@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.var.Columns;
 import com.ash.drishti.banking.compute.var.ScenarioFx;
 import com.ash.drishti.banking.compute.var.VarBook;
@@ -416,7 +416,7 @@ final class VarPlayground {
     VarPlaygroundParametric.Engine parametric(Built b) {
         VarParametric par = views.parametric();
         if (par == null || !par.enabled()) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.FORBIDDEN,
                     "parametric VaR is switched off on this server (drishti.var.parametric.enabled): the playground's Parametric tab is not offered");
         }
         return VarPlaygroundParametric.engine(b.scope(), b.parts(), b.model().set.confidence(), b.model().set.esConfidence(), par.props().settings());

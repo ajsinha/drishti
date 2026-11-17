@@ -22,6 +22,11 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **`DrishtiException` and `ErrorCode` are in `drishti-api` (I11, D2).** Package `com.ash.drishti.api.error` (was `com.ash.drishti.common`), so a module
+  names them through the kernel API alone. One mechanical commit: the imports of every file (the three classes of `common` that used them
+  unqualified gained the import), `kernel-api-surface.txt` (two signatures), DEVELOPER_GUIDE and the two tools that name the file. Neither
+  class name is persisted (audit rows keep the code text), so `moved-classes.properties` is unchanged. `drishti-kernel-api` keeps its
+  `drishti-common` dependency: `Vocabularies` still calls `common.Extensions`.
 - **The SDK folder (I11, D1).** `drishti.py build sdk` writes `<home>/sdk/` (git-ignored): `repo/`, a Maven file repository with `drishti-kernel-api`
   and what it needs (`drishti-api`, `drishti-common`, `drishti-settingsfile`), the product's parent pom, `drishti-module-parent` and the archetype;
   `settings.xml` naming it by absolute path (`mvn -s`); `drishti-module-parent/pom.xml` for a `relativePath`. Maven runs `package`, never `install`.

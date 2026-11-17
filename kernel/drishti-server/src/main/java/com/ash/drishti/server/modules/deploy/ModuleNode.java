@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.modules.deploy;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.module.runtime.Contributions;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;

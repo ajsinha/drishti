@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.var.Backtest;
 import com.ash.drishti.banking.compute.var.Columns;
 import com.ash.drishti.banking.compute.var.CurrencyTotals;

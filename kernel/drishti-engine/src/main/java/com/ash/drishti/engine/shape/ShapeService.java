@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.engine.shape;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.Semantics;
 import com.fasterxml.jackson.databind.JsonNode;

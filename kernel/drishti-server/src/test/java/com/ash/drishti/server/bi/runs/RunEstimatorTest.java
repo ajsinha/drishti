@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.runs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.runs.RunEstimate.Basis;
 import com.ash.drishti.server.bi.runs.RunEstimator.BuildPath;
 import com.ash.drishti.server.bi.runs.RunEstimator.DateRows;

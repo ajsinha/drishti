@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.governance;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

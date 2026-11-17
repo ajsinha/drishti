@@ -16,7 +16,7 @@
 package com.ash.drishti.trading;
 
 import com.ash.drishti.bicompute.rows.InlinePivot;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.KernelCalls;
 import com.ash.drishti.kernel.api.module.PersonCache;

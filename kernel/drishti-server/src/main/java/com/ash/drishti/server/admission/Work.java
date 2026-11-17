@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.admission;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 
 /** The kinds of new work busy protection may ask to wait (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"), each with its code. */
 public enum Work {

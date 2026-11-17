@@ -23,7 +23,7 @@ import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.kernel.api.pivot.Viewer;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;

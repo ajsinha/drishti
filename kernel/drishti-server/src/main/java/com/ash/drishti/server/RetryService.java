@@ -17,8 +17,8 @@ package com.ash.drishti.server;
 
 import com.ash.drishti.ai.LlmRegistry;
 import com.ash.drishti.ai.McpRegistry;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.RetryBoard;
 import com.ash.drishti.common.RetryTracker;
 import com.ash.drishti.engine.source.SourceRegistry;

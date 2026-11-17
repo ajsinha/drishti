@@ -164,7 +164,7 @@ public class RunsConfiguration {
                 try {
                     bi.updateItem(who, itemId, java.util.Map.of("body", body, "message", "promoted again from a run (BI runs 9.4)"));
                     return itemId;
-                } catch (com.ash.drishti.common.DrishtiException e) {
+                } catch (com.ash.drishti.api.error.DrishtiException e) {
                     // the item was deleted or moved out of reach: a new draft
                 }
             }

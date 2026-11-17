@@ -18,8 +18,8 @@ package com.ash.drishti.bicompute.python;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
 import com.ash.drishti.kernel.api.pivot.Kind;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.util.List;
 
 /**

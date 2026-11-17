@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.python;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;

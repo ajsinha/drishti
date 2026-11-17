@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.server.registry.PackRegistryClient;

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.identity;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;

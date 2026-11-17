@@ -61,7 +61,7 @@ public interface TransformRunner {
      */
     default com.fasterxml.jackson.databind.JsonNode measure(com.ash.drishti.kernel.api.security.Principal who, Map<String, Object> manifest, Map<String, Object> params,
             List<String> groupBy, List<String> columns, List<List<Object>> rows) {
-        throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.PYTHON_BUSY, "this runner runs Transforms only");
+        throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.PYTHON_BUSY, "this runner runs Transforms only");
     }
 
     /** Runs it; a failure is a {@code DrishtiException} with the Python code (DRS-9070 to 9074) or {@code DRS-9075}. */

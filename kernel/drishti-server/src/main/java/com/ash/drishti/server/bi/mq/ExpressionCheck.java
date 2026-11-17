@@ -81,8 +81,8 @@ final class ExpressionCheck {
             new com.ash.drishti.server.bi.engine.SqlCompiler(ds, com.ash.drishti.server.bi.engine.Dialect.DUCKDB).plan(new com.ash.drishti.server.bi.engine.QueryRequest(
                     List.of(), List.of(PROBE), List.of(), null, null, List.of(), null, "auto"), new com.ash.drishti.server.bi.engine.SqlCompiler.Reader(false, java.util.Set.of(),
                     Map.of(), com.ash.drishti.server.bi.engine.SqlCompiler.Masks.NONE));
-        } catch (com.ash.drishti.common.DrishtiException e) {
-            if (e.errorCode() == com.ash.drishti.common.ErrorCode.QUERY_INVALID) {
+        } catch (com.ash.drishti.api.error.DrishtiException e) {
+            if (e.errorCode() == com.ash.drishti.api.error.ErrorCode.QUERY_INVALID) {
                 problems.add(new Problem("DRS-9156", Problem.ERROR, "a model query would refuse this measure: "
                         + e.getMessage().replace(PROBE, "this measure").replaceFirst("^DRS-\\d+ ", ""), "aggregate each fact in a measure of its own, or join the facts through a shared dimension",
                         0, length));

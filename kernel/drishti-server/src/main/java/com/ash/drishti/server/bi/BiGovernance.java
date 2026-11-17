@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
@@ -450,7 +450,7 @@ public final class BiGovernance {
                     if (x instanceof Map<?, ?> c && c.get("id") != null) {
                         try {
                             found.add(bi.readableItem(p, String.valueOf(c.get("id"))));
-                        } catch (com.ash.drishti.common.DrishtiException hidden) {
+                        } catch (com.ash.drishti.api.error.DrishtiException hidden) {
                             // an item the caller may not read is not named (the count is of those named)
                         }
                     }

@@ -18,8 +18,8 @@ package com.ash.drishti.server.dist;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.RetryPolicy;
 import com.ash.drishti.engine.time.BusinessDateProperties;
 import com.ash.drishti.engine.time.BusinessDates;

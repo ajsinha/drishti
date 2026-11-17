@@ -34,7 +34,7 @@ import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
 import com.ash.drishti.kernel.api.pivot.Kind;
 import com.ash.drishti.kernel.api.pivot.Viewer;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

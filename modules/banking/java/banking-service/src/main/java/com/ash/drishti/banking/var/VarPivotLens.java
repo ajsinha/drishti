@@ -16,7 +16,7 @@
 package com.ash.drishti.banking.var;
 
 import com.ash.drishti.kernel.api.pivot.PivotView;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.banking.compute.frtb.FrtbChoices;
 import com.ash.drishti.banking.compute.var.Columns;
 import com.ash.drishti.banking.compute.var.VarBook;

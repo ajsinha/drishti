@@ -16,8 +16,8 @@
 package com.ash.drishti.server.calc;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.search.ColumnRead;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.server.security.Entitlements;

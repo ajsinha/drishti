@@ -26,7 +26,7 @@ import com.ash.drishti.engine.view.ViewModel.PanelView;
 import com.ash.drishti.graph.BadgeRenderer;
 import com.ash.drishti.graph.LinkRef;
 import com.ash.drishti.graph.ReferenceCatalog;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.el.Expr;

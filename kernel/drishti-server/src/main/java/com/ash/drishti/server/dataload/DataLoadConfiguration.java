@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.dataload;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.dataload.DataInbox;
 import com.ash.drishti.dataload.DataLoadSettings;
 import com.ash.drishti.dataload.LoaderProcess;

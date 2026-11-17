@@ -69,7 +69,7 @@ public final class VarSystemBasketsProvider implements KindProvider {
         }
         LocalDate latest = s.loader().latest();
         if (latest == null) {                                           // never today's empty list as if it were true: say why
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND,
                     "the system baskets are dated by the VaR engine's newest business date, and no P&L vectors or scenario PVs are read yet "
                             + "(their connectors are starting, or none holds any): ask again, or name a business date");
         }

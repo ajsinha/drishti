@@ -29,7 +29,7 @@ import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularProvider;
 import com.ash.drishti.bicompute.sql.TabularSource;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

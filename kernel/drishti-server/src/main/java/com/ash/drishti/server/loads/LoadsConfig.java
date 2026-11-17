@@ -16,8 +16,8 @@
 package com.ash.drishti.server.loads;
 
 import com.ash.drishti.common.BusinessCalendar;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.packs.Pack;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -140,7 +140,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         private void importFiles() {
             try {
                 store.put(MARKER, ("{\"at\":\"" + java.time.Instant.now() + "\"}").getBytes(java.nio.charset.StandardCharsets.UTF_8), null);
-            } catch (com.ash.drishti.common.DrishtiException e) {
+            } catch (com.ash.drishti.api.error.DrishtiException e) {
                 return;                                                   // imported before (or by another node now)
             }
             Path folder = dir.resolve("config");

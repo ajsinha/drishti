@@ -91,8 +91,8 @@ public final class LoadStore {
                 content.put(key(pack), Files.readAllBytes(file(pack)), null);
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read " + file(pack), e);
-            } catch (com.ash.drishti.common.DrishtiException e) {
-                if (e.errorCode() != com.ash.drishti.common.ErrorCode.CONTENT_CONFLICT) {
+            } catch (com.ash.drishti.api.error.DrishtiException e) {
+                if (e.errorCode() != com.ash.drishti.api.error.ErrorCode.CONTENT_CONFLICT) {
                     throw e;                                                // another node imported it first
                 }
             }
@@ -130,8 +130,8 @@ public final class LoadStore {
                 return r;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
-            } catch (com.ash.drishti.common.DrishtiException e) {
-                if (e.errorCode() != com.ash.drishti.common.ErrorCode.CONTENT_CONFLICT || attempt >= 20) {
+            } catch (com.ash.drishti.api.error.DrishtiException e) {
+                if (e.errorCode() != com.ash.drishti.api.error.ErrorCode.CONTENT_CONFLICT || attempt >= 20) {
                     throw e;
                 }
             }

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.identity.content;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;

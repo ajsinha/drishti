@@ -19,8 +19,8 @@ import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.FilePreferenceStore;
 import com.ash.drishti.identity.collab.Notice;

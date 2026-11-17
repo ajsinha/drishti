@@ -1019,7 +1019,7 @@ snippets below leave it out to save space.
 **Goal:** `GET /api/v1/mnemonics` lists the mnemonics the caller may use; `GET /api/v1/mnemonics/{code}` gives one, or `404 DRS-4005`.
 (There is no such endpoint today: on the demo stack `GET /api/v1/mnemonics` answers `404`.)
 
-**1. Add the error code** to `kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java`, in its group (4 = engine and graph),
+**1. Add the error code** to `kernel/drishti-api/src/main/java/com/ash/drishti/api/error/ErrorCode.java`, in its group (4 = engine and graph),
 with the next free number. Never reuse a code.
 
 ```java
@@ -1034,8 +1034,8 @@ entitlements before doing anything:
 ```java
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.server.security.Entitlements;
@@ -1448,8 +1448,8 @@ and inject it where it is used. The `noticeStore` bean takes it as one more para
     }
 ```
 
-and `NoticeStore` keeps the limit and checks it first in `set` (add the imports `com.ash.drishti.common.DrishtiException` and
-`com.ash.drishti.common.ErrorCode`):
+and `NoticeStore` keeps the limit and checks it first in `set` (add the imports `com.ash.drishti.api.error.DrishtiException` and
+`com.ash.drishti.api.error.ErrorCode`):
 
 ```java
     private final int maxLength;

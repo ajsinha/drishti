@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common;
+package com.ash.drishti.api.error;
 
 /** The single exception type crossing module boundaries. It always carries an {@link ErrorCode}. */
 public class DrishtiException extends RuntimeException {

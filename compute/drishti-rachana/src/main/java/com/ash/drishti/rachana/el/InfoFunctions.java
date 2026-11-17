@@ -17,7 +17,7 @@ package com.ash.drishti.rachana.el;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.NodeType;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.util.List;
 
 /**

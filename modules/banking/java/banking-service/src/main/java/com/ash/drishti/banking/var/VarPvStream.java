@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.TempFiles;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.deltalake.write.LakeManifest;

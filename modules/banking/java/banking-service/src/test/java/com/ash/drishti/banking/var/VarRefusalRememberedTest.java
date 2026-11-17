@@ -18,8 +18,8 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.ash.drishti.server.caches.RefusedForNow;
 import java.nio.file.Files;

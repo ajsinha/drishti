@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureCalc;
 import com.ash.drishti.banking.compute.ccr.ExposureGrid;
@@ -409,7 +409,7 @@ final class ExposureOfficial implements AutoCloseable {
                             blank ? path.toString() : where.toString()));
                     parentOf.put(id, parent);
                 } else if (s.leafIds() && !parent.equals(parentOf.get(id))) {
-                    throw new DrishtiException(com.ash.drishti.common.ErrorCode.VAR_HIERARCHY_INVALID, "the hierarchy " + s.id() + " names its nodes by their own value "
+                    throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.VAR_HIERARCHY_INVALID, "the hierarchy " + s.id() + " names its nodes by their own value "
                             + "(ids: leaf), but " + v + " sits under both " + parentOf.get(id) + " and " + parent + ": use ids: path");
                 }
                 parent = id;

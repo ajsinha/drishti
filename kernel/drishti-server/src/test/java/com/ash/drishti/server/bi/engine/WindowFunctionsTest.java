@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.common.BusinessCalendar;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.fasterxml.jackson.databind.ObjectMapper;

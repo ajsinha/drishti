@@ -21,7 +21,7 @@ import com.ash.drishti.api.HistoryRead;
 import com.ash.drishti.api.HistoryReads;
 import com.ash.drishti.api.HistoryRequest;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;

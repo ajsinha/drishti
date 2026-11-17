@@ -18,8 +18,8 @@ package com.ash.drishti.server.bi.model;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
@@ -110,8 +110,8 @@ public final class PackModels {
                 if (mayOpen.test(kind)) {
                     try {
                         out.add(info(pack, kind, names));
-                    } catch (com.ash.drishti.common.DrishtiException e) {
-                        if (e.errorCode() != com.ash.drishti.common.ErrorCode.QUERY_SOURCE) {
+                    } catch (com.ash.drishti.api.error.DrishtiException e) {
+                        if (e.errorCode() != com.ash.drishti.api.error.ErrorCode.QUERY_SOURCE) {
                             throw e;
                         }
                         skipped.add(new Skipped(pack.name(), kind, pack.routes().getOrDefault(kind, ""), e.getMessage()));

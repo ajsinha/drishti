@@ -96,7 +96,7 @@ final class Fy {
 
     static void evalError(String src, String... words) {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> eval(src)).as(src).isInstanceOfSatisfying(ElException.class, e -> {
-            assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.EL_EVAL);
+            assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.EL_EVAL);
             for (String w : words) {
                 assertThat(e.getMessage()).contains(w);
             }

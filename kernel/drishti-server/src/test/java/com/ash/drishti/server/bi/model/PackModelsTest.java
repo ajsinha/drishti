@@ -29,7 +29,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.packs.Pack;
@@ -164,7 +164,7 @@ class PackModelsTest {
             @Override
             public Optional<SourcePlugin> plugin(String connector, String kind) {
                 if ("region".equals(kind)) {
-                    throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.QUERY_SOURCE, "connector 'regions-store' is not running");
+                    throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.QUERY_SOURCE, "connector 'regions-store' is not running");
                 }
                 return super.plugin(connector, kind);
             }

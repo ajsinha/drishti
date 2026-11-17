@@ -107,7 +107,7 @@ final class TextFunctions {
                 if (Functions.literal(args, 2) instanceof Number g && (g.intValue() < 0 || g.intValue() > re.groups())) {
                     return "the pattern '" + p + "' has " + re.groups() + " group(s); group " + g.intValue() + " was asked for";
                 }
-            } catch (com.ash.drishti.common.DrishtiException e) {
+            } catch (com.ash.drishti.api.error.DrishtiException e) {
                 return "the pattern '" + p + "' is refused: " + e.getMessage();
             }
         }

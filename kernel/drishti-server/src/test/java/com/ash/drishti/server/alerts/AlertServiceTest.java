@@ -18,7 +18,7 @@ package com.ash.drishti.server.alerts;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.time.BusinessDateProperties;
 import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.identity.AuditLog;
@@ -133,7 +133,7 @@ class AlertServiceTest {
         AlertEnvironment.People people = name -> all.stream().filter(p -> p.username().equals(name)).findFirst();
         AlertEnvironment.Checker checker = (spec, p) -> {
             if (p.user().equals("dave")) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.BI_FORBIDDEN, "no access to the report");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.BI_FORBIDDEN, "no access to the report");
             }
         };
         AlertEnvironment.Live live = (spec, p) -> spec.source().type().equals("dataset") ? liveGeneration.get() : -1;

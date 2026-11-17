@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -62,11 +62,11 @@ final class VarTradeLinks implements ViewAugmenter {
         }
         try {
             if (!svc.running()) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "the VaR engine is off on this server");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.FORBIDDEN, "the VaR engine is off on this server");
             }
             java.util.Optional<VarDate> loaded = svc.loadedDate(asOf == null ? null : asOf.businessDate());
             if (loaded.isEmpty()) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND, "the VaR engine has not loaded the day's vectors yet "
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND, "the VaR engine has not loaded the day's vectors yet "
                         + "(open the page again in a moment, or VAR TRD " + id + ")");
             }
             VarDate d = loaded.get();

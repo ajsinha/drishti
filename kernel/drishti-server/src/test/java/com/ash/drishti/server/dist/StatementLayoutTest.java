@@ -19,7 +19,7 @@ import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.ash.drishti.server.bi.report.StatementSpec;
 import java.nio.file.Files;

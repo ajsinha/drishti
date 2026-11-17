@@ -285,7 +285,7 @@ public class VarConfiguration {
                                 "a window of the PV topic: " + rows + " intraday updates"), VarPvStreamPlugin.NAME);
                         return;
                     }
-                } catch (com.ash.drishti.common.DrishtiException e) {
+                } catch (com.ash.drishti.api.error.DrishtiException e) {
                     // the pack not loaded under that name (another pack serves the kinds): the engine is told directly
                 }
                 registry.plugins().stream().filter(x -> x.manifest().serves(kind))

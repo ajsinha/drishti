@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.runs;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.runs.RunEstimate.Basis;
 import java.time.LocalDate;
 import java.util.ArrayList;

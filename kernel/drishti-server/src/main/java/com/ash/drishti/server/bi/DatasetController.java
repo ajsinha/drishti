@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.model.PackModels;
 import com.ash.drishti.kernel.api.security.Principal;

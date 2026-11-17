@@ -55,7 +55,7 @@ final class LayerDatasetTests {
     List<ExpectedValueRunner.Outcome> run(Principal p, String body, String chosen) {
         DatasetDefParser.Result r = DatasetDefParser.parse(body);
         if (r.dataset() == null) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.LAYER_DATASET_INVALID, "the dataset has errors: " + r.firstError());
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.LAYER_DATASET_INVALID, "the dataset has errors: " + r.firstError());
         }
         DatasetDef d = r.dataset();
         List<ExpectedValueRunner.Outcome> out = new ArrayList<>();

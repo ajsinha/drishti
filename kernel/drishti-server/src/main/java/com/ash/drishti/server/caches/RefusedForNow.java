@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.caches;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 
 /**
  * A date refused for room (capacity or disk) and remembered ({@link Refusals}): answered at once with the refusal's code and a

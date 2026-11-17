@@ -453,7 +453,7 @@ class TypedCallParityTest {
             try {
                 return rest.get();
             } catch (Kernel.Refused e) {
-                if (e.status() == 404 && com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND.code().equals(e.code())) {
+                if (e.status() == 404 && com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND.code().equals(e.code())) {
                     return Map.of("absent", true);
                 }
                 throw e;

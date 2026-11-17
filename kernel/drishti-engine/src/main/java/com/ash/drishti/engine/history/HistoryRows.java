@@ -305,7 +305,7 @@ public final class HistoryRows {
                 }
             }
             if (!unknown.isEmpty()) {
-                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_SEARCH, "no " + spec.kind()
+                throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.BAD_SEARCH, "no " + spec.kind()
                         + " has " + (unknown.size() == 1 ? "a field " : "the fields ") + String.join(", ", unknown) + " on these days");
             }
         }

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.embed;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 
 /**
  * A refused embed exchange or call. {@code error} is the RFC 6749 section 5.2 name the token endpoint answers with

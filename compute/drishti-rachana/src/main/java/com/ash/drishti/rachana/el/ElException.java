@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana.el;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 
 /** A Rachana-EL expression failed to compile ({@code DRS-2101}) or to evaluate ({@code DRS-2102}). */
 public class ElException extends DrishtiException {

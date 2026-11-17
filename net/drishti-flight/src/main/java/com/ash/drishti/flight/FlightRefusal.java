@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.flight;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import org.apache.arrow.flight.CallStatus;
 import org.apache.arrow.flight.ErrorFlightMetadata;
 import org.apache.arrow.flight.FlightRuntimeException;

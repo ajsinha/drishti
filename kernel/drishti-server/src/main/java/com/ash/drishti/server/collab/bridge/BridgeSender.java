@@ -16,8 +16,8 @@
 package com.ash.drishti.server.collab.bridge;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.collab.CollabProperties;

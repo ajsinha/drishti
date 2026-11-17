@@ -31,7 +31,7 @@ import com.ash.drishti.ai.LlmPolicy;
 import com.ash.drishti.ai.LlmRegistry;
 import com.ash.drishti.ai.ModelInfo;
 import com.ash.drishti.ai.llm.LLMFactory;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.ai.AiProperties;
 import com.ash.drishti.server.bi.BiService;

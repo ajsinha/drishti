@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.collab;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 
 /** Over a collaboration rate limit: {@code 429 DRS-7003} with a {@code Retry-After} header. */
 public final class RateLimitedException extends DrishtiException {

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana.el;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.rachana.el.check.Checker;
 import com.ash.drishti.rachana.el.check.Fields;
 import com.ash.drishti.rachana.el.check.Problem;

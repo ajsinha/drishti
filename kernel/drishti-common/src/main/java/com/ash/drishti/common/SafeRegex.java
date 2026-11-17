@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.common;
 
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

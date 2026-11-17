@@ -17,8 +17,8 @@ package com.ash.drishti.banking.frtb;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.frtb.FactorDictionary;
 import com.ash.drishti.banking.compute.frtb.FrtbChoices;
 import com.ash.drishti.banking.compute.frtb.FrtbExamples;

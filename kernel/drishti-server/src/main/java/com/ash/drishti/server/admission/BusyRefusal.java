@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.admission;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 
 /**
  * New work asked to wait because the server is very busy (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): answered {@code 503} with

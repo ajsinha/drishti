@@ -24,7 +24,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.Subscription;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

@@ -162,7 +162,7 @@ final class VarTier implements AutoCloseable {
         long need = written / 2 + (64L << 20);
         if (!b.fits(root, need)) {
             long free = b.usableBytes(root);
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.VAR_CAPACITY, String.format(java.util.Locale.ROOT,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.VAR_CAPACITY, String.format(java.util.Locale.ROOT,
                     "the VaR hot file of %s needs about %.2f GB more, %.2f GB free in %s (guard %.2f GB, drishti.disk.min-free-percent and "
                             + "min-free-gb): free disk there, lower drishti.var.tier.max-disk-gb for other files, or purge a date in Admin > Caches",
                     date, need / 1e9, free / 1e9, root, b.guardBytes(root) / 1e9));

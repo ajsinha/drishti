@@ -275,7 +275,7 @@ public final class BiAggregate {
             sets.forEach(s -> rows.put(s, new ArrayList<>()));
             List<ArrowIpcWriter.Column> cols = r.columns();
             if (r.rows() > maxGroups) {
-                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.QUERY_ROWS, "the totals have more than " + maxGroups
+                throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.QUERY_ROWS, "the totals have more than " + maxGroups
                         + " groups: group by less or filter; a total is never cut short");
             }
             for (int row = 0; row < r.rows(); row++) {

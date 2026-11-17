@@ -198,7 +198,7 @@ class SourceRegistryLiveTest {
         SourceRegistry r = new SourceRegistry(List.of(new Recorder()), props, new JsonCodec());
         var router = new SourceRouter(r, props, java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
         var e = router.noSource("trade");
-        assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.CONNECTOR_NOT_CONFIGURED);
+        assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.CONNECTOR_NOT_CONFIGURED);
         assertThat(e.getMessage()).contains("connector trading-lake is not configured").contains("Admin -> Connectors");
         assertThat(router.noSource("other").getMessage()).endsWith("no source serves kind 'other'");
         r.apply("trading-lake", cs("boom", true));
@@ -217,8 +217,8 @@ class SourceRegistryLiveTest {
         SourceRegistry r = new SourceRegistry(List.of(new Recorder()), props, new JsonCodec());
         var router = new SourceRouter(r, props, java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
         var e = org.assertj.core.api.Assertions.catchThrowable(() -> router.fetch(new EntityRef("trade", "NOPE")).join());
-        var de = (com.ash.drishti.common.DrishtiException) e.getCause();
-        assertThat(de.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND);
+        var de = (com.ash.drishti.api.error.DrishtiException) e.getCause();
+        assertThat(de.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND);
         assertThat(de.getMessage()).contains("DRS-1001 no source holds trade/NOPE").contains("trading-store").contains("trade-endur").contains("disabled");
     }
 }

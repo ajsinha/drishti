@@ -20,7 +20,7 @@ import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.kernel.api.pivot.FigureSource;
 import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import com.ash.drishti.kernel.api.pivot.Viewer;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

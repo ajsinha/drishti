@@ -187,7 +187,7 @@ public final class Functions {
         }
         try {
             return simple(text, label, provider);
-        } catch (com.ash.drishti.common.DrishtiException e) {
+        } catch (com.ash.drishti.api.error.DrishtiException e) {
             if (!provider.capabilities().builtIns() || text == null || !com.ash.drishti.bicompute.formula.FormulaLowering.isFormula(text)) {
                 throw e;
             }

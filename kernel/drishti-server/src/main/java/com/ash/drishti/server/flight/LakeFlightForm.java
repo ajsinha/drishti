@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.flight;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.compute.arrow.ArrowIpc;
 import com.ash.drishti.compute.arrow.ArrowTable;
 import com.ash.drishti.flight.FlightBackend;

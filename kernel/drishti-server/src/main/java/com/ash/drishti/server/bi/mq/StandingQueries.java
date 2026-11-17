@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.engine.GenerationBus;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Clock;
@@ -190,7 +190,7 @@ public final class StandingQueries implements AutoCloseable {
             if (!owner.equals(dir.self())) {
                 ShardDirectory.Peer peer = peers.get(owner);
                 if (peer == null || !peer.alive()) {
-                    throw new DrishtiException(com.ash.drishti.common.ErrorCode.SQ_OWNER_UNREACHABLE, "the node that holds this model's standing queries (" + owner
+                    throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.SQ_OWNER_UNREACHABLE, "the node that holds this model's standing queries (" + owner
                             + ") cannot be reached: try again");
                 }
                 Map<String, Object> out = peer.subscribe(p, q, throttle, deliver, id);
