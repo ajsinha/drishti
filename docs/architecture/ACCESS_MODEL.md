@@ -87,6 +87,9 @@ Every answer is cacheable and invalidated on change, so asking stays cheap when 
 - **Only drishti-registry reads the access model** (an architecture test, as for the domain boundaries).
 - **Both stores answer the same** (one suite, run against each).
 - **Session isolation**: nothing per person in shared state.
+- **A module's typed call passes the same doors as the REST path it replaces** (entitlements, masks, row rules, token scopes, the
+  refusal's code and words, the access log): `TypedCallParityTest`; the table of doors is in
+  [KERNEL_AND_MODULES.md section 2.3](KERNEL_AND_MODULES.md#23-the-spis).
 
 ## 7. What is built when
 

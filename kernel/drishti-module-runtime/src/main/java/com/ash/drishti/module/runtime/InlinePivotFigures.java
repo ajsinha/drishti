@@ -82,13 +82,24 @@ public final class InlinePivotFigures {
      */
     public static InlineFigures.Figures ask(KernelCalls.Caller caller, List<Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
             String by, String across, Map<String, Object> top) {
+        return ask(b -> caller.post("/pivot/inline", b, Map.of()), fields, rows, values, by, across, top);
+    }
+
+    /**
+     * The engine's figures of {@code rows}, the body ({@link #body}) answered by {@code engine}: the kernel's typed
+     * {@code Pivots.figures} passes its own in-process {@code Pivots.inline}. No rows: nothing is asked.
+     *
+     * @throws IllegalArgumentException more rows than the engine takes inline
+     */
+    public static InlineFigures.Figures ask(java.util.function.UnaryOperator<Map<String, Object>> engine, List<Field> fields, List<List<Object>> rows,
+            List<Map<String, Object>> values, String by, String across, Map<String, Object> top) {
         if (rows.isEmpty()) {
             return new Figures(null);
         }
         if (rows.size() > InlineFigures.MAX_ROWS) {
             throw new IllegalArgumentException("the engine takes at most " + InlineFigures.MAX_ROWS + " rows inline (" + rows.size() + " were read)");
         }
-        return new Figures(caller.post("/pivot/inline", body(fields, rows, values, by, across, top), Map.of()));
+        return new Figures(engine.apply(body(fields, rows, values, by, across, top)));
     }
 
     /** The engine's answer, by member. */

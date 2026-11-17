@@ -16,14 +16,9 @@
 package com.ash.drishti.server.api;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Sutra;
@@ -32,7 +27,6 @@ import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -67,7 +61,8 @@ public class CatalogController {
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
             com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding,
-            com.ash.drishti.rachana.about.AboutCatalog about) {
+            com.ash.drishti.rachana.about.AboutCatalog about, RecordReads reads) {
+        this.reads = reads;
         this.about = about;
         this.branding = branding;
         this.packAccess = packAccess;
@@ -80,16 +75,12 @@ public class CatalogController {
         this.sutras = sutras;
     }
 
+    private final RecordReads reads;
+
     @GetMapping("/entities/{kind}/{id}/raw")
     public ApiDtos.RawEntity raw(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        entitlements.requireOpen(principal, kind);
-        try {
-            EntityDocument d = router.fetch(EntityRef.of(kind, id), asOf).join();
-            return new ApiDtos.RawEntity(new ViewModel.Ref(kind, id), d.provenance(), entitlements.redact(principal, d.data()));
-        } catch (CompletionException e) {
-            throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, e.getMessage());
-        }
+        return reads.raw(kind, id, asOf, principal);
     }
 
     /** Version, build and what is loaded: the About page. */

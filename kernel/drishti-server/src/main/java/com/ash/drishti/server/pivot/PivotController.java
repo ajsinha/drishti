@@ -25,7 +25,6 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
-import com.ash.drishti.server.edition.EditionCommands;
 import com.ash.drishti.kernel.api.security.Principal;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,36 +68,23 @@ public class PivotController {
     private final PivotViews views;
     private final PivotProperties props;
     private final AuditLog audit;
-    private final EditionCommands edition;
-    private final boolean enabled;
-    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines;
+    private final PivotInline door;
     private final KindSources kinds;
     private final com.ash.drishti.server.security.Entitlements entitlements;
 
-    public PivotController(PivotCore core, PivotViews views, PivotProperties props, AuditLog audit, EditionCommands edition,
-            @Value("${drishti.engines.pivot.enabled:${drishti.pivot.enabled:true}}") boolean enabled,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, KindSources kinds,
+    public PivotController(PivotCore core, PivotViews views, PivotProperties props, AuditLog audit, PivotInline door, KindSources kinds,
             com.ash.drishti.server.security.Entitlements entitlements) {
+        this.door = door;
         this.kinds = kinds;
         this.entitlements = entitlements;
         this.core = core;
         this.views = views;
         this.props = props;
         this.audit = audit;
-        this.edition = edition;
-        this.enabled = enabled;
-        this.engines = engines;
     }
 
     Viewer on(Principal p) {
-        com.ash.drishti.server.engines.EngineRegistry reg = engines.getIfAvailable();
-        if (reg != null ? reg.known("pivot") && !reg.running("pivot") : !enabled) {
-            throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (config/engines/pivot.yaml, drishti.engines.pivot.enabled)");
-        }
-        if (edition != null && !edition.edition().wordOn(WORD)) {
-            throw new DrishtiException(ErrorCode.PIVOT_OFF, "PIVOT is not part of the edition '" + edition.edition().name() + "'");
-        }
-        return new Viewer(p.user(), p);
+        return door.on(p);
     }
 
     /** The view of a body: {@code {"view": {...}}}, {@code {"view": "owner/name"}} (a saved view), or the view itself. */
@@ -262,11 +247,7 @@ public class PivotController {
      */
     @PostMapping("/inline")
     public Map<String, Object> inline(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
-        Viewer v = on(p);
-        com.ash.drishti.bicompute.rows.InlinePivot inline = com.ash.drishti.bicompute.rows.InlinePivot.of(body);
-        Map<String, Object> a = inline.query(v);
-        audited(p, "pivot.inline", inline.view(), "; rows=" + inline.rows() + "; cells=" + a.get("cellCount"));
-        return a;
+        return door.inline(p, body);
     }
 
     /** A cell's member rows (drill-through), paged: {@code {view, coords: {DIM: value}, offset, limit}}. */

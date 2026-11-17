@@ -55,9 +55,16 @@ public class AsOfResolver implements HandlerMethodArgumentResolver, WebMvcConfig
 
     @Override
     public AsOf resolveArgument(MethodParameter parameter, ModelAndViewContainer mav, NativeWebRequest request, WebDataBinderFactory binders) {
-        String date = first(request.getHeader(HEADER), request.getParameter("asOf"));
-        String knownAt = first(request.getHeader(KNOWN_AT_HEADER), request.getParameter("knownAt"));
-        return dates.parse(date, knownAt);
+        return read(request.getHeader(HEADER), request.getParameter("asOf"), request.getHeader(KNOWN_AT_HEADER), request.getParameter("knownAt"),
+                dates);
+    }
+
+    /**
+     * A request's date box: the header, else the query parameter, for the business date and for "known at" (one reading for the REST
+     * paths and for the person of a typed kernel call).
+     */
+    public static AsOf read(String dateHeader, String dateParam, String knownAtHeader, String knownAtParam, BusinessDates dates) {
+        return dates.parse(first(dateHeader, dateParam), first(knownAtHeader, knownAtParam));
     }
 
     private static String first(String a, String b) {

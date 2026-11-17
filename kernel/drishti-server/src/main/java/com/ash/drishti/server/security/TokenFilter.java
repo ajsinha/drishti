@@ -123,10 +123,7 @@ public final class TokenFilter extends OncePerRequestFilter {
                 TokenScopes.Verdict v = scopes.check(g.scopes(), method, path);
                 if (v != TokenScopes.Verdict.ALLOWED) {
                     record(g, "token-denied", method, path, 403);
-                    java.util.List<String> opening = scopes.opening(method, path);
-                    String detail = v == TokenScopes.Verdict.NEVER ? "API tokens may not call this endpoint"
-                            : opening.isEmpty() ? "API tokens only read"
-                            : "this token lacks the scope " + String.join(" or ", opening);
+                    String detail = scopes.refusal(v, method, path);
                     res.setStatus(403);
                     res.setContentType("application/problem+json");
                     res.getWriter().write("{\"title\":\"forbidden\",\"status\":403,\"code\":\"DRS-5002\",\"detail\":\"" + detail + "\"}");

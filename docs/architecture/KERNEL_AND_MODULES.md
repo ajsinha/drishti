@@ -23,7 +23,7 @@ throughout. The same day the owner decided the three building blocks (section 1.
 **separate Spring Boot application** in front of one or many kernels (section 10), and **Drishti modules**; and that Drishti Elements is the
 one controlled set of UI statics (section 11). Surveyed on `wip/train` `89f010df5`. A printable copy with the diagrams and mock-ups: [KERNEL_AND_MODULES.pdf](KERNEL_AND_MODULES.pdf).
 
-**Built so far.** The kernel API jar (`drishti-kernel-api`, kernel API 0.4) carries the SPIs of section 2.3 that i1 moved plus
+**Built so far.** The kernel API jar (`drishti-kernel-api`, kernel API 0.5) carries the SPIs of section 2.3 that i1 moved plus
 `DrishtiModule`, `ModuleContext` (with `Kinds` and `KindWriter`), `ModuleSettings`, `KindProvider`, `BindingState`, `AiToolProvider`,
 `@ModuleApi`, `@EngineWide` and `ApprovalSource`; `FunctionProvider` (its `ElFunction` and `EvalContext`), `CacheGroup` (`MemoryBudget`), `CacheReport`
 (Caffeine) and `FlightForm` (Arrow Flight types) stay at their homes until their types move. Banking's `var-positions` and
@@ -257,6 +257,45 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 
 The Java SPIs are discovered with `ServiceLoader` **inside the module's class loader** (`META-INF/services/…` in the module's jars) and,
 for Spring beans, through the module's own child application context (section 4.4).
+
+**The kernel's typed services** (`com.ash.drishti.kernel.api.services`, kernel API 0.5). A module reads what a client reads through one
+bean, `Kernel`, in process: no HTTP call to its own server. `Kernel.person()` copies the person of the request in hand (user, display
+name, administrator or not, roles, lens, date box and known-at, the scopes of a personal API token); the copy is usable from any thread,
+and every service takes it explicitly (no thread local, nothing per person in a static or a shared cache; `Kernel.cache` keys on
+`Person.key()`). A `Person` the kernel did not make is refused. Each service answers what the REST path it replaces answers for the same
+person, **by the same body**: the controller and the typed service call one method, and a typed service never calls a controller.
+
+| Service | Replaces | The body both call |
+|---|---|---|
+| `records().search(p, query)` | `GET /api/v1/search` | `Searches.search` (row rule joined, masks, the edition, the cluster's shards) |
+| `records().raw(p, ref)` | `GET /api/v1/entities/{kind}/{id}/raw` (empty where the path answers `DRS-1001`) | `RecordReads.raw` |
+| `history().series(p, ref, path, days, to)` | `GET /api/v1/history/{kind}/{id}/series` | `RecordReads.series` |
+| `dates()` | `GET /api/v1/business-date` (`current`, `selected`, `live`) | the server's business dates (`drishti.business-date.*`, a fixed `today` included) |
+| `settings().of(p)` | `GET /api/v1/me/settings` | `MySettings.of` |
+| `live().query(p, query, limit)` | `GET /api/v1/live/query?again=true` | `LivePages.query` |
+| `pivots().inline(p, request)`, `pivots().figures(…)` | `POST /api/v1/pivot/inline` | `PivotInline.inline` (the engine switch, the edition's `PIVOT`, the audit row) |
+| `lenses().block(lens, block)` | a block of `config/lenses/<module>/<lens>.yaml` | `KernelLenses.whole` |
+| `access()` | the entitlements a REST path applies (`requireOpen`, the masks) | `Entitlements` |
+| `operations()` | one module asking another (section 5) | none yet: every module is unavailable and a call refuses `404 DRS-1020` until operations are registered |
+
+What each door of a REST path does for a typed call:
+
+| Door | Typed call |
+|---|---|
+| `TokenFilter` (identity, token scopes) | the identity is copied into `Person`; each service checks the scope of the path it replaces against the same table (`TokenScopes`), refusing `403 DRS-5002` with the filter's words |
+| Entitlements, masks, row rules | inside the body, as the controller applies them |
+| `AsOfResolver` (date box, known-at), the lens header | values of `Person` (the header, else the query parameter, as the REST paths read them) |
+| A refusal | the status, code and words the REST path answers, from the one exception table (`ApiExceptionHandler.problem`) as `Kernel.Refused` |
+| The access log (`AccessRecorder`) | a search, a raw record and a series are recorded as their REST reads are |
+| Time | a read runs on its own (virtual) thread and is given 60 s, then refuses `503 DRS-5003` |
+| `EngineGateFilter`, `ModuleGateFilter`, `PlacementGuardFilter` | the kernel's services run on every node and have no engine switch of their own; operations pass them |
+| `RequestsInFlight`, `RequestActivity` | not counted again: the request that made the typed call already holds its slot |
+| `PathGuard`, `RequestSizeFilter` | not applicable: no path, no body |
+
+`TypedCallParityTest` holds the parity: every call the landings make, typed and over the loopback, for an administrator, a masked role, a
+row-ruled role, a role the kind is closed to, a lens, an earlier date box, another language, a read-only API token and a scoped one, several
+people at once, and again with the business today fixed. Until the landings move to the typed services, `KernelCalls` (each call
+`GET`/`POST` over this server's own API on the loopback) answers them.
 
 ### 2.4 What stays kernel-only, and why
 

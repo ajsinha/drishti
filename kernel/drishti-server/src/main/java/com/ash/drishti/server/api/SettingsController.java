@@ -58,8 +58,11 @@ public class SettingsController {
     private final PreferenceStore store;
     private final ObjectMapper json = new ObjectMapper();
 
-    public SettingsController(PreferenceStore store) {
+    private final MySettings settings;
+
+    public SettingsController(PreferenceStore store, MySettings settings) {
         this.store = store;
+        this.settings = settings;
     }
 
     @GetMapping
@@ -223,30 +226,11 @@ public class SettingsController {
     }
 
     private ObjectNode stored(String user) {
-        return store.get(user, NS, NS).filter(JsonNode::isObject).map(n -> (ObjectNode) n).orElseGet(json::createObjectNode);
+        return settings.stored(user);
     }
 
     private ObjectNode withDefaults(ObjectNode s) {
-        ObjectNode out = json.createObjectNode();
-        out.set("theme", s.path("theme").isMissingNode() ? json.nullNode() : s.get("theme"));
-        out.put("landing", s.path("landing").asText("/t"));
-        out.set("clockZone", s.path("clockZone").isMissingNode() ? json.nullNode() : s.get("clockZone"));
-        out.set("locale", s.path("locale").isMissingNode() ? json.nullNode() : s.get("locale"));
-        out.put("density", s.path("density").asText("comfortable"));
-        out.put("designerMode", s.path("designerMode").asText("customize"));       // the Sutra designer's mode a person opens first
-        out.put("flash", s.path("flash").asBoolean(true));
-        out.put("searchLimit", s.path("searchLimit").asInt(100));
-        ObjectNode email = json.createObjectNode();
-        com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS.forEach(e -> email.put(e, s.path("notify").path("email").path(e).asBoolean(true)));
-        out.putObject("notify").set("email", email);
-        out.set("refresh", s.path("refresh").isObject() ? s.get("refresh") : json.createObjectNode());
-        out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
-        out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
-        out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // LENSES.md 8: the console reads them back
-        out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
-        out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
-        out.set("varView", s.path("varView").isObject() ? s.get("varView") : json.nullNode());        // the VaR page's lens (2.9.7)
-        return out;
+        return settings.withDefaults(s);
     }
 
     /** {@code {email: {share, mention, reply}}}: which events are emailed; a patch changes only the events it names. */

@@ -28,6 +28,17 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   module tool until A2. `DmodPackParityTest` packs all 12 modules with both the Java `ModuleAssembler` and the Python packer and fails on any
   difference in entry names, order or content hash (deleted with `ModuleAssembler` in A2; the Java packer stamps entry times, so it is not
   byte-reproducible: the Python package is the one that is).
+- **The kernel's typed services, in process (I10, K1 + K2).** `Kernel` is a bean of the server (`server/kernelapi`): records (search,
+  raw), history series, business dates, a person's settings, live queries, the inline pivot and its figures, lens blocks and access, each
+  answering what its REST path answers for the same person by the same body (the controllers now call `Searches`, `RecordReads`,
+  `MySettings`, `LivePages` and `PivotInline`, as the typed services do). `Kernel.person()` copies the request's person (identity, display
+  name, roles, lens, date box and known-at, an API token's scopes); a `Person` the kernel did not make is refused. A typed call checks the
+  token scope of the path it replaces (`TokenScopes`, the filter's words), refuses with the REST path's status, code and words
+  (`ApiExceptionHandler.problem`, the one table), is recorded in the access log, and is given the loopback's 60 s. Operations answer
+  "unavailable" until they are registered (K3). Kernel API 0.5. The loopback (`LoopbackKernelCalls`) stays until the landings move (K4).
+  `TypedCallParityTest`: every call the landings make, typed and over the loopback, for an administrator, a masked, a row-ruled and a
+  closed role, a lens, an earlier date box, another language, a read-only and a scoped API token, several people at once, and with the
+  business today fixed.
 - **The kernel's typed services, finished for the merge.** `Kernel.cache(size, ttlMillis)` (the per-person cache) and
   `Pivots.figures(person, fields, rows, values, by, across, top)` (the engine's figures of rows a module holds, read as
   `InlineFigures.Figures`) are on the typed `Kernel`, as the two loopback calls they replace. `InlineRequest` holds fields only: the

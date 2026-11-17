@@ -47,6 +47,48 @@ public class ApiExceptionHandler {
         this.refusals = refusals;
     }
 
+    /**
+     * The problem an exception answers on a REST path, from this one table (the handlers below): what a typed kernel call refuses with
+     * (KERNEL_AND_MODULES.md section 2.3), so its status, code and words are the REST path's. Null for an exception no handler maps
+     * (the framework's own 500).
+     */
+    public ProblemDetail problem(RuntimeException e) {
+        if (e instanceof SutraException x) {
+            return sutra(x);
+        }
+        if (e instanceof com.ash.drishti.server.collab.RateLimitedException x) {
+            return rateLimited(x).getBody();
+        }
+        if (e instanceof com.ash.drishti.server.bi.mq.MqException x) {
+            return modelQuery(x);
+        }
+        if (e instanceof com.ash.drishti.server.bi.runs.RunProblem x) {
+            return run(x).getBody();
+        }
+        if (e instanceof com.ash.drishti.server.caches.RefusedForNow x) {
+            return refusedForNow(x).getBody();
+        }
+        if (e instanceof com.ash.drishti.server.admission.BusyRefusal x) {
+            return busy(x).getBody();
+        }
+        if (e instanceof com.ash.drishti.server.security.CommandOffException x) {
+            return commandOff(x);
+        }
+        if (e instanceof com.ash.drishti.server.engines.EngineOffException x) {
+            return engineOff(x);
+        }
+        if (e instanceof DrishtiException x) {
+            return drishti(x);
+        }
+        if (e instanceof java.time.format.DateTimeParseException x) {
+            return badValue(x);
+        }
+        if (e instanceof IllegalArgumentException x) {
+            return bad(x);
+        }
+        return null;
+    }
+
     /** A Sutra problem names its file relative to the Sutra root; the absolute paths stay in the log only (SEC-11). */
     @ExceptionHandler(SutraException.class)
     ProblemDetail sutra(SutraException e) {

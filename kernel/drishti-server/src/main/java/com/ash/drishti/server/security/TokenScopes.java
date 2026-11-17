@@ -110,6 +110,17 @@ public final class TokenScopes {
         return Verdict.NEEDS_SCOPE;
     }
 
+    /**
+     * The words of a token's refusal ({@code 403 DRS-5002}): one reading for the token filter and for a typed kernel call made under a
+     * token (KERNEL_AND_MODULES.md section 2.3).
+     */
+    public String refusal(Verdict v, String method, String path) {
+        List<String> open = opening(method, path);
+        return v == Verdict.NEVER ? "API tokens may not call this endpoint"
+                : open.isEmpty() ? "API tokens only read"
+                : "this token lacks the scope " + String.join(" or ", open);
+    }
+
     /** The scopes that would open the request, for the error message. */
     public List<String> opening(String method, String path) {
         return p().tokenScopes().entrySet().stream().filter(e -> matches(e.getValue().allow(), method, path))

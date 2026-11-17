@@ -63,7 +63,11 @@ public class LoopbackKernelCalls implements KernelCalls {
     private final ObjectMapper json = new ObjectMapper();
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
 
-    public LoopbackKernelCalls(Environment env, Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.UserService> users) {
+    private final com.ash.drishti.server.kernelapi.KernelLenses lenses;
+
+    public LoopbackKernelCalls(Environment env, Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.UserService> users,
+            com.ash.drishti.server.kernelapi.KernelLenses lenses) {
+        this.lenses = lenses;
         this.env = env;
         this.entitlements = entitlements;
         this.users = users;
@@ -93,12 +97,7 @@ public class LoopbackKernelCalls implements KernelCalls {
 
     @Override
     public Map<String, Object> lens(String name) {
-        if (name == null || name.isBlank()) {
-            return Map.of();
-        }
-        Map<String, Object> spec = com.ash.drishti.server.console.ConsoleDistribution.lens(com.ash.drishti.api.Roots.anchored(
-                env.getProperty("drishti.lenses-dir", com.ash.drishti.api.Roots.config("lenses"))), name.strip());
-        return spec == null ? Map.of() : spec;
+        return lenses.whole(name);
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.engine.search.SearchQuery;
 import com.ash.drishti.engine.search.StructuredSearch;
-import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,69 +36,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/search")
 public class SearchController {
 
-    private final StructuredSearch search;
-    private final Entitlements entitlements;
-    private final SearchAnswers answers;
+    private final Searches searches;
 
-    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
-
-    /** The edition's command allow-list (LENSES.md › The design); none: every command shown. */
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
-        this.edition = edition;
-    }
-
-    public SearchController(StructuredSearch search, Entitlements entitlements, SearchAnswers answers) {
-        this.search = search;
-        this.answers = answers;
-        this.entitlements = entitlements;
+    public SearchController(Searches searches) {
+        this.searches = searches;
     }
 
     @GetMapping
     public Map<String, Object> search(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        SearchQuery query = SearchQuery.pick(q);
-        Map<String, Object> out = share(q, asOf, principal);
-        // Drishti*net: the same search on every peer that holds other data of the kind (shards, not replicas), merged as one answer
-        com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
-        if (sc == null) {
-            out.remove(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS);
-            return out;
-        }
-        return sc.complete(out, (String) out.get("kind"), q, asOf, principal, query.descending(), query.limit(), entitlements.isAdmin(principal));
+        return searches.search(q, asOf, principal);
     }
 
-    /**
-     * The search answered from this node's own data, as {@link #search} answers it without the cluster, with the ids of every match
-     * ({@code matchedIds}, up to {@link StructuredSearch#MATCHED_IDS}; absent when there are more) so that a merge across nodes counts
-     * an entity two nodes matched once. A peer's share of a scattered search ({@code GET /api/v1/net/search}).
-     */
+    /** This node's share of a search ({@link Searches#share}): a peer's share of a scattered search ({@code GET /api/v1/net/search}). */
     public Map<String, Object> share(String q, AsOf asOf, Principal principal) {
-        SearchQuery query = SearchQuery.pick(q);           // TRD where …, TRD MX-200000, TRD productType=Revolver, TRD
-        String kind = search.kindOf(query);
-        entitlements.requireOpen(principal, kind);
-        edition.requireKind(kind);
-        // the person's row rule on the kind joins the condition (ACCESS_MODEL.md section 10): a search finds only the records they may see
-        java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rule = entitlements.rowRule(principal, kind);
-        if (rule.isPresent()) {
-            String c = query.condition();
-            query = new SearchQuery(query.head(), c == null || c.isBlank() ? rule.get().el() : "(" + c + ") && (" + rule.get().el() + ")",
-                    query.orderBy(), query.descending(), query.limit(), query.fields(), query.idPattern());
-        }
-        StructuredSearch.Result r = search.run(query, asOf, data -> entitlements.redact(principal, data));
-        Map<String, Object> out = answers.summary(q, query, r, asOf);
-        out.put("rows", r.rows());
-        if (r.listsMatches()) {
-            out.put(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS, r.matchedIds());
-        }
-        return out;
-    }
-
-    /** Drishti*net's scatter-gather (absent in a test that makes the controller itself). */
-    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> scatter;
-
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void scatter(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> s) {
-        this.scatter = s;
+        return searches.share(q, asOf, principal);
     }
 
     /**
