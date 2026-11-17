@@ -373,7 +373,7 @@ class PackReloaderTest {
 
     @Test
     void theWatchStartsOnceTheModulesHaveLoadedAndFindsNothingChanged() {
-        // the server is ready: its modules have loaded (ModuleDeployConfiguration#startModules), the first load is no change under way any
+        // the server is ready: its modules have loaded (ModuleHostConfiguration#startModules), the first load is no change under way any
         // more, and the watch compares with what the folders hold now, so its first look reloads nothing
         assertThat(com.ash.drishti.common.Extensions.settled()).isTrue();
         assertThat(reloader.watchState()).isNotEqualTo("OFF");

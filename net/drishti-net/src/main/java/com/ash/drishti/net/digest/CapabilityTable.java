@@ -215,12 +215,20 @@ public final class CapabilityTable {
         return out;
     }
 
+    /** Whether the nodes booted the same modules (each node's digest; nodes that did not report them are left out). */
+    public ModuleAgreement modules() {
+        Map<String, Digest> digests = new LinkedHashMap<>();
+        ordered().forEach(n -> digests.put(n.id(), n.digest()));
+        return ModuleAgreement.of(self, digests);
+    }
+
     /** The digest service a member that runs an edition publishes its name under (none: the full product). */
     public static final String EDITION_SERVICE = "edition";
 
     /**
      * What Admin → Net should show: one version of a pack with different contents, different calendars, different mask lists, different
-     * editions (drishti.edition: every member of a cluster should run the same one).
+     * editions (drishti.edition: every member of a cluster should run the same one), nodes that booted different modules (one warning
+     * per module, naming the nodes: {@link ModuleAgreement}).
      */
     public List<Warning> warnings() {
         List<Warning> out = new ArrayList<>();
@@ -254,6 +262,7 @@ public final class CapabilityTable {
             out.add(new Warning("redact", "the nodes mask different fields " + redacts.values()
                     + ": each masks what it masks, and the node that shows a page applies its own masks again, so the stricter wins"));
         }
+        modules().disagreements().forEach(m -> out.add(new Warning("modules", m.words())));
         nodes.values().stream().filter(n -> n.member().protocol() != Member.PROTOCOL)
                 .forEach(n -> out.add(new Warning("protocol", n.id() + " speaks protocol " + n.member().protocol() + ": it is listed but not routed to")));
         return out;

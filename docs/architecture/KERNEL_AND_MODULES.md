@@ -575,6 +575,125 @@ host (`ModuleNode`) loads the boot's candidates into one `ModuleRuntime` at star
 under `<data>/modules` or the modules folder, `<data>/overrides/installed`) and `<data>/modules/registry.json` are never read and never
 deleted: each is named once as *not read: safe to delete*.
 
+#### 4.2.2 The cluster digest and Admin → Modules
+
+**What each node publishes.** Once its modules have loaded, each node puts what it booted into its Drishti\*net digest
+(`GET /api/v1/net/digest`, pulled by every peer when the gossiped hash changes): `modules`, one entry per module of its boot and per
+package the boot refused, and `modulesFingerprint`, the boot's `ModuleHomes.fingerprint()`. An entry (`Digest.ModuleEntry`, built by
+`ModuleNode.identity()`) holds:
+
+| Field | Meaning |
+|---|---|
+| `id`, `version` | the module (a refused file whose manifest could not be read: its file name, no version) |
+| `contentHash` | SHA-256 of its `DMOD.MF` (section 4.2.1): what two nodes compare; null for a development folder or a refused package |
+| `origin` | `first-party`, `third-party`, `development`; null when refused |
+| `state` | `loaded`, `off` (switched off, or a module it requires is off), `not-placed`, `refused`, `stale` (built for another kernel) |
+| `parts` | the parts of it placed on this node (`api`, `console`, `compute`, …) |
+| `problems` | `{kind, severity, text}`: `stale`, `refused`, `need` (a required module missing, refused or off), `library` (it carries a library the kernel ships: the kernel's copy is used, section 4.4), `resource` (over the module budget), `development`; severity `problem` (it does not run) or `warning` (it runs) |
+
+A node compares modules by content, never by file bytes: two nodes that each built a module from one commit agree. Per module, the nodes
+are grouped by what they booted (the content hash; a refused package by its state; a node that reported and has no entry: *not
+installed*) and the largest group is the **majority** (a tie: the asking node's group). A node whose group is not the majority
+**differs**. A node that has not reported its modules (an older node, or one still starting) is left out, never counted as different.
+
+**Where it shows.** The capability table's warnings (Admin → Net) carry one `modules` warning per module the nodes disagree on, and the
+cluster's health (`GET /api/v1/admin/health` → `net.modules`) says it in the same words:
+
+```json
+{"agree": false, "nodes": ["drishti-b", "drishti-c", "drishti-main"],
+ "disagree": [{"module": "trading", "majority": "5b0d77e8", "differing": ["drishti-c"],
+   "text": "nodes disagree on module trading: drishti-b, drishti-main booted 5b0d77e8 (2.9.11.i7a) (the majority); drishti-c booted 9c13aa40 (2.9.11.i7a)"}]}
+```
+
+**The Admin → Modules answer (contract `admin-modules/1`).** `GET /api/v1/admin/modules` (administrators only, never a token) answers
+one document for the page (mock-up C, [docs/lenses/mockups/admin-modules/C.html](../lenses/mockups/admin-modules/C.html)): the modules ×
+nodes matrix, each module's detail, the nodes with their fingerprints, the problems and the install steps. In a cluster every node reads
+every node, itself included, from the digests, so each node answers the same matrix; a single server has one column. `POST` on the same
+path is the module switch (section 7). The recorded example, made by the server's code over the mock-up's three nodes and ten modules,
+is `drishti-console/tests/answers/admin-modules.json` (`AdminModulesRecordTest`,
+`-Ddrishti.record=true` writes it again); the console's page and its tests are built against it. The schema (JSON Schema, draft 2020-12;
+fields not listed may be added within `admin-modules/1`, a removed or renamed field raises the number):
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admin-modules/1",
+  "type": "object",
+  "required": ["contract", "self", "kernel", "counts", "fingerprint", "nodes", "modules", "disagree", "problems", "install"],
+  "properties": {
+    "contract": {"const": "admin-modules/1"},
+    "self": {"type": "string", "description": "the node that answered"},
+    "kernel": {"type": "string", "description": "its kernel version"},
+    "counts": {"type": "object", "required": ["modules", "on", "off", "nodes", "nodesAgree", "nodesDiffer", "problems", "warnings", "stale", "notLoaded"],
+      "additionalProperties": {"type": "integer"}},
+    "fingerprint": {"type": "object", "properties": {
+      "majority": {"type": ["string", "null"], "description": "the fingerprint most nodes booted (64 hex)"},
+      "short": {"type": ["string", "null"], "description": "its first 8 hex digits"},
+      "nodes": {"type": "array", "items": {"type": "string"}, "description": "the nodes that have it"},
+      "agree": {"type": "boolean"}}},
+    "nodes": {"type": "array", "items": {"$ref": "#/$defs/node"}, "description": "this node first, then by id"},
+    "modules": {"type": "array", "items": {"$ref": "#/$defs/module"}, "description": "by id"},
+    "disagree": {"type": "array", "items": {"type": "object", "properties": {
+      "module": {"type": "string"}, "majority": {"type": "string"},
+      "differing": {"type": "array", "items": {"type": "string"}},
+      "groups": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}},
+        "description": "short hash (or state, 'not installed') -> nodes, the majority first"},
+      "text": {"type": "string"}}}},
+    "problems": {"type": "array", "items": {"$ref": "#/$defs/problem"}, "description": "every module's, flattened"},
+    "install": {"type": "object", "properties": {
+      "modulesFolder": {"type": ["string", "null"]},
+      "steps": {"type": "array", "items": {"type": "object", "properties": {"command": {"type": "string"}, "comment": {"type": "string"}}}},
+      "text": {"type": "string", "description": "the steps as one block to copy; <file> stands for a row's file"},
+      "note": {"type": "string"}}},
+    "licence": {"type": "object"}, "lenses": {"type": "array"}, "store": {"type": "object"}, "warnings": {"type": "array"}
+  },
+  "$defs": {
+    "node": {"type": "object", "required": ["id", "self", "up", "reported"], "properties": {
+      "id": {"type": "string"}, "self": {"type": "boolean"}, "up": {"type": "boolean"},
+      "reported": {"type": "boolean", "description": "false: an older node or one still starting; its cells are 'unknown'"},
+      "fingerprint": {"type": ["string", "null"]}, "short": {"type": ["string", "null"]}, "agrees": {"type": ["boolean", "null"]}}},
+    "cell": {"type": "object", "required": ["node", "state", "differs"], "properties": {
+      "node": {"type": "string"},
+      "state": {"enum": ["loaded", "off", "not-placed", "leaving", "refused", "stale", "on", "absent", "unknown"]},
+      "version": {"type": ["string", "null"]}, "contentHash": {"type": ["string", "null"]}, "short": {"type": ["string", "null"]},
+      "origin": {"type": ["string", "null"]}, "parts": {"type": "array", "items": {"type": "string"}},
+      "differs": {"type": "boolean", "description": "this node booted other content than the majority"}}},
+    "problem": {"type": "object", "required": ["module", "node", "kind", "severity", "text"], "properties": {
+      "module": {"type": "string"}, "node": {"type": "string", "description": "one node, or the differing nodes joined by ', '"},
+      "kind": {"enum": ["differs", "stale", "refused", "need", "library", "resource", "development"]},
+      "severity": {"enum": ["problem", "warning"]}, "text": {"type": "string"}}},
+    "module": {"type": "object", "required": ["id", "cells", "problems", "differs"], "properties": {
+      "id": {"type": "string"}, "title": {"type": "string"}, "domain": {"type": "string"},
+      "installed": {"type": "boolean", "description": "false: only a peer booted it"},
+      "licensed": {"type": "boolean"}, "enabled": {"type": "boolean"}, "on": {"type": "boolean"}, "reason": {"type": "string"},
+      "switchSource": {"type": "string"}, "loaded": {"type": "boolean"}, "restartNeeded": {"type": "boolean"},
+      "brings": {"type": "object"}, "sourceSystems": {"type": "array"},
+      "version": {"type": ["string", "null"]}, "origin": {"type": ["string", "null"]},
+      "contentHash": {"type": ["string", "null"]}, "short": {"type": ["string", "null"]},
+      "state": {"type": "string", "description": "this node's cell state (else the first node's)"},
+      "file": {"type": ["string", "null"], "description": "<id>-<version>.dmod"},
+      "parts": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}, "description": "node -> parts placed"},
+      "majority": {"type": ["string", "null"]}, "differs": {"type": "boolean"},
+      "cells": {"type": "array", "items": {"$ref": "#/$defs/cell"}, "description": "one per node, in the nodes' order"},
+      "problems": {"type": "array", "items": {"$ref": "#/$defs/problem"}}}}
+  }
+}
+```
+
+An abridged answer (trading booted with other content on `drishti-c`; the recorded file has all ten modules):
+
+```json
+{"contract": "admin-modules/1", "self": "drishti-main", "kernel": "2.9.11.i7a",
+ "counts": {"modules": 10, "on": 7, "off": 3, "nodes": 3, "nodesAgree": 2, "nodesDiffer": 1, "problems": 7, "warnings": 6, "stale": 1, "notLoaded": 1},
+ "nodes": [{"id": "drishti-main", "self": true, "up": true, "reported": true, "fingerprint": "…", "short": "…", "agrees": true}, "…"],
+ "modules": [{"id": "trading", "title": "Trading", "on": true, "version": "2.9.11.i7a", "origin": "first-party", "file": "trading-2.9.11.i7a.dmod",
+   "differs": true, "cells": [{"node": "drishti-main", "state": "loaded", "short": "…", "differs": false}, "…",
+     {"node": "drishti-c", "state": "loaded", "short": "…", "differs": true}],
+   "problems": [{"module": "trading", "node": "drishti-c", "kind": "differs", "severity": "problem", "text": "nodes disagree on module trading: …"}]}, "…"],
+ "install": {"modulesFolder": "/opt/drishti/modules", "steps": [{"command": "python3 tools/drishti.py module verify <file>",
+   "comment": "the same verifier the server runs at start"}, "…"]}}
+```
+
 ### 4.3 Verification, in order
 
 Each step refuses with a reason code and words; a refused module is **absent everywhere** (section 4.9).
@@ -808,7 +927,7 @@ class `light` (a request to a path no other part declares belongs to it); a modu
 #### 4.11.5 Routing and availability
 
 - Drishti\*net routes a module's API calls, compute and jobs **only to nodes where that part is placed and active** (each node's capability
-  digest gains a `modules` part: id, version, the parts active here, the singleton leader). **Failover stays inside the placement**: the
+  digest carries a `modules` part: id, version, content hash, origin, state, the parts placed here and the problems, section 4.2.2). **Failover stays inside the placement**: the
   next placed node, never an unplaced one.
 - **No placed node up** for a part: the part is **unavailable**, not absent. People see *Banking's VaR is unavailable right now (no
   compute node is up); try again later*; pages that need only the façade still work; saved artefacts, schedules (paused) and data stay;
@@ -816,13 +935,15 @@ class `light` (a request to a path no other part declares belongs to it); a modu
 
 #### 4.11.6 Drift
 
-- Each node gossips its **module fingerprint** (`id@version#sha256-of-DMOD.SIG`, with the parts it runs); drift is **a node's actual
-  state differing from its placement**.
-- Health and Admin → Cluster show a **node × module matrix**: **green** placed and active; **red** placed but missing, refused or at another
-  version (that node is left out of routing for the module until *Resync* re-sends the package and activation passes); **amber**
-  *present but not placed* (a leftover `.dmod`: the node serves nothing for it; *Clean up* removes it).
-- In strict mode (`cluster.modules.consistency: strict`, the default) a node whose **kernel API range** differs is refused from joining:
-  modules cannot be checked against a kernel the cluster does not run.
+- Each node publishes its modules in its digest: per module the **content hash** (SHA-256 of `DMOD.MF`), origin, state, the parts placed
+  there and its problems, with the boot's **fingerprint** (section 4.2.2). **Drift** is a node that booted other content than the
+  majority, or that lacks a module the others booted.
+- Admin → Modules shows the **nodes × modules matrix** (each cell the content hash a node booted, marked when it differs from the
+  majority) and each node's fingerprint, agreeing or not; Admin → Health (`net.modules`) and Admin → Net's warnings say *nodes disagree
+  on module trading*, naming the nodes. Nothing is re-sent between nodes: the fix is the right `.dmod` in that node's modules folder and a
+  restart (section 4.11.4).
+- Placement (section 4.11.2) still decides who runs a part: a node whose package was refused runs nothing of it, and requests go to a
+  placed node that is up.
 
 #### 4.11.7 How the console interacts
 
@@ -848,7 +969,7 @@ class `light` (a request to a path no other part declares belongs to it); a modu
   serves the matching bundle (`/m/<id>/static/<version>/` lets both coexist), so a page always talks to the API version it was built for.
   When the old version's last placed node is restarted, pinned sessions get the *updated: reload* notice.
 - Rolling back is the same in reverse: the old file back, the node restarted. A mixed set after the roll is drift: the nodes' content
-  hashes of a module differ (`GET /api/v1/net/modules/status`).
+  hashes of a module differ, and Admin → Modules and Health say so (section 4.2.2).
 
 #### 4.11.9 Tests
 
@@ -861,7 +982,7 @@ class `light` (a request to a path no other part declares belongs to it); a modu
 | **All-nodes heavy refused** | placing `compute` on 3 of 3 nodes is refused without `allow-all: true` and a second approval |
 | **Memory check** | a heavy part placed on a node without headroom is refused at stage, and the activation aborts on all placed nodes |
 | **Late joiner** | a fourth node with `role:risk-compute` receives only banking (placed by role), activates it, then serves; a fourth node without the role receives nothing |
-| **Drift** | delete the module on b: red cell, b out of routing, *Resync* repairs; copy a `.dmod` onto c: amber cell, c serves nothing for it |
+| **Drift** | `ModuleDigestClusterTest`: on three nodes, c boots other trading content of the same version: every node's Admin → Modules marks c's trading cell and c's fingerprint as differing from the majority, Health (`net.modules`) and Admin → Net say *nodes disagree on module trading* naming c; c back on the majority's content: the cluster agrees |
 | **Rolling upgrade** | 3.0.0 → 3.0.1 across the placed nodes under load: sessions stay pinned until reload, no request reaches a mismatched API, no failed request |
 | **Console without install** | a separate console shows a newly placed module's pages from the kernel-served bundle; two consoles serve identical bytes; its API calls land only on placed nodes |
 

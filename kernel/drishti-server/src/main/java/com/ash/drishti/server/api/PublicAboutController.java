@@ -42,14 +42,14 @@ public class PublicAboutController {
     private final com.ash.drishti.server.edition.EditionContext edition;
     private final ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster;
     private final ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules;
-    private final ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node;
+    private final ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node;
     private final ObjectProvider<com.ash.drishti.server.console.ConsoleAnswers> answers;
 
     public PublicAboutController(Branding branding, ObjectProvider<BuildProperties> build, SecurityProperties security,
             ObjectProvider<OidcProperties> oidc, com.ash.drishti.server.edition.EditionContext edition,
             ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster,
             ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules,
-            ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node,
+            ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node,
             ObjectProvider<com.ash.drishti.server.console.ConsoleAnswers> answers) {
         this.node = node;
         this.answers = answers;
@@ -77,7 +77,7 @@ public class PublicAboutController {
         com.ash.drishti.server.modules.ModuleConfiguration.Started started = modules.getIfAvailable();
         m.put("modules", started == null ? null : started.loaded().entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).sorted().toList());
         // the module registry's fingerprint: when it changes, a console reads /public/modules/manifests again (its distribution's modules)
-        com.ash.drishti.server.modules.deploy.ModuleNode n = node.getIfAvailable();
+        com.ash.drishti.server.modules.ModuleNode n = node.getIfAvailable();
         m.put("manifests", n == null ? null : n.fingerprint());
         // the console's signal (THIN_CONSOLE_DESIGN.md 3.1): a short digest per answer it keeps; a changed one is asked again before the next page
         com.ash.drishti.server.console.ConsoleAnswers a = answers.getIfAvailable();

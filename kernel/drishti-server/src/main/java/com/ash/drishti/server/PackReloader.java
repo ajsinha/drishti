@@ -158,7 +158,7 @@ public final class PackReloader implements AutoCloseable {
     // -- watching --------------------------------------------------------------------------------------------------
 
     /**
-     * The server's modules have loaded ({@code ModuleDeployConfiguration#startModules}): their packs' folders are in place (a module from the
+     * The server's modules have loaded ({@code ModuleHostConfiguration#startModules}): their packs' folders are in place (a module from the
      * distribution is unpacked into its installed folder at that moment, new files with new times). What the folders hold now is what
      * the running packs were read from, so it is the starting point the watch compares with, and the watch starts here, never before:
      * a fingerprint taken while the modules were still to come made the first look reload every module pack although nothing had changed.

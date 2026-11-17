@@ -29,7 +29,7 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.kernel.api.health.HealthFigures;
 import com.ash.drishti.module.runtime.ModuleHealth;
-import com.ash.drishti.server.modules.deploy.ModuleNode;
+import com.ash.drishti.server.modules.ModuleNode;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.format.Formats;

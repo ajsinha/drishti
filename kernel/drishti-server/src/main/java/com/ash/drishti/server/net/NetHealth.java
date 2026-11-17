@@ -67,6 +67,43 @@ public final class NetHealth {
         return this;
     }
 
+    private volatile java.util.function.Supplier<com.ash.drishti.net.digest.ModuleAgreement> modules = () -> null;
+
+    /** Tells whether the nodes booted the same modules (their digests), for the summary's {@code modules}. */
+    public NetHealth modules(java.util.function.Supplier<com.ash.drishti.net.digest.ModuleAgreement> m) {
+        this.modules = m == null ? () -> null : m;
+        return this;
+    }
+
+    /**
+     * {@code {agree, nodes, disagree: [{module, majority, differing, text}]}}: "nodes disagree on modules", naming each module and the
+     * nodes that booted other content than the majority (the content hash, KERNEL_AND_MODULES.md section 4.2.1).
+     */
+    private Map<String, Object> modulesSummary() {
+        com.ash.drishti.net.digest.ModuleAgreement a = null;
+        try {
+            a = modules.get();
+        } catch (RuntimeException e) {
+            // no table yet
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        java.util.List<Map<String, Object>> disagree = new java.util.ArrayList<>();
+        if (a != null) {
+            for (var m : a.disagreements()) {
+                Map<String, Object> d = new LinkedHashMap<>();
+                d.put("module", m.module());
+                d.put("majority", com.ash.drishti.net.digest.ModuleAgreement.shortHash(m.majority()));
+                d.put("differing", m.differing());
+                d.put("text", m.words());
+                disagree.add(d);
+            }
+        }
+        out.put("agree", disagree.isEmpty());
+        out.put("nodes", a == null ? java.util.List.of() : a.nodes());
+        out.put("disagree", disagree);
+        return out;
+    }
+
     private double count(MemberState s) {
         return net.node().map(n -> n.table().entries().stream().filter(m -> m.state() == s).count()).orElse(0L);
     }
@@ -91,6 +128,7 @@ public final class NetHealth {
         out.put("last10Minutes", log.totals(10));
         IdentitySync id = identity.get();
         out.put("warnings", id == null ? java.util.List.of() : id.warnings());
+        out.put("modules", modulesSummary());
         return out;
     }
 }

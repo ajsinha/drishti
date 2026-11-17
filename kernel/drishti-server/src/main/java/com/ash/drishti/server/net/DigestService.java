@@ -91,6 +91,20 @@ public final class DigestService implements AutoCloseable {
         ensureRunning();
     }
 
+    /** This node's modules and their fingerprint for its digest (wired once the modules have loaded; none before: not reported). */
+    private volatile Supplier<List<Digest.ModuleEntry>> modules = List::of;
+    private volatile Supplier<String> modulesFingerprint = () -> "";
+
+    /**
+     * The modules this node booted, published in its digest (KERNEL_AND_MODULES.md section 4.2.1): each with its content hash, and the
+     * boot's fingerprint; Admin → Modules and the capability table's warnings compare them across the nodes. Announced at once.
+     */
+    public void modules(Supplier<List<Digest.ModuleEntry>> entries, Supplier<String> fingerprint) {
+        this.modules = entries == null ? List::of : entries;
+        this.modulesFingerprint = fingerprint == null ? () -> "" : fingerprint;
+        announce();
+    }
+
     /** The BI report ids this node serves (wired by the BI layer). */
     public void reports(Supplier<List<String>> ids) {
         this.reports = ids == null ? List::of : ids;
@@ -376,7 +390,17 @@ public final class DigestService implements AutoCloseable {
         });
         return new Digest(n.id(), me.url(), net.version(), Member.PROTOCOL, packEntries, kinds, new Digest.Load(Math.round(rps * 100) / 100.0, ms),
                 calendar.get(), me.tags(), security.redact().stream().sorted().toList(), access, reports.get().stream().sorted().toList(),
-                System.currentTimeMillis(), svc);
+                System.currentTimeMillis(), svc, safeList(modules), safe(modulesFingerprint));
+    }
+
+    private static <T> List<T> safeList(Supplier<List<T>> s) {
+        try {
+            List<T> v = s.get();
+            return v == null ? List.of() : v;
+        } catch (RuntimeException e) {
+            LOG.debug("net: the modules of this node were not read: {}", e.toString());
+            return List.of();
+        }
     }
 
     private List<Digest.SourceEntry> sourcesOf(String kind) {

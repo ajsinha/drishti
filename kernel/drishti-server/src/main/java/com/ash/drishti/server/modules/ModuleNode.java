@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.modules.deploy;
+package com.ash.drishti.server.modules;
 
 import com.ash.drishti.api.resolution.ModuleHomes;
 import com.ash.drishti.module.runtime.Contributions;
@@ -29,6 +29,8 @@ import com.ash.drishti.module.runtime.ModuleHost;
 import com.ash.drishti.module.runtime.ModuleRuntime;
 import com.ash.drishti.module.runtime.RouteTable;
 import com.ash.drishti.module.runtime.placement.ModuleParts;
+import com.ash.drishti.net.digest.Digest;
+import com.ash.drishti.server.modules.host.ApiMounts;
 import com.ash.drishti.server.placement.PlacementHost;
 import com.ash.drishti.server.placement.PlacementService;
 import java.nio.file.Files;
@@ -53,8 +55,10 @@ import org.springframework.context.ApplicationContext;
  * their source folders). Nothing is deployed, upgraded or removed while the server runs: a module is a file and a restart. A node that
  * holds no part of a module keeps only its entry: placement forwards the module's requests to the node that does.
  *
- * <p>TODO(I8c): the reads below (entries, needs, status, fingerprint, console folders) are what the console, the about answer, the
- * edition and the packs take from here; I8c rewrites them over the boot result and adds the content hash for the cluster's digest.
+ * <p>The reads here are over the boot result: the entries (every module of the boot, on or off), what saved work needs, a console path's
+ * module, the console folders, this node's status and its {@link #identity() identity} in the cluster's digest (each module's content
+ * hash, origin, switch, parts placed here and problems, with {@link #modulesFingerprint() the boot's fingerprint}), which Admin → Modules
+ * compares across the nodes.
  */
 public final class ModuleNode implements AutoCloseable {
 
@@ -199,6 +203,11 @@ public final class ModuleNode implements AutoCloseable {
         } finally {
             lock.unlock();
         }
+    }
+
+    /** This node's id (placement's: the cluster's node id, {@code local} on a single server). */
+    public String nodeId() {
+        return placement.self();
     }
 
     /** The extension types a loaded module's beans are connected through (empty without the kernel's wiring). */
@@ -382,6 +391,82 @@ public final class ModuleNode implements AutoCloseable {
         out.put("lib", com.ash.drishti.common.SharedLib.get().info());      // Admin → Modules: the shared lib jars, marked lib
         out.put("development", developmentMode());
         out.put("bridge", bridged());
+        return out;
+    }
+
+    // ---- the cluster's digest -----------------------------------------------------------------------------------------------------
+
+    /**
+     * The fingerprint of the modules this node booted ({@link ModuleHomes#fingerprint()}): equal on two nodes exactly when they booted the
+     * same modules at the same versions with the same content.
+     */
+    public String modulesFingerprint() {
+        return ModuleHomes.current().orElse(ModuleHomes.none()).fingerprint();
+    }
+
+    /**
+     * This node's modules as its digest carries them (KERNEL_AND_MODULES.md section 4.2.1): every module of the boot with its content
+     * hash, origin, state here, the parts placed on this node and its problems, and every package the boot refused; in id order.
+     */
+    public List<Digest.ModuleEntry> identity() {
+        ModuleHomes homes = ModuleHomes.current().orElse(ModuleHomes.none());
+        Map<String, Digest.ModuleEntry> out = new TreeMap<>();
+        ModuleBoot.current().ifPresent(b -> b.refused().forEach((id, words) -> out.put(id, new Digest.ModuleEntry(id, null, null, null,
+                stale(words) ? "stale" : "refused", List.of(), List.of(new Digest.Problem(stale(words) ? "stale" : "refused", "problem", words))))));
+        Map<String, List<String>> parts = partsHere();
+        for (Entry e : entries()) {
+            ModuleHealth h = runtime == null ? null : runtime.health(e.id()).orElse(null);
+            ModuleHomes.Home home = homes.home(e.id()).orElse(null);
+            List<Digest.Problem> problems = new ArrayList<>();
+            String state = e.state() == State.ACTIVE ? "on" : "off";
+            if (h != null) {
+                state = switch (h.state()) {
+                    case LOADED -> "loaded";
+                    case OFF -> "off";
+                    case NOT_PLACED -> "not-placed";
+                    case LEAVING -> "leaving";
+                    case REFUSED -> stale(h.reason()) ? "stale" : "refused";
+                };
+                if (h.state() == ModuleHealth.State.REFUSED) {
+                    problems.add(new Digest.Problem("V4".equals(h.check()) ? "need" : state, "problem", h.reason()));
+                } else if (h.state() == ModuleHealth.State.OFF && h.reason() != null && h.reason().contains("requires")) {
+                    problems.add(new Digest.Problem("need", "problem", e.id() + ": " + h.reason()));
+                }
+                for (String n : h.notes()) {
+                    if (n.startsWith(com.ash.drishti.module.runtime.ModuleVerifier.LIBRARY_WARNING)) {
+                        problems.add(new Digest.Problem("library", "warning", n.substring(com.ash.drishti.module.runtime.ModuleVerifier.LIBRARY_WARNING.length())));
+                    } else if (n.startsWith("warning: ")) {
+                        problems.add(new Digest.Problem("resource", "warning", n.substring("warning: ".length())));
+                    }
+                }
+            }
+            String origin = home == null ? origin(e.id()).map(FirstParty.Origin::word).orElse(null)
+                    : home.origin() == ModuleHomes.Origin.DEVELOPMENT ? "development" : home.origin().word();
+            if ("development".equals(origin)) {
+                problems.add(new Digest.Problem("development", "warning", e.id() + ": " + ModuleHomes.Origin.DEVELOPMENT.word()
+                        + ": read from its source folder, not a verified .dmod"));
+            }
+            out.put(e.id(), new Digest.ModuleEntry(e.id(), e.version(), home == null ? null : home.contentHash(), origin, state,
+                    parts.getOrDefault(e.id(), List.of()), problems));
+        }
+        return List.copyOf(out.values());
+    }
+
+    /** True when a refusal says the package was built for another kernel (its API ranges or its kernel build): a stale package. */
+    static boolean stale(String words) {
+        return words != null && words.contains(": built for ");
+    }
+
+    /** Module id → the parts of it placed on this node (an in-process module: its in-process parts). */
+    private Map<String, List<String>> partsHere() {
+        Map<String, List<String>> out = new TreeMap<>();
+        try {
+            String me = placement.self();
+            placement.matrix().parts().stream().filter(p -> p.placed().contains(me) || "in-process".equals(p.status()))
+                    .forEach(p -> out.computeIfAbsent(p.module(), k -> new ArrayList<>()).add(p.part()));
+        } catch (RuntimeException ex) {
+            LOG.debug("the parts placed here are not known: {}", ex.toString());
+        }
         return out;
     }
 

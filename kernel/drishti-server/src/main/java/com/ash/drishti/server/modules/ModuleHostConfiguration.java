@@ -13,10 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.modules.deploy;
+package com.ash.drishti.server.modules;
 
 import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.kernel.api.health.HealthFigures;
+import com.ash.drishti.server.modules.host.ApiMounts;
 import com.ash.drishti.server.placement.PlacementService;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,12 +34,12 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 /** The module host's beans: this node's module runtime and the Health figure. */
 @Configuration(proxyBeanMethods = false)
-public class ModuleDeployConfiguration {
+public class ModuleHostConfiguration {
 
     static {
         // a library object made while a module's code ran keeps that thread's context class loader: the Hadoop configuration of a
         // Parquet codec (cached for the process) is given the kernel's back when the module leaves, so its loader can go
-        com.ash.drishti.common.ModuleLoaders.onLeave(ModuleDeployConfiguration::releaseLibraryLoaders);
+        com.ash.drishti.common.ModuleLoaders.onLeave(ModuleHostConfiguration::releaseLibraryLoaders);
         // the JDK's one delay thread of CompletableFuture starts when first asked and keeps the access context of the code that asked:
         // started here, by the kernel, before any module's code runs, so it never holds a module's protection domain (and loader)
         new java.util.concurrent.CompletableFuture<Void>().completeOnTimeout(null, 1, java.util.concurrent.TimeUnit.MILLISECONDS);
@@ -52,11 +53,11 @@ public class ModuleDeployConfiguration {
                 java.lang.reflect.Method getConf = codec.getClass().getMethod("getConf");
                 Object conf = getConf.invoke(codec);
                 if (conf != null && conf.getClass().getMethod("getClassLoader").invoke(conf) == leaving) {
-                    conf.getClass().getMethod("setClassLoader", ClassLoader.class).invoke(conf, ModuleDeployConfiguration.class.getClassLoader());
+                    conf.getClass().getMethod("setClassLoader", ClassLoader.class).invoke(conf, ModuleHostConfiguration.class.getClassLoader());
                 }
             }
         } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
-            LoggerFactory.getLogger(ModuleDeployConfiguration.class).debug("the Parquet codecs' configurations were not released: {}", e.toString());
+            LoggerFactory.getLogger(ModuleHostConfiguration.class).debug("the Parquet codecs' configurations were not released: {}", e.toString());
         }
     }
 
@@ -112,7 +113,10 @@ public class ModuleDeployConfiguration {
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         try {
-            e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+            ModuleNode node = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+            // the cluster's digest carries what this node booted (content hash per module, the fingerprint): Admin -> Modules compares
+            e.getApplicationContext().getBeanProvider(com.ash.drishti.server.net.DigestService.class)
+                    .ifAvailable(d -> d.modules(node::identity, node::modulesFingerprint));
         } finally {
             // the modules are in: a connector that named a module's engine class before they loaded starts now (the start's order, not a
             // retry); one whose class is still missing fails in words from here on
