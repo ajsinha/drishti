@@ -101,9 +101,10 @@ class Detached:
 
 
 def copy_console(dst: Path) -> Path:
-    """``drishti-console/`` copied alone into ``dst`` (its tests and caches left out); the copy's folder."""
+    """``drishti-console/`` copied alone into ``dst`` (its tests, caches and virtual environment left out: the copy runs on this
+    interpreter, and a checkout's ``.venv`` is often a link to another's); the copy's folder."""
     target = dst / "drishti-console"
-    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs"))
+    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs", ".venv", "venv"))
     return target
 
 

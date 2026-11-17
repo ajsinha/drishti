@@ -46,6 +46,9 @@ release tag `v2.9.11.i_6`.
   tree-rows browser tests read Elements from the vendored tree. `tools/drill.sh` exports `DRISHTI_RESOLVED_CACHE` as its own folder for
   every tool and test it starts (the gate's `--check` generators wrote the resolver's answers under `data/tmp/resolved`, which failed
   the drill's data check), and each writer of that cache writes a file of its own before renaming it into place.
+  The detached console's copy leaves the virtual environment out (a checkout's `.venv` linked to itself looped the copy); the
+  render sign-in test's host serves the vendored Elements tree beside the renderer; the genomics top-bar test lists its stand-in in the
+  distribution's answer (the distribution is a frozen view).
 - **One server jar in `lib/`, of this version.** The tools refuse a jar in `<home>/lib` whose version differs from `.mvn/maven.config` ("lib/ holds ...-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run python tools/drishti.py build jar"; two jars stay refused); `build jar` and the drill's gate replace an older Drishti server jar there (never `lib/ext`), and the gate's Python checks that run the jar wait for the jar the gate just built.
 - **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
   designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)
