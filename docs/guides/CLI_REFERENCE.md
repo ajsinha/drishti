@@ -1282,12 +1282,19 @@ the installed and loaded versions.)
 
 ### `module pack`, `module check`, `module inspect`: a module package without Maven
 
-The module tool ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)): `pack` turns a module folder (`module.yaml` at
-its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod`; `check` runs the conformance checks C1–C15 on a
-`.dmod` or a folder; `inspect` says what a package is and whether its files match its hash list. It runs
-`kernel/drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
+`pack` turns a module folder (`module.yaml` at its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod` and
+its `.sha256`. It is the Python packager (`tools/modulepack.py`): no Java and no Maven are needed, and the package is reproducible, the same
+bytes on every run (`module.yaml` first and stored, every other entry sorted by name, every entry timed 1980-01-01 00:00, mode 0644, the hash
+list `META-INF/DMOD.MF` last). `--jar` may be given more than once (a jar is placed by the name `module.yaml` gives in `java.jars` or
+`java.lib`; the first unnamed one is the module's own); `--out` defaults to `<module>/target/dmod`. A first-party module with a
+`kernel-internals:` allowance is stamped with one kernel build: `--kernel-build BUILD`, or `--kernel-jar FILE` (the server jar whose
+`build-info.properties` says it), by default the server jar in `<Drishti folder>/lib`.
+
+`check` runs the conformance checks C1–C15 on a `.dmod` or a folder; `inspect` says what a package is and whether its files match its hash
+list. They run `kernel/drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
 
 ```bash
+python3 tools/drishti.py module pack modules/trading --jar build/drishti-trading.jar
 python3 tools/drishti.py module pack build/greet --jar build/libs/greet.jar --out dist
 python3 tools/drishti.py module check dist/greet-0.1.0.dmod --project .
 python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod

@@ -106,23 +106,29 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
     # module -----------------------------------------------------------------------------------------------
-    mg = group("module", "Modules: pack a folder into a .dmod, run the conformance checks C1-C15, inspect a package (the module tool; no Maven needed); deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
-    for name, what in (("pack", "pack a module folder (module.yaml at its root, its jar under java/ or given with --jar) into <out>/<id>-<version>.dmod"),
-                       ("check", "the conformance checks C1-C15 on a .dmod or a folder (packed first); exit 1 when one fails"),
+    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), run the conformance checks C1-C15 on a package, inspect one (the module tool); deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
+    mp = add(mg, "pack", h.cmd_module, "module pack: a module folder (module.yaml at its root) -> <out>/<id>-<version>.dmod, the same bytes on every run, plus its .sha256; "
+             "no Java needed", [],
+             "examples:\n  drishti.py module pack modules/trading\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
+             "exit: 0 done, 1 refused (the reason in one line), 2 usage")
+    mp.set_defaults(module_cmd="pack")
+    mp.add_argument("path", type=pathlib.Path, help="the module folder (module.yaml at its root)")
+    mp.add_argument("--jar", action="append", default=[], type=pathlib.Path, dest="jars",
+                    help="a jar of the module (repeatable): placed by the names module.yaml gives; the first unnamed one is the module's own")
+    mp.add_argument("--out", type=pathlib.Path, help="the folder the .dmod is written to (default: <module>/target/dmod)")
+    mp.add_argument("--kernel-build", help="the kernel build to stamp in a first-party module (default: the server jar in <Drishti folder>/lib)")
+    mp.add_argument("--kernel-jar", type=pathlib.Path, help="the server jar whose build is stamped (instead of --kernel-build)")
+    for name, what in (("check", "the conformance checks C1-C15 on a .dmod or a folder (packed first); exit 1 when one fails"),
                        ("inspect", "what a .dmod or a module folder is and holds; the hash list's verdict")):
         mp = add(mg, name, h.cmd_module, f"module {name}: {what}", [],
-                 "examples:\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
-                 "  drishti.py module check dist/greet-0.1.0.dmod --project .\n  drishti.py module inspect dist/greet-0.1.0.dmod\n"
+                 "examples:\n  drishti.py module check dist/greet-0.1.0.dmod --project .\n  drishti.py module inspect dist/greet-0.1.0.dmod\n"
                  "exit: 0 done, 1 a check failed or the module was refused, 2 usage")
         mp.set_defaults(module_cmd=name)
-        mp.add_argument("path", help="a module folder (module.yaml at its root) or, for check and inspect, a .dmod")
+        mp.add_argument("path", help="a module folder (module.yaml at its root) or a .dmod")
         mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
         mp.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
-        if name in ("pack", "check"):
-            mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
-        if name == "pack":
-            mp.add_argument("--out", help="the folder the .dmod is written to (default: <Drishti folder>/dist)")
         if name == "check":
+            mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
             mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
     load_module("modulecli", "modulecli.py").register(h, mg, add, srv, js)   # deploy, plan, apply, list, remove, disable, enable, upgrade, run

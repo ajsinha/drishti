@@ -191,3 +191,15 @@ def test_the_digest_holds_no_time_and_the_first_party_list_holds_none(tmp_path):
     text = modulepack.digest(m) + modulepack.first_party(tmp_path / "out").read_text(encoding="utf-8")
     import re
     assert not re.search(r"\b20\d\d-\d\d-\d\d|\b\d\d:\d\d:\d\d", text)
+
+
+def test_kernel_jar_stamps_the_build_of_the_server_jar_and_a_foreign_jar_is_refused(tmp_path):
+    jar = tmp_path / "drishti-server-1.0-exec.jar"
+    with zipfile.ZipFile(jar, "w") as z:
+        z.writestr("META-INF/build-info.properties", "build.artifact=drishti-server\nbuild.version=1.0\nbuild.time=2026-01-01T00\\:00\\:00Z\n")
+    assert modulepack.kernel_build_of_jar(jar) == "1.0+2026-01-01T00:00:00Z"
+    other = tmp_path / "other.jar"
+    with zipfile.ZipFile(other, "w") as z:
+        z.writestr("x", "y")
+    with pytest.raises(modulepack.PackError):
+        modulepack.kernel_build_of_jar(other)

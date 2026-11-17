@@ -22,6 +22,12 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **`module pack` is the Python packager (I1).** `drishti.py module pack <folder>` runs `tools/modulepack.py`: no Java, no Maven, a reproducible
+  `.dmod` (fixed entry times and modes, sorted entries, `META-INF/DMOD.MF` last; no build time in the content). `--jar` is repeatable, `--out`
+  defaults to `<module>/target/dmod`, `--kernel-jar FILE` stamps the build of a named server jar. `module check` and `module inspect` stay on the
+  module tool until A2. `DmodPackParityTest` packs all 12 modules with both the Java `ModuleAssembler` and the Python packer and fails on any
+  difference in entry names, order or content hash (deleted with `ModuleAssembler` in A2; the Java packer stamps entry times, so it is not
+  byte-reproducible: the Python package is the one that is).
 - **The kernel's typed services, finished for the merge.** `Kernel.cache(size, ttlMillis)` (the per-person cache) and
   `Pivots.figures(person, fields, rows, values, by, across, top)` (the engine's figures of rows a module holds, read as
   `InlineFigures.Figures`) are on the typed `Kernel`, as the two loopback calls they replace. `InlineRequest` holds fields only: the

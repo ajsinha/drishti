@@ -90,7 +90,10 @@ def read_manifest(folder: Path) -> dict:
 
 def kernel_build_of(lib: Path) -> str | None:
     """`<version>+<time>` of the server jar in `lib` (its META-INF/build-info.properties), or None when there is none."""
-    jars = sorted(lib.glob("drishti-server*.jar")) if lib.is_dir() else []
+    return _build_of_jars(sorted(lib.glob("drishti-server*.jar")) if lib.is_dir() else [])
+
+
+def _build_of_jars(jars) -> str | None:
     for jar in jars:
         try:
             with zipfile.ZipFile(jar) as z:
@@ -102,6 +105,16 @@ def kernel_build_of(lib: Path) -> str | None:
         except zipfile.BadZipFile:
             continue
     return None
+
+
+def kernel_build_of_jar(jar: Path) -> str:
+    """`<version>+<time>` of one named server jar (--kernel-jar), or a refusal that says what was wrong."""
+    if not Path(jar).is_file():
+        raise PackError(f"--kernel-jar {jar} is not a file")
+    build = _build_of_jars([Path(jar)])
+    if not build:
+        raise PackError(f"--kernel-jar {jar} holds no build-info.properties of drishti-server: give the server jar")
+    return build
 
 
 def _properties(text: str) -> dict:
@@ -340,6 +353,7 @@ def add_arguments(sub) -> None:
                    help="a jar of the module (repeatable): placed by the names module.yaml gives; the first unnamed one is the module's own")
     p.add_argument("--out", type=Path, help="the folder the .dmod is written to (default: <module>/target/dmod)")
     p.add_argument("--kernel-build", help="the kernel build to stamp (default: the server jar in <home>/lib)")
+    p.add_argument("--kernel-jar", type=Path, help="the server jar whose build is stamped (instead of --kernel-build)")
     f = sub.add_parser("first-party", help="write first-party.yaml for every .dmod of a folder")
     f.add_argument("path", type=Path, help="the folder of .dmod files (<home>/modules)")
     f.add_argument("--out", type=Path, help="the file to write (default: <folder>/first-party.yaml)")
@@ -348,7 +362,12 @@ def add_arguments(sub) -> None:
 def run(args) -> int:
     try:
         if args.cmd == "pack":
-            dmod, notes = pack(args.path, args.jars, args.out, args.kernel_build)
+            build = args.kernel_build
+            if getattr(args, "kernel_jar", None):
+                if build:
+                    raise PackError("give --kernel-build or --kernel-jar, not both")
+                build = kernel_build_of_jar(args.kernel_jar)
+            dmod, notes = pack(args.path, args.jars, args.out, build)
             for n in notes:
                 print("note: " + n, file=sys.stderr)
             print(f"packed {dmod} ({dmod.stat().st_size} bytes; the hash of every file in {HASHES})")

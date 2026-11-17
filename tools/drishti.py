@@ -141,10 +141,13 @@ def find_module_tool(explicit: str | None = None) -> str:
 
 
 def cmd_module(a, extra) -> int:
-    """`module pack|check|inspect`: the standalone module tool (java -jar drishti-module-tool.jar), no Maven needed; the same code as the
-    Maven plugin's goals."""
+    """`module pack` is the Python packager (tools/modulepack.py); `module check|inspect` run the standalone module tool
+    (java -jar drishti-module-tool.jar), no Maven needed."""
+    if a.module_cmd == "pack":
+        a.cmd = "pack"                                           # the one packager: Python, tools/modulepack.py (no Java, no second copy)
+        return load_module("modulepack", "modulepack.py").run(a)
     args = [a.module_cmd, absolute(a.path)]
-    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None) or (str(ROOT / "dist") if a.module_cmd == "pack" else None)), ("--project", getattr(a, "project", None))):
+    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--project", getattr(a, "project", None))):
         if val:
             args += [flag, absolute(val)]
     if getattr(a, "cycles", None) is not None:
