@@ -3163,7 +3163,6 @@ and the fix for the codes that need more than the meaning.
 | DRS-1043 | — | pack's module off | the pack belongs to a module that is off: switch it on in Admin → Modules; the pack is not loaded and says so |
 | DRS-1045 | — | connector template twice | two modules that are on declare a connector template of one name: neither is used; remove one declaration (Admin → Health) |
 | DRS-1046 | — | connector file not used | a site connector file says `template: <owner>` (or an earlier release generated it) and that template is not here (its module is off or removed): the file is listed, never run on its own |
-| DRS-1047 | — | two packs folders | `drishti.packs.dir` (the former name) and `drishti.packs.site-dir` name different folders: the server does not start; keep one |
 | DRS-1048 | — | inbox rules unreadable | a module's `dataload.yaml` cannot be read: its files are not matched by the inbox until it is fixed (Admin → Health) |
 | DRS-1035 | 409 | needs data | a function that is installed and on but whose required data no source serves (`EXP needs data: exposure-path is not bound; ask your data administrator`): its API answers this with the need and `function`; its console page is the needs-data page (200, links to Admin → Data bindings and Help) and the command line says the same words. Binding the data turns it on; never 404 |
 | DRS-1032 | 503 | module part unavailable | a module part runs on no node that is up (or is not placed at all, or a forwarded request reached a node it is not placed on); it is never run on an unplaced node |

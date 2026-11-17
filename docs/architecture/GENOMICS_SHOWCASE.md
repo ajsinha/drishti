@@ -167,7 +167,7 @@ server's work at view time is what it does everywhere: filter, join, count, pivo
 
 ## 7. The generator
 
-One standalone script, `modules/genomics/tools/make_showcase.py`, with `make_showcase.sh` and `.ps1`, in the shape of the other
+One standalone script, `tools/packgen/genomics_showcase/make.py` (built; planned first as a module script with `.sh` and `.ps1` twins), in the shape of the other
 packs' generators: Python standard library only, one seed (`--seed`, default 20261116), one output per kind
 (`data/testdata/genomics/<kind>/<kind>.<date>.jsonl.gz` and `data/testdata/protein/<kind>/…`), listed in `testdata.yaml` and loaded by
 `drishti.py lake demo`. The same seed gives byte-identical files; a test holds the row counts of section 6 and the file checksums.

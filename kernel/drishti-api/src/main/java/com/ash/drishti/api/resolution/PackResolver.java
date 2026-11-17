@@ -315,7 +315,7 @@ public final class PackResolver {
         found.forEach((name, at) -> {
             if (at.size() > 1) {
                 problems.add("pack '" + name + "' is in two places of " + where + ": " + describe(at.get(0), module) + " and " + describe(at.get(1), module)
-                        + "; neither is read (keep one, rename or remove the other)");
+                        + "; neither is read (keep one, rename or remove the other; DRS-1042)");
                 return;
             }
             Path dir = at.get(0);

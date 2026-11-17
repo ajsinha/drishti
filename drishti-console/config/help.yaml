@@ -325,6 +325,14 @@ moved:
   performance: cluster#16-tuning
   scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # SCALE_BENCHMARK.md merged into BENCHMARK.md
   connector-proxy: data-guide#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
+  ai-providers: docs-guides-ai-guide   # AI is not in this release (owner 2026-11-16): the old address opens the AI guide, which says so
+  mcp-client: docs-guides-ai-guide#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # AI is not in this release: the AI guide says so
+  quant-service: docs-guides-ai-guide#4-server-side-pricing-the-quant-service-proposed   # AI is not in this release: the AI guide says so
+  docs-architecture-ai-management: docs-guides-ai-guide#3-ai-management-design-not-built   # AI is not in this release: the AI guide says so
+  docs-architecture-mcp-client: docs-guides-ai-guide#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # AI is not in this release: the AI guide says so
+  docs-architecture-quant-service: docs-guides-ai-guide#4-server-side-pricing-the-quant-service-proposed   # AI is not in this release: the AI guide says so
+  docs-tutorials-15-ai-in-drishti: docs-guides-ai-guide   # AI is not in this release: the AI guide says so
+  docs-admin-ai: docs-guides-ai-guide   # AI is not in this release: the AI guide says so
   connector-demo: data-guide#82-which-connector
   demo-data: data-guide#11-the-demo-data
   connector-file: data-guide#82-which-connector

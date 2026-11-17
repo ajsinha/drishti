@@ -76,7 +76,7 @@ fields:
   description: The amino acid sequence, one letter each.
   example: MKTAYIAKQR
 - name: ACTIVE_SITE
-  type: list
+  type: vector
   presence: required
   description: The positions of the active site's residues.
 - name: DESIGN_ROUNDS

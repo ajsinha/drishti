@@ -65,6 +65,8 @@ panels:
     bind: $.FAMILY
   - label: Sequence
     bind: $.SEQUENCE
+  - label: Active site
+    bind: $.ACTIVE_SITE
   - label: Design rounds
     bind: $.DESIGN_ROUNDS
     fmt: amount0

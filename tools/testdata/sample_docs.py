@@ -168,7 +168,7 @@ GROUPS = [
       "counterparty-risk/cva", "counterparty-risk/sa-ccr", "counterparty-risk/simm"]),
     ("Market data", "You produce this", None),               # every market-data folder
     ("Public data (refreshed by Drishti's scripts)", "Public source", None),   # gleif, us-equities, funds, news-and-markets, world-economy
-    ("Demonstration only", "Demo", None),                    # compute-demo
+    ("Demonstration only", "Demo", None),                    # compute-demo, the genomics showcase's two packs
     ("Planned inputs (demo data generated, not loaded)", "You will produce this", None),   # planned contracts with generated data
 ]
 PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy",
@@ -976,7 +976,7 @@ def _group_of(page: dict) -> int:
         return 5
     if page["pack"] in PUBLIC:
         return 6
-    if page["pack"] == "compute-demo":
+    if page["pack"] in ("compute-demo", "genomics-showcase", "protein-engineering"):   # seeded, invented demonstration data
         return 7
     raise SystemExit(f"sample_docs: {page['name']} is in no group of the index")
 

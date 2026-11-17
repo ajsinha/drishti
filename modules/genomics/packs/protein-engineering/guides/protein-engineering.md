@@ -29,7 +29,7 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 
 ## The join to genomics
 
-The [genomics-showcase pack](genomics-showcase.md)'s `study-variant` carries a gene, a protein position and an amino acid; with the gene
+The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ## Making the data again
@@ -42,13 +42,13 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `PROT` | `protein` | fundamental | `PROTEIN` | One row per protein, keyed by PROTEIN (the symbol of its gene). | [PROT: Protein](../../../../../docs/contracts/packs/protein-engineering.md#prot-protein-protein) (`contracts/protein.contract.yaml`) | — (no test data) |
-| `RESIDUE` | `residue` | fundamental | `RESIDUE_ID` | One row per protein position, keyed by RESIDUE_ID. | [RESIDUE: Residue](../../../../../docs/contracts/packs/protein-engineering.md#residue-residue-residue) (`contracts/residue.contract.yaml`) | — (no test data) |
-| `CONTACT` | `residue-contact` | fundamental | `CONTACT_ID` | One row per contact, keyed by CONTACT_ID. | [CONTACT: Residue contact](../../../../../docs/contracts/packs/protein-engineering.md#contact-residue-contact-residue-contact) (`contracts/residue-contact.contract.yaml`) | — (no test data) |
-| `DMS` | `dms-score` | fundamental | `SCORE_ID` | One row per position, amino acid and assay, keyed by SCORE_ID. | [DMS: Deep mutational scan score](../../../../../docs/contracts/packs/protein-engineering.md#dms-deep-mutational-scan-score-dms-score) (`contracts/dms-score.contract.yaml`) | — (no test data) |
-| `DESIGN` | `design` | fundamental | `DESIGN_ID` | One row per design, keyed by DESIGN_ID. | [DESIGN: Protein design](../../../../../docs/contracts/packs/protein-engineering.md#design-protein-design-design) (`contracts/design.contract.yaml`) | — (no test data) |
-| `DMUT` | `design-mutation` | fundamental | `DESIGN_MUTATION_ID` | One row per design and position, keyed by DESIGN_MUTATION_ID. | [DMUT: Design change](../../../../../docs/contracts/packs/protein-engineering.md#dmut-design-change-design-mutation) (`contracts/design-mutation.contract.yaml`) | — (no test data) |
-| `DROUND` | `design-round` | fundamental | `ROUND_ID` | One row per protein and round, keyed by ROUND_ID. | [DROUND: Design round](../../../../../docs/contracts/packs/protein-engineering.md#dround-design-round-design-round) (`contracts/design-round.contract.yaml`) | — (no test data) |
+| `PROT` | `protein` | fundamental | `PROTEIN` | One row per protein, keyed by PROTEIN (the symbol of its gene). | [PROT: Protein](../../../../../docs/contracts/packs/protein-engineering.md#prot-protein-protein) (`contracts/protein.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#protein) |
+| `RESIDUE` | `residue` | fundamental | `RESIDUE_ID` | One row per protein position, keyed by RESIDUE_ID. | [RESIDUE: Residue](../../../../../docs/contracts/packs/protein-engineering.md#residue-residue-residue) (`contracts/residue.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#residue) |
+| `CONTACT` | `residue-contact` | fundamental | `CONTACT_ID` | One row per contact, keyed by CONTACT_ID. | [CONTACT: Residue contact](../../../../../docs/contracts/packs/protein-engineering.md#contact-residue-contact-residue-contact) (`contracts/residue-contact.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#residue-contact) |
+| `DMS` | `dms-score` | fundamental | `SCORE_ID` | One row per position, amino acid and assay, keyed by SCORE_ID. | [DMS: Deep mutational scan score](../../../../../docs/contracts/packs/protein-engineering.md#dms-deep-mutational-scan-score-dms-score) (`contracts/dms-score.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#dms-score) |
+| `DESIGN` | `design` | fundamental | `DESIGN_ID` | One row per design, keyed by DESIGN_ID. | [DESIGN: Protein design](../../../../../docs/contracts/packs/protein-engineering.md#design-protein-design-design) (`contracts/design.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#design) |
+| `DMUT` | `design-mutation` | fundamental | `DESIGN_MUTATION_ID` | One row per design and position, keyed by DESIGN_MUTATION_ID. | [DMUT: Design change](../../../../../docs/contracts/packs/protein-engineering.md#dmut-design-change-design-mutation) (`contracts/design-mutation.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#design-mutation) |
+| `DROUND` | `design-round` | fundamental | `ROUND_ID` | One row per protein and round, keyed by ROUND_ID. | [DROUND: Design round](../../../../../docs/contracts/packs/protein-engineering.md#dround-design-round-design-round) (`contracts/design-round.contract.yaml`) | [example](../../../../../docs/contracts/samples/protein-engineering.md#design-round) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

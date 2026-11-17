@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-117 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+131 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -58,6 +58,13 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `HELD` | `fund-holder` | [funds](funds.md#held-funds-holding-a-company-fund-holder) | fundamental | active |  | 0 |
 | `TRACK` | `index-funds` | [funds](funds.md#track-funds-tracking-an-index-index-funds) | fundamental | active |  | 0 |
 | `GDELT` | `event-country` | [gdelt-events](gdelt-events.md#gdelt-world-events-by-country-event-country) | fundamental | active |  | 0 |
+| `SGENE` | `study-gene` | [genomics-showcase](genomics-showcase.md#sgene-study-gene-study-gene) | fundamental | active |  | 0 |
+| `SSAMPLE` | `study-sample` | [genomics-showcase](genomics-showcase.md#ssample-study-sample-study-sample) | fundamental | active |  | 0 |
+| `SVARIANT` | `study-variant` | [genomics-showcase](genomics-showcase.md#svariant-study-variant-study-variant) | fundamental | active |  | 0 |
+| `VCALL` | `variant-call` | [genomics-showcase](genomics-showcase.md#vcall-variant-call-variant-call) | fundamental | active |  | 0 |
+| `ASSOC` | `association` | [genomics-showcase](genomics-showcase.md#assoc-association-of-a-variant-with-a-trait-association) | fundamental | active |  | 0 |
+| `CNV` | `cnv-segment` | [genomics-showcase](genomics-showcase.md#cnv-copy-number-segment-cnv-segment) | fundamental | active |  | 0 |
+| `PATHWAY` | `pathway-gene` | [genomics-showcase](genomics-showcase.md#pathway-pathway-membership-pathway-gene) | fundamental | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 3 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | computed | active |  | 0 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 3 |
@@ -113,6 +120,13 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `OECDS` | `oecd-series` | [oecd](oecd.md#oecds-oecd-series-oecd-series) | fundamental | active |  | 0 |
 | `PRESS` | `release-source` | [official-news](official-news.md#press-official-press-releases-release-source) | fundamental | active |  | 0 |
 | `PREL` | `press-release` | [official-news](official-news.md#prel-press-release-press-release) | fundamental | active |  | 0 |
+| `PROT` | `protein` | [protein-engineering](protein-engineering.md#prot-protein-protein) | fundamental | active |  | 0 |
+| `RESIDUE` | `residue` | [protein-engineering](protein-engineering.md#residue-residue-residue) | fundamental | active |  | 0 |
+| `CONTACT` | `residue-contact` | [protein-engineering](protein-engineering.md#contact-residue-contact-residue-contact) | fundamental | active |  | 0 |
+| `DMS` | `dms-score` | [protein-engineering](protein-engineering.md#dms-deep-mutational-scan-score-dms-score) | fundamental | active |  | 0 |
+| `DESIGN` | `design` | [protein-engineering](protein-engineering.md#design-protein-design-design) | fundamental | active |  | 0 |
+| `DMUT` | `design-mutation` | [protein-engineering](protein-engineering.md#dmut-design-change-design-mutation) | fundamental | active |  | 0 |
+| `DROUND` | `design-round` | [protein-engineering](protein-engineering.md#dround-design-round-design-round) | fundamental | active |  | 0 |
 | `TRD` | `trade` | [trading](trading.md#trd-trade-trade) | fundamental | active |  | 7 |
 | `CTRD` | `counterparty-trades` | [trading](trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | computed | active |  | 1 |
 | `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | active |  | 1 |

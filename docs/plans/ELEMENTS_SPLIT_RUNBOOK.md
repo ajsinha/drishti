@@ -281,7 +281,7 @@ Write the counts before and after into `$WORK/reports/decoupling.md`, with one r
 | C1 | The loader's default folder `/static/elements/` and the maps' default `/static/vendor/echarts/maps/` (`drishti_loader.js`, `drishti_map-view.js`, `drishti_chart-geo.js`) | The default is the folder the core bundle was loaded from (the bundle already reads `document.currentScript`); with no script URL (an ES module import) `configure({ base, staticBase })` is required and the error says so. No literal `/static/`. | Nothing: the bundle is loaded from the vendored folder, so the default is right. |
 | C2 | Libraries outside the manifest: the loader only knows the manifest's names (`requirements`, `refused`) | New function `Drishti.elements.register(name, { base, entry, bundle, requires, css, module })`: a library that lives elsewhere, loaded and refused by the same rules. The manifest's `module` field stays, documented as "the host's own grouping". | Registers drishti-insight, drishti-renderer, drishti-risk (base `/static/elements/`) and each hosted module's library. |
 | C3 | The base-path helpers: `window.drishti_url`, `window.drishti_route`, `meta[name="drishti-base"]`, `meta[name="drishti-modules"]` (`drishti_base.js`, `drishti_loader.js`) | Kept: they are named after the library and work for any host under a path prefix. Documented as API. **Allowance for P2.** | Nothing. |
-| C4 | The grid's live and pivot defaults: `/pivot?source=`, `/api/live`, `/api/changes` (`drishti_live-model.js`) | Required options (`pivotUrl`, `base`, `changesUrl`); with none given the feature is off and says so in words. The shapes of the answers are documented as "the live-set contract" in `docs/CONTRACTS.md`. | `configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot' } })`. |
+| C4 | The grid's live and pivot defaults: `/pivot?source=`, `/api/live`, `/api/changes` (`drishti_live-model.js`) | Required options (`pivotUrl`, `base`, `changesUrl`); with none given the feature is off and says so in words. The shapes of the answers are documented as "the live-set contract" in `docs/CONTRACTS.md`. | `configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot' } })`. (planned) |
 | C5 | The Arrow client's `capabilitiesUrl` default `/api/v1/data/capabilities` (`drishti_arrow.js`) | An option with no default; without it the client asks nothing and uses JSON pages. Contract documented. | Sets it in `endpoints`. |
 | C6 | The API client: the as-of header `X-Drishti-As-Of`, the device header, the error shape `{code, detail}` with DRS codes (`drishti_api.js`) | The header names stay as defaults (they carry the library's own name) and become options (`asOfHeader`). **Allowance for P4.** The error shape is documented as "the error contract: any `code` string and a `detail`". Comments and tests use neutral example codes (`E-1001`), not DRS numbers. | Nothing. |
 | C7 | Explain's drawing in core and any call to `/api/explain` or `/explain` from the eight | The drawing stays (it draws a tree it is given). Any fetch moves behind an option `explain: (ref) => Promise<tree>`; a component with no `explain` shows no Explain action. | drishti-insight supplies `explain`. |
@@ -500,7 +500,7 @@ du -sh dist/drishti-elements-$V
 
 **STOP and ask the lead** if the two zips differ, or if the tree is over 40 MB.
 
-**6d. CI.** `.github/workflows/ci.yml`: on push to `main` and on pull requests; one job on `ubuntu-latest` with
+**6d. CI.** `.github/workflows/ci.yml`: on push to `main` and on pull requests; one job on `ubuntu-latest` with (planned)
 `actions/setup-python` 3.13 and `actions/setup-node` 22: `pip install -r tests/requirements.txt`, `playwright install --with-deps
 chromium`, then the three gate lines of 6b, then `python3 tools/elements/cli.py dist --out dist`. The workflow uploads nothing,
 publishes nothing and uses no secret. (On a public repository the workflow's logs are public too: the tests print no data beyond
@@ -591,7 +591,7 @@ for reuse). Every name carries the `drishti_` prefix. The gallery's pages and th
 `CHANGELOG.md` at the root (one entry, 2.4.0: the first version of the separate project, what the eight libraries are, the four new
 names of step 3). `docs/` as in 6e, with `docs/README.md` as the index.
 
-**The gallery as the docs site.** `.github/workflows/pages.yml`: on a tag `v*`; builds the release tree, copies it to `_site/`,
+**The gallery as the docs site.** `.github/workflows/pages.yml`: on a tag `v*`; builds the release tree, copies it to `_site/`, (planned)
 adds `_site/docs/` (the guides and the reference rendered to HTML by `tools/docs/` with the gallery's sheet and the logo) and an
 `_site/index.html` that opens `gallery/drishti_gallery.html`; deploys with `actions/upload-pages-artifact` and
 `actions/deploy-pages`. Address: `https://ajsinha.github.io/drishti-elements/`. The site serves the same proprietary files the
@@ -740,7 +740,7 @@ git rm -q compute/drishti-rachana/src/main/resources/world-regions.yaml compute/
 | The host script | New `static/js/drishti_elements-host.js`, loaded in `base.html` straight after the core bundle: registers the three Drishti libraries and each hosted module's library (C2), sets `endpoints` (C4, C5) and `explain` (C7). The only place Drishti's routes are told to Elements. |
 | The three libraries | Stay at `static/elements/drishti-{insight,renderer,risk}/`. `static/elements/drishti_elements.json` keeps only their three entries and loses the `elements` key (the version is the pin). Built by the vendored tool: `python3 $S/vendor/drishti-elements/<pin>/tools/elements/build.py --root $S --manifest $S/elements/drishti_elements.json --header config/license-header.txt`. Their imports of the eight go through the vendored entry files. |
 | Python that reads Elements files | `core/render_dist.py` (`VERSION` from the pin; `LIBRARY` unchanged), `core/element_sheet.py` and `tools/render_sheet.py` (sheet paths under the copy), `core/element_api.py`, the embed routes (`embed_routes.py`, `embed_v2_routes.py`: files served from the copy), `routes/help_routes.py`, `core/schemakit/build.py` and `tools/packgen/banking/make_packs.py` (the path of `formats.yaml`). Find them all: `git grep -nE "static/elements\|formats\.yaml\|world-regions\.yaml\|tools/elements\|vendor/(echarts\|codemirror)" -- '*.py' '*.sh' '*.ps1' '*.xml' '*.yml'`. |
-| The two tables (R3) | `compute/drishti-rachana/pom.xml`: a second `<resource>` whose directory is `${maven.multiModuleProjectDirectory}/drishti-console/web/static/vendor/drishti-elements/${drishti.elements.version}/data` with `<include>world-regions.yaml</include>` and `<include>formats.yaml</include>`; the property `drishti.elements.version` in the root `pom.xml`, checked against the pin by the guard. `WorldRegions.java` and `Formats.java` do not change. |
+| The two tables (R3) | `compute/drishti-rachana/pom.xml`: a second `<resource>` whose directory is `${maven.multiModuleProjectDirectory}/drishti-console/web/static/vendor/drishti-elements/${drishti.elements.version}/data` with `<include>world-regions.yaml</include>` and `<include>formats.yaml</include>`; the property `drishti.elements.version` in the root `pom.xml`, checked against the pin by the guard. `WorldRegions.java` and `Formats.java` do not change. (planned) |
 | The render folder | `static/render/<pin>/` stays and is built in Drishti (`tools/render_sheet.py`). **The redirect policy is unchanged:** when the pin moves, a new folder is written, the previous folder's paths answer `308` to the current one with `Deprecation: true` and `Drishti-Deprecated` for one release, then are removed; `1.2.0` stays frozen. `RETIRED = ("2.0.0",)` is removed in the release after i6 as already planned. |
 | The CLI and the WebJar | The `elements` command group leaves `tools/drishti.py`; the profile `elements` and its module leave the root `pom.xml`. `tools/docs/code_volume.py` and the licence-header tool already skip `vendor`. |
 | The module ranges | `elements: '>=2.4 <3'` in every `module.yaml` stays; it is now checked against the pin. |
@@ -754,14 +754,14 @@ they now come inside Drishti Elements (their rows and licence files are in its o
 
 Below it, "Updating": clone the Elements repository at the new tag into an empty folder outside this repository, check the commit
 id, run `python3 tools/elements/cli.py dist`, copy the tree into `drishti-elements/<new>/`, delete the old folder, set
-`drishti.elements.version`, rebuild the three libraries and the render folder, run the guards. Nothing else names the version.
+`drishti.elements.version`, rebuild the three libraries and the render folder, run the guards. Nothing else names the version. (planned)
 
 **9e. Docs: one home per fact.**
 
 - Deleted: `docs/architecture/ELEMENTS.md`; `EMBED_GUIDE.md` sections 13 and 14; the Elements README; the eight libraries' part of
   `docs/guides/ELEMENTS_API.md` (the file stays, generated by the vendored generator for the three Drishti libraries only, and its
   first line links to the Elements reference).
-- New, short: `docs/architecture/ELEMENTS_IN_DRISHTI.md`: the pin and how to move it, the host script and what it sets, the three
+- New, short: `docs/architecture/ELEMENTS_IN_DRISHTI.md`: the pin and how to move it, the host script and what it sets, the three (planned)
   Drishti libraries, the two tables read from the copy, the render folder policy, and the checklist that was `ELEMENTS.md`
   section 12. It links to the Elements docs for everything else.
 - Every other link to the deleted text (171 files name one of the three documents today) goes to the Elements repository's `docs/`
@@ -782,7 +782,7 @@ id, run `python3 tools/elements/cli.py dist`, copy the tree into `drishti-elemen
 - Kept: the three libraries' Node and browser tests, the embed and render tests, `test_elements_guards.py` (no console script keeps
   a second implementation).
 - New guard `tests/test_elements_vendored.py`: exactly one folder under `vendor/drishti-elements/`; its manifest's version equals
-  the folder name and `drishti.elements.version`; `LICENSE` is present; the folder's files match the SHA-384 hashes in its own
+  the folder name and `drishti.elements.version`; `LICENSE` is present; the folder's files match the SHA-384 hashes in its own (planned)
   `drishti-elements.json` (nobody edits the copy); no tracked file outside the copy lives under
   `static/elements/drishti-{core,inputs,grid,chart,data,tree,graph,designer}/`, `static/gallery/`, `tools/elements/`; no template
   or script spells `drishti-elements/2.` (the version comes from `ELEMENTS_DIR` only); `static/vendor/echarts` and
@@ -914,7 +914,7 @@ notices are in THIRD-PARTY-NOTICES.
 
 followed by the full `NOTICE` of every bundled Apache-2.0 library that ships one (today Apache ECharts), as section 4(d) asks.
 
-**L3. `THIRD-PARTY-NOTICES`, generated** by a new `tools/elements/notices.py` from `vendor/VENDOR.md` and the folders: for each
+**L3. `THIRD-PARTY-NOTICES`, generated** by a new `tools/elements/notices.py` from `vendor/VENDOR.md` and the folders: for each (planned)
 folder under `vendor/`, the row's name, version, licence and source, its licence file in full, its NOTICE if any; then the
 "Algorithms and published constants used" section (Equal Earth, CRC-32), Natural Earth's public-domain statement and the boundary
 note. `--check` fails when stale; the gate runs it.

@@ -32,7 +32,7 @@ the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and
 ## The join to proteins
 
 `study-variant` carries the gene, the protein position and the amino acid after the change. With the gene as the protein's id, those
-three values are the key of a scan score in the [protein-engineering pack](protein-engineering.md): every variant of a gene that has a
+three values are the key of a scan score in the [protein-engineering pack](../../protein-engineering/guides/protein-engineering.md): every variant of a gene that has a
 protein has a measured functional reading.
 
 ## Making the data again
@@ -47,13 +47,13 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `SGENE` | `study-gene` | fundamental | `GENE` | One row per gene, keyed by GENE. | [SGENE: Study gene](../../../../../docs/contracts/packs/genomics-showcase.md#sgene-study-gene-study-gene) (`contracts/study-gene.contract.yaml`) | — (no test data) |
-| `SSAMPLE` | `study-sample` | fundamental | `SAMPLE_ID` | One row per sample, keyed by SAMPLE_ID. | [SSAMPLE: Study sample](../../../../../docs/contracts/packs/genomics-showcase.md#ssample-study-sample-study-sample) (`contracts/study-sample.contract.yaml`) | — (no test data) |
-| `SVARIANT` | `study-variant` | fundamental | `VARIANT_ID` | One row per variant site, keyed by VARIANT_ID. | [SVARIANT: Study variant](../../../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant) (`contracts/study-variant.contract.yaml`) | — (no test data) |
-| `VCALL` | `variant-call` | fundamental | `CALL_ID` | One row per sample and variant, keyed by CALL_ID. | [VCALL: Variant call](../../../../../docs/contracts/packs/genomics-showcase.md#vcall-variant-call-variant-call) (`contracts/variant-call.contract.yaml`) | — (no test data) |
-| `ASSOC` | `association` | fundamental | `ASSOC_ID` | One row per trait and variant, keyed by ASSOC_ID. | [ASSOC: Association of a variant with a trait](../../../../../docs/contracts/packs/genomics-showcase.md#assoc-association-of-a-variant-with-a-trait-association) (`contracts/association.contract.yaml`) | — (no test data) |
-| `CNV` | `cnv-segment` | fundamental | `SEGMENT_ID` | One row per sample segment, keyed by SEGMENT_ID. | [CNV: Copy-number segment](../../../../../docs/contracts/packs/genomics-showcase.md#cnv-copy-number-segment-cnv-segment) (`contracts/cnv-segment.contract.yaml`) | — (no test data) |
-| `PATHWAY` | `pathway-gene` | fundamental | `PATHWAY_GENE_ID` | One row per pathway and gene, keyed by PATHWAY_GENE_ID. | [PATHWAY: Pathway membership](../../../../../docs/contracts/packs/genomics-showcase.md#pathway-pathway-membership-pathway-gene) (`contracts/pathway-gene.contract.yaml`) | — (no test data) |
+| `SGENE` | `study-gene` | fundamental | `GENE` | One row per gene, keyed by GENE. | [SGENE: Study gene](../../../../../docs/contracts/packs/genomics-showcase.md#sgene-study-gene-study-gene) (`contracts/study-gene.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#study-gene) |
+| `SSAMPLE` | `study-sample` | fundamental | `SAMPLE_ID` | One row per sample, keyed by SAMPLE_ID. | [SSAMPLE: Study sample](../../../../../docs/contracts/packs/genomics-showcase.md#ssample-study-sample-study-sample) (`contracts/study-sample.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#study-sample) |
+| `SVARIANT` | `study-variant` | fundamental | `VARIANT_ID` | One row per variant site, keyed by VARIANT_ID. | [SVARIANT: Study variant](../../../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant) (`contracts/study-variant.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#study-variant) |
+| `VCALL` | `variant-call` | fundamental | `CALL_ID` | One row per sample and variant, keyed by CALL_ID. | [VCALL: Variant call](../../../../../docs/contracts/packs/genomics-showcase.md#vcall-variant-call-variant-call) (`contracts/variant-call.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#variant-call) |
+| `ASSOC` | `association` | fundamental | `ASSOC_ID` | One row per trait and variant, keyed by ASSOC_ID. | [ASSOC: Association of a variant with a trait](../../../../../docs/contracts/packs/genomics-showcase.md#assoc-association-of-a-variant-with-a-trait-association) (`contracts/association.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#association) |
+| `CNV` | `cnv-segment` | fundamental | `SEGMENT_ID` | One row per sample segment, keyed by SEGMENT_ID. | [CNV: Copy-number segment](../../../../../docs/contracts/packs/genomics-showcase.md#cnv-copy-number-segment-cnv-segment) (`contracts/cnv-segment.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#cnv-segment) |
+| `PATHWAY` | `pathway-gene` | fundamental | `PATHWAY_GENE_ID` | One row per pathway and gene, keyed by PATHWAY_GENE_ID. | [PATHWAY: Pathway membership](../../../../../docs/contracts/packs/genomics-showcase.md#pathway-pathway-membership-pathway-gene) (`contracts/pathway-gene.contract.yaml`) | [example](../../../../../docs/contracts/samples/genomics-showcase.md#pathway-gene) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

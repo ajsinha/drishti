@@ -728,7 +728,7 @@ The shipped lenses:
 
 The registry also lists lenses that have no lens file or Home yet (CRO, MR cube, CCR cube, CIO, Oversight); they are not offered to people.
 
-**One folder.** The lens files are under `config/lenses` (the console's `lens.dir`, `DRISHTI_LENS_DIR`): a file sits in its module's
+**One folder.** The lens files are under `config/lenses` (the server's `drishti.lenses-dir`, default `<config>/lenses`; the console reads none: the server sends each lens in its installation answer): a file sits in its module's
 folder (`config/lenses/<module>/<lens>.yaml`), or in the folder itself for a lens of no module; only the console reads them. The feature
 presets a distribution may name are in [`config/distributions/kernel.yaml`](../../config/distributions/kernel.yaml) (`features:`). The
 full product's packs are [`config/packs/default-packs.yaml`](../../config/packs/default-packs.yaml), by module; a distribution's are its

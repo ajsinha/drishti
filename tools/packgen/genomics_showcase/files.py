@@ -320,7 +320,7 @@ the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and
 ## The join to proteins
 
 `study-variant` carries the gene, the protein position and the amino acid after the change. With the gene as the protein's id, those
-three values are the key of a scan score in the [protein-engineering pack](protein-engineering.md): every variant of a gene that has a
+three values are the key of a scan score in the [protein-engineering pack](../../protein-engineering/guides/protein-engineering.md): every variant of a gene that has a
 protein has a measured functional reading.
 
 ## Making the data again
@@ -360,7 +360,7 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 
 ## The join to genomics
 
-The [genomics-showcase pack](genomics-showcase.md)'s `study-variant` carries a gene, a protein position and an amino acid; with the gene
+The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ## Making the data again

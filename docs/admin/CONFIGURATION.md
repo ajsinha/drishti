@@ -2922,9 +2922,6 @@ read by both programs, so one set of variables configures both halves.
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Create → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs. |
-| `builder.max_samples` | `50` | Build workbench, **New** (`/build/new`): files in one upload, and samples in all (a `.jsonl` line is one). Over it, the whole upload is refused (`413 DRS-5005`). Keep it at or under the server's `drishti.builder.max-samples`. |
-| `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
-| `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
 | `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
 | `builder.pack_designer_max_mb` | `4096` | **Create → New pack** (the Pack designer, [BUILD_GUIDE](../guides/BUILD_GUIDE.md#8-the-pack-designer-create--new-pack)): the most megabytes uploaded to one workspace. Over it: `413 DRS-5005`. |
 | `builder.pack_designer_max_files` | `500` | The Pack designer: files in one workspace. Over it: `413 DRS-5005`. |

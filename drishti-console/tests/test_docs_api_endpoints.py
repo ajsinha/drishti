@@ -36,7 +36,8 @@ NOT_DOCUMENTED = {"POST /launcher/stop"}
 def _endpoints() -> set[tuple[str, str]]:
     found: set[tuple[str, str]] = set()
     # the core server and the domain modules (docs/architecture/DOMAIN_MODULES.md): every controller of the product's API
-    for path in [*ROOT.glob("kernel/drishti-server/src/main/java/**/*.java"), *ROOT.glob("modules/banking/java/banking-service/src/main/java/**/*.java")]:
+    for path in [*ROOT.glob("kernel/drishti-server/src/main/java/**/*.java"), *(p for p in ROOT.glob("modules/*/java/*/src/main/java/**/*.java")
+                                                                                   if "modules/genomics/" not in p.as_posix())]:   # another publisher's sample module documents its own API (its guide)
         text = path.read_text(encoding="utf-8")
         if not re.search(r"@(Rest)?Controller", text):
             continue

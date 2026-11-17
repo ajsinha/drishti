@@ -205,7 +205,7 @@ KINDS: list[Kind] = [
           F("LENGTH", "integer", "The amino acids in it.", 312, "amino acids"),
           F("FAMILY", "text", "The family it belongs to.", "Helicase-like kinase"),
           F("SEQUENCE", "text", "The amino acid sequence, one letter each.", "MKTAYIAKQR"),
-          F("ACTIVE_SITE", "list", "The positions of the active site's residues.", None),
+          F("ACTIVE_SITE", "vector", "The positions of the active site's residues.", None),
           F("DESIGN_ROUNDS", "integer", "How many rounds of design the campaign ran on it; 0 for a protein never designed.", 8,
             "rounds")],
          ["PROTEIN", "NAME", "LENGTH", "FAMILY", "DESIGN_ROUNDS"],
