@@ -41,6 +41,19 @@
     <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka-test</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <properties>
+    <drishti.repo>${project.basedir}/../..</drishti.repo>
+    <drishti.python>python3</drishti.python>
+    <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
+    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
+  </properties>
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <activation><os><family>windows</family></os></activation>
+      <properties><drishti.python>python</drishti.python></properties>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -60,9 +73,98 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- the modules without Java (the six source-system modules), packed by the one packer into the same folder; first-party.yaml again for all of them -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration><executable>${drishti.python}</executable></configuration>
+        <executions>
+          <execution>
+            <id>pack-source-calypso</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-calypso</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-endur</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-endur</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-ici</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-ici</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-murex</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-murex</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-swapone</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-swapone</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-wss</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-wss</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>first-party</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.modules.home}</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}/first-party.yaml</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <!-- a JVM per test class: a module's functions are registered once per JVM (Rachana's function table is the process's), so two servers on the
+               same packages in one JVM refuse the second ("provided twice") -->
+          <reuseForks>false</reuseForks>
           <systemPropertyVariables>
             <drishti.sdk.archetype>${project.basedir}/../../drishti-sdk/drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
             <!-- the one folder a test fork writes into (TestRun in the tests): every path below and in the tests' properties is

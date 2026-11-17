@@ -155,7 +155,7 @@ class ModuleDeployClusterTest {
         // upload once: the fourteen checks, stored by id and version; the same bytes again are the same entry
         JsonNode stored = upload("a", v1);
         assertThat(stored.path("version").asText()).isEqualTo("1.0.0");
-        assertThat(stored.path("checks")).hasSize(15);
+        assertThat(stored.path("checks")).hasSize(14);
         assertThat(stored.path("checks").toString()).contains("C14 Absent everywhere: passed");
         assertThat(upload("a", v1).path("sha").asText()).isEqualTo(stored.path("sha").asText());
 

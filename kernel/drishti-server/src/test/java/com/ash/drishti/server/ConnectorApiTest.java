@@ -208,9 +208,7 @@ class ConnectorApiTest {
             manager.scan();
         }
         mvc.perform(get("/api/v1/admin/health")).andExpect(jsonPath("$.connectors.badFiles").isEmpty())
-                // the test forks read the repository's modules (drishti.modules.home): banking's folder manifest makes it the code module
-                .andExpect(jsonPath("$.modules.summary").value(containsString("banking")))
-                .andExpect(jsonPath("$.modules.code[*].id").value(hasItem("banking")));
+                .andExpect(jsonPath("$.modules.summary").exists());                 // the modules' own part of the answer: ModuleHealthTest (drishti-modules-it)
     }
 
     @Test

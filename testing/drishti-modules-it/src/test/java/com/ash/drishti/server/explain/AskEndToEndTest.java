@@ -45,6 +45,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * receives, the per-pack switch, the masks, the limits and the failure modes. {@code values: shown} is set here so the masking
  * proof has something to protect.
  */
+@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics,trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",

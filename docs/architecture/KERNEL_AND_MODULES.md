@@ -1309,6 +1309,11 @@ $ cd genomics && python3 tools/drishti.py module run            # or: mvn drisht
   8.6 and 12.11.
 - Python side: `pytest` plugin `drishti_kernel.testing` (the console harness with the module mounted).
 
+**Kernel tests and module tests are separate projects.** The kernel's projects (`kernel/*`, `lake/*`, `compute/*`, `net/*`, `plugins/*`) run on fixtures with
+`drishti.modules.home=none`: no kernel test opens the repository's `modules/` folder and no pom outside the modules' own names a module's artefact (guard G2,
+`KernelNamesNoModuleTest`). The tests that need the real modules are in `testing/drishti-modules-it`, which runs servers on the built `.dmod` packages (never on module sources), and
+holds guard G14 (`PackagedVarGoldenTest`): the VaR golden matrix asked of a server started on the exec jar and the packages. See `TEST_HARNESS.md` section 3.30.
+
 ### 8.6 The conformance suite
 
 Every module passes it to be signed with a publisher key (`drishti:sign` refuses a release build that has not passed it); `module verify

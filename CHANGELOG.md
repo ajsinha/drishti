@@ -22,6 +22,18 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
+  `drishti-packs` and `drishti-it`: pack tests, the Sutra equivalence tests, module host and distribution tests, `ConsoleAnswersRecordTest`, the source-system modules,
+  `OneTablePerSystemTest`) on the **built packages** (`target/modules-home`: `packaging/dist`'s `.dmod` files and the six source-system modules, packed by `tools/modulepack.py`),
+  never on module sources. The kernel's projects run on fixtures with `drishti.modules.home=none`; `drishti-server`'s temporary `drishti.modules.packages=false` is gone and
+  so is its `drishti.modules.home` (it names `drishti.module-manifests-dir=none` instead, until I8 deletes `LegacyModules`: a folder another key names beats `none`, and the server's
+  `application.yaml` still names the old key). `drishti-banking`'s own surefire still serves its module sources (its 160 Spring tests run banking on the flat harness; F1 changes that).
+  `drishti-it` no longer has banking on its class path; the architecture rules that name a module's packages are `ModuleArchitectureRulesTest` over the jars as files. The root pom no
+  longer manages the modules' artefacts (their poms name them). Guard **G2** (`KernelNamesNoModuleTest`) is on. `ModuleDeployClusterTest` expected 15 checks since I3 made them 14.
+- **G14, the VaR golden through a packaged server (I7).** `PackagedVarGoldenTest` starts the exec jar with the built packages beside it over a lake of the committed test data and asks
+  the golden matrix's every node and system basket (members, VaR, ES, limit, limit use: three dates, two windows, two currencies). `tools/drillkit/affected.py` selects
+  `drishti-modules-it` (and the packages' build) for any change under `modules/`.
+
 - **`module pack` is the Python packager (I1).** `drishti.py module pack <folder>` runs `tools/modulepack.py`: no Java, no Maven, a reproducible
   `.dmod` (fixed entry times and modes, sorted entries, `META-INF/DMOD.MF` last; no build time in the content). `--jar` is repeatable, `--out`
   defaults to `<module>/target/dmod`, `--kernel-jar FILE` stamps the build of a named server jar. `module check` and `module inspect` stay on the

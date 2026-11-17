@@ -304,8 +304,30 @@ for 20 GB free before it starts. It does not replace the gate before a merge or 
 
 `VarGoldenMatrixTest` (`drishti-banking`, a few seconds) is the VaR proof of a patch: the three demo dates, the 509 and 250 windows, USD and EUR, every node of every
 hierarchy and all 28 system baskets, against `var/golden-matrix.json.gz`. VaR, ES, component VaR and limit use agree to 1e-6; trees, members, limits and worst
-scenarios exactly. **The server-against-server comparison over the API runs for releases only**, in a release's preparation, never for a patch. A change that means to move the numbers records the file
+scenarios exactly. A change that means to move the numbers records the file
 again (the class's comment gives the command) and says why in the commit.
+
+That test runs banking on the flat test class path (one context, no module loader). **`PackagedVarGoldenTest`** (`testing/drishti-modules-it`, guard G14) asks the same golden
+file of a **server on the module path**: the exec jar, the built `.dmod` packages beside it, a lake of the same committed test data built by the one loader. For every case of
+the matrix (three dates, the 509 and 250 windows, USD and EUR) it reads, over HTTP, the headline of every node of the three hierarchies and of the 28 system baskets and compares
+members, VaR, ES (the API rounds to whole currency units: the golden's figure rounded the same way, equal), limit and limit use. It catches what the flat test cannot: loader order,
+a second copy of a maths library, a missing `ServiceLoader` provider. Worst scenarios and component VaR stay with the flat test. The full API comparison over the release's
+demo lake still runs for releases only (3.21).
+
+### 3.30 The module tests (`testing/drishti-modules-it`)
+
+The kernel's projects test the kernel, on fixtures: their surefire runs set `drishti.modules.home=none`, and guard G2 (`KernelNamesNoModuleTest`) fails when a pom outside `modules/`,
+`packaging/dist`, `docs/` and this project names a module's artefact, or a test under `kernel/` opens the repository's `modules/` folder. What needs the real modules lives in
+`testing/drishti-modules-it` (about 50 test classes: the pack tests, the equivalence tests of the shipped Sutras, the module host and distribution tests, the console's recorded
+answers, the source-system modules, G14). It runs on **packages**, never on module sources: `generate-test-resources` copies `packaging/dist/target/dmod` into `target/modules-home`
+and packs the six source-system modules beside it (`tools/modulepack.py`, then `first-party.yaml`); its tests' servers name that folder as `drishti.modules.home`. A test that builds
+its own module folder starts from an empty home (`EmptyModulesHome`). The modules' classes are not on its class path: the architecture rules over them
+(`ModuleArchitectureRulesTest`) read the jars `packaging/dist` leaves in `target/module-jars` as files. The project depends, for build order only, on `drishti-modules` and `drishti-app`
+(the exec jar G14 starts), so it is built after them; the Java lanes (`clean verify` of the whole reactor) run it, and `tools/drill.sh --affected` selects it for any change under
+`modules/` (a module's Java and its packs, console part or Python alike: the packages are packed again). Its tests helpers come from `drishti-server`'s test jar; the helpers' resources are
+found under `drishti.module.root`, which this project points at `drishti-server`.
+
+Run it by hand: `./mvnw package -pl testing/drishti-modules-it -am -Dtest=... -Dsurefire.failIfNoSpecifiedTests=false` (the build packs the modules first).
 
 ### 3.18 The memory budget and the Java 25 lane
 

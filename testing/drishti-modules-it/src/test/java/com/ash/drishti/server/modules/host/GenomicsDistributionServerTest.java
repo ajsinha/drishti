@@ -50,6 +50,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * brand, the Research lens, none of the kernel's packs (no counterparty, book or desk) and no risk word; the module loaded, its VCF reader
  * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fourteen checks.
  */
+@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.EmptyModulesHome.class)   // genomics arrives by the drop below, not by the install's packages
 @SpringBootTest(properties = {"drishti.distribution=genomics", "drishti.distributions-dir=../../config/distributions",
         "drishti.module-manifests-dir=../../modules", "drishti.packs.dir=../../config/packs",
         "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
@@ -83,11 +84,9 @@ class GenomicsDistributionServerTest {
             work = Path.of(System.getProperty("drishti.test.dir", System.getProperty("java.io.tmpdir"))).resolve("genomics-" + System.nanoTime());
             dmod = genomics(work);
             Files.createDirectories(work.resolve("modules"));
-            Files.createDirectories(work.resolve("home"));                              // an empty modules home: genomics arrives by the drop below, not by the install's
             Files.copy(dmod, work.resolve("modules").resolve(dmod.getFileName()));     // dropped in, as an administrator would
             ModuleFixtures.write(work.resolve("placement.yaml"), "modules:\n  genomics:\n    parts:\n      api: { nodes: [local] }\n");
         }
-        r.add("drishti.modules.home", () -> work.resolve("home").toString());
         r.add("drishti.modules.path", () -> work.resolve("modules").toString());
         r.add("drishti.placement.file", () -> work.resolve("placement.yaml").toString());
         r.add("drishti.data.dir", () -> work.resolve("data").toString());

@@ -49,6 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * beside them as version 2 (test data) and the views compared, leaving out only what names the layout itself (its version and
  * fingerprint) and the timings. Written the way {@link SutraNextEquivalenceTest} proves ir-curve.
  */
+@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.packs.enabled=world-economy", "drishti.security.redact=GDP_USD_BN,GROWTH,DEBT,UNEMPLOYMENT,LATEST,ISO3",
