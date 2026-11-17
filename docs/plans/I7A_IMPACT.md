@@ -15,6 +15,13 @@
 -->
 # Impact analysis: release i7a, modules end to end
 
+**Owner decisions, 2026-11-17 (they override the text below where they differ).**
+1. **One Spring context is dropped, permanently.** Per-module **child** contexts (the kernel's context as parent) are the one design:
+   **F1 and I12 (F1a/F1b/F1c) are dropped**, and the guards G11 and G12 hold the child-context design instead
+   (`ModuleControllerPathsGuardTest`, `ModuleBridgeTest`, `ModuleChildContextGuardTest`; TEST_HARNESS.md).
+2. **K5 and I15** (banking's kernel-internals 43 to 39) **move to the next release**.
+3. **There is no separate Drill A**: the one full drill is the release drill (Drill B).
+
 **Status: analysis, nothing built, nothing run.** Companion of `I7A_BUILD_PLAN.md` (the plan; its step names A1…Z1 are used here).
 Read from git only: the base `origin/wip/i6` at `52606dea6` ("the base"), `wip/i7a` at `f8a86ef0a`, `wip/i7a-core` at `010600074`.
 No build, test or server was run for this document, so every statement about behaviour is from reading the code; where a point is
@@ -472,11 +479,11 @@ gate, and the "done means" list. Browser files are the samples to run before han
 | I10 | **K1 + K2** (lane 2, any time after I0; merges before F1) | O | `TypedCallParityTest` incl. language and fixed-today rows | `TypedCallParityTest`, `ApiSurfaceTest`, `TokenScopeGuardTest` | none |
 | I11 | **D1, D2** (D2 alone on its day) | S | `SdkBuildsGenomicsTest`; full compile; surface regenerated | all Java (`clean verify`), `ArchitectureRulesTest` | none |
 | — | **Gate 1**, then **spike** (1 day, O): genomics in the kernel's context on a throw-away branch (F1 point 4) | O | the spike's findings written into F1's brief | – | – |
-| I12 | **F1a** genomics, **F1b** trading + market-data, **F1c** banking: three merges, alone | O | G11, G12, G14 after each; mapping check; no doubled SPI bean | `OneContextTest`, `ModuleHostServerTest`, `KernelWithoutModulesTest`, banking's suite (F1c), `drishti-modules-it` | F1a: `test_genomics_walk_browser.py`; F1b: `test_edition_trading_browser.py`, `test_edition_market_browser.py`, `test_landing.py`; F1c: `test_var_explorer_browser.py`, `test_var_regulatory_browser.py`, `test_pvar_browser.py`, `test_snapshots_var_browser.py`, `test_command_sweep_browser.py`, `test_page_walk_browser.py` |
-| — | **Drill A** | – | plan section 8 | – | – |
+| I12 | **DROPPED (2026-11-17: child contexts stay; G11/G12 hold them)** ~~**F1a** genomics, **F1b** trading + market-data, **F1c** banking: three merges, alone~~ | O | G11, G12, G14 after each; mapping check; no doubled SPI bean | `OneContextTest`, `ModuleHostServerTest`, `KernelWithoutModulesTest`, banking's suite (F1c), `drishti-modules-it` | F1a: `test_genomics_walk_browser.py`; F1b: `test_edition_trading_browser.py`, `test_edition_market_browser.py`, `test_landing.py`; F1c: `test_var_explorer_browser.py`, `test_var_regulatory_browser.py`, `test_pvar_browser.py`, `test_snapshots_var_browser.py`, `test_command_sweep_browser.py`, `test_page_walk_browser.py` |
+| — | **Drill A** (DROPPED, 2026-11-17: the release drill is the one) | – | plan section 8 | – | – |
 | I13 | **K3** operations | O | `OperationsTest`, `OperationsClusterTest`, parity rows per gate | + `PlacementClusterTest` | `test_admin_net_stack_browser.py` |
 | I14 | **K4** landings typed; loopback, `KernelCalls` deleted | S, reviewed by O | G13; landing recordings **unchanged** | `TradingLandingRecordTest`, `MarketLandingRecordTest`, `ApiSurfaceTest` | `test_edition_trading_browser.py`, `test_edition_market_browser.py`, `test_landing_back.py` |
-| I15 | **K5** (beside I13/I14, merges after I13) | S | `BankingReachTest`; G14 | banking's suite | `test_var_explorer_browser.py` |
+| I15 | **MOVED to the next release (2026-11-17)** ~~**K5** (beside I13/I14, merges after I13)~~ | S | `BankingReachTest`; G14 | banking's suite | `test_var_explorer_browser.py` |
 | I16 | **Z1**, then **Drill B** | S | – | – | – |
 
 **Parallel lanes that never touch the same files** (at most three builders; one heavy job at a time).
@@ -501,7 +508,7 @@ the step that makes it.
 | R2 | **Stale packages**: a source edit under `modules/<m>/` (or a file `content.yaml` copies in: lenses, the four guides) not rebuilt; tests pass on old content | `modulepack.digest(folder)` vs the package's `DMOD.MF`; `start server` in a checkout and `conftest.py` (session start) refuse: *"modules/banking changed since banking-1.0.0.dmod was built: python tools/drishti.py build modules banking"*. `tools/test_modules_fresh.py` |
 | R3 | **Kernel build stamp** (S4): banking packed for another jar | `ModuleBoot` refusal already says it; add `BankingMatchesThisKernelTest` in `drishti-modules-it` and a `build modules` self-check (the stamp equals the jar in `lib/`) |
 | R4 | **Class-loading order**: a module's own copy silently unused, a `lib/ext` jar now winning, resources of the kernel leaking into a module's `ServiceLoader` | G10 with three fixtures (module copy, `lib/ext` copy, a `META-INF/services` file in both); banking: zero library warnings |
-| R5 | **One context**: doubled SPI beans, twice-mapped or unprefixed controller paths, bean-name clash, a kernel single-bean injection made ambiguous by a module bean | G11 extended: (a) every handler path of a module bean is under its prefix or declared paths; (b) no mapping registered twice; (c) for each kernel SPI type the injected list has no duplicate instance; (d) a fixture module defining an `ObjectMapper` bean does not change the kernel's |
+| R5 | (dropped with F1; the child contexts stay) **One context**: doubled SPI beans, twice-mapped or unprefixed controller paths, bean-name clash, a kernel single-bean injection made ambiguous by a module bean | G11 extended: (a) every handler path of a module bean is under its prefix or declared paths; (b) no mapping registered twice; (c) for each kernel SPI type the injected list has no duplicate instance; (d) a fixture module defining an `ObjectMapper` bean does not change the kernel's |
 | R6 | **Duplicate-jar warning missing or noisy**: artifact-name comparison misses a shaded or renamed jar | `KernelLibraries` also compares package overlap of each module jar with the kernel list for the top 20 libraries; a test with a renamed Jackson jar |
 | R7 | **Resolver and cache paths in outputs**: `<data>/cache/modules/<id>/<v>-<hash16>` changes every build; a path in a recording, snapshot, generated doc or golden churns | `test_no_cache_paths_recorded.py`: no file under `tests/answers`, `tests/snapshots`, `docs/` contains `cache/modules/`; Admin → resolved paths masks the hash in snapshot pages |
 | R8 | **Writes under the wrong folder**: the cache or the overrides view under `<home>` or the working folder; a test run unpacking into the repository's `data/` | `ModuleBoot` refuses a cache root not under the data folder; `test_paths_guard.py` row; the test harness sets the data folder (as `DRISHTI_RESOLVED_CACHE` is set today) and a guard asserts `data/cache/modules` is untouched by a `--gate` run |
