@@ -29,7 +29,9 @@ release tag `v2.9.11.i_6`.
   the lake connectors' `lookback-days` and every fund, trade, curve and headline was "not held"). A module with a REST namespace always has
   its `api` part, also when its `parts:` name only others (trading declared feeds and console, so `/api/v1/trading/landing/...` answered
   503 "trading has no part api" and the Trading landing had no one to view as). The detached console reads the version file only in its
-  own folder or the one above (it walked up into the checkout it was copied into).
+  own folder or the one above (it walked up into the checkout it was copied into). The server hands the console the console part of a
+  module loaded from its folder with code too (the genomics sample has a `java:` block and is no registry package, so its menu, Home
+  cards and Help section had gone from the thin console).
 
 - **Home's facts can ask a compute engine again, and a retired renderer path says its deprecation.** The installation answer's engine
   catalogue carries each engine's API roots (`api`; a fact's step names an engine and asks a path under its API, so every shipped
