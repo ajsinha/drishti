@@ -180,8 +180,10 @@ async def versioned_css(request: Request, version: str):
 
 
 # Drishti Elements' bundles that the console's scripts draw with in an embed (the vendored copy, core/elements_pin.py): the nested pivot of tree rows
-# and Chart any table's table draw with drishti-grid, which needs drishti-core. Each library's own bundle and style sheet, nothing else.
+# and Chart any table's table draw with drishti-grid, which requires drishti-core, drishti-inputs and drishti-chart (drishti-elements.json). Each library's
+# own bundle and style sheet, nothing else.
 ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css"),
+                   ("drishti-chart", "drishti_chart.js"), ("drishti-chart", "drishti_chart.css"),
                    ("drishti-inputs", "drishti_inputs.js"), ("drishti-inputs", "drishti_inputs.css")}   # the controls' pickers (and the 1.2.0 loader js/multiselect.js)
 
 

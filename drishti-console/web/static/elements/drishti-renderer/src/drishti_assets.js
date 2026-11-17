@@ -84,18 +84,23 @@ function trusted() {
   return policy;
 }
 
+/** A path that names a file of Drishti Elements (its engines, its libraries' bundles), as core/elements_pin.py's is_elements. */
+const ELEMENTS_FILE = /^(?:vendor\/(?:echarts|echarts-gl|codemirror|apache-arrow)\/|elements\/drishti-(?:core|inputs|grid|chart|data|tree|graph|designer)\/)/;
+
 /**
  * Loads a classic script of this console (ECharts, ECharts GL, the map shapes' helper, a console behaviour), once.
  * @param {string} rel its path under the static root
+ * @param {Object<string,string>} [data] data-* attributes of the script element (its settings)
  * @returns {Promise<void>}
  */
-export function script(rel) {
-  const url = /^vendor\/(echarts|echarts-gl)\//.test(rel) ? elementsFile(rel) : statics(rel);   // the engines come with Drishti Elements
+export function script(rel, data) {
+  const url = ELEMENTS_FILE.test(rel) ? elementsFile(rel) : statics(rel);   // the engines and the libraries' bundles come with Drishti Elements
   return memoised('s:' + url, () => new Promise((resolve, reject) => {
     const s = document.createElement('script'), p = trusted();
     s.src = p ? p.createScriptURL(url) : url;
     s.async = false;
     s.setAttribute('data-manual', '');
+    Object.keys(data || {}).forEach((k) => s.setAttribute('data-' + k, data[k]));
     s.onload = () => resolve(); s.onerror = () => reject(new Error('cannot load ' + url));
     document.head.appendChild(s);
   }));
@@ -120,11 +125,11 @@ export async function echartsGl() {
 }
 
 /**
- * The map shapes' helper (window.drishtiGeo): it fetches the vendored Natural Earth files from beside itself.
+ * The map shapes' helper (window.drishtiGeo): it fetches the vendored Natural Earth files that come with Drishti Elements.
  * @returns {Promise<Object>}
  */
 export async function geo() {
-  if (!window.drishtiGeo) { await script('js/drishti_geomap.js'); }
+  if (!window.drishtiGeo) { await script('js/drishti_geomap.js', { maps: elementsFile('vendor/echarts/maps/') }); }
   return window.drishtiGeo;
 }
 

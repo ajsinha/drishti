@@ -30,7 +30,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from core.app import CSP
 from scratch_ports import worker_port
-from core import base_path, half_up, render_dist, screen_grid
+from core import base_path, half_up, list_value, render_dist, screen_grid
+from core import elements_pin as _pin
 
 CONSOLE = Path(__file__).resolve().parent.parent
 WEB = CONSOLE / "web"
@@ -52,6 +53,7 @@ def env(design_on: bool) -> Environment:
         e = Environment(loader=FileSystemLoader(str(WEB / "templates")), extensions=["jinja2.ext.do"], autoescape=True)
         e.globals.update(ASSET_V="", design_on=(lambda: design_on))
         half_up.install(e)
+        list_value.install(e)                       # a list attribute's value as the console draws it
         base_path.install(e)                        # BASE and the filter u (core/base_path.py)
         _envs[design_on] = e
     return _envs[design_on]
@@ -76,12 +78,12 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     ref = vm.get("ref") or {}
     view = (f'<div class="view" data-view data-kind="{ref.get("kind", "")}" data-id="{ref.get("id", "")}">'
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
-    links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
-    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/drishti-elements/2.4.0/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/vendor/drishti-elements/2.4.0/elements/drishti-inputs/drishti_inputs.js", "/static/vendor/drishti-elements/2.4.0/elements/drishti-chart/drishti_chart.js",
+    links = "".join(f'<link rel="stylesheet" href="{_pin.static_url(s.removeprefix("static/"))}">' for s in CONSOLE_SHEETS)   # Elements' sheets from the vendored tree
+    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", _pin.URL + "/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", _pin.URL + "/elements/drishti-inputs/drishti_inputs.js", _pin.URL + "/elements/drishti-chart/drishti_chart.js",
                                                                      "/static/js/drishti_charts.js", "/static/js/drishti_view.js",
-                                                                     "/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/drishti_grid.js", "/render-test/trees.js"))
+                                                                     _pin.URL + "/elements/drishti-grid/drishti_grid.js", "/render-test/trees.js", "/render-test/chips.js"))
     # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)
-    resize = '<link rel="stylesheet" href="/static/vendor/drishti-elements/2.4.0/css/drishti_resize.css"><script src="/static/vendor/drishti-elements/2.4.0/elements/drishti-core/drishti_core.js"></script>'
+    resize = f'<link rel="stylesheet" href="{_pin.URL}/css/drishti_resize.css"><script src="{_pin.URL}/elements/drishti-core/drishti_core.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""
     return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}{resize}</head><body class="terminal">{view}{scripts}</body></html>'
 
@@ -95,6 +97,9 @@ CSP_JS = "window.__csp = []; document.addEventListener('securitypolicyviolation'
 # the console's tables with children, drawn as drishti_tree-rows.js draws them (drishti-tree's treeTables), without its nested pivots
 TREES_JS = ("(function () { var E = window.Drishti && window.Drishti.elements; if (E && document.querySelector('table.tbl-tree')) {"
             " E.core.load('drishti-tree').then(function (T) { T.treeTables(document, { scope: location.pathname }); }); } })();")
+
+# the list values the macros wrote (span[data-drishti-chips]) as chips, as drishti_app.js upgrades them on every console page
+CHIPS_JS = "(function () { var C = window.Drishti && window.Drishti.elements && window.Drishti.elements.core; if (C && C.upgradeChips) { C.upgradeChips(document); } })();"
 
 HARNESS_JS = """
 import { render } from '%s';
@@ -130,7 +135,7 @@ class Site:
     """The made-up origin: static files from web/static, test pages and ViewModels from memory; every request is recorded."""
 
     def __init__(self):
-        self.pages: dict[str, str] = {"/render-test/library.html": library_html(), "/render-test/csp.js": CSP_JS, "/render-test/trees.js": TREES_JS, "/render-test/harness.js": HARNESS_JS,
+        self.pages: dict[str, str] = {"/render-test/library.html": library_html(), "/render-test/csp.js": CSP_JS, "/render-test/trees.js": TREES_JS, "/render-test/chips.js": CHIPS_JS, "/render-test/harness.js": HARNESS_JS,
                                      "/render-test/page.css": "body { margin: 0; }", "/render-test/lab.html": LAB_HTML, "/render-test/lab.js": LAB_JS}
         self.requests: list[str] = []
 

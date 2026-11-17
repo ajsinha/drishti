@@ -18,7 +18,7 @@
    server's table, drawn by the grid: docTable, docDrill, docPivot, docPlainTable) with the renderer's cells as its hooks; charts are
    drishti-chart's panel charts, drawn from the container's data (a property, never an attribute of JSON) once the panel is in the page;
    the few figures the macros compute (a bar's width, a share, a gauge's level, a progress) are rounded by drishti-core, half up. */
-import { roundHalfUp, formatNumber, formatPythonFloat, basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { roundHalfUp, formatNumber, formatPythonFloat, basePath, url as drishtiUrl, configure, endpoint } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 import { docPivotable, docDrill, docPivot, docPlainTable } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
 import { h, str, icon, toneClass, capitalize } from './drishti_dom.js';
 import { cellText, entity, entityLink, fields } from './drishti_cells.js';
@@ -34,6 +34,10 @@ export function tableHooks(R) {
 
 /** A bar's width, a gauge's level: percent of the whole, one decimal, half up (data-w). */
 const pct1 = (v, whole) => roundHalfUp(v / (whole || 1) * 100, 1);
+
+// the console's pivot screen, told to Drishti Elements as the console's pages tell it (drishti_elements-host.js): drishti-grid draws the
+// Pivot link only for a host that names it, and these modules are their own instance of drishti-core
+if (!endpoint('pivotPage')) { configure({ endpoints: { pivotPage: '/pivot' } }); }
 
 /** The table kinds: a drill-down (levels:), else the table with the Pivot link the Sutra opts into (the macro's pivot_link). */
 const tableKind = (R, p) => (p.data.levels ? docDrill(document, p, tableHooks(R)) : docPivotable(document, p, tableHooks(R)));

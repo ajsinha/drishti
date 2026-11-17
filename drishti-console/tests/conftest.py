@@ -60,6 +60,16 @@ if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
     _TMP = tempfile.mkdtemp(prefix="drishti-console-tmp-")
     os.environ["DRISHTI_CONSOLE_TMP_DIR"] = _TMP
     atexit.register(shutil.rmtree, _TMP, True)
+if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
+    # the Java resolver's answers the tools read (tools/resolved.py) are cached in the test run's own folder, shared by its workers and
+    # the tools it starts, never under the repository's data/tmp/resolved, which the drill checks is left unchanged
+    import atexit
+    import shutil
+    import tempfile
+
+    _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
+    os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
+    atexit.register(shutil.rmtree, _RESOLVED, True)
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)
 from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401 - the per-worker fixtures (TEST_HARNESS.md)

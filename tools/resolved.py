@@ -16,7 +16,7 @@
 
 The Java resolver (``ConfigResolution``, ``PackLoader``, ``ConnectorLayers``) answers through the kernel jar with no server running:
 ``java -jar <home>/lib/drishti-server-*-exec.jar resolve --json [--root DIR | --site DIR] [--connectors DIR]``. This module runs it, keeps
-the document under the data folder (``<data>/tmp/resolved/``) by a key of its inputs' modification times, and gives the tools data classes
+the document under the data folder (``<data>/tmp/resolved/``, or ``DRISHTI_RESOLVED_CACHE``) by a key of its inputs' modification times, and gives the tools data classes
 over it. It holds **no rule**: no layering, no ``replaces``, no on or off, no connector merge; a question the document does not answer is
 asked of the Java resolver by a new field, never worked out here. A checkout with no built jar says so in one line with the command that
 builds it (``python tools/drishti.py build jar``).
@@ -262,7 +262,10 @@ def _override_dirs(home: Path) -> list[Path]:
 
 
 def _cache_dir() -> Path:
-    return javacmd.launch_roots()["data"][0] / "tmp" / "resolved"
+    """``DRISHTI_RESOLVED_CACHE`` (a test run's own folder: the test harness sets it, so a run never writes under the data folder),
+    else ``<data>/tmp/resolved``."""
+    given = (os.environ.get("DRISHTI_RESOLVED_CACHE") or "").strip()
+    return Path(given).expanduser().resolve() if given else javacmd.launch_roots()["data"][0] / "tmp" / "resolved"
 
 
 def _ask(args: tuple) -> dict:

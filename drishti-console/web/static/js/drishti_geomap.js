@@ -35,7 +35,9 @@
   // an embedded element loads this file from /embed/v1/js/ and the shapes from /embed/v1/ on the same server; the console, from its static folder
   // the client-side renderer (static/render/) loads it from a console that may not be the page's origin: the shapes come from beside it
   var CORE = window.Drishti && window.Drishti.elements && window.Drishti.elements.core;   // the shapes come with Drishti Elements (vendored): by drishti-core's static root
-  var BASE = /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
+  var GIVEN = document.currentScript && document.currentScript.getAttribute('data-maps');   // the loader names the maps folder (the client-side renderer: Drishti Elements' vendored tree)
+  var BASE = GIVEN ? GIVEN.replace(/\/?$/, '/')
+    : /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
     : CORE ? CORE.staticUrl('vendor/echarts/maps/')
     : /\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/')
     : drishti_url('/static/vendor/echarts/maps/');   // /static/js/ or /embed/v2/js/: the maps beside it (a URL that already carries the base path)

@@ -15,7 +15,7 @@
  */
 /* A retired name, kept only as a loader. Pivot rows are drawn by drishti-grid (Drishti Elements) since 2.9.11.e; the renderer 1.2.0, whose
    released folder never changes, still loads js/pivot-grid.js before js/tree-rows.js. So this file draws nothing: it adds the console's
-   drishti-core and drishti-grid bundles to the page (once, in order, before the scripts loaded after it), and tree rows find the grid. The
+   drishti-grid bundle and the libraries it requires (drishti-core, drishti-inputs, drishti-chart) to the page (once, in order, before the scripts loaded after it), and tree rows find the grid. The
    embed routes serve the same bundles beside the scripts (/embed/v1/elements/..., /embed/v2/elements/...), so the base works there too.
    Deleted with the renderer 1.2.0 (renderer 2.0.0 draws with the libraries; Drishti Elements' docs/DESIGN.md, step 8). */
 (function () {
@@ -26,8 +26,9 @@
   var base = me.src.replace(/js\/(?:drishti_)?pivot-grid\.js.*$/, "");
   if (D.elements && D.elements.core) { base = D.elements.core.staticUrl(""); }   // a console page: the vendored Drishti Elements (an embed: its routes beside it)
   var v = /[?&]v=([^&]+)/.exec(me.src);
-  ["elements/drishti-core/drishti_core.js", "elements/drishti-grid/drishti_grid.js"].forEach(function (p) {
-    if (p.indexOf("core") > 0 && D.elements && D.elements.core) { return; }
+  ["elements/drishti-core/drishti_core.js", "elements/drishti-inputs/drishti_inputs.js", "elements/drishti-chart/drishti_chart.js", "elements/drishti-grid/drishti_grid.js"].forEach(function (p) {   // drishti-grid and what it requires, in order (drishti-elements.json)
+    var name = p.split("/")[1], have = D.elements && D.elements.libs && D.elements.libs[name];
+    if (have || (name === "drishti-core" && D.elements && D.elements.core)) { return; }
     try {
       var s = document.createElement("script");
       s.src = drishti_url(base + p + (v ? "?v=" + v[1] : ""));
