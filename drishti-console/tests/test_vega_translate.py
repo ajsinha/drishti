@@ -15,7 +15,6 @@
 """Vega-Lite translated by drishti-chart (the product owner's decision O1): the two shipped specifications (the python-desk-risk report's
 vega-lite visual and what the pnl-vega Python item returns) translate whole and draw what Vega drew (the chart's data and encodings, read
 from drishti-chart's built option in Node), and an unsupported feature is refused in words with the alternative. Starts Node, so it runs in
-from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 the console's lane (the guard against the Vega library is a quick file check: test_bi_wave_c.py)."""
 import json
 import shutil
@@ -25,6 +24,7 @@ import pytest
 import yaml
 
 from conftest import CONSOLE
+from core import elements_pin  # the vendored Drishti Elements
 
 ROOT = CONSOLE.parent
 NODE = shutil.which("node")
