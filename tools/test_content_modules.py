@@ -105,8 +105,18 @@ def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
         for pack in (m.get("provides") or {}).get("kinds", {}):
             assert f"packs/{pack}/pack.yaml" in names, pack
             assert z.read(f"packs/{pack}/pack.yaml").decode() == (MODULES / mid / "packs" / pack / "pack.yaml").read_text(encoding="utf-8")
+    # a restricted file (content.yaml, with its licence reason) is absent; every other sample of the pack travels
+    restricted = set(modulepack.restricted_paths(MODULES / mid))
+    assert not restricted & set(names), sorted(restricted & set(names))
+    for r in restricted:
+        assert (MODULES / mid / r).is_file(), r
     if mid == "economy":
-        assert not any(n.startswith("packs/world-economy/samples") for n in names)   # the IMF figures stay internal
+        assert restricted == {f"packs/world-economy/samples/{n}.jsonl" for n in ("catalog", "economic-forecast", "economy", "fiscal-position", "macro-indicator")}
+        shipped = {Path(n).name for n in names if n.startswith("packs/world-economy/samples/")}
+        assert {"jurisdiction.jsonl", "region.jsonl", "region-economy.jsonl", "election.jsonl", "party.jsonl", "office-holder.jsonl",
+                "labour-market.jsonl", "social-indicator.jsonl"} <= shipped                    # the non-IMF samples travel
+        samples = [p for p in (MODULES / mid / "packs" / "world-economy" / "samples").glob("*.jsonl") if f"packs/world-economy/samples/{p.name}" not in restricted]
+        assert not [p.name for p in samples if re.search(r"imf|weo", p.read_text(encoding="utf-8"), re.I)], "a shipped sample names the IMF"
 
 
 @pytest.mark.parametrize("mid", ["market-data", "trading", "banking", "genomics"])

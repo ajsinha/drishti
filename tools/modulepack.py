@@ -180,6 +180,8 @@ def _bring_content(src: Path, entries: dict) -> None:
             gone = p + "/" + str(x).strip("/")
             for k in [k for k in entries if k == gone or k.startswith(gone + "/")]:
                 del entries[k]
+    for e in spec.get("restricted") or []:
+        _leave_restricted(f, e, entries)
     for e in spec.get("copy") or []:
         frm = (src / str(e.get("from", ""))).resolve()
         to = str(e.get("to", "")).strip("/")
@@ -197,6 +199,25 @@ def _bring_content(src: Path, entries: dict) -> None:
             for n in filenames:
                 if n not in leave and not n.endswith(".pyc"):
                     entries["/".join((to, *rel_dir.parts, n))] = Path(dirpath) / n
+
+
+def _leave_restricted(f: Path, e: dict, entries: dict) -> None:
+    """``restricted:`` in content.yaml: a file the module's folder holds but its package may never carry (a licence says so), each named
+    with the reason. This is the one way a served file (:data:`SERVED`) is left out, and it is explicit: the file must exist in the
+    folder, the reason must be given, and a test asserts exactly the files named here are absent from the package."""
+    p = str((e or {}).get("path", "")).strip("/")
+    if not p or ".." in p.split("/") or not str((e or {}).get("reason", "")).strip():
+        raise PackError(f"{f}: restricted {e} needs a `path` of a file in the module and a `reason` (the licence)")
+    if p not in entries:
+        raise PackError(f"{f}: restricted {p} is not a file of the package's layout (a wrong name would restrict nothing)")
+    del entries[p]
+
+
+def restricted_paths(folder: Path) -> list[str]:
+    """The files content.yaml of ``folder`` restricts (:func:`_leave_restricted`), package-relative."""
+    f = Path(folder) / CONTENT_YAML
+    spec = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
+    return [str(e["path"]).strip("/") for e in spec.get("restricted") or []]
 
 
 def _never_served(f: Path, e: dict, x) -> None:

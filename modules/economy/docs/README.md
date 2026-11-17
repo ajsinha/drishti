@@ -8,7 +8,7 @@ domain: economy
 summary: Economies, forecasts, elections and governments; development indicators, central banks, national statistics, the OECD, official press releases, news and quotes, GDELT world events; the World lens.
 packs: [world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
 distributions: [drishti.finance, drishti.all]
-internal-only: the IMF figures of world-economy (no samples in the package)
+internal-only: the IMF figures of world-economy (five sample files, listed under `restricted:` in content.yaml, are not in the package)
 ---
 
 # The economy module
@@ -25,6 +25,6 @@ function under `/m/economy/`), the **World lens** and its Help. Each pack is fil
 | Help | `docs/help.yaml`: the packs' guides, the public-sector tutorial |
 | Data it needs | `data/needs.yaml`: every kind, bound by the site to its own connectors |
 
-The IMF figures stay internal-only: the world-economy pack's samples are left out of the package. The World landing (Home's World desk)
+The IMF figures stay internal-only: the five IMF-derived sample files of world-economy (`catalog`, `economic-forecast`, `economy`, `fiscal-position`, `macro-indicator`) are named under `restricted:` in `content.yaml`, with their licence reason, and are left out of the package; the other samples (jurisdictions, regions, elections, parties, office holders, labour markets, social indicators) travel, so a read such as JUR-AUS answers on an installed server. The World landing (Home's World desk)
 is still drawn by the console's economy plugin until its two tables move onto the Elements grid (conformance C2). The module carries no
 connector.
