@@ -184,7 +184,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [BUILD_GUIDE.md](BUILD_GUIDE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the map region builder |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
@@ -1668,7 +1668,7 @@ live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` f
 
 ### 5.9 The multi-select and the date fields
 
-The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](../architecture/ELEMENTS.md) section 8.2),
+The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 8.2),
 loaded on every page by `base.html`. A form stays a plain server form: `drishti_app.js` calls `upgradeFields(document)`, which turns
 every `<input type="date">` into the business-date picker (the field becomes a hidden input with the same name and value, so the form
 sends `2026-11-06` as before) and every group marked `data-multiselect` with more than six checkboxes into the multi-select (chips, a
@@ -4006,7 +4006,7 @@ forwards its requests once to a placed node (`X-Drishti-Placement` names who ran
 ### 12.6 How to create a custom visual
 
 A chart Drishti does not have is a **kind of drishti-chart's registry** in the module's own Elements library, never a drawing of its own
-([ELEMENTS.md section 7.4](../architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)):
+([ELEMENTS.md section 7.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
 
 ```bash
 mvn drishti:visual -Dname=lane-flow -Dtitle="Lane flow"     # in the module project

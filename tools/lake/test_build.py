@@ -312,6 +312,26 @@ class BuildTest(unittest.TestCase):
         self.assertEqual((s["pack"], s["domain"], s["kind"], s["promote"]), ("synth-book", "book", "deal", ["NOTIONAL"]))
         self.assertTrue((self.lake / "book" / "deal" / "_delta_log").is_dir())
 
+    def test_a_kind_with_tables_in_two_domains_writes_the_pack_connectors_table(self):
+        """A lake file with the kind in two domains (protein: protein-engineering's table and the genomics example pack's): the load of a
+        pack whose connector names its domain picks that domain's entry, never refused as ambiguous."""
+        from unittest import mock
+        lakes = self.root / "lakes"
+        lakes.mkdir()
+        (lakes / "two.yaml").write_text(f"lake: two\nformat: delta\nroot: {self.lake}\ntables:\n  other.deal: {{}}\n  book.deal: {{}}\n",
+                                        encoding="utf-8")
+        pack = self.root / "pack"
+        pack.mkdir()
+        (pack / "pack.yaml").write_text(
+            "pack: synth-book\nconnectors:\n  book-store:\n    plugin: delta\n    kinds: [deal]\n    settings:\n      root: x\n      domain: book\n"
+            "ingest:\n  deal: {key: TRADE_ID, date: TRADE_DATE}\n", encoding="utf-8")
+        with mock.patch.dict(os.environ, {"DRISHTI_LAKES_DIR": str(lakes)}):
+            p = build.plan(args(src=[str(self.src)], lake="two", pack=str(pack)))
+            self.assertEqual((p["domain"], p["kind"], p["table"]), ("book", "deal", "deal"))
+            with self.assertRaises(build.BuildError) as refused:           # no domain to go by: both tables named, nothing guessed
+                build.plan(args(src=[str(self.src)], lake="two", kind="deal", key="TRADE_ID"))
+            self.assertIn("more than one table", str(refused.exception))
+
     def test_the_connectors_set_is_stamped_into_rows_that_lack_the_field(self):
         pack = self.root / "pack"
         pack.mkdir()

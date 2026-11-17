@@ -482,9 +482,10 @@ def help_sections(console_dir: Path) -> list[dict]:
     return modules.help_heads([dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")])
 
 
-def spec_of(console_dir: Path) -> dict:
-    """The sitemap as read (for the guard and the Build home)."""
-    return _spec(console_dir)
+def spec_of(console_dir: Path, editions=None) -> dict:
+    """The sitemap as read (for the guard and the Build home): the kernel's pages with the modules' menus of ``editions``'s installation
+    answer (an app's :class:`core.edition.Editions`; none: the kernel's pages only)."""
+    return _spec(console_dir, editions)
 
 
 def placeholder(request) -> str:

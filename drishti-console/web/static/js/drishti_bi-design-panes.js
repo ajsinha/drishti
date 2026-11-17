@@ -45,7 +45,7 @@
     }).catch(() => {});
     const q = D.q;
 
-    // ---- Fields: drishti-tree's outline (one component for every tree; ELEMENTS.md 12.3) --------------------------------------
+    // ---- Fields: drishti-tree's outline (one component for every tree; Drishti Elements' docs/DESIGN.md 12.3) --------------------------------------
     // the dataset's tables and their columns (a date opens into its parts), its measures and hierarchies, in folders as the model files
     // them; each field a button (a click, or Enter, adds it; a drag puts it on the canvas or a well); badges say masked, this report only,
     // default or model, the time function; a measure of this report only on a model links to the model; one branch per added dataset

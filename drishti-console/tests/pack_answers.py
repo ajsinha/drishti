@@ -114,7 +114,8 @@ def me_console(rows: list[dict], user: str = "ash", roles=(), admin: bool | None
                                      for k, _, v in (str(x).partition(":") for x in rules)):
             opened.append(e["id"])
     doc = {"person": {"user": user, "roles": sorted(roles), "admin": admin}, "packs": packs, "installation": "test",
-           "engines-opened": opened, "grants": ["admin"] if admin else []}
+           "engines-opened": opened, "grants": ["admin"] if admin else [],
+           "admin-pages": server_answers.admin_pages() if admin else []}      # the Admin pages the server lists for an administrator
     return {"stamp": "p-" + _digest(doc), **doc}
 
 

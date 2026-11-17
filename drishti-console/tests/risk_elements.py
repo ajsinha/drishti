@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Reading the VaR and exposure screens' Drishti Elements in a browser test (ELEMENTS.md 4.8): a risk grid's rows through its model (a
+"""Reading the VaR and exposure screens' Drishti Elements in a browser test (Drishti Elements' docs/DESIGN.md 4.8): a risk grid's rows through its model (a
 grid draws only the rows in view, so the DOM is not the table) and a risk chart's drawing through its built option and figures (a
 drishti-chart draws on a canvas, so there are no SVG nodes to count). The screens' tests assert the server's figures on what these give."""
 from __future__ import annotations

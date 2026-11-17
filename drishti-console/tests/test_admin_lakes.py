@@ -86,6 +86,24 @@ def test_the_page_and_the_data_loads_link(client, backend, monkeypatch, lakes):
     assert 'href="/admin/lakes"' in client.get("/admin/loads").text
 
 
+def test_a_console_not_on_the_servers_machine_says_where_the_lakes_pages_run(client, backend, monkeypatch, tmp_path):
+    """No lake engine beside the console (a console that holds only its own folder, THIN_CONSOLE_DESIGN.md Q7): both pages answer, say that
+    the build, maintenance and a table's detail run on a console on the server's machine, offer no form, and still show the server's own
+    read-only answer of its lake files."""
+    calls = []
+    fake(backend, monkeypatch, calls)
+    client.app.state.lakes = Lakes(LakeSettings(roots=[tmp_path / "lake"], tools_dir=tmp_path / "no-tools"))
+    try:
+        page = client.get("/admin/lakes")
+        assert page.status_code == 200 and "data-lakes-elsewhere" in page.text and "on the server's machine" in page.text
+        assert "data-file" not in page.text and "drishti_admin-lakes.js" not in page.text and "Recent builds" not in page.text
+        assert any(c[1] == "/lakes/files" for c in calls)                                 # the server's answer, read-only
+        table = client.get("/admin/lakes/table", params={"root": str(tmp_path / "lake"), "table": "book/deal"})
+        assert table.status_code == 200 and "data-lakes-elsewhere" in table.text
+    finally:
+        del client.app.state.lakes
+
+
 def test_upload_scan_and_targets(client, backend, monkeypatch, lakes):
     fake(backend, monkeypatch, [])
     u = upload(client, book())

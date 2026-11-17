@@ -19,7 +19,7 @@
 {% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_form.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_form.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% if not design %}
@@ -213,10 +213,9 @@
 {% endif %}
 {% endblock %}
 {% block scripts %}
-<script src="{{ BASE }}/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}{{ ELEMENTS_DIR }}/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 {% include "_designer_kit.html" %}
-<script src="{{ BASE }}/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
-<script src="{{ BASE }}/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
 <script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
 <script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>
 <script src="{{ BASE }}/static/js/drishti_controls.js?v={{ ASSET_V }}" data-manual></script>

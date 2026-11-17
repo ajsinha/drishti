@@ -22,8 +22,8 @@ import com.ash.drishti.packs.distribution.Distributions;
 import com.ash.drishti.packs.distribution.ModuleManifests;
 import com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ash.drishti.testroots.RecordedAnswers;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,14 +37,13 @@ import org.junit.jupiter.api.Test;
 /**
  * The recorded installation answers the console's unit tests read (docs/architecture/THIN_CONSOLE_DESIGN.md 5.2, "Recorded answers"):
  * {@code drishti-console/tests/answers/bootstrap-<distribution>.json}, one per distribution of the product, made here by the server's own
- * code from the repository's files (the distribution's own lenses offered, every lens's arrangement kept, every module loaded). One direction only: the server
- * makes them, the console reads them. Run with {@code -Ddrishti.record=true} to write them again; otherwise a file that differs from what
- * the server makes fails here, so a console test never reads a stale sample.
+ * code from the repository's files (the distribution's own lenses offered, every lens's arrangement kept, every module loaded). Kept by
+ * {@link RecordedAnswers}, as the modules' landing recordings are: one direction only (the server makes them, the console reads them);
+ * {@code -Ddrishti.record=true} writes them again, otherwise a file that differs from what the server makes fails here.
  */
 class ConsoleAnswersRecordTest {
 
     static final Path REPO = Path.of(com.ash.drishti.testroots.TestRoots.repo());
-    static final Path OUT = REPO.resolve("drishti-console/tests/answers");
 
     @Test
     void theRecordedBootstrapsAreTheServersAnswers() throws Exception {
@@ -53,8 +52,7 @@ class ConsoleAnswersRecordTest {
         List<String> lenses = lensNames(REPO.resolve("config/lenses"));
         Map<String, List<String>> mapping = EditionEnvironmentPostProcessor.featureMapping(dir, "console");
         ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
-        boolean record = Boolean.getBoolean("drishti.record");
-        List<String> stale = new ArrayList<>();
+        RecordedAnswers rec = RecordedAnswers.under(REPO, "");
         try (Stream<Path> s = Files.list(dir)) {
             for (Path f : s.filter(p -> p.getFileName().toString().matches("drishti\\.[a-z0-9-]+\\.yaml")).sorted().toList()) {
                 Distribution d = Distributions.read(f, dir.resolve(Distributions.KERNEL), REPO.resolve("modules"), REPO.resolve("config/packs"));
@@ -71,35 +69,57 @@ class ConsoleAnswersRecordTest {
                 doc.put("modules", modules);
                 doc.put("engines", engines());
                 doc.put("under-construction", underConstruction());
-                String text = json.writeValueAsString(doc).replace("\r\n", "\n") + "\n";
-                assertThat(text).as("no folder of the repository").doesNotContain(REPO.toString());
-                Path out = OUT.resolve("bootstrap-" + d.shortName() + ".json");
-                if (record || !Files.isRegularFile(out)) {
-                    Files.createDirectories(OUT);
-                    Files.writeString(out, text, StandardCharsets.UTF_8);
-                } else if (!Files.readString(out, StandardCharsets.UTF_8).equals(text)) {
-                    stale.add(out.getFileName().toString());
-                }
+                doc.put("limits", ConsoleAnswers.limits(com.ash.drishti.engine.shape.BuilderProperties.defaults()));
+                doc.put("commands", commands(d.packs()));
+                rec.keep("bootstrap-" + d.shortName() + ".json", json.writeValueAsString(doc));
             }
         }
-        assertThat(stale).as("recorded answers older than the server's: run this test with -Ddrishti.record=true").isEmpty();
+        rec.assertCurrent();
     }
 
     /** The product's engine catalogue and each module's (banking's jar resource), every engine running. */
     static List<Map<String, Object>> engines() throws Exception {
         List<Map<String, Object>> out = new ArrayList<>();
         Map<String, com.ash.drishti.server.engines.EngineCatalogue.Entry> all = new LinkedHashMap<>();
-        try (Stream<Path> s = Files.walk(REPO.resolve("modules"), 8)) {
-            for (Path f : s.filter(p -> p.toString().replace('\\', '/').endsWith("src/main/resources/" + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE))
-                    .sorted().toList()) {
+        // a module's jar parts are modules/<module>/java/<part>/ (KERNEL_AND_MODULES.md): each part's engines.yaml, in a sorted order
+        java.nio.file.PathMatcher jarPart = REPO.getFileSystem().getPathMatcher(
+                "glob:modules/*/java/*/src/main/resources/" + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE);
+        try (Stream<Path> s = Files.walk(REPO.resolve("modules"))) {
+            for (Path f : s.filter(p -> jarPart.matches(REPO.relativize(p))).sorted().toList()) {
                 try (java.io.InputStream in = Files.newInputStream(f)) {
                     all.putAll(com.ash.drishti.server.engines.EngineCatalogue.moduleEntries(in));
                 }
             }
         }
+        assertThat(all).as("the modules' engines (modules/<module>/java/<part>/src/main/resources/META-INF/drishti/engines.yaml)").isNotEmpty();
         com.ash.drishti.server.engines.EngineCatalogue.load().all().forEach(e -> all.putIfAbsent(e.id(), e));
         all.values().forEach(e -> out.add(com.ash.drishti.server.engines.EngineCluster.consoleRow(e, true, true)));
         return out;
+    }
+
+    /** The Admin pages an administrator's answer lists (GET /api/v1/me/console {@code admin-pages}), for the console's stand-in server. */
+    @Test
+    void theRecordedAdminPagesAreTheServers() throws Exception {
+        ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        RecordedAnswers rec = RecordedAnswers.under(REPO, "");
+        rec.keep("admin-pages.json", json.writeValueAsString(Map.of("admin-pages", ConsoleController.ADMIN_PAGES)));
+        rec.assertCurrent();
+    }
+
+    /**
+     * Every command word of the repository's installation as a server running the distribution answers it: every module on, loaded the
+     * packs the distribution names, else the default list ({@link ConsoleAnswers#commands(com.ash.drishti.api.resolution.ConfigResolution, Map)}).
+     */
+    static Map<String, Object> commands(List<String> named) {
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.repository(REPO);
+        Map<String, Map<String, Object>> loaded = new LinkedHashMap<>();
+        for (String name : named.isEmpty() ? com.ash.drishti.packs.edition.Editions.defaultPacks() : named) {
+            com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
+            if (at != null) {
+                loaded.put(name, ConsoleAnswers.read(at.dir().resolve("pack.yaml")));
+            }
+        }
+        return ConsoleAnswers.commands(r, loaded);
     }
 
     /** The shipped under-construction registry as the console draws it. */

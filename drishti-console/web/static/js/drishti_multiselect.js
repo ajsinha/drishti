@@ -16,13 +16,14 @@
 /* A retired name, kept only as a loader. The multi-select is drishti-inputs' MultiSelect (Drishti Elements) since 2.9.11.e; the renderer
    1.2.0, whose released folder never changes, still loads js/multiselect.js before js/controls.js. So this file draws nothing: it adds
    the console's drishti-core and drishti-inputs bundles and the inputs' style sheet to the page (once, in order, before the scripts
-   loaded after it), and the controls find the pickers. Deleted with the renderer 1.2.0 (ELEMENTS.md section 12, step 8). */
+   loaded after it), and the controls find the pickers. Deleted with the renderer 1.2.0 (Drishti Elements' docs/DESIGN.md, step 8). */
 (function () {
   "use strict";
   function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, D = window.Drishti || {};
   if (!me || !me.src || (D.elements && D.elements.inputs)) { return; }
   var base = me.src.replace(/js\/(?:drishti_)?multiselect\.js.*$/, "");
+  if (D.elements && D.elements.core) { base = D.elements.core.staticUrl(""); }   // a console page: the vendored Drishti Elements (an embed: its routes beside it)
   var v = /[?&]v=([^&]+)/.exec(me.src), q = v ? "?v=" + v[1] : "";
   try {
     var l = document.createElement("link");

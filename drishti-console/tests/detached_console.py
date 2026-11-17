@@ -12,11 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The detached console (docs/architecture/THIN_CONSOLE_DESIGN.md 5, step S0; 5.2): a copy of ``drishti-console/`` alone, in a folder
-that holds nothing of the server's (no ``config/``, ``modules/``, ``docs/contracts``, ``tools/``), started as a real console process in
-front of a real server, with an audit hook (Python's ``sys.addaudithook``) in every process of it that records each file it opens or
-folder it lists outside its own folder, its data folder and Python's own: the remaining readers, each named by the console file and line
-that asked. That list is the checklist of the thin console's steps; a reader not on the known list fails the test.
+"""The detached console (docs/architecture/THIN_CONSOLE_DESIGN.md 5, step S0; 5.2): a copy of ``drishti-console/`` with what ships
+beside it in every install (``SHIPPED``: Help's documents, section 4.1), in a folder that holds nothing of the server's (no ``config/``,
+``modules/``, ``docs/contracts``, ``tools/``), started as a real console process in front of a real server, with an audit hook (Python's
+``sys.addaudithook``) in every process of it that records each file it opens or folder it lists outside its own folder, the documents
+shipped with it, its data folder and Python's own: the remaining readers, each named by the console file and line that asked. That list
+is the checklist of the thin console's steps; a reader not on the known list fails the test.
 
 What the hook sees: ``open``, ``os.listdir``, ``os.scandir`` (``glob``, ``rglob``, ``iterdir``). Not seen: ``stat`` alone
 (``Path.exists``, ``is_file``); a reader that only asks whether a file exists is found by the pages it then draws wrongly.
@@ -36,6 +37,10 @@ from pathlib import Path
 
 CONSOLE = Path(__file__).resolve().parents[1]
 REPO = CONSOLE.parent
+#: what ships beside the console in every install, as the console images copy it (deploy/docker/console.Dockerfile,
+#: deploy/docker/ecs/console.Dockerfile; test_console_ships_its_help.py holds them to this list): the documents Help renders
+#: (``help.docs_dir``: ``../docs``) and the root documents Help and the footer show. ``docs/contracts`` is the server's (S0) and stays out.
+SHIPPED = ("docs", "LICENSE", "CHANGELOG.md", "RELEASE_NOTES.md", "THIRD-PARTY-NOTICES.md")
 
 #: the audit hook, written as sitecustomize.py into a folder on PYTHONPATH: every process of the console (each worker) loads it
 HOOK = r'''
@@ -101,9 +106,17 @@ class Detached:
 
 
 def copy_console(dst: Path) -> Path:
-    """``drishti-console/`` copied alone into ``dst`` (its tests and caches left out); the copy's folder."""
+    """``drishti-console/`` copied into ``dst`` with what ships beside it (``SHIPPED``, as an install lays it out: ``dst/docs``, ...; its
+    tests, caches and virtual environment left out: the copy runs on this interpreter, and a checkout's ``.venv`` is often a link to
+    another's); the copy's folder."""
     target = dst / "drishti-console"
-    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs"))
+    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs", ".venv", "venv"))
+    for name in SHIPPED:
+        src = REPO / name
+        if src.is_dir():
+            shutil.copytree(src, dst / name, ignore=lambda d, names, top=str(src): ["contracts"] if d == top and "contracts" in names else [])
+        else:
+            shutil.copy2(src, dst / name)
     return target
 
 
@@ -127,7 +140,8 @@ def start(tmp: Path, server: str, extra: dict | None = None, seconds: float = 12
     port = free_port()
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(tmp), "PYTHONPATH": str(hook), "PYTHONDONTWRITEBYTECODE": "1",
            "DRISHTI_DATA_DIR": str(data), "DRISHTI_CONSOLE_TMP_DIR": str(data / "tmp"),
-           "DRISHTI_AUDIT_LOG": str(log), "DRISHTI_AUDIT_CODE": str(copy), "DRISHTI_AUDIT_ALLOW": os.pathsep.join([str(copy), str(data), str(hook)]),
+           "DRISHTI_AUDIT_LOG": str(log), "DRISHTI_AUDIT_CODE": str(copy),
+           "DRISHTI_AUDIT_ALLOW": os.pathsep.join([str(copy), str(data), str(hook), *[str(tmp / n) for n in SHIPPED]]),
            "DRISHTI_AUDIT_WATCH": os.pathsep.join([str(tmp), str(REPO)])}
     args = [sys.executable, str(copy / "run_drishti_web.py"), f"--server.port={port}", "--server.host=127.0.0.1", f"--backend.url={server}",
             *[f"--{k}={v}" for k, v in (extra or {}).items()]]
@@ -157,3 +171,4 @@ def start(tmp: Path, server: str, extra: dict | None = None, seconds: float = 12
             proc.kill()
             proc.wait(10)
         out.close()
+        shutil.rmtree(tmp / "docs", ignore_errors=True)          # the shipped documents' copy is large: not kept among pytest's runs

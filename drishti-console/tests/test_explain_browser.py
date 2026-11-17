@@ -43,7 +43,7 @@ def stack(tmp_path_factory):
     if keep and (Path(keep) / "delta" / "risk" / "scenario-pv").is_dir():
         lake = Path(keep) / "delta"
     else:
-        lake = shared_lake(tmp_path_factory)   # the committed three dates, ending today (the last weekday)
+        lake = shared_lake(tmp_path_factory)   # ending its fixed date, the server's today (var_stack.SHARED_TODAY)
     yield from var_server(tmp_path_factory, lake, shared=not keep)   # reads only: the pool guards it
 
 

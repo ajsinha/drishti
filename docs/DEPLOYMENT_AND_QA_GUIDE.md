@@ -648,7 +648,7 @@ line per table as it is written, then:
   lake writer: java (asked for); 4 datasets at a time
   reference/legal-entity: 240 rows over 60 days
   …
-Demo lake ready: /home/you/drishti/data/delta/demo: 89 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
+Demo lake ready: /home/you/drishti/data/delta/demo: 103 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
 Feeds: /home/you/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Connector files:
   reference-store: already reads /home/you/drishti/data/delta/demo (its template)
@@ -1293,7 +1293,7 @@ Details: [guides/bi/README.md](guides/bi/README.md), [guides/bi/README.md](guide
 
 **In the UI.** **Create → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
 (grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
-([ELEMENTS.md section 8.4](architecture/ELEMENTS.md#84-as-built-the-gallery)). A component that does not draw here will not draw on a screen
+([ELEMENTS.md section 8.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
 either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)

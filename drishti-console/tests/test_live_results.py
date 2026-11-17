@@ -36,7 +36,7 @@ def be():
 
 @pytest.fixture
 def cl(be):
-    app = create_app(load_settings(CONSOLE / "config" / "application.yaml"))
+    app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = be
     with TestClient(app) as c:
         yield c

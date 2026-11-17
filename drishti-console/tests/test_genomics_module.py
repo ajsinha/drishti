@@ -23,7 +23,7 @@ from pathlib import Path
 import server_answers
 
 CONSOLE = Path(__file__).resolve().parents[1]
-MODULE = CONSOLE.parent / "modules" / "genomics" / "src" / "dmod"     # the module project's .dmod folder, as the server hands it over
+MODULE = CONSOLE.parent / "modules" / "genomics"     # the module's folder (module.yaml, console/, elements/, docs/), as the server hands it over
 SHIPPED = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "active", "title": "Genomics", "console": True, "claims": []}],
            "fingerprint": "shipped"}
 
@@ -98,7 +98,8 @@ def test_drishti_genomics_is_the_research_lens_with_no_finance():
     d = server_answers.bootstrap("genomics")["distribution"]          # compiled by the server (recorded by ConsoleAnswersRecordTest)
     assert d["title"] == "Drishti Genomics" and d["modules"] == ["genomics"]
     ed = d["filter"]
-    assert ed["packs"] == {"none": True}
+    own = {p.name for p in (MODULE / "packs").iterdir() if (p / "pack.yaml").is_file()}
+    assert ed["packs"].get("enabled") and set(ed["packs"]["enabled"]) <= own        # only the module's own packs (the showcase data), none of finance
     allow = set(ed["commands"]["allow"])
     assert {"VARIANT", "GENE", "COHORT"} <= allow and not allow & {"CPTY", "BOOK", "DESK", "CRV", "VRES", "TRD"}
     assert ed["commands"]["words"].get("VAR") == "off" and ed["commands"]["words"].get("EXP") == "off"

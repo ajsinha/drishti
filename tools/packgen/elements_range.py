@@ -12,14 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Elements API range a module is built for: ``>=<major>.<minor> <<major+1>`` of the one Elements version (static/elements/drishti_elements.json,
-"elements"). Every generator that writes a module.yaml uses this, so the range follows the one version source."""
-import json
+"""The Elements API range a module is built for: ``>=<major>.<minor> <<major+1>`` of the pinned Drishti Elements (the one folder under
+static/vendor/drishti-elements/, its name the version). Every generator that writes a module.yaml uses this, so the range follows the pin."""
 from pathlib import Path
 
-MANIFEST = Path(__file__).resolve().parents[2] / "drishti-console" / "web" / "static" / "elements" / "drishti_elements.json"
+VENDOR = Path(__file__).resolve().parents[2] / "drishti-console" / "web" / "static" / "vendor" / "drishti-elements"
 
 
 def elements_range() -> str:
-    major, minor = json.loads(MANIFEST.read_text(encoding="utf-8"))["elements"].split(".")[:2]
+    [pin] = [p.name for p in VENDOR.iterdir() if p.is_dir()]
+    major, minor = pin.split(".")[:2]
     return f">={major}.{minor} <{int(major) + 1}"

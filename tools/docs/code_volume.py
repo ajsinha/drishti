@@ -39,7 +39,7 @@ README = ROOT / "README.md"
 BEGIN, END = "<!-- code-volume:begin -->", "<!-- code-volume:end -->"
 TOLERANCE = 0.10
 ROWS = [("java", "Java, product"), ("java-test", "Java, tests"), ("py", "Python, product (console, tools, loaders, feeds)"),
-        ("py-test", "Python, tests"), ("js", "JavaScript, product (console and Elements)"), ("js-test", "JavaScript, tests"),
+        ("py-test", "Python, tests"), ("js", "JavaScript, product (console and its own Elements libraries)"), ("js-test", "JavaScript, tests"),
         ("css", "CSS"), ("html", "HTML (templates and pages)"), ("yaml", "YAML: configuration, Sutras, data contracts"),
         ("md", "Markdown: guides, tutorials, design")]
 PRODUCT, TESTS = ("java", "py", "js", "css", "html"), ("java-test", "py-test", "js-test")
@@ -143,7 +143,8 @@ def inventory(files: list[str], pom: str) -> dict:
 
 
 def k(n: int) -> str:
-    return f"{round(n / 1000):,}k" if n >= 1000 else str(n)
+    """Thousands of lines; under 10k with one decimal, so a small row (JavaScript tests: 1,125) stays within the check's 10%."""
+    return f"{round(n / 1000):,}k" if n >= 10_000 else f"{n / 1000:.1f}k" if n >= 1000 else str(n)
 
 
 def render(m: dict) -> str:
@@ -158,7 +159,7 @@ def render(m: dict) -> str:
             ("Functions a module declares", f"{sum(inv['functions'].values())} ({fn}); every other command word is the kernel's"),
             ("Console routes", f"{inv['routes']}"),
             ("Server REST handlers", f"{inv['handlers']}"),
-            ("Drishti Elements", f"{len(inv['libraries'])} libraries, {inv['lib_modules']} ES modules"),
+            ("Drishti's own Elements libraries (Drishti Elements itself: vendored)", f"{len(inv['libraries'])} libraries, {inv['lib_modules']} ES modules"),
             ("Domain packs", f"{sum(inv['packs'].values())}: " + ", ".join(f"{d} {n}" for d, n in inv["packs"].items())),
             ("Sutras in the shipped packs", f"{inv['sutras']}"),
             ("Connectors", f"{inv['plugins']} plugins (a driver or native library each) and {inv['built_ins']} built-in types"),
@@ -180,7 +181,7 @@ def render(m: dict) -> str:
 
 def figures(text: str) -> list[int]:
     block = text[text.index(BEGIN):text.index(END)]
-    return [int(x.replace(",", "")) * 1000 for x in re.findall(r"\| ([\d,]+)k \|", block)]
+    return [round(float(x.replace(",", "")) * 1000) for x in re.findall(r"\| ([\d,]+(?:\.\d)?)k \|", block)]
 
 
 def web_split(ref: str | None) -> dict[str, int]:
@@ -194,7 +195,7 @@ def web_split(ref: str | None) -> dict[str, int]:
         if f.startswith(ELEMENTS):
             rest = f[len(ELEMENTS):].split("/")
             if len(rest) < 2 or (rest[1] != "src" and not f.endswith(".css")):
-                continue                                        # the bundles tools/elements/build.py writes
+                continue                                        # the bundles the vendored Drishti Elements build writes
             part = "libraries"
         else:
             part = "screens"

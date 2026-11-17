@@ -68,4 +68,6 @@ def test_no_file_references_the_vega_library():
 def test_the_report_and_designer_pages_load_drishti_chart():
     for page in ("report", "design", "notebook", "design_theme"):
         html = (CONSOLE / f"web/templates/bi/{page}.html").read_text(encoding="utf-8")
-        assert "/static/elements/drishti-chart/drishti_chart.js" in html and "/static/elements/drishti-chart/drishti_chart.css" in html, page
+        assert "{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.css" in html, page
+    base = (CONSOLE / "web/templates/base.html").read_text(encoding="utf-8")   # the bundle comes once with every page, before drishti-grid that requires it
+    assert base.index("{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.js") < base.index("{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.js")

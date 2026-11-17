@@ -44,7 +44,8 @@ KNOWN_FAULTS: dict[str, str] = {
 
 def sitemap() -> dict:
     from core.menus import spec_of
-    return spec_of(CONSOLE)   # the kernel's pages (config/sitemap.yaml) with the modules' menus from their manifests
+    import server_answers
+    return spec_of(CONSOLE, server_answers.installed())   # the kernel's pages (config/sitemap.yaml) with the modules' menus from the server's installation answer
 
 
 def go(cmd: str) -> str:

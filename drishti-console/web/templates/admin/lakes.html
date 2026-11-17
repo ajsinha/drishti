@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Lakes · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -23,6 +23,10 @@
 <div class="adm" data-lakes data-max-mb="{{ cfg.maxUploadMb }}">
   {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="lk-crumb"><a href="{{ BASE }}/admin/loads">Data loads</a> <span aria-hidden="true">›</span> Lakes</p>
+  {% if elsewhere %}
+  <h1 class="ws-h">Lakes</h1>
+  {% include "admin/_lakes_elsewhere.html" %}
+  {% else %}
   <h1 class="ws-h">Load a file into a lake <a class="emb-help" href="{{ BASE }}/help/cli-guide" aria-label="Help: the lake build tool" title="Help: the lake build tool">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
   <p class="text-muted-d">Bring a large JSON export (an array or JSON Lines, gzipped or not) and turn it into a Delta table that {{ PRODUCT }}'s Delta connector
@@ -61,8 +65,10 @@
   </section>
 
   {% include "admin/_lake_maintain.html" %}
+  {% endif %}
   {% if lake_files %}{% include "admin/_lake_files.html" %}{% endif %}
   {% if memory %}{% include "admin/_lake_memory.html" %}{% endif %}
+  {% if not elsewhere %}
 
   <h2 class="lk-h2">Recent builds</h2>
   <div class="tbl-wrap"><table class="tbl adm-tbl lk-runs">
@@ -70,7 +76,8 @@
     <thead><tr><th scope="col">Run log line</th></tr></thead>
     <tbody>{% for r in runs | reverse %}<tr><td class="mono">{{ r.line }}</td></tr>{% else %}<tr><td class="text-muted-d">No build has run on these roots yet.</td></tr>{% endfor %}</tbody>
   </table></div>
+  {% endif %}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-lakes.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-lake-maintain.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% if not elsewhere %}<script src="{{ BASE }}/static/js/drishti_admin-lakes.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-lake-maintain.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

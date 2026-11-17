@@ -1,0 +1,13 @@
+Drishti Elements
+
+Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+All rights reserved.
+
+PROPRIETARY.
+
+This file is the proprietary property of Ashutosh Sinha.
+Copying, use, modification or distribution of this file, via any medium,
+is not permitted except with the express prior written permission of the
+copyright holder.
+
+See the LICENSE file in the root of this repository.

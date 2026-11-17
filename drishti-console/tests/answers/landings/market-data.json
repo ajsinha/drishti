@@ -1,0 +1,736 @@
+{
+  "about" : "Drishti Market's landings as the market-data module answers them over MarketStandIn's data: written by MarketLandingRecordTest (-Ddrishti.record=true), replayed by the console's stand-in (tests/landing_answers.py)",
+  "module" : "market-data",
+  "people" : [ {
+    "answers" : {
+      "GET /market-data/landing/desk" : {
+        "businessDate" : "2026-09-30",
+        "curve" : {
+          "ois" : [ {
+            "rate" : 3.8115,
+            "tenor" : "1M",
+            "years" : 0.0833
+          }, {
+            "rate" : 3.82,
+            "tenor" : "3M",
+            "years" : 0.25
+          }, {
+            "rate" : 3.8283,
+            "tenor" : "6M",
+            "years" : 0.5
+          }, {
+            "rate" : 3.84,
+            "tenor" : "1Y",
+            "years" : 1.0
+          }, {
+            "rate" : 3.8566,
+            "tenor" : "2Y",
+            "years" : 2.0
+          }, {
+            "rate" : 3.8693,
+            "tenor" : "3Y",
+            "years" : 3.0
+          }, {
+            "rate" : 3.8894,
+            "tenor" : "5Y",
+            "years" : 5.0
+          }, {
+            "rate" : 3.9058,
+            "tenor" : "7Y",
+            "years" : 7.0
+          }, {
+            "rate" : 3.9265,
+            "tenor" : "10Y",
+            "years" : 10.0
+          }, {
+            "rate" : 3.9549,
+            "tenor" : "15Y",
+            "years" : 15.0
+          }, {
+            "rate" : 3.9789,
+            "tenor" : "20Y",
+            "years" : 20.0
+          }, {
+            "rate" : 4.0191,
+            "tenor" : "30Y",
+            "years" : 30.0
+          } ],
+          "projection" : [ {
+            "rate" : 3.9615,
+            "tenor" : "1M",
+            "years" : 0.0833
+          }, {
+            "rate" : 3.97,
+            "tenor" : "3M",
+            "years" : 0.25
+          }, {
+            "rate" : 3.9783,
+            "tenor" : "6M",
+            "years" : 0.5
+          }, {
+            "rate" : 3.99,
+            "tenor" : "1Y",
+            "years" : 1.0
+          }, {
+            "rate" : 4.0066,
+            "tenor" : "2Y",
+            "years" : 2.0
+          }, {
+            "rate" : 4.0193,
+            "tenor" : "3Y",
+            "years" : 3.0
+          }, {
+            "rate" : 4.0394,
+            "tenor" : "5Y",
+            "years" : 5.0
+          }, {
+            "rate" : 4.0558,
+            "tenor" : "7Y",
+            "years" : 7.0
+          }, {
+            "rate" : 4.0765,
+            "tenor" : "10Y",
+            "years" : 10.0
+          }, {
+            "rate" : 4.1049,
+            "tenor" : "15Y",
+            "years" : 15.0
+          }, {
+            "rate" : 4.1289,
+            "tenor" : "20Y",
+            "years" : 20.0
+          }, {
+            "rate" : 4.1691,
+            "tenor" : "30Y",
+            "years" : 30.0
+          } ],
+          "weekAgo" : {
+            "date" : "2026-09-23",
+            "points" : [ {
+              "rate" : 3.8615,
+              "tenor" : "1M",
+              "years" : 0.0833
+            }, {
+              "rate" : 3.87,
+              "tenor" : "3M",
+              "years" : 0.25
+            }, {
+              "rate" : 3.8783,
+              "tenor" : "6M",
+              "years" : 0.5
+            }, {
+              "rate" : 3.89,
+              "tenor" : "1Y",
+              "years" : 1.0
+            }, {
+              "rate" : 3.9066,
+              "tenor" : "2Y",
+              "years" : 2.0
+            }, {
+              "rate" : 3.9193,
+              "tenor" : "3Y",
+              "years" : 3.0
+            }, {
+              "rate" : 3.9394,
+              "tenor" : "5Y",
+              "years" : 5.0
+            }, {
+              "rate" : 3.9558,
+              "tenor" : "7Y",
+              "years" : 7.0
+            }, {
+              "rate" : 3.9765,
+              "tenor" : "10Y",
+              "years" : 10.0
+            }, {
+              "rate" : 4.0049,
+              "tenor" : "15Y",
+              "years" : 15.0
+            }, {
+              "rate" : 4.0289,
+              "tenor" : "20Y",
+              "years" : 20.0
+            }, {
+              "rate" : 4.0691,
+              "tenor" : "30Y",
+              "years" : 30.0
+            } ]
+          }
+        },
+        "curves" : 28,
+        "dataDate" : "2026-09-30",
+        "kinds" : 20,
+        "problems" : [ ],
+        "tiles" : [ {
+          "change" : {
+            "delta" : -4.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CRV CRV-USD-OIS",
+          "id" : "ois10y",
+          "label" : "USD OIS 10Y",
+          "sub" : "CRV CRV-USD-OIS · SOFR",
+          "unit" : "%",
+          "value" : 3.9265
+        }, {
+          "change" : {
+            "delta" : 1.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CRV CRV-USD-PROJ",
+          "id" : "slope",
+          "label" : "USD 2s10s",
+          "sub" : "slope, CRV-USD-PROJ",
+          "unit" : "bp",
+          "value" : 46.0
+        }, {
+          "change" : null,
+          "cmd" : "FXV FXV-EURUSD",
+          "id" : "fxvol",
+          "label" : "EUR/USD 1M ATM vol",
+          "sub" : "FXV FXV-EURUSD",
+          "unit" : "%",
+          "value" : 7.8
+        }, {
+          "change" : {
+            "delta" : 1.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CDS where SPREAD_5Y > 0 order by SPREAD_5Y desc",
+          "id" : "cds",
+          "label" : "CDS 5Y, median",
+          "sub" : "CDS · 3 names",
+          "unit" : "bp",
+          "value" : 70.0
+        } ]
+      },
+      "GET /market-data/landing/moves" : {
+        "asked" : 9,
+        "items" : [ {
+          "cmd" : "CRV CRV-EUR-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "move" : 30.0,
+          "sigma" : 15.02,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-USD-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-USD-OIS",
+          "kind" : "ir-curve",
+          "move" : -4.0,
+          "sigma" : 1.78,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-GBP-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-GBP-OIS",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-USD-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-USD-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-EUR-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-EUR-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-AUD-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-AUD-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        } ],
+        "measured" : 9,
+        "mode" : "sigma",
+        "problems" : [ ]
+      },
+      "GET /market-data/landing/quality" : {
+        "businessDate" : "2026-09-30",
+        "checked" : 14,
+        "checks" : [ {
+          "flagged" : 2,
+          "id" : "stale",
+          "items" : 14
+        }, {
+          "flagged" : 1,
+          "id" : "gap",
+          "items" : 9
+        }, {
+          "flagged" : 1,
+          "id" : "forwards",
+          "items" : 6
+        }, {
+          "flagged" : 2,
+          "id" : "surface",
+          "items" : 4
+        } ],
+        "clean" : 8,
+        "cleanPct" : 57.1,
+        "critical" : [ {
+          "check" : "calendar spread",
+          "cmd" : "FXV FXV-USDTRY",
+          "detail" : "total variance falls 3M to 6M",
+          "id" : "FXV-USDTRY",
+          "kind" : "fx-vol-surface",
+          "severity" : "critical",
+          "since" : null
+        }, {
+          "check" : "discount factor",
+          "cmd" : "CRV CRV-EUR-OIS",
+          "detail" : "does not fall at 30Y",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "severity" : "critical",
+          "since" : null
+        }, {
+          "check" : "negative vol",
+          "cmd" : "EQV EQV-ZERO",
+          "detail" : "3M M_90 0",
+          "id" : "EQV-ZERO",
+          "kind" : "equity-vol-surface",
+          "severity" : "critical",
+          "since" : null
+        } ],
+        "problems" : [ ],
+        "staleDays" : 2,
+        "warnings" : [ {
+          "check" : "gap",
+          "cmd" : "CRV CRV-AUD-PROJ",
+          "detail" : "15Y missing (the other curves of its type have it)",
+          "id" : "CRV-AUD-PROJ",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : null
+        }, {
+          "check" : "negative forward",
+          "cmd" : "CRV CRV-EUR-OIS",
+          "detail" : "10Y -0.12%",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : null
+        }, {
+          "check" : "stale",
+          "cmd" : "INF INF-UKRPI",
+          "detail" : "as of 2026-09-25, 3 business days old (the latest INF loaded)",
+          "id" : "INF-UKRPI",
+          "kind" : "inflation-index",
+          "severity" : "warning",
+          "since" : "2026-09-25"
+        }, {
+          "check" : "stale",
+          "cmd" : "CRV CRV-GBP-OIS",
+          "detail" : "as of 2026-09-24, 4 business days old",
+          "id" : "CRV-GBP-OIS",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : "2026-09-24"
+        } ]
+      }
+    },
+    "checks" : [ ],
+    "lens" : "market",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "ash"
+  }, {
+    "answers" : {
+      "GET /market-data/landing/desk" : {
+        "businessDate" : "2026-09-30",
+        "curve" : {
+          "ois" : [ {
+            "rate" : 3.8115,
+            "tenor" : "1M",
+            "years" : 0.0833
+          }, {
+            "rate" : 3.82,
+            "tenor" : "3M",
+            "years" : 0.25
+          }, {
+            "rate" : 3.8283,
+            "tenor" : "6M",
+            "years" : 0.5
+          }, {
+            "rate" : 3.84,
+            "tenor" : "1Y",
+            "years" : 1.0
+          }, {
+            "rate" : 3.8566,
+            "tenor" : "2Y",
+            "years" : 2.0
+          }, {
+            "rate" : 3.8693,
+            "tenor" : "3Y",
+            "years" : 3.0
+          }, {
+            "rate" : 3.8894,
+            "tenor" : "5Y",
+            "years" : 5.0
+          }, {
+            "rate" : 3.9058,
+            "tenor" : "7Y",
+            "years" : 7.0
+          }, {
+            "rate" : 3.9265,
+            "tenor" : "10Y",
+            "years" : 10.0
+          }, {
+            "rate" : 3.9549,
+            "tenor" : "15Y",
+            "years" : 15.0
+          }, {
+            "rate" : 3.9789,
+            "tenor" : "20Y",
+            "years" : 20.0
+          }, {
+            "rate" : 4.0191,
+            "tenor" : "30Y",
+            "years" : 30.0
+          } ],
+          "projection" : [ {
+            "rate" : 3.9615,
+            "tenor" : "1M",
+            "years" : 0.0833
+          }, {
+            "rate" : 3.97,
+            "tenor" : "3M",
+            "years" : 0.25
+          }, {
+            "rate" : 3.9783,
+            "tenor" : "6M",
+            "years" : 0.5
+          }, {
+            "rate" : 3.99,
+            "tenor" : "1Y",
+            "years" : 1.0
+          }, {
+            "rate" : 4.0066,
+            "tenor" : "2Y",
+            "years" : 2.0
+          }, {
+            "rate" : 4.0193,
+            "tenor" : "3Y",
+            "years" : 3.0
+          }, {
+            "rate" : 4.0394,
+            "tenor" : "5Y",
+            "years" : 5.0
+          }, {
+            "rate" : 4.0558,
+            "tenor" : "7Y",
+            "years" : 7.0
+          }, {
+            "rate" : 4.0765,
+            "tenor" : "10Y",
+            "years" : 10.0
+          }, {
+            "rate" : 4.1049,
+            "tenor" : "15Y",
+            "years" : 15.0
+          }, {
+            "rate" : 4.1289,
+            "tenor" : "20Y",
+            "years" : 20.0
+          }, {
+            "rate" : 4.1691,
+            "tenor" : "30Y",
+            "years" : 30.0
+          } ],
+          "weekAgo" : {
+            "date" : "2026-09-23",
+            "points" : [ {
+              "rate" : 3.8615,
+              "tenor" : "1M",
+              "years" : 0.0833
+            }, {
+              "rate" : 3.87,
+              "tenor" : "3M",
+              "years" : 0.25
+            }, {
+              "rate" : 3.8783,
+              "tenor" : "6M",
+              "years" : 0.5
+            }, {
+              "rate" : 3.89,
+              "tenor" : "1Y",
+              "years" : 1.0
+            }, {
+              "rate" : 3.9066,
+              "tenor" : "2Y",
+              "years" : 2.0
+            }, {
+              "rate" : 3.9193,
+              "tenor" : "3Y",
+              "years" : 3.0
+            }, {
+              "rate" : 3.9394,
+              "tenor" : "5Y",
+              "years" : 5.0
+            }, {
+              "rate" : 3.9558,
+              "tenor" : "7Y",
+              "years" : 7.0
+            }, {
+              "rate" : 3.9765,
+              "tenor" : "10Y",
+              "years" : 10.0
+            }, {
+              "rate" : 4.0049,
+              "tenor" : "15Y",
+              "years" : 15.0
+            }, {
+              "rate" : 4.0289,
+              "tenor" : "20Y",
+              "years" : 20.0
+            }, {
+              "rate" : 4.0691,
+              "tenor" : "30Y",
+              "years" : 30.0
+            } ]
+          }
+        },
+        "curves" : 28,
+        "dataDate" : "2026-09-30",
+        "kinds" : 20,
+        "problems" : [ ],
+        "tiles" : [ {
+          "change" : {
+            "delta" : -4.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CRV CRV-USD-OIS",
+          "id" : "ois10y",
+          "label" : "USD OIS 10Y",
+          "sub" : "CRV CRV-USD-OIS · SOFR",
+          "unit" : "%",
+          "value" : 3.9265
+        }, {
+          "change" : {
+            "delta" : 1.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CRV CRV-USD-PROJ",
+          "id" : "slope",
+          "label" : "USD 2s10s",
+          "sub" : "slope, CRV-USD-PROJ",
+          "unit" : "bp",
+          "value" : 46.0
+        }, {
+          "change" : null,
+          "cmd" : "FXV FXV-EURUSD",
+          "id" : "fxvol",
+          "label" : "EUR/USD 1M ATM vol",
+          "sub" : "FXV FXV-EURUSD",
+          "unit" : "%",
+          "value" : 7.8
+        }, {
+          "change" : {
+            "delta" : 1.0,
+            "since" : "2026-09-29"
+          },
+          "cmd" : "CDS where SPREAD_5Y > 0 order by SPREAD_5Y desc",
+          "id" : "cds",
+          "label" : "CDS 5Y, median",
+          "sub" : "CDS · 3 names",
+          "unit" : "bp",
+          "value" : 70.0
+        } ]
+      },
+      "GET /market-data/landing/moves" : {
+        "asked" : 9,
+        "items" : [ {
+          "cmd" : "CRV CRV-EUR-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "move" : 30.0,
+          "sigma" : 15.02,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-USD-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-USD-OIS",
+          "kind" : "ir-curve",
+          "move" : -4.0,
+          "sigma" : 1.78,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-GBP-OIS",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-GBP-OIS",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-USD-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-USD-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-EUR-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-EUR-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        }, {
+          "cmd" : "CRV CRV-AUD-PROJ",
+          "date" : "2026-09-30",
+          "days" : 19,
+          "field" : "TEN_Y",
+          "id" : "CRV-AUD-PROJ",
+          "kind" : "ir-curve",
+          "move" : -1.0,
+          "sigma" : 0.5,
+          "since" : "2026-09-29",
+          "unit" : "bp"
+        } ],
+        "measured" : 9,
+        "mode" : "sigma",
+        "problems" : [ ]
+      },
+      "GET /market-data/landing/quality" : {
+        "businessDate" : "2026-09-30",
+        "checked" : 14,
+        "checks" : [ {
+          "flagged" : 2,
+          "id" : "stale",
+          "items" : 14
+        }, {
+          "flagged" : 1,
+          "id" : "gap",
+          "items" : 9
+        }, {
+          "flagged" : 1,
+          "id" : "forwards",
+          "items" : 6
+        }, {
+          "flagged" : 2,
+          "id" : "surface",
+          "items" : 4
+        } ],
+        "clean" : 8,
+        "cleanPct" : 57.1,
+        "critical" : [ {
+          "check" : "calendar spread",
+          "cmd" : "FXV FXV-USDTRY",
+          "detail" : "total variance falls 3M to 6M",
+          "id" : "FXV-USDTRY",
+          "kind" : "fx-vol-surface",
+          "severity" : "critical",
+          "since" : null
+        }, {
+          "check" : "discount factor",
+          "cmd" : "CRV CRV-EUR-OIS",
+          "detail" : "does not fall at 30Y",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "severity" : "critical",
+          "since" : null
+        }, {
+          "check" : "negative vol",
+          "cmd" : "EQV EQV-ZERO",
+          "detail" : "3M M_90 0",
+          "id" : "EQV-ZERO",
+          "kind" : "equity-vol-surface",
+          "severity" : "critical",
+          "since" : null
+        } ],
+        "problems" : [ ],
+        "staleDays" : 2,
+        "warnings" : [ {
+          "check" : "gap",
+          "cmd" : "CRV CRV-AUD-PROJ",
+          "detail" : "15Y missing (the other curves of its type have it)",
+          "id" : "CRV-AUD-PROJ",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : null
+        }, {
+          "check" : "negative forward",
+          "cmd" : "CRV CRV-EUR-OIS",
+          "detail" : "10Y -0.12%",
+          "id" : "CRV-EUR-OIS",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : null
+        }, {
+          "check" : "stale",
+          "cmd" : "INF INF-UKRPI",
+          "detail" : "as of 2026-09-25, 3 business days old (the latest INF loaded)",
+          "id" : "INF-UKRPI",
+          "kind" : "inflation-index",
+          "severity" : "warning",
+          "since" : "2026-09-25"
+        }, {
+          "check" : "stale",
+          "cmd" : "CRV CRV-GBP-OIS",
+          "detail" : "as of 2026-09-24, 4 business days old",
+          "id" : "CRV-GBP-OIS",
+          "kind" : "ir-curve",
+          "severity" : "warning",
+          "since" : "2026-09-24"
+        } ]
+      }
+    },
+    "checks" : [ ],
+    "lens" : "market",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "alice"
+  } ],
+  "schema" : 1
+}

@@ -18,7 +18,7 @@
    /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
 
    Domain glue only: each kind maps the genomics module's answers and words onto drishti-chart's generic kinds and options (the owner's
-   rule: every drawing capability lives in the generic libraries; ELEMENTS.md section 7.4), so the card, theme, tooltips, Explain, the
+   rule: every drawing capability lives in the generic libraries; Drishti Elements' docs/DESIGN.md), so the card, theme, tooltips, Explain, the
    data table, export, the keyboard and linked selection come with them, and nothing is drawn here.
 
      genomics.manhattan   the association plot: drishti-chart's segmented scatter (the chromosomes as segments, the genome-wide and
@@ -178,7 +178,14 @@
     const rnd = seeded(9), rows = [], field = [];
     for (let r = 1; r <= 4; r++) { for (let i = 0; i < 40; i++) { const t = r / 4; rows.push({ DESIGN_ID: 'D' + r + '-' + i, ROUND: r, EMB_X: Math.round(((rnd() - 0.5) * 5 * (1 - t) + 2 * t) * 100) / 100, EMB_Y: Math.round(((rnd() - 0.5) * 5 * (1 - t) + 1.5 * t) * 100) / 100, ACTIVITY: Math.round((1 + 12 * t * rnd()) * 100) / 100 }); } }
     for (let x = -3; x <= 3; x += 0.5) { for (let y = -3; y <= 3; y += 0.5) { field.push({ x: x, y: y, value: Math.round(15 * Math.exp(-((x - 2) ** 2 + (y - 1.5) ** 2) / 3) * 100) / 100 }); } }
-    return { kind: 'protein.landscape', title: 'Design rounds climbing the landscape (synthetic)', data: { rows: rows }, field: { rows: field, cell: [0.5, 0.5] }, wildType: { EMB_X: -2, EMB_Y: -2 } };
+    return { kind: 'protein.landscape', title: 'Design rounds climbing the landscape (synthetic)', data: { rows: rows }, field: { rows: field, cell: [0.5, 0.5] }, wildType: { EMB_X: -2, EMB_Y: -2 }, frames: landscapeFrames({}) };
+  }
+
+  /** The campaign's frames, one a round: drishti-chart's frame bar (Play, the slider) reads them from the chart's spec, so a page gives
+   *  the spec these (spec.round shown first, spec.interval, spec.trail false for one round at a time; spec.frames overrides). */
+  function landscapeFrames(spec) {
+    const o = spec || {};
+    return Object.assign({ field: 'ROUND', label: 'Round', mode: o.trail === false ? 'only' : 'upto', interval: o.interval || 900, at: o.round, play: true, playText: 'Play the rounds' }, o.frames);
   }
 
   /** The campaign. spec: rows {DESIGN_ID, ROUND, EMB_X, EMB_Y, ACTIVITY}, field {rows: [{x, y, value}], cell}, wildType {EMB_X, EMB_Y}, round (shown first), interval. */
@@ -186,7 +193,7 @@
     const wt = spec.wildType;
     const s = Object.assign({}, spec, { kind: 'scatter', id: spec.id || 'DESIGN_ID', x: { field: 'EMB_X', title: 'Design map (precomputed)' }, y: { field: 'EMB_Y', title: '' },
       size: { field: 'ACTIVITY', title: 'Activity (× natural)' }, tone: 'link', opacity: 0.8,
-      frames: { field: 'ROUND', label: 'Round', mode: spec.trail === false ? 'only' : 'upto', interval: spec.interval || 900, at: spec.round, play: true, playText: 'Play the rounds' },
+      frames: landscapeFrames(spec),
       surface: spec.field && spec.field.rows ? { rows: spec.field.rows, cell: spec.field.cell || [1, 1], opacity: 0.45 } : undefined,
       annotations: (spec.annotations || []).concat(wt ? [{ type: 'point', x: C.num(wt.EMB_X), y: C.num(wt.EMB_Y), label: 'natural', tone: 'warn' }] : []) });
     const b = C.buildScatter(s, rows, env);
@@ -228,5 +235,5 @@
     sample: sampleLollipop, ready: was ? Promise.all([was.ready, ready]).then(() => ready) : ready };
   E.libs = E.libs || {};
   E.libs['drishti-genomics'] = Object.freeze(Object.assign({}, E.libs['drishti-genomics'], { library: 'drishti-genomics', version: VERSION, KINDS: KINDS, install: install, PROTEIN_KINDS: PROTEIN_KINDS, installProtein: installProtein,
-    sample: sampleLollipop, sampleManhattan: sampleManhattan, sampleOncoprint: sampleOncoprint, sampleDms: sampleDms, sampleBackbone: sampleBackbone, sampleLandscape: sampleLandscape, tones: { IMPACT_TONES, ALTERATION_TONES, EFFECT_TONES } }));
+    sample: sampleLollipop, sampleManhattan: sampleManhattan, sampleOncoprint: sampleOncoprint, sampleDms: sampleDms, sampleBackbone: sampleBackbone, sampleLandscape: sampleLandscape, landscapeFrames: landscapeFrames, tones: { IMPACT_TONES, ALTERATION_TONES, EFFECT_TONES } }));
 }(typeof window !== 'undefined' ? window : globalThis));

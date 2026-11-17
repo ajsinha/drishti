@@ -28,12 +28,12 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | JCTools | Apache-2.0 |
 | HdrHistogram | BSD-2-Clause / CC0 |
 | Bootstrap, Bootstrap Icons (console, vendored) | MIT |
-| Apache ECharts (console, vendored) | Apache-2.0 |
-| Natural Earth 110m country boundaries (console, vendored for the map visual; simplified) | Public domain |
-| Natural Earth 10m admin-1 states and provinces (console, vendored per country for the maps' regions; simplified, `tools/maps/build_regions.py`) | Public domain |
+| Apache ECharts and ECharts GL (console, inside the vendored Drishti Elements) | Apache-2.0 / BSD-3-Clause |
+| Natural Earth 110m country boundaries (console, inside the vendored Drishti Elements, for the map visual; simplified) | Public domain |
+| Natural Earth 10m admin-1 states and provinces (console, inside the vendored Drishti Elements, per country for the maps' regions; simplified by its own tools/maps/build_regions.py) | Public domain |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
-| CodeMirror 5 and its Python mode (console, vendored) | MIT |
-| Apache Arrow JS (console, vendored bundle) and `arrow-format` with flatbuffers-java (server, Arrow IPC messages) | Apache-2.0 |
+| CodeMirror 5 and its Python mode (console, inside the vendored Drishti Elements) | MIT |
+| Apache Arrow JS (console, inside the vendored Drishti Elements) and `arrow-format` with flatbuffers-java (server, Arrow IPC messages) | Apache-2.0 |
 | Pyodide (console, Calc; installed by `tools/fetch-pyodide.sh`, not in the repository) | MPL-2.0 |
 | CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |

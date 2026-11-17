@@ -16,6 +16,7 @@
 package com.ash.drishti.kernel.api.module;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,6 +42,12 @@ public interface KernelCalls {
      * there (the trading landings' {@code trading:}, the quality landing's {@code quality:}). Empty for no such lens.
      */
     Map<String, Object> lens(String name);
+
+    /**
+     * A new {@link PersonCache} for what the module works out per person: at most {@code size} answers, each kept {@code ttlMillis}.
+     * Every key holds the person's {@link Caller#key()}.
+     */
+    <V> PersonCache<V> cache(int size, long ttlMillis);
 
     /** One person's calls. Immutable. */
     interface Caller {
@@ -75,6 +82,17 @@ public interface KernelCalls {
 
         /** {@code POST /api/v1<path>} with a JSON body, as the person; as {@link #get}. */
         Map<String, Object> post(String path, Object body, Map<String, ?> params);
+
+        /**
+         * The pivot engine's figures of {@code rows} ({@code POST /api/v1/pivot/inline}, as the person): the fields, the rows (a number as
+         * {@link Answers#num} reads it, a member as text), the measures ({@link InlineFigures#measure}) and the arrangement (one level of
+         * rows {@code by} and of columns {@code across}, either null; a top N or null). No rows: nothing is asked and every figure is null.
+         *
+         * @throws Refused the server's refusal (the pivot engine switched off among them)
+         * @throws IllegalArgumentException more rows than the engine takes inline ({@link InlineFigures#MAX_ROWS})
+         */
+        InlineFigures.Figures figures(List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values, String by,
+                String across, Map<String, Object> top);
     }
 
     /** The server's refusal of a call: its HTTP status, its code ({@code DRS-…}) and its words. */

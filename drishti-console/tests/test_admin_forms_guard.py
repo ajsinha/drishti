@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Admin screens' forms are Drishti Elements (docs/architecture/ELEMENTS.md section 3.1 and 12.3, the survey's "Packs, lake files…" row):
+"""The Admin screens' forms are Drishti Elements (Drishti Elements' docs/DESIGN.md, the survey's "Packs, lake files…" row):
 no Admin template writes a raw ``<input>``, ``<select>`` or ``<textarea>``; its fields are drishti-inputs' ``Form`` from a schema the server
 builds (core/admin_forms.py), or drishti-grid editing for a table's rows. A hidden input (a token, a value the page carries) is not a field
 and is allowed. A table's row picks are drishti-grid's row selection (data-select on a console table), never a checkbox per row. ALLOWED

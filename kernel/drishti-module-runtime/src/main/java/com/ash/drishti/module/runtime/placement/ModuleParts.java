@@ -25,7 +25,8 @@ import java.util.Optional;
 /**
  * The parts a module declares (the manifest's {@code parts:}, KERNEL_AND_MODULES.md section 4.11.2), each with its resource class, its
  * memory and the API paths it answers (relative to {@code /api/v1/<prefix>/}). A request path belongs to the part with the longest matching
- * path; every other path is the {@code api} part's. A module that declares no parts has one: {@code api}, light.
+ * path; every other path is the {@code api} part's. A module with a REST namespace ({@code api: prefix}) always has the {@code api} part
+ * (light, when its {@code parts:} do not name it), and a module that declares no parts has that one.
  *
  * @param module   the module id
  * @param version  its version
@@ -78,9 +79,9 @@ public record ModuleParts(String module, String version, String prefix, boolean 
                 out.add(new Part(String.valueOf(e.getKey()), PartClass.of(String.valueOf(spec.getOrDefault("class", "light"))), mb, paths));
             }
         }
-        if (out.isEmpty()) {
-            out.add(new Part("api", PartClass.LIGHT, 0, List.of()));
-        }
+        if (manifest.api() != null ? out.stream().noneMatch(p -> p.name().equals("api")) : out.isEmpty()) {
+            out.add(new Part("api", PartClass.LIGHT, 0, List.of()));   // its REST namespace's other paths are the api part's (a module that
+        }                                                                // declares only feeds and a console still answers its API)
         return of(manifest.id(), manifest.version(), manifest.api() == null ? null : manifest.api().prefix(), out);
     }
 

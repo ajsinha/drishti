@@ -23,7 +23,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Sign in · {{ PRODUCT }}</title>
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_tokens.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_tokens.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_embed-sign-in.css?v={{ ASSET_V }}">
 </head>
 <body class="esi"{% if payload %} data-sign-in="{{ payload | tojson | forceescape }}"{% endif %}>

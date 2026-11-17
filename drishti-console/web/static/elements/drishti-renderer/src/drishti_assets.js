@@ -19,7 +19,7 @@
    draw with. Nothing comes from a CDN. Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's
    static scripts. Where the files are: the static root drishti-core's loader knows (the folder its bundle came from, or configure()), or
    what the public entry (static/render/<version>/drishti-render.js) says from its own address (setAssetBase). */
-import { staticUrl, ELEMENTS_VERSION } from '../../drishti-core/src/drishti_index.js';
+import { staticUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 const base = { statics: null, sheet: null };
 
@@ -39,8 +39,18 @@ export function setAssetBase(o) {
  * @returns {string}
  */
 export function statics(rel) {
-  const root = base.statics || new URL(staticUrl(''), document.baseURI).href;
+  // by default the console's static root is three folders above Drishti Elements' root (static/vendor/drishti-elements/<version>/)
+  const root = base.statics || new URL('../../../', new URL(staticUrl(''), document.baseURI)).href;
   return new URL(rel, root).href;
+}
+
+/**
+ * The address of a file of Drishti Elements (vendored under the console's static root, at the version drishti-core says it is).
+ * @param {string} rel for example "vendor/echarts/echarts.min.js" or "elements/drishti-inputs/drishti_inputs.css"
+ * @returns {string}
+ */
+export function elementsFile(rel) {
+  return statics('vendor/drishti-elements/' + ELEMENTS_VERSION + '/' + rel);
 }
 
 const once = new Map();
@@ -74,18 +84,23 @@ function trusted() {
   return policy;
 }
 
+/** A path that names a file of Drishti Elements (its engines, its libraries' bundles), as core/elements_pin.py's is_elements. */
+const ELEMENTS_FILE = /^(?:vendor\/(?:echarts|echarts-gl|codemirror|apache-arrow)\/|elements\/drishti-(?:core|inputs|grid|chart|data|tree|graph|designer)\/)/;
+
 /**
  * Loads a classic script of this console (ECharts, ECharts GL, the map shapes' helper, a console behaviour), once.
  * @param {string} rel its path under the static root
+ * @param {Object<string,string>} [data] data-* attributes of the script element (its settings)
  * @returns {Promise<void>}
  */
-export function script(rel) {
-  const url = statics(rel);
+export function script(rel, data) {
+  const url = ELEMENTS_FILE.test(rel) ? elementsFile(rel) : statics(rel);   // the engines and the libraries' bundles come with Drishti Elements
   return memoised('s:' + url, () => new Promise((resolve, reject) => {
     const s = document.createElement('script'), p = trusted();
     s.src = p ? p.createScriptURL(url) : url;
     s.async = false;
     s.setAttribute('data-manual', '');
+    Object.keys(data || {}).forEach((k) => s.setAttribute('data-' + k, data[k]));
     s.onload = () => resolve(); s.onerror = () => reject(new Error('cannot load ' + url));
     document.head.appendChild(s);
   }));
@@ -110,11 +125,11 @@ export async function echartsGl() {
 }
 
 /**
- * The map shapes' helper (window.drishtiGeo): it fetches the vendored Natural Earth files from beside itself.
+ * The map shapes' helper (window.drishtiGeo): it fetches the vendored Natural Earth files that come with Drishti Elements.
  * @returns {Promise<Object>}
  */
 export async function geo() {
-  if (!window.drishtiGeo) { await script('js/drishti_geomap.js'); }
+  if (!window.drishtiGeo) { await script('js/drishti_geomap.js', { maps: elementsFile('vendor/echarts/maps/') }); }
   return window.drishtiGeo;
 }
 

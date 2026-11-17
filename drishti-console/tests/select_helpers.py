@@ -55,7 +55,7 @@ def choose(pg, sel, val):
 
 
 # ---- Playwright's select_option and input_value on a <drishti-select> --------------------------------------------------------------
-# drishti-inputs' Form draws its lists as <drishti-select> (ELEMENTS.md section 8.2), so a screen's test that picked from a native select
+# drishti-inputs' Form draws its lists as <drishti-select> (Drishti Elements' docs/DESIGN.md), so a screen's test that picked from a native select
 # with select_option picks from the Select the way a person does (open it, click the option); input_value reads the element's value. A
 # native <select> is untouched. Installed once for the test session by conftest.py.
 

@@ -134,7 +134,7 @@ class HistoryServiceTest {
     private static HistoryService service(Lake lake, Map<String, HistorySpec> specs) {
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, Map.of());
         SourceRouter router = new SourceRouter(new SourceRegistry(List.of(lake), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
-        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK);
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
                 Formats.defaults(), new ElCompiler(), k -> specs.getOrDefault(k, HistorySpec.defaults(k)), k -> k.equals("trade") ? "TRD" : null);
     }

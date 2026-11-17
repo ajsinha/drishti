@@ -63,7 +63,7 @@ LANE_RULES: tuple[tuple[str, frozenset[str]], ...] = (
     (r"\.java$|(^|/)pom\.xml$|^\.mvn/|^mvnw|^\.java-version$|/src/main/resources/|/src/test/resources/", _JAVA_RUNS),
     (r"^(kernel|compute|lake|net|plugins|modules|packaging|testing|drishti-sdk|external_lib)/", _JAVA_RUNS),   # the Maven modules' subject folders
     (r"^config/|^data/testdata/|^sutras/", ALL),                                                  # what every server and lake reads
-    (r"^(packaging/drishti-elements|compute/drishti-compute|deploy/stack|clients|examples)/", ALL),   # shared by the console, the tools and Java
+    (r"^(drishti-console/web/static/vendor/drishti-elements|compute/drishti-compute|deploy/stack|clients|examples)/", ALL),   # shared by the console, the tools and Java (Drishti Elements: rachana reads its two tables)
     (r"^LICENSE$|^NOTICE|^THIRD-PARTY-NOTICES\.md$|^CHANGELOG\.md$|^RELEASE_NOTES\.md$", frozenset({"other"})),
 )
 

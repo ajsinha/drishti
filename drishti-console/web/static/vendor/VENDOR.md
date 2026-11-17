@@ -16,21 +16,26 @@
 # Vendored front-end libraries
 
 Everything the console loads is served from this folder: no CDN, no external URL (`tests/test_assets_policy.py`). Each library
-keeps its licence file beside it. Sizes are bytes as served (raw) and gzip -9.
+keeps its licence file beside it. Drishti Elements' engines (ECharts, ECharts GL, CodeMirror, Apache Arrow JS, the map shapes) come inside its
+vendored release tree, listed with their licences in its own `vendor/VENDOR.md`. Sizes are bytes as served (raw) and gzip -9.
 
 | Library | Version | Licence | Where | In git | Loaded by |
 |---|---|---|---|---|---|
 | Bootstrap, Bootstrap Icons | 5.3.8 / see its folder | MIT | `bootstrap/`, `bootstrap-icons/` | yes | every page |
+| **Drishti Elements** (an external component with its own repository and docs: github.com/ajsinha/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit and the gallery; with its engines: Apache ECharts and ECharts GL, CodeMirror, Apache Arrow JS, the Natural Earth map shapes and the world-regions table) | 2.4.0 (github.com/ajsinha/drishti-elements, tag v2.4.0, commit 39ca755a0354; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` (Apache-2.0, BSD-3-Clause, MIT, public domain) | `drishti-elements/2.4.0/` | yes | every page |
 | Cinzel 700 (wordmark), Playfair Display 500 (tagline) | Google Fonts, Latin subset (Cinzel v26) | SIL OFL 1.1 (`fonts/OFL-*.txt`) | `fonts/` | yes | every page (theme.css) |
-| Apache ECharts, ECharts GL (patched: `echarts-gl/PATCHED.md`) | 6.1.0 / see its folder | Apache-2.0 / BSD-3 | `echarts/`, `echarts-gl/` | yes | chart panels |
-| **Natural Earth** country boundaries, 1:110m scale (the map visual: countries only, no tiles, no CDN) | 5.1 (nvkelso/natural-earth-vector, `ne_110m_admin_0_countries`) | Public domain (naturalearthdata.com/about/terms-of-use) | `echarts/maps/world-countries.json` (176,138 bytes: coordinates rounded to 2 decimals, properties reduced to `name`, `iso2`, `iso3`; 177 features) | yes | a report or board that holds a `map` visual; fetched on first use, `/embed/v1/world-countries.json` for the `<drishti-report>` element |
-| **Natural Earth** admin-1 (states, provinces, counties), 1:10m scale, simplified (the map's regions: a click on a country opens its regions) | 5.1 (nvkelso/natural-earth-vector, `ne_10m_admin_1_states_provinces`) | Public domain (naturalearthdata.com/about/terms-of-use) | `echarts/maps/regions/<ISO3>.json` (251 files, about 7 MB in all, the largest under 200 KB; made by `tools/maps/build_regions.py`, see `regions/README.md`) and `echarts/maps/world-points.json` (the countries too small for the 1:110m shapes, one point each) | yes | a map that opens a country; each file is fetched the first time that country is opened; `/embed/v1/regions/<ISO3>.json` for the elements |
-| **World regions** (the grouping of countries into sub-regions and continents: the map's world-regions level and the server's `WorldRegions`) | Natural Earth 5.1 admin-0 map units, fields `REGION_UN` and `SUBREGION`, derived by `tools/maps/build_world_regions.py` | Public domain (naturalearthdata.com/about/terms-of-use). **Not** the UN Statistics Division's M49 list: its terms of reuse are not plainly public domain, so the grouping is derived from Natural Earth's own fields | `compute/drishti-rachana/src/main/resources/world-regions.yaml` (the one home; the chart's `drishti_world-regions.js` is generated from it) | yes | the map, the server |
-| CodeMirror 5 | see its folder | MIT | `codemirror/` | yes | Studio, Build |
 | Pyodide (CPython for Calc) | 314.0.7 | MPL-2.0 | `pyodide/` | **no**: `tools/fetch-pyodide.sh` | Calc, on demand |
-| **Apache Arrow JS 21.1.0** (2.9.7, "Arrow where it pays": the pages that read big tables as Arrow, docs/guides/DATA_FORMATS.md section 6) | 21.1.0 (npm `apache-arrow`, published 2025-10-07) | Apache-2.0 (`LICENSE`, `NOTICE` beside it; the licence text lists the code bundled into it) | `apache-arrow/21.1.0/Arrow.es2015.min.js` (the package's ES2015 UMD build, `window.Arrow`; its `# sourceMappingURL` comment removed) | yes, 178,919 bytes (47,797 gzip -9) | the VaR explorer (`terminal/var.html`), before `drishti-table.js`; no other page |
 
-**Apache Arrow JS: updating and checking.** `npm i --ignore-scripts apache-arrow@<v>` in an empty folder outside the repository, copy `Arrow.es2015.min.js` without its last line (`//# sourceMappingURL=...`), `LICENSE.txt` as `LICENSE` and `NOTICE.txt` as `NOTICE` into `apache-arrow/<v>/`, and change the version in the `<script>` of each page that loads it. `grep -E 'https?://'` over the folder must find only the licence URL in the file's header comment (no source map, no worker, no remote fetch). The bundle holds one `new Function` (Arrow's builder compiling a null-value test, `createIsValidFunction`), reached only when JavaScript *builds* vectors with `nullValues`; reading a stream (`tableFromIPC`, all Drishti does) never reaches it, so the page's policy (no `unsafe-eval`) holds, which `tests/test_arrow_browser.py` asserts on the VaR explorer.
+
+**Drishti Elements: updating the pin.** Drishti holds no source of Drishti Elements, only this release tree (docs/architecture/ELEMENTS_IN_DRISHTI.md).
+Clone github.com/ajsinha/drishti-elements at the new tag into an empty folder outside this repository, check the tag's commit id, run
+`python3 tools/elements/cli.py dist --out dist`, copy `dist/drishti-elements-<new>/` to `drishti-elements/<new>/` and delete the old folder (the
+folder's name is the pin: `core/elements_pin.py`), set `drishti.elements.version` in the root `pom.xml` (drishti-rachana reads `data/world-regions.yaml`
+and `data/formats.yaml` from the copy), change the pinned paths of Drishti's own libraries and pages (`git grep -l "vendor/drishti-elements/<old>/"`),
+rebuild Drishti's three libraries (`python3 drishti-console/web/static/vendor/drishti-elements/<new>/tools/elements/build.py --root drishti-console/web/static
+--manifest drishti-console/web/static/elements/drishti_elements.json --header config/license-header.txt`), the render folder (`tools/render_sheet.py`) and
+the element sheets (`tools/elements_sheet.py`), and run the guards (`tests/test_elements_vendored.py`, `tests/test_elements_version.py`). Nobody edits
+the copy: the guard compares every file with the SHA-384 its own `drishti-elements.json` lists.
 
 ## Removed in wave B (2.3.0)
 
@@ -49,17 +54,9 @@ and drawn by drishti-chart; a feature it does not translate is refused in words 
 
 The d3fc chart plugin (already vendored) is loaded by a page that holds a `perspective-chart`; it writes two more `<style>` texts than a grid does (`CHART_STYLE_HASHES` in `core/perspective_csp.py`, the same two the phase 0 page lists), which only such a page is given. The settings panel writes no more styles but sets about a dozen `style` **attributes** through `setAttribute`, which the policy refuses (`style-src-attr`); the panel works. The Chromium test of the chart page asserts both: every `<style>` is on the list, and nothing but those attributes is refused.
 
-## Algorithms and published constants used (no third-party code copied)
-
-Elements' own sources were scanned (foreign copyright lines, "adapted from", pasted snippets, minified code): none found. Two places use a
-published method, written independently: the **Equal Earth** projection's four polynomial coefficients (Šavrič, Patterson and Jenny, 2018,
-*International Journal of Geographical Information Science*; d3-geo-projection, BSD-3, publishes the same constants) in
-`elements/drishti-chart/src/drishti_chart-geo.js`, and the standard **CRC-32** (IEEE 802.3) table in the zip writer of
-`elements/drishti-grid/src/drishti_export.js`. Constants and algorithms are not code; they are credited here so the notices stay complete.
-
 ## Licence policy
 
-Only these licences are vendored: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, SIL OFL 1.1, MPL-2.0 (unmodified), public domain or CC0, PSF.
+Only these licences are vendored (besides Drishti Elements, by the same owner as Drishti, under the same proprietary `LICENSE`): MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, SIL OFL 1.1, MPL-2.0 (unmodified), public domain or CC0, PSF.
 Anything else (GPL, AGPL, LGPL, SSPL, CC-BY-NC, CC-BY-ND, the Commons Clause, BUSL, or an unknown licence) is refused by
 `tests/test_vendor_licences.py`. Every folder here has a row above, its licence file beside it, and Apache-2.0's NOTICE where upstream
-ships one (ECharts, Apache Arrow JS).
+ships one (inside Drishti Elements: ECharts, Apache Arrow JS).

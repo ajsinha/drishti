@@ -172,7 +172,7 @@ def test_without_the_designer_the_sutra_is_named_without_a_link(browsers, render
 def test_light_dom_with_the_console_s_own_sheets_is_the_same(browsers, render_site):
     """shadow: false (how the console itself will draw its pages, phase 2): the host's sheets style it."""
     render_site.pages["/render-test/library-light.html"] = ('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>light</title>'
-                                                            + "".join(f'<link rel="stylesheet" href="/static/{s}">' for s in H.CONSOLE_SHEETS)
+                                                            + "".join(f'<link rel="stylesheet" href="{H._pin.static_url(s)}">' for s in H.CONSOLE_SHEETS)
                                                             + '</head><body class="terminal"><div id="host"></div><script src="/render-test/csp.js"></script>'
                                                             '<script type="module" src="/render-test/harness.js"></script></body></html>')
     assert_same(browsers, render_site, "showcase", EDGES["showcase"], light=True)

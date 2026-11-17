@@ -25,6 +25,7 @@ import time
 import urllib.request
 
 import pytest
+from core import elements_pin
 
 from page_walk import dedupe, menu_links, new_page, open_page, report
 from test_workbench_browser import browser  # noqa: F401 - the fixture
@@ -109,7 +110,7 @@ def test_the_gallery_shows_the_modules_visual(genomics, browser):
     base = str(genomics)
     pg = new_page(browser)
     try:
-        pg.goto(base + "/static/gallery/drishti_gallery.html#c=genomics.lollipop")
+        pg.goto(base + elements_pin.URL + "/gallery/drishti_gallery.html?visuals=/api/elements/visuals#c=genomics.lollipop")   # the vendored gallery, asked for the modules' visuals
         pg.wait_for_function("() => window.__gallery && window.__gallery.demos.some((d) => d.id === 'genomics.lollipop')", timeout=30000)
         pg.wait_for_selector("drishti-chart canvas", timeout=20000)
         assert pg.evaluate("() => window.__gallery.id") == "genomics.lollipop"
@@ -166,7 +167,9 @@ def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
         pg.click("[data-showcase-clusters] button:has-text('C3 immune-hot')")
         pg.wait_for_function("() => document.querySelector('[data-showcase]').dataset.state === 'ready'")
         assert any(a.startswith("cohorts/ONC-1/oncoprint") and "cluster=C3%20immune-hot" in a for a in asked), asked
-        box = pg.locator('[data-chart="map"] canvas').bounding_box()
+        canvas = pg.locator('[data-chart="map"] canvas')
+        canvas.scroll_into_view_if_needed()                       # the mouse acts inside the viewport only: the map may sit below it
+        box = canvas.bounding_box()
         pg.mouse.move(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.3)
         pg.mouse.down()
         pg.mouse.move(box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.7, steps=6)
@@ -192,7 +195,7 @@ def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
         play = pg.locator('[data-chart="landscape"] [data-tool="play"]')
         assert "Play the rounds" in play.text_content()
         pg.eval_on_selector('[data-chart="landscape"] .dc-frame-slider', "(el) => { el.value = '0'; el.dispatchEvent(new Event('input', { bubbles: true })); }")
-        pg.wait_for_function("() => document.querySelector('.dc-frame-label').textContent.startsWith('Round 1')")
+        pg.wait_for_function("() => document.querySelector('[data-chart=landscape] .dc-frame-label').textContent.startsWith('Round 1')")
         pg.wait_for_selector('[data-grid="leaderboard"] [role="row"]', timeout=20000)
         assert any(a.startswith("proteins/HLXK7/leaderboard") and "round=1" in a for a in asked), asked
         assert not [e for e in errors if "favicon" not in e], errors

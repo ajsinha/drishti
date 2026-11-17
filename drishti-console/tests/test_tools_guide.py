@@ -58,7 +58,7 @@ def scripts() -> list[str]:
         + list(TOOLS.glob("packgen/*/make*.py")) + list(TOOLS.glob("bench/*.sh")) \
         + [TOOLS / p for p in ("samplegen/bulk_trades.py", "docs/screenshots.py", "realdata/realdata.py", "packreg/packreg.py",
                                 "rachana/md_to_yaml.py", "maps/build_regions.py")]
-    return sorted(str(f.relative_to(ROOT)) for f in found if f.is_file() and not f.name.startswith("test_") and f.name != "__init__.py")
+    return sorted(str(f.relative_to(ROOT)) for f in found if f.is_file() and not f.name.startswith("test_") and f.name not in ("__init__.py", "conftest.py"))
 
 
 def test_every_drishti_command_is_in_the_guide():

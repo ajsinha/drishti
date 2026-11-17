@@ -1,0 +1,3 @@
+{
+  "admin-pages" : [ "users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "loads", "lakes", "collab", "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out", "configuration", "bindings", "white-label" ]
+}

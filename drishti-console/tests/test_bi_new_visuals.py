@@ -22,13 +22,15 @@ from pathlib import Path
 
 import pytest
 
+from core import elements_pin
+
 from test_embed import HOST, make_client
 from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = WEB.parent.parent
-WORLD = STATIC / "vendor/echarts/maps/world-countries.json"
+WORLD = elements_pin.static_path("vendor/echarts/maps/world-countries.json")
 node = shutil.which("node")
 needs_node = pytest.mark.skipif(node is None, reason="needs Node to run the shared report code")
 
@@ -53,7 +55,7 @@ def test_the_licence_of_the_map_data_is_recorded():
 
 
 def test_the_map_is_served_from_the_console_and_to_the_element_with_cors(backend, client):
-    r = client.get("/static/vendor/echarts/maps/world-countries.json")
+    r = client.get("/static/vendor/drishti-elements/2.4.0/vendor/echarts/maps/world-countries.json")
     assert r.status_code == 200 and r.json()["type"] == "FeatureCollection"
     embed = make_client(backend)
     e = embed.get("/embed/v1/world-countries.json", headers={"Origin": HOST})

@@ -31,6 +31,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from core.backend import BackendError
+from core import elements_pin as _pin
 from core import element_dist as dist
 from core import element_sheet as es
 from core import channel_relay, servers
@@ -178,9 +179,11 @@ async def versioned_css(request: Request, version: str):
     return response
 
 
-# Drishti Elements' bundles that the console's scripts draw with in an embed (static/elements/; ELEMENTS.md section 8): the nested pivot of tree rows
-# and Chart any table's table draw with drishti-grid, which needs drishti-core. Each library's own bundle and style sheet, nothing else.
+# Drishti Elements' bundles that the console's scripts draw with in an embed (the vendored copy, core/elements_pin.py): the nested pivot of tree rows
+# and Chart any table's table draw with drishti-grid, which requires drishti-core, drishti-inputs and drishti-chart (drishti-elements.json). Each library's
+# own bundle and style sheet, nothing else.
 ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css"),
+                   ("drishti-chart", "drishti_chart.js"), ("drishti-chart", "drishti_chart.css"),
                    ("drishti-inputs", "drishti_inputs.js"), ("drishti-inputs", "drishti_inputs.css")}   # the controls' pickers (and the 1.2.0 loader js/multiselect.js)
 
 
@@ -188,7 +191,7 @@ async def element_bundle(request: Request, library: str, name: str):
     """One allow-listed Drishti Elements bundle or style sheet (``/elements/drishti-grid/drishti_grid.js``), for the console's scripts in an embed."""
     if (library, name) not in ELEMENT_BUNDLES:
         return await refuse(request, 404, "DRS-9404", f"no such library file: {library}/{name}")
-    path = WEB / "static/elements" / library / name
+    path = _pin.static_path(f"elements/{library}/{name}")
     return await send(request, path.read_bytes(), "text/css" if name.endswith(".css") else "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
@@ -232,15 +235,15 @@ async def charts_js(request: Request):
 
 @router.get("/world-countries.json")
 async def world_countries(request: Request):
-    """The countries of the world for a map visual (Natural Earth, public domain; vendored, see static/vendor/VENDOR.md), served with CORS like the chart library."""
-    path = WEB / "static/vendor/echarts/maps/world-countries.json"
+    """The countries of the world for a map visual (Natural Earth, public domain; inside the vendored Drishti Elements), served with CORS like the chart library."""
+    path = _pin.static_path("vendor/echarts/maps/world-countries.json")
     return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
 
 
 @router.get("/world-points.json")
 async def world_points(request: Request):
     """The countries too small for the 1:110m world map, one point each (Natural Earth; vendored)."""
-    path = WEB / "static/vendor/echarts/maps/world-points.json"
+    path = _pin.static_path("vendor/echarts/maps/world-points.json")
     return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
 
 
@@ -249,7 +252,7 @@ async def country_regions(request: Request, iso3: str):
     """One country's regions for a map that drills into it (Natural Earth admin-1, ISO 3166-2 codes; vendored). The name is a three-letter code and nothing else."""
     if not re.fullmatch(r"[A-Z]{3}", iso3):
         return await refuse(request, 404, "DRS-9404", f"no such country: {iso3}")
-    path = WEB / "static/vendor/echarts/maps/regions" / f"{iso3}.json"
+    path = _pin.static_path(f"vendor/echarts/maps/regions/{iso3}.json")
     if not path.is_file():
         return await refuse(request, 404, "DRS-9404", f"no regions for {iso3}")
     return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
@@ -257,7 +260,7 @@ async def country_regions(request: Request, iso3: str):
 
 @router.get("/echarts.js")
 async def echarts_js(request: Request):
-    path = WEB / "static/vendor/echarts/echarts.min.js"
+    path = _pin.static_path("vendor/echarts/echarts.min.js")
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
@@ -275,24 +278,33 @@ async def enhancer_js(request: Request, name: str):
     path = WEB / "static/js" / f"drishti_{name}.js"
     if name.startswith("elements-"):              # Drishti Elements' bundles (elements-core, elements-grid: the tables, elements-chart: the panel charts, elements-graph: a graph panel, elements-tree: a table with children), loaded like the scripts
         library = "drishti-" + name.removeprefix("elements-")
-        path = WEB / "static/elements" / library / f"drishti_{library.removeprefix('drishti-')}.js"
+        path = _pin.static_path(f"elements/{library}/drishti_{library.removeprefix('drishti-')}.js") if library in _pin.LIBRARIES else WEB / "static/elements" / library / f"drishti_{library.removeprefix('drishti-')}.js"
         if name in ("elements-core", "elements-inputs"):
             # the grid, the chart, the graph and the tree require drishti-inputs (they draw their choices with its Select), and the frozen
             # 1.x element loads elements-inputs after them: elements-core carries drishti-inputs too, once (a second load is skipped)
-            core = WEB / "static/elements/drishti-core/drishti_core.js"
-            body = (core.read_bytes() + b"\n" if name == "elements-core" else b"") + _inputs_once()
-            stamp = max(core.stat().st_mtime_ns, INPUTS_BUNDLE.stat().st_mtime_ns)
+            core = _pin.static_path("elements/drishti-core/drishti_core.js")
+            body = (core.read_bytes() + b"\n" if name == "elements-core" else b"") + _once("drishti-inputs")
+            stamp = max(core.stat().st_mtime_ns, _bundle("drishti-inputs").stat().st_mtime_ns)
+            return await send(request, body, "text/javascript", f'"{name}-{stamp:x}"')
+        if name in ("elements-grid", "elements-chart"):
+            # drishti-grid requires drishti-chart (drishti-elements.json) and the element loads elements-grid first: elements-grid carries
+            # drishti-chart too, once, and elements-chart is that same bundle once (a second load is skipped)
+            chart = _bundle("drishti-chart")
+            body = _once("drishti-chart") + (path.read_bytes() if name == "elements-grid" else b"")
+            stamp = max(chart.stat().st_mtime_ns, path.stat().st_mtime_ns)
             return await send(request, body, "text/javascript", f'"{name}-{stamp:x}"')
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
-INPUTS_BUNDLE = WEB / "static/elements/drishti-inputs/drishti_inputs.js"
+def _bundle(library: str):
+    """A Drishti Elements library's bundle in the vendored copy."""
+    return _pin.static_path(f"elements/{library}/drishti_{library.removeprefix('drishti-')}.js")
 
 
-def _inputs_once() -> bytes:
-    """drishti-inputs' bundle, run only when the page has not registered it yet."""
-    return (b"if (!(window.Drishti && window.Drishti.elements && window.Drishti.elements.libs && window.Drishti.elements.libs['drishti-inputs'])) {\n"
-            + INPUTS_BUNDLE.read_bytes() + b"\n}\n")
+def _once(library: str) -> bytes:
+    """A library's bundle, run only when the page has not registered it yet."""
+    return (f"if (!(window.Drishti && window.Drishti.elements && window.Drishti.elements.libs && window.Drishti.elements.libs['{library}'])) {{\n".encode()
+            + _bundle(library).read_bytes() + b"\n}\n")
 
 
 @router.get("/views/{kind}/{id_:path}/about")

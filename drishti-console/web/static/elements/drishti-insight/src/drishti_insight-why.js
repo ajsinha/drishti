@@ -19,7 +19,7 @@
    number on each date, the change, the tail scenario), the waterfall first and wide with, on its right, the clicked step's biggest
    contributors and its plain words, then Formula, Inputs & lineage and Checks folded below. Every figure is the server's; the browser
    only places it. A number whose explanation has no steps keeps the four-card page. */
-import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 /** True when an answer's why it moved can be drawn as layout A (it has the engine's steps). @param {Object} a @returns {boolean} */
 export function whyPageFits(a) {

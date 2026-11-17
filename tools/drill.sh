@@ -169,6 +169,9 @@ while (( other_workers + 20 > mem_gb && other_workers > 2 )); do other_workers=$
 # five minutes, before the browser workers reach their peak; the memory floor (DRILL_MIN_FREE_GB) holds a test back while memory is short.
 browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb 24 --threads "$cpus")}
 export DRISHTI_LAKE_CACHE="${DRISHTI_LAKE_CACHE:-$(pwd -P)/$DATA/tmp/lake-cache}"   # the demo lakes, built once per hash (tools/drillkit/lake_cache.py)
+# the Java resolver's answers the tools cache (tools/resolved.py): every tool, test and lane the drill starts keeps them in the drill's
+# own folder, never in data/tmp/resolved, which the drill checks is left unchanged (data_unchanged)
+export DRISHTI_RESOLVED_CACHE="${DRISHTI_RESOLVED_CACHE:-$DRILL_TMP/resolved}"
 LANE_LIMIT=${DRILL_LANE_LIMIT:-10800}   # a console lane that runs three hours has hung: it fails the drill instead of blocking it
 echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers workers, other $other_workers workers"
 
@@ -240,13 +243,20 @@ GATE_CONSOLE=(drishti-console/tests/test_docs_*.py drishti-console/tests/test_he
               drishti-console/tests/test_help_configuration.py drishti-console/tests/test_help_developer.py
               drishti-console/tests/test_tools_guide.py)
 
+wait_gate_jar() {   # returns once the gate's build has put its jar in lib/; fails when that build ended without one
+  until [[ -e "$LOGS/gate-jar.ready" ]]; do
+    [[ -e "$LOGS/gate-java.secs" ]] && { echo "drill: the gate's build ended without a server jar: the checks cannot run" >&2; return 1; }
+    sleep 2
+  done
+}
 all_of() {   # runs each argument (a command line) at once and waits for all; fails naming each that failed
   local cmd pids=() cmds=() i bad=0
   for cmd in "$@"; do bash -c "$cmd" & pids+=($!); cmds+=("$cmd"); done
   for i in "${!pids[@]}"; do wait "${pids[$i]}" || { echo "drill: FAILED: ${cmds[$i]}" >&2; bad=1; }; done
   return $bad
 }
-gate_static() {
+gate_static() {   # most of these run the server jar (resolve --json): they wait for the one the gate builds
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
   local checks=(
     "python3 tools/license_headers.py"
     "python3 tools/settings_catalogue.py --check"      # CONFIGURATION.md's every setting: each key has a meaning, every variable indexed, current
@@ -256,7 +266,9 @@ gate_static() {
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen
-  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py modules/*/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
+  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py modules/*/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do
+    checks+=("python3 $gen --check")   # generated pack content is current
+  done   # generated pack content is current
   all_of "${checks[@]}"
 }
 
@@ -268,6 +280,8 @@ gate_checks() {
   mapfile -t console < <(python3 "$PLAN" static --kind console)
   mapfile -t tools < <(python3 "$PLAN" static --kind tools)
   (( ${#console[@]} > 10 && ${#tools[@]} > 3 )) || { echo "drill: only ${#console[@]} console and ${#tools[@]} tools files of quick checks found" >&2; return 1; }
+  # some checks run the server jar (resolve --json): they wait for THIS checkout's jar, never use a stale one left in lib/ by an earlier release
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
   console_files checks 4 2 -m static "${console[@]}" || rc=1
   for f in "${tools[@]}"; do
     out="$LOGS/checks-$(basename "$f" .py).txt"
@@ -295,6 +309,11 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
     --python "$PY" --parallel "$reruns"
 }
 
+gate_docs() {   # the gate's console tests: they run the server jar (resolve --json), so they wait for the one the gate builds
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
+  console_files gate 4 2 "${GATE_CONSOLE[@]}"
+}
+
 # One Java 21 build of the working tree: compiles every module once (Error Prone, Javadoc with doclint, Spotless, the enforcer's
 # bytecode rule), packages the jars the console and the tool tests start, and runs only the rule tests. Maven threads build the
 # modules side by side; nothing is installed into ~/.m2.
@@ -305,7 +324,11 @@ gate_java() {
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # <home>/lib is the one place every tool finds the server jar: the newest exec jar is copied there
-  mkdir -p lib && cp -f "$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
+  # and it REPLACES any other server jar there (lib/ holds exactly one; lib/ext is the site's and never touched)
+  local built; built=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)
+  mkdir -p lib && find lib -maxdepth 1 -name 'drishti-server-*-exec.jar' ! -name "$(basename "$built")" -delete \
+    && cp -f "$built" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
+  : > "$LOGS/gate-jar.ready"   # the gate's checks that run the jar wait for this
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
@@ -419,6 +442,10 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   trap "rm -rf '$copy'; rmdir '$COPY_BASE' 2>/dev/null || true" EXIT
   trap "exit 143" TERM
   git archive HEAD | tar -x -C "$copy"
+  # the tools read where everything is from the kernel jar (tools/resolved.py) and the copy's tests run them (the Python lake path of
+  # PythonPathEqualityTest): the copy's lib/, the one place they look, gets the jar the gate built from this same commit
+  wait_gate_jar || return 1
+  mkdir -p "$copy/lib" && cp "$REPO"/lib/drishti-server-*-exec.jar "$copy/lib/"
   cd "$copy"
   # the copy is not a repository: git must not find one above it (a worktree's copy sits under the main checkout's ignored .claude/,
   # where git would call every copied file ignored and the repository-wide scans would see none)
@@ -613,8 +640,9 @@ if [[ "$MODE" != docs ]]; then
 fi
 
 t=$SECONDS
+rm -f "$LOGS/gate-jar.ready" "$LOGS/gate-java.secs"
 start_job gate-static gate_static
-start_job gate-docs console_files gate 4 2 "${GATE_CONSOLE[@]}"
+start_job gate-docs gate_docs
 start_job gate-checks gate_checks
 gate_jobs=(gate-static gate-docs gate-checks)
 if [[ "$MODE" != docs ]]; then start_job gate-java gate_java; gate_jobs+=(gate-java); fi

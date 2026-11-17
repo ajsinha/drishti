@@ -1,0 +1,3704 @@
+{
+  "about" : "Drishti Trading's landings as the trading module answers them over TradingStandIn's data: written by TradingLandingRecordTest (-Ddrishti.record=true), replayed by the console's stand-in (tests/landing_answers.py)",
+  "module" : "trading",
+  "people" : [ {
+    "answers" : {
+      "GET /trading/landing/blotter" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "counts" : {
+          "amended" : 1,
+          "cancelled" : 1,
+          "new" : 1
+        },
+        "how" : "trades",
+        "live" : {
+          "live" : false,
+          "seq" : 1,
+          "set" : null,
+          "total" : 3
+        },
+        "matched" : 3,
+        "page" : {
+          "live" : false,
+          "offset" : 0,
+          "rows" : [ {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T13:52:00Z",
+              "TRADE_ACTION" : "NEW",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "VALIDATED",
+              "TRADE_VERSION" : "1"
+            },
+            "id" : "MX-20000001",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-NORTHPLAINS",
+              "PORTFOLIO" : "BOOK-RATES-2",
+              "PRODUCT_TYPE" : "SWAPTION",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T12:10:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "3"
+            },
+            "id" : "MX-20000002",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T11:41:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "CANCELLED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000004",
+            "seq" : 1,
+            "version" : 1
+          } ],
+          "search" : {
+            "columns" : [ "$.PORTFOLIO", "$.COUNTERPARTY", "$.PRODUCT_TYPE", "$.TRADE_ACTION", "$.TRADE_STATUS", "$.TRADE_VERSION", "$.TRADE_DATE", "$.SOURCE_UPDATE_TIME" ],
+            "kind" : "trade",
+            "matched" : 3,
+            "partial" : false
+          },
+          "seq" : 1,
+          "set" : {
+            "id" : null,
+            "kind" : "trade"
+          },
+          "total" : 3
+        },
+        "partial" : false,
+        "rows" : [ {
+          "at" : "2026-09-30T13:52:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "new",
+          "notional" : 5.0E7,
+          "product" : "IR_SWAP",
+          "status" : "VALIDATED",
+          "time" : "13:52",
+          "trade" : "MX-20000001",
+          "version" : "1"
+        }, {
+          "at" : "2026-09-30T12:10:00Z",
+          "book" : "BOOK-RATES-2",
+          "counterparty" : "CP-NORTHPLAINS",
+          "event" : "amended",
+          "notional" : 1.0E8,
+          "product" : "SWAPTION",
+          "status" : "AMENDED",
+          "time" : "12:10",
+          "trade" : "MX-20000002",
+          "version" : "3"
+        }, {
+          "at" : "2026-09-30T11:41:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "cancelled",
+          "notional" : 2.0E8,
+          "product" : "IR_SWAP",
+          "status" : "CANCELLED",
+          "time" : "11:41",
+          "trade" : "MX-20000004",
+          "version" : "2"
+        } ],
+        "total" : 3
+      },
+      "GET /trading/landing/blotter?for=desk" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "counts" : {
+          "amended" : 2,
+          "cancelled" : 1,
+          "new" : 1
+        },
+        "how" : "trades",
+        "live" : {
+          "live" : false,
+          "seq" : 1,
+          "set" : null,
+          "total" : 4
+        },
+        "matched" : 4,
+        "page" : {
+          "live" : false,
+          "offset" : 0,
+          "rows" : [ {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T13:52:00Z",
+              "TRADE_ACTION" : "NEW",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "VALIDATED",
+              "TRADE_VERSION" : "1"
+            },
+            "id" : "MX-20000001",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-NORTHPLAINS",
+              "PORTFOLIO" : "BOOK-RATES-2",
+              "PRODUCT_TYPE" : "SWAPTION",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T12:10:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "3"
+            },
+            "id" : "MX-20000002",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T11:41:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "CANCELLED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000004",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-MERIDIAN",
+              "PORTFOLIO" : "BOOK-RATES-3",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T10:05:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000003",
+            "seq" : 1,
+            "version" : 1
+          } ],
+          "search" : {
+            "columns" : [ "$.PORTFOLIO", "$.COUNTERPARTY", "$.PRODUCT_TYPE", "$.TRADE_ACTION", "$.TRADE_STATUS", "$.TRADE_VERSION", "$.TRADE_DATE", "$.SOURCE_UPDATE_TIME" ],
+            "kind" : "trade",
+            "matched" : 4,
+            "partial" : false
+          },
+          "seq" : 1,
+          "set" : {
+            "id" : null,
+            "kind" : "trade"
+          },
+          "total" : 4
+        },
+        "partial" : false,
+        "rows" : [ {
+          "at" : "2026-09-30T13:52:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "new",
+          "notional" : 5.0E7,
+          "product" : "IR_SWAP",
+          "status" : "VALIDATED",
+          "time" : "13:52",
+          "trade" : "MX-20000001",
+          "version" : "1"
+        }, {
+          "at" : "2026-09-30T12:10:00Z",
+          "book" : "BOOK-RATES-2",
+          "counterparty" : "CP-NORTHPLAINS",
+          "event" : "amended",
+          "notional" : 1.0E8,
+          "product" : "SWAPTION",
+          "status" : "AMENDED",
+          "time" : "12:10",
+          "trade" : "MX-20000002",
+          "version" : "3"
+        }, {
+          "at" : "2026-09-30T11:41:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "cancelled",
+          "notional" : 2.0E8,
+          "product" : "IR_SWAP",
+          "status" : "CANCELLED",
+          "time" : "11:41",
+          "trade" : "MX-20000004",
+          "version" : "2"
+        }, {
+          "at" : "2026-09-30T10:05:00Z",
+          "book" : "BOOK-RATES-3",
+          "counterparty" : "CP-MERIDIAN",
+          "event" : "amended",
+          "notional" : 1.5E8,
+          "product" : "IR_SWAP",
+          "status" : "AMENDED",
+          "time" : "10:05",
+          "trade" : "MX-20000003",
+          "version" : "2"
+        } ],
+        "total" : 4
+      },
+      "GET /trading/landing/limits" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7443243243243243,
+            "state" : "ok",
+            "var" : 5508000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 7400000.0,
+            "limitUse" : 0.765,
+            "state" : "ok",
+            "var" : 5661000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7856756756756756,
+            "state" : "ok",
+            "var" : 5814000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 7400000.0,
+            "limitUse" : 0.8063513513513515,
+            "state" : "near",
+            "var" : 5967000.000000001,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-2",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 5000000.0,
+            "limitUse" : 0.54,
+            "state" : "ok",
+            "var" : 2700000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 5000000.0,
+            "limitUse" : 0.555,
+            "state" : "ok",
+            "var" : 2775000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 5000000.0,
+            "limitUse" : 0.57,
+            "state" : "ok",
+            "var" : 2850000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 5000000.0,
+            "limitUse" : 0.5850000000000001,
+            "state" : "ok",
+            "var" : 2925000.0000000005,
+            "why" : null
+          } ]
+        } ],
+        "dates" : [ "2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30" ],
+        "missingDates" : [ "2026-09-25" ],
+        "near" : 0.8
+      },
+      "GET /trading/landing/limits?for=desk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7443243243243243,
+            "state" : "ok",
+            "var" : 5508000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 7400000.0,
+            "limitUse" : 0.765,
+            "state" : "ok",
+            "var" : 5661000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7856756756756756,
+            "state" : "ok",
+            "var" : 5814000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 7400000.0,
+            "limitUse" : 0.8063513513513515,
+            "state" : "near",
+            "var" : 5967000.000000001,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-2",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 5000000.0,
+            "limitUse" : 0.54,
+            "state" : "ok",
+            "var" : 2700000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 5000000.0,
+            "limitUse" : 0.555,
+            "state" : "ok",
+            "var" : 2775000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 5000000.0,
+            "limitUse" : 0.57,
+            "state" : "ok",
+            "var" : 2850000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 5000000.0,
+            "limitUse" : 0.5850000000000001,
+            "state" : "ok",
+            "var" : 2925000.0000000005,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-3",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 8000000.0,
+            "limitUse" : 1.0125,
+            "state" : "breach",
+            "var" : 8100000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 8000000.0,
+            "limitUse" : 1.040625,
+            "state" : "breach",
+            "var" : 8325000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 8000000.0,
+            "limitUse" : 1.06875,
+            "state" : "breach",
+            "var" : 8550000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 8000000.0,
+            "limitUse" : 1.096875,
+            "state" : "breach",
+            "var" : 8775000.0,
+            "why" : null
+          } ]
+        } ],
+        "dates" : [ "2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30" ],
+        "missingDates" : [ "2026-09-25" ],
+        "near" : 0.8
+      },
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-ASHAH",
+          "kind" : "trader",
+          "name" : "A. Shah",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/me?for=desk" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "T. Brennan",
+          "id" : "DESK-RATES",
+          "kind" : "desk",
+          "name" : "A. Shah",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/pnl-var" : {
+        "available" : false,
+        "reason" : "a desk's history: pick a desk"
+      },
+      "GET /trading/landing/pnl-var?for=desk" : {
+        "available" : true,
+        "backtest" : {
+          "days" : 64,
+          "exceptions" : 1,
+          "light" : "green"
+        },
+        "days" : 60,
+        "exceptions" : 1,
+        "note" : null,
+        "rows" : [ {
+          "date" : "2026-07-05",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-06",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-07",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-08",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-09",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-10",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-11",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-12",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-13",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-14",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-15",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-16",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-17",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-18",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-19",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-20",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-21",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-22",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-01",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-02",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-03",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-04",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-05",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-06",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-07",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-08",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-09",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-10",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-11",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-12",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-13",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-14",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-15",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-16",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-17",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-18",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-19",
+          "exception" : true,
+          "pnl" : -1.65E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-20",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-21",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-22",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-01",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-02",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-03",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-04",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-05",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-06",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-07",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-08",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-09",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-10",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-11",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-12",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-13",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-14",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-15",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-16",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-17",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-18",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-19",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-20",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        } ],
+        "scope" : "DESK:DESK-RATES"
+      },
+      "GET /trading/landing/risk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        }, {
+          "book" : "BOOK-RATES-2",
+          "limit" : 5000000.0,
+          "limitUse" : 0.6,
+          "state" : "ok",
+          "trades" : 4,
+          "var" : 3000000.0
+        } ],
+        "breaches" : [ ],
+        "businessDate" : "2026-09-30",
+        "confidence" : 0.99,
+        "currency" : "USD",
+        "es" : null,
+        "intraday" : {
+          "lastAt" : "2026-09-30T14:05:00Z",
+          "trades" : 3,
+          "updates" : 2
+        },
+        "limit" : null,
+        "limitUse" : null,
+        "near" : 0.8,
+        "nearLimit" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        } ],
+        "positions" : [ {
+          "book" : "BOOK-RATES-1",
+          "componentVar" : 2310000.0,
+          "label" : "USD SOFR swaps 10Y",
+          "marketValue" : -4.21E7,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-1~MX-20000001"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "componentVar" : 710000.0,
+          "label" : "USD swaptions 1Yx10Y",
+          "marketValue" : 9200000.0,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-2~MX-20000002"
+        } ],
+        "positionsProblem" : null,
+        "problems" : [ ],
+        "scope" : "BOOK:BOOK-RATES-1 + BOOK:BOOK-RATES-2",
+        "state" : "none",
+        "trades" : 8,
+        "var" : 8000000.0,
+        "worst" : {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        }
+      },
+      "GET /trading/landing/risk?for=desk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        }, {
+          "book" : "BOOK-RATES-2",
+          "limit" : 5000000.0,
+          "limitUse" : 0.6,
+          "state" : "ok",
+          "trades" : 4,
+          "var" : 3000000.0
+        }, {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "breaches" : [ {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "businessDate" : "2026-09-30",
+        "confidence" : 0.99,
+        "currency" : "USD",
+        "es" : null,
+        "intraday" : null,
+        "limit" : 2.0E7,
+        "limitUse" : 0.75,
+        "near" : 0.8,
+        "nearLimit" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        } ],
+        "positions" : [ {
+          "book" : "BOOK-RATES-1",
+          "componentVar" : 2310000.0,
+          "label" : "USD SOFR swaps 10Y",
+          "marketValue" : -4.21E7,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-1~MX-20000001"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "componentVar" : 710000.0,
+          "label" : "USD swaptions 1Yx10Y",
+          "marketValue" : 9200000.0,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-2~MX-20000002"
+        } ],
+        "positionsProblem" : null,
+        "problems" : [ ],
+        "scope" : "DESK:DESK-RATES",
+        "state" : "ok",
+        "trades" : 11,
+        "var" : 1.5E7,
+        "worst" : {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "trader"
+      },
+      "GET /trading/landing/traders" : {
+        "available" : false,
+        "reason" : "by trader is a desk's: pick a desk"
+      },
+      "GET /trading/landing/traders?for=desk" : {
+        "available" : true,
+        "hasPrevious" : true,
+        "note" : null,
+        "reason" : null,
+        "rows" : [ {
+          "name" : "A. Shah",
+          "pnl" : 480000,
+          "recordTrades" : 8.0,
+          "trader" : "TRDR-ASHAH",
+          "trades" : 8,
+          "var" : 1.2E7
+        }, {
+          "name" : "K. Moreau",
+          "pnl" : 300000,
+          "recordTrades" : 4.0,
+          "trader" : "TRDR-KMOREAU",
+          "trades" : 3,
+          "var" : 4500000.0
+        } ],
+        "traderMasked" : false,
+        "varNote" : null
+      },
+      "GET /trading/landing/valuations" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "byBook" : [ {
+          "book" : "BOOK-RATES-1",
+          "mtm" : -6000000,
+          "pnl" : 220000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-2",
+          "mtm" : 6000000,
+          "pnl" : 260000,
+          "trades" : 4
+        } ],
+        "byTrader" : [ {
+          "pnl" : 480000,
+          "trader" : "TRDR-ASHAH",
+          "trades" : 8
+        } ],
+        "counterparties" : [ "CP-ALDERSHOT", "CP-NORTHPLAINS" ],
+        "dataDate" : "2026-09-30",
+        "dv01" : -48000,
+        "dv01Trades" : 8,
+        "figuresProblem" : null,
+        "hasPrevious" : true,
+        "largestCounterparty" : {
+          "counterparty" : "CP-NORTHPLAINS",
+          "positiveMtm" : 16000000,
+          "share" : 0.6666666666666666,
+          "totalPositiveMtm" : 24000000
+        },
+        "liveTrades" : 8,
+        "matched" : 8,
+        "movers" : [ {
+          "book" : "BOOK-RATES-2",
+          "change" : 110000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 11000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000011",
+          "valuation" : "TVAL-MX-20000011"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 100000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -10000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000010",
+          "valuation" : "TVAL-MX-20000010"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 80000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : -8000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000008",
+          "valuation" : "TVAL-MX-20000008"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 70000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : 7000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000007",
+          "valuation" : "TVAL-MX-20000007"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 50000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 5000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000005",
+          "valuation" : "TVAL-MX-20000005"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 40000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -4000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000004",
+          "valuation" : "TVAL-MX-20000004"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 20000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : -2000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000002",
+          "valuation" : "TVAL-MX-20000002"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 10000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : 1000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000001",
+          "valuation" : "TVAL-MX-20000001"
+        } ],
+        "mtm" : 0,
+        "mtmMasked" : false,
+        "partial" : false,
+        "pnl" : 480000,
+        "previousDate" : "2026-09-29",
+        "previousProblem" : null,
+        "products" : [ "IR_SWAP", "SWAPTION" ],
+        "traderMasked" : false,
+        "trades" : 8,
+        "valuedBoth" : 8
+      },
+      "GET /trading/landing/valuations?for=desk" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "byBook" : [ {
+          "book" : "BOOK-RATES-1",
+          "mtm" : -6000000,
+          "pnl" : 220000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-2",
+          "mtm" : 6000000,
+          "pnl" : 260000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-3",
+          "mtm" : -6000000,
+          "pnl" : 300000,
+          "trades" : 3
+        } ],
+        "byTrader" : [ {
+          "pnl" : 480000,
+          "trader" : "TRDR-ASHAH",
+          "trades" : 8
+        }, {
+          "pnl" : 300000,
+          "trader" : "TRDR-KMOREAU",
+          "trades" : 3
+        } ],
+        "counterparties" : [ "CP-ALDERSHOT", "CP-NORTHPLAINS", "CP-MERIDIAN" ],
+        "dataDate" : "2026-09-30",
+        "dv01" : -66000,
+        "dv01Trades" : 11,
+        "figuresProblem" : null,
+        "hasPrevious" : true,
+        "largestCounterparty" : {
+          "counterparty" : "CP-NORTHPLAINS",
+          "positiveMtm" : 16000000,
+          "share" : 0.4444444444444444,
+          "totalPositiveMtm" : 36000000
+        },
+        "liveTrades" : 11,
+        "matched" : 12,
+        "movers" : [ {
+          "book" : "BOOK-RATES-3",
+          "change" : 120000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -12000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000012",
+          "valuation" : "TVAL-MX-20000012"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 110000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 11000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000011",
+          "valuation" : "TVAL-MX-20000011"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 100000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -10000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000010",
+          "valuation" : "TVAL-MX-20000010"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 90000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 9000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000009",
+          "valuation" : "TVAL-MX-20000009"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 80000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : -8000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000008",
+          "valuation" : "TVAL-MX-20000008"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 70000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : 7000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000007",
+          "valuation" : "TVAL-MX-20000007"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 60000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -6000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000006",
+          "valuation" : "TVAL-MX-20000006"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 50000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 5000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000005",
+          "valuation" : "TVAL-MX-20000005"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 40000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -4000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000004",
+          "valuation" : "TVAL-MX-20000004"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 30000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 3000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000003",
+          "valuation" : "TVAL-MX-20000003"
+        } ],
+        "mtm" : -6000000,
+        "mtmMasked" : false,
+        "partial" : false,
+        "pnl" : 780000,
+        "previousDate" : "2026-09-29",
+        "previousProblem" : null,
+        "products" : [ "IR_SWAP", "SWAPTION" ],
+        "traderMasked" : false,
+        "trades" : 12,
+        "valuedBoth" : 12
+      }
+    },
+    "checks" : [ {
+      "answer" : {
+        "book" : "BOOK-RATES-1",
+        "counterparty" : "CP-ALDERSHOT",
+        "exposure" : {
+          "after" : 4.092E8,
+          "before" : 4.015E8,
+          "checkId" : "PDC-TEST",
+          "command" : "PREDEAL CP-ALDERSHOT LIKE MX-20000010",
+          "confidence" : 0.95,
+          "decision" : "approve",
+          "fallback" : null,
+          "flags" : [ "exact" ],
+          "limit" : 4.2E8,
+          "method" : "paths",
+          "nettingSet" : "NS-ALDERSHOT-NY",
+          "note" : "copies",
+          "proxy" : false,
+          "reason" : "exact: within the limit",
+          "reasons" : [ "exact: within the limit" ],
+          "scope" : "CPTY:CP-ALDERSHOT",
+          "state" : "near",
+          "useAfter" : 0.9742857142857143,
+          "useBefore" : 0.955952380952381
+        },
+        "factor" : 0.5,
+        "notional" : 2.5E8,
+        "ok" : true,
+        "template" : {
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "notional" : 5.0E8,
+          "product" : "IR_SWAP",
+          "side" : "S",
+          "trade" : "MX-20000010"
+        },
+        "var" : {
+          "after" : 6300000.0,
+          "before" : 6120000.0,
+          "change" : 180000.0,
+          "confidence" : 0.99,
+          "currency" : "USD",
+          "engine" : "Java VaR engine (the server)",
+          "limit" : 7400000.0,
+          "note" : "copies",
+          "scope" : "BOOK:BOOK-RATES-1",
+          "state" : "near",
+          "useAfter" : 0.8513513513513513,
+          "useBefore" : 0.827027027027027
+        }
+      },
+      "body" : {
+        "book" : "BOOK-RATES-1",
+        "counterparty" : "CP-ALDERSHOT",
+        "notional" : "250m",
+        "product" : "IR_SWAP",
+        "side" : "S"
+      }
+    } ],
+    "lens" : "trading",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "ash"
+  }, {
+    "answers" : {
+      "GET /trading/landing/blotter" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/blotter?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/limits" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/limits?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/me" : {
+        "admin" : false,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/me?for=desk" : {
+        "admin" : false,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/pnl-var" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/pnl-var?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/risk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/risk?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : ""
+      },
+      "GET /trading/landing/traders" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/traders?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/valuations" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/valuations?for=desk" : {
+        "available" : false,
+        "reason" : "pick a trader or a desk to view as",
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "viewer" ],
+    "settings" : { },
+    "user" : "zed"
+  }, {
+    "answers" : {
+      "GET /trading/landing/blotter" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "counts" : {
+          "amended" : 2,
+          "cancelled" : 1,
+          "new" : 1
+        },
+        "how" : "trades",
+        "live" : {
+          "live" : false,
+          "seq" : 1,
+          "set" : null,
+          "total" : 4
+        },
+        "matched" : 4,
+        "page" : {
+          "live" : false,
+          "offset" : 0,
+          "rows" : [ {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T13:52:00Z",
+              "TRADE_ACTION" : "NEW",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "VALIDATED",
+              "TRADE_VERSION" : "1"
+            },
+            "id" : "MX-20000001",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-NORTHPLAINS",
+              "PORTFOLIO" : "BOOK-RATES-2",
+              "PRODUCT_TYPE" : "SWAPTION",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T12:10:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "3"
+            },
+            "id" : "MX-20000002",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T11:41:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "CANCELLED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000004",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-MERIDIAN",
+              "PORTFOLIO" : "BOOK-RATES-3",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T10:05:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000003",
+            "seq" : 1,
+            "version" : 1
+          } ],
+          "search" : {
+            "columns" : [ "$.PORTFOLIO", "$.COUNTERPARTY", "$.PRODUCT_TYPE", "$.TRADE_ACTION", "$.TRADE_STATUS", "$.TRADE_VERSION", "$.TRADE_DATE", "$.SOURCE_UPDATE_TIME" ],
+            "kind" : "trade",
+            "matched" : 4,
+            "partial" : false
+          },
+          "seq" : 1,
+          "set" : {
+            "id" : null,
+            "kind" : "trade"
+          },
+          "total" : 4
+        },
+        "partial" : false,
+        "rows" : [ {
+          "at" : "2026-09-30T13:52:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "new",
+          "notional" : 5.0E7,
+          "product" : "IR_SWAP",
+          "status" : "VALIDATED",
+          "time" : "13:52",
+          "trade" : "MX-20000001",
+          "version" : "1"
+        }, {
+          "at" : "2026-09-30T12:10:00Z",
+          "book" : "BOOK-RATES-2",
+          "counterparty" : "CP-NORTHPLAINS",
+          "event" : "amended",
+          "notional" : 1.0E8,
+          "product" : "SWAPTION",
+          "status" : "AMENDED",
+          "time" : "12:10",
+          "trade" : "MX-20000002",
+          "version" : "3"
+        }, {
+          "at" : "2026-09-30T11:41:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "cancelled",
+          "notional" : 2.0E8,
+          "product" : "IR_SWAP",
+          "status" : "CANCELLED",
+          "time" : "11:41",
+          "trade" : "MX-20000004",
+          "version" : "2"
+        }, {
+          "at" : "2026-09-30T10:05:00Z",
+          "book" : "BOOK-RATES-3",
+          "counterparty" : "CP-MERIDIAN",
+          "event" : "amended",
+          "notional" : 1.5E8,
+          "product" : "IR_SWAP",
+          "status" : "AMENDED",
+          "time" : "10:05",
+          "trade" : "MX-20000003",
+          "version" : "2"
+        } ],
+        "total" : 4
+      },
+      "GET /trading/landing/blotter?for=desk" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "counts" : {
+          "amended" : 2,
+          "cancelled" : 1,
+          "new" : 1
+        },
+        "how" : "trades",
+        "live" : {
+          "live" : false,
+          "seq" : 1,
+          "set" : null,
+          "total" : 4
+        },
+        "matched" : 4,
+        "page" : {
+          "live" : false,
+          "offset" : 0,
+          "rows" : [ {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T13:52:00Z",
+              "TRADE_ACTION" : "NEW",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "VALIDATED",
+              "TRADE_VERSION" : "1"
+            },
+            "id" : "MX-20000001",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-NORTHPLAINS",
+              "PORTFOLIO" : "BOOK-RATES-2",
+              "PRODUCT_TYPE" : "SWAPTION",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T12:10:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "3"
+            },
+            "id" : "MX-20000002",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-ALDERSHOT",
+              "PORTFOLIO" : "BOOK-RATES-1",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T11:41:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "CANCELLED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000004",
+            "seq" : 1,
+            "version" : 1
+          }, {
+            "doc" : {
+              "COUNTERPARTY" : "CP-MERIDIAN",
+              "PORTFOLIO" : "BOOK-RATES-3",
+              "PRODUCT_TYPE" : "IR_SWAP",
+              "SOURCE_UPDATE_TIME" : "2026-09-30T10:05:00Z",
+              "TRADE_ACTION" : "AMEND",
+              "TRADE_DATE" : "2026-08-27",
+              "TRADE_STATUS" : "AMENDED",
+              "TRADE_VERSION" : "2"
+            },
+            "id" : "MX-20000003",
+            "seq" : 1,
+            "version" : 1
+          } ],
+          "search" : {
+            "columns" : [ "$.PORTFOLIO", "$.COUNTERPARTY", "$.PRODUCT_TYPE", "$.TRADE_ACTION", "$.TRADE_STATUS", "$.TRADE_VERSION", "$.TRADE_DATE", "$.SOURCE_UPDATE_TIME" ],
+            "kind" : "trade",
+            "matched" : 4,
+            "partial" : false
+          },
+          "seq" : 1,
+          "set" : {
+            "id" : null,
+            "kind" : "trade"
+          },
+          "total" : 4
+        },
+        "partial" : false,
+        "rows" : [ {
+          "at" : "2026-09-30T13:52:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "new",
+          "notional" : 5.0E7,
+          "product" : "IR_SWAP",
+          "status" : "VALIDATED",
+          "time" : "13:52",
+          "trade" : "MX-20000001",
+          "version" : "1"
+        }, {
+          "at" : "2026-09-30T12:10:00Z",
+          "book" : "BOOK-RATES-2",
+          "counterparty" : "CP-NORTHPLAINS",
+          "event" : "amended",
+          "notional" : 1.0E8,
+          "product" : "SWAPTION",
+          "status" : "AMENDED",
+          "time" : "12:10",
+          "trade" : "MX-20000002",
+          "version" : "3"
+        }, {
+          "at" : "2026-09-30T11:41:00Z",
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "event" : "cancelled",
+          "notional" : 2.0E8,
+          "product" : "IR_SWAP",
+          "status" : "CANCELLED",
+          "time" : "11:41",
+          "trade" : "MX-20000004",
+          "version" : "2"
+        }, {
+          "at" : "2026-09-30T10:05:00Z",
+          "book" : "BOOK-RATES-3",
+          "counterparty" : "CP-MERIDIAN",
+          "event" : "amended",
+          "notional" : 1.5E8,
+          "product" : "IR_SWAP",
+          "status" : "AMENDED",
+          "time" : "10:05",
+          "trade" : "MX-20000003",
+          "version" : "2"
+        } ],
+        "total" : 4
+      },
+      "GET /trading/landing/limits" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7443243243243243,
+            "state" : "ok",
+            "var" : 5508000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 7400000.0,
+            "limitUse" : 0.765,
+            "state" : "ok",
+            "var" : 5661000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7856756756756756,
+            "state" : "ok",
+            "var" : 5814000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 7400000.0,
+            "limitUse" : 0.8063513513513515,
+            "state" : "near",
+            "var" : 5967000.000000001,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-2",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 5000000.0,
+            "limitUse" : 0.54,
+            "state" : "ok",
+            "var" : 2700000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 5000000.0,
+            "limitUse" : 0.555,
+            "state" : "ok",
+            "var" : 2775000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 5000000.0,
+            "limitUse" : 0.57,
+            "state" : "ok",
+            "var" : 2850000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 5000000.0,
+            "limitUse" : 0.5850000000000001,
+            "state" : "ok",
+            "var" : 2925000.0000000005,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-3",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 8000000.0,
+            "limitUse" : 1.0125,
+            "state" : "breach",
+            "var" : 8100000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 8000000.0,
+            "limitUse" : 1.040625,
+            "state" : "breach",
+            "var" : 8325000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 8000000.0,
+            "limitUse" : 1.06875,
+            "state" : "breach",
+            "var" : 8550000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 8000000.0,
+            "limitUse" : 1.096875,
+            "state" : "breach",
+            "var" : 8775000.0,
+            "why" : null
+          } ]
+        } ],
+        "dates" : [ "2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30" ],
+        "missingDates" : [ "2026-09-25" ],
+        "near" : 0.8
+      },
+      "GET /trading/landing/limits?for=desk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7443243243243243,
+            "state" : "ok",
+            "var" : 5508000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 7400000.0,
+            "limitUse" : 0.765,
+            "state" : "ok",
+            "var" : 5661000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 7400000.0,
+            "limitUse" : 0.7856756756756756,
+            "state" : "ok",
+            "var" : 5814000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 7400000.0,
+            "limitUse" : 0.8063513513513515,
+            "state" : "near",
+            "var" : 5967000.000000001,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-2",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 5000000.0,
+            "limitUse" : 0.54,
+            "state" : "ok",
+            "var" : 2700000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 5000000.0,
+            "limitUse" : 0.555,
+            "state" : "ok",
+            "var" : 2775000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 5000000.0,
+            "limitUse" : 0.57,
+            "state" : "ok",
+            "var" : 2850000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 5000000.0,
+            "limitUse" : 0.5850000000000001,
+            "state" : "ok",
+            "var" : 2925000.0000000005,
+            "why" : null
+          } ]
+        }, {
+          "book" : "BOOK-RATES-3",
+          "cells" : [ {
+            "date" : "2026-09-24",
+            "limit" : 8000000.0,
+            "limitUse" : 1.0125,
+            "state" : "breach",
+            "var" : 8100000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-25",
+            "limit" : null,
+            "limitUse" : null,
+            "state" : "missing",
+            "var" : null,
+            "why" : "no official record of this date"
+          }, {
+            "date" : "2026-09-28",
+            "limit" : 8000000.0,
+            "limitUse" : 1.040625,
+            "state" : "breach",
+            "var" : 8325000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-29",
+            "limit" : 8000000.0,
+            "limitUse" : 1.06875,
+            "state" : "breach",
+            "var" : 8550000.0,
+            "why" : null
+          }, {
+            "date" : "2026-09-30",
+            "limit" : 8000000.0,
+            "limitUse" : 1.096875,
+            "state" : "breach",
+            "var" : 8775000.0,
+            "why" : null
+          } ]
+        } ],
+        "dates" : [ "2026-09-24", "2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30" ],
+        "missingDates" : [ "2026-09-25" ],
+        "near" : 0.8
+      },
+      "GET /trading/landing/me" : {
+        "admin" : false,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "T. Brennan",
+          "id" : "DESK-RATES",
+          "kind" : "desk",
+          "name" : "Rates · Swaps and options",
+          "problems" : [ ],
+          "role" : "desk-head",
+          "source" : "choice"
+        }
+      },
+      "GET /trading/landing/me?for=desk" : {
+        "admin" : false,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "T. Brennan",
+          "id" : "DESK-RATES",
+          "kind" : "desk",
+          "name" : "Rates · Swaps and options",
+          "problems" : [ ],
+          "role" : "desk-head",
+          "source" : "choice"
+        }
+      },
+      "GET /trading/landing/pnl-var" : {
+        "available" : true,
+        "backtest" : {
+          "days" : 64,
+          "exceptions" : 1,
+          "light" : "green"
+        },
+        "days" : 60,
+        "exceptions" : 1,
+        "note" : null,
+        "rows" : [ {
+          "date" : "2026-07-05",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-06",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-07",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-08",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-09",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-10",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-11",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-12",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-13",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-14",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-15",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-16",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-17",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-18",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-19",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-20",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-21",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-22",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-01",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-02",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-03",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-04",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-05",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-06",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-07",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-08",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-09",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-10",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-11",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-12",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-13",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-14",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-15",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-16",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-17",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-18",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-19",
+          "exception" : true,
+          "pnl" : -1.65E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-20",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-21",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-22",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-01",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-02",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-03",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-04",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-05",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-06",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-07",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-08",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-09",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-10",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-11",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-12",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-13",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-14",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-15",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-16",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-17",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-18",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-19",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-20",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        } ],
+        "scope" : "DESK:DESK-RATES"
+      },
+      "GET /trading/landing/pnl-var?for=desk" : {
+        "available" : true,
+        "backtest" : {
+          "days" : 64,
+          "exceptions" : 1,
+          "light" : "green"
+        },
+        "days" : 60,
+        "exceptions" : 1,
+        "note" : null,
+        "rows" : [ {
+          "date" : "2026-07-05",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-06",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-07",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-08",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-09",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-10",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-11",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-12",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-13",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-14",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-15",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-16",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-17",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-18",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-19",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-20",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-21",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-07-22",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-01",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-02",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-03",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-04",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-05",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-06",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-07",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-08",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-09",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-10",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-11",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-12",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-13",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-14",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-15",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-16",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-17",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-18",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-19",
+          "exception" : true,
+          "pnl" : -1.65E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-20",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-21",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-08-22",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-01",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-02",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-03",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-04",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-05",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-06",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-07",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-08",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-09",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-10",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-11",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-12",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-13",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-14",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-15",
+          "exception" : false,
+          "pnl" : 8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-16",
+          "exception" : false,
+          "pnl" : -1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-17",
+          "exception" : false,
+          "pnl" : 4000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-18",
+          "exception" : false,
+          "pnl" : -8000000.0,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-19",
+          "exception" : false,
+          "pnl" : 1.2E7,
+          "var" : 1.5E7
+        }, {
+          "date" : "2026-09-20",
+          "exception" : false,
+          "pnl" : -4000000.0,
+          "var" : 1.5E7
+        } ],
+        "scope" : "DESK:DESK-RATES"
+      },
+      "GET /trading/landing/risk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        }, {
+          "book" : "BOOK-RATES-2",
+          "limit" : 5000000.0,
+          "limitUse" : 0.6,
+          "state" : "ok",
+          "trades" : 4,
+          "var" : 3000000.0
+        }, {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "breaches" : [ {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "businessDate" : "2026-09-30",
+        "confidence" : 0.99,
+        "currency" : "USD",
+        "es" : null,
+        "intraday" : null,
+        "limit" : 2.0E7,
+        "limitUse" : 0.75,
+        "near" : 0.8,
+        "nearLimit" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        } ],
+        "positions" : [ {
+          "book" : "BOOK-RATES-1",
+          "componentVar" : 2310000.0,
+          "label" : "USD SOFR swaps 10Y",
+          "marketValue" : -4.21E7,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-1~MX-20000001"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "componentVar" : 710000.0,
+          "label" : "USD swaptions 1Yx10Y",
+          "marketValue" : 9200000.0,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-2~MX-20000002"
+        } ],
+        "positionsProblem" : null,
+        "problems" : [ ],
+        "scope" : "DESK:DESK-RATES",
+        "state" : "ok",
+        "trades" : 11,
+        "var" : 1.5E7,
+        "worst" : {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        }
+      },
+      "GET /trading/landing/risk?for=desk" : {
+        "available" : true,
+        "books" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        }, {
+          "book" : "BOOK-RATES-2",
+          "limit" : 5000000.0,
+          "limitUse" : 0.6,
+          "state" : "ok",
+          "trades" : 4,
+          "var" : 3000000.0
+        }, {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "breaches" : [ {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        } ],
+        "businessDate" : "2026-09-30",
+        "confidence" : 0.99,
+        "currency" : "USD",
+        "es" : null,
+        "intraday" : null,
+        "limit" : 2.0E7,
+        "limitUse" : 0.75,
+        "near" : 0.8,
+        "nearLimit" : [ {
+          "book" : "BOOK-RATES-1",
+          "limit" : 7400000.0,
+          "limitUse" : 0.827027027027027,
+          "state" : "near",
+          "trades" : 4,
+          "var" : 6120000.0
+        } ],
+        "positions" : [ {
+          "book" : "BOOK-RATES-1",
+          "componentVar" : 2310000.0,
+          "label" : "USD SOFR swaps 10Y",
+          "marketValue" : -4.21E7,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-1~MX-20000001"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "componentVar" : 710000.0,
+          "label" : "USD swaptions 1Yx10Y",
+          "marketValue" : 9200000.0,
+          "pct" : null,
+          "productType" : null,
+          "scope" : "POS:POS-BOOK-RATES-2~MX-20000002"
+        } ],
+        "positionsProblem" : null,
+        "problems" : [ ],
+        "scope" : "DESK:DESK-RATES",
+        "state" : "ok",
+        "trades" : 11,
+        "var" : 1.5E7,
+        "worst" : {
+          "book" : "BOOK-RATES-3",
+          "limit" : 8000000.0,
+          "limitUse" : 1.125,
+          "state" : "breach",
+          "trades" : 4,
+          "var" : 9000000.0
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "desk-head"
+      },
+      "GET /trading/landing/traders" : {
+        "available" : true,
+        "hasPrevious" : true,
+        "note" : "trader ids are masked for your role: P&L, VaR and trades by trader need a role that sees TRADER_ID",
+        "reason" : null,
+        "rows" : [ {
+          "name" : "A. Shah",
+          "pnl" : null,
+          "recordTrades" : 8.0,
+          "trader" : "TRDR-ASHAH",
+          "trades" : null,
+          "var" : null
+        }, {
+          "name" : "K. Moreau",
+          "pnl" : null,
+          "recordTrades" : 4.0,
+          "trader" : "TRDR-KMOREAU",
+          "trades" : null,
+          "var" : null
+        } ],
+        "traderMasked" : true,
+        "varNote" : null
+      },
+      "GET /trading/landing/traders?for=desk" : {
+        "available" : true,
+        "hasPrevious" : true,
+        "note" : "trader ids are masked for your role: P&L, VaR and trades by trader need a role that sees TRADER_ID",
+        "reason" : null,
+        "rows" : [ {
+          "name" : "A. Shah",
+          "pnl" : null,
+          "recordTrades" : 8.0,
+          "trader" : "TRDR-ASHAH",
+          "trades" : null,
+          "var" : null
+        }, {
+          "name" : "K. Moreau",
+          "pnl" : null,
+          "recordTrades" : 4.0,
+          "trader" : "TRDR-KMOREAU",
+          "trades" : null,
+          "var" : null
+        } ],
+        "traderMasked" : true,
+        "varNote" : null
+      },
+      "GET /trading/landing/valuations" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "byBook" : [ {
+          "book" : "BOOK-RATES-1",
+          "mtm" : -6000000,
+          "pnl" : 220000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-2",
+          "mtm" : 6000000,
+          "pnl" : 260000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-3",
+          "mtm" : -6000000,
+          "pnl" : 300000,
+          "trades" : 3
+        } ],
+        "byTrader" : [ ],
+        "counterparties" : [ "CP-ALDERSHOT", "CP-NORTHPLAINS", "CP-MERIDIAN" ],
+        "dataDate" : "2026-09-30",
+        "dv01" : -66000,
+        "dv01Trades" : 11,
+        "figuresProblem" : null,
+        "hasPrevious" : true,
+        "largestCounterparty" : {
+          "counterparty" : "CP-NORTHPLAINS",
+          "positiveMtm" : 16000000,
+          "share" : 0.4444444444444444,
+          "totalPositiveMtm" : 36000000
+        },
+        "liveTrades" : 11,
+        "matched" : 12,
+        "movers" : [ {
+          "book" : "BOOK-RATES-3",
+          "change" : 120000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -12000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000012",
+          "valuation" : "TVAL-MX-20000012"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 110000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 11000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000011",
+          "valuation" : "TVAL-MX-20000011"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 100000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -10000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000010",
+          "valuation" : "TVAL-MX-20000010"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 90000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 9000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000009",
+          "valuation" : "TVAL-MX-20000009"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 80000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : -8000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000008",
+          "valuation" : "TVAL-MX-20000008"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 70000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : 7000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000007",
+          "valuation" : "TVAL-MX-20000007"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 60000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -6000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000006",
+          "valuation" : "TVAL-MX-20000006"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 50000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 5000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000005",
+          "valuation" : "TVAL-MX-20000005"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 40000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -4000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000004",
+          "valuation" : "TVAL-MX-20000004"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 30000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 3000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000003",
+          "valuation" : "TVAL-MX-20000003"
+        } ],
+        "mtm" : -6000000,
+        "mtmMasked" : false,
+        "partial" : false,
+        "pnl" : 780000,
+        "previousDate" : "2026-09-29",
+        "previousProblem" : null,
+        "products" : [ "IR_SWAP", "SWAPTION" ],
+        "traderMasked" : true,
+        "trades" : 12,
+        "valuedBoth" : 12
+      },
+      "GET /trading/landing/valuations?for=desk" : {
+        "available" : true,
+        "businessDate" : "2026-09-30",
+        "byBook" : [ {
+          "book" : "BOOK-RATES-1",
+          "mtm" : -6000000,
+          "pnl" : 220000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-2",
+          "mtm" : 6000000,
+          "pnl" : 260000,
+          "trades" : 4
+        }, {
+          "book" : "BOOK-RATES-3",
+          "mtm" : -6000000,
+          "pnl" : 300000,
+          "trades" : 3
+        } ],
+        "byTrader" : [ ],
+        "counterparties" : [ "CP-ALDERSHOT", "CP-NORTHPLAINS", "CP-MERIDIAN" ],
+        "dataDate" : "2026-09-30",
+        "dv01" : -66000,
+        "dv01Trades" : 11,
+        "figuresProblem" : null,
+        "hasPrevious" : true,
+        "largestCounterparty" : {
+          "counterparty" : "CP-NORTHPLAINS",
+          "positiveMtm" : 16000000,
+          "share" : 0.4444444444444444,
+          "totalPositiveMtm" : 36000000
+        },
+        "liveTrades" : 11,
+        "matched" : 12,
+        "movers" : [ {
+          "book" : "BOOK-RATES-3",
+          "change" : 120000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -12000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000012",
+          "valuation" : "TVAL-MX-20000012"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 110000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 11000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000011",
+          "valuation" : "TVAL-MX-20000011"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 100000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -10000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000010",
+          "valuation" : "TVAL-MX-20000010"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 90000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 9000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000009",
+          "valuation" : "TVAL-MX-20000009"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 80000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : -8000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000008",
+          "valuation" : "TVAL-MX-20000008"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 70000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : 7000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000007",
+          "valuation" : "TVAL-MX-20000007"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 60000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : -6000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000006",
+          "valuation" : "TVAL-MX-20000006"
+        }, {
+          "book" : "BOOK-RATES-2",
+          "change" : 50000,
+          "counterparty" : "CP-NORTHPLAINS",
+          "mtm" : 5000000,
+          "product" : "SWAPTION",
+          "trade" : "MX-20000005",
+          "valuation" : "TVAL-MX-20000005"
+        }, {
+          "book" : "BOOK-RATES-1",
+          "change" : 40000,
+          "counterparty" : "CP-ALDERSHOT",
+          "mtm" : -4000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000004",
+          "valuation" : "TVAL-MX-20000004"
+        }, {
+          "book" : "BOOK-RATES-3",
+          "change" : 30000,
+          "counterparty" : "CP-MERIDIAN",
+          "mtm" : 3000000,
+          "product" : "IR_SWAP",
+          "trade" : "MX-20000003",
+          "valuation" : "TVAL-MX-20000003"
+        } ],
+        "mtm" : -6000000,
+        "mtmMasked" : false,
+        "partial" : false,
+        "pnl" : 780000,
+        "previousDate" : "2026-09-29",
+        "previousProblem" : null,
+        "products" : [ "IR_SWAP", "SWAPTION" ],
+        "traderMasked" : true,
+        "trades" : 12,
+        "valuedBoth" : 12
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "viewer" ],
+    "settings" : {
+      "tradingView" : "desk:DESK-RATES"
+    },
+    "user" : "zed"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : ""
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "alice"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : false,
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3" ],
+          "canPick" : false,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "T. Brennan",
+          "id" : "DESK-RATES",
+          "kind" : "desk",
+          "name" : "Rates · Swaps and options",
+          "problems" : [ ],
+          "role" : "desk-head",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "desk-head"
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "viewer" ],
+    "settings" : { },
+    "user" : "t.brennan"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : false,
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2" ],
+          "canPick" : false,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-ASHAH",
+          "kind" : "trader",
+          "name" : "A. Shah",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "trader"
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "viewer" ],
+    "settings" : { },
+    "user" : "drishti-dev-admin"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-ASHAH",
+          "kind" : "trader",
+          "name" : "A. Shah",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "trader"
+      }
+    },
+    "checks" : [ {
+      "answer" : {
+        "book" : "BOOK-RATES-1",
+        "counterparty" : "CP-ALDERSHOT",
+        "exposure" : {
+          "after" : 4.092E8,
+          "before" : 4.015E8,
+          "checkId" : "PDC-TEST",
+          "command" : "PREDEAL CP-ALDERSHOT LIKE MX-20000010",
+          "confidence" : 0.95,
+          "decision" : "approve",
+          "fallback" : null,
+          "flags" : [ "exact" ],
+          "limit" : 4.2E8,
+          "method" : "paths",
+          "nettingSet" : "NS-ALDERSHOT-NY",
+          "note" : "copies",
+          "proxy" : false,
+          "reason" : "exact: within the limit",
+          "reasons" : [ "exact: within the limit" ],
+          "scope" : "CPTY:CP-ALDERSHOT",
+          "state" : "near",
+          "useAfter" : 0.9742857142857143,
+          "useBefore" : 0.955952380952381
+        },
+        "factor" : 0.5,
+        "notional" : 2.5E8,
+        "ok" : true,
+        "template" : {
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "notional" : 5.0E8,
+          "product" : "IR_SWAP",
+          "side" : "S",
+          "trade" : "MX-20000010"
+        },
+        "var" : {
+          "after" : 6300000.0,
+          "before" : 6120000.0,
+          "change" : 180000.0,
+          "confidence" : 0.99,
+          "currency" : "USD",
+          "engine" : "Java VaR engine (the server)",
+          "limit" : 7400000.0,
+          "note" : "copies",
+          "scope" : "BOOK:BOOK-RATES-1",
+          "state" : "near",
+          "useAfter" : 0.8513513513513513,
+          "useBefore" : 0.827027027027027
+        }
+      },
+      "body" : {
+        "counterparty" : "CP-ALDERSHOT",
+        "notional" : "250m",
+        "product" : "IR_SWAP",
+        "side" : "S"
+      }
+    }, {
+      "answer" : {
+        "ok" : false,
+        "reason" : "name the product, a notional (250m, 1.5bn) and the counterparty (CP-…)"
+      },
+      "body" : {
+        "product" : "IR_SWAP"
+      }
+    }, {
+      "answer" : {
+        "book" : "BOOK-RATES-1",
+        "counterparty" : "CP-ALDERSHOT",
+        "exposure" : {
+          "after" : 4.092E8,
+          "before" : 4.015E8,
+          "checkId" : "PDC-TEST",
+          "command" : "PREDEAL CP-ALDERSHOT LIKE MX-20000010",
+          "confidence" : 0.95,
+          "decision" : "approve",
+          "fallback" : null,
+          "flags" : [ "exact" ],
+          "limit" : 4.2E8,
+          "method" : "paths",
+          "nettingSet" : "NS-ALDERSHOT-NY",
+          "note" : "copies",
+          "proxy" : false,
+          "reason" : "exact: within the limit",
+          "reasons" : [ "exact: within the limit" ],
+          "scope" : "CPTY:CP-ALDERSHOT",
+          "state" : "near",
+          "useAfter" : 0.9742857142857143,
+          "useBefore" : 0.955952380952381
+        },
+        "factor" : 0.002,
+        "notional" : 1000000.0,
+        "ok" : true,
+        "template" : {
+          "book" : "BOOK-RATES-1",
+          "counterparty" : "CP-ALDERSHOT",
+          "notional" : 5.0E8,
+          "product" : "IR_SWAP",
+          "side" : "S",
+          "trade" : "MX-20000010"
+        },
+        "var" : {
+          "after" : 6120720.0,
+          "before" : 6120000.0,
+          "change" : 720.0,
+          "confidence" : 0.99,
+          "currency" : "USD",
+          "engine" : "Java VaR engine (the server)",
+          "limit" : 7400000.0,
+          "note" : "copies",
+          "scope" : "BOOK:BOOK-RATES-1",
+          "state" : "near",
+          "useAfter" : 0.8271243243243244,
+          "useBefore" : 0.827027027027027
+        }
+      },
+      "body" : {
+        "counterparty" : "CP-ALDERSHOT",
+        "notional" : "1m",
+        "product" : "IR_SWAP"
+      }
+    } ],
+    "lens" : "trading",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "drishti-dev-admin"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ ],
+          "canPick" : true,
+          "desk" : "",
+          "deskName" : "",
+          "head" : "",
+          "id" : "",
+          "kind" : "",
+          "name" : "",
+          "problems" : [ ],
+          "role" : "",
+          "source" : "none"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : ""
+      }
+    },
+    "checks" : [ ],
+    "lens" : "world",
+    "roles" : [ "*" ],
+    "settings" : { },
+    "user" : "drishti-dev-admin"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : false,
+        "scope" : {
+          "books" : [ "BOOK-RATES-3" ],
+          "canPick" : false,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-KMOREAU",
+          "kind" : "trader",
+          "name" : "K. Moreau",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "record"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : ""
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "viewer" ],
+    "settings" : { },
+    "user" : "kim"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-1", "BOOK-RATES-2" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-ASHAH",
+          "kind" : "trader",
+          "name" : "A. Shah",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "config"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "trader"
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "admin" ],
+    "settings" : { },
+    "user" : "root"
+  }, {
+    "answers" : {
+      "GET /trading/landing/me" : {
+        "admin" : true,
+        "options" : {
+          "desks" : [ {
+            "id" : "DESK-RATES",
+            "name" : "Rates · Swaps and options"
+          }, {
+            "id" : "DESK-COMM",
+            "name" : "Commodities"
+          } ],
+          "traders" : [ {
+            "id" : "TRDR-ASHAH",
+            "name" : "A. Shah"
+          }, {
+            "id" : "TRDR-KMOREAU",
+            "name" : "K. Moreau"
+          } ]
+        },
+        "scope" : {
+          "books" : [ "BOOK-RATES-3" ],
+          "canPick" : true,
+          "desk" : "DESK-RATES",
+          "deskName" : "Rates · Swaps and options",
+          "head" : "",
+          "id" : "TRDR-KMOREAU",
+          "kind" : "trader",
+          "name" : "K. Moreau",
+          "problems" : [ ],
+          "role" : "trader",
+          "source" : "choice"
+        }
+      },
+      "GET /trading/landing/role" : {
+        "role" : "trader"
+      }
+    },
+    "checks" : [ ],
+    "lens" : "trading",
+    "roles" : [ "admin" ],
+    "settings" : {
+      "tradingView" : "trader:TRDR-KMOREAU"
+    },
+    "user" : "root"
+  } ],
+  "schema" : 1
+}

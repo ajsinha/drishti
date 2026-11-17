@@ -1,11 +1,11 @@
-<!--
-  Project Drishti · Any data. Any domain. One grammar.
-  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
-  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository for the full terms.
--->
 ---
+# Project Drishti · Any data. Any domain. One grammar.
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+# PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository for the full terms.
 module: trading
 title: Trading
+domain: trading
+summary: The live trade blotter and the Trading landings' figures, worked out on the server as the person
 kinds: [trade]
 ---
 # Trading

@@ -28,8 +28,8 @@ doc:
   emits: []
   expects: []
   examples:
-  - /v/design/DSG-HLXK7-R8-0897
-  - DESIGN DSG-HLXK7-R8-0897
+  - /v/design/DSG-HLXK7-R8-0901
+  - DESIGN DSG-HLXK7-R8-0901
   since: 2.9.11
 match:
   kind: design

@@ -365,7 +365,7 @@ describes every kind in depth. The full grammar is in
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
 handling on the console ([section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) maps each kind to its macro).
 
-**Formats** (`fmt`) are named and config driven: the core set is in `compute/drishti-rachana/src/main/resources/formats.yaml`
+**Formats** (`fmt`) are named and config driven: the core set is `formats.yaml` of Drishti Elements (`data/formats.yaml` of its vendored copy, a resource of drishti-rachana: [ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md#5-the-two-tables-the-server-reads))
 (`text`, `amount0`, `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact` (4.1m), `date`, `dmy`), a
 site file can be named in `drishti.rachana.formats-file`, and packs add their own (the finance pack's
 `config/formats.yaml` adds `pct4`, `rate5`, `pips1`, `df4`, `bp1`). **Tones** (`sign`, `threshold`, `status`) colour
@@ -1034,7 +1034,7 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | `modules/<module>/packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
 | `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
 | `modules/<module>/packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
-| `compute/drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
+| `formats.yaml` (Drishti Elements' `data/`, a resource of drishti-rachana) (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |
 | `drishti-console/config/application.yaml` | console host and port, server URL, default theme, sign-in and OIDC, help docs folder |
@@ -2690,7 +2690,7 @@ test between the two. Base VaR needs neither: it adds precomputed vectors.
 
 How other web applications show Drishti screens without an iframe, and how the code that draws them is built. The how-to for host
 developers (the elements, tokens, the sign-in window, the render API, theming, versions) is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md);
-the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](ELEMENTS.md).
+the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md).
 Decisions: [ADR-021](adr/021-embedding-is-html-over-the-wire.md) (embedding, the token, served versions) and
 [ADR-022](adr/022-one-renderer-in-the-browser.md) (one renderer in the browser).
 
@@ -2844,7 +2844,7 @@ target.
 - **Lifecycle.** `embed.lifecycle` (one entry per API major) adds `Deprecation` (RFC 9745), `Sunset` (RFC 8594) and a `Link` to every
   answer from the announcement, and `410 DRS-8006` from the sunset day; a `Drishti-Embed-Api` header naming an unserved major is `410`.
 - **Packages.** `@drishti/render` is the version folder laid out as an npm package (documented, not published); the Elements libraries are
-  distributed by `drishti.py elements pack|dist` as a zip, npm tarballs and a WebJar (ELEMENTS.md section 8.7). `core/element_api.py`
+  a separate project, Drishti Elements, vendored at a pinned version ([ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md)). `core/element_api.py`
   holds the element API as data: it generates the reference tables in EMBED_GUIDE.md and the TypeScript declarations, and a test checks
   it against the elements.
 
@@ -2879,7 +2879,7 @@ against every renderer version before it ships, and a hostile ViewModel (markup 
 Drishti Elements is two things with one name: the **embedding elements** above, and the **component libraries** (drishti-core,
 -inputs, -grid, -chart, -data, -insight, -renderer, -risk) that the console, the renderer and outside applications all draw with. The
 libraries' design (their APIs, the grid and its pivot, the AG Grid-style adapter, the chart spec and maps, packaging and licensing, the
-guards) is [ELEMENTS.md](ELEMENTS.md); using them in another application is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) chapters 13 and 14.
+guards) is [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md); using them in another application is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) chapters 13 and 14.
 The renderer is library 7, so "no bespoke UI" holds for embeds too: a fix in a component reaches the console, the renderer and every host
 at once.
 

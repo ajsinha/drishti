@@ -27,6 +27,7 @@ import yaml
 from conftest import CONSOLE
 from core.auth import Identity
 from core.menus import spec_of
+import server_answers
 from core.module_parts import ModuleParts
 from module_parts_fake import Registry
 from test_distributions import _app, _client
@@ -37,12 +38,15 @@ def _titles(html: str, label: str) -> list[str]:
     return re.findall(r'<div class="mega-title">([^<]+)<', _panel(html, label))
 
 
-def _bar(backend, monkeypatch, *argv):
-    return _client(_app(backend, monkeypatch, *argv)).get("/t").text
+def _bar(backend, monkeypatch, *argv, served: dict | None = None):
+    app = _app(backend, monkeypatch, *argv)
+    if served is not None:                         # the console takes the installation's answer from its server (the commands it draws by)
+        server_answers.serve(app, served)
+    return _client(app).get("/t").text
 
 
 def test_all_has_domains_and_create_and_every_domains_column_is_from_a_manifest(backend, monkeypatch):
-    page = _bar(backend, monkeypatch)
+    page = _bar(backend, monkeypatch, served=server_answers.bootstrap("all"))
     assert _menus(page) == ["Views", "Domains", "Create", "Admin", "Help"]
     cols = _titles(page, "Domains")
     for c in ("Blotter", "Positions", "Counterparties", "Economies", "Markets · Rates", "Risk · VaR"):
@@ -52,9 +56,11 @@ def test_all_has_domains_and_create_and_every_domains_column_is_from_a_manifest(
 
 
 def test_companies_appear_in_domains_when_their_packs_are_enabled(backend, monkeypatch):
-    monkeypatch.setenv("DRISHTI_PACKS", "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,"
-                                        "us-equities,funds,gleif")
-    cols = _titles(_bar(backend, monkeypatch), "Domains")
+    doc = server_answers.bootstrap("all")                       # a server that enables the US equities, funds and GLEIF packs
+    for need in doc["commands"].values():
+        if need["pack"] in ("us-equities", "funds", "gleif"):
+            need["loaded"] = True
+    cols = _titles(_bar(backend, monkeypatch, served=doc), "Domains")
     assert "Companies" in cols, cols
 
 
@@ -75,6 +81,7 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=genomics")
     reg = Registry()
     reg.install(backend, monkeypatch)
+    reg.listed(app, monkeypatch)
     from core import modules
     here = modules.module_on                                                    # this distribution runs the genomics module only (and the stand-in)
     monkeypatch.setattr(modules, "module_on", lambda m: here(m) and str(m or "core") in {"core", "genomics", "greeter"})
@@ -90,7 +97,7 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
         reg.state = "active"
         assert _menus(_client(app).get("/t").text) == ["Views", "Create", "Admin", "Help"]  # hosted, not of this distribution: not drawn
         dist = app.state.editions.distribution         # a distribution draws only its own modules' menus (DISTRIBUTIONS.md, menus.hosted_shown)
-        monkeypatch.setattr(dist, "modules", [*dist.modules, "greeter"])           # the stand-in as a module of this distribution
+        monkeypatch.setitem(dist.doc, "modules", [*dist.modules, "greeter"])      # the stand-in as a module of this distribution
         page = _client(app).get("/t").text
     assert _menus(page) == ["Views", "greeter", "Create", "Admin", "Help"]                   # the one hosted domain, by its own name
 
@@ -101,7 +108,7 @@ def test_create_holds_the_designers_and_bi_and_the_old_menus_are_gone(backend, m
     panel = _panel(page, "Create")
     for href in ("/build/pack/designer", "/build/connector/designer", "/build/new"):
         assert f'href="{href}"' in panel, href
-    create = next(m for m in spec_of(CONSOLE)["menus"] if m["id"] == "create")
+    create = next(m for m in spec_of(CONSOLE, server_answers.installed())["menus"] if m["id"] == "create")
     assert create["gather"] == ["bi", "build"]                                  # BI's items follow the person's BI powers (none in the stand-in)
 
 
@@ -124,7 +131,7 @@ def test_the_old_per_module_top_menus_are_not_drawn_beside_domains(backend, monk
 
 @pytest.mark.parametrize("name", ["all", "risk", "finance", "genomics"])
 def test_every_distribution_names_only_menus_the_sitemap_has(name):
-    have = {m["id"] for m in spec_of(CONSOLE)["menus"]}
+    have = {m["id"] for m in spec_of(CONSOLE, server_answers.installed())["menus"]}
     d = yaml.safe_load((CONSOLE.parent / "config" / "distributions" / f"drishti.{name}.yaml").read_text(encoding="utf-8"))
     for mid in (d.get("menus") or {}).get("top") or []:
         assert mid in have, (name, mid)

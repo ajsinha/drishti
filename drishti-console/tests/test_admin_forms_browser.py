@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Admin screens' forms on drishti-inputs' Form from the server's schema (core/admin_forms.py, docs/architecture/ELEMENTS.md section
+"""The Admin screens' forms on drishti-inputs' Form from the server's schema (core/admin_forms.py, Drishti Elements' docs/DESIGN.md section
 12.3): Roles, Users and the searches post what they always posted (an unticked power or Enabled box is false, never left out), the
 fields keep their names and hooks. Runs Chromium through Playwright against a console with a stand-in server; skipped when Playwright or
 its Chromium is missing."""

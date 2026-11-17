@@ -32,4 +32,15 @@
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
   </dependencies>
+  <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- world-regions.yaml and formats.yaml have their home in Drishti Elements (both projects read them): read from the vendored copy,
+           no second copy in git (docs/architecture/ELEMENTS_IN_DRISHTI.md) -->
+      <resource>
+        <directory>${project.basedir}/../../drishti-console/web/static/vendor/drishti-elements/${drishti.elements.version}/data</directory>
+        <includes><include>world-regions.yaml</include><include>formats.yaml</include></includes>
+      </resource>
+    </resources>
+  </build>
 </project>

@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Elements' performance budget (a quick file check): each library's bundle stays under its byte budget, and the style sheets of the
-components under theirs. A budget is raised only with a reason in the commit; a library that grows past it is split or lazy-loaded
-(drishti-core's loader), not allowed to creep. Frame time per gallery page is the browser budget of the gallery test, not here."""
+"""The performance budget of Drishti's own Elements libraries (a quick file check): each bundle stays under its byte budget. A budget is
+raised only with a reason in the commit; a library that grows past it is split or lazy-loaded, not allowed to creep. Drishti Elements'
+eight libraries keep their budgets in their own project."""
 from pathlib import Path
 
 import pytest
@@ -22,24 +22,14 @@ import pytest
 pytestmark = pytest.mark.static
 
 ELEMENTS = Path(__file__).resolve().parent.parent / "web" / "static" / "elements"
-CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
-# bytes; about 15% over the size when written (2026-11-16); raised the same day for the chart (more kinds, the world regions) and data (worker, feed monitor);
-# the chart again at the i6 integration: the showcase's generic kinds joined it (segmented scatter, matrix, lollipop, 3D trace, heatmap tracks)
-BUNDLES = {"drishti-core": 180_000, "drishti-inputs": 290_000, "drishti-grid": 610_000, "drishti-tree": 145_000, "drishti-designer": 170_000,
-           "drishti-data": 56_000, "drishti-chart": 320_000, "drishti-graph": 165_000, "drishti-insight": 82_000, "drishti-risk": 32_000,
-           "drishti-renderer": 165_000}
-SHEETS = {"drishti_states.css": 4_000, "drishti_command-palette.css": 5_000, "drishti_dock.css": 5_000, "drishti_chips.css": 5_000}
+# bytes; about 15% over the size when written (2026-11-16)
+BUNDLES = {"drishti-insight": 82_000, "drishti-risk": 32_000, "drishti-renderer": 165_000}
 
 
 @pytest.mark.parametrize("library,budget", sorted(BUNDLES.items()))
 def test_a_bundle_stays_under_its_budget(library, budget):
     f = ELEMENTS / library / ("drishti_" + library.split("-", 1)[1] + ".js")
     assert f.stat().st_size <= budget, f"{f.name} is {f.stat().st_size} bytes, over its budget of {budget}: split it or lazy-load the part"
-
-
-@pytest.mark.parametrize("sheet,budget", sorted(SHEETS.items()))
-def test_a_component_sheet_stays_under_its_budget(sheet, budget):
-    assert (CSS / sheet).stat().st_size <= budget, sheet
 
 
 def test_every_library_has_a_budget():

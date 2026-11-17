@@ -27,13 +27,18 @@
      find(world, code)  the country an ISO alpha-2/alpha-3 code or an English name means, or null
      option(cfg)        an ECharts option for a world or region map (see below)
      codeOf(params)     the place code of an ECharts click or hover on a map built by option() */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
   function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var SELF = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   // an embedded element loads this file from /embed/v1/js/ and the shapes from /embed/v1/ on the same server; the console, from its static folder
   // the client-side renderer (static/render/) loads it from a console that may not be the page's origin: the shapes come from beside it
-  var BASE = /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
+  var CORE = window.Drishti && window.Drishti.elements && window.Drishti.elements.core;   // the shapes come with Drishti Elements (vendored): by drishti-core's static root
+  var GIVEN = document.currentScript && document.currentScript.getAttribute('data-maps');   // the loader names the maps folder (the client-side renderer: Drishti Elements' vendored tree)
+  var BASE = GIVEN ? GIVEN.replace(/\/?$/, '/')
+    : /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
+    : CORE ? CORE.staticUrl('vendor/echarts/maps/')
     : /\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/')
     : drishti_url('/static/vendor/echarts/maps/');   // /static/js/ or /embed/v2/js/: the maps beside it (a URL that already carries the base path)
   var WORLD = 'drishti-world';

@@ -17,7 +17,7 @@
    drishti-core's rules for untrusted data in front of it (attrAllowed, safeUrl). Text goes in as text nodes, attributes through the
    allow-list: no innerHTML, no outerHTML, no insertAdjacentHTML, no eval and no new Function anywhere in the library (a test reads the
    sources). A value from the ViewModel can never become markup, an event handler, a style attribute or a script URL. */
-import { h as make, attrAllowed, safeUrl } from '../../drishti-core/src/drishti_index.js';
+import { h as make, attrAllowed, safeUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 const warned = new Set();
 function warn(msg) { if (!warned.has(msg)) { warned.add(msg); if (typeof console !== 'undefined') { console.warn('drishti-renderer: ' + msg); } } }

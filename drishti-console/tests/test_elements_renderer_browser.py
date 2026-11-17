@@ -25,12 +25,27 @@ import pytest
 
 pytestmark = pytest.mark.spread
 
-from test_elements_grid_browser import ORIGIN, route  # noqa: E402 - the same static origin and strict CSP
+from pathlib import Path  # noqa: E402
 
-import json as _json  # noqa: E402
-from pathlib import Path as _Path  # noqa: E402
+from core import elements_pin  # noqa: E402
 
-ELEMENTS_VERSION = _json.loads((_Path(__file__).resolve().parent.parent / "web" / "static" / "elements" / "drishti_elements.json").read_text(encoding="utf-8"))["elements"]   # the one Elements version
+STATIC = Path(__file__).resolve().parents[1] / "web" / "static"
+ORIGIN = "http://render.test"
+HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'"}   # a strict CSP on the harness page
+TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "application/javascript", ".json": "application/json"}
+ELEMENTS_VERSION = elements_pin.VERSION   # the one Elements version: the vendored folder's name
+
+
+async def route(r):
+    """The console's static folder (the vendored Drishti Elements inside it) on a made-up origin; the HTML under the strict CSP."""
+    path = r.request.url[len(ORIGIN):].split("?")[0]
+    f = STATIC / path[len("/static/"):] if path.startswith("/static/") else None
+    if f and f.is_file():
+        headers = {"content-type": TYPES.get(f.suffix, "application/octet-stream")}
+        if f.suffix == ".html":
+            headers.update(HEADERS)
+        return await r.fulfill(status=200, body=f.read_bytes(), headers=headers)
+    return await r.fulfill(status=404, body="")
 PAGE = "/static/elements/drishti-renderer/drishti_harness.html"
 ROOT = "document.getElementById('host').shadowRoot"
 READY = "() => window.__rx && window.__rx.ready === true"

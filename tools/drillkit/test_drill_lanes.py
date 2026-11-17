@@ -50,7 +50,7 @@ class Reach(unittest.TestCase):
         self.assertTrue({"browser", "other", "java21", "tools-a"} <= L.lanes_for("docs/guides/VAR_GUIDE.md"))
 
     def test_shared_data_and_config_reach_every_lane(self):
-        for p in ("config/packs/default-packs.yaml", "data/testdata/core/desk/a.jsonl.gz", "packaging/drishti-elements/pom.xml"):
+        for p in ("config/packs/default-packs.yaml", "data/testdata/core/desk/a.jsonl.gz", "drishti-console/web/static/vendor/drishti-elements/any/data/formats.yaml"):
             self.assertEqual(L.lanes_for(p), L.ALL, p)
 
     def test_the_dockerfiles_reach_the_containers(self):

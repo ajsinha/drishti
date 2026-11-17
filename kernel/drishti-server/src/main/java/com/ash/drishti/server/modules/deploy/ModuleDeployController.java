@@ -210,9 +210,10 @@ public class ModuleDeployController {
     }
 
     /**
-     * The product's own content modules shipped as folders ({@code modules/<id>/module.yaml}, the one module layout) that have a console
+     * The modules shipped as folders ({@code modules/<id>/module.yaml}, the one module layout) that have a console
      * part and are loaded on this server: the console hosts them from this server's answer like a deployed module's, and reads no modules
-     * folder itself (THIN_CONSOLE_DESIGN.md, step S2). A module with code (a {@code java:} block in its manifest) comes from the registry.
+     * folder itself (THIN_CONSOLE_DESIGN.md, step S2). A module the registry lists (a deployed or first-party {@code .dmod}) is served from
+     * the registry; one loaded from its folder only, with code or without (the genomics sample), from that folder.
      */
     private Map<String, Shipped> shipped() {
         Map<String, Shipped> out = new java.util.TreeMap<>();
@@ -233,10 +234,7 @@ public class ModuleDeployController {
             try {
                 manifest = com.ash.drishti.api.resolution.ResolutionSettings.yaml(e.source());
             } catch (RuntimeException ex) {
-                manifest = Map.of();                                // a manifest that does not read: version 0, no code block
-            }
-            if (manifest.get("java") != null) {                     // a module with code (its manifest's java: block) comes from the registry
-                return;
+                manifest = Map.of();                                // a manifest that does not read: version 0
             }
             Object v = manifest.get("version");
             String version = v == null ? "0" : String.valueOf(v);

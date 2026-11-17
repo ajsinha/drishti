@@ -171,7 +171,7 @@ Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **
   Impact and **Propose for review**.
 - **+ New** opens guided steps in plain language (option B); when the object exists it opens in the three-pane editor.
 - **As built**: the shell is drishti-designer's `DesignerShell` and the YAML its `YamlPane` over drishti-inputs' `CodeEditor`
-  ([ELEMENTS.md section 8.9](ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)), the same for every designer: the table,
+  ([ELEMENTS.md section 8.9](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)), the same for every designer: the table,
   model and Python editors, the Build workbench's canvas and YAML, the BI report designer's canvas, undo and YAML. Its look is mock-up
   g7's: **studio** (option A, the default: the left rail's tabs, the canvas with the YAML docked under it, the inspector, the preview),
   **side by side** (B: the canvas and the YAML side by side, the inspector a card by the selection) and **terminal** (C: a command line
@@ -248,7 +248,7 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **Impact before change**: every editor shows what uses the object (models, Sutras, reports, boards, keys) before it is changed.
 - **One grammar**: every formula, filter, row rule and computed column is Rachana, typed in drishti-inputs' code editor (one line for a
   field, the whole text for the statement) with the function catalogue and the editor's names as its completion.
-- **Built from Drishti Elements, never by hand** ([ELEMENTS.md section 3.1](ELEMENTS.md#31-standing-rule-no-bespoke-ui)): every pane of
+- **Built from Drishti Elements, never by hand** ([ELEMENTS.md section 3.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)): every pane of
   fields is drishti-inputs' `Form` (live, with the formula widget for a Rachana field: the table's name, rows and look-ups, the model's
   Overview and masks, the Build workbench's inspector through drishti-designer's `Inspector`); the rows of a table of settings (a model's
   tables, relationships, measures, hierarchies, row rules, fields and access matrix; a table's source and look-ups and its columns

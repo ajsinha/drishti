@@ -21,13 +21,13 @@
        render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
      </script>
 
-   This file says where everything is, from its own address: the libraries beside the console's static root (../../elements/), the
+   This file says where everything is, from its own address: Drishti Elements vendored under the console's static root (../../vendor/drishti-elements/<version>/), the renderer (../../elements/), the
    console's static files (../../), the sheet beside it; it works the same under /embed/v2/render/2.4.0/ for other origins. Types:
    drishti-render.d.ts beside this file. */
-import { configure } from '../../elements/drishti-core/src/drishti_index.js';
+import { configure } from '../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 import { setAssetBase, installRender } from '../../elements/drishti-renderer/src/drishti_index.js';
 
-configure({ base: new URL('../../elements/', import.meta.url).href, staticBase: new URL('../../', import.meta.url).href });
+configure({ base: new URL('../../vendor/drishti-elements/2.4.0/elements/', import.meta.url).href, staticBase: new URL('../../vendor/drishti-elements/2.4.0/', import.meta.url).href });   // Drishti Elements: vendored
 setAssetBase({ statics: new URL('../../', import.meta.url).href, sheet: new URL('drishti-render.css', import.meta.url).href });
 if (typeof window !== 'undefined') { installRender(window); }
 

@@ -23,10 +23,12 @@ import re
 from fastapi.testclient import TestClient
 
 from module_parts_fake import Registry
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 
 def _console(client, tmp_path, reg: Registry, backend, monkeypatch) -> TestClient:
     reg.install(backend, monkeypatch)
+    reg.listed(client.app, monkeypatch)
     _fresh(client, tmp_path, monkeypatch)
     return client
 
@@ -102,7 +104,7 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
 def test_a_part_carrying_elements_code_or_a_private_template_is_refused(client, backend, monkeypatch, tmp_path):
     from module_parts_fake import ROOT
 
-    grid = (ROOT / "drishti-console" / "web" / "static" / "elements" / "drishti-grid" / "drishti_grid.js").read_bytes()
+    grid = (elements_pin.ROOT / "elements" / "drishti-grid" / "drishti_grid.js").read_bytes()
     reg = Registry({"console/static/drishti_greeter-grid.js": grid, "console/handler.py": b"print(1)\n",
                     "console/templates/peek.html": b'{% include "terminal/_topbar.html" %}'})
     reg.state = "active"
@@ -116,7 +118,7 @@ def test_the_economy_world_page_is_served_from_the_module(client, tmp_path, monk
     parts = _fresh(client, tmp_path, monkeypatch)
     client.get("/t")
     p = parts.part("economy")
-    assert p is not None and p.source == "shipped" and (p.folder / "console" / "templates" / "world_landing.html").is_file()
+    assert p is not None and p.source == "server" and (p.folder / "console" / "templates" / "world_landing.html").is_file()
     js = client.get(f"/m/economy/static/{p.version}/js/drishti_world-landing.js")
     assert js.status_code == 200 and "Drishti.elements.grid" in js.text
     html = (p.folder / "console" / "templates" / "world_landing.html").read_text(encoding="utf-8")

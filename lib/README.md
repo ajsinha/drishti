@@ -19,7 +19,7 @@ Every jar sits under the install folder, every piece of data under the data fold
 
 - `<home>/lib` holds Drishti's own jar(s): shipped with a release and replaced on an upgrade (made by `python tools/drishti.py build jar`,
   which builds with Maven and copies the server's exec jar here). Every tool and script finds the server jar in this one folder;
-  `--jar FILE` names another for a one-off run. The start refuses when this folder holds more than one Drishti server exec jar.
+  `--jar FILE` names another for a one-off run. The tools refuse when this folder holds more than one Drishti server exec jar, or one whose version is not this install's (`build jar` replaces the old one).
 - `<home>/lib/ext` holds YOUR jars (JDBC drivers, connector plugins, a company's own libraries): kept on an upgrade, read by the server
   at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`; see [ext/README.md](ext/README.md)). A Drishti server jar put there is skipped.
 

@@ -166,20 +166,20 @@ Links: `PROTEIN` → `protein`.
 
 About: Protein design.
 
-**Id:** field `DESIGN_ID`; pattern `^DSG-`; for example `DSG-HLXK7-R8-0897`.
+**Id:** field `DESIGN_ID`; pattern `^DSG-`; for example `DSG-HLXK7-R8-0901`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `DESIGN_ID` | string | `DSG-HLXK7-R8-0897` | DSG-, the protein, the round and the design's number in it.; link to `design` |
+| `DESIGN_ID` | string | `DSG-HLXK7-R8-0901` | DSG-, the protein, the round and the design's number in it.; link to `design` |
 | `PROTEIN` | string | `HLXK7` | The protein designed; opens PROT.; link to `protein` |
 | `ROUND` | integer | `8` | The round, 1 to 8. |
-| `PARENT` | string | `DSG-HLXK7-R7-1321` | The design of the round before that is nearest to it on the map; NATURAL in round 1. |
+| `PARENT` | string | `DSG-HLXK7-R7-0911` | The design of the round before that is nearest to it on the map; NATURAL in round 1. |
 | `N_CHANGES` | integer | `3` | How many amino acid changes it carries against the natural protein. (changes) |
 | `CHANGES` | string | `T41Y H141Y L229S` | The changes written out, in position order; the rows are in design-mutation. |
 | `ACTIVITY` | number | `16.07` | The measured activity as a multiple of the natural protein's (1.0). (x natural) |
-| `DELTA_TM` | number | `7.59` | The melting temperature against the natural protein: positive is more stable. (degrees C) |
+| `DELTA_TM` | number | `6.75` | The melting temperature against the natural protein: positive is more stable. (degrees C) |
 | `MODEL_SCORE` | number | `17.4` | The activity the design model predicted. (x natural) |
 | `STATUS` | string | `lead` | lead for the best design of the campaign, selected for the best 5% of its round, tested for the rest. |
 | `EMB_X` | number | `0.7363` | Its place on the map of designs, left to right (0 to 1). Written by the generator. |
@@ -224,9 +224,9 @@ Fields, from 2 sample documents:
 | `METHOD` | string | `Final polish around the lead` | How the round's designs were chosen. |
 | `STARTED` | date | `2026-04-20` | The day the round started. |
 | `DESIGNS` | integer | `1500` | How many designs the round tested. (designs) |
-| `BEST_DESIGN` | string | `DSG-HLXK7-R8-0897` | The round's best design; opens DESIGN.; link to `design` |
+| `BEST_DESIGN` | string | `DSG-HLXK7-R8-0901` | The round's best design; opens DESIGN.; link to `design` |
 | `BEST_ACTIVITY` | number | `16.07` | Its activity. (x natural) |
-| `MEDIAN_ACTIVITY` | number | `12.24` | The median activity of the round's designs. (x natural) |
+| `MEDIAN_ACTIVITY` | number | `12.23` | The median activity of the round's designs. (x natural) |
 | `TRAPPED` | integer | `0` | How many designs were caught on the false peak. (designs) |
 | `NOTE` | string | `The campaign reaches the summit.` | What happened in the round. |
 
@@ -254,7 +254,7 @@ Examples:
 | Type | Shows |
 |---|---|
 | `PROT HLXK7` | Helixase-7: length, family, sequence and the positions of its active site |
-| `DESIGN DSG-HLXK7-R8-0897` | The lead design of the campaign: its changes, activity and stability |
+| `DESIGN DSG-HLXK7-R8-0901` | The lead design of the campaign: its changes, activity and stability |
 | `DMS HLXK7:177:A:activity` | One scan score: what changing one position to one amino acid did to the activity |
 | `RESIDUE HLXK7:177` | The active site's centre: fold, burial, coordinates and mean effects |
 | `DROUND HLXK7-R8` | The round of the lead design: method, best and median activity |

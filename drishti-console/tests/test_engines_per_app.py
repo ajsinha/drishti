@@ -21,6 +21,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from conftest import CONSOLE
+import server_answers
 from core import engines
 from core.app import create_app
 from core.config import load_settings
@@ -44,6 +45,8 @@ def test_an_app_keeps_its_own_engines_when_another_app_of_the_process_learns_its
 
 def test_each_state_is_read_where_it_is_used():
     a, b = engines.new_state(), engines.new_state()
+    for s in (a, b):                                          # each app's catalogue, from its server's installation answer
+        engines.take(server_answers.bootstrap("all")["engines"], s)
     engines.learn(DATALOAD_OFF["engines"], b)
     token = engines.use(a)
     try:

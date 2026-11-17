@@ -48,6 +48,7 @@ def _load(name: str, path: Path):
 
 README = _load("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
 GD = _load("drishti_guide_data", ROOT / "tools" / "packgen" / "common" / "guide_data.py")
+CONTRACTS = _load("drishti_contracts", ROOT / "tools" / "contracts.py")    # the one way a contract's validation rules follow its fields
 
 MODULE_DIR = ROOT / "modules" / "genomics"
 GENERATOR = "tools/packgen/genomics_showcase/make.py"
@@ -137,11 +138,7 @@ def contract(k: S.Kind) -> str:
     links = [{"field": f.name, "kind": f.link} for f in k.fields if f.link]
     if links:
         c["links"] = links
-    rules = [{"rule": "required", "fields": [f.name for f in k.fields if f.presence == "required"]},
-             {"rule": "unique", "key": [k.key], "per": "snapshot"}]
-    rules += [{"rule": "link", "field": x["field"], "kind": x["kind"]} for x in links]
-    rules += [{"rule": "enum", "field": f.name, "values": list(f.enum)} for f in k.fields if f.enum]
-    c["validation"] = rules
+    c["validation"] = CONTRACTS.Draft.rules(None, c["fields"], {}, c["key"], c["dated-by"])
     c["notes"] = ["Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, "
                   "patients and designs are invented, and every screen that shows it says so.",
                   "A snapshot: the same documents on every business day of the demo lake."]
@@ -360,7 +357,8 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 
 ## The join to genomics
 
-The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` carries a gene, a protein position and an amino acid; with the gene
+The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` ([contract](../../../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant),
+[example](../../../../../docs/contracts/samples/genomics-showcase.md#study-variant)) carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ## Making the data again

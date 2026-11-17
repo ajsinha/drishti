@@ -23,7 +23,7 @@
 {% block title %}{{ id }} · History · {{ PRODUCT }}{% endblock %}
 {% block screen %}history{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_history.css?v={{ ASSET_V }}">{% if page and page.market %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_history.css?v={{ ASSET_V }}">{% if page and page.market %}<link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=((mn ~ ' ') if mn else '') ~ id ~ ' ' ~ typed_range ~ (' DIFF' if params.get('diff') else '') ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% if error %}
@@ -174,4 +174,4 @@
 </div>
 {% endif %}
 {% endblock %}
-{% block scripts %}{% if page and page.market %}<script src="{{ BASE }}/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{% endif %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_history-page.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_history-page.js?v={{ ASSET_V }}"></script>{% endblock %}

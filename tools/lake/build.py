@@ -80,12 +80,18 @@ from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
-PACKS_ROOT = R.current().site_dir                       # the site's packs (the modules' and the kernel's: the resolver)
+PACKS_ROOT = None                                       # the site's packs: None asks the resolver when a feed is routed (packs_root)
 RESERVED = {"id", "doc", "business_date"}
 
 
 class BuildError(RuntimeError):
     pass
+
+
+def packs_root():
+    """The site's packs (the modules' and the kernel's, the Java resolver's answer), asked only when a feed is routed by its files: a
+    command that never routes one (lake maintain imports this module) runs where no kernel jar is built."""
+    return PACKS_ROOT if PACKS_ROOT is not None else R.current().site_dir
 
 
 class Locked(BuildError):
@@ -205,6 +211,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
         name, c = delta[0]
         st = c.get("settings") or {}
         out["connector"], out["domain"] = name, st.get("domain") or out["pack"]
+        out["lake_domain"] = st.get("domain")      # the connector's own domain (a lake-form template's lake-tables: name it): it picks the table
         out["set"] = site_set(name, st)
         if kind:
             lay = (st.get("layout") or {}).get(kind) if isinstance(st.get("layout"), dict) else None
@@ -286,7 +293,7 @@ def _feed(a) -> str:
     if len(tables) != 1:
         raise BuildError(f"the files name {len(tables)} tables ({', '.join(tables)}): load one table at a time, or give --kind")
     try:
-        t = feedroute.resolve(tables[0], PACKS_ROOT, a.pack)
+        t = feedroute.resolve(tables[0], packs_root, a.pack)
     except feedroute.RouteError as e:
         if getattr(a, "new_table", False) and a.domain and "no pack" in str(e):
             a.kind = tables[0]                             # a new table, asked for: the generic layout under --domain
@@ -335,7 +342,7 @@ def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
     for t in tables:
         try:
             pack = _pack_dir(folders[t]) if t in folders else (pathlib.Path(a.pack) if a.pack else None)
-            routes[t] = feedroute.resolve(t, PACKS_ROOT, pack, a.kind if a.kind and len(tables) == 1 else None)
+            routes[t] = feedroute.resolve(t, packs_root, pack, a.kind if a.kind and len(tables) == 1 else None)
         except feedroute.RouteError as e:
             problems.append(str(e))
     if problems:
@@ -380,6 +387,7 @@ def plan(a) -> dict:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
         p["set"] = d.get("set") or {}
+        p["lake_domain"] = d.get("lake_domain")
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
     lake_layout(a, p)
     p["key"] = p["key"] or "id"
@@ -419,7 +427,9 @@ def lake_layout(a, p: dict) -> None:
     if not lakeconfig.is_lake_name(name):
         return
     try:
-        t = lakeconfig.table(name, p["kind"] or a.kind, getattr(a, "domain", None), p.get("table"))
+        # the domain given, else the pack's connector's: a kind with tables in several domains (protein: protein-engineering's, the
+        # genomics example pack's) is the connector's own, never refused as ambiguous
+        t = lakeconfig.table(name, p["kind"] or a.kind, getattr(a, "domain", None) or p.get("lake_domain"), p.get("table"))
         lakeconfig.disagree("--partition-by", split(a.partition_by), t["partition-by"], t)
         lakeconfig.disagree("--promote", split(a.promote), t["promote"], t)
         lakeconfig.disagree("--vector", split(getattr(a, "vector", None)), t["vectors"], t)

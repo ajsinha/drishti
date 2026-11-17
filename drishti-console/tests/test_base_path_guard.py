@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from core import elements_pin
+
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
 STATIC = CONSOLE / "web" / "static"
@@ -45,7 +47,9 @@ ALLOWED: list[tuple[str, str]] = [
     ("drishti-renderer/src/drishti_signin.js", "const BASE = '/embed/v2/sign-in'"),   # joined to the console's root (this.server)
     ("drishti-renderer/src/drishti_elements.js", "views(r, '/about'"),           # a suffix of server + API + the view's path
     ("drishti-renderer/src/drishti_screen.js", "views(r, '/about'"),             # the same, in the screen
-    ("drishti-core/src/drishti_loader.js", "url('/static/elements/')"),          # drishti-core's own url() (drishti_base.js)
+    # the host's endpoints for Drishti Elements: its endpoint(name) puts each under the console's base itself (drishti-core's url())
+    ("js/drishti_elements-host.js", "endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' }"),
+    ("elements/drishti-renderer/src/drishti_kinds.js", "configure({ endpoints: { pivotPage: '/pivot' } })"),   # as the host script: drishti-core's endpoint() puts the base path in front
     ("js/drishti_bi-design-model.js", "path.slice('/reports/'.length)"),        # a length, not a URL
 ]
 
@@ -274,7 +278,7 @@ def test_console_templates_put_every_console_url_under_base():
 def test_the_page_names_its_base_once():
     base = (CONSOLE / "web" / "templates" / "base.html").read_text(encoding="utf-8")
     assert base.count('<meta name="drishti-base" content="{{ BASE }}">') == 1
-    helper = (STATIC / "elements" / "drishti-core" / "src" / "drishti_base.js").read_text(encoding="utf-8")
+    helper = elements_pin.static_path("elements/drishti-core/src/drishti_base.js").read_text(encoding="utf-8")   # drishti-core's, vendored
     assert "root.drishti_url = url" in helper and 'meta[name="drishti-base"]' in helper
 
 

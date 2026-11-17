@@ -28,6 +28,7 @@ from core.auth import Identity
 from core.config import load_settings
 from plugins.banking.routes.play_routes import play_command
 import engine_fakes  # noqa: E402
+import server_answers  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data",
               "edition": {"name": "drishti.risk", "title": "Drishti Risk"}}
@@ -59,7 +60,7 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
     if about:
-        assert app.state.editions.learn(about)
+        assert server_answers.follow(app, about)
 
     async def current(cookie, _backend):
         return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles, admin=bool({"*", "admin"} & set(roles)))

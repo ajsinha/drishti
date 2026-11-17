@@ -65,7 +65,6 @@ NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".pn
 EXEMPT = {"tools/iceberg/fixtures.py": "writes real Iceberg tables: it tests the Iceberg reader itself",
           "tools/packgen/designer_job.py": "the Pack designer job's answers to the console page (analysis.json, mapping.json, result.json beside "
                                            "request.json and status.json): one JSON document each, not data records",
-          "tools/maps/build_regions.py": "map GeoJSON for the console's maps (not data records)",
           "tools/packi18n.py": "a translation sheet for people (CSV), not data",
           "tools/historycmd.py": "human-facing export (--csv beside --jsonl)",
           "tools/biruns.py": "human-facing export (csv beside jsonl)"}

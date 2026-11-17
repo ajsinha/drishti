@@ -1685,35 +1685,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Measured 2026-11-16: 3,025 page loads of 381 pages; the 25 slowest by p95 (slow from 2 s).
+Measured 2026-11-16: 1,943 page loads of 315 pages; the 25 slowest by p95 (slow from 2 s).
 
 | Page | Loads | p95 | Median |
 |---|---:|---:|---:|
-| `/v/listed-company/CO-AAPL` (slow) | 4 | 16.77 s | 3.69 s |
-| `/v/news-topic/TOPIC-TOYOTA` (slow) | 1 | 8.67 s | 8.67 s |
-| `/v/us-company/AAPL` (slow) | 1 | 8.43 s | 8.43 s |
-| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 7.76 s | 6.34 s |
-| `/bi/r/file:report:nv-demo` (slow) | 6 | 7.47 s | 1.00 s |
-| `/v/fund/QQQ` (slow) | 1 | 7.46 s | 7.46 s |
-| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 7.45 s | 1.50 s |
-| `/bi/r/file:report:trades-overview` (slow) | 20 | 7.37 s | 0.87 s |
-| `/admin/artifacts` (slow) | 18 | 7.34 s | 2.21 s |
-| `/bi/r/file:report:py-server` (slow) | 1 | 7.30 s | 7.30 s |
-| `/v/trade/MX-00003` (slow) | 1 | 7.17 s | 7.17 s |
-| `/reports/subscribe` (slow) | 5 | 6.95 s | 2.11 s |
-| `/v/desk/NOPE` (slow) | 2 | 6.58 s | 4.17 s |
-| `/bi/models` (slow) | 20 | 6.40 s | 1.60 s |
-| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 6.33 s | 6.33 s |
-| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 6.25 s | 6.25 s |
-| `/admin/bindings` (slow) | 8 | 5.99 s | 3.33 s |
-| `/v/economy/ECON-AUS` (slow) | 1 | 5.96 s | 5.96 s |
-| `/page.html` (slow) | 5 | 5.85 s | 4.00 s |
-| `/v/trade/MX-20000001` (slow) | 17 | 5.51 s | 2.93 s |
-| `/v/trade/1000001` (slow) | 33 | 5.44 s | 2.07 s |
-| `/help/configuration` (slow) | 12 | 5.38 s | 2.06 s |
-| `/v/news-topic/TOPIC-FED` (slow) | 3 | 5.34 s | 4.24 s |
-| `/help/build-guide` (slow) | 4 | 5.23 s | 1.80 s |
-| `/v/jurisdiction/JUR-NZL` (slow) | 1 | 5.08 s | 5.08 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 9.08 s | 1.54 s |
+| `/page.html` (slow) | 5 | 6.94 s | 1.77 s |
+| `/v/trade/MX-00003` (slow) | 1 | 6.68 s | 6.68 s |
+| `/v/listed-company/CO-AAPL` (slow) | 2 | 5.60 s | 5.01 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.75 s | 2.89 s |
+| `/v/economy/ECON-AUS` (slow) | 1 | 4.73 s | 4.73 s |
+| `/bi/models` (slow) | 11 | 4.38 s | 0.38 s |
+| `/v/netting-set/NS-NORTH-01` (slow) | 10 | 3.69 s | 0.56 s |
+| `/designer/grid` (slow) | 7 | 3.52 s | 0.28 s |
+| `/bi/r/file:report:trades-overview` (slow) | 19 | 3.48 s | 0.53 s |
+| `/admin/artifacts` (slow) | 15 | 3.13 s | 0.66 s |
+| `/bi/datasets` (slow) | 8 | 3.05 s | 0.22 s |
+| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 2.91 s | 0.54 s |
+| `/bi/designer` (slow) | 16 | 2.67 s | 0.26 s |
+| `/login` (slow) | 204 | 2.63 s | 0.52 s |
+| `/build/tables` (slow) | 11 | 2.60 s | 0.11 s |
+| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 2.54 s | 2.54 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 1 | 2.54 s | 2.54 s |
+| `/build/d/33233784a64b` (slow) | 1 | 2.49 s | 2.49 s |
+| `/v/trade/1000001` (slow) | 29 | 2.46 s | 0.51 s |
+| `/bi/r/file:report:py-server` (slow) | 1 | 2.45 s | 2.45 s |
+| `/v/trade/1000003` (slow) | 3 | 2.24 s | 1.44 s |
+| `/bi/r/file:report:world-economics` (slow) | 2 | 2.23 s | 1.27 s |
+| `/bi/ds/file:table:bi.wa_demo_trade` (slow) | 4 | 2.16 s | 1.05 s |
+| `/help/configuration` (slow) | 11 | 2.09 s | 0.48 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
@@ -1754,7 +1754,7 @@ from a new measured run with the same headroom; they are never raised to make a 
 
 ## 20. Drishti Elements: the grid engine at 1,000,000 rows
 
-drishti-grid's engine ([ELEMENTS.md section 8.1](../architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)),
+drishti-grid's engine ([ELEMENTS.md section 8.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)),
 without a browser: `node --max-old-space-size=6144 tools/bench/elements_grid.mjs 1000000 10000` (Node v22.22.1, the workstation of
 [section 3](#3-machine-and-data), 2026-11-07). One million synthetic trades of ten columns in the page. A scroll frame is the viewport's
 window at a random position and the text of every drawn cell (40 rows on screen with overscan, 530 cells): what a

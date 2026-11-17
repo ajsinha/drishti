@@ -51,12 +51,12 @@ def stack(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("fundsstack")
     work = tmp / "server"
     work.mkdir()
-    from var_stack import shared_connectors, shared_folder, shared_lake
+    from var_stack import SHARED_TODAY, shared_connectors, shared_folder, shared_lake
     lake = shared_lake(tmp_path_factory, needs="funds/fund")                        # the ONE shared read-only lake and its connector files
     shared_connectors(shared_folder(tmp_path_factory), work / "connectors")
     env = dict(os.environ, DRISHTI_PACKS="us-equities,funds", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                DRISHTI_SECURITY_ENABLED="false", DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_DELTA_ROOT=str(lake),
-               DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_OFFLINE="true")
+               DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_OFFLINE="true", **SHARED_TODAY)   # its today: the lake's last date
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
                               stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:

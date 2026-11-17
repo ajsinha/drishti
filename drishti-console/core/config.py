@@ -145,6 +145,8 @@ def _read_settings_file(named: str) -> dict[str, str]:
 
 
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
+    if not Path(config_dir).is_dir():   # a file named instead of its folder read no file at all, and every setting fell to its default
+        raise ValueError(f"load_settings takes the console's config folder, not {config_dir}")
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name

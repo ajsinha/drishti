@@ -60,7 +60,7 @@ SECRET = "sign-in-window-scratch-secret-0123456789abcdef"
 USER = "pat"
 TRADE = "1000008"
 APP = "intranet"
-LIB = CONSOLE / "web" / "static"            # a host that copied the renderer's version folder and the Elements libraries beside it
+LIB = CONSOLE / "web" / "static"            # a host that copied the renderer's version folder and the Elements release tree beside it (vendor/)
 
 
 # ---- the stand-in identity provider -----------------------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ class Host:
                     body, kind = (PAGE % {"lib": f"/lib/render/{rd.VERSION}/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
                 elif path == "/elements.html":
                     body, kind = (ELEMENT_PAGE % {"console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
-                elif path.startswith(("/lib/render/", "/lib/elements/")) and (LIB / path[5:]).resolve().is_file() and LIB in (LIB / path[5:]).resolve().parents:
+                elif path.startswith(("/lib/render/", "/lib/elements/", "/lib/vendor/drishti-elements/")) and (LIB / path[5:]).resolve().is_file() and LIB in (LIB / path[5:]).resolve().parents:
                     f = (LIB / path[5:]).resolve()
                     body, kind = f.read_bytes(), {".js": "text/javascript", ".css": "text/css"}.get(f.suffix, "application/octet-stream")
                 else:

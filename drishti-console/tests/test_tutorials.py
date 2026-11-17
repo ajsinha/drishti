@@ -29,6 +29,10 @@ ROOT = CONSOLE.parent
 TUTORIALS = ROOT / "docs" / "tutorials"
 WRITTEN = sorted(TUTORIALS.glob("[0-9][0-9]-*.md"))          # 20 and 21 too (the glob was [01][0-9] and missed them)
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
+#: a tutorial whose index row says "parked": its feature is hidden and off in this release (the AI assistant, owner 2026-11-16); the file
+#: is kept for when it comes back, its pictures are not retaken
+PARKED = {p.name for p in WRITTEN if re.search(r"^\|[^\n]*" + re.escape(p.name) + r"[^\n]*\|\s*parked\s*\|\s*$",
+                                                (TUTORIALS / "README.md").read_text(), re.M)}
 IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$", re.M)
 
@@ -76,7 +80,7 @@ def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_o
     for p in WRITTEN:
         assert p.name in index, p.name
         row = next(line for line in index.splitlines() if p.name in line)
-        assert "written" in row and f"[" in row, row                      # the index row says it is written and links the tutorial by its title
+        assert ("written" in row or p.name in PARKED) and "[" in row, row   # the index row says it is written (or parked) and links it by its title
 
 
 def test_the_docs_index_links_to_the_tutorials():
@@ -170,7 +174,7 @@ def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at
     listed = []
     for guide in (f"t{n}" for n in range(10, 20)):
         listed += subprocess.run([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--list", "--guide", guide], capture_output=True, text=True, cwd=ROOT).stdout.split()
-    for doc in WRITTEN:
+    for doc in (d for d in WRITTEN if d.name not in PARKED):
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"

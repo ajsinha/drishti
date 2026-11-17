@@ -25,7 +25,7 @@ description: 'One patient''s sample of the 1,500 of cohort ONC-1: the clinical t
   its place on the two-dimensional map of samples (precomputed, never projected at view time).'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per sample, keyed by SAMPLE_ID.
-key:
+key: &id001
 - SAMPLE_ID
 id-pattern:
 - ^S
@@ -62,7 +62,7 @@ fields:
   presence: required
   description: The tumour type.
   example: Colorectal
-  enum:
+  enum: &id002
   - Breast
   - Lung
   - Colorectal
@@ -72,7 +72,7 @@ fields:
   presence: required
   description: The stage at sampling.
   example: II
-  enum:
+  enum: &id003
   - I
   - II
   - III
@@ -87,7 +87,7 @@ fields:
   presence: required
   description: The response to therapy.
   example: responder
-  enum:
+  enum: &id004
   - responder
   - non-responder
 - name: TOXICITY
@@ -95,7 +95,7 @@ fields:
   presence: required
   description: Whether the patient had a severe adverse reaction.
   example: none
-  enum:
+  enum: &id005
   - severe
   - none
 - name: RELAPSE
@@ -103,7 +103,7 @@ fields:
   presence: required
   description: Whether the disease returned within twelve months.
   example: free
-  enum:
+  enum: &id006
   - relapsed
   - free
 - name: CLUSTER
@@ -111,7 +111,7 @@ fields:
   presence: required
   description: The group of similar samples the map shows.
   example: C3 immune-hot
-  enum:
+  enum: &id007
   - C1 luminal-like
   - C2 basal-like
   - C3 immune-hot
@@ -149,46 +149,29 @@ validation:
   - EMB_Y
   - MUTATION_COUNT
 - rule: unique
-  key:
-  - SAMPLE_ID
+  key: *id001
   per: snapshot
 - rule: enum
   field: TUMOUR_TYPE
-  values:
-  - Breast
-  - Lung
-  - Colorectal
-  - Ovarian
+  values: *id002
 - rule: enum
   field: STAGE
-  values:
-  - I
-  - II
-  - III
-  - IV
+  values: *id003
 - rule: enum
   field: RESPONSE
-  values:
-  - responder
-  - non-responder
+  values: *id004
 - rule: enum
   field: TOXICITY
-  values:
-  - severe
-  - none
+  values: *id005
 - rule: enum
   field: RELAPSE
-  values:
-  - relapsed
-  - free
+  values: *id006
 - rule: enum
   field: CLUSTER
-  values:
-  - C1 luminal-like
-  - C2 basal-like
-  - C3 immune-hot
-  - C4 stromal
-  - C5 proliferative
+  values: *id007
+- rule: range
+  field: MUTATION_COUNT
+  min: 0
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

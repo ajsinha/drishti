@@ -228,7 +228,11 @@ loader and reused across runs and drills; a run looks it up once (`browser_harne
 `var_stack.shared_lake(tmp_path_factory, needs=...)` (`needs`: a table it reads, checked) or `var_stack.shared_folder` (the lake and the
 connector files the build wrote beside it). It is read only: no test builds a lake of its own, asks for a subset (`--only`), copies it or
 names the Python writer. A server over it writes to its own folders (`var_stack.own_folders`: the VaR hot folder and the official VaR and
-exposure roots). A server over it that names its heap asks for at least `var_stack.VAR_HEAP` (1536 MB, `var_server`'s default): the lake
+exposure roots). A server over it runs with its "today" at the lake's last date (`var_stack.SHARED_TODAY`: `DRISHTI_BUSINESS_TODAY`, the
+setting `drishti.business-date.today`), so a live read is for a date the lake holds on any day the tests run: with the clock's today a
+snapshot read looks back at most its connector's `lookback-days` (10) for the newest date, and from the eleventh day every live read found
+nothing. `var_server` sets it; a file that starts its own server over the lake (`shared_connectors`) passes it too, and
+`tests/test_lake_builds_cached.py` fails a file that does not. A server over it that names its heap asks for at least `var_stack.VAR_HEAP` (1536 MB, `var_server`'s default): the lake
 holds every trade set, and at 768 MB a server ran out of heap at start and its pages never loaded. `tests/test_lake_builds_cached.py` (a
 quick file check) fails on any test that does otherwise and is not parked.
 
@@ -280,6 +284,12 @@ and drill on a machine, so the shared test lake (section 3.12) is built and kept
 processes, so workers wait for it rather than repeat it. The build is `lake demo`'s default writer, the parallel Java loader of the exec jar.
 
 The browser tests read one of these, the shared test lake (section 3.12).
+
+The Java resolver's answers that the tools read (`tools/resolved.py`) are cached by their inputs under `<data>/tmp/resolved`, or under
+`DRISHTI_RESOLVED_CACHE` when it is set. The console tests' and the tools tests' `conftest.py` set it to the test run's own temporary folder
+(removed at its end), and `tools/drill.sh` exports it as its own `<drill tmp>/resolved` for every tool, test and lane it starts (the
+gate's `--check` generators too), so neither a test run nor a drill writes under the repository's `data/`, which the drill checks is
+left unchanged.
 `python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
 
 ### 3.16 Affected tests
@@ -501,7 +511,8 @@ Every speed-up of the drill changes how a test runs, never what it proves. For e
 (`<data>/tmp/drill/`, which it exports as `TMPDIR`, so the tests' temporary folders land there too), or its own Java copies
 (`<repository>-drill-copies/<lane>.<its pid>.*`, beside the repository, and that folder only when empty). A `DRISHTI_DRILL_TMP` whose name
 does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `drill-copies`, is refused. `tools/drillkit/test_drill_lanes.py`
-(`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list.
+(`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list. Each Java copy's `lib/` holds the server jar the gate built from the same commit (the tools its tests run, such as the
+Python lake path of `PythonPathEqualityTest`, read where everything is from that jar: `tools/resolved.py`).
 
 ### 3.27 The command sweep
 

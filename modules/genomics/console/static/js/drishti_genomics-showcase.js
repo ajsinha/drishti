@@ -65,6 +65,8 @@
 
   let C = null;
   const charts = {};
+  // a selection made on the map is cleared with setSelection([]): the redraw that follows every selection (refresh) draws the map
+  // afresh, rectangle gone, and drishti-chart's clearBrush throws in ECharts once a redraw has taken its rectangle away
   function chart(name, spec, o) {
     const host = root.querySelector('[data-chart="' + name + '"]');
     if (!host) { return null; }
@@ -126,7 +128,7 @@
         b.dataset.cluster = c.CLUSTER;
         b.setAttribute('aria-pressed', String(c.CLUSTER === st.cluster));
         b.textContent = c.CLUSTER + ' · ' + count(c.SAMPLES) + ' · ' + pct(c.RESPONSE_RATE) + ' respond';
-        b.addEventListener('click', () => { st.cluster = st.cluster === c.CLUSTER ? '' : c.CLUSTER; st.box = ''; if (charts.map) { charts.map.clearBrush(); } tell('genomics.samples', [st.cluster]); refresh(); });
+        b.addEventListener('click', () => { st.cluster = st.cluster === c.CLUSTER ? '' : c.CLUSTER; st.box = ''; if (charts.map) { charts.map.setSelection([]); } tell('genomics.samples', [st.cluster]); refresh(); });
         host.appendChild(b);
       });
     }
@@ -136,7 +138,7 @@
       tell('genomics.gene', [g]);
       refresh();
     }
-    $('[data-showcase-clear]').addEventListener('click', () => { st.cluster = ''; st.box = ''; if (charts.map) { charts.map.clearBrush(); } refresh(); });
+    $('[data-showcase-clear]').addEventListener('click', () => { st.cluster = ''; st.box = ''; if (charts.map) { charts.map.setSelection([]); } refresh(); });
     get('associations', { trait: st.trait }).then((a) => {
       st.trait = a.trait;
       if (!st.gene && a.peaks.length) { st.gene = a.peaks[0].GENE; }
@@ -210,7 +212,8 @@
     function campaign() {
       return get('proteins/' + enc(id) + '/designs', { residue: st.residue, aa: st.aa }).then((c) => {
         const ch = chart('landscape', { kind: 'protein.landscape', title: 'Design campaign · ' + count(c.total) + ' designs, ' + c.rounds.length + ' rounds', subtitle: count(c.rows.length) + ' drawn · press Play the rounds',
-          data: { rows: c.rows }, field: c.field, wildType: c.wildType, round: st.round || c.rounds[c.rounds.length - 1], interval: 1100 },
+          data: { rows: c.rows }, field: c.field, wildType: c.wildType,
+          frames: E.libs['drishti-genomics'].landscapeFrames({ round: st.round || c.rounds[c.rounds.length - 1], interval: 1100 }) },
         { height: 340, explain: explainer((ctx) => (ctx.ids && ctx.ids[0] ? ['explain/design/' + enc(ctx.ids[0]), { protein: id }] : null)) });
         ch.ready.then(() => ch.setSelection(st.design ? [st.design] : (c.carrying || []), { silent: true }));
         if (!ch.wired) {

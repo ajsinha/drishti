@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The standing rule (the product owner, 2026-11-07; docs/architecture/ELEMENTS.md section 3.1): no bespoke UI. Every designer, editor and
+"""The standing rule (the product owner, 2026-11-07; Drishti Elements' docs/DESIGN.md): no bespoke UI. Every designer, editor and
 authoring tool is assembled from Drishti Elements; a need the libraries do not meet is met by extending a library, never by code in the
 screen. This guard holds it for what designers and editors are made of. No console script (static/js) or page (templates) implements:
 
@@ -31,6 +31,8 @@ longer breaks the rule, fails the check, so the list stays true. Comments are le
 import re
 
 import pytest
+
+from core import elements_pin
 
 from conftest import CONSOLE
 
@@ -178,10 +180,10 @@ def test_the_form_guard_finds_what_it_looks_for():
 
 def test_the_kit_is_where_the_designers_live():
     """The libraries the rule points to exist and every designer page loads the kit."""
-    kit = WEB / "static" / "elements" / "drishti-designer" / "src"
+    kit = elements_pin.static_path("elements/drishti-designer/src")   # in the vendored Drishti Elements
     for name in ("drishti_layout-canvas.js", "drishti_palette.js", "drishti_inspector.js", "drishti_yaml-pane.js", "drishti_shell.js"):
         assert (kit / name).is_file(), name
-    assert (WEB / "static" / "elements" / "drishti-tree" / "src" / "drishti_tree-outline.js").is_file()   # the one outline; the kit re-exports it
+    assert elements_pin.static_path("elements/drishti-tree/src/drishti_tree-outline.js").is_file()   # the one outline; the kit re-exports it
     assert not (kit / "drishti_outline.js").exists()                                                       # never a second one beside it
     for page in ("build/design.html", "build/tables.html", "bi/design.html"):
         assert '{% include "_designer_kit.html" %}' in (WEB / "templates" / page).read_text(encoding="utf-8"), page

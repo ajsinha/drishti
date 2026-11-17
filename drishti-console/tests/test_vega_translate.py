@@ -24,10 +24,11 @@ import pytest
 import yaml
 
 from conftest import CONSOLE
+from core import elements_pin  # the vendored Drishti Elements
 
 ROOT = CONSOLE.parent
 NODE = shutil.which("node")
-CHART = CONSOLE / "web" / "static" / "elements" / "drishti-chart" / "drishti_chart.js"
+CHART = elements_pin.ROOT / "elements" / "drishti-chart" / "drishti_chart.js"
 
 
 def _shipped():

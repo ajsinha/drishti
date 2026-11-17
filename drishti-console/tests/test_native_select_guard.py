@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""No native <select> in the console (docs/architecture/ELEMENTS.md sections 3.1 and 8.2): a single choice is drishti-inputs' Select
+"""No native <select> in the console (Drishti Elements' docs/DESIGN.md): a single choice is drishti-inputs' Select
 (<drishti-select>, a Form's select field, the grid's select editor), with search, type-ahead and the keys of the rest of the kit. This
 guard reads every console page (templates), script (static/js) and library source (static/elements/*/src, the libraries' harness pages,
 the gallery), and the plugins' pages and scripts, for a raw select: the tag in markup or in a string, document.createElement('select'), or an element helper asked for one
@@ -24,6 +24,8 @@ static/render/<version>/ (frozen copies a host pins; the current renderer is dri
 import re
 
 import pytest
+
+from core import elements_pin
 
 from conftest import CONSOLE
 
@@ -45,7 +47,7 @@ ALLOWED: dict = {
 def _sources():
     files = (sorted((WEB / "static" / "js").rglob("*.js")) + sorted((WEB / "templates").rglob("*.html"))
              + sorted((WEB / "static" / "elements").glob("*/src/*.js")) + sorted((WEB / "static" / "elements").glob("*/*.html"))
-             + sorted((WEB / "static" / "gallery").glob("*.js"))
+             + sorted((elements_pin.ROOT / "gallery").glob("*.js"))
              + sorted(CONSOLE.glob("plugins/*/templates/**/*.html")) + sorted(CONSOLE.glob("plugins/*/static/**/*.js")))
     return {str(p.relative_to(CONSOLE)): p for p in files}
 

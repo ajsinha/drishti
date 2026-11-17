@@ -21,6 +21,7 @@ from core import under_construction
 from core.app import create_app
 from core.config import load_settings
 from fastapi.testclient import TestClient
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 SCRIPTS = ("drishti_editors.js", "drishti_editor-new.js", "drishti_editor-table.js", "drishti_editor-model.js", "drishti_editor-python.js",
            "drishti_editor-formula.js", "drishti_editors.css")
@@ -52,7 +53,7 @@ def test_the_page_is_a_shell_with_its_scripts_and_needs_bi():
         assert s in r.text
     # the header, the modes and the resizable panes are drawn by drishti-designer's DesignerShell in the page's [data-editors] (the kit)
     assert "data-editors" in r.text and '{% include "_designer_kit.html" %}' not in r.text and "drishti-designer" in r.text
-    shell = (CONSOLE / "web" / "static" / "elements" / "drishti-designer" / "src" / "drishti_shell.js").read_text(encoding="utf-8")
+    shell = (elements_pin.ROOT / "elements" / "drishti-designer" / "src" / "drishti_shell.js").read_text(encoding="utf-8")
     for act in ("validate", "preview", "history", "impact", "save", "propose"):
         assert f"id: '{act}'" in shell
     assert "'data-act': 'new'" in shell and "'data-mode': m" in shell and "'data-resize': 'panel'" in shell

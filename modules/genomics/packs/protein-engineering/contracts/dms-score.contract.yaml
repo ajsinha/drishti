@@ -25,7 +25,7 @@ description: 'One measurement of the scan: what changing one position of a prote
   of the 20 amino acids, two assays: 47,840 experiments.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per position, amino acid and assay, keyed by SCORE_ID.
-key:
+key: &id001
 - SCORE_ID
 dated-by: snapshot
 cadence:
@@ -79,7 +79,7 @@ fields:
   presence: required
   description: What was measured.
   example: activity
-  enum:
+  enum: &id002
   - activity
   - stability
 - name: SCORE
@@ -115,17 +115,14 @@ validation:
   - SE
   - REPLICATES
 - rule: unique
-  key:
-  - SCORE_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: PROTEIN
   kind: protein
 - rule: enum
   field: ASSAY
-  values:
-  - activity
-  - stability
+  values: *id002
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

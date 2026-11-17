@@ -19,8 +19,8 @@
    Data tables under charts. The behaviours on a real page are tested by the renderer's browser files. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as G from '../../web/static/elements/drishti-grid/src/drishti_index.js';
-import * as C from '../../web/static/elements/drishti-core/src/drishti_index.js';
+import * as G from '../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 // ---- a stand-in document: enough DOM for an element maker -------------------------------------------------------------------
 class Node0 { constructor(t) { this.nodeType = t; this.childNodes = []; } appendChild(c) { if (c.nodeType === 11) { c.childNodes.forEach((x) => this.childNodes.push(x)); c.childNodes = []; } else { this.childNodes.push(c); } return c; } }
@@ -42,6 +42,7 @@ const serAll = (x) => (Array.isArray(x) ? x.map(serAll).join('') : ser(x));
 const old = await import('../../web/static/render/1.2.0/m/tables.js');
 const cells = await import('../../web/static/render/1.2.0/m/cells.js');
 const R = { server: '', outsideLinks: 'event' };
+C.configure({ endpoints: { pivotPage: '/pivot' } });    // as the console's host script does (static/js/drishti_elements-host.js): the Pivot link's page
 const hooks = { content: (c) => cells.cellText(R, c), rowAttrs: (r, i) => ({ 'data-r-row': String(i) }) };
 
 const cell = (text, extra) => Object.assign({ text }, extra);
@@ -95,10 +96,11 @@ test('a plain table, a tree, a drill and a table offering Pivot are drawn as 1.2
   assert.equal(ser(G.docTable(doc, PLAIN, hooks)), ser(old.table(R, PLAIN)));
   assert.equal(ser(G.docTable(doc, Object.assign({}, PLAIN, { search: true }), hooks)), ser(old.table(R, Object.assign({}, PLAIN, { search: true }))));
   assert.equal(ser(G.docTable(doc, TREE, hooks)), ser(old.table(R, TREE)));
-  assert.equal(ser(G.docDrill(doc, DRILL, hooks)), ser(old.drill(R, DRILL)));
+  // an empty level's note is words only in Drishti Elements (no icon font); 1.2.0, frozen, drew Bootstrap Icons' inbox before them
+  assert.equal(ser(G.docDrill(doc, DRILL, hooks)), ser(old.drill(R, DRILL)).replace(/<I aria-hidden="true" class="bi bi-inbox"><\/>" /g, '"'));
   const pv = { id: 'p', title: 'Trades', data: Object.assign({ pivot: { source: 'panel/trade/T1/p' } }, PLAIN) };
-  // 1.2.0 is frozen byte for byte and still names the pivot guide by its old file (PIVOT_GUIDE.md); the grid names where it is now
-  assert.equal(serAll(G.docPivotable(doc, pv, hooks)), serAll(old.pivotable(R, pv)).replace('(PIVOT_GUIDE.md)', '(bi/PIVOT.md)'));
+  // 1.2.0 is frozen byte for byte and still names the console's pivot guide (PIVOT_GUIDE.md); Drishti Elements names no host's document
+  assert.equal(serAll(G.docPivotable(doc, pv, hooks)), serAll(old.pivotable(R, pv)).replace(' (PIVOT_GUIDE.md)', ''));
   assert.equal(serAll(G.docPivotable(doc, { id: 'p', data: PLAIN }, hooks)), serAll(old.pivotable(R, { id: 'p', data: PLAIN })));
   assert.match(ser(G.docTable(doc, PLAIN, hooks)), /data-r-row="1"/);
 });

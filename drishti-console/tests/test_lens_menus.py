@@ -164,11 +164,11 @@ def test_admin_by_command_is_for_administrators_only(backend, monkeypatch):
 
 
 def test_every_lens_menu_exists_and_every_subject_item_runs_a_command():
-    """Every menu a lens names exists (the kernel's sitemap with the modules' menus from their manifests), and each subject item runs a
+    """Every menu a lens names exists (the kernel's sitemap with the modules' menus from the server's installation answer), and each subject item runs a
     command it requires (cmd: or word:), so a menu never holds what the command line does not."""
     from core.edition import Edition
     from core.menus import spec_of
-    menus = {m["id"]: m for m in spec_of(CONSOLE)["menus"]}
+    menus = {m["id"]: m for m in spec_of(CONSOLE, server_answers.installed())["menus"]}
     for name in ("risk", "trading", "market", "world"):
         ed = Edition(name, yaml.safe_load(next((ROOT / "config" / "lenses").glob(f"*/{name}.yaml")).read_text(encoding="utf-8")), lens=True)
         top = ed.menu("top")

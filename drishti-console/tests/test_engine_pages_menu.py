@@ -60,7 +60,7 @@ def _about(off: set[str]) -> list[dict]:
 
 
 def test_no_engines_menu_and_each_engine_page_lives_under_risk_with_its_engine_rule():
-    spec = spec_of(CONSOLE)
+    spec = spec_of(CONSOLE, server_answers.installed())
     assert not [m for m in spec["menus"] if m.get("engines") or m["id"] == "engines"]
     risk = next(m for m in spec["menus"] if m["id"] == "risk")
     titles = [c["title"] for c in risk["columns"]]
@@ -81,7 +81,7 @@ def test_no_engines_menu_and_each_engine_page_lives_under_risk_with_its_engine_r
 def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
     """Lean (2.9.11.c): Pre-deal check (PREDEAL, the server's pre-deal service since 2.9.11.g) only under Counterparties, FX volatility
     (FXV) only under Volatility."""
-    spec = spec_of(CONSOLE)
+    spec = spec_of(CONSOLE, server_answers.installed())
     where: dict[str, list[str]] = {}
     for m in spec["menus"]:
         for col in m.get("columns") or []:

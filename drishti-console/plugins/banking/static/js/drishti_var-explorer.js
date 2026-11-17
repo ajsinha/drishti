@@ -46,7 +46,7 @@
   "use strict";
   var root = document.querySelector("[data-var]");
   if (!root || !window.Drishti.elements || !window.Drishti.elements.risk) return;
-  var R = window.Drishti.elements.risk;                // drishti-risk: the grid and chart presets and the figures in words (ELEMENTS.md 4.8)
+  var R = window.Drishti.elements.risk;                // drishti-risk: the grid and chart presets and the figures in words (Drishti Elements' docs/DESIGN.md 4.8)
   var money = R.riskMoney, signed = R.riskSigned;
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);

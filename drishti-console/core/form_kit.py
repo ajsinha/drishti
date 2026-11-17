@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The server's side of drishti-inputs' ``Form`` (docs/architecture/ELEMENTS.md sections 8.2 and 12.3): the fields of a schema in a few
+"""The server's side of drishti-inputs' ``Form`` (Drishti Elements' docs/DESIGN.md): the fields of a schema in a few
 words, and the host element a page puts where its form goes. The page draws no control of its own: ``drishti_form-host.js`` makes the
 host a ``Form`` (embedded by default, so a field with a ``name`` is submitted by the page's own ``<form>`` exactly as the old control
 was; a page's script reads and sets the rest through the Form). A field's ``hook`` puts the old control's data attributes on the new one,

@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js", "drishti-chart": "../drishti-chart/drishti_chart.js", "drishti-data": "../drishti-data/drishti_data.js", "drishti-graph": "../drishti-graph/drishti_graph.js", "drishti-tree": "../drishti-tree/drishti_tree.js"};
+  var needs = {"drishti-core": "../../vendor/drishti-elements/2.4.0/elements/drishti-core/drishti_core.js", "drishti-grid": "../../vendor/drishti-elements/2.4.0/elements/drishti-grid/drishti_grid.js", "drishti-chart": "../../vendor/drishti-elements/2.4.0/elements/drishti-chart/drishti_chart.js", "drishti-data": "../../vendor/drishti-elements/2.4.0/elements/drishti-data/drishti_data.js", "drishti-graph": "../../vendor/drishti-elements/2.4.0/elements/drishti-graph/drishti_graph.js", "drishti-tree": "../../vendor/drishti-elements/2.4.0/elements/drishti-tree/drishti_tree.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -108,7 +108,7 @@
   })();
   /* ---- src/drishti_kinds.js ---- */
   __m["src/drishti_kinds.js"] = (function () {
-    var roundHalfUp = __lib("drishti-core").roundHalfUp, formatNumber = __lib("drishti-core").formatNumber, formatPythonFloat = __lib("drishti-core").formatPythonFloat, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
+    var roundHalfUp = __lib("drishti-core").roundHalfUp, formatNumber = __lib("drishti-core").formatNumber, formatPythonFloat = __lib("drishti-core").formatPythonFloat, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url, configure = __lib("drishti-core").configure, endpoint = __lib("drishti-core").endpoint;
     var docPivotable = __lib("drishti-grid").docPivotable, docDrill = __lib("drishti-grid").docDrill, docPivot = __lib("drishti-grid").docPivot, docPlainTable = __lib("drishti-grid").docPlainTable;
     var h = __m["src/drishti_dom.js"].h, str = __m["src/drishti_dom.js"].str, icon = __m["src/drishti_dom.js"].icon, toneClass = __m["src/drishti_dom.js"].toneClass, capitalize = __m["src/drishti_dom.js"].capitalize;
     var cellText = __m["src/drishti_cells.js"].cellText, entity = __m["src/drishti_cells.js"].entity, entityLink = __m["src/drishti_cells.js"].entityLink, fields = __m["src/drishti_cells.js"].fields;
@@ -116,6 +116,7 @@
       return { content: (c) => cellText(R, c), tone: (c) => toneClass(c), rowAttrs: (r, i) => ({ 'data-r-row': String(i) }) };
     }
     const pct1 = (v, whole) => roundHalfUp(v / (whole || 1) * 100, 1);
+    if (!endpoint('pivotPage')) { configure({ endpoints: { pivotPage: '/pivot' } }); }
     const tableKind = (R, p) => (p.data.levels ? docDrill(document, p, tableHooks(R)) : docPivotable(document, p, tableHooks(R)));
     const pyQuote = (s) => encodeURIComponent(String(s)).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%2F/g, '/');
     const PALETTE = ['link', 'accent', 'ok', 'neg', 'warn', 'bad', 'muted', 'ink'];
@@ -613,8 +614,11 @@
       if (o && o.sheet) { base.sheet = String(o.sheet); }
     }
     function statics(rel) {
-      const root = base.statics || new URL(staticUrl(''), document.baseURI).href;
+      const root = base.statics || new URL('../../../', new URL(staticUrl(''), document.baseURI)).href;
       return new URL(rel, root).href;
+    }
+    function elementsFile(rel) {
+      return statics('vendor/drishti-elements/' + ELEMENTS_VERSION + '/' + rel);
     }
     const once = new Map();
     function memoised(key, fn) {
@@ -638,13 +642,15 @@
       } catch (e) { policy = null; }
       return policy;
     }
-    function script(rel) {
-      const url = statics(rel);
+    const ELEMENTS_FILE = /^(?:vendor\/(?:echarts|echarts-gl|codemirror|apache-arrow)\/|elements\/drishti-(?:core|inputs|grid|chart|data|tree|graph|designer)\/)/;
+    function script(rel, data) {
+      const url = ELEMENTS_FILE.test(rel) ? elementsFile(rel) : statics(rel);   // the engines and the libraries' bundles come with Drishti Elements
       return memoised('s:' + url, () => new Promise((resolve, reject) => {
         const s = document.createElement('script'), p = trusted();
         s.src = p ? p.createScriptURL(url) : url;
         s.async = false;
         s.setAttribute('data-manual', '');
+        Object.keys(data || {}).forEach((k) => s.setAttribute('data-' + k, data[k]));
         s.onload = () => resolve(); s.onerror = () => reject(new Error('cannot load ' + url));
         document.head.appendChild(s);
       }));
@@ -658,7 +664,7 @@
       if (!(window.echarts && window.echarts.graphicGL)) { await script('vendor/echarts-gl/echarts-gl.min.js'); }
     }
     async function geo() {
-      if (!window.drishtiGeo) { await script('js/drishti_geomap.js'); }
+      if (!window.drishtiGeo) { await script('js/drishti_geomap.js', { maps: elementsFile('vendor/echarts/maps/') }); }
       return window.drishtiGeo;
     }
     function sheet() {
@@ -679,7 +685,7 @@
       });
     }
     const trustedTypesActive = () => !!trusted();
-    return { "setAssetBase": setAssetBase, "statics": statics, "memoised": memoised, "script": script, "echarts": echarts, "echartsGl": echartsGl, "geo": geo, "sheet": sheet, "RENDERER_SHEET_VERSION": RENDERER_SHEET_VERSION, "font": font, "trustedTypesActive": trustedTypesActive };
+    return { "setAssetBase": setAssetBase, "statics": statics, "elementsFile": elementsFile, "memoised": memoised, "script": script, "echarts": echarts, "echartsGl": echartsGl, "geo": geo, "sheet": sheet, "RENDERER_SHEET_VERSION": RENDERER_SHEET_VERSION, "font": font, "trustedTypesActive": trustedTypesActive };
   })();
   /* ---- src/drishti_behave.js ---- */
   __m["src/drishti_behave.js"] = (function () {
@@ -1051,7 +1057,7 @@
       const E = (window.Drishti && window.Drishti.elements) || {};
       if (!E.inputs) {
         try {
-          const res = await fetch(drishtiUrl(assets.statics('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
+          const res = await fetch(drishtiUrl(assets.elementsFile('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
           if (res.ok) {
             const sheet = new CSSStyleSheet();
             sheet.replaceSync(await res.text());

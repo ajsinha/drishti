@@ -17,11 +17,12 @@
    attributes it keeps, the links it drops). Its drawing against the console's macros is the parity suite (test_render_*). */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import * as R from '../../web/static/elements/drishti-renderer/src/drishti_index.js';
 
 test('the renderer carries the one Elements version and names the panel kinds it draws', () => {
-  assert.equal(R.VERSION, JSON.parse(readFileSync(new URL('../../web/static/elements/drishti_elements.json', import.meta.url), 'utf8')).elements);
+  const pin = readdirSync(new URL('../../web/static/vendor/drishti-elements/', import.meta.url));     // the pinned Drishti Elements: one folder
+  assert.equal(R.VERSION, pin.length === 1 && pin[0]);
   assert.ok(Object.isFrozen(R.KINDS));
   ['table', 'markdown', 'line', 'hbar', 'facets'].forEach((k) => assert.ok(R.KINDS.includes(k), k));
 });

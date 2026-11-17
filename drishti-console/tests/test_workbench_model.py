@@ -20,10 +20,11 @@ import shutil
 import subprocess
 
 import pytest
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 ROOT = Path(__file__).resolve().parents[2]
 JS = ROOT / "drishti-console" / "web" / "static" / "js"
-DESIGNER = ROOT / "drishti-console" / "web" / "static" / "elements" / "drishti-designer" / "drishti_designer.js"   # the YAML reader is drishti-designer's
+DESIGNER = elements_pin.ROOT / "elements" / "drishti-designer" / "drishti_designer.js"   # the YAML reader is drishti-designer's
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Admin screens' forms as drishti-inputs draws them (docs/architecture/ELEMENTS.md section 12.3): each builder answers the host of a
+"""The Admin screens' forms as drishti-inputs draws them (Drishti Elements' docs/DESIGN.md): each builder answers the host of a
 server-built schema (``core/form_kit.py``); a template calls ``admin_form("<name>", ...)``. Every field keeps the old control's name and
 data attributes (``hook``), so the routes and the pages' scripts read the same names; what a page posts as JSON its script reads from the
 Form. Nothing here decides who may do what: the routes keep every check."""

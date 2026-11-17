@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-"""The VaR family's figures before and after a move onto Drishti Elements (ELEMENTS.md section 12): every screen of the family on the
+"""The VaR family's figures before and after a move onto Drishti Elements (Drishti Elements' docs/DESIGN.md): every screen of the family on the
 market-risk pack's demo data, each tab, read by screen_figures (every table's or grid's rows, the tiles, the playground's cells) and
 written to DRISHTI_FIGURES_OUT; with DRISHTI_FIGURES_BASELINE (the folder an earlier run wrote, from the code before the move) each
 screen is compared with its baseline and must show the same figures: VaR, ES, components, limits, the history, the currencies.

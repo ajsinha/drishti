@@ -70,6 +70,5 @@
   </div>
   {% endif %}
 </div>
-{% include "terminal/_risk_elements.html" %}
-<script src="{{ BASE }}/static/js/drishti_simm.js?v={{ ASSET_V }}"></script>
 {% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_simm.js?v={{ ASSET_V }}"></script>{% endblock %}

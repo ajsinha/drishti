@@ -56,7 +56,13 @@ public final class BusinessDates {
 
     /** Today's business date. */
     public LocalDate current() {
-        return calendar.onOrBefore(LocalDate.now(clock.withZone(zone)));
+        return calendar.onOrBefore(today());
+    }
+
+    /** Today's calendar date in the zone, or the fixed one ({@code drishti.business-date.today}). */
+    private LocalDate today() {
+        LocalDate fixed = props.fixedToday();
+        return fixed != null ? fixed : LocalDate.now(clock.withZone(zone));
     }
 
     public LocalDate earliest() {
@@ -72,7 +78,7 @@ public final class BusinessDates {
             return new AsOf(current(), asked == null ? null : asked.knownAt(), asked == null || asked.knownAt() == null);
         }
         LocalDate d = asked.businessDate();
-        if (d.isAfter(LocalDate.now(clock.withZone(zone)))) {
+        if (d.isAfter(today())) {
             throw new DrishtiException(ErrorCode.BAD_BUSINESS_DATE, "business date " + d + " is in the future");
         }
         if (d.isBefore(earliest())) {

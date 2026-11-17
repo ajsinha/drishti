@@ -93,4 +93,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ BASE }}/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_scenario-matrix.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}{{ ELEMENTS_DIR }}/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_scenario-matrix.js?v={{ ASSET_V }}"></script>{% endblock %}

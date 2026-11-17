@@ -51,7 +51,7 @@ afterwards.
 11. [`design`: the Screen Designer over REST](#11-design-the-screen-designer-over-rest)
 12. [`bi` and `tables`](#12-bi-and-tables)
 13. [The risk engines: `var`, `exposure`, `sens`, `frtb`, `simm`, `pivot`](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot)
-14. [`compute`, `contract`, `elements` and `feed`](#14-compute-contract-elements-and-feed)
+14. [`compute`, `contract` and `feed`](#14-compute-contract-and-feed)
 15. [Store loaders: `tools/load-*.sh`](#15-store-loaders-toolsload-sh)
 16. [Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`](#16-generators-toolspackgen-toolssamplegen-toolsrealdata)
 17. [Developer tools](#17-developer-tools)
@@ -83,7 +83,7 @@ codes and, where it helps scripts, `--json`.
 | `approvals`, `change`, `edits` | `approvals` list, show, approve, reject, withdraw, ask; `change` propose, submit, list, show, history; `edits status` | REST | [11](#approvals-the-one-approvals-queue) |
 | `bi`, `tables` | `bi workspace`, `catalogue`, `expr`, `migrate`, `sql`, `model`, `mq`, `transform`, `item`, `dataset`, `runs`, `statement`; `tables` list, check, preview, lineage, offer, migrate | REST; the Java `tables` tool | [12](#12-bi-and-tables) |
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
-| `compute`, `contract`, `elements`, `feed` | reactive connectors; data contracts; Drishti Elements bundles; the data feeds | REST; `tools/contracts.py`; `tools/elements/`; `tools/feeds/` | [14](#14-compute-contract-elements-and-feed) |
+| `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
 | `docs` | `docs shots` | `tools/docs/screenshots.py` (Playwright) | [17](#docs-shots-screenshots) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
 
@@ -3797,7 +3797,7 @@ drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk 
 drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
-## 14. `compute`, `contract`, `elements` and `feed`
+## 14. `compute`, `contract` and `feed`
 
 ### `compute`: reactive connectors
 
@@ -3857,27 +3857,12 @@ python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/dri
 line with what it does and an example, from the packs, their contracts and `tools/commands.builtin.yaml` (the command line's own words and
 forms). `--check` fails when it is stale; a console test runs the same check.
 
-### `elements`: Drishti Elements for other applications
+### Drishti Elements
 
-Drishti Elements (the JavaScript and CSS libraries) for other applications (`tools/elements/cli.py`, with `dist.py`, `pack.py` and
-`dts.py` beside it; the guide [EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)). Offline, Python only; nothing is published.
-
-- `elements pack --libs core,grid,chart [--theme dark|light|<theme>] [--out DIR] [--include-domain banking] [--no-engines] [--maps]`:
-  one `drishti-elements.js` and one `drishti-elements.css` with exactly the named libraries and the ones they require (deepest
-  first), the vendored engines they need (ECharts) unless `--no-engines`, and `drishti-elements-pack.json` (what is inside, with SRI
-  hashes). The output and its first comment name every library and version inside. A library licensed with a domain module
-  (drishti-risk: banking) is refused (exit 1) unless `--include-domain banking`; an unknown library is refused too. `--libs all`:
-  every library the licence allows. Default folder `target/elements/pack`.
-- `elements dist [--out DIR] [--include-domain banking] [--only zip|npm]`: the release archive `drishti-elements-<version>.zip` and the
-  npm tarballs `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`); with banking the archive is
-  `drishti-elements-<version>+banking.zip` and drishti-risk's tarball is added. Default folder `target/elements`.
-- `elements webjar-tree --out DIR [--version V]`: the WebJar's files; the Maven profile runs it
-  (`./mvnw -P elements -pl :drishti-elements package`).
-
-```bash
-python3 tools/drishti.py elements pack --libs core,grid,chart --theme dark --out build/vendor/drishti
-python3 tools/drishti.py elements dist
-```
+Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
+`tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
+([USING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/USING.md)). Drishti has no `elements` command; how the console
+holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md).
 
 ### `feed`: the data feeds
 
@@ -3998,15 +3983,16 @@ of Parquet.
 | `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
-| `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`2.9.11.i6`), `--tag` the release tag (`v2.9.11.i_6`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
+| `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`<version>`), `--tag` the release tag (`v<version>`, an i-step written `i_<n>`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |
-| `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the one Elements version in `drishti_elements.json`): the pack generators write it into a module's `elements:` |
+| `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the pinned Drishti Elements, the folder under `static/vendor/drishti-elements/`): the pack generators write it into a module's `elements:` |
 | `tools/duplicates.py` | the copy-paste detector (PMD CPD through `tools/cpd/pom.xml`, 100 tokens) over Java, JavaScript and Python, excluding tests, generated files, `static/vendor`, `render/1.2.0` and `web/embed`; fails if a language has more duplicated lines than `tools/cpd/baseline.txt` (the gate runs it); `--report [N]` lists the biggest groups, `--write` lowers the baseline, never raising it |
 | `tools/code_volume.py` | lines of Java main and test, console Python and console JavaScript per release tag from git; `--write` replaces the table in [BENCHMARK.md](../admin/BENCHMARK.md#22-code-volume-by-release) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
-| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (EMBED_GUIDE.md section 13). A released version's folder never changes: a change means a new version folder |
+| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale ([ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md#6-the-render-folder-and-the-embed)). A released version's folder never changes: a change means a new version folder |
+| `tools/renderer_fixtures.py` | writes drishti-renderer's harness fixtures (`static/elements/drishti-renderer/drishti_fixtures.json`) from the parity suite's cases; `--check` says whether they are stale |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |

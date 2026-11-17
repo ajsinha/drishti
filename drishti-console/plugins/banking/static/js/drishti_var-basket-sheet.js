@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The basket's sheet (docs/guides/VAR_GUIDE.md section 3.5): drishti-grid with cell editing (ELEMENTS.md 8.2) in drishti-risk's terminal
+/* The basket's sheet (docs/guides/VAR_GUIDE.md section 3.5): drishti-grid with cell editing (Drishti Elements' docs/DESIGN.md 8.2) in drishti-risk's terminal
    layout, one column per kind of part and the Op column (+ or −), made by drishti_var-basket.js. The grid draws only the rows in view
    (a sheet holds 20,000 rows), so 10,000 pasted ids scroll as fast as ten.
 

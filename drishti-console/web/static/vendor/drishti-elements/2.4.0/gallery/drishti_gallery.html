@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  Drishti Elements
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY.
+
+  This file is the proprietary property of Ashutosh Sinha.
+  Copying, use, modification or distribution of this file, via any medium,
+  is not permitted except with the express prior written permission of the
+  copyright holder.
+
+  See the LICENSE file in the root of this repository.
+
+  The Drishti Elements gallery : the live documentation of every component. Static: it needs no
+  server and opens from the file system too (the maps then cannot read their shapes); the console serves it at /elements. The mode by
+  the address: #mode=playground (A, the default) or #mode=docs (B); #c=<component>; #tab=examples|api|a11y|changelog; #o={...} the
+  options. drishti-core is loaded here; the boot script loads every other library of the manifest with its loader (so a library added to
+  drishti_elements.json is in the gallery with no change here). Nothing inline: it runs under a strict CSP.
+-->
+<html lang="en" data-theme="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Elements · the gallery</title>
+<link rel="icon" type="image/svg+xml" href="../brand/drishti_elements-favicon.svg">
+<link rel="stylesheet" href="../css/drishti_tokens.css">
+<link rel="stylesheet" href="../css/drishti_states.css">
+<link rel="stylesheet" href="../css/drishti_command-palette.css">
+<link rel="stylesheet" href="../css/drishti_dock.css">
+<link rel="stylesheet" href="drishti_gallery.css">
+</head>
+<body>
+<div id="gallery" class="gx-root"><p class="gx-note">Loading the gallery…</p></div>
+<script src="../elements/drishti-core/drishti_core.js"></script>
+<script src="drishti_catalogue.js"></script>
+<script src="drishti_gallery-code.js"></script>
+<script src="drishti_gallery-data.js"></script>
+<script src="drishti_gallery-demos.js"></script>
+<script src="drishti_gallery-demos-chart.js"></script>
+<script src="drishti_gallery-demos-inputs.js"></script>
+<script src="drishti_gallery-demos-graph.js"></script>
+<script src="drishti_gallery-demos-tree.js"></script>
+<script src="drishti_gallery-demos-designer.js"></script>
+<script src="drishti_gallery.js"></script>
+<script src="drishti_gallery-page.js"></script>
+<script src="drishti_gallery-demos-bi.js"></script>
+<script src="drishti_gallery-demos-states.js"></script>
+<script src="drishti_gallery-boot.js"></script>
+</body>
+</html>

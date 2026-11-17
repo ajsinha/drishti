@@ -104,5 +104,5 @@
     so the portfolio is still the scope and its VaR the VaR page's.</p>
   {% endif %}
 </div>
-{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
 {% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>{% endblock %}

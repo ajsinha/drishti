@@ -169,7 +169,7 @@ class DatasetRefresherTest {
         DatasetParser.Result r = Layered.dataset(table(refresh));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
-        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null), clock);
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null, null), clock);
         RetryPolicy retry = new RetryPolicy(true, Duration.ofMillis(50), 2.0, Duration.ofMillis(400), 0.0, 3);
         AuditLog audit = new AuditLog() {
             @Override

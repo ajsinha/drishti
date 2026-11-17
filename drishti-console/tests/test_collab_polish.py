@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from core import elements_pin
 
 import pytest
 from fastapi.testclient import TestClient
@@ -273,7 +274,7 @@ def quoted(parts, cells, pin_gen=1742, page_gen="1742"):
         pytest.skip("needs node")
     c = {"id": "cm_1", "revision": 1, "author": "a", "pin": {"generation": pin_gen}, "state": "live", "parts": parts}
     out = subprocess.run(["node", "-e", HARNESS, str(JS / "drishti_discussion-view.js"), json.dumps(cells), json.dumps(c), json.dumps({"pageGen": page_gen}),
-                          str(JS.parent / "elements" / "drishti-core" / "drishti_core.js")],
+                          str(elements_pin.static_path("elements/drishti-core/drishti_core.js"))],
                          capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 

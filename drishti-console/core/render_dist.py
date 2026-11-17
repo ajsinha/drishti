@@ -30,11 +30,12 @@ import re
 from pathlib import Path
 
 from core import element_sheet as es
+from core import elements_pin as _pin
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = json.loads((STATIC / "elements" / "drishti_elements.json").read_text(encoding="utf-8"))["elements"]   # the current renderer: the one version of Drishti Elements (drishti_elements.json); 1.2.0 stays served, frozen, for existing embedders
+VERSION = _pin.VERSION              # the current renderer: the pinned Drishti Elements version (core/elements_pin.py); 1.2.0 stays served, frozen, for existing embedders
 RETIRED = ("2.0.0",)                # the renderer of the Elements before the one version (2.4.0): its paths redirect to the current folder for ONE release (removed in the release after i6)
 DEPRECATION = "the Drishti Render {old} paths are removed in the release after i6: use {new}"
 FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
@@ -106,7 +107,7 @@ def build_sheet(version: str = VERSION) -> tuple[str, dict]:
     """The renderer's sheet (deterministic) and its facts."""
     rules = es.glyph_rules()
     icons = [n for n in icons_used(version) if n in rules]
-    parts = [es._compact(es.container_queries(es.shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in SHEETS]
+    parts = [es._compact(es.container_queries(es.shadow_css(_pin.static_path(s).read_text(encoding="utf-8")))) for s in SHEETS]
     parts.append(ADDENDUM)
     parts.append(es._compact(rules[""]) + "".join(es._compact(rules[n]) for n in icons))
     body = es.prune_tokens(es.inline_tokens("".join(parts), es.fixed_tokens()))   # the scale tokens written in, as in the view sheet

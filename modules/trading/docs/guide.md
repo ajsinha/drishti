@@ -16,7 +16,7 @@
 # The trading module
 
 The module ships the trade blotter (`/live/trade`) and its binding; the steps below are specific to trades. The engine behind the blotter, the page,
-editing, the declaration, the API and the settings are the platform's: [Live results and blotters](../../../docs/guides/LIVE_RESULTS_GUIDE.md).
+editing, the declaration, the API and the settings are the platform's: the *Live results and blotters* guide (Help → Guides; `docs/guides/LIVE_RESULTS_GUIDE.md`).
 
 ## 1. Switch it on (tutorial)
 
@@ -84,7 +84,7 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appl
 
 **A stale edit is refused.** When the trade moved since you saw it, the answer is `409 DRS-9303`:
 *trade MX-20004163 is at version 8, changed by R.DIAZ at 10:02:11; you edited version 7: open it again and edit from what is there*.
-The same guard runs again when the change is applied at the source ([live results, section 8](../../../docs/guides/LIVE_RESULTS_GUIDE.md#8-writing-back-to-the-records-own-source)), so a change that raced another one is refused there too.
+The same guard runs again when the change is applied at the source (the *Live results and blotters* guide, section 8), so a change that raced another one is refused there too.
 
 ## 4. Source systems
 
@@ -103,7 +103,7 @@ rule's `date-pattern` reads the date from the name) goes by the module's rule to
 it; switch `source-swapone` off and it is gone, on and it is back.
 
 A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
-the [live results guide](../../../docs/guides/LIVE_RESULTS_GUIDE.md#8-writing-back-to-the-records-own-source), section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
+the *Live results and blotters* guide, section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
 format of `config/dataload.yaml`; the inbox reads the site's rules first) and a short guide. A connector's source options:
 
 | Option | Meaning |

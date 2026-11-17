@@ -293,7 +293,7 @@ Iceberg and file connectors never write per change.
 The console passes these on as the person: `GET /api/live`, `GET /api/live/{id}/rows[/{entity}]`, `POST /api/live/{id}/edit` and
 `POST /api/live/{id}/stream/{stream}/window`; the stream is the console's channel (`/api/channel?s=live:{id}`, events `hello`, `rows`,
 `resync`). The page is `/live/{id}`; the module's menu entry (`console/plugin.yaml`) links to `/live/trade`. The component is the grid's live
-mode ([ELEMENTS.md](../architecture/ELEMENTS.md) section 5.5).
+mode ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 5.5).
 
 ## 10. Settings
 

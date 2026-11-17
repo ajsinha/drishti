@@ -23,8 +23,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
-GRID_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "elements" / "drishti-grid" / "drishti_grid.js"
+GRID_JS = elements_pin.ROOT / "elements" / "drishti-grid" / "drishti_grid.js"
 needs_node = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node to run drishti-grid's bundle")
 
 CASES = [

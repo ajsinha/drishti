@@ -15,8 +15,9 @@
 """The workbench's page and the review page (QA 2026-10-01 UX-15, ported from Studio's): a heading, a labelled editor, and an
 approved proposal's review page that still shows what it changed."""
 from pathlib import Path
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
-JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "elements" / "drishti-inputs" / "src" / "drishti_code-editor.js").read_text()   # the YAML tab is drishti-inputs' CodeEditor
+JS = (elements_pin.ROOT / "elements" / "drishti-inputs" / "src" / "drishti_code-editor.js").read_text()   # the YAML tab is drishti-inputs' CodeEditor
 
 OLD = "rachana: 1\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
 

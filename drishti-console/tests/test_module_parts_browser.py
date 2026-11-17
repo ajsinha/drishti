@@ -48,6 +48,7 @@ def console(tmp_path_factory):
     app.state.backend = FakeBackend()
     reg = Registry()
     reg.install(app.state.backend, None)
+    reg.listed(app)
     old = app.state.module_parts
     app.state.module_parts = app.state.editions.modules.parts = ModuleParts(tmp_path_factory.mktemp("parts"), old.web, 0.0)
     with socket.socket() as s:

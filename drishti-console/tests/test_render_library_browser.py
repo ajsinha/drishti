@@ -25,9 +25,11 @@ import pytest
 
 import render_cases as cases
 import render_harness as H
+from core import elements_pin as _pin
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-E = "/static/elements/"          # drishti-renderer and the libraries it draws with
+E = _pin.URL + "/elements/"      # the libraries the renderer draws with: Elements' vendored tree (core/elements_pin.py)
+R = "/static/elements/"          # drishti-renderer: the console's own
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +94,7 @@ def test_formats_are_the_libraries_and_round_half_up(lab):
         share: [1 / 3, 1 / 2, 2 / 8].map((x) => C.formatNumber(x * 100, { decimals: 1, grouping: false })),
         compact: [1750000, -1.2e9, 250000, 12345, 3.14159, NaN].map(K.panelCompact), heat: [G.heatBucket(-2, -2, 7), G.heatBucket(7, -2, 7), G.heatBucket(2.5, -2, 7), G.heatBucket(1, 1, 1)],
         tones: [R.toneClass({tone: 'neg'}), R.toneClass({})] };
-    }""" % (E, E, E, E), [NUMBERS, HALVES])
+    }""" % (E, E, E, R), [NUMBERS, HALVES])
     assert got["floats"] == [repr(x) if not math.isinf(x) else "inf" for x in NUMBERS]
     assert got["rounds"] == ["1", "2", "3", "3", "2.68", "0.13", "36.5", "33.4"]     # the digits, half up on the decimal value (the sign is the format's)
     assert got["share"] == ["33.3", "50.0", "25.0"]
@@ -109,7 +111,7 @@ def test_the_dom_rules_refuse_markup_handlers_styles_and_script_urls(lab):
       const el = D.h('span', { onclick: 'alert(1)', style: 'color:red', title: 't', 'data-x': '1', 'aria-label': 'a', href: 'javascript:alert(1)', srcdoc: 'x' }, '<img src=x onerror=alert(1)>');
       return { urls: urls.map((u) => D.safeUrl(u)), names: ['onclick', 'ONLOAD', 'style', 'srcdoc', 'src', 'href', 'data-ev', 'aria-pressed', 'class', 'formaction'].map(D.attrAllowed),
         attrs: [...el.attributes].map((a) => a.name).sort(), children: el.childNodes.length, kind: el.firstChild.nodeType, imgs: el.querySelectorAll('img').length };
-    }""" % (E, E))
+    }""" % (E, R))
     assert got["urls"] == [None, None, None, None, None, None, "/v/trade/X", "?dr.p=1", "#x", "https://www.sec.gov/x", "http://a/b"]
     assert got["names"] == [False, False, False, False, False, True, True, True, True, False]
     assert got["attrs"] == ["aria-label", "data-x", "title"]
@@ -285,7 +287,7 @@ def test_rows_and_bars_with_events_say_so(lab):
 def test_a_column_sorts_as_the_console_sorts_it(browser, site):
     vm = cases.more_shapes()
     site.add_vm("sorting", vm)
-    html = H.console_html(vm).replace("</body>", '<script src="/static/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
+    html = H.console_html(vm).replace("</body>", '<script src="/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
                                       '<script src="/static/js/drishti_tables.js"></script></body>')
     site.add_console("sorting", html)
     orders = []

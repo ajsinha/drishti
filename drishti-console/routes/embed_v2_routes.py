@@ -40,6 +40,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core import about_index, controls
 from core import element_dist as dist
+from core import elements_pin as _pin
 from core import render_dist as rd
 from core.backend import BackendError
 from core.embed import EmbedError
@@ -61,16 +62,19 @@ SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "dr
 VENDOR = re.compile(r"(echarts/echarts\.min\.js|echarts-gl/echarts-gl\.min\.js|echarts/maps/(world-countries|world-points)\.json|echarts/maps/regions/[A-Z]{3}\.json"
                     r"|bootstrap-icons/fonts/bootstrap-icons\.woff2)")
 CSS = {"table-chart"}
+LIFECYCLE = ("Deprecation", "Sunset", "Link")      # the lifecycle headers (RFC 9745, RFC 8594, the successor link)
 
 
 async def cors(request: Request, response: Response) -> Response:
-    """v1's allow-list CORS, with this API's version and lifecycle (``embed.lifecycle."2"``)."""
+    """v1's allow-list CORS, with this API's version and lifecycle (``embed.lifecycle."2"``). A response's own lifecycle headers (a retired
+    path's redirect says its deprecation, :func:`deprecated`) are kept over the API's: only v1's are replaced."""
+    own = {name: response.headers[name] for name in LIFECYCLE if name in response.headers}
     response = await v1.cors(request, response)
     response.headers["Drishti-Embed-Api"] = API
-    for name in ("Deprecation", "Sunset", "Link"):
+    for name in LIFECYCLE:
         if name in response.headers:
             del response.headers[name]
-    for name, value in dist.lifecycle(request.app.state.embed.settings, "2").get("headers", {}).items():
+    for name, value in {**dist.lifecycle(request.app.state.embed.settings, "2").get("headers", {}), **own}.items():
         response.headers[name] = value
     response.headers["Access-Control-Expose-Headers"] = "Drishti-Embed-Api, Drishti-Subscribe"
     return response
@@ -178,9 +182,9 @@ async def elements(request: Request, version: str):
 async def library(request: Request, library: str, rest: str):
     """A module of the Elements libraries the current renderer is drawn with (revalidated: the libraries are not per-version folders yet)."""
     rel = f"{library}/{rest}"
-    if not LIBRARY_FILE.fullmatch(rel) or not (STATIC / "elements" / rel).is_file():
+    if not LIBRARY_FILE.fullmatch(rel) or not _pin.static_path("elements/" + rel).is_file():   # Drishti Elements' from the vendored copy
         return await refuse(request, 404, "DRS-9404", f"no such file: {rel}")
-    return await static(request, STATIC / "elements" / rel)
+    return await static(request, _pin.static_path("elements/" + rel))
 
 
 @router.get("/js/{name}.js")
@@ -201,9 +205,16 @@ async def sheet(request: Request, name: str):
 
 @router.get("/vendor/{rest:path}")
 async def vendor(request: Request, rest: str):
-    if not VENDOR.fullmatch(rest) or not (STATIC / "vendor" / rest).is_file():
+    pinned = f"drishti-elements/{_pin.VERSION}/"
+    if rest.startswith(pinned):                   # the vendored Drishti Elements, as the renderer's modules import it (beside the static root)
+        inner = rest[len(pinned):]
+        ok = (inner.startswith("elements/") and LIBRARY_FILE.fullmatch(inner[len("elements/"):])) or (inner.startswith("vendor/") and VENDOR.fullmatch(inner[len("vendor/"):]))
+        if not ok or not (_pin.ROOT / inner).is_file():
+            return await refuse(request, 404, "DRS-9404", f"no such file: {rest}")
+        return await static(request, _pin.ROOT / inner)
+    if not VENDOR.fullmatch(rest) or not _pin.static_path("vendor/" + rest).is_file():   # the engines come inside Drishti Elements
         return await refuse(request, 404, "DRS-9404", f"no such file: {rest}")
-    return await static(request, STATIC / "vendor" / rest)
+    return await static(request, _pin.static_path("vendor/" + rest))
 
 
 # -- the data: the ViewModel and its parts as JSON, as the embed caller (masked) --------------------------------------------------

@@ -15,7 +15,9 @@
 -->
 # Runbook: Drishti Elements becomes its own project
 
-A plan to be carried out later, step by step. Nothing in it is built. It is written so that a builder follows it without making
+**Carried out in i6** (Drishti Elements 2.4.0, tag v2.4.0; the Drishti side: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md)); the paths below are of the source tree before the split. The later phase (an open licence, npm, the CDNs) and the open questions still stand.
+
+A plan carried out step by step. It is written so that a builder follows it without making
 choices: every choice is made here, and where the facts on the day differ from what is written, the step says **STOP** and whom to ask.
 
 **This runbook is the separation only.** Drishti Elements moves into its own repository with its history, its own build, tests and

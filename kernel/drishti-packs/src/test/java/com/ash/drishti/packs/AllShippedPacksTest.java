@@ -47,7 +47,9 @@ class AllShippedPacksTest {
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
     static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo",
             // the public-sector module's packs, filled by their daily feeds (docs/guides/WORLD_DATA_GUIDE.md)
-            "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events");
+            "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events",
+            // the genomics module's showcase packs, read from the demo lake like funds and us-equities (docs/architecture/GENOMICS_SHOWCASE.md)
+            "genomics-showcase", "protein-engineering");
 
     @Test
     void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {

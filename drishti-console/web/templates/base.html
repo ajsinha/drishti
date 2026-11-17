@@ -35,10 +35,10 @@
   {% if FAVICON %}<link rel="icon" href="{{ FAVICON | u }}">{% else %}<link rel="icon" href="{{ BASE }}/favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/svg+xml" href="{{ BASE }}/static/img/icons/drishti_favicon.svg?v={{ ASSET_V }}">{% endif %}
   <script src="{{ BASE }}/static/js/drishti_theme-init.js?v={{ ASSET_V }}"></script>
-  <script src="{{ BASE }}/static/elements/drishti-core/drishti_core.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/elements/drishti-data/drishti_data.js?v={{ ASSET_V }}"></script>{# Drishti Elements' core, in the head so every script of the page finds it: formats, theme, API client, bus, a11y, resize handles (data-resize), keys, dialogs, toasts; the loader of the other libraries #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-core/drishti_core.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_elements-host.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-data/drishti_data.js?v={{ ASSET_V }}"></script>{# Drishti Elements' core, in the head so every script of the page finds it: formats, theme, API client, bus, a11y, resize handles (data-resize), keys, dialogs, toasts; the loader of the other libraries #}
   <link rel="stylesheet" href="{{ BASE }}/static/vendor/bootstrap/css/bootstrap.min.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/vendor/bootstrap-icons/bootstrap-icons.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_tokens.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_tokens.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_theme.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_terminal.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_under-construction.css?v={{ ASSET_V }}">
@@ -50,15 +50,15 @@
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_busy.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_colfilter.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_controls.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}">{# drishti-inputs: the as-of date, every date field, the multi-selects, pickers and forms #}
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}">{# drishti-inputs: the as-of date, every date field, the multi-selects, pickers and forms #}
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_touch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_server-watch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_phone.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_resize.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_chips.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_states.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_command-palette.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dock.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_resize.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_chips.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_states.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_command-palette.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/css/drishti_dock.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="{{ BASE }}/static/css/drishti_keys.css?v={{ ASSET_V }}">{# the ? overlay of the one keymap and the one search box #}
   {% if me %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_explain.css?v={{ ASSET_V }}">{% endif %}
   {% block head %}{% endblock %}
@@ -75,10 +75,12 @@
   <script src="{{ BASE }}/static/js/drishti_server-watch.js?v={{ ASSET_V }}"></script>
   <script src="{{ BASE }}/static/js/drishti_live-hub.js?v={{ ASSET_V }}"></script>
   <script src="{{ BASE }}/static/js/drishti_channel.js?v={{ ASSET_V }}"></script>
-  <script src="{{ BASE }}/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script>{# drishti-inputs: drishti_app.js upgrades the page's date fields and long checkbox lists with it #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script>{# drishti-inputs: drishti_app.js upgrades the page's date fields and long checkbox lists with it #}
   <script src="{{ BASE }}/static/js/drishti_app.js?v={{ ASSET_V }}"></script>
   <script src="{{ BASE }}/static/js/drishti_busy.js?v={{ ASSET_V }}"></script>
-  <script src="{{ BASE }}/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script>{# drishti-grid: every table's sort, filter and pages (its console tables, drishti_tables.js hosts them) #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{# ECharts, drishti-chart's engine (its "scripts" in drishti-elements.json): a page that loads drishti-chart by tag loads its engine first, as the Elements loader would; the loader skips the engine of a library already on the page #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{# drishti-chart before drishti-grid: the grid requires it (its bullet cells; drishti-elements.json), so every page has it once, after its engine #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script>{# drishti-grid: every table's sort, filter and pages (its console tables, drishti_tables.js hosts them) #}
   <script src="{{ BASE }}/static/js/drishti_records.js?v={{ ASSET_V }}"></script>{# after drishti-grid, in order (no defer: the console pages load no deferred or module scripts); records everywhere: every table of records is the grid (live or static), mounted from a data-records host #}
   <script src="{{ BASE }}/static/js/drishti_colfilter.js?v={{ ASSET_V }}"></script>
   <script src="{{ BASE }}/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>

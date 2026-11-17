@@ -714,6 +714,11 @@ public final class ModuleConformance {
         public Map<String, Object> lens(String name) {
             return Map.of();
         }
+
+        @Override
+        public <V> com.ash.drishti.kernel.api.module.PersonCache<V> cache(int size, long ttlMillis) {
+            return new com.ash.drishti.module.runtime.KernelPersonCache<>(size, ttlMillis);
+        }
     };
 
     /**

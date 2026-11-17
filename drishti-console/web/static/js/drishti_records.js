@@ -22,7 +22,8 @@
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
-  var CSS = [drishti_url('/static/elements/drishti-grid/drishti_grid.css'), drishti_url('/static/elements/drishti-inputs/drishti_inputs.css'), drishti_url('/static/css/drishti_records.css')];
+  var CORE = window.Drishti.elements.core;    // the vendored Drishti Elements' sheets, by drishti-core's static root (base.html loads it first)
+  var CSS = [CORE.staticUrl('elements/drishti-grid/drishti_grid.css'), CORE.staticUrl('elements/drishti-inputs/drishti_inputs.css'), drishti_url('/static/css/drishti_records.css')];
   var tag = document.querySelector('script[src*="drishti_records.js"]'), version = ((tag && tag.getAttribute('src')) || '').split('?')[1] || '';
   var NONE = { subscribe: function () { return function () {}; } };
 

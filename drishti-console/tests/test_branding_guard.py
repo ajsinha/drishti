@@ -25,6 +25,7 @@ from fastapi.testclient import TestClient
 from conftest import CONSOLE
 from core.app import create_app
 from core.config import load_settings
+import server_answers
 
 WEB = CONSOLE / "web"
 # the word on its own: not Drishti.Channel, X-Drishti-User, DRISHTI_PACKS or the scripts' one namespace (window.Drishti.Channel)
@@ -74,19 +75,16 @@ def test_the_guard_sees_a_literal_and_lets_identifiers_through(tmp_path):
     assert [f.split(":")[1] for f in found] == ["2", "4"], found
 
 
-def _acme(tmp_path, **brand) -> str:
-    """A site's own distribution file (brand: is the one home of the product's name and notices); returns its path."""
-    import yaml
-    f = tmp_path / "drishti.acme.yaml"
-    f.write_text(yaml.safe_dump({"format": 1, "distribution": "drishti.acme", "version": "1.0.0", "modules": "all",
-                                 "brand": {"product": "Acme Insight", **brand}}), encoding="utf-8")
-    return f"--distribution={f}"
+def _acme(app, **brand) -> None:
+    """The console follows a server whose distribution file names the product Acme Insight (brand: is the one home of the product's name
+    and notices; the server compiles it, server_answers.branded)."""
+    assert app.state.editions.follow(server_answers.branded(product="Acme Insight", **brand))
 
 
-def test_a_rebranded_console_names_the_product_and_owner_from_configuration(backend, tmp_path):
-    app = create_app(load_settings(CONSOLE / "config", [_acme(tmp_path, owner="Jane Doe"), "--ui.owner_email=jane@acme.test",
-                                                       "--ui.product_meaning=", "--ui.product_native="]))
+def test_a_rebranded_console_names_the_product_and_owner_from_configuration(backend):
+    app = create_app(load_settings(CONSOLE / "config", ["--ui.owner_email=jane@acme.test", "--ui.product_meaning=", "--ui.product_native="]))
     app.state.backend = backend
+    _acme(app, owner="Jane Doe")
     html = TestClient(app).get("/about").text
     assert "Acme Insight Elements" in html and "Acme Insight*net" in html and "<b>Jane Doe</b>" in html and "mailto:jane@acme.test" in html
     assert "Ashutosh Sinha</b>" not in html
@@ -112,9 +110,10 @@ def test_the_menus_and_the_edition_pages_never_write_the_product_name():
     assert not [t for t in shown if NAME.search(t)]
 
 
-def test_a_rebranded_console_has_no_drishti_in_its_manifest_title_or_menus(backend, tmp_path):
-    app = create_app(load_settings(CONSOLE / "config", [_acme(tmp_path, tagline="Risk, simply")]))
+def test_a_rebranded_console_has_no_drishti_in_its_manifest_title_or_menus(backend):
+    app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
+    _acme(app, tagline="Risk, simply")
     c = TestClient(app)
     assert c.get("/manifest.webmanifest").json()["name"] == "Acme Insight"
     page = c.get("/t").text

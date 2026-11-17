@@ -165,7 +165,7 @@ public final class HistoryBench {
             var props = new SourcesProperties(Map.of("trade", "bench-lake"), null, Map.of(), Duration.ofSeconds(10), null, Map.of());
             SourceRouter router = new SourceRouter(new SourceRegistry(List.of(source), props, new JsonCodec()), props,
                     Executors.newVirtualThreadPerTaskExecutor());
-            BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null),
+            BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null),
                     Clock.fixed(END.atTime(20, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
             HistoryProperties hp = new HistoryProperties(null, null, null, null, null, null, null, null, cacheMb);
             service = new HistoryService(router, dates, hp, new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID", "TRADE_STATUS"))),

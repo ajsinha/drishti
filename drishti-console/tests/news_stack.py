@@ -135,11 +135,11 @@ class Stack:
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
         if self.lake:
-            from var_stack import shared_connectors
+            from var_stack import SHARED_TODAY, shared_connectors
             folder = Path(self.shared)                                                      # the ONE shared read-only lake (var_stack.shared_folder)
             lake = folder / "delta"
             shared_connectors(folder, work / "connectors")
-            env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
+            env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"), **SHARED_TODAY)   # its today: the lake's last date
             if self.offline:
                 env["DRISHTI_OFFLINE"] = "true"
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=self.tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,

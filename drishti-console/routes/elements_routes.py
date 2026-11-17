@@ -11,30 +11,35 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The Drishti Elements gallery (docs/architecture/ELEMENTS.md section 10): ``/elements`` (and ``/elements/gallery``) open the static
-gallery page, ``static/gallery/drishti_gallery.html``, with the address's query kept (``?mode=docs&c=pivot&tab=api``). The page is the
-same file a developer opens from the file system: it needs no server. ``/elements`` is a Build page: the edition gate answers 404 when the
+"""The Drishti Elements gallery (docs/architecture/ELEMENTS_IN_DRISHTI.md): ``/elements`` (and ``/elements/gallery``) open the gallery of
+the vendored Drishti Elements release tree (``static/vendor/drishti-elements/<version>/gallery/drishti_gallery.html``, offline), with the
+address's query kept (``?mode=docs&c=pivot&tab=api``) and the hosted modules' visuals asked for (``?visuals=/api/elements/visuals``). The
+page is the same file a developer opens from the release tree: it needs no server. ``/elements`` is a Build page: the edition gate answers 404 when the
 build feature is off for the person (core/edition.py FEATURE_PATHS), and Build → Learn lists it (config/sitemap.yaml)."""
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core import elements_pin as _pin
+
 router = APIRouter(include_in_schema=False)
 
-#: the gallery page, under the console's static root
-PAGE = "/static/gallery/drishti_gallery.html"
+#: the gallery page, inside the vendored Drishti Elements
+PAGE = _pin.URL + "/gallery/drishti_gallery.html"
+#: where the gallery asks for the hosted modules' visual types (the gallery's page option ?visuals=)
+VISUALS = "/api/elements/visuals"
 
 
 @router.get("/elements")
 @router.get("/elements/gallery")
 async def gallery(request: Request) -> RedirectResponse:
     """The gallery page, its query kept (the gallery reads its mode, component, tab and options from the address)."""
-    query = ("?" + request.url.query) if request.url.query else ""
-    return RedirectResponse(PAGE + query, status_code=302)
+    query = "&".join(q for q in (request.url.query, "visuals=" + VISUALS) if q)
+    return RedirectResponse(PAGE + "?" + query, status_code=302)
 
 
 @router.get("/api/elements/visuals")
 async def module_visuals(request: Request) -> JSONResponse:
-    """The visual types the hosted modules bring (the custom-visual SDK, ELEMENTS.md section 7.4): each kind with its module, title and the
+    """The visual types the hosted modules bring (the custom-visual SDK, Drishti Elements' docs/DESIGN.md): each kind with its module, title and the
     library file that registers it in drishti-chart's registry. The gallery loads them and shows a page per kind; a module that is off
     or removed (or off for this person) brings none. Nothing of any person is kept."""
     from core import modules as _modules
