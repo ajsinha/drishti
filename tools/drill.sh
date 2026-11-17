@@ -306,6 +306,11 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
     --python "$PY" --parallel "$reruns"
 }
 
+gate_docs() {   # the gate's console tests: they run the server jar (resolve --json), so they wait for the one the gate builds
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
+  console_files gate 4 2 "${GATE_CONSOLE[@]}"
+}
+
 # One Java 21 build of the working tree: compiles every module once (Error Prone, Javadoc with doclint, Spotless, the enforcer's
 # bytecode rule), packages the jars the console and the tool tests start, and runs only the rule tests. Maven threads build the
 # modules side by side; nothing is installed into ~/.m2.
@@ -630,7 +635,7 @@ fi
 t=$SECONDS
 rm -f "$LOGS/gate-jar.ready" "$LOGS/gate-java.secs"
 start_job gate-static gate_static
-start_job gate-docs console_files gate 4 2 "${GATE_CONSOLE[@]}"
+start_job gate-docs gate_docs
 start_job gate-checks gate_checks
 gate_jobs=(gate-static gate-docs gate-checks)
 if [[ "$MODE" != docs ]]; then start_job gate-java gate_java; gate_jobs+=(gate-java); fi
