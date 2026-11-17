@@ -13,9 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Modules, from GET /api/v1/admin/modules as `data`: one row per module (state, domain, why it is off), the chosen module's detail beside
-   it. A module is a file beside the server and a restart: nothing on this page installs or removes one (the page itself is rebuilt on
-   Drishti Elements in the next increment). Console tables and links only. #}
+{# Admin → Modules (mock-up C, docs/lenses/mockups/admin-modules/C.html), from GET /api/v1/admin/modules (contract admin-modules/1) as `data`: summary tiles,
+   the "nodes disagree" banner, the nodes x modules matrix (a console table, drishti-grid: the cell is the content hash each node booted, red when it differs
+   from the majority; the filter chips set the grid's own filter), the chosen module's detail, the install steps (commands only: nothing deploys from the
+   browser) and saved work that needs a module that is not installed. Drishti Elements and console tokens only. #}
 {% extends "base.html" %}
 {% block title %}Modules · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
@@ -23,48 +24,99 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{% set STATE = {'loaded': ('st-ok', 'LOADED'), 'off': ('', 'OFF'), 'restart': ('st-bad', 'RESTART NEEDED')} %}
+{% set nodes = data.nodes or [] %}{% set mods = data.modules or [] %}{% set c = data.counts or {} %}{% set inst = data.install or {} %}
+{% macro cellclass(cell) %}{{ 'bd' if cell.differs or cell.state in ('stale', 'refused') else ('no' if cell.state in ('off', 'absent', 'unknown', 'not-placed') else 'ok') }}{% endmacro %}
 <div class="adm ib" data-admin-modules>
   {% with tab='modules' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="mod-head">
     <span><h1 class="ws-h">Modules</h1></span>
+    {% if data.kernel %}<span class="text-muted-d" data-modules-sum>{{ c.modules }} installed &middot; {{ c.on }} on &middot; {{ c.off }} off &middot; {{ c.nodes }} node{{ '' if c.nodes == 1 else 's' }} &middot; kernel {{ data.kernel }}</span>{% endif %}
   </div>
   <p class="text-muted-d ib-intro">A module is a file beside the server's jar and a restart: copy the <span class="mono">.dmod</span> into the modules folder and
-    restart the server (a cluster: every node, one after another). See the <a href="{{ BASE }}/help/admin">Administration guide</a>.</p>
+    restart the server (a cluster: every node, one after another). See the <a href="{{ BASE }}/help/admin#25-modules">Administration guide</a>.</p>
   {% if error %}<p class="adm-warn" role="alert" data-modules-error>The server did not give the modules: {{ error }}</p>{% endif %}
-
-  <div class="mod-split">
-    <section class="mod-card" aria-labelledby="modules-h">
-      <h2 class="ib-h2" id="modules-h">Modules ({{ (data.modules or [])|length }})</h2>
-      {% if not data.modules %}<p class="text-muted-d" data-modules-none>No module is installed.</p>{% else %}
-      <div class="tbl-wrap"><table class="tbl adm-tbl" data-modules-table>
-        <caption class="visually-hidden">The modules of this installation: domain and state</caption>
-        <thead><tr><th scope="col">Module</th><th scope="col">Domain</th><th scope="col">State</th></tr></thead>
-        <tbody>
-        {% for m in data.modules %}{% set st = 'restart' if m.restartNeeded else ('loaded' if m.loaded else 'off') %}{% set look = STATE[st] %}
-          <tr data-module="{{ m.id }}" data-state="{{ st }}"{% if chosen and chosen.id == m.id %} class="mod-row-on"{% endif %}>
-            <td><a href="{{ BASE }}/admin/modules?module={{ m.id|urlencode }}"><b>{{ m.id }}</b></a><div class="text-muted-d">{{ m.title }}</div></td>
-            <td>{{ m.domain or '-' }}</td>
-            <td><span class="st {{ look[0] }}">{{ look[1] }}</span></td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table></div>
-      {% endif %}
-    </section>
-
-    {% if chosen %}
-    <section class="mod-card" aria-labelledby="module-h" data-module-detail="{{ chosen.id }}">
-      <h2 class="ib-h2" id="module-h">{{ chosen.id }}</h2>
-      <dl class="mod-facts">
-        <dt>Loaded</dt><dd>{{ 'yes' if chosen.loaded else 'no' }}</dd>
-        <dt>Switched on</dt><dd>{{ 'yes' if chosen.enabled else 'no' }}{% if chosen.switchSource %} · {{ chosen.switchSource }}{% endif %}</dd>
-        <dt>Licensed</dt><dd>{{ 'yes' if chosen.licensed else 'no' }}</dd>
-        <dt>Why</dt><dd>{{ chosen.reason or '-' }}</dd>
-      </dl>
-    </section>
-    {% endif %}
+{% if not error %}
+  <div class="mod-tiles" data-modules-tiles>
+    <div class="mod-tile" data-tile="modules"><div class="mod-tl">Modules</div><div class="mod-tv">{{ c.modules }}</div><div class="mod-ts">{{ c.on }} on &middot; {{ c.off }} off</div></div>
+    <div class="mod-tile" data-tile="nodes"><div class="mod-tl">Nodes</div><div class="mod-tv {{ 'mod-bad' if c.nodesDiffer else 'mod-ok' }}">{{ c.nodesAgree }} / {{ c.nodes }}</div><div class="mod-ts">{{ 'agree' if not c.nodesDiffer else (c.nodesDiffer ~ ' differ') }}</div></div>
+    <div class="mod-tile" data-tile="fingerprint"><div class="mod-tl">Fingerprint</div><div class="mod-tv mono">{{ (data.fingerprint or {}).short or '-' }}</div><div class="mod-ts">{{ 'all nodes' if (data.fingerprint or {}).agree else 'the majority' }}</div></div>
+    <div class="mod-tile" data-tile="problems"><div class="mod-tl">Problems</div><div class="mod-tv {{ 'mod-bad' if (c.problems or 0) - (c.warnings or 0) else '' }}">{{ (c.problems or 0) - (c.warnings or 0) }}</div><div class="mod-ts">{{ c.warnings or 0 }} warning{{ '' if c.warnings == 1 else 's' }}</div></div>
+    <div class="mod-tile" data-tile="stale"><div class="mod-tl">Stale</div><div class="mod-tv {{ 'mod-warn' if c.stale else '' }}">{{ c.stale or 0 }}</div><div class="mod-ts">built for another kernel</div></div>
+    <div class="mod-tile" data-tile="notLoaded"><div class="mod-tl">Not loaded</div><div class="mod-tv">{{ c.notLoaded or 0 }}</div><div class="mod-ts">refused or waiting</div></div>
   </div>
+
+  {% for d in data.disagree or [] %}{% set dm = (mods | selectattr('id', 'equalto', d.module) | list | first) or {} %}
+  <div class="adm-warn mod-banner" role="alert" data-modules-banner data-banner-module="{{ d.module }}"><span class="st st-bad">Nodes disagree</span>
+    <span class="mod-banner-t">{{ d.text }}</span>
+    <button type="button" class="btn-pill ib-btn" data-copy-fix="{{ (inst.text or '')|replace('<file>', dm.file or (d.module ~ '.dmod')) }}">Copy fix command</button></div>
+  {% endfor %}
+  <p class="ib-said" data-modules-said role="status" aria-live="polite"></p>
+
+  <section class="mod-card" aria-labelledby="modules-h">
+    <h2 class="ib-h2" id="modules-h">Nodes &times; modules</h2>
+    <p class="mod-filters" role="group" aria-label="Show modules" data-modules-chips>
+      {% for k, label in [('', 'all'), ('problem', 'problems'), ('off', 'off'), ('development', 'development')] %}<button type="button" class="drishti-chip mod-chip{{ ' mod-chip-on' if not k else '' }}" data-filter="{{ k }}" aria-pressed="{{ 'true' if not k else 'false' }}">{{ label }}</button>{% endfor %}
+    </p>
+    {% if not mods %}<p class="text-muted-d" data-modules-none>No module is installed.</p>{% else %}
+    <div class="tbl-wrap mod-matrix"><table class="tbl adm-tbl" data-modules-table>
+      <caption class="visually-hidden">Every module and the content hash each node booted</caption>
+      <thead><tr><th scope="col">Module</th><th scope="col">Status</th><th scope="col">Version</th>{% for n in nodes %}<th scope="col" data-node="{{ n.id }}">{{ n.id }}{% if n.self %} *{% endif %}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for m in mods %}
+        {% set probs = m.problems | selectattr('severity', 'equalto', 'problem') | list %}{% set warns = m.problems | selectattr('severity', 'equalto', 'warning') | list %}
+        {% set status = 'problem' if probs else ('warning' if warns else ('off' if not m.on else 'ok')) %}
+        <tr data-module="{{ m.id }}" data-status="{{ status }}" data-state="{{ m.state }}"{% if chosen and chosen.id == m.id %} class="mod-row-on"{% endif %}>
+          <td><a href="{{ BASE }}/admin/modules?module={{ m.id|urlencode }}" data-pick="{{ m.id }}"><b>{{ m.id }}</b></a><div class="text-muted-d">{{ m.title }}</div></td>
+          <td><span class="st {{ 'st-bad' if probs else ('st-warn' if warns else ('' if not m.on else 'st-ok')) }}">{{ status }}</span>{% if m.origin and m.origin not in ('first-party',) %} <span class="text-muted-d">{{ m.origin }}</span>{% endif %}</td>
+          <td class="mono">{{ m.version or '-' }}</td>
+          {% for cell in m.cells %}<td data-cell="{{ cell.node }}" data-differs="{{ 'true' if cell.differs else 'false' }}"><span class="mod-cell mod-{{ cellclass(cell)|trim }}" title="{{ cell.state }}{% if cell.contentHash %} {{ cell.contentHash }}{% endif %}">{{ cell.short if (cell.short and cell.state in ('loaded', 'on', 'leaving', 'off')) else cell.state }}</span></td>{% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    <p class="text-muted-d mod-note">A cell is the content hash that node booted; red when it differs from the majority. * this node.</p>
+    {% endif %}
+  </section>
+
+  {% for m in mods %}
+  <section class="mod-card" aria-labelledby="module-h-{{ m.id }}" data-module-detail="{{ m.id }}"{% if not chosen or chosen.id != m.id %} hidden{% endif %}>
+    <h2 class="ib-h2" id="module-h-{{ m.id }}">{{ m.id }} <span class="text-muted-d">{{ m.title }}</span></h2>
+    <dl class="mod-facts">
+      <dt>Version</dt><dd class="mono">{{ m.version or '-' }}</dd>
+      <dt>Origin</dt><dd>{{ m.origin or '-' }}</dd>
+      <dt>Content hash</dt><dd class="mono">{{ m.contentHash or '-' }}</dd>
+      <dt>File</dt><dd class="mono">{{ m.file or '-' }}</dd>
+      <dt>Switch</dt><dd data-detail-switch>{{ 'on' if m.on else 'off' }}{% if m.reason %} &middot; {{ m.reason }}{% endif %}{% if m.switchSource %} <span class="text-muted-d">({{ m.switchSource }})</span>{% endif %}</dd>
+      <dt>Licensed</dt><dd>{{ 'yes' if m.licensed else 'no' }}</dd>
+      <dt>Parts placed</dt><dd>{% for node, parts in (m.parts or {}).items() %}<div><span class="mono">{{ node }}</span>: {% for p in parts %}<span class="drishti-chip">{{ p }}</span> {% else %}<span class="text-muted-d">none</span>{% endfor %}</div>{% endfor %}</dd>
+      <dt>Needs</dt><dd>{% set b = m.brings or {} %}{% set need = b.get('needs') or b.get('requires') or [] %}{{ need|join(', ') if need else '-' }}</dd>
+      <dt>Problems</dt><dd>{% for p in m.problems %}<div data-problem-kind="{{ p.kind }}"><span class="st {{ 'st-bad' if p.severity == 'problem' else 'st-warn' }}">{{ p.kind }}</span> <span class="mono">{{ p.node }}</span> {{ p.text }}</div>{% else %}none{% endfor %}</dd>
+    </dl>
+  </section>
+  {% endfor %}
+
+  <section class="mod-card" aria-labelledby="install-h" data-modules-install>
+    <h2 class="ib-h2" id="install-h">Install or upgrade</h2>
+    <p class="text-muted-d">{{ inst.note }}</p>
+    {% if inst.modulesFolder %}<p>Modules folder: <span class="mono">{{ inst.modulesFolder }}</span></p>{% endif %}
+    <pre class="mod-cmd" data-install-text>{{ inst.text }}</pre>
+    <p><button type="button" class="btn-pill ib-btn" data-copy-fix="{{ inst.text or '' }}">Copy commands</button></p>
+  </section>
+
+  <section class="mod-card" aria-labelledby="saved-h" data-modules-saved>
+    <h2 class="ib-h2" id="saved-h">Saved work that needs a module that is not installed</h2>
+    {% if not saved %}<p class="text-muted-d" data-saved-none>No saved work waits for a module.</p>{% else %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-saved-table>
+      <caption class="visually-hidden">Saved work and the modules it needs that are off or not installed</caption>
+      <thead><tr><th scope="col">Saved work</th><th scope="col">Needs</th><th scope="col">State</th></tr></thead>
+      <tbody>{% for it in saved %}{% for n in it.needs %}
+        <tr data-saved="{{ it.ref }}"><td>{{ it.name }} <span class="text-muted-d">{{ it.kind }}</span></td><td class="mono">{{ n.module }}</td><td><span class="st st-warn">{{ n.words }}</span></td></tr>
+      {% endfor %}{% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+  </section>
+{% endif %}
 </div>
 {% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_admin-modules.js?v={{ ASSET_V }}"></script>{% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}

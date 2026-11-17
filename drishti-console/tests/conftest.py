@@ -660,6 +660,8 @@ class FakeBackend:
             return {"name": path.rsplit("/", 1)[1], **body}
         if path == "/role-definitions/admin" and method == "DELETE":
             raise BackendError(400, "DRS-5001", "'admin' is a built-in role")
+        if path == "/modules" and method == "GET":           # Admin -> Modules (contract admin-modules/1), the server's recorded answer
+            return server_answers.admin_modules()
         if path == "/distributions":                         # the server's compiled distributions (recorded, tests/answers)
             rows = []
             for name in ("all", "finance", "genomics", "risk"):

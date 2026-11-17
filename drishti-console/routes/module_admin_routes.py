@@ -45,7 +45,22 @@ async def modules_page(request: Request, module: str = ""):
         data, error = {}, e.detail
     mods = data.get("modules") or []
     chosen = next((m for m in mods if m.get("id") == module), mods[0] if mods else None)
-    return render(request, "admin/modules.html", data=data, error=error, chosen=chosen, me=me)
+    saved = await saved_needing_modules(request) if mods and any(m.get("state") != "loaded" or not m.get("on") for m in mods) else []
+    return render(request, "admin/modules.html", data=data, error=error, chosen=chosen, saved=saved, me=me)
+
+
+async def saved_needing_modules(request: Request) -> list[dict]:
+    """Saved work (the Build home's kinds) that needs a module that is off or not installed: ``[{ref, name, kind, needs: [{module, words}]}]``;
+    empty when the server or a source cannot say, so the page never breaks on it."""
+    try:
+        from core import build_registry
+        reg = build_registry.loaded()
+        rows = await build_registry.gather(request, [t for t in reg.types() if t.group != "work"])
+        items = [it for v in rows.values() for it in v or []]
+        found = await needs(request, [{"id": it.ref, "text": " ".join([it.name, it.kind, it.href, *it.uses, repr(it.extra)])} for it in items])
+    except Exception:  # noqa: BLE001 - an unavailable source leaves the section empty
+        return []
+    return [{"ref": it.ref, "name": it.name, "kind": it.kind, "needs": found[it.ref]} for it in items if found.get(it.ref)]
 
 
 def _hosted(request: Request, module: str):

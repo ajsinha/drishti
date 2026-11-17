@@ -22,6 +22,11 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **Admin → Modules as mock-up C (I8b).** The page is cluster-first, on Drishti Elements and one fetch of `GET /api/v1/admin/modules`: summary tiles, the
+  *Nodes disagree* banner with a copy-fix-command button, the nodes × modules matrix (the content hash each node booted, red when it differs from the
+  majority; the console grid with chips that set its filter), the chosen module's detail, the install commands, and saved work that needs a module that is
+  not installed. A phone scrolls the matrix inside its card. `test_admin_modules.py` (the recorded answer), `test_admin_modules_browser.py`; the
+  `admin-modules` snapshot goldens re-approved.
 - **Operations: one module asks another, in process, through the REST path's doors (I13, K3).** A module serves `@Operation(value, rest)` methods from the
   beans of its own child context, registered as `<module>:<name>` when it starts (the module runtime's wiring) and withdrawn first when it unloads; two of one
   name stop its start. `kernel.operations().of(module, ConsumerView.class)` converts the consumer's records to the provider's and back by field name. A call

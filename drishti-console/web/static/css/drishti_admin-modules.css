@@ -34,3 +34,25 @@
 .mod-notice h1 { margin: 0 0 4px; }
 .mod-admin { border: 1px dashed var(--d-border); padding: 6px 10px; margin: 8px 0; }
 .mod-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+/* Admin -> Modules, mock-up C: summary tiles, the nodes x modules matrix (the cell is the hash a node booted), the detail and the install box. */
+.mod-tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.mod-tile { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 8px 10px; min-width: 0; }
+.mod-tl { font-size: var(--d-fs-12); color: var(--d-muted); text-transform: uppercase; letter-spacing: .06em; }
+.mod-tv { font: 600 18px var(--d-font-mono); margin-top: 2px; overflow-wrap: anywhere; }
+.mod-ts { font-size: var(--d-fs-12); color: var(--d-muted); }
+.mod-ok { color: var(--d-ok); } .mod-warn { color: var(--d-warn); } .mod-bad { color: var(--d-bad); }
+.mod-banner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.mod-banner-t { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.mod-filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 8px; }
+.mod-chip { cursor: pointer; font: inherit; font-size: var(--d-fs-12); }
+.mod-chip-on { border-color: var(--d-accent); color: var(--d-accent); }
+.mod-matrix { max-width: 100%; overflow-x: auto; }
+.mod-cell { display: inline-block; min-width: 22px; border-radius: 3px; font: 600 11px var(--d-font-mono); padding: 1px 5px; }
+.mod-cell.mod-ok { background: var(--d-surface-2); color: var(--d-ok); }
+.mod-cell.mod-no { color: var(--d-muted); }
+.mod-cell.mod-bd { background: var(--d-surface-2); color: var(--d-bad); border: 1px solid var(--d-bad); }
+.mod-cmd { font-family: var(--d-font-mono); font-size: 12px; background: var(--d-bg); border: 1px solid var(--d-border); border-radius: var(--d-radius);
+  padding: 6px 10px; color: var(--d-accent); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mod-note { font-size: var(--d-fs-12); }
+@media (max-width: 700px) { .mod-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mod-facts { grid-template-columns: minmax(0, 1fr); } }
