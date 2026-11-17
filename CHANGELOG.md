@@ -39,6 +39,23 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   `TypedCallParityTest`: every call the landings make, typed and over the loopback, for an administrator, a masked, a row-ruled and a
   closed role, a lens, an earlier date box, another language, a read-only and a scoped API token, several people at once, and with the
   business today fixed.
+- **Every reader of module folders asks the boot result (I5, B2, dual source).** `LaunchRoots` runs the module boot once at start
+  (`bootModules`): when `<home>/modules` holds packages (`*.dmod`), `ModuleBoot` reads, verifies and unpacks them and its result
+  (`ModuleHomes`) is published for the process and as settings first in the environment, `drishti.module.homes` and
+  `drishti.module.dir.<id>`; when it holds none, until I8, the modules come from the old store and folders through one adapter,
+  `LegacyModules` (the only reader of the store's `active.yaml`, read at each ask). `ModuleHomes.resolve(property)` is the one entry
+  point. Moved to it: the resolver (`PackResolver`, `ResolutionSettings.homes`, `ConfigResolution`), the access registry
+  (`YamlAccessStore`; `ModulePackages` only with no package), the distributions and module manifests, the module settings, the
+  blotters (`LiveSets`), `resolve --json` (its own boot, no sweep), the loader process (given `drishti.module.homes`, every
+  `drishti.module.dir.*` and `drishti.modules.dev`; it never boots) and banking's FRTB parameters
+  (`${drishti.module.dir.banking:}`). The site's overrides of module files: a view per booted module,
+  `<data>/overrides/modules/<id>/<version>-<hash16>/`. `resolve --json --root` is source mode (`ModuleHomes.source`: every module
+  folder of the checkout, never a package); its answer for the checkout is unchanged. `tools/resolved.py` keys its cached answers on
+  `modules_fingerprint` (`ModuleHomes.fingerprint()` of the modules folder, worked out without the jar; one test vector in Java and
+  Python), so a rebuilt module never serves an old answer. Deleted: `ModuleDirs`, `Roots.modules()`, `ModuleDiscovery.readActive`,
+  the settings `drishti.live-sets.modules-dir` and `drishti.packs.modules-dir`. Guard G9 (`NoModuleFolderReaderTest`) is on:
+  outside `ModuleBoot` and `ModuleFiles`, no main class names `cache/modules`, `drishti.modules.home` or `active.yaml`, with
+  `LegacyModules` its one exception until I8.
 - **The Java verifier is a command; the module tool is gone (I3, A2).** `java -jar drishti-server-...-exec.jar module verify|inspect|visual`
   (`ModuleCli`, no Spring, no web server) is the one Java verifier: `verify FILE.dmod` runs the package rules and API ranges (V1, V2, V3, V5,
   V7, V8, the origin and the kernel-internals allowance), `--conformance` adds the checks C1-C14, `--with FILE` installs a required module

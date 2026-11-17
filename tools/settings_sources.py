@@ -213,8 +213,10 @@ def env_names(raw: str) -> list[str]:
 
 def placeholder_default(raw: str) -> str | None:
     """The value when no environment variable is set: ``${A:${B:x}}`` -> ``x``; ``${A}`` -> None (no default); ``${drishti.data.dir}``
-    reads as ``<data>``, the data folder (``<config>``, ``<home>``, ``<modules>`` likewise: the launch roots, never a working-directory path)."""
+    reads as ``<data>``, the data folder (``<config>``, ``<home>``, ``<modules>`` likewise: the launch roots, never a working-directory path);
+    ``${drishti.module.dir.banking:}``, a module's folder as the module boot gave it, as ``<module:banking>``."""
     text = _SPRING_REF.sub("<data>", raw)
+    text = re.sub(r"\$\{drishti\.module\.dir\.([a-z0-9][a-z0-9-]*):?\}", r"<module:\1>", text)
     prev = None
     while prev != text:
         prev = text

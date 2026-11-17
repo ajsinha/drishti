@@ -535,6 +535,20 @@ folder through a rolling upgrade protect each other: a running server writes `<c
 of its folders (`ModuleBoot.markInUse`, refreshed every 5 minutes, removed at stop by `releaseInUse`), and the sweep keeps a folder with
 a marker younger than 15 minutes, saying so; an older marker is deleted.
 
+**Who runs it, and who reads it (i7a I5).** `LaunchRoots` runs the boot right after the launch roots (`bootModules`; the server sweeps,
+a command line such as `resolve --json` does not and keeps its overrides' views apart). When `<home>/modules` holds packages the result
+is the boot's, published for the process (`ModuleHomes.current()`) and as settings first in the environment: `drishti.module.homes`
+(the whole value) and `drishti.module.dir.<id>` (each folder, also for placeholders such as `${drishti.module.dir.banking:}`); the loader
+process is given both and never boots. When it holds none (a checkout before `build modules`, every server until i7a's I8), the
+modules come from the old store and folders through **one adapter, `LegacyModules`** (the only reader of the store's `active.yaml`),
+read at each ask so a deployment into the old store still shows at once. Every reader asks `ModuleHomes.resolve(property)`: the
+published value, else the adapter; none lists a modules folder or the cache (guard G9, `NoModuleFolderReaderTest`, with `LegacyModules`
+its one exception until I8). The readers: the resolver (`PackResolver`, `ConfigResolution`, `ResolveCli`), the overrides, the access
+registry (`YamlAccessStore`; `ModulePackages` only with no package), the distributions and module manifests, the module settings, the
+blotters (`LiveSets`), the loader process and banking's FRTB parameters. `tools/resolved.py` keys its cached answers on the
+fingerprint of the modules folder (`ModuleHomes.fingerprint()` worked out without the jar), so a rebuilt module never serves an old
+answer.
+
 **The removed deployment store.** Its folders (`installed`, `store`, `shipped`, `staging`, `tombstones` under `<data>/modules` or the
 modules folder, `<data>/overrides/installed`) and `<data>/modules/registry.json` are never read for modules and never deleted: each is
 named once as *not read: safe to delete*. A module that `registry.json` names OFF or REMOVED is told once: *was off in the old store:
@@ -2499,9 +2513,11 @@ paper beside this section ([pack-resolution-inventory.md](pack-resolution-invent
 The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
 administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
 distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
-version, state, the reason when off, and **its folder**: `<drishti.modules.home>/<id>/` (every module's one layout, section 8.10; the view of section 18.10 when the site overrides a file),
-else the active version in the store, `<drishti.modules.path>/installed/<id>/<version>/`. A module found in both with different
-versions is read from the folder and reported (DRS-1044). The command line and the tools, which have no server, compute the same
+version, state, the reason when off, and **its folder**: the one the module boot gave it (section 4.2.1, `ModuleHomes`): the cache folder
+of its package, or its source folder in source mode (the view of section 18.10 when the site overrides a file). Until i7a's I8, a server
+whose modules folder holds no package takes its modules from the old store and folders through the one adapter `LegacyModules`:
+`<drishti.modules.home>/<dir>/` (every module's one layout, section 8.10), else the active version in the store,
+`<drishti.modules.path>/installed/<id>/<version>/`. The command line and the tools, which have no server, compute the same
 from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
 
 ### 18.2 Settings: one per concept
@@ -2510,8 +2526,9 @@ from the distribution file and the switch files (licence not evaluated); the con
 |---|---|---|
 | `drishti.packs.site-dir` (`DRISHTI_PACKS_DIR`) | `./config/packs` | the site's own packs: `<dir>/<pack>/pack.yaml`, or one folder down (`<dir>/<group>/<pack>/`) |
 | `drishti.packs.installed-dir` | `<data>/packs/installed` | packs an administrator deployed (Admin → Packs, a registry); part of the site |
-| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders (tests and tools point it at the repository's `modules/`; no symbolic link beside a scratch `config/`) |
-| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the store of modules installed from a `.dmod` (section 4.1) |
+| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<home>/modules` | the modules folder: the packages (`*.dmod`) the module boot reads (section 4.2.1); read by the boot alone, every other reader asks the boot's result. With no package in it (until i7a's I8) its source folders are the modules |
+| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the old store of modules installed from a `.dmod`, read only through `LegacyModules` with no package booted; gone in i7a's I8 |
+| `drishti.module.dir.<id>`, `drishti.module.homes` | published at start | **not set by hand**: the boot's result as the launch publishes it (a module's folder; the whole value), for placeholders (`${drishti.module.dir.banking:}`) and child processes |
 | `drishti.modules.dir` (`DRISHTI_MODULES_DIR`) | `./config/modules` | the administrator's module switches (unchanged: an existing setting keeps its meaning) |
 | `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
 | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the site's connector files |
@@ -2735,7 +2752,7 @@ the folder name `capital-markets/…` (refused, naming the id to use). One rule,
 | **Where** | `drishti.overrides.dir` in the settings file (`drishti.overrides.dir=/abs/overrides` under a label section such as `[roots]`), `-Ddrishti.overrides.dir`, or `DRISHTI_OVERRIDES_DIR`. A comma-separated list is allowed: the right-most folder wins a path. Paths are absolute (a relative one is taken under `drishti.home`, never the process folder) |
 | **What** | any module file: every YAML (a pack's `pack.yaml`, contracts, `console/plugin.yaml`, `data/needs.yaml`, mappings, blotters, `docs/help.yaml`), every Sutra (`*.sutra.yaml`, `*.block.yaml`), pages and docs. A file the module does not ship is added |
 | **Never** | `<module>/module.yaml` (the module's identity); `<module>/connectors/` (a connector is changed in `config/connectors/<name>.yaml`, merged over the template, section 18.5; connectors stay read-only); `pom.xml`, `target/`, `tools/` (they only build the module); **code**: `java/`, `lib/`, `python/`, `engines/`, any `.jar`, `.class`, `.py`, `.pyc`, `.pyd`, `.so`, `.dll`, `.dylib`, `.exe`, `.sh`, `.bat`, `.cmd`, `.ps1` file wherever it sits, and every symbolic link (never followed): an override changes what a module says, never what it runs. Each is refused in words, in the log and in Health, and not used |
-| **How** | when at least one file overrides, the server brings the **view** `<data>/overrides/modules` up to date (the modules folder copied, only what changed since the last start, then the overrides laid over it) and `drishti.modules.home` names the view; the module's own folder is never written. Every reader (the pack resolver, Sutras, pages, blotters, data needs, Help) sees the overridden file and needs no rule of its own. A module installed from its `.dmod` (the module store, which the resolver reads before the folder's copy: the shipped banking, market-data, capital-markets and economy on a server that installs them) gets the same rule where the resolver picks its folder: `<data>/overrides/installed/<id>/<version>`, the installed folder with the overrides under `<id>/` laid over it. With no override the views are removed and the folders are read as they are |
+| **How** | when at least one file overrides, a module the boot took from a package gets a **view** of its own, `<data>/overrides/modules/<id>/<version>-<hash16>/` (its cache folder copied, only what changed since the last start, then the overrides laid over it), and the boot's result names the view as the module's folder. With no package booted (until i7a's I8) the server brings the view `<data>/overrides/modules` of the modules folder as a whole up to date and the launch names it as the modules folder; the module's own folder is never written. Every reader (the pack resolver, Sutras, pages, blotters, data needs, Help) sees the overridden file and needs no rule of its own. A module installed from its `.dmod` (the module store, which the resolver reads before the folder's copy: the shipped banking, market-data, capital-markets and economy on a server that installs them) gets the same rule where the resolver picks its folder: `<data>/overrides/installed/<id>/<version>`, the installed folder with the overrides under `<id>/` laid over it. With no override the views are removed and the folders are read as they are |
 | **Shown** | one report, keyed by the module id: the log's `module overrides:` block; **Admin → Health**, *module files overridden by the site* (each `<id>/<path>`, its source, *added* when the module has no such file, and the file it is applied to: in `<data>/overrides/modules/<folder>/` or in an installed module's view; the refused ones; the *waiting* ones, whose id names no module of the modules folder, until a module of that id is installed from its `.dmod`); `GET /api/v1/admin/health` → `moduleOverrides` (`dirs`, `view`, `modulesHome`, `files` with `applied`, `refused`, `waiting`); the view's own list, `overrides.yaml`, which the console's resolver reads to use the same view |
 | **When** | at start: change an override, restart the server (and the console). Removing the file and restarting restores the module's |
 

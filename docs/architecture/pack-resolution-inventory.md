@@ -10,10 +10,12 @@
 [KERNEL_AND_MODULES.md section 18](KERNEL_AND_MODULES.md#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules): every
 reader of packs, connectors, bindings and data-inbox rules in the code as it stands on `wip/i4`, what each must change to, why the
 readers disagreed, the tests that hold them together, and the order one implementer builds it in. Line numbers are those of `wip/i4`
-at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`, `624b75c24`).
+at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`, `624b75c24`). Section 0 is the current list of the
+readers of **module folders** (release i7a, increment I5); where a row below says otherwise about a module folder, section 0 wins.
 
 ## Contents
 
+0. [The readers of module folders (i7a I5)](#0-the-readers-of-module-folders-i7a-i5)
 1. [How to read the tables](#1-how-to-read-the-tables)
 2. [Readers of packs](#2-readers-of-packs)
 3. [Readers of connectors](#3-readers-of-connectors)
@@ -23,6 +25,39 @@ at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`,
 7. [The failure analysis](#7-the-failure-analysis)
 8. [The test plan](#8-the-test-plan)
 9. [The build order](#9-the-build-order)
+
+## 0. The readers of module folders (i7a I5)
+
+The module boot answers *which modules, from which folder* once per process, before any Spring context
+([KERNEL_AND_MODULES.md section 4.2.1](KERNEL_AND_MODULES.md#421-the-module-boot-and-its-result)); its result is the plain value
+`ModuleHomes` (`drishti-api`). `LaunchRoots` runs it: when `<home>/modules` holds packages (`*.dmod`) `ModuleBoot` reads, verifies and
+unpacks them and the result is published as the setting `drishti.module.homes` (plus `drishti.module.dir.<id>` per module); when it holds
+none, until increment I8, the modules come from the old store and folders through **`LegacyModules`**, the one adapter, read at each ask.
+`ModuleHomes.resolve(property)` is the one entry point: the published value, else `LegacyModules`. Guard G9 (`NoModuleFolderReaderTest`)
+keeps every other main class from naming `cache/modules`, `drishti.modules.home` or `active.yaml`; `LegacyModules` is its one exception
+until I8.
+
+| Reader | Takes its modules from | Notes |
+|---|---|---|
+| `kernel/drishti-packs/.../LaunchRoots.java` | runs the boot (`bootModules`: `ModuleBoot` on packages, else `LegacyModules`); lays the site's overrides over (a view per booted module, `ModuleOverrides.view`; with no package the modules folder's whole view, `ModuleOverrides.apply`) | publishes `drishti.module.homes`, `drishti.module.dir.<id>` first in the environment and as system properties; `ModuleHomes.current()` |
+| `kernel/drishti-api/.../PackResolver.java` (`modules`) | `Layout.homes()` (the boot's); with none, `LegacyModules.read` (folders, then the store's active installs) | `Module.source`: the folder under the modules folder, else `<id>-<version>.dmod (<origin>)` |
+| `kernel/drishti-api/.../ResolutionSettings.java` | `ModuleHomes.of(property)` into `homes` | `modulesHome`, `modulesPath` stay for the layout shown and for `LegacyModules` |
+| `kernel/drishti-api/.../ConfigResolution.java` (`repository`) | source mode: `ModuleHomes.source(checkout)` (every `<checkout>/modules/<dir>/module.yaml`, origin development) | what `resolve --json --root` and `tools/resolved.py repository()` read; never a package |
+| `kernel/drishti-api/.../ModuleOverrides.java` | the boot's homes (`view`); the old store's installs (`installed`, through `LegacyModules`) | Health keeps the same report shape |
+| `kernel/drishti-registry/.../AccessRegistries.java`, `YamlAccessStore.java` | the boot's homes (each module's `module.yaml`); with none, the modules folder and the old store's packages (`ModulePackages`) | |
+| `kernel/drishti-registry/.../ModulePackages.java` | the old store's active versions through `LegacyModules` | read only with no package booted |
+| `kernel/drishti-packs/.../Distributions.java`, `ModuleManifests.java`, `module/ModuleSettingsEnvironmentPostProcessor.java` | `Distributions.homes(env)` = `ModuleHomes.resolve` | `ModuleManifests.read(ModuleHomes …)`; the folder walk is gone |
+| `kernel/drishti-server/.../liveset/LiveSetConfiguration.java`, `LiveSets.folders` | each home's `blotters/` | `drishti.live-sets.modules-dir` deleted |
+| `kernel/drishti-server/.../dataload/DataLoadConfiguration.java` | the resolution's inbox rules | unchanged: already through the resolution |
+| `kernel/drishti-server/.../cli/ResolveCli.java` | `--root`: source mode; `--site`: no module; else this process's boot (`LaunchRoots.bootModules`, no sweep, its own view folder `<data>/tmp/resolve/overrides/modules`) | output unchanged for a checkout |
+| `kernel/drishti-server/.../cli/CliLauncher.java` | the process's resolution | `drishti.packs.modules-dir` deleted |
+| `kernel/drishti-server/.../console/ConsoleAnswers.java` | `Distributions.homes(env)` | |
+| `kernel/drishti-server/.../modules/deploy/ModuleNode.java`, `ModuleDeployService.java` | the old store, its active versions through `LegacyModules` | deleted in I8 |
+| `kernel/drishti-module-runtime/.../ModuleDiscovery.java` | the folders it is given (the deployment's) | `readActive` moved into `LegacyModules`; the rest deleted in I8 |
+| `lake/drishti-lakeload/.../LoaderProcess.java` | passes `drishti.module.homes`, every `drishti.module.dir.*` and `drishti.modules.dev` to the loader process, which never boots | |
+| `lake/drishti-lakeio/.../ModuleDirs.java` | deleted (no reader left) | |
+| `modules/banking/.../frtb/FrtbProperties.java`, `config/engines/frtb-sa.yaml` | `${drishti.module.dir.banking:}`; else banking's home | |
+| `tools/resolved.py` | the jar's answer; its cache key carries `modules_fingerprint` (= `ModuleHomes.fingerprint()` of the modules folder: packages, else source folders) | a rebuilt module never serves an old answer |
 
 ## 1. How to read the tables
 
@@ -264,8 +299,8 @@ Today **eight settings name a modules folder** and four files are found "beside"
 | The site's packs | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) + the `./packs` fallback; `drishti.packs.extra-dirs`; console `packs.dir` | `drishti.packs.site-dir` (same variable `DRISHTI_PACKS_DIR`, same default; a list is allowed). `drishti.packs.dir` is read as its former name. The `./packs` fallback and `extra-dirs` are deleted |
 | The kernel's packs | inside the site's folder: `config/packs/core/` | `drishti.kernel.packs-dir`, default `./config/packs/core` **in this release** (the folder does not move; only its default changes when it does) |
 | Packs deployed from Admin or a registry | `drishti.packs.installed-dir` (`<data>/packs/installed`) | unchanged; part of the site layer |
-| The modules' folders | `drishti.module-manifests-dir` (`./modules`); system property `drishti.modules.dir` (`PackEntry`); `drishti.live-sets.modules-dir`; console `module_manifests_dir`; "two folders above the packs folder" (`AccessRegistries`, `distribution.py`) | **`drishti.modules.dir`** (`DRISHTI_MODULES_HOME`), default `./modules`. The others are deleted |
-| The module store (`.dmod`) | `drishti.modules.path` (`<data>/modules`); `drishti.packs.modules-dir`; `drishti.module-deploy.dir`; console `builder.pack_designer_modules_dir` | `drishti.modules.path` only |
+| The modules' folders | `drishti.module-manifests-dir` (`./modules`); system property `drishti.modules.dir` (`PackEntry`); `drishti.live-sets.modules-dir`; console `module_manifests_dir`; "two folders above the packs folder" (`AccessRegistries`, `distribution.py`) | **`drishti.modules.home`** (`DRISHTI_MODULES_HOME`), default `<home>/modules`, read by the module boot alone; every reader asks the boot's result (section 0). `drishti.live-sets.modules-dir` is deleted (i7a I5) |
+| The module store (`.dmod`) | `drishti.modules.path` (`<data>/modules`); `drishti.packs.modules-dir`; `drishti.module-deploy.dir`; console `builder.pack_designer_modules_dir` | read only through `LegacyModules` until i7a I8, then gone; `drishti.packs.modules-dir` deleted (i7a I5) |
 | The modules' switches | **`drishti.modules.dir`** (`DRISHTI_MODULES_DIR`, `./config/modules`) | `drishti.modules.switches-dir` (`DRISHTI_MODULES_SWITCHES_DIR`), same default. **The one renamed meaning**: see the note |
 | The site's connector files | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`, `./config/connectors`) | unchanged |
 | The site's bindings | `drishti.bindings.file`, default "the sibling of the connectors folder" | `drishti.bindings.file`, default `./config/bindings.yaml` |

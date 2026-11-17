@@ -302,7 +302,7 @@ mode ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs
 | `drishti.live-sets.flush-ms` | `50` | how often viewers' windows are sent their changes |
 | `drishti.live-sets.window-capacity` | `5000` | records waiting per viewer before it is asked to resync |
 | `drishti.live-sets.dir` | `config/blotters` | the site's own declarations |
-| `drishti.live-sets.modules-dir` | `modules` | where the modules' `blotters/` folders are found (a module's only while it is on) |
+| (none) | | the modules' `blotters/` folders are read from each module's folder as the module boot gave it (a module's only while it is on) |
 | `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
 | `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads into memory when its store cannot page it |
 | `drishti.live-sets.store-timeout-seconds` | `120` | how long a set paged from the lake may take to read the columns it orders by, and a page's records |
