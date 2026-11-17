@@ -1685,35 +1685,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Measured 2026-11-16: 1,943 page loads of 315 pages; the 25 slowest by p95 (slow from 2 s).
+Measured 2026-11-17: 3,202 page loads of 383 pages; the 25 slowest by p95 (slow from 2 s).
 
 | Page | Loads | p95 | Median |
 |---|---:|---:|---:|
-| `/v/trade/MX-20000001` (slow) | 17 | 9.08 s | 1.54 s |
-| `/page.html` (slow) | 5 | 6.94 s | 1.77 s |
-| `/v/trade/MX-00003` (slow) | 1 | 6.68 s | 6.68 s |
-| `/v/listed-company/CO-AAPL` (slow) | 2 | 5.60 s | 5.01 s |
-| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.75 s | 2.89 s |
-| `/v/economy/ECON-AUS` (slow) | 1 | 4.73 s | 4.73 s |
-| `/bi/models` (slow) | 11 | 4.38 s | 0.38 s |
-| `/v/netting-set/NS-NORTH-01` (slow) | 10 | 3.69 s | 0.56 s |
-| `/designer/grid` (slow) | 7 | 3.52 s | 0.28 s |
-| `/bi/r/file:report:trades-overview` (slow) | 19 | 3.48 s | 0.53 s |
-| `/admin/artifacts` (slow) | 15 | 3.13 s | 0.66 s |
-| `/bi/datasets` (slow) | 8 | 3.05 s | 0.22 s |
-| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 2.91 s | 0.54 s |
-| `/bi/designer` (slow) | 16 | 2.67 s | 0.26 s |
-| `/login` (slow) | 204 | 2.63 s | 0.52 s |
-| `/build/tables` (slow) | 11 | 2.60 s | 0.11 s |
-| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 2.54 s | 2.54 s |
-| `/v/news-topic/TOPIC-FED` (slow) | 1 | 2.54 s | 2.54 s |
-| `/build/d/33233784a64b` (slow) | 1 | 2.49 s | 2.49 s |
-| `/v/trade/1000001` (slow) | 29 | 2.46 s | 0.51 s |
-| `/bi/r/file:report:py-server` (slow) | 1 | 2.45 s | 2.45 s |
-| `/v/trade/1000003` (slow) | 3 | 2.24 s | 1.44 s |
-| `/bi/r/file:report:world-economics` (slow) | 2 | 2.23 s | 1.27 s |
-| `/bi/ds/file:table:bi.wa_demo_trade` (slow) | 4 | 2.16 s | 1.05 s |
-| `/help/configuration` (slow) | 11 | 2.09 s | 0.48 s |
+| `/datamap` (slow) | 12 | 19.35 s | 0.84 s |
+| `/admin/bindings` (slow) | 9 | 9.25 s | 4.35 s |
+| `/v/fund/QQQ` (slow) | 1 | 8.99 s | 8.99 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 8.16 s | 5.27 s |
+| `/page.html` (slow) | 5 | 7.92 s | 5.13 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 3 | 7.53 s | 7.24 s |
+| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 7.29 s | 7.29 s |
+| `/v/trade/MX-00003` (slow) | 1 | 7.23 s | 7.23 s |
+| `/admin/artifacts` (slow) | 19 | 7.07 s | 1.62 s |
+| `/v/us-company/AAPL` (slow) | 1 | 6.95 s | 6.95 s |
+| `/bi/datasets` (slow) | 12 | 6.73 s | 0.54 s |
+| `/help/configuration` (slow) | 13 | 6.39 s | 1.86 s |
+| `/elements.html` (slow) | 1 | 6.04 s | 6.04 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 5.98 s | 2.28 s |
+| `/v/economy/ECON-AUS` (slow) | 1 | 5.62 s | 5.62 s |
+| `/v/netting-set/NS-NORTH-01` (slow) | 10 | 5.55 s | 1.08 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 5.46 s | 3.95 s |
+| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 5.45 s | 5.45 s |
+| `/admin/data-out` (slow) | 6 | 4.84 s | 0.90 s |
+| `/admin/packs` (slow) | 19 | 4.84 s | 0.76 s |
+| `/v/trade/1000001` (slow) | 33 | 4.82 s | 2.63 s |
+| `/v/path-book/BOOK-RATES` (slow) | 1 | 4.79 s | 4.79 s |
+| `/v/trade/1000003` (slow) | 3 | 4.78 s | 3.06 s |
+| `/v/sutra/all-panels-showcase` (slow) | 8 | 4.71 s | 2.02 s |
+| `/v/portfolio-trades/BOOK-RATES-2` (slow) | 46 | 4.70 s | 1.39 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate

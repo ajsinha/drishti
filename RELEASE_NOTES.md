@@ -15,7 +15,7 @@
 -->
 # Drishti 2.9.11.i6 — release notes
 
-*Released 2026-11-16.* **The console draws what the server decides (the thin console), Drishti Elements 2.4.0 with one version for
+*Released 2026-11-17.* **The console draws what the server decides (the thin console), Drishti Elements 2.4.0 with one version for
 every library, and the genomics showcase: a linked cohort board and a protein-engineering workbench over two seeded data packs.** The
 version shown everywhere (About, the console footer, the image tags, the jar's name) is `2.9.11.i6`, read from `.mvn/maven.config`;
 the release tag is `v2.9.11.i_6`.
@@ -29,6 +29,11 @@ the release tag is `v2.9.11.i_6`.
 - **AI is hidden and off** in this release (`drishti.ai.enabled`, off as shipped; Admin → Health says *AI: off*).
 - **The tools read the Java resolver's answer** (`resolve --json` in the server jar): every Python tool and generator needs a built jar
   (`python tools/drishti.py build jar`). Site overrides of module files (`drishti.overrides.dir`) now reach these tools too.
+- **A fixed business "today"** for a server whose data ends on a known date (`drishti.business-date.today`, environment
+  `DRISHTI_BUSINESS_TODAY`; blank as shipped, so the clock's today).
+- **Admin → Lakes on a console away from the server's machine** says so and lists the server's read-only lakes instead of offering
+  lake scripts.
+- **The demo lake has 103 tables** (89 in i5); the two showcase packs are opt-in.
 - **`start cluster <name>`** refuses a name that is no node or console, listing the names there are.
 
 ## What changes for readers
