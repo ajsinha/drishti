@@ -53,7 +53,9 @@ class BankingReachTest {
                         Matcher m = REF.matcher(line);
                         while (m.find()) {
                             String pkg = "com.ash.drishti." + m.group(1);
-                            if (!pkg.startsWith("com.ash.drishti.kernel.api") && !pkg.startsWith("com.ash.drishti.banking")) {
+                            // the kernel API (drishti-kernel-api and drishti-api: ModuleClassLoader.KERNEL_API) is every module's to use
+                            if (!pkg.startsWith("com.ash.drishti.kernel.api") && !pkg.equals("com.ash.drishti.api") && !pkg.startsWith("com.ash.drishti.api.")
+                                    && !pkg.startsWith("com.ash.drishti.banking")) {
                                 reached.add(pkg);
                             }
                         }

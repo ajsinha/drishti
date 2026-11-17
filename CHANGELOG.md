@@ -30,7 +30,9 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   its name, its package prefixes) and checks against `BOOT-INF/lib` after the repackaging; a module carrying one of them gets one sentence naming
   the module, the library and both versions: WARN at load, the module's Health notes, `module verify` (`N library warnings`, `--json`
   `libraryWarnings`). The thread context class loader is the module's on the runtime's calls into it (load, the unload steps). Banking's
-  `kernel-internals.txt` drops its five `# library` lines (Caffeine, Kafka clients, SnakeYAML); `BankingReachTest` refuses one coming back.
+  `kernel-internals.txt` drops its five `# library` lines (Caffeine, Kafka clients, SnakeYAML) and its two `com.ash.drishti.api` lines (the
+  kernel API, as the loader and C1 see it); `BankingReachTest` counts `com.ash.drishti.api.*` as the API and refuses a `# library` line. A kernel
+  `META-INF/services` file reaches a module's loader only when every provider it names is a class the module may take from the kernel.
   Guard G10 `KernelLibrariesWinTest` (a module's Jackson copy, a `lib/ext` copy, a `META-INF/services` file in both, the warning in verify, log and
   Health). KERNEL_AND_MODULES §4.4, DEVELOPER_GUIDE (a module's libraries).
 - **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
