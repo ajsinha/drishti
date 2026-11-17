@@ -59,7 +59,7 @@ and what happens when a module is removed section 12.
 9. [Module UI and the developer's own pages](#9-module-ui-and-the-developers-own-pages)
 10. [The Drishti Console on Spring Boot (a separate UI tier)](#10-the-drishti-console-on-spring-boot-a-separate-ui-tier)
 11. [Drishti Elements: the controlled UI statics](#11-drishti-elements-the-controlled-ui-statics)
-12. [Offloading a module: everything disappears](#12-offloading-a-module-everything-disappears)
+12. [Taking a module away: everything disappears](#12-taking-a-module-away-everything-disappears)
 13. [Security](#13-security)
 14. [Migration, with banking as the proving ground](#14-migration-with-banking-as-the-proving-ground)
 15. [Decisions](#15-decisions)
@@ -1280,7 +1280,7 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 | 10 Sign and publish | publisher's CI | `mvn -Prelease deploy` | signed `.dmod` + `.sha256` in the module repository |
 | 11 Install | customer administrators | `drishti.py module install genomics-0.1.0.dmod` + approval | verify report, four eyes, LOADED |
 | 12 Bind data | customer data administrator | Admin → Data bindings (or `drishti.py bindings set …`) | needs `BOUND` (section 5) |
-| 13 Upgrade or remove | customer administrators | `module upgrade` / `rollback` / `remove` | section 7.4 and section 12 |
+| 13 Upgrade or remove | customer administrators | replace or take out the file, `module rollback`, restart | section 7.4 and section 12 |
 
 ### 8.9 Worked example: the genomics sample module
 

@@ -946,12 +946,11 @@ drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name
   for none), or as `--child LEGS,CASHFLOWS` (`kind=LEGS;kind2=none`, `none`) says; the plan lists them, `--load` writes their rows beside the
   parent's ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
 - **`--load`** writes the documents under `--files-root` as `<name>/<business date>/<kind>.jsonl` (the date comes from the file name,
-  `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** drops the checked
-  `.dmod` into `--modules-dir` (one node; with `--server` and `--reason` it is uploaded and planned on a cluster). The running server's
-  auto-deploy runs the fourteen conformance checks again, installs the module and loads its packs; no restart.
+  `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** copies the checked
+  `.dmod` into `--modules-dir` (the server's modules folder); restart the server to load it (a cluster: every node, one after another).
 - Measured on one machine: 60 files, 300,000 rows, 26 Sutras (one of them for a combination of a single row): about 35 s for the
   generation and the 15 checks of the `.dmod`; 6 files, 20,000 rows, one rare row: 33 s in all (generation, load, checks, deploy), and
-  the server showed the module and opened the rare row's screen (`GET /api/v1/views/<kind>/<id>`, HTTP 200) after its auto-deploy.
+  the server showed the module and opened the rare row's screen (`GET /api/v1/views/<kind>/<id>`, HTTP 200) after a restart.
 
 ### `pack check`: lint + test + help coverage, for CI
 

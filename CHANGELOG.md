@@ -1276,7 +1276,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   at the first start that finds jars in either, the server moves them into lib, writes `lib/moved-<date-time>.bak` and Health says so;
   `drishti.sources.plugin-dir` is deprecated (ignored, said in Health) for one release. `external_lib/python` stays the console's.
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
-  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
+  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the
   registration bridge): a `KindProvider` is routed like any source, a new `function.FunctionProvider` adds Rachana functions, a
   `ComputeEngine` joins the engine registry, and approval sources, explainers, view augmenters, pivot sources, Health and capacity figures,
@@ -1294,7 +1294,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
   the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
 - **The console part of a module** (2.9.11.i2 + i3; [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-a-modules-console-part),
-  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): the console hosts a module's `console/` part
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)): the console hosts a module's `console/` part
   declaratively under `/m/<id>/`, from the server's registry (`GET /public/modules/console` and the part's zip) or from the modules the
   product ships: `plugin.yaml` format 2's routes (a page of the module's own templates, rendered in its own Jinja environment over
   `kernel/page.html` and the Elements macros of `kernel/elements.html`; a Sutra route opens the kernel's page of its word), menus, words,
@@ -1321,8 +1321,8 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   their data; a search's time taken is quietened like the VaR timings; a module's kinds keep their file order (Admin → Modules listed them
   in a different order on each start); Admin → White label opens in a fraction of a second (it parsed every pack file once per command,
   about 20 s per distribution).
-- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
-  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
+- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what
   happens, following the placement (unplaced nodes receive nothing); a second administrator applies it: phase 1 stages on every placed node
   (each checks the SHA-256 and V1–V9 itself, the package sent in chunks over Drishti\*net), phase 2 activates; any failure rolls every

@@ -45,7 +45,7 @@ GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showc
 ## Contents
 
 [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
-[Deploy and place modules](#deploy-and-place-modules) · [Distributions](#distributions) · [Risk](#risk) · [Analyse](#analyse) ·
+[Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Risk](#risk) · [Analyse](#analyse) ·
 [Build](#build) · [Data in](#data-in) · [Data out](#data-out) · [Operate](#operate) · [Run it](#run-it) ·
 [Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) ·
 [By the numbers](#by-the-numbers)
@@ -137,14 +137,14 @@ one implementation, reached **three ways**:
 - **The genomics sample**, step by step: a third party's module made from the archetype on the kernel API and the plugin API only,
   with a VCF connector inside it and its own lollipop visual ([DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)).
 
-## Deploy and place modules
+## Install and place modules
 
-- **Two folders, as in Tomcat**, under the data folder ([ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)):
-  `modules/` (`drishti.modules.path`) takes `.dmod` packages and **auto-deploys** them within seconds (verified, checked, installed,
-  loaded; taking the file out removes the module), on for a single node and off in a cluster; `lib/ext/` (`drishti.lib.path`) takes jars every
+- **Two folders, as in Tomcat** ([ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)):
+  `modules/` (`drishti.modules.home`) takes `.dmod` packages, each verified, unpacked once and loaded at the next start (a module is a file
+  and a restart; taking the file out removes the module); `lib/ext/` (`drishti.lib.path`) takes jars every
   connector and module may use (JDBC drivers, connector plugins, a company's libraries), read once at start into one class loader under the
   kernel's and listed with their SHA-256 in Health. **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
-  and reloads it on every rebuild; it is refused in a cluster and under the production profile, which loads only verified packages.
+  unverified; it is refused in a cluster and under the production profile, which loads only verified packages.
 - **Data bindings.** A module names the kinds it needs; the site decides which connector or lake table serves each one, in
   `config/bindings.yaml`. **Admin → Data bindings** shows every kind with its state (`BOUND`, `AUTO`, `DEMO`, `STALE`, `MISMATCH`,
   `UNBOUND`, `COMPUTED`), the modules and functions that need it; a change takes two administrators and applies without a restart
@@ -156,7 +156,7 @@ one implementation, reached **three ways**:
 - **Install**: a module is a **file** (`<id>-<version>.dmod`) in the modules folder beside the server's jar, and a restart. The boot verifies each
   file, unpacks it once and loads it; a cluster restarts node by node while the others serve. A switched-off or missing module answers `404`, and
   saved Sutras, reports, dashboards, baskets, searches and alert rules that use it are kept and marked ***needs module X***. **Admin → Modules**
-  shows what each server booted; `drishti.py module install|remove|rollback|list` are file operations
+  shows what each server booted
   ([CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster), [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)).
 
 ## Distributions
@@ -283,7 +283,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   | `regulators` | regulators' publications (shipped empty) |
 
   The banking module adds the official VaR and exposure records; which table serves each kind a module needs is a
-  [data binding](#deploy-and-place-modules). In-memory lakes (`mem://`) hold data that never touches disk.
+  [data binding](#install-and-place-modules). In-memory lakes (`mem://`) hold data that never touches disk.
 - **Loading**: JSON Lines is the standard. A plain file is one table and one business date; a `.ready` file says it is complete and names
   its lake; a tar archive loads all or nothing; every row carries its load id, so `drishti.py lake undo <load-id>` removes exactly one
   load. The data inbox loads what your ETL drops, and the parallel Java loader handles large loads

@@ -683,7 +683,7 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
   `TokenScopeGuardTest`, `ArrowAnswersTest`). Its jar is the one stage 2 starts.
 
 Before it starts, with no server running from the checkout, the drill moves a server's state left in the data folder by an earlier
-run (`modules/installed/`, `identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
+run (`identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
 so every drill starts from the same data folder; nothing is deleted.
 
 **Stage 2** (the long runs side by side, each with its own log in `<data dir>/drill/`; all must pass):
@@ -3725,7 +3725,7 @@ entry, and Health notes *freight: single node: placed here*. In a cluster there 
 where `config/placement.yaml` places it ([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)).
 
 **7. Remove and reinstall.** Take the `.dmod` out of the modules folder and restart (its paths are unknown, `404`); put it back and restart to
-reinstall. To pause a module without removing it, `enabled: false` in `config/modules/freight.yaml` (its API answers `404 DRS-1025`). Saved
+reinstall. To pause a module without removing it, `enabled: false` in the module's switch file (its API answers `404 DRS-1025`). Saved
 work that uses it is kept, marked *needs module freight*, and comes back with it ([HOW_IT_FITS.md section 6](../../HOW_IT_FITS.md#6-a-modules-life)).
 
 ### 12.2 How to create a plugin (a connector type)
@@ -4174,7 +4174,7 @@ on the heavy one. *CLI*: `POST /api/v1/admin/cluster/placement/plans` `{placemen
 one node after the other:
 
 ```bash
-python3 tools/drishti.py module install java/freight/target/dmod/freight-0.1.0.dmod       # verifies, copies into the modules folder
+cp java/freight/target/dmod/freight-0.1.0.dmod <each node's Drishti folder>/modules/       # the modules folder beside the jar
 # restart the node (python3 tools/drishti.py stop server / start server), then the next one
 python3 tools/drishti.py module list
 ```

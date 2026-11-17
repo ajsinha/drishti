@@ -243,21 +243,13 @@ notes *single node: placed here*.
 | The command line, any build | Gradle, Bazel, a script, a plain folder | `python3 tools/drishti.py module pack <folder>`, then `module verify --conformance` and `module inspect` |
 | The command line | Linux, macOS and Windows with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module check`, `module inspect` |
 
-**Deploy, cluster-first.**
+**Install: a file and a restart.** Copy the `.dmod` into the modules folder beside the server's jar and restart the server: the boot verifies the
+package (its hash list, the kernel range, the licence), unpacks it once and loads it. To upgrade, replace the file; to remove a module, take the file
+out. A cluster does the same on each node, one node after another, while the others serve; nothing is uploaded, planned, applied or copied from one node
+to another, and a module is never unloaded while the server runs.
 
-1. **Upload once** to the module store (Admin → Modules → Deploy, or `drishti.py module deploy <file>`). It is checked there once and
-   kept by id and version; a version is never rebuilt with other bytes.
-2. **Plan**: what each node does now and after; nodes where nothing is placed receive nothing.
-3. **Approve and apply**: a **second administrator** applies the plan (`drishti.py module apply <id>`); the proposer cannot.
-4. **Two phases**: every placed node receives the package, checks it itself and stages it; then all activate together. A failure on any
-   node rolls every node back, and the page says which node and why.
-5. **Upgrade**: a newer version is staged everywhere first, then switched **node by node** while the others serve the old one.
-
-**Auto-deploy on one node.** Drop a `.dmod` into `<data folder>/modules/` and within seconds it is verified, installed and loaded; take the
-file out and the module is removed. It is on for a single node and off in a cluster, where deploys go through plan and apply.
-
-**Development folders.** With `drishti.modules.dev` a developer's own server loads a module's build folder unpacked and reloads it on every
-rebuild; Health marks it *development (unverified)*. It is refused in a cluster and under the production profile.
+**Development folders.** With `drishti.modules.dev` a developer's own server loads a module's build folder unpacked, unverified; Health marks
+it *development (unverified)*. It is refused in a cluster and under the production profile.
 
 **"Needs module X".** Switched off or not installed, a module's API answers `404 DRS-1025` and its pages say it is not available. Saved
 Sutras, reports, dashboards, baskets, searches and alert rules that use it are **kept**, marked *needs module X*; the module back,
@@ -334,14 +326,13 @@ Who writes it, when it is read, what it decides and where an administrator sees 
 | **The site** | | | | |
 | `config/bindings.yaml` | the data administrator (four eyes) | at start, then re-read (`drishti.bindings.refresh-seconds`, 30) | which connectors or lake table serve each kind | Data bindings |
 | `config/placement.yaml` | the cluster administrator (plan, then a second applies) | at start; at once on apply, on every member | which nodes run each part of each module | Cluster → Modules |
-| `<data folder>/modules/installed/active.yaml` | **the server** (deploy, auto-deploy, upgrade, rollback) | at start and at each activation | which installed version of each module is active | Modules |
 | `config/modules/<id>.yaml` | the administrator | at start | the module's on/off switch (`drishti.modules.<id>.enabled` wins over it) | Modules (switch off / on) |
 | `config/connectors/*.yaml` | the data administrator; pack templates write first copies | watched; a change applies without a restart | a source: plugin, settings, lake; credentials only as secret references | Connectors |
 | `config/lakes/*.yaml` | the data administrator | with the connectors that use the lake | a lake's format, root and tables | Lakes |
 | `config/engines/*.yaml` | the product's defaults; the administrator | at start; the switch from the Admin page | each compute engine on or off, and its settings (VaR confidence, window …) | Engines |
 | `config/net/node.yaml` | the administrator of each node | watched | this node's name, real address, tags (the `roles:` placement matches) | Cluster → Files |
 | `deploy/stack/stack.yaml` | the operator | by `tools/drishti.py start cluster` | the nodes to start, their ports and heaps, the consoles and each one's distribution | `tools/drishti.py status` |
-| `application.yaml` and settings | the operator | at start | `drishti.distribution`; `drishti.modules.path` (the `.dmod` folder), `drishti.modules.autodeploy`, `drishti.modules.dev`; `drishti.lib.path` (shared jars); `drishti.module.<id>.*` (a module's own settings) | Configuration (Help → Configuration) |
+| `application.yaml` and settings | the operator | at start | `drishti.distribution`; `drishti.modules.home` (the `.dmod` folder), `drishti.modules.dev`; `drishti.lib.path` (shared jars); `drishti.module.<id>.*` (a module's own settings) | Configuration (Help → Configuration) |
 
 ### 8.2 How they point at each other
 
