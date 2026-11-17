@@ -95,30 +95,16 @@ public interface KernelCalls {
                 String across, Map<String, Object> top);
     }
 
-    /** The server's refusal of a call: its HTTP status, its code ({@code DRS-…}) and its words. */
-    final class Refused extends RuntimeException {
+    /**
+     * The server's refusal of a call: its HTTP status, its code ({@code DRS-…}) and its words. The old name of
+     * {@link com.ash.drishti.kernel.api.services.Kernel.Refused}, which holds all of it; deleted with {@code KernelCalls}.
+     */
+    final class Refused extends com.ash.drishti.kernel.api.services.Kernel.Refused {
 
         private static final long serialVersionUID = 1L;
-        private final int status;
-        private final String code;
 
         public Refused(int status, String code, String detail) {
-            super(detail == null ? "" : detail);
-            this.status = status;
-            this.code = code == null ? "" : code;
-        }
-
-        public int status() {
-            return status;
-        }
-
-        public String code() {
-            return code;
-        }
-
-        /** {@code DRS-4040 the words} (the status when there is no code): what a panel says when it cannot draw. */
-        public String say() {
-            return (code.isEmpty() ? String.valueOf(status) : code) + " " + getMessage();
+            super(status, code, detail);
         }
     }
 }
