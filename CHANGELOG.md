@@ -22,6 +22,17 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **An installed server answers world-economy (I8c).** The economy package left out the world-economy pack's `samples/` (its `content.yaml` trimmed them), so a
+  server started from the packages, with no lake built, answered 404 / "no source holds jurisdiction/JUR-AUS" for every world-economy read (economies, regions,
+  jurisdictions, the map panel's countries), while the source tree answered; a lake could not be built from an install either (the demo lake's world-economy
+  tables are built from those samples). The samples travel now (a server from `build all` answers JUR-AUS and REGE-AU-NSW, and the Region economics sample
+  report answers from a `macro.region-economy` table built from the installed package's samples), and the packer (`tools/modulepack.py`) refuses a `trim` or
+  `copy` that leaves out what a pack serves (`samples`, `sutras`, `config`, `contracts`, `pack.yaml`; `test_modulepack.py`). The last six tests of
+  `testing/drishti-modules-it` on module sources (the economics and world-economy equivalence tests, `MapPanelTest`, `ExplainAboutTest`, `ExplainGlossaryTest`,
+  `AskEndToEndTest`) run on the packages; the explain tests switch the genomics module off (`drishti.modules.genomics.enabled=false`), whose VCF reader serves
+  `variant`, since their variant pages are the example genomics pack's. `ModuleSources` is deleted; `OnPackagesOnlyTest` fails when a test of the project points a
+  server at `modules/`, turns source mode or the development switch on, or brings it back.
+
 - **An applied correction is read at once (write-back).** The overlays and owned values cached per record were dropped only after the apply had closed the draft and told
   the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
   unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped
