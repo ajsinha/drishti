@@ -13,13 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.module.tool;
+package com.ash.drishti.module.runtime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import com.ash.drishti.module.runtime.Dmod;
-import com.ash.drishti.module.runtime.DmodManifest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -31,7 +30,8 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * The one packager is Python ({@code tools/modulepack.py}); the one verifier is Java ({@link Dmod}). A package the packager makes from a
  * fixture folder is unpacked and verified by {@link Dmod#verify}, and the manifest reads: the two sides agree on the format. Skipped
- * where no Python is on the path or the checkout has no tools folder (a test of the runtime alone).
+ * where no Python is on the path or the checkout has no tools folder (a test of the runtime alone), unless {@code -Ddrishti.test.requires-python=true}
+ * (the drill's Java lanes set it): then each of those is a failure, never a skip.
  */
 class DmodPythonPackTest {
 
@@ -41,9 +41,9 @@ class DmodPythonPackTest {
     @Test
     void aPackageThePythonPackagerMakesIsAcceptedByDmodVerify() throws Exception {
         Path packager = findPackager();
-        assumeTrue(packager != null, "tools/modulepack.py is not above the working folder");
+        needs(packager != null, "tools/modulepack.py is not above the working folder");
         String python = python();
-        assumeTrue(python != null, "no python on the path");
+        needs(python != null, "no python with PyYAML on the path");
 
         Path module = tmp.resolve("modules/greet");
         Dmod.write(module.resolve("module.yaml"), "format: 1\nid: greet\nversion: 0.1.0\ntitle: Greet\n");
@@ -65,6 +65,14 @@ class DmodPythonPackTest {
         assertThat(notes).isNotEmpty();
         assertThat(Dmod.files(unpacked)).containsExactly("docs/z.md", "module.yaml", "packs/a.yaml");
         assertThat(DmodManifest.read(Files.newInputStream(unpacked.resolve("module.yaml")), "greet").id()).isEqualTo("greet");
+    }
+
+    /** A skip, or a failure when the run says Python is required. */
+    private static void needs(boolean there, String why) {
+        if (!there && Boolean.getBoolean("drishti.test.requires-python")) {
+            fail("drishti.test.requires-python=true, and " + why);
+        }
+        assumeTrue(there, why);
     }
 
     private static Path findPackager() {

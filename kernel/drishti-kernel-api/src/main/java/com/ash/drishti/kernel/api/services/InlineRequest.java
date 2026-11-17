@@ -15,13 +15,14 @@
  */
 package com.ash.drishti.kernel.api.services;
 
+import com.ash.drishti.kernel.api.module.InlineFigures;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
- * Rows for the pivot engine: field for field the body of {@code POST /api/v1/pivot/inline}, with the same rules.
+ * Rows for the pivot engine: field for field the body of {@code POST /api/v1/pivot/inline}. The record holds the fields only; the rules
+ * of the body (field names and types, the row limit) are read once, by {@code InlinePivot} of drishti-bicompute, when the engine takes it.
  *
  * @param fields the fields of the rows
  * @param rows   the rows, one value per field (a number, text or null)
@@ -29,27 +30,19 @@ import java.util.regex.Pattern;
  */
 public record InlineRequest(List<Field> fields, List<List<Object>> rows, Map<String, Object> view) {
 
-    /** The engine's most inline rows (a chart of a table's shown rows is a page, never a lake). */
-    public static final int MAX_ROWS = 100_000;
+    /** The engine's most inline rows: {@link InlineFigures#MAX_ROWS}. */
+    public static final int MAX_ROWS = InlineFigures.MAX_ROWS;
 
-    private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
-
-    /** Refuses no fields, more than {@link #MAX_ROWS} rows, or a view that is absent. */
+    /** Copies the lists and the view (null fields and rows become empty); the view must be there. */
     public InlineRequest {
         fields = fields == null ? List.of() : List.copyOf(fields);
-        if (fields.isEmpty()) {
-            throw new IllegalArgumentException("an inline pivot needs its fields");
-        }
         rows = rows == null ? List.of() : List.copyOf(rows);
-        if (rows.size() > MAX_ROWS) {
-            throw new IllegalArgumentException("the engine takes at most " + MAX_ROWS + " rows inline (" + rows.size() + " given)");
-        }
         Objects.requireNonNull(view, "view");
         view = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(view));
     }
 
     /**
-     * One field: a name of letters, digits and {@code _}, a type ({@code string}, {@code number} or {@code date}) and a label.
+     * One field of the rows, as the body names it.
      *
      * @param name  the field's name
      * @param type  {@code string}, {@code number} or {@code date}
@@ -57,12 +50,8 @@ public record InlineRequest(List<Field> fields, List<List<Object>> rows, Map<Str
      */
     public record Field(String name, String type, String label) {
 
-        /** Refuses a name or a type the engine does not take. */
+        /** The label defaults to the name. */
         public Field {
-            if (name == null || !NAME.matcher(name).matches() || !List.of("string", "number", "date").contains(type)) {
-                throw new IllegalArgumentException("an inline field is {name: letters, digits and _, type: string, number or date}: "
-                        + name + " " + type);
-            }
             label = label == null ? name : label;
         }
     }

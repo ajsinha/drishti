@@ -1,0 +1,71 @@
+# The tests that run banking on the FLAT test class path (S6 of docs/plans/I7A_IMPACT.md): BankingTestHarness imports
+# BankingAutoConfiguration into one Spring context, with no ModuleClassLoader, no bean-name prefix and every META-INF/services of the
+# class path visible. They stay green whatever the module loader or the one-context host does, so they prove nothing about the module path.
+# G14 (PackagedVarGoldenTest, lands in I7) is their counterpart: the same golden matrix through a server started on packages.
+# FlatHarnessInventoryTest fails when a test starts using the flat harness without being added here, or is removed and still listed.
+# Regenerate: run the test with -Ddrishti.flat.write=true. One path per line, relative to the repository root.
+modules/banking/java/banking-compute/src/test/java/com/ash/drishti/banking/compute/var/HierarchyEquivalenceTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/BankingBindingsTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/BankingModuleOffTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/BankingModuleOnTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/BankingTestHarness.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/BankingTestServer.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/CapitalMarketsModuleOffTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/EconomyModuleOffTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/PublicSectorLensTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/TokenScopeGuardTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/exposure/ExposureApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/exposure/ExposureFormatEqualityTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/exposure/ExposureOfficialBiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/exposure/ExposureOfficialHierarchiesTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/exposure/ExposurePreDealApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/frtb/FrtbApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/simm/SimmApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/HierarchyColumnMissingTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/MrCubeOffTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/SystemBasketGoldenTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarBasketSheetApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarBusyProtectionTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarByAttributeApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarCurrencyAheadTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarCurrencyApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarExplainApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarFormatEqualityTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarGoldenMatrixTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarHeadlinePartsTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarHierarchyApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarInputsApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarInstalledModuleRestartTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarIntradayApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarMatrixApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarMrCubeApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarMrCubeCapTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarMrCubeShardTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarOfficialBiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarParallelReadTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarParametricApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarPivotApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarPlaygroundApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarPvStreamTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarRefusalRememberedTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarRegulatoryApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarResourcesSoakTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarRootNameTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarShardNoPvTableTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarShardSingleNodeTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarStressApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarStressWindowApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarSystemBasketApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarWindowApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/CacheAdminTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/DomainPacksTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/HealthApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/approvals/ApprovalApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/bi/BiLiveApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/connectors/HierarchyUpgradeWithoutLettersTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/edition/DistributionFinanceServerTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/edition/EditionNoneAndLensServerTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/edition/EditionTradingServerTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/engines/EngineApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/server/metrics/PlatformMetricsApiTest.java

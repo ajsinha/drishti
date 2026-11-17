@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.kernel.api.services;
 
+import com.ash.drishti.kernel.api.module.PersonCache;
+
 /**
  * The kernel's services to a module: one bean in the kernel's context, also {@code ModuleContext.kernel()}. Every answer is what the REST
  * path it replaces answers for the same person (K2's parity test holds it), so a module computes from the same figures a client would
@@ -57,6 +59,12 @@ public interface Kernel {
 
     /** One module asking another: operations, by the consumer's own interface. */
     Operations operations();
+
+    /**
+     * A new {@link PersonCache} for what the module works out per person: at most {@code size} answers, each kept {@code ttlMillis}.
+     * Every key holds the person's {@link Person#key()}.
+     */
+    <V> PersonCache<V> cache(int size, long ttlMillis);
 
     /**
      * The kernel's refusal of a typed call, with the status, code and words the REST path would have answered: what a panel says when it

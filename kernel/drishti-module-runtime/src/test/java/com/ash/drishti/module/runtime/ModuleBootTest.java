@@ -236,6 +236,25 @@ class ModuleBootTest {
         assertThat(ModuleBoot.current()).containsSame(r);
     }
 
+    /**
+     * Decision D1, the flat modules folder: {@code .dmod} files live flat in the modules folder; a package in a folder below it, or a file that only looks like one, is never read.
+     */
+    @Test
+    void onlyPackagesDirectlyInTheModulesFolderAreRead() throws IOException {
+        Path real = pack("demo", "1.0.0", ">=0.4");
+        Path below = Files.createDirectories(home.resolve("lib").resolve("modules"));
+        Path other = Files.createDirectories(home.resolve("more"));
+        Dmod.pack(source("hidden", "1.0.0", ">=0.4"), below.resolve(Dmod.fileName("hidden", "1.0.0")));
+        Dmod.pack(source("deeper", "1.0.0", ">=0.4"), other.resolve(Dmod.fileName("deeper", "1.0.0")));
+        Files.copy(real, home.resolve("demo-1.0.0.dmod.part"));
+        Files.writeString(home.resolve("notes.txt"), "not a package");
+
+        ModuleBoot.Result r = ModuleBoot.boot(home, cache, true, facts, List.of());
+
+        assertThat(r.modules().keySet()).containsExactly("demo");
+        assertThat(r.refused()).isEmpty();
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private Path pack(String id, String version, String kernel, String... files) {

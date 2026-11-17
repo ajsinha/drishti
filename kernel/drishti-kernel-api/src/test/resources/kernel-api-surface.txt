@@ -493,6 +493,128 @@
   security.Principal public java.lang.String com.ash.drishti.kernel.api.security.Principal.user()
   security.Principal public java.util.List<java.lang.String> com.ash.drishti.kernel.api.security.Principal.roles()
   security.Principal public static com.ash.drishti.kernel.api.security.Principal com.ash.drishti.kernel.api.security.Principal.anonymous(java.lang.String)
+  services.Access public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.Access.redact(com.ash.drishti.kernel.api.services.Person,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
+  services.Access public abstract void com.ash.drishti.kernel.api.services.Access.requireOpen(com.ash.drishti.kernel.api.services.Person,java.lang.String)
+  services.BusinessDates public abstract boolean com.ash.drishti.kernel.api.services.BusinessDates.live(com.ash.drishti.kernel.api.services.Person)
+  services.BusinessDates public abstract java.time.LocalDate com.ash.drishti.kernel.api.services.BusinessDates.current()
+  services.BusinessDates public abstract java.time.LocalDate com.ash.drishti.kernel.api.services.BusinessDates.selected(com.ash.drishti.kernel.api.services.Person)
+  services.CellSet public final boolean com.ash.drishti.kernel.api.services.CellSet.equals(java.lang.Object)
+  services.CellSet public final int com.ash.drishti.kernel.api.services.CellSet.hashCode()
+  services.CellSet public final java.lang.String com.ash.drishti.kernel.api.services.CellSet.toString()
+  services.CellSet public java.util.List<java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.columns()
+  services.CellSet public java.util.List<java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.rows()
+  services.CellSet public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.answer()
+  services.CellSet public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.cells()
+  services.History public abstract com.ash.drishti.kernel.api.services.Series com.ash.drishti.kernel.api.services.History.series(com.ash.drishti.kernel.api.services.Person,com.ash.drishti.api.EntityRef,java.lang.String,int,java.time.LocalDate)
+  services.InlineRequest public final boolean com.ash.drishti.kernel.api.services.InlineRequest.equals(java.lang.Object)
+  services.InlineRequest public final int com.ash.drishti.kernel.api.services.InlineRequest.hashCode()
+  services.InlineRequest public final java.lang.String com.ash.drishti.kernel.api.services.InlineRequest.toString()
+  services.InlineRequest public java.util.List<com.ash.drishti.kernel.api.services.InlineRequest$Field> com.ash.drishti.kernel.api.services.InlineRequest.fields()
+  services.InlineRequest public java.util.List<java.util.List<java.lang.Object>> com.ash.drishti.kernel.api.services.InlineRequest.rows()
+  services.InlineRequest public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.InlineRequest.view()
+  services.InlineRequest$Field public final boolean com.ash.drishti.kernel.api.services.InlineRequest$Field.equals(java.lang.Object)
+  services.InlineRequest$Field public final int com.ash.drishti.kernel.api.services.InlineRequest$Field.hashCode()
+  services.InlineRequest$Field public final java.lang.String com.ash.drishti.kernel.api.services.InlineRequest$Field.toString()
+  services.InlineRequest$Field public java.lang.String com.ash.drishti.kernel.api.services.InlineRequest$Field.label()
+  services.InlineRequest$Field public java.lang.String com.ash.drishti.kernel.api.services.InlineRequest$Field.name()
+  services.InlineRequest$Field public java.lang.String com.ash.drishti.kernel.api.services.InlineRequest$Field.type()
+  services.Kernel public abstract <V> com.ash.drishti.kernel.api.module.PersonCache<V> com.ash.drishti.kernel.api.services.Kernel.cache(int,long)
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Access com.ash.drishti.kernel.api.services.Kernel.access()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.BusinessDates com.ash.drishti.kernel.api.services.Kernel.dates()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.History com.ash.drishti.kernel.api.services.Kernel.history()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Lenses com.ash.drishti.kernel.api.services.Kernel.lenses()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.LiveQueries com.ash.drishti.kernel.api.services.Kernel.live()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Operations com.ash.drishti.kernel.api.services.Kernel.operations()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Person com.ash.drishti.kernel.api.services.Kernel.person()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.PersonSettings com.ash.drishti.kernel.api.services.Kernel.settings()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Pivots com.ash.drishti.kernel.api.services.Kernel.pivots()
+  services.Kernel public abstract com.ash.drishti.kernel.api.services.Records com.ash.drishti.kernel.api.services.Kernel.records()
+  services.Kernel$Refused public int com.ash.drishti.kernel.api.services.Kernel$Refused.status()
+  services.Kernel$Refused public java.lang.String com.ash.drishti.kernel.api.services.Kernel$Refused.code()
+  services.Kernel$Refused public java.lang.String com.ash.drishti.kernel.api.services.Kernel$Refused.say()
+  services.Lenses public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.Lenses.block(java.lang.String,java.lang.String)
+  services.LivePage public boolean com.ash.drishti.kernel.api.services.LivePage.live()
+  services.LivePage public final boolean com.ash.drishti.kernel.api.services.LivePage.equals(java.lang.Object)
+  services.LivePage public final int com.ash.drishti.kernel.api.services.LivePage.hashCode()
+  services.LivePage public final java.lang.String com.ash.drishti.kernel.api.services.LivePage.toString()
+  services.LivePage public int com.ash.drishti.kernel.api.services.LivePage.offset()
+  services.LivePage public int com.ash.drishti.kernel.api.services.LivePage.total()
+  services.LivePage public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> com.ash.drishti.kernel.api.services.LivePage.asOfNotices()
+  services.LivePage public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> com.ash.drishti.kernel.api.services.LivePage.rows()
+  services.LivePage public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.LivePage.search()
+  services.LivePage public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.LivePage.set()
+  services.LivePage public long com.ash.drishti.kernel.api.services.LivePage.seq()
+  services.LiveQueries public abstract com.ash.drishti.kernel.api.services.LivePage com.ash.drishti.kernel.api.services.LiveQueries.query(com.ash.drishti.kernel.api.services.Person,java.lang.String,int)
+  services.Operation public abstract java.lang.String com.ash.drishti.kernel.api.services.Operation.value()
+  services.Operations public abstract <T> T com.ash.drishti.kernel.api.services.Operations.of(java.lang.String,java.lang.Class<T>)
+  services.Operations public abstract boolean com.ash.drishti.kernel.api.services.Operations.available(java.lang.String)
+  services.Person public abstract boolean com.ash.drishti.kernel.api.services.Person.admin()
+  services.Person public abstract com.ash.drishti.api.AsOf com.ash.drishti.kernel.api.services.Person.asOf()
+  services.Person public abstract com.ash.drishti.kernel.api.services.Person com.ash.drishti.kernel.api.services.Person.onDate(java.time.LocalDate)
+  services.Person public abstract java.lang.String com.ash.drishti.kernel.api.services.Person.display()
+  services.Person public abstract java.lang.String com.ash.drishti.kernel.api.services.Person.key()
+  services.Person public abstract java.lang.String com.ash.drishti.kernel.api.services.Person.lens()
+  services.Person public abstract java.lang.String com.ash.drishti.kernel.api.services.Person.user()
+  services.Person public abstract java.util.List<java.lang.String> com.ash.drishti.kernel.api.services.Person.roles()
+  services.PersonSettings public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.PersonSettings.of(com.ash.drishti.kernel.api.services.Person)
+  services.Pivots public abstract com.ash.drishti.kernel.api.module.InlineFigures$Figures com.ash.drishti.kernel.api.services.Pivots.figures(com.ash.drishti.kernel.api.services.Person,java.util.List<com.ash.drishti.kernel.api.module.InlineFigures$Field>,java.util.List<java.util.List<java.lang.Object>>,java.util.List<java.util.Map<java.lang.String, java.lang.Object>>,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
+  services.Pivots public abstract com.ash.drishti.kernel.api.services.CellSet com.ash.drishti.kernel.api.services.Pivots.inline(com.ash.drishti.kernel.api.services.Person,com.ash.drishti.kernel.api.services.InlineRequest)
+  services.RawRecord public com.ash.drishti.api.DataNode com.ash.drishti.kernel.api.services.RawRecord.data()
+  services.RawRecord public com.ash.drishti.api.EntityRef com.ash.drishti.kernel.api.services.RawRecord.ref()
+  services.RawRecord public com.ash.drishti.api.Provenance com.ash.drishti.kernel.api.services.RawRecord.provenance()
+  services.RawRecord public final boolean com.ash.drishti.kernel.api.services.RawRecord.equals(java.lang.Object)
+  services.RawRecord public final int com.ash.drishti.kernel.api.services.RawRecord.hashCode()
+  services.RawRecord public final java.lang.String com.ash.drishti.kernel.api.services.RawRecord.toString()
+  services.Records public abstract com.ash.drishti.kernel.api.services.SearchAnswer com.ash.drishti.kernel.api.services.Records.search(com.ash.drishti.kernel.api.services.Person,java.lang.String)
+  services.Records public abstract java.util.Optional<com.ash.drishti.kernel.api.services.RawRecord> com.ash.drishti.kernel.api.services.Records.raw(com.ash.drishti.kernel.api.services.Person,com.ash.drishti.api.EntityRef)
+  services.SearchAnswer public boolean com.ash.drishti.kernel.api.services.SearchAnswer.descending()
+  services.SearchAnswer public boolean com.ash.drishti.kernel.api.services.SearchAnswer.partial()
+  services.SearchAnswer public double com.ash.drishti.kernel.api.services.SearchAnswer.elapsedMs()
+  services.SearchAnswer public final boolean com.ash.drishti.kernel.api.services.SearchAnswer.equals(java.lang.Object)
+  services.SearchAnswer public final int com.ash.drishti.kernel.api.services.SearchAnswer.hashCode()
+  services.SearchAnswer public final java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.toString()
+  services.SearchAnswer public int com.ash.drishti.kernel.api.services.SearchAnswer.limit()
+  services.SearchAnswer public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.condition()
+  services.SearchAnswer public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.kind()
+  services.SearchAnswer public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.mnemonic()
+  services.SearchAnswer public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.orderBy()
+  services.SearchAnswer public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer.query()
+  services.SearchAnswer public java.util.List<com.ash.drishti.kernel.api.services.SearchAnswer$Failure> com.ash.drishti.kernel.api.services.SearchAnswer.failed()
+  services.SearchAnswer public java.util.List<com.ash.drishti.kernel.api.services.SearchAnswer$Row> com.ash.drishti.kernel.api.services.SearchAnswer.rows()
+  services.SearchAnswer public java.util.List<java.lang.String> com.ash.drishti.kernel.api.services.SearchAnswer.columns()
+  services.SearchAnswer public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> com.ash.drishti.kernel.api.services.SearchAnswer.nodes()
+  services.SearchAnswer public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.SearchAnswer.noData()
+  services.SearchAnswer public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.SearchAnswer.pivot()
+  services.SearchAnswer public java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.services.SearchAnswer.labels()
+  services.SearchAnswer public long com.ash.drishti.kernel.api.services.SearchAnswer.matched()
+  services.SearchAnswer public long com.ash.drishti.kernel.api.services.SearchAnswer.scanned()
+  services.SearchAnswer$Failure public final boolean com.ash.drishti.kernel.api.services.SearchAnswer$Failure.equals(java.lang.Object)
+  services.SearchAnswer$Failure public final int com.ash.drishti.kernel.api.services.SearchAnswer$Failure.hashCode()
+  services.SearchAnswer$Failure public final java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer$Failure.toString()
+  services.SearchAnswer$Failure public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer$Failure.reason()
+  services.SearchAnswer$Failure public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer$Failure.source()
+  services.SearchAnswer$Row public com.ash.drishti.api.EntityRef com.ash.drishti.kernel.api.services.SearchAnswer$Row.ref()
+  services.SearchAnswer$Row public final boolean com.ash.drishti.kernel.api.services.SearchAnswer$Row.equals(java.lang.Object)
+  services.SearchAnswer$Row public final int com.ash.drishti.kernel.api.services.SearchAnswer$Row.hashCode()
+  services.SearchAnswer$Row public final java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer$Row.toString()
+  services.SearchAnswer$Row public java.lang.String com.ash.drishti.kernel.api.services.SearchAnswer$Row.title()
+  services.SearchAnswer$Row public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.SearchAnswer$Row.values()
+  services.Series public boolean com.ash.drishti.kernel.api.services.Series.dated()
+  services.Series public com.ash.drishti.api.EntityRef com.ash.drishti.kernel.api.services.Series.ref()
+  services.Series public final boolean com.ash.drishti.kernel.api.services.Series.equals(java.lang.Object)
+  services.Series public final int com.ash.drishti.kernel.api.services.Series.hashCode()
+  services.Series public final java.lang.String com.ash.drishti.kernel.api.services.Series.toString()
+  services.Series public java.lang.String com.ash.drishti.kernel.api.services.Series.label()
+  services.Series public java.lang.String com.ash.drishti.kernel.api.services.Series.path()
+  services.Series public java.util.List<com.ash.drishti.kernel.api.services.Series$Point> com.ash.drishti.kernel.api.services.Series.points()
+  services.Series$Point public final boolean com.ash.drishti.kernel.api.services.Series$Point.equals(java.lang.Object)
+  services.Series$Point public final int com.ash.drishti.kernel.api.services.Series$Point.hashCode()
+  services.Series$Point public final java.lang.String com.ash.drishti.kernel.api.services.Series$Point.toString()
+  services.Series$Point public java.lang.Long com.ash.drishti.kernel.api.services.Series$Point.generation()
+  services.Series$Point public java.lang.Object com.ash.drishti.kernel.api.services.Series$Point.value()
+  services.Series$Point public java.lang.String com.ash.drishti.kernel.api.services.Series$Point.source()
+  services.Series$Point public java.time.LocalDate com.ash.drishti.kernel.api.services.Series$Point.dataDate()
+  services.Series$Point public java.time.LocalDate com.ash.drishti.kernel.api.services.Series$Point.date()
   shard.ShardGather public static <P> P com.ash.drishti.kernel.api.shard.ShardGather.gather(int[],java.util.function.IntPredicate,java.util.function.IntFunction<P>,java.util.function.IntFunction<P>,com.ash.drishti.kernel.api.shard.ShardGather$Combine<P>,java.util.concurrent.Executor)
   shard.ShardGather public static com.ash.drishti.kernel.api.shard.ShardGather$Combine<double[]> com.ash.drishti.kernel.api.shard.ShardGather.sum(int)
   shard.ShardGather$Combine public abstract P com.ash.drishti.kernel.api.shard.ShardGather$Combine.add(P,P)
@@ -581,6 +703,29 @@ pivot.Windows
 pivot.Windows$Info
 pivot.Windows$Wrapped
 security.Principal
+services.Access
+services.BusinessDates
+services.CellSet
+services.History
+services.InlineRequest
+services.InlineRequest$Field
+services.Kernel
+services.Kernel$Refused
+services.Lenses
+services.LivePage
+services.LiveQueries
+services.Operation
+services.Operations
+services.Person
+services.PersonSettings
+services.Pivots
+services.RawRecord
+services.Records
+services.SearchAnswer
+services.SearchAnswer$Failure
+services.SearchAnswer$Row
+services.Series
+services.Series$Point
 shard.ShardGather
 shard.ShardGather$Combine
 shard.ShardedMeasure

@@ -237,18 +237,15 @@ def _strip_comment(p: str) -> str:
 
 
 # ------------------------------------------------------------------------------------------------------------------ pack
-def pack(folder: Path, jars=(), out: Path | None = None, kernel_build: str | None = None,
-         lib_dir: Path | None = None) -> tuple[Path, list[str]]:
-    """Packs a module folder; returns (the .dmod, the notes: strays left out). `out` defaults to <folder>/target/dmod."""
-    src = Path(folder).resolve()
-    if not src.is_dir():
-        raise PackError(f"{folder} is not a folder: pack takes the module's folder (module.yaml at its root)")
+def _collect(src: Path, jars, kernel_build: str | None, lib_dir: Path | None, with_jars: bool = True):
+    """The module's entries as the package holds them: (manifest, notes, entry names in package order, bytes by name, DMOD.MF text)."""
     m = read_manifest(src)
     notes = _strays(src)
     entries: dict = {}
     _stage_tree(src, entries)
     _bring_content(src, entries)
-    _place_jars(m, [Path(j) for j in jars], entries)
+    if with_jars:
+        _place_jars(m, [Path(j) for j in jars], entries)
     text = (src / MANIFEST).read_text(encoding="utf-8")
     if "kernel-internals:" in text or "kernel-build:" in text:
         build = kernel_build or kernel_build_of(lib_dir or Path(os.environ.get("DRISHTI_HOME", ROOT)) / "lib")
@@ -260,6 +257,41 @@ def pack(folder: Path, jars=(), out: Path | None = None, kernel_build: str | Non
     data = {n: (v if isinstance(v, bytes) else v.read_bytes()) for n, v in ((n, entries[n]) for n in order)}
     mf = "# DMOD.MF format 1: sha-256 of every entry\n" + "".join(
         f"{sha256_bytes(data[n])}  {n}\n" for n in sorted(order, key=_order))
+    return m, notes, order, data, mf
+
+
+def digest(folder: Path, kernel_build: str | None = None, lib_dir: Path | None = None) -> str:
+    """The content lines of the DMOD.MF a package of `folder` would carry, computed from the SOURCE (R2, the stale check): what the folder
+    holds and `content.yaml` brings in, never a time. A module's own jars are the build's, not the source's: they are not in it."""
+    src = Path(folder).resolve()
+    if not src.is_dir():
+        raise PackError(f"{folder} is not a folder: the digest takes the module's folder (module.yaml at its root)")
+    return _collect(src, (), kernel_build, lib_dir, with_jars=False)[4]
+
+
+def stale(folder: Path, dmod: Path) -> list[str]:
+    """The entries of `folder`'s source that differ from the package `dmod` (changed, new or gone; the jars are not compared), or none when
+    the package is current. The kernel build of an allowance is the package's own."""
+    with zipfile.ZipFile(dmod) as z:
+        held = dict(reversed(line.split("  ", 1)) for line in z.read(HASHES).decode("utf-8").splitlines() if line and line[0] != "#")
+        build = None
+        for line in z.read(MANIFEST).decode("utf-8").splitlines():
+            if line.startswith("kernel-build:"):
+                build = line.split(":", 1)[1].strip().strip("'\"")
+    now = dict(reversed(line.split("  ", 1)) for line in digest(folder, kernel_build=build).splitlines() if line and line[0] != "#")
+    def built(n: str) -> bool:
+        return n.startswith(("java/", "lib/")) and n.endswith(".jar")               # the build's, not the source's
+
+    return sorted(n for n in set(held) | set(now) if not built(n) and held.get(n) != now.get(n))
+
+
+def pack(folder: Path, jars=(), out: Path | None = None, kernel_build: str | None = None,
+         lib_dir: Path | None = None) -> tuple[Path, list[str]]:
+    """Packs a module folder; returns (the .dmod, the notes: strays left out). `out` defaults to <folder>/target/dmod."""
+    src = Path(folder).resolve()
+    if not src.is_dir():
+        raise PackError(f"{folder} is not a folder: pack takes the module's folder (module.yaml at its root)")
+    m, notes, order, data, mf = _collect(src, jars, kernel_build, lib_dir)
     target = (Path(out) if out else src / "target" / "dmod").resolve() / f"{m['id']}-{m['version']}.dmod"
     target.parent.mkdir(parents=True, exist_ok=True)
     part = target.with_name(target.name + ".part")

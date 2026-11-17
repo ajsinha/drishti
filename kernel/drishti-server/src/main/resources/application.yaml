@@ -418,6 +418,7 @@ drishti:
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
+      - /api/v1/forms/check              # a form's draft checked as people type: issues, computed defaults, hints and typed values; writes nothing
       - /api/v1/live/*/stream/*/window   # a live set stream's page (the rows it is sent changes of), kept in memory for the caller's own stream
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it

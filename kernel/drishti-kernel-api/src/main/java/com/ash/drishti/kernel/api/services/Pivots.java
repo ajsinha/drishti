@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.kernel.api.services;
 
+import com.ash.drishti.kernel.api.module.InlineFigures;
+import java.util.List;
+import java.util.Map;
+
 /** The pivot engine on rows a module already holds: what {@code POST /api/v1/pivot/inline} answers. */
 public interface Pivots {
 
@@ -25,4 +29,16 @@ public interface Pivots {
      * @throws Kernel.Refused the pivot engine is switched off, or the view does not read
      */
     CellSet inline(Person p, InlineRequest request);
+
+    /**
+     * The engine's figures of rows a module holds ({@code POST /api/v1/pivot/inline}, as {@code p}): the fields, the rows, the measures
+     * ({@link InlineFigures#measure}) and the arrangement (one level of rows {@code by} and of columns {@code across}, either null; a
+     * top N or null). No rows: nothing is asked and every figure is null. The reading of the engine's answer stays
+     * {@code InlinePivotFigures}.
+     *
+     * @throws Kernel.Refused the pivot engine is switched off, or the view does not read
+     * @throws IllegalArgumentException more rows than the engine takes inline ({@link InlineFigures#MAX_ROWS})
+     */
+    InlineFigures.Figures figures(Person p, List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
+            String by, String across, Map<String, Object> top);
 }

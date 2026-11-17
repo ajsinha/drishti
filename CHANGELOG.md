@@ -18,6 +18,23 @@
 
 ## Unreleased
 
+## 2.9.11.i7a
+
+Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
+
+- **The kernel's typed services, finished for the merge.** `Kernel.cache(size, ttlMillis)` (the per-person cache) and
+  `Pivots.figures(person, fields, rows, values, by, across, top)` (the engine's figures of rows a module holds, read as
+  `InlineFigures.Figures`) are on the typed `Kernel`, as the two loopback calls they replace. `InlineRequest` holds fields only: the
+  rules of an inline body stay in `InlinePivot`, and its `MAX_ROWS` is `InlineFigures.MAX_ROWS`. The API surface baseline is regenerated.
+- **`POST /api/v1/forms/check`** has its token-scope row (a read for a token, as `/changes/preview`) and its API reference row.
+- **The module packager.** `tools/modulepack.py` is in the tools table of the CLI reference; `modulepack.digest(folder)` and
+  `modulepack.stale(folder, dmod)` read a folder's content as the package's hash list would hold it, never a time (the stale-package check).
+- **Guards written first.** `ServerJarHoldsNoModuleTest` (G1), `KernelNamesNoModuleTest` (G2), `NoModuleFolderReaderTest` (G9) and
+  `NoLoopbackTest` (G13) are in `testing/drishti-it`, switched off with the increment that switches each on; `FlatHarnessInventoryTest` lists exactly the
+  tests that run banking on the flat test class path (they cannot catch a module-path breakage; G14 is their counterpart), and
+  `ModuleBootTest` holds the flat-folder rule (packages are read only directly in the modules folder). `DmodPythonPackTest` is in `module.runtime` and fails,
+  not skips, with `-Ddrishti.test.requires-python=true`.
+
 ## 2.9.11.i6 (2026-11-16)
 
 The thin console, Drishti Elements 2.4.0 and the genomics showcase. The version shown everywhere is `2.9.11.i6` (`.mvn/maven.config`), the

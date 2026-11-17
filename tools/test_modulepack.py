@@ -158,3 +158,36 @@ def test_a_folder_without_module_yaml_is_refused(tmp_path):
     (tmp_path / "empty").mkdir()
     with pytest.raises(modulepack.PackError, match="module.yaml"):
         modulepack.pack(tmp_path / "empty", out=tmp_path / "o")
+
+
+# ------------------------------------------------------------------------------------------------------------------ R2: stale packages
+def test_the_digest_is_the_content_lines_of_the_hash_list_of_the_package(tmp_path):
+    m = _module(tmp_path)
+    dmod, _ = modulepack.pack(m, out=tmp_path / "out")
+    with zipfile.ZipFile(dmod) as z:
+        held = z.read("META-INF/DMOD.MF").decode("utf-8")
+    assert modulepack.digest(m) == held
+    assert modulepack.stale(m, dmod) == []
+
+
+def test_a_source_edit_makes_the_package_stale_by_content_and_never_by_time(tmp_path):
+    m = _module(tmp_path)
+    dmod, _ = modulepack.pack(m, out=tmp_path / "out")
+    f = m / "packs" / "a.yaml"
+    import os
+    os.utime(f, (1, 1))                                       # a time alone is not a change
+    assert modulepack.stale(m, dmod) == []
+    f.write_text("a: 2\n", encoding="utf-8")
+    assert modulepack.stale(m, dmod) == ["packs/a.yaml"]
+    (m / "packs" / "new.yaml").write_text("n: 1\n", encoding="utf-8")
+    assert modulepack.stale(m, dmod) == ["packs/a.yaml", "packs/new.yaml"]
+    f.unlink()
+    assert modulepack.stale(m, dmod) == ["packs/a.yaml", "packs/new.yaml"]
+
+
+def test_the_digest_holds_no_time_and_the_first_party_list_holds_none(tmp_path):
+    m = _module(tmp_path)
+    modulepack.pack(m, out=tmp_path / "out")
+    text = modulepack.digest(m) + modulepack.first_party(tmp_path / "out").read_text(encoding="utf-8")
+    import re
+    assert not re.search(r"\b20\d\d-\d\d-\d\d|\b\d\d:\d\d:\d\d", text)

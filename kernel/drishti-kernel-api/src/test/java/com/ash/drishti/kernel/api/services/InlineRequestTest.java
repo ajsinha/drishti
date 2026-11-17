@@ -18,12 +18,11 @@ package com.ash.drishti.kernel.api.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** {@link InlineRequest}: the rules of {@code POST /api/v1/pivot/inline}'s body, held by the record. */
+/** {@link InlineRequest}: fields only; the rules of the body stay in InlinePivot. */
 class InlineRequestTest {
 
     private static final Map<String, Object> VIEW = Map.of("rows", List.of("DESK"), "values", List.of(Map.of("measure", "sum(MTM)", "as", "m")));
@@ -38,20 +37,9 @@ class InlineRequestTest {
     }
 
     @Test
-    void aFieldNameOrTypeTheEngineDoesNotTakeIsRefused() {
-        assertThatThrownBy(() -> new InlineRequest.Field("1desk", "string", null)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new InlineRequest.Field("DESK", "money", null)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("string, number or date");
-    }
-
-    @Test
-    void noFieldsOrTooManyRowsAreRefused() {
-        assertThatThrownBy(() -> new InlineRequest(List.of(), List.of(), VIEW)).hasMessageContaining("needs its fields");
-        List<List<Object>> rows = new ArrayList<>();
-        for (int i = 0; i <= InlineRequest.MAX_ROWS; i++) {
-            rows.add(List.of("x"));
-        }
-        assertThatThrownBy(() -> new InlineRequest(List.of(new InlineRequest.Field("A", "string", null)), rows, VIEW))
-                .hasMessageContaining("at most 100000 rows");
+    void theRulesOfTheBodyAreNotHeldHereAndTheLimitIsTheEnginesOne() {
+        assertThat(InlineRequest.MAX_ROWS).isEqualTo(com.ash.drishti.kernel.api.module.InlineFigures.MAX_ROWS);
+        assertThat(new InlineRequest(List.of(), null, VIEW).rows()).isEmpty();
+        assertThatThrownBy(() -> new InlineRequest(List.of(), List.of(), null)).isInstanceOf(NullPointerException.class);
     }
 }
