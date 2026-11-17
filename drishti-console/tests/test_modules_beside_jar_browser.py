@@ -62,7 +62,7 @@ class Node:
         """Starts the server; the new lines of its log (what this start said)."""
         log = self.data / "logs" / "server.log"
         before = log.stat().st_size if log.is_file() else 0
-        r = subprocess.run([*self.cli, "start", "server", "--port", str(self.port), "--data-dir", str(self.data), "--background", "--wait", "400"],
+        r = subprocess.run([*self.cli, "start", "server", "--port", str(self.port), "--data-dir", str(self.data), "--background", "--wait", "400", "--heap", "768m"],
                            cwd=str(ROOT), env=self.env, capture_output=True, text=True, timeout=600)
         assert r.returncode == 0, r.stdout[-1500:] + r.stderr[-1500:]
         with open(log, encoding="utf-8", errors="replace") as f:

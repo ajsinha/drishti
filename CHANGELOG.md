@@ -158,7 +158,7 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   `first-party.yaml` (`.dockerignore` drops the module folders: `modules/**` then the two exceptions), `container_smoke` asks for them; the IDE run configurations gain **Drishti
   build modules** (the debug server's before-launch step) and **Drishti server (dev switch)**; `module run` starts the kernel alone from the
   jar in `lib/`. `drill.sh`: the gate builds the modules, the Java copies get them and `-Ddrishti.test.requires-python=true`, `STALE_STATE`
-  holds `modules`. Guards: G1 (`ServerJarHoldsNoModuleTest`, the exec jar of the reactor), G5 and G7 (`test_modules_beside_jar.py`: one jar,
+  holds `modules`. Guards: G1 (`ServerJarHoldsNoModuleTest`, the exec jar of the reactor), G5 and G7 (`test_modules_beside_jar_browser.py`: one jar,
   genomics 0.1.0 then 0.1.1 then removed across restarts; an empty folder starts healthy with no module), `tools/test_build_modules.py`.
   The anywhere, genomics walk and connector designer tests take the one jar and a modules folder; `clusterlakes` and `test_content_modules`
   read modules and packs through the resolver (the config readers guard is whole again). `drishti.modules.packages=false` (the pom of
