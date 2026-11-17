@@ -112,7 +112,12 @@ final class PackagedServer implements AutoCloseable {
     }
 
     private static void runLake(List<String> cmd, Path log) throws IOException, InterruptedException {
-        Process p = new ProcessBuilder(cmd).directory(REPO.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
+        ProcessBuilder pb = new ProcessBuilder(cmd).directory(REPO.toFile()).redirectErrorStream(true).redirectOutput(log.toFile());
+        // the lake build boots the modules (the resolver): into the lake folder's own data and temp folders, never the checkout's data/
+        Path data = log.getParent().resolve("data");
+        pb.environment().put("DRISHTI_DATA_DIR", data.toString());
+        pb.environment().put("DRISHTI_TMP_DIR", log.getParent().resolve("tmp").toString());
+        Process p = pb.start();
         if (!p.waitFor(40, java.util.concurrent.TimeUnit.MINUTES)) {
             p.destroyForcibly().waitFor();
             throw new IllegalStateException("the lake build did not end in 40 minutes: " + log);
