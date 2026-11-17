@@ -371,7 +371,8 @@ One generator writes both packs: `python3 tools/packgen/genomics_showcase/make.p
 
 
 def guide(pack: str, pack_dir: Path) -> str:
-    return GUIDE_TEXT[pack].rstrip() + "\n\n" + "\n".join(GD.sections(pack_dir)).rstrip() + "\n"
+    return (README.licence_comment().rstrip() + "\n" + GUIDE_TEXT[pack].rstrip() + "\n\n" + "\n".join(GD.sections(pack_dir)).rstrip()
+            + "\n")
 
 
 def pack_files(pack: str, docs: dict, story: dict, guide_sections: bool = True) -> dict:

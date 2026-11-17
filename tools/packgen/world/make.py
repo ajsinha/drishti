@@ -64,6 +64,8 @@ def spec() -> PB.PackSpec:
         description=e.description.rstrip(".") + "; and governments and societies: government type, office holders, elections, parties with seats, "
                     "and social and governance indicators (CIA World Factbook, World Bank, UNDP).",
         domains={**e.domains, **p.domains}, examples=e.examples + p.examples, columns={**e.columns, **p.columns},
+        # public data is loaded when its feed runs, not every day: a date with no load of its own shows the newest load on or before it
+        effective_domains={"macro", "civic"},
         form_overrides={**e.form_overrides, **p.form_overrides}, roles={**e.roles, **p.roles},
         # the economics screens, written by hand from the Drishti UI kit (config/ui-kit/fragments) since Sutra Next phase 1 (SutraNextEquivalenceTest)
         hand_written={"country-group", "economic-forecast", "economy", "fiscal-position", "labour-market", "macro-indicator", "region-economy"},
