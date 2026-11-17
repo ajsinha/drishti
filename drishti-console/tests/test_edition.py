@@ -391,8 +391,7 @@ def test_the_stale_threshold_comes_from_the_edition_file(market, monkeypatch):
     _workspace(app, "market")
     app.state.editions.lenses["market"].spec["quality"] = {"stale-days": 5}
     page = _client(app).post("/home/landing/quality").text
-    assert 'data-stale-days="5"' in page and "no update in 5 business days" in page
-    assert not [e for e in _client(app).get("/api/home/market/quality").json()["warnings"] if e["check"] == "stale"]
+    assert 'data-stale-days="5"' in page and "no update in 5 business days" in page   # the checks' threshold: MarketLandingRecordTest
 
 
 def test_three_lenses_each_person_opens_any_and_switches_between_them(market, monkeypatch):
@@ -496,8 +495,7 @@ def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(t
 
 def test_the_first_landing_follows_the_trading_role_and_the_persons_own_choice_wins(trading, monkeypatch):
     app = _app(trading, monkeypatch)
-    _workspace(app, "trading", "t.brennan", "drishti-dev-admin")
-    app.state.editions.lenses["trading"].spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
+    _workspace(app, "trading", "t.brennan", "drishti-dev-admin")     # the server maps t.brennan to DESK-RATES as its desk head
     _people(app, monkeypatch, {})
     head = _client(app, "t.brennan")
     assert 'data-trading-landing="desk"' in head.get("/").text                         # a desk head opens on B
@@ -531,8 +529,7 @@ def test_my_scope_mapped_from_a_record_or_chosen_and_view_as_is_remembered(tradi
     dev = _client(app, "drishti-dev-admin")
     r = dev.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"}, follow_redirects=False)
     assert "DRS-4023" in r.headers["location"] and "tradingView" not in app.state.store.get("drishti-dev-admin", {})
-    root = _client(app, "root")
-    app.state.editions.lenses["trading"].spec["trading"]["people"]["root"] = {"trader": "TRDR-ASHAH"}
+    root = _client(app, "root")                                                          # mapped by the server to A. Shah
     root.get("/home/trading/view-as", params={"as": "trader:TRDR-KMOREAU"})
     me = root.get("/api/home/trading/me").json()
     assert me["scope"]["id"] == "TRDR-KMOREAU" and me["scope"]["canPick"] and me["options"]["traders"]
@@ -543,15 +540,6 @@ def test_my_scope_mapped_from_a_record_or_chosen_and_view_as_is_remembered(tradi
 def test_scoping_never_widens_access_every_read_is_the_persons_own(trading, monkeypatch):
     app = _app(trading, monkeypatch)
     _workspace(app, "trading", "zed")
-    seen = []
-    for name in ("search", "raw", "var", "exposure"):
-        real = getattr(trading, name)
-
-        def spy(*a, _real=real, **k):
-            ident = k.get("ident") or next((x for x in a if isinstance(x, Identity)), None)
-            seen.append((ident.user if ident else None, ident.roles if ident else None))
-            return _real(*a, **k)
-        monkeypatch.setattr(trading, name, spy)
     _people(app, monkeypatch, {})
     zed = _client(app, "zed")
     zed.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"})
@@ -559,7 +547,8 @@ def test_scoping_never_widens_access_every_read_is_the_persons_own(trading, monk
     assert t["traderMasked"] and all(r["pnl"] is None and r["var"] is None for r in t["rows"])   # TRADER_ID stays masked for a viewer
     for part in ("valuations", "risk", "blotter", "limits", "pnl-var"):
         assert zed.get(f"/api/home/trading/{part}").status_code == 200, part
-    assert seen and {u for u, _r in seen} == {"zed"} and {r for _u, r in seen} == {("viewer",)}   # read as zed, with zed's roles only
+    seen = trading.asked                                                                  # each landing call: as zed, with zed's roles only
+    assert seen and {u for u, *_ in seen} == {"zed"} and {r for _u, r, *_ in seen} == {("viewer",)}
     assert "__rows" not in zed.get("/api/home/trading/valuations").json()               # what the panels keep is never sent
 
 

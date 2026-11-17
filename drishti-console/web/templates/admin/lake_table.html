@@ -23,7 +23,10 @@
 <div class="adm lt" data-lake-table-page>
   {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="lk-crumb"><a href="{{ BASE }}/admin/loads">Data loads</a> <span aria-hidden="true">›</span> <a href="{{ BASE }}/admin/lakes">Lakes</a> <span aria-hidden="true">›</span> <span class="mono">{{ table }}</span></p>
-  {% if not t %}
+  {% if elsewhere %}
+  <h1 class="ws-h mono">{{ table or 'Lakes' }}</h1>
+  {% include "admin/_lakes_elsewhere.html" %}
+  {% elif not t %}
   <h1 class="ws-h mono">{{ table }}</h1>
   <p class="hl-err" role="alert">No Delta table <span class="mono">{{ table }}</span> under the lake root <span class="mono">{{ root }}</span>.
     <a href="{{ BASE }}/admin/lakes">Back to the lakes</a>.</p>

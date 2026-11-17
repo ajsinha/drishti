@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public final class InlineFigures {
 
-    /** The engine's most inline rows ({@code PivotController.INLINE_MAX_ROWS}). */
+    /** The engine's most inline rows ({@code InlinePivot.MAX_ROWS} of drishti-bicompute). */
     public static final int MAX_ROWS = 100_000;
     /** The member of rows with no value of the dimension ({@code CellKey.BLANK}). */
     public static final String BLANK = "(blank)";

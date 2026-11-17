@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Drishti Trading's three Home landings in a browser (LENSES.md › The design): the console with the stand-in server of trading_fake.py
-(port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
+(port 17980: the trading module's recorded answers), the person mapped by the server to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""
 import server_answers
@@ -58,8 +58,7 @@ def trading_console():
         return mine
 
     app.state.backend.settings, app.state.backend.patch_settings = settings, patch_settings
-    app.state.editions.lenses["trading"].spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
-    _APP["app"], _APP["user"] = app, user
+    _APP["app"], _APP["user"], _APP["store"] = app, user, store     # the server maps the default user (ash) to A. Shah's books
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -139,10 +138,13 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
 
 
 def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_console):
-    """A person mapped to no trader or desk: every panel says to pick one, the blotter (a grid host, not a table) too, never a lasting '…'."""
-    block = _APP["app"].state.editions.lenses["trading"].spec["trading"]
-    mapping, matching = block["people"].pop(_APP["user"]), block.get("match-records")
-    block["match-records"] = False
+    """A person mapped to no trader or desk (zed: no mapping on the server, no trader record of theirs): every panel says to pick one, the
+    blotter (a grid host, not a table) too, never a lasting '…'."""
+    from core.auth import Identity
+    auth = _APP["app"].state.auth
+    was = auth.default
+    auth.default = Identity("zed", "Zed", "", roles=("viewer",))
+    _APP["store"]["zed"] = {"lens": "trading"}
     ctx = browser.new_context(viewport={"width": 1280, "height": 900})
     page = _page(ctx)
     try:
@@ -152,11 +154,7 @@ def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_cons
         assert "Pick a trader or a desk to view as" in _text(page, "[data-tl-positions]")
     finally:
         ctx.close()
-        block["people"][_APP["user"]] = mapping
-        if matching is None:
-            block.pop("match-records", None)
-        else:
-            block["match-records"] = matching
+        auth.default = was
 def test_the_check_box_answers_end_to_end(browser, trading_console):
     ctx = browser.new_context(viewport={"width": 1280, "height": 900})
     page = _page(ctx)

@@ -14,7 +14,8 @@
 
 """Admin → Data loads → Lakes (/admin/lakes): upload a large JSON / JSON Lines file, scan it, build or add to a Delta lake with the
 CLI's engine (tools/lake/build.py) as a job on the console's machine, bind the lake to a pack's Delta connector and announce the
-load. Administrators only; see core/lakes.py."""
+load. Administrators only; see core/lakes.py. A console that is not on the server's machine (no lake engine beside it: ``Lakes.here``)
+says so on both pages and offers nothing it cannot run (docs/architecture/THIN_CONSOLE_DESIGN.md Q7)."""
 from __future__ import annotations
 
 import asyncio
@@ -60,6 +61,10 @@ async def page(request: Request):
     if not me.is_admin:
         return render(request, "admin/forbidden.html", status_code=403)
     lakes = _lakes(request)
+    if not lakes.here():                  # elsewhere: only what the server answers (its lake files and in-memory lake), read-only
+        memory, lake_files = await _servers_lakes(request, me)
+        return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), elsewhere=True, status={}, runs=[], tables=[], maint=None,
+                      memory=memory, lake_files=lake_files)
     try:
         status = await request.app.state.backend.admin("GET", "/status", me)
     except BackendError:
@@ -73,16 +78,23 @@ async def page(request: Request):
         maint = await asyncio.to_thread(maintenance(request.app).overview, figures)
     except Exception:                     # noqa: BLE001 - without the tools folder or with a broken file the tables are listed without Maintain
         maint = None
-    try:                                  # the in-memory lake (docs/guides/DATA_LAKE_GUIDE.md): ids and counts only, never a value of the data
+    memory, lake_files = await _servers_lakes(request, me)
+    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint,
+                  memory=memory, lake_files=lake_files)
+
+
+async def _servers_lakes(request: Request, me) -> tuple[dict | None, dict | None]:
+    """The server's own answers: its in-memory lake (docs/guides/DATA_LAKE_GUIDE.md: ids and counts only, never a value of the data) and
+    its lake files (every lake and table as the server reads them, read-only); None for one it does not give."""
+    try:
         memory = await request.app.state.backend.admin("GET", "/lakes/memory", me)
     except BackendError:
         memory = None
-    try:                                  # the lake files (DATA_LAKE_GUIDE.md): every lake and table as the server reads them, read-only
+    try:
         lake_files = await request.app.state.backend.admin("GET", "/lakes/files", me)
     except BackendError:
         lake_files = None
-    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint,
-                  memory=memory if memory and memory.get("stores") else None, lake_files=lake_files)
+    return (memory if memory and memory.get("stores") else None), lake_files
 
 
 @router.get("/lakes/table")
@@ -93,6 +105,8 @@ async def table_page(request: Request, root: str = "", table: str = ""):
     if not me.is_admin:
         return render(request, "admin/forbidden.html", status_code=403)
     lakes = _lakes(request)
+    if not lakes.here():
+        return render(request, "admin/lake_table.html", t=None, elsewhere=True, root=root, table=table)
     roots = {str(r): r for r in lakes.cfg.lake_roots()}
     parts = table.split("/")
     path = roots[root] / parts[0] / parts[1] if root in roots and len(parts) == 2 and all(p and p not in (".", "..") for p in parts) else None
