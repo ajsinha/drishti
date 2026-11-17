@@ -23,6 +23,7 @@ import re
 from fastapi.testclient import TestClient
 
 from module_parts_fake import Registry
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 
 def _console(client, tmp_path, reg: Registry, backend, monkeypatch) -> TestClient:
@@ -102,7 +103,7 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
 def test_a_part_carrying_elements_code_or_a_private_template_is_refused(client, backend, monkeypatch, tmp_path):
     from module_parts_fake import ROOT
 
-    grid = (ROOT / "drishti-console" / "web" / "static" / "elements" / "drishti-grid" / "drishti_grid.js").read_bytes()
+    grid = (elements_pin.ROOT / "elements" / "drishti-grid" / "drishti_grid.js").read_bytes()
     reg = Registry({"console/static/drishti_greeter-grid.js": grid, "console/handler.py": b"print(1)\n",
                     "console/templates/peek.html": b'{% include "terminal/_topbar.html" %}'})
     reg.state = "active"

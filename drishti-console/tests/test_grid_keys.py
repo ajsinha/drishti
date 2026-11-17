@@ -20,8 +20,9 @@ import shutil
 import subprocess
 
 import pytest
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
-JS = Path(__file__).resolve().parents[1] / "web" / "static" / "elements" / "drishti-core" / "drishti_core.js"
+JS = elements_pin.ROOT / "elements" / "drishti-core" / "drishti_core.js"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 

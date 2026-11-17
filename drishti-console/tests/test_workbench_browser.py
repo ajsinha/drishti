@@ -26,6 +26,7 @@ import pytest
 
 from conftest import CONSOLE
 from wb_live import BROWSER_WAIT_MS, should_reload, live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 ALL_KINDS = ["kv", "status", "provenance", "markdown", "table", "ladder", "pivot", "tabs", "line", "area", "candlestick", "surface", "histogram",
@@ -391,7 +392,7 @@ def test_layout_mode_still_moves_and_sizes_with_the_shared_grid_keys(browser):
     root = CONSOLE / "web" / "static" / "js"
     page = browser.new_page()
     page.set_content(LAYOUT_PAGE)
-    page.add_script_tag(path=str(CONSOLE / "web" / "static" / "elements" / "drishti-core" / "drishti_core.js"))   # the shared panel keys
+    page.add_script_tag(path=str(elements_pin.ROOT / "elements" / "drishti-core" / "drishti_core.js"))   # the shared panel keys
     for f in ("drishti_keys.js", "drishti_layout-rules.js", "drishti_layout.js"):   # the one keymap first, as base.html loads it
         page.add_script_tag(path=str(root / f))
     page.keyboard.press("Alt+l")

@@ -20,8 +20,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
-DESIGNER = Path(__file__).resolve().parent.parent / "web" / "static" / "elements" / "drishti-designer" / "drishti_designer.js"
+DESIGNER = elements_pin.ROOT / "elements" / "drishti-designer" / "drishti_designer.js"
 SCHEMA = {
     "properties": {
         "rachana": {}, "sutra": {}, "version": {},

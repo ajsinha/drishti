@@ -25,6 +25,8 @@ import re
 
 import pytest
 
+from core import elements_pin
+
 from conftest import CONSOLE
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
@@ -45,7 +47,7 @@ ALLOWED: dict = {
 def _sources():
     files = (sorted((WEB / "static" / "js").rglob("*.js")) + sorted((WEB / "templates").rglob("*.html"))
              + sorted((WEB / "static" / "elements").glob("*/src/*.js")) + sorted((WEB / "static" / "elements").glob("*/*.html"))
-             + sorted((WEB / "static" / "gallery").glob("*.js"))
+             + sorted((elements_pin.ROOT / "gallery").glob("*.js"))
              + sorted(CONSOLE.glob("plugins/*/templates/**/*.html")) + sorted(CONSOLE.glob("plugins/*/static/**/*.js")))
     return {str(p.relative_to(CONSOLE)): p for p in files}
 

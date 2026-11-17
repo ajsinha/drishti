@@ -57,7 +57,7 @@ def test_security_headers(client):
 
 
 def test_static_assets_served(client):
-    for path in ("/static/js/drishti_landing.js", "/static/css/drishti_tokens.css", "/static/vendor/bootstrap/css/bootstrap.min.css"):
+    for path in ("/static/js/drishti_landing.js", "/static/vendor/drishti-elements/2.4.0/css/drishti_tokens.css", "/static/vendor/bootstrap/css/bootstrap.min.css"):
         assert client.get(path).status_code == 200
 
 
