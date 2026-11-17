@@ -18,7 +18,6 @@ package com.ash.drishti.module.runtime;
 import com.ash.drishti.kernel.api.module.Answers;
 import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.InlineFigures.Field;
-import com.ash.drishti.kernel.api.module.KernelCalls;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The kernel's {@link KernelCalls.Caller#figures}: the request to the pivot engine ({@code POST /api/v1/pivot/inline}, as the person) and
+ * The kernel's {@code Pivots.figures}: the request to the pivot engine ({@code POST /api/v1/pivot/inline}, as the person) and
  * the reading of its cells into {@link InlineFigures.Figures}. The engine aggregates; nothing here adds up a figure.
  */
 public final class InlinePivotFigures {
@@ -72,17 +71,6 @@ public final class InlinePivotFigures {
         body.put("rows", out);
         body.put("view", view);
         return body;
-    }
-
-    /**
-     * The engine's figures of {@code rows}, as the person (a refusal is the server's {@link KernelCalls.Refused}, the pivot engine switched
-     * off among them). No rows: nothing is asked.
-     *
-     * @throws IllegalArgumentException more rows than the engine takes inline
-     */
-    public static InlineFigures.Figures ask(KernelCalls.Caller caller, List<Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
-            String by, String across, Map<String, Object> top) {
-        return ask(b -> caller.post("/pivot/inline", b, Map.of()), fields, rows, values, by, across, top);
     }
 
     /**

@@ -15,7 +15,7 @@
  */
 /**
  * The typed kernel API (docs/architecture/KERNEL_AND_MODULES.md section 2.3), kernel API {@code 0.5}: what a module calls instead of the
- * loopback HTTP calls of {@code module.KernelCalls}. {@link com.ash.drishti.kernel.api.services.Kernel} is one bean (also
+ * loopback HTTP calls the landings made to their own server. {@link com.ash.drishti.kernel.api.services.Kernel} is one bean (also
  * {@code ModuleContext.kernel()}); each of its services answers exactly what the REST path it replaces answers, for the same
  * {@link com.ash.drishti.kernel.api.services.Person}, through the same doors (entitlements, masks, row rules, lens, date box, token scopes).
  *

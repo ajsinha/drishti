@@ -26,6 +26,9 @@ public interface BusinessDates {
     /** The date the person's date box resolves to, rolled back to a business day. */
     LocalDate selected(Person p);
 
+    /** The calendar's holidays from the earliest business date to a year after today's one ({@code holidays} of {@code /business-date}). */
+    java.util.Set<LocalDate> holidays();
+
     /** Whether the person looks at the live date (their date box is today's business date with no known-at). */
     boolean live(Person p);
 }

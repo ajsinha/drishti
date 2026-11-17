@@ -49,13 +49,25 @@ final class KernelModuleContext implements ModuleContext {
     private final Supplier<AuditLog> audit;
     private final Path dataDir;
     private final Settings settings;
+    private final Supplier<com.ash.drishti.kernel.api.services.Kernel> kernel;
 
-    KernelModuleContext(String id, Supplier<SourceRouter> router, Supplier<AuditLog> audit, Path dataDir, ConfigurableEnvironment env) {
+    KernelModuleContext(String id, Supplier<SourceRouter> router, Supplier<AuditLog> audit, Path dataDir, ConfigurableEnvironment env,
+            Supplier<com.ash.drishti.kernel.api.services.Kernel> kernel) {
+        this.kernel = kernel;
         this.id = id;
         this.router = router;
         this.audit = audit;
         this.dataDir = dataDir;
         this.settings = new Settings(read(env, "drishti.module." + id + "."));
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Kernel kernel() {
+        com.ash.drishti.kernel.api.services.Kernel k = kernel.get();
+        if (k == null) {
+            throw new IllegalStateException("the kernel's typed services are not up yet");
+        }
+        return k;
     }
 
     @Override

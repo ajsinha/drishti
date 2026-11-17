@@ -27,12 +27,10 @@ import static com.ash.drishti.kernel.api.module.Answers.str;
 import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.InlineFigures.Field;
 import com.ash.drishti.kernel.api.module.InlineFigures.Figures;
-import com.ash.drishti.kernel.api.module.KernelCalls;
-import com.ash.drishti.kernel.api.module.KernelCalls.Caller;
-import com.ash.drishti.kernel.api.module.KernelCalls.Refused;
+import com.ash.drishti.kernel.api.services.Kernel;
+import com.ash.drishti.kernel.api.services.Kernel.Refused;
+import com.ash.drishti.kernel.api.services.Person;
 import com.ash.drishti.kernel.api.module.PersonCache;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -91,21 +89,31 @@ public class TradingLanding {
     static final Map<String, String> STATES = Map.of("within", "ok", "near", "near", "breach", "breach");
     private static final long TTL_MILLIS = 120_000;
 
-    private final KernelCalls kernel;
+    private final Kernel kernel;
+    private final RiskFigures risk;
     private final Environment env;
     /** What was read, per person (the caller's key: user, roles, lens, date box), two minutes each, the 64 most recent. */
     private final PersonCache<Object> cache;
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
-    public TradingLanding(KernelCalls kernel, Environment env) {
+    public TradingLanding(Kernel kernel, Environment env) {
         this.kernel = kernel;
+        this.risk = kernel.operations().of("banking", RiskFigures.class);
         this.env = env;
         this.cache = kernel.cache(64, TTL_MILLIS);
     }
 
     /** The person of the request in hand. */
-    public Caller caller() {
-        return kernel.caller();
+    public TradingAsker caller() {
+        return new Asking(kernel, risk, kernel.person());
+    }
+
+    /** One person's questions of the kernel. */
+    private record Asking(Kernel kernel, RiskFigures risk, Person person) implements TradingAsker {
+        @Override
+        public TradingAsker as(Person p) {
+            return new Asking(kernel, risk, p);
+        }
     }
 
     // -- small helpers ------------------------------------------------------------------------------------------------------------------
@@ -144,17 +152,13 @@ public class TradingLanding {
         }
     }
 
-    static Map<String, Object> search(Caller c, String query) {
-        return c.get("/search", Map.of("q", query));
+    static Map<String, Object> search(TradingAsker c, String query) {
+        return c.search(query);
     }
 
     /** A document as the server holds it ({@code GET /api/v1/entities/{kind}/{id}/raw}): an id a path cannot carry goes in the query. */
-    static Map<String, Object> raw(Caller c, String kind, String id) {
-        String k = URLEncoder.encode(kind, StandardCharsets.UTF_8).replace("+", "%20");
-        if (id.contains("/") || id.contains("\\") || id.equals(".") || id.equals("..") || id.equals("~")) {
-            return c.get("/entities/" + k + "/~/raw", Map.of("id", id));
-        }
-        return c.get("/entities/" + k + "/" + URLEncoder.encode(id, StandardCharsets.UTF_8).replace("+", "%20") + "/raw", Map.of());
+    static Map<String, Object> raw(TradingAsker c, String kind, String id) {
+        return c.raw(kind, id);
     }
 
     static int count(Map<String, Object> cfg, String key, int dflt, int lo, int hi) {
@@ -173,8 +177,8 @@ public class TradingLanding {
 
     // -- configuration ------------------------------------------------------------------------------------------------------------------
     /** The lens's {@code trading:} block with the server's {@code drishti.trading.people} over its people (a name in both: the server's). */
-    public Map<String, Object> config(Caller c) {
-        Map<String, Object> block = new LinkedHashMap<>(map(kernel.lens(c.lens()), "trading"));
+    public Map<String, Object> config(TradingAsker c) {
+        Map<String, Object> block = new LinkedHashMap<>(kernel.lenses().block(c.lens(), "trading"));
         Map<String, Object> people = new LinkedHashMap<>();
         map(block, "people").forEach((k, v) -> {
             if (v instanceof Map<?, ?>) {
@@ -251,16 +255,16 @@ public class TradingLanding {
         return null;
     }
 
-    private Map<String, Object> settings(Caller c) {
+    private Map<String, Object> settings(TradingAsker c) {
         try {
-            return c.get("/me/settings", Map.of());
+            return c.settings();
         } catch (Refused e) {
             return Map.of();
         }
     }
 
     /** A trader record that is this person's: {@code TRDR-<USER>} (case and dots ignored), or the same name as their display name. */
-    private String recordMatch(Caller c) {
+    private String recordMatch(TradingAsker c) {
         String user = c.user().toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "");
         String display = c.display().strip().toLowerCase(Locale.ROOT);
         Map<String, Object> found;
@@ -288,7 +292,7 @@ public class TradingLanding {
     }
 
     /** Who "my" is for this person, with the trader's or desk's books read from its record as the person. */
-    public Scope resolve(Caller c, Map<String, Object> cfg) {
+    public Scope resolve(TradingAsker c, Map<String, Object> cfg) {
         String[] mapped = mapping(map(cfg, "people").get(c.user().toLowerCase(Locale.ROOT)));
         String[] view = parseView(settings(c).get("tradingView"));
         String key = "scope\u0001" + c.key() + "\u0001" + (mapped == null ? "" : String.join(":", mapped)) + "\u0001"
@@ -346,7 +350,7 @@ public class TradingLanding {
     }
 
     /** The Desk head landing of a trader: their desk (its record's books, read as the person); a desk stays itself. */
-    public Scope deskOf(Caller c, Scope scope) {
+    public Scope deskOf(TradingAsker c, Scope scope) {
         if (!"trader".equals(scope.kind) || !SAFE_ID.matcher(scope.desk.isEmpty() ? "-" : scope.desk).matches()) {
             return scope;
         }
@@ -374,7 +378,7 @@ public class TradingLanding {
     }
 
     /** What the View as picker offers: the traders and desks this person may read (their search, as them). */
-    public Map<String, Object> options(Caller c) {
+    public Map<String, Object> options(TradingAsker c) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (String[] wk : new String[][] {{"TRDR", "traders"}, {"DESK", "desks"}}) {
             List<Map<String, Object>> items = new ArrayList<>();
@@ -398,7 +402,7 @@ public class TradingLanding {
     }
 
     /** The person's trading role without reading the data (which landing opens first): their mapping's, else what their View as names. */
-    public String tradingRole(Caller c, Map<String, Object> cfg) {
+    public String tradingRole(TradingAsker c, Map<String, Object> cfg) {
         String[] mapped = mapping(map(cfg, "people").get(c.user().toLowerCase(Locale.ROOT)));
         String[] view = parseView(settings(c).get("tradingView"));
         if (view != null && (mapped == null || c.admin())) {
@@ -437,9 +441,9 @@ public class TradingLanding {
     record Dates(LocalDate business, Set<String> holidays) {
     }
 
-    static Dates dates(Caller c) {
+    static Dates dates(TradingAsker c) {
         try {
-            Map<String, Object> bd = c.get("/business-date", Map.of());
+            Map<String, Object> bd = c.dates();
             Object sel = get(bd, "selected");
             Set<String> h = new HashSet<>();
             list(bd, "holidays").forEach(x -> h.add(str(x)));
@@ -469,7 +473,7 @@ public class TradingLanding {
      * Every trade valuation matching {@code condition} on the caller's business date, a page of the server's most at a time (by MTM,
      * largest first; each next page from the last MTM down, ids already read skipped).
      */
-    static Read readValuations(Caller c, String condition, int maxRows) {
+    static Read readValuations(TradingAsker c, String condition, int maxRows) {
         String names = String.join(" or ", FIELDS.stream().map(f -> f + " != null").toList());
         String base = "TVAL where " + condition + " and (" + names + ")";
         Map<String, Map<String, Object>> rows = new LinkedHashMap<>();
@@ -529,7 +533,7 @@ public class TradingLanding {
     }
 
     /** The day a read's valuations are of: one of them read whole, its provenance's business date (null when there is none to read). */
-    static LocalDate dataDate(Caller c, Read read) {
+    static LocalDate dataDate(TradingAsker c, Read read) {
         if (read == null || read.rows().isEmpty()) {
             return null;
         }
@@ -556,7 +560,7 @@ public class TradingLanding {
      * The scope's trade valuations on the business date and the business day before, and what they give (the P&amp;L tiles, by book and
      * trader, overnight movers, DV01, the largest counterparty share), kept two minutes per person, date and scope.
      */
-    public Valuations valuations(Caller c, Scope scope, Map<String, Object> cfg) {
+    public Valuations valuations(TradingAsker c, Scope scope, Map<String, Object> cfg) {
         String cond = scopeCondition(scope);
         Dates d = dates(c);
         if (cond == null || d.business() == null) {
@@ -572,7 +576,7 @@ public class TradingLanding {
         }
     }
 
-    private Valuations makeValuations(Caller c, String cond, int maxRows, Dates d, Map<String, Object> cfg) {
+    private Valuations makeValuations(TradingAsker c, String cond, int maxRows, Dates d, Map<String, Object> cfg) {
         Read now = readValuations(c, cond, maxRows);
         // the day the valuations are really of (a lake not loaded since serves its latest day on later dates): its day before is compared
         LocalDate dataDay = dataDate(c, now);
@@ -583,7 +587,7 @@ public class TradingLanding {
         Read was = null;
         String wasProblem = null;
         try {
-            Caller then = c.onDate(before);
+            TradingAsker then = c.onDate(before);
             was = readValuations(then, cond, maxRows);
             LocalDate wasDay = dataDate(then, was);
             if (wasDay != null && !wasDay.equals(before)) {           // carried from an earlier day: no valuations of that day
@@ -660,7 +664,7 @@ public class TradingLanding {
     }
 
     /** The scope's totals from the server's pivot engine: {totals, counterparties, problem}. */
-    Object[] engineFigures(Caller c, Read now, Read was, List<String> live) {
+    Object[] engineFigures(TradingAsker c, Read now, Read was, List<String> live) {
         List<List<Object>> rows = figureRows(now, was, live);
         try {
             CompletableFuture<Figures> totals = async(() -> c.figures(FIG_FIELDS, rows, FIG_TOTALS, "BOOK", "TRADER", null));
@@ -783,7 +787,7 @@ public class TradingLanding {
      * draws its grid from, and each trade's notional from the valuations.
      */
     @SuppressWarnings("unchecked")
-    public Map<String, Object> blotter(Caller c, Scope scope, Map<String, Object> cfg) {
+    public Map<String, Object> blotter(TradingAsker c, Scope scope, Map<String, Object> cfg) {
         Dates d = dates(c);
         List<String> books = scope.books;
         if (books.isEmpty() || d.business() == null) {
@@ -799,7 +803,7 @@ public class TradingLanding {
         String key = "blotter\u0001" + c.key() + "\u0001" + scope.kind + "\u0001" + scope.id + "\u0001" + scope.booksKey() + "\u0001" + business;
         Map<String, Object> made = (Map<String, Object>) cache.once(key, () -> {
             try {
-                Map<String, Object> page = c.get("/live/query", Map.of("q", query, "again", "true", "limit", PAGE));
+                Map<String, Object> page = c.live(query, PAGE);
                 Map<String, Object> out = events(page, business);
                 out.put("how", "trades");
                 Map<String, Object> set = map(page, "set");
@@ -896,15 +900,15 @@ public class TradingLanding {
      * The scope's VaR (intraday when the engine applied updates), each book's VaR against its limit, the worst book, breaches and books
      * near their limit, and the largest positions by VaR contribution: the VaR engine's own answers.
      */
-    public Map<String, Object> risk(Caller c, Scope scope) {
+    public Map<String, Object> risk(TradingAsker c, Scope scope) {
         String text = varScope(scope);
         if (text == null) {
             return m("available", false, "reason", "no books in your scope");
         }
-        CompletableFuture<Asked> headT = async(() -> Asked.of(() -> c.get("/risk/var/scope", Map.of("scope", text))));
+        CompletableFuture<Asked> headT = async(() -> Asked.of(() -> c.varScope(text)));
         List<CompletableFuture<Asked>> bookTs = scope.books.stream()
-                .map(b -> async(() -> Asked.of(() -> c.get("/risk/var/scope", Map.of("scope", "BOOK:" + b))))).toList();
-        CompletableFuture<Asked> partsT = async(() -> Asked.of(() -> c.get("/risk/var/scope/contributions", Map.of("scope", text, "by", "position"))));
+                .map(b -> async(() -> Asked.of(() -> c.varScope("BOOK:" + b)))).toList();
+        CompletableFuture<Asked> partsT = async(() -> Asked.of(() -> c.varContributions(text, "position")));
         Asked head = join(headT);
         List<Map<String, Object>> books = new ArrayList<>();
         List<String> problems = new ArrayList<>();
@@ -956,14 +960,14 @@ public class TradingLanding {
     }
 
     /** Each book's VaR ÷ limit over the last business dates, from each date's official VaR record (the numbers of record). */
-    public Map<String, Object> limits(Caller c, Scope scope, Map<String, Object> cfg) {
+    public Map<String, Object> limits(TradingAsker c, Scope scope, Map<String, Object> cfg) {
         Dates d = dates(c);
         if (d.business() == null || scope.books.isEmpty()) {
             return m("available", false, "reason", d.business() != null ? "no books in your scope" : "the server gave no business date");
         }
         List<LocalDate> days = businessDays(d.business(), count(cfg, "limit-days", 5, 1, 20), d.holidays());
         List<CompletableFuture<Asked>> ts = days.stream()
-                .map(day -> async(() -> Asked.of(() -> c.get("/risk/var/official", Map.of("asOf", day.toString()))))).toList();
+                .map(day -> async(() -> Asked.of(() -> c.onDate(day).varOfficial()))).toList();
         List<Asked> answers = ts.stream().map(TradingLanding::join).toList();
         if (answers.stream().allMatch(a -> a.answer() == null)) {
             String why = answers.get(answers.size() - 1).why();
@@ -995,12 +999,12 @@ public class TradingLanding {
      * The desk's daily P&amp;L against its VaR, from its official history (each day's hypothetical P&amp;L against the VaR before it). A
      * replayed history is scenario P&amp;L, not a day's: then the card is left out and says why.
      */
-    public Map<String, Object> pnlVsVar(Caller c, Scope scope, Map<String, Object> cfg) {
+    public Map<String, Object> pnlVsVar(TradingAsker c, Scope scope, Map<String, Object> cfg) {
         String text = "desk".equals(scope.kind) ? varScope(scope) : null;
         if (text == null) {
             return m("available", false, "reason", "a desk's history: pick a desk");
         }
-        Asked h = Asked.of(() -> c.get("/risk/var/scope/history", Map.of("scope", text)));
+        Asked h = Asked.of(() -> c.varHistory(text));
         if (h.answer() == null) {
             return m("available", false, "reason", h.why());
         }
@@ -1034,14 +1038,13 @@ public class TradingLanding {
      * The desk by trader: each trader's P&amp;L and live trades from the valuations' TRADER_ID, and their VaR as the server computes it
      * ({@code /scope/contributions?by=attribute:TRADER_ID}). A role that sees TRADER_ID masked gets the trader records' counts only.
      */
-    public Map<String, Object> traders(Caller c, Scope scope, Map<String, Object> cfg) {
+    public Map<String, Object> traders(TradingAsker c, Scope scope, Map<String, Object> cfg) {
         if (!"desk".equals(scope.kind)) {
             return m("available", false, "reason", "by trader is a desk's: pick a desk");
         }
         Asked listed = Asked.of(() -> search(c, "TRDR where DESK = " + q(scope.id) + " and (NAME != null or TRADE_COUNT != null) limit 200"));
         CompletableFuture<Valuations> tvT = async(() -> valuations(c, scope, cfg));
-        CompletableFuture<Asked> groupsT = async(() -> Asked.of(() -> c.get("/risk/var/scope/contributions",
-                Map.of("scope", "DESK:" + scope.id, "by", "attribute:TRADER_ID"))));
+        CompletableFuture<Asked> groupsT = async(() -> Asked.of(() -> c.varContributions("DESK:" + scope.id, "attribute:TRADER_ID")));
         Map<String, Object> tv = join(tvT).answer();
         Asked groups = join(groupsT);
         Map<String, Map<String, Object>> rows = new LinkedHashMap<>();
@@ -1139,7 +1142,7 @@ public class TradingLanding {
      * Does a new trade fit? One VaR what-if on the book and one pre-deal check on the counterparty, each the engine's own, on a copy of a
      * booked trade of the product scaled to the notional (factor = notional ÷ its notional, negative for the other side).
      */
-    public Map<String, Object> check(Caller c, Scope scope, Map<String, Object> cfg, Map<String, Object> body) {
+    public Map<String, Object> check(TradingAsker c, Scope scope, Map<String, Object> cfg, Map<String, Object> body) {
         String product = str(body.get("product")).strip();
         String cp = str(body.get("counterparty")).strip().toUpperCase(Locale.ROOT);
         Double notional = parseAmount(body.get("notional"));
@@ -1182,12 +1185,12 @@ public class TradingLanding {
     }
 
     /** The VaR what-if on the book: VaR before and after, and the book's limit, its use before and after and the status after. */
-    static Map<String, Object> varCheck(Caller c, String book, String tid, double factor, String label) {
+    static Map<String, Object> varCheck(TradingAsker c, String book, String tid, double factor, String label) {
         if (book == null || book.isEmpty()) {
             return m("state", "unavailable", "reason", "no book in your scope");
         }
         String scope = "BOOK:" + book;
-        Asked w = Asked.of(() -> c.post("/risk/var/what-if", m("scope", scope, "items", List.of(m("copyOf", tid, "factor", factor, "label", label))), Map.of()));
+        Asked w = Asked.of(() -> c.varWhatIf(m("scope", scope, "items", List.of(m("copyOf", tid, "factor", factor, "label", label)))));
         if (w.answer() == null) {
             return m("state", "unavailable", "scope", scope, "reason", w.why(), "code", w.code());
         }
@@ -1204,9 +1207,9 @@ public class TradingLanding {
      * when the copy has no paths on the run, the same check described (asset class, notional, maturity), the engine's conservative proxy,
      * which only refers. The decision, the limit use and every figure are the server's, the state too.
      */
-    static Map<String, Object> exposureCheck(Caller c, String cp, String tid, Map<String, Object> t, double factor, double notional, double sign) {
+    static Map<String, Object> exposureCheck(TradingAsker c, String cp, String tid, Map<String, Object> t, double factor, double notional, double sign) {
         String side = sign < 0 ? "reverse" : "same";
-        Asked a = Asked.of(() -> c.post("/risk/exposure/predeal", m("counterparty", cp, "like", tid, "notional", notional, "side", side), Map.of()));
+        Asked a = Asked.of(() -> c.exposurePreDeal(m("counterparty", cp, "like", tid, "notional", notional, "side", side)));
         String fellBack = null;
         if (a.answer() == null && "DRS-1001".equals(a.code())) {        // the copy has no paths on the run: the check described, the proxy
             fellBack = a.why();
@@ -1221,7 +1224,7 @@ public class TradingLanding {
             Double mtm = num(t.get("MTM"));
             Map<String, Object> described = m("counterparty", cp, "assetClass", group != null && !"".equals(group) ? group : "rates", "notional", notional,
                     "maturity", maturity != null && !"".equals(maturity) ? maturity : "1Y", "mtm", (mtm == null ? 0 : mtm) * factor, "side", side);
-            a = Asked.of(() -> c.post("/risk/exposure/predeal", described, Map.of()));
+            a = Asked.of(() -> c.exposurePreDeal(described));
         }
         if (a.answer() == null) {
             return m("state", "unavailable", "scope", "CPTY:" + cp, "reason", a.why(), "code", a.code());

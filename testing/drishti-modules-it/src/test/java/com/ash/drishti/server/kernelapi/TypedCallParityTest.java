@@ -19,12 +19,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.kernel.api.module.InlineFigures;
-import com.ash.drishti.kernel.api.module.KernelCalls;
 import com.ash.drishti.kernel.api.services.InlineRequest;
 import com.ash.drishti.kernel.api.services.Kernel;
 import com.ash.drishti.kernel.api.services.Person;
 import com.ash.drishti.module.runtime.InlinePivotFigures;
-import com.ash.drishti.server.api.LoopbackKernelCalls;
+import com.ash.drishti.server.api.AsOfResolver;
+import com.ash.drishti.server.edition.EditionContext;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,8 +59,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * K2's parity (docs/plans/I7A_BUILD_PLAN.md): for every kernel call the landings make today, the typed in-process call and the loopback
- * REST call ({@link LoopbackKernelCalls}) give the same answer for the same person, both made inside one real request (a probe endpoint
+ * K2's parity (docs/plans/I7A_BUILD_PLAN.md): for every kernel call the landings make today, the typed in-process call and the REST
+ * call (a plain HTTP client carrying the request's own headers) give the same answer for the same person, both made inside one real request (a probe endpoint
  * of this test). Rows: an administrator, a masked role, a row-ruled role, a role the kind is closed to, a lens, an earlier date box, another
  * language, a read-only API token and a token with the scope that opens the one POST; a refusal is the same status, code and words both
  * ways. The rows run several people at once on shared threads (session isolation). {@link FixedToday}: the same with
@@ -230,14 +230,14 @@ class TypedCallParityTest {
                     differ.add(m.substring(0, Math.max(0, m.indexOf("\nexpected"))));
                 }
             }
-            assertThat(differ).as("calls whose typed answer is not the loopback's").isEmpty();
+            assertThat(differ).as("calls whose typed answer is not the REST answer").isEmpty();
         } finally {
             pool.shutdownNow();
         }
     }
 
     @Test
-    void everyCallAnswersTheSameTypedAndOverTheLoopback() throws Exception {
+    void everyCallAnswersTheSameTypedAndOverRest() throws Exception {
         String readOnly = apiToken("parity-ro", "full");
         String scoped = apiToken("parity-scoped", "full", "pivot-inline");
         allCalls(List.of(
@@ -364,13 +364,13 @@ class TypedCallParityTest {
         this.port = p;
     }
 
-    /** The probe: the same call typed and over the loopback, inside one request of the person. */
+    /** The probe: the same call typed and over REST, inside one request of the person. */
     @TestConfiguration(proxyBeanMethods = false)
     static class Probes {
 
         @Bean
-        Probe parityProbe(Kernel kernel, LoopbackKernelCalls loopback) {
-            return new Probe(kernel, loopback);
+        Probe parityProbe(Kernel kernel, com.ash.drishti.server.kernelapi.KernelLenses lenses, org.springframework.core.env.Environment env) {
+            return new Probe(kernel, lenses, env);
         }
     }
 
@@ -378,11 +378,13 @@ class TypedCallParityTest {
     static class Probe {
 
         private final Kernel kernel;
-        private final LoopbackKernelCalls loopback;
+        private final com.ash.drishti.server.kernelapi.KernelLenses lenses;
+        private final org.springframework.core.env.Environment env;
 
-        Probe(Kernel kernel, LoopbackKernelCalls loopback) {
+        Probe(Kernel kernel, com.ash.drishti.server.kernelapi.KernelLenses lenses, org.springframework.core.env.Environment env) {
             this.kernel = kernel;
-            this.loopback = loopback;
+            this.lenses = lenses;
+            this.env = env;
         }
 
         static final List<InlineFigures.Field> FIELDS = List.of(new InlineFigures.Field("CCY", "string"), new InlineFigures.Field("Q", "number"));
@@ -390,9 +392,10 @@ class TypedCallParityTest {
         static final List<Map<String, Object>> VALUES = List.of(InlineFigures.measure("sum(Q)", "q"));
 
         @GetMapping("/api/v1/parity-probe/{call}")
-        Map<String, Object> probe(@PathVariable String call, @RequestParam Map<String, String> q) {
+        Map<String, Object> probe(@PathVariable String call, @RequestParam Map<String, String> q,
+                jakarta.servlet.http.HttpServletRequest req) {
             Person p = kernel.person();
-            KernelCalls.Caller c = loopback.caller();
+            Rest c = new Rest(env.getProperty("local.server.port"), req);
             Map<String, Object> out = new LinkedHashMap<>();
             switch (call) {
                 case "search" -> both(out, () -> kernel.records().search(p, q.get("q")), () -> c.get("/search", Map.of("q", q.get("q"))));
@@ -421,9 +424,9 @@ class TypedCallParityTest {
                 case "pivot" -> both(out, () -> kernel.pivots().inline(p, request()).answer(),
                         () -> c.post("/pivot/inline", InlinePivotFigures.body(FIELDS, ROWS, VALUES, "CCY", null, null), Map.of()));
                 case "figures" -> both(out, () -> figures(kernel.pivots().figures(p, FIELDS, ROWS, VALUES, "CCY", null, null)),
-                        () -> figures(c.figures(FIELDS, ROWS, VALUES, "CCY", null, null)));
+                        () -> figures(InlinePivotFigures.ask(b -> c.post("/pivot/inline", b, Map.of()), FIELDS, ROWS, VALUES, "CCY", null, null)));
                 case "lens" -> both(out, () -> kernel.lenses().block(p.lens().isEmpty() ? q.get("lens") : p.lens(), q.get("block")), () -> {
-                    Object b = loopback.lens(c.lens().isEmpty() ? q.get("lens") : c.lens()).get(q.get("block"));
+                    Object b = lenses.whole(c.lens().isEmpty() ? q.get("lens") : c.lens()).get(q.get("block"));
                     return b instanceof Map<?, ?> m ? m : Map.of();
                 });
                 default -> throw new IllegalArgumentException("no call " + call);
@@ -474,6 +477,70 @@ class TypedCallParityTest {
                 m.put("code", e.code());
                 m.put("detail", e.getMessage());
                 return Map.of("refused", m);
+            }
+        }
+
+        /** The REST side: a plain HTTP call to this server carrying the headers of the request in hand. */
+        static final class Rest {
+
+            private final String port;
+            private final Map<String, String> headers = new LinkedHashMap<>();
+            private final HttpClient http = HttpClient.newHttpClient();
+
+            Rest(String port, jakarta.servlet.http.HttpServletRequest req) {
+                this.port = port;
+                for (String h : List.of("Authorization", "X-Drishti-User", AsOfResolver.HEADER, AsOfResolver.KNOWN_AT_HEADER, EditionContext.HEADER,
+                        "Accept-Language")) {
+                    String v = req.getHeader(h);
+                    if (v != null && !v.isBlank()) {
+                        headers.put(h, v);
+                    }
+                }
+            }
+
+            String lens() {
+                return headers.getOrDefault(EditionContext.HEADER, "");
+            }
+
+            Map<String, Object> get(String path, Map<String, ?> params) {
+                return send(HttpRequest.newBuilder(uri(path, params)).GET());
+            }
+
+            Map<String, Object> post(String path, Object body, Map<String, ?> params) {
+                try {
+                    return send(HttpRequest.newBuilder(uri(path, params)).header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofByteArray(JSON.writeValueAsBytes(body == null ? Map.of() : body))));
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+
+            private URI uri(String path, Map<String, ?> params) {
+                StringBuilder q = new StringBuilder();
+                params.forEach((k, v) -> q.append(q.isEmpty() ? '?' : '&').append(URLEncoder.encode(k, StandardCharsets.UTF_8)).append('=')
+                        .append(URLEncoder.encode(String.valueOf(v), StandardCharsets.UTF_8)));
+                return URI.create("http://127.0.0.1:" + port + "/api/v1" + path + q);
+            }
+
+            @SuppressWarnings("unchecked")
+            private Map<String, Object> send(HttpRequest.Builder b) {
+                b.header("Accept", "application/json");
+                headers.forEach(b::header);
+                try {
+                    HttpResponse<byte[]> r = http.send(b.build(), HttpResponse.BodyHandlers.ofByteArray());
+                    Object body = r.body().length == 0 ? Map.of() : JSON.readValue(r.body(), Object.class);
+                    if (r.statusCode() >= 400) {
+                        Map<String, Object> m = body instanceof Map<?, ?> x ? (Map<String, Object>) x : Map.of();
+                        throw new Kernel.Refused(r.statusCode(), m.get("code") == null ? "HTTP-" + r.statusCode() : String.valueOf(m.get("code")),
+                                m.get("detail") == null ? String.valueOf(r.statusCode()) : String.valueOf(m.get("detail")));
+                    }
+                    return body instanceof Map<?, ?> x ? (Map<String, Object>) x : Map.of("value", body);
+                } catch (java.io.IOException e) {
+                    throw new IllegalStateException(e);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }

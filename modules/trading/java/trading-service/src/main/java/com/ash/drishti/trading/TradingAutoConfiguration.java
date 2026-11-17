@@ -24,7 +24,7 @@ import org.springframework.context.annotation.FilterType;
  * The trading module's server part (docs/architecture/KERNEL_AND_MODULES.md section 3.3; THIN_CONSOLE_DESIGN.md step S8a): the manifest's
  * {@code java.spring}, made by the module host in trading's own child context when the server loads {@code trading-1.0.0.dmod}. It
  * brings the Trading landings' figures ({@code /api/v1/trading/landing}); not loaded, nothing below exists. It reads the kernel and the
- * other modules only through their API, as the person ({@code KernelCalls}).
+ * other modules only through their API, as the person ({@code Kernel}, typed).
  */
 @AutoConfiguration
 @ComponentScan(basePackages = "com.ash.drishti.trading", excludeFilters = {

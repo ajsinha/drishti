@@ -319,10 +319,12 @@ the module off, the engine off, a read-only API token on a write, the provider's
 `OperationsClusterTest` an operation placed on another node (the same answer as the REST path through this node, computed there only) and
 that node down (the same `503 DRS-1032`).
 
-`TypedCallParityTest` holds the parity: every call the landings make, typed and over the loopback, for an administrator, a masked role, a
+`TypedCallParityTest` holds the parity: every call the landings make, typed and over REST, for an administrator, a masked role, a
 row-ruled role, a role the kind is closed to, a lens, an earlier date box, another language, a read-only API token and a scoped one, several
-people at once, and again with the business today fixed. Until the landings move to the typed services, `KernelCalls` (each call
-`GET`/`POST` over this server's own API on the loopback) answers them.
+people at once, and again with the business today fixed. The trading and market-data landings call these services: a module's Spring
+context takes `Kernel` from the kernel's context (or asks `ModuleContext.kernel()`), the landing's controller asks for the person of the
+request (`Kernel.person()`), and every read is a typed call of that person. No module calls its own server over HTTP (`NoLoopbackTest`);
+the trading landings reach the banking module's VaR and exposure engines through six operations (`RiskFigures`, served by banking's `RiskOperations`).
 
 ### 2.4 What stays kernel-only, and why
 

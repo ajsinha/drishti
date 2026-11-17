@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Reading the fields of a JSON answer ({@link KernelCalls.Caller#get}) without casts at every step: a missing or mistyped field is
+ * Reading the fields of a JSON answer ({@link Asker}) without casts at every step: a missing or mistyped field is
  * {@code null}, an empty map or an empty list, never an exception. The reading rules of the answers' JSON shape, part of the contract that
  * gives them: pure static functions, no state and nothing to implement (an interface, as the kernel API holds no implementation class).
  */

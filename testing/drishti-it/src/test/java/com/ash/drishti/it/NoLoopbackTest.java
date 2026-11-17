@@ -23,7 +23,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,7 +31,6 @@ import org.junit.jupiter.api.Test;
  */
 class NoLoopbackTest {
 
-    @Disabled("i7a: enabled in I14 (K4: landings typed, LoopbackKernelCalls and KernelCalls deleted)")
     @Test
     void noMainClassCallsItsOwnServerOverTheLoopback() throws IOException {
         assertThat(offenders(RepositoryFiles.root())).isEmpty();
@@ -48,7 +46,8 @@ class NoLoopbackTest {
         List<String> out = new ArrayList<>();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/") && loopsBack(Files.readString(p))) {
+            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/")
+                    && loopsBack(Files.readString(p))) {
                 out.add(rel);
             }
         }

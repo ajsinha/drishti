@@ -325,6 +325,33 @@ java: {jars: [genomics-service.jar, genomics-compute.jar], lib: [commons-math3-3
 A library every module and connector of the site shares (a JDBC driver, a company's own jar) goes into the shared lib folder instead
 (`drishti.lib.path`, default `<home>/lib/ext`; [ADMIN_GUIDE.md](ADMIN_GUIDE.md)): a module sees it after its own jars.
 
+### 1.6a How a module calls the kernel
+
+A module never calls its own server over HTTP. Its Spring context takes the kernel's typed `Kernel` (a bean of the kernel's context; a
+module's entry gets the same through `ModuleContext.kernel()`), and a request-serving bean asks it for the person of the request:
+
+```java
+@RestController
+class MyLandingController {
+    private final Kernel kernel;
+    MyLandingController(Kernel kernel) { this.kernel = kernel; }
+
+    @GetMapping("/api/v1/my-module/landing")
+    Object landing() {
+        Person p = kernel.person();                                   // copied from the request in hand
+        var found = kernel.records().search(p, "TRD where CURRENCY = 'EUR' limit 50");
+        return found.rows();
+    }
+}
+```
+
+Each service (`records()`, `history()`, `dates()`, `settings()`, `live()`, `pivots()`, `lenses()`, `access()`, `operations()`) answers what
+the REST path it replaces answers for the same person, through the same doors; a refusal is `Kernel.Refused` (status, code, words).
+A person is made by the kernel only (`Kernel.person()`, `Person.onDate`): keep what you work out per person in `kernel.cache(size, ttl)`,
+keyed by `Person.key()`. The `Asker` interface (a record of `kernel` and `person`) reads the typed answers as JSON-shaped maps,
+as the trading and market-data landings do. Another module's work is asked through `kernel.operations()`. `NoLoopbackTest` fails a
+module class that builds a URL on its own server.
+
 ### 1.7 What a module can contribute
 
 A loaded module's beans (of its Spring configuration) and the `META-INF/services` entries of its jars that are of one of the kernel's

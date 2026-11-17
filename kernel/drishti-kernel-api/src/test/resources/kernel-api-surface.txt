@@ -133,6 +133,22 @@
   module.Answers public static java.util.List<java.lang.Object> com.ash.drishti.kernel.api.module.Answers.list(java.lang.Object,java.lang.String)
   module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object)
   module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object,java.lang.String)
+  module.Asker public abstract com.ash.drishti.kernel.api.module.Asker com.ash.drishti.kernel.api.module.Asker.as(com.ash.drishti.kernel.api.services.Person)
+  module.Asker public abstract com.ash.drishti.kernel.api.services.Kernel com.ash.drishti.kernel.api.module.Asker.kernel()
+  module.Asker public abstract com.ash.drishti.kernel.api.services.Person com.ash.drishti.kernel.api.module.Asker.person()
+  module.Asker public default boolean com.ash.drishti.kernel.api.module.Asker.admin()
+  module.Asker public default com.ash.drishti.kernel.api.module.Asker com.ash.drishti.kernel.api.module.Asker.onDate(java.time.LocalDate)
+  module.Asker public default com.ash.drishti.kernel.api.module.InlineFigures$Figures com.ash.drishti.kernel.api.module.Asker.figures(java.util.List<com.ash.drishti.kernel.api.module.InlineFigures$Field>,java.util.List<java.util.List<java.lang.Object>>,java.util.List<java.util.Map<java.lang.String, java.lang.Object>>,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
+  module.Asker public default java.lang.String com.ash.drishti.kernel.api.module.Asker.display()
+  module.Asker public default java.lang.String com.ash.drishti.kernel.api.module.Asker.key()
+  module.Asker public default java.lang.String com.ash.drishti.kernel.api.module.Asker.lens()
+  module.Asker public default java.lang.String com.ash.drishti.kernel.api.module.Asker.user()
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.dates()
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.live(java.lang.String,int)
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.raw(java.lang.String,java.lang.String)
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.search(java.lang.String)
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.series(java.lang.String,java.lang.String,java.lang.String,int)
+  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.settings()
   module.DrishtiModule public abstract java.lang.String com.ash.drishti.kernel.api.module.DrishtiModule.id()
   module.DrishtiModule public abstract void com.ash.drishti.kernel.api.module.DrishtiModule.start(com.ash.drishti.kernel.api.module.ModuleContext)
   module.DrishtiModule public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.DrishtiModule.health()
@@ -149,22 +165,11 @@
   module.InlineFigures$Figures public abstract java.lang.Double com.ash.drishti.kernel.api.module.InlineFigures$Figures.get(java.lang.String,java.lang.Object,java.lang.Object)
   module.InlineFigures$Figures public abstract java.util.List<java.lang.Object> com.ash.drishti.kernel.api.module.InlineFigures$Figures.members()
   module.InlineFigures$Figures public default java.lang.Double com.ash.drishti.kernel.api.module.InlineFigures$Figures.get(java.lang.String)
-  module.KernelCalls public abstract <V> com.ash.drishti.kernel.api.module.PersonCache<V> com.ash.drishti.kernel.api.module.KernelCalls.cache(int,long)
-  module.KernelCalls public abstract com.ash.drishti.kernel.api.module.KernelCalls$Caller com.ash.drishti.kernel.api.module.KernelCalls.caller()
-  module.KernelCalls public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls.lens(java.lang.String)
-  module.KernelCalls$Caller public abstract boolean com.ash.drishti.kernel.api.module.KernelCalls$Caller.admin()
-  module.KernelCalls$Caller public abstract com.ash.drishti.kernel.api.module.InlineFigures$Figures com.ash.drishti.kernel.api.module.KernelCalls$Caller.figures(java.util.List<com.ash.drishti.kernel.api.module.InlineFigures$Field>,java.util.List<java.util.List<java.lang.Object>>,java.util.List<java.util.Map<java.lang.String, java.lang.Object>>,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
-  module.KernelCalls$Caller public abstract com.ash.drishti.kernel.api.module.KernelCalls$Caller com.ash.drishti.kernel.api.module.KernelCalls$Caller.onDate(java.time.LocalDate)
-  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.display()
-  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.key()
-  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.lens()
-  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.user()
-  module.KernelCalls$Caller public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls$Caller.get(java.lang.String,java.util.Map<java.lang.String, ?>)
-  module.KernelCalls$Caller public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls$Caller.post(java.lang.String,java.lang.Object,java.util.Map<java.lang.String, ?>)
   module.ModuleApi public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleApi.value()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$KindWriter com.ash.drishti.kernel.api.module.ModuleContext.writer()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$Kinds com.ash.drishti.kernel.api.module.ModuleContext.kinds()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleSettings com.ash.drishti.kernel.api.module.ModuleContext.settings()
+  module.ModuleContext public abstract com.ash.drishti.kernel.api.services.Kernel com.ash.drishti.kernel.api.module.ModuleContext.kernel()
   module.ModuleContext public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleContext.moduleId()
   module.ModuleContext public abstract java.nio.file.Path com.ash.drishti.kernel.api.module.ModuleContext.dataDir()
   module.ModuleContext public abstract java.time.LocalDate com.ash.drishti.kernel.api.module.ModuleContext.businessDate()
@@ -495,6 +500,7 @@
   services.BusinessDates public abstract boolean com.ash.drishti.kernel.api.services.BusinessDates.live(com.ash.drishti.kernel.api.services.Person)
   services.BusinessDates public abstract java.time.LocalDate com.ash.drishti.kernel.api.services.BusinessDates.current()
   services.BusinessDates public abstract java.time.LocalDate com.ash.drishti.kernel.api.services.BusinessDates.selected(com.ash.drishti.kernel.api.services.Person)
+  services.BusinessDates public abstract java.util.Set<java.time.LocalDate> com.ash.drishti.kernel.api.services.BusinessDates.holidays()
   services.CellSet public final boolean com.ash.drishti.kernel.api.services.CellSet.equals(java.lang.Object)
   services.CellSet public final int com.ash.drishti.kernel.api.services.CellSet.hashCode()
   services.CellSet public final java.lang.String com.ash.drishti.kernel.api.services.CellSet.toString()
@@ -648,14 +654,12 @@ function.FunctionProvider
 function.FunctionProvider$Provided
 health.HealthFigures
 module.Answers
+module.Asker
 module.DrishtiModule
 module.EngineWide
 module.InlineFigures
 module.InlineFigures$Field
 module.InlineFigures$Figures
-module.KernelCalls
-module.KernelCalls$Caller
-module.KernelCalls$Refused
 module.ModuleApi
 module.ModuleContext
 module.ModuleContext$KindWriter

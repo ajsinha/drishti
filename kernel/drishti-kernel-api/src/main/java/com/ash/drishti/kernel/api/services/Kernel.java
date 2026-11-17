@@ -68,7 +68,7 @@ public interface Kernel {
 
     /**
      * The kernel's refusal of a typed call, with the status, code and words the REST path would have answered: what a panel says when it
-     * cannot draw. Replaces {@code KernelCalls.Refused}.
+     * cannot draw..
      */
     class Refused extends RuntimeException {
 

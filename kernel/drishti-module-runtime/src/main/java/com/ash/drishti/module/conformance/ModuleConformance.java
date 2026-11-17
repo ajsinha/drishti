@@ -682,23 +682,34 @@ public final class ModuleConformance {
         return new ModuleRuntime(facts, null, ModuleConformance.class.getClassLoader(), HARNESS);
     }
 
-    /** The harness's {@code KernelCalls}: there is no person of a request here, and no lens file. */
-    private static final com.ash.drishti.kernel.api.module.KernelCalls NO_CALLS = new com.ash.drishti.kernel.api.module.KernelCalls() {
-        @Override
-        public Caller caller() {
+    /** The harness's {@code Kernel}: there is no person of a request here, and no lens file; every service refuses (the cache is the kernel's own). */
+    private static final com.ash.drishti.kernel.api.services.Kernel NO_KERNEL = refusing(com.ash.drishti.kernel.api.services.Kernel.class, true);
+
+    @SuppressWarnings("unchecked")
+    private static <T> T refusing(Class<T> type, boolean services) {
+        return (T) java.lang.reflect.Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, (proxy, method, args) -> {
+            if (method.getDeclaringClass() == Object.class) {
+                return switch (method.getName()) {
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> "the harness's " + type.getSimpleName();
+                };
+            }
+            if (services && "cache".equals(method.getName())) {
+                return new com.ash.drishti.module.runtime.KernelPersonCache<>((Integer) args[0], (Long) args[1]);
+            }
+            if ("of".equals(method.getName()) && args != null && args.length == 2 && args[1] instanceof Class<?> view) {
+                return refusing(view, false);                         // a module's view of another's operations: every call refuses
+            }
+            if ("available".equals(method.getName())) {
+                return false;
+            }
+            if (services && method.getReturnType().isInterface() && !"person".equals(method.getName())) {
+                return refusing(method.getReturnType(), false);
+            }
             throw new IllegalStateException("the conformance harness serves no request: there is no person to call as");
-        }
-
-        @Override
-        public Map<String, Object> lens(String name) {
-            return Map.of();
-        }
-
-        @Override
-        public <V> com.ash.drishti.kernel.api.module.PersonCache<V> cache(int size, long ttlMillis) {
-            return new com.ash.drishti.module.runtime.KernelPersonCache<>(size, ttlMillis);
-        }
-    };
+        });
+    }
 
     /**
      * The harness's host: it has no kernel beans, so a module with a kernel-internals allowance (whose beans take the kernel's) is made
@@ -707,8 +718,8 @@ public final class ModuleConformance {
     private static final ModuleHost HARNESS = new ModuleHost() {
         @Override
         public void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
-            // the kernel's API as the person (THIN_CONSOLE_DESIGN.md step S8a): no request is ever in hand here, so every call is refused
-            context.registerBean(com.ash.drishti.kernel.api.module.KernelCalls.class, () -> NO_CALLS);
+            // the kernel's typed API: no request is ever in hand here, so every call is refused
+            context.registerBean(com.ash.drishti.kernel.api.services.Kernel.class, () -> NO_KERNEL);
             if (!candidate.manifest().kernelInternals().isEmpty()) {
                 context.addBeanFactoryPostProcessor(bf -> {
                     for (String n : bf.getBeanDefinitionNames()) {

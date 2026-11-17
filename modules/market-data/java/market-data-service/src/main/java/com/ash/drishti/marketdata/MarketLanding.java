@@ -26,12 +26,11 @@ import static com.ash.drishti.kernel.api.module.Answers.str;
 import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.InlineFigures.Field;
 import com.ash.drishti.kernel.api.module.InlineFigures.Figures;
-import com.ash.drishti.kernel.api.module.KernelCalls;
-import com.ash.drishti.kernel.api.module.KernelCalls.Caller;
-import com.ash.drishti.kernel.api.module.KernelCalls.Refused;
+import com.ash.drishti.kernel.api.module.Asker;
+import com.ash.drishti.kernel.api.services.Kernel;
+import com.ash.drishti.kernel.api.services.Kernel.Refused;
+import com.ash.drishti.kernel.api.services.Person;
 import com.ash.drishti.kernel.api.module.PersonCache;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -87,17 +86,25 @@ public class MarketLanding {
     static final int SIGMA_MIN_DAYS = 10;
     static final Pattern TENOR = Pattern.compile("^(\\d+(?:\\.\\d+)?)\\s*([DWMY])$", Pattern.CASE_INSENSITIVE);
 
-    private final KernelCalls kernel;
+    private final Kernel kernel;
     private final PersonCache<Map<String, Object>> cache;
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
-    public MarketLanding(KernelCalls kernel) {
+    public MarketLanding(Kernel kernel) {
         this.kernel = kernel;
         this.cache = kernel.cache(200, 120_000);
     }
 
-    public Caller caller() {
-        return kernel.caller();
+    public Asker caller() {
+        return new Asking(kernel, kernel.person());
+    }
+
+    /** One person's questions of the kernel. */
+    private record Asking(Kernel kernel, Person person) implements Asker {
+        @Override
+        public Asker as(Person p) {
+            return new Asking(kernel, p);
+        }
     }
 
     /** Pairs in their order (a value may be null), for a constant to wrap unmodifiable where it is declared (the C12 check reads it there). */
@@ -120,8 +127,8 @@ public class MarketLanding {
     }
 
     /** The quality landing's {@code quality.stale-days} of the person's lens (default 2, 0 to 60). */
-    public int staleDays(Caller c) {
-        Double n = num(map(kernel.lens(c.lens()), "quality").get("stale-days"));
+    public int staleDays(Asker c) {
+        Double n = num(kernel.lenses().block(c.lens(), "quality").get("stale-days"));
         return n == null ? 2 : Math.max(0, Math.min(n.intValue(), 60));
     }
 
@@ -169,11 +176,11 @@ public class MarketLanding {
     // -- reading -----------------------------------------------------------------------------------------------------------------------
     /** The pack's answers for one person, at most {@code limit} calls at once; an answer refused is null and noted. */
     final class Reader {
-        final Caller c;
+        final Asker c;
         final Semaphore gate;
         final List<String> problems = Collections.synchronizedList(new ArrayList<>());
 
-        Reader(Caller c, int limit) {
+        Reader(Asker c, int limit) {
             this.c = c;
             this.gate = new Semaphore(limit);
         }
@@ -203,30 +210,16 @@ public class MarketLanding {
             return CompletableFuture.supplyAsync(() -> call(what, s), pool);
         }
 
-        String path(String kind, String id) {
-            String k = URLEncoder.encode(kind, StandardCharsets.UTF_8).replace("+", "%20");
-            boolean odd = id.contains("/") || id.contains("\\") || id.equals(".") || id.equals("..") || id.equals("~");
-            return k + "/" + (odd ? "~" : URLEncoder.encode(id, StandardCharsets.UTF_8).replace("+", "%20"));
-        }
-
-        Map<String, Object> idParam(String id) {
-            boolean odd = id.contains("/") || id.contains("\\") || id.equals(".") || id.equals("..") || id.equals("~");
-            return odd ? m("id", id) : m();
-        }
-
         CompletableFuture<Map<String, Object>> raw(String kind, String id) {
-            return later(kind + "/" + id, () -> c.get("/entities/" + path(kind, id) + "/raw", idParam(id)));
+            return later(kind + "/" + id, () -> c.raw(kind, id));
         }
 
         CompletableFuture<Map<String, Object>> search(String q) {
-            return later(q, () -> c.get("/search", Map.of("q", q)));
+            return later(q, () -> c.search(q));
         }
 
         CompletableFuture<Map<String, Object>> series(String kind, String id, String field, int days) {
-            Map<String, Object> p = idParam(id);
-            p.put("path", field);
-            p.put("days", days);
-            return later(kind + "/" + id + " " + field, () -> c.get("/history/" + path(kind, id) + "/series", p));
+            return later(kind + "/" + id + " " + field, () -> c.series(kind, id, field, days));
         }
 
         List<String> ids(String kind, int limit) {
@@ -299,7 +292,7 @@ public class MarketLanding {
 
     static Business business(Reader r) {
         try {
-            Map<String, Object> bd = r.c.get("/business-date", Map.of());
+            Map<String, Object> bd = r.c.dates();
             Set<String> h = new HashSet<>();
             list(bd, "holidays").forEach(x -> h.add(str(x)));
             Object sel = get(bd, "selected");
@@ -355,11 +348,11 @@ public class MarketLanding {
     }
 
     /** A's tiles (USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median) and its USD curves (OIS today, a week ago, projection). */
-    public Map<String, Object> desk(Caller c) {
+    public Map<String, Object> desk(Asker c) {
         return cache.once("desk\u0001" + c.key(), () -> makeDesk(c));
     }
 
-    private Map<String, Object> makeDesk(Caller c) {
+    private Map<String, Object> makeDesk(Asker c) {
         Reader r = new Reader(c, 8);
         Business b = business(r);
         CompletableFuture<Map<String, Object>> oisT = r.raw("ir-curve", "CRV-USD-OIS");
@@ -505,11 +498,11 @@ public class MarketLanding {
      * daily changes when the lake holds {@link #SIGMA_MIN_DAYS} of them ({@code sigma}), else the largest moves ({@code absolute}), else
      * none ({@code none}).
      */
-    public Map<String, Object> moves(Caller c) {
+    public Map<String, Object> moves(Asker c) {
         return cache.once("moves\u0001" + c.key(), () -> makeMoves(c, 21, 6));
     }
 
-    private Map<String, Object> makeMoves(Caller c, int days, int top) {
+    private Map<String, Object> makeMoves(Asker c, int days, int top) {
         Reader r = new Reader(c, 6);
         Business b = business(r);
         List<String[]> plan = new ArrayList<>();
@@ -803,7 +796,7 @@ public class MarketLanding {
     }
 
     /** C's checks over the pack's own answers: the curves and surfaces read whole, every other kind by its latest load. */
-    public Map<String, Object> quality(Caller c, int staleDays) {
+    public Map<String, Object> quality(Asker c, int staleDays) {
         String key = "quality\u0001" + staleDays + "\u0001" + c.key();
         Map<String, Object> hit = cache.get(key);
         if (hit != null) {

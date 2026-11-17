@@ -27,6 +27,11 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   majority; the console grid with chips that set its filter), the chosen module's detail, the install commands, and saved work that needs a module that is
   not installed. A phone scrolls the matrix inside its card. `test_admin_modules.py` (the recorded answer), `test_admin_modules_browser.py`; the
   `admin-modules` snapshot goldens re-approved.
+- **The landings are typed; the loopback is deleted (I14, K4).** The trading and market-data landings ask the kernel through `Kernel` (taken from the kernel's
+  context, also `ModuleContext.kernel()`) as the person of the request, through `Asker` (the typed services answered as the JSON-shaped maps the landings read),
+  not over HTTP to this server. `LoopbackKernelCalls`, `KernelCalls` (and its `Refused`) are gone; `Kernel.Refused` remains. `BusinessDates.holidays()` joins the
+  typed API (the landings' business-day arithmetic). The six `/risk/*` calls of the trading landings are operations of the banking module (`RiskFigures`, served by `RiskOperations`: `var.scope`,
+  `var.contributions`, `var.official`, `var.history`, `var.whatif`, `exposure.predeal`), asked through `Kernel.operations()`. The landing recordings are byte-equal; the stand-ins implement the typed services; `NoLoopbackTest` (G13) is on.
 - **Operations: one module asks another, in process, through the REST path's doors (I13, K3).** A module serves `@Operation(value, rest)` methods from the
   beans of its own child context, registered as `<module>:<name>` when it starts (the module runtime's wiring) and withdrawn first when it unloads; two of one
   name stop its start. `kernel.operations().of(module, ConsumerView.class)` converts the consumer's records to the provider's and back by field name. A call

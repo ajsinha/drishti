@@ -84,6 +84,7 @@ public class ModuleHostConfiguration {
                 env instanceof org.springframework.core.env.ConfigurableEnvironment c ? c : null,
                 () -> ctx.getBeanProvider(com.ash.drishti.server.caches.MemoryBudget.class).getIfAvailable())
                 .bindings(() -> ctx.getBeanProvider(com.ash.drishti.server.bindings.BindingService.class).getIfAvailable())
+                .kernel(() -> ctx.getBeanProvider(com.ash.drishti.kernel.api.services.Kernel.class).getIfAvailable())
                 .packs(() -> ctx.getBeanProvider(com.ash.drishti.server.PackReloader.class).getIfAvailable())
                 .sutras(() -> ctx.getBeanProvider(com.ash.drishti.rachana.SutraRegistry.class).getIfAvailable())
                 .python(() -> ctx.getBeanProvider(com.ash.drishti.compute.ComputeService.class).getIfAvailable(),
