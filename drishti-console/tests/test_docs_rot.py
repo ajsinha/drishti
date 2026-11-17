@@ -60,7 +60,9 @@ HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
            # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
            "docs/architecture/pack-resolution-inventory.md",
            # the Elements separation runbook, carried out in i6: its paths are of the source tree before the split
-           "docs/plans/ELEMENTS_SPLIT_RUNBOOK.md")
+           "docs/plans/ELEMENTS_SPLIT_RUNBOOK.md",
+           # the i7a plan and its impact analysis name files the release builds (deleted with it at the release)
+           "docs/plans/I7A_BUILD_PLAN.md", "docs/plans/I7A_IMPACT.md")
 
 
 @functools.lru_cache(maxsize=None)
