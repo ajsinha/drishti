@@ -94,6 +94,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Unique: `PROTEIN` per snapshot.
+- `ACTIVE_SITE` has the same length on every row of one business date.
 
 ### See also
 

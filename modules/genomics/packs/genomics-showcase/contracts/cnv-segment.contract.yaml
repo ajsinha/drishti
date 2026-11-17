@@ -25,7 +25,7 @@ description: 'One stretch of a sample''s genome with a copy number other than tw
   gain or loss.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per sample segment, keyed by SEGMENT_ID.
-key:
+key: &id001
 - SEGMENT_ID
 id-pattern:
 - ^CNV-
@@ -83,7 +83,7 @@ fields:
   presence: required
   description: 'The call: deep deletion, loss, gain or amplification.'
   example: amplification
-  enum:
+  enum: &id002
   - deep deletion
   - loss
   - gain
@@ -110,22 +110,17 @@ validation:
   - COPY_NUMBER
   - CALL
 - rule: unique
-  key:
-  - SEGMENT_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: SAMPLE_ID
   kind: study-sample
+- rule: enum
+  field: CALL
+  values: *id002
 - rule: link
   field: GENE
   kind: study-gene
-- rule: enum
-  field: CALL
-  values:
-  - deep deletion
-  - loss
-  - gain
-  - amplification
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

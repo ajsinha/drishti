@@ -618,7 +618,9 @@ def make_campaign(seed: int, prot: Protein) -> tuple:
     designs = []
     for rd in range(1, ROUNDS + 1):
         t = (rd - 1) / (ROUNDS - 1)
-        cx, cy, sd = 0.2 + 0.54 * t, 0.56 - 0.24 * t + 0.1 * math.sin(t * 3.1), 0.125 - 0.07 * t
+        # the crowd moves towards the global peak fastest early (t ** 0.8), so each round's median beats the one before even while
+        # part of rounds 3 to 6 is caught on the false peak
+        cx, cy, sd = 0.2 + 0.54 * t ** 0.8, 0.56 - 0.24 * t + 0.1 * math.sin(t * 3.1), 0.125 - 0.07 * t
         for n in range(1, PER_ROUND + 1):
             trap = 3 <= rd <= 6 and r.random() < 0.2
             x = clamp((0.30 if trap else cx) + r.gauss(0, 0.045 if trap else sd), 0.02, 0.98)

@@ -26,7 +26,7 @@ description: 'One designed variant of Helixase-7 from one round of the campaign:
   times as active as the natural one.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per design, keyed by DESIGN_ID.
-key:
+key: &id001
 - DESIGN_ID
 id-pattern:
 - ^DSG-
@@ -100,7 +100,7 @@ fields:
   presence: required
   description: lead for the best design of the campaign, selected for the best 5% of its round, tested for the rest.
   example: lead
-  enum:
+  enum: &id002
   - lead
   - selected
   - tested
@@ -133,18 +133,14 @@ validation:
   - EMB_X
   - EMB_Y
 - rule: unique
-  key:
-  - DESIGN_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: PROTEIN
   kind: protein
 - rule: enum
   field: STATUS
-  values:
-  - lead
-  - selected
-  - tested
+  values: *id002
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

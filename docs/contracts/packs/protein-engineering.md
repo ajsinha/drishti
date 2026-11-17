@@ -69,6 +69,7 @@ One invented protein: its sequence, family and active site. Four proteins; Helix
 - required: fields `PROTEIN`, `GENE`, `NAME`, `LENGTH`, `FAMILY`, `SEQUENCE`, `ACTIVE_SITE`, `DESIGN_ROUNDS`
 - unique: key `PROTEIN`; per snapshot
 - link: field GENE; kind study-gene
+- vector-length: field ACTIVE_SITE; same every row of one business date
 
 **Notes**
 

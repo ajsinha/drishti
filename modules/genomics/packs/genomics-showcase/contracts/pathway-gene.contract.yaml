@@ -24,7 +24,7 @@ title: Pathway membership
 description: One gene in one biological pathway and the part it plays there. Twelve invented pathways, 500 memberships.
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per pathway and gene, keyed by PATHWAY_GENE_ID.
-key:
+key: &id001
 - PATHWAY_GENE_ID
 id-pattern:
 - ^PWG-
@@ -63,7 +63,7 @@ fields:
   presence: required
   description: The part the gene plays in the pathway.
   example: activator
-  enum:
+  enum: &id002
   - activator
   - inhibitor
   - scaffold
@@ -80,20 +80,14 @@ validation:
   - GENE
   - ROLE_IN_PATHWAY
 - rule: unique
-  key:
-  - PATHWAY_GENE_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: GENE
   kind: study-gene
 - rule: enum
   field: ROLE_IN_PATHWAY
-  values:
-  - activator
-  - inhibitor
-  - scaffold
-  - effector
-  - regulator
+  values: *id002
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

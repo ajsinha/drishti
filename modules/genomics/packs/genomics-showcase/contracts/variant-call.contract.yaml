@@ -25,7 +25,7 @@ description: 'One sample carrying one variant: the genotype, the fraction of rea
   the association tests are computed from them.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per sample and variant, keyed by CALL_ID.
-key:
+key: &id001
 - CALL_ID
 id-pattern:
 - ^CALL-
@@ -73,7 +73,7 @@ fields:
   presence: required
   description: 0/1 heterozygous, 1/1 homozygous for the variant.
   example: 0/1
-  enum:
+  enum: &id002
   - 0/1
   - 1/1
 - name: VAF
@@ -106,8 +106,7 @@ validation:
   - VAF
   - DEPTH
 - rule: unique
-  key:
-  - CALL_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: SAMPLE_ID
@@ -120,9 +119,7 @@ validation:
   kind: study-gene
 - rule: enum
   field: GENOTYPE
-  values:
-  - 0/1
-  - 1/1
+  values: *id002
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

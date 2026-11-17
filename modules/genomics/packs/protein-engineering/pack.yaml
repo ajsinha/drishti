@@ -157,7 +157,7 @@ console:
   examples:
   - - PROT HLXK7
     - 'Helixase-7: length, family, sequence and the positions of its active site'
-  - - DESIGN DSG-HLXK7-R8-0897
+  - - DESIGN DSG-HLXK7-R8-0901
     - 'The lead design of the campaign: its changes, activity and stability'
   - - DMS HLXK7:177:A:activity
     - 'One scan score: what changing one position to one amino acid did to the activity'

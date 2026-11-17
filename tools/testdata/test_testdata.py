@@ -98,8 +98,9 @@ class TestData(unittest.TestCase):
                if f.stat().st_size > (25 if f.name.endswith(".tar") else 10) * 1024 * 1024]
         self.assertEqual(big, [], "a file above 10 MB (a tar of one date above 25 MB)")
         total = sum(f.stat().st_size for f in files)
-        # sixty days, the VaR data's three business dates about 182 MB; GitHub refuses files over 100 MB, none is over 25
-        self.assertLess(total, 185e6, f"{total / 1e6:.1f} MB committed")
+        # sixty days, the VaR data's three business dates about 182 MB, the genomics showcase's two packs about 3 MB; GitHub refuses files
+        # over 100 MB, none is over 25
+        self.assertLess(total, 190e6, f"{total / 1e6:.1f} MB committed")
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):
@@ -149,7 +150,7 @@ class TestData(unittest.TestCase):
             self.assertTrue(days.get(self.dates[0]), ds["folder"])
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif", "funds", "compute-demo"})
+                          "us-equities", "gleif", "funds", "compute-demo", "genomics-showcase", "protein-engineering"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):
         ids: list[str] = []

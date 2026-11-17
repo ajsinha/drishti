@@ -26,7 +26,7 @@ description: 'One variant tested against one trait: the p-value, its negative lo
   log odds ratio), never painted.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per trait and variant, keyed by ASSOC_ID.
-key:
+key: &id001
 - ASSOC_ID
 id-pattern:
 - ^GWAS-
@@ -56,7 +56,7 @@ fields:
   presence: required
   description: 'The trait tested: RESPONSE (responder), TOXICITY (severe) or RELAPSE (relapsed).'
   example: RESPONSE
-  enum:
+  enum: &id002
   - RESPONSE
   - TOXICITY
   - RELAPSE
@@ -127,21 +127,17 @@ validation:
   - NEG_LOG10_P
   - R2_LEAD
 - rule: unique
-  key:
-  - ASSOC_ID
+  key: *id001
   per: snapshot
+- rule: enum
+  field: TRAIT
+  values: *id002
 - rule: link
   field: VARIANT_ID
   kind: study-variant
 - rule: link
   field: GENE
   kind: study-gene
-- rule: enum
-  field: TRAIT
-  values:
-  - RESPONSE
-  - TOXICITY
-  - RELAPSE
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'
