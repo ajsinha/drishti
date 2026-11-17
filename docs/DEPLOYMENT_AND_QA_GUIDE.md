@@ -143,7 +143,7 @@ Every jar lives under the install folder, in two places that never mix:
 **Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run) makes them: Maven builds and packs the modules with Java, the one packer (`tools/modulepack.py`) packs the others, and each package goes in through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core). For a developer's own server, `start server --modules-dev` (`drishti.modules.dev`) loads the module folders as they are, unverified; it is refused in a cluster and under the `prod` profile.
 
 A jar found in the data folder's old `lib/` is moved into `lib/ext` once, at the first start that finds it, listed in the moved list, and
-**Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)).
+**Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)).
 
 **In a container** the image is immutable (its install folder is root-owned; on ECS the root file system is read-only), so the site's jars
 cannot go into `<drishti>/lib/ext`: every Drishti image and the ECS task definition set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`, a folder
@@ -974,7 +974,7 @@ guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <G
 Genomics** on the green theme with only the kernel's menus (Views, BI, Admin, Help) and no finance anywhere; Admin → Health says the
 `genomics` module was asked for and is *not installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics/java/genomics
 -am`; Windows `.\mvnw.cmd …`) and copy `modules/genomics/java/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should
-see** it install itself within seconds (auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop
+see** it loaded at the next start (a module is a file and a restart): the Research lens with VARIANT, GENE and COHORT, and the lollipop
 visual in Create → Elements gallery.
 
 **Drishti Risk and Drishti Finance over one cluster (the owner's stack).** In the stack file, a `consoles:` list beside the nodes:

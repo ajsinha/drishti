@@ -141,7 +141,6 @@ drishti:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
   distribution: ${DRISHTI_DISTRIBUTION:}
   distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:${drishti.config.dir}/distributions}   # the distribution files and kernel.yaml (the kernel's packs and words)
-  module-manifests-dir: ${DRISHTI_MODULE_MANIFESTS_DIR:${drishti.home}/modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder)
   # Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a
   # role and never hides anything (what exists is the distribution's). The four lenses by default; DRISHTI_LENSES= (empty) offers none.
   lenses: ${DRISHTI_LENSES:risk,world,market,trading}
@@ -203,11 +202,7 @@ drishti:
   modules:                           # the modules (docs/architecture/ACCESS_MODEL.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
     dir: ${DRISHTI_MODULES_DIR:${drishti.config.dir}/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
-    path: ${DRISHTI_MODULES_PATH:${drishti.data.dir}/modules}   # the module folders (commas): .dmod packages dropped here are auto-deployed; with dev on, exploded module folders here load unverified (docs/guides/ADMIN_GUIDE.md, Admin → Modules)
-    autodeploy: ${DRISHTI_MODULES_AUTODEPLOY:}   # a .dmod dropped into or taken out of drishti.modules.path is deployed or removed through the module deployment; empty: on for a single node, off in a cluster (plan → apply)
-    autodeploy-seconds: 5            # how often the module folders are looked at (auto-deploy, and development mode's reload)
-    shipped: ${DRISHTI_MODULES_SHIPPED:true}   # install the distribution's first-party modules (drishti/modules/*.dmod in the full jar: banking, market-data, capital-markets, economy) at start when not installed or rebuilt; one an administrator removed or switched off stays so
-    dev: ${DRISHTI_MODULES_DEV:false}   # development mode: exploded module folders of drishti.modules.path load without a .dmod, unverified, reloaded on change; refused in a cluster and under the prod or production profile
+    dev: ${DRISHTI_MODULES_DEV:false}   # development mode: the module source folders of the modules folder (drishti.modules.home) load without a .dmod, unverified; refused in a cluster and under the prod or production profile
   overrides:                         # site overrides of module files (docs/architecture/KERNEL_AND_MODULES.md section 18.10): a file at <module>/<path> in an override folder replaces the module's file at that path
     dir: ${DRISHTI_OVERRIDES_DIR:}   # the override folders (commas; the right-most wins; absolute): any module file but module.yaml, the connector templates and code (java/, lib/, python/, engines/, .jar/.py/.class/.so/.dll and scripts, links); the first folder is the module's id; read at start into the view <data>/overrides/modules, listed in Admin -> Health; empty: none
   lib:                               # the shared lib folder, as Tomcat's lib/ (docs/guides/ADMIN_GUIDE.md): every jar in it is loaded at start into one lib class loader under the kernel's
@@ -346,13 +341,6 @@ drishti:
     # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
     file: ${DRISHTI_BINDINGS_FILE:}         # where config/bindings.yaml is; empty: bindings.yaml beside the connectors' folder
     refresh-seconds: 30                     # how often an edited bindings.yaml is read again and applied (an approval applies at once)
-  module-deploy:
-    # Module deployment (docs/guides/CLUSTER_GUIDE.md "Deploying a module", KERNEL_AND_MODULES.md section 7.6): the module store (each
-    # .dmod kept once, by id and version), the installed modules and active.yaml, staging and the registry, all under this folder.
-    dir: ${DRISHTI_MODULE_DEPLOY_DIR:}       # empty: modules/ under drishti.data.dir
-    drain-seconds: 30                        # an unload lets requests already inside the module finish, at most this long
-    swap-wait-seconds: 30                    # a request to a module switching versions on this node waits at most this long, then 503
-    node-call-seconds: 120                   # how long the coordinator waits for one node's stage, activate or unload
   placement:
     # Where each module part runs (docs/guides/CLUSTER_GUIDE.md "Module placement", KERNEL_AND_MODULES.md section 4.11): by node name or
     # role (a node label such as heavy or web). No all-nodes default: a part not placed runs nowhere. Changed by plan and apply in
@@ -575,17 +563,6 @@ drishti:
           - POST /api/v1/pivot/rollups
           - DELETE /api/v1/pivot/rollups/*
           - POST /api/v1/pivot/rollups/*/refresh
-      "[modules:deploy]":
-        description: "Modules: upload a .dmod to the module store, plan an install, upgrade, removal, switch-off or switch-on, and apply another administrator's plan (four eyes; drishti.py module deploy|plan|apply). Needs the admin role."
-        allow:
-          - GET /api/v1/admin/modules/deployments
-          - GET /api/v1/admin/modules/deployments/*
-          - GET /api/v1/admin/modules/store
-          - POST /api/v1/admin/modules/store
-          - POST /api/v1/admin/modules/deployments/plans
-          - POST /api/v1/admin/modules/deployments/*/apply
-          - POST /api/v1/admin/modules/deployments/*/reject
-          - POST /api/v1/admin/modules/deployments/*/withdraw
       "[packs:admin]":
         description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors), and Retry now for packs, connectors, AI providers and MCP servers. Needs the admin role."
         allow:

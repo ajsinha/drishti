@@ -650,7 +650,7 @@ public final class PackDeployService {
             // the deployed copy is what runs: the shipped one is what the layers below the deployed packs find
             com.ash.drishti.api.resolution.PackResolver.Layout l = r.settings().layout();
             at = com.ash.drishti.api.resolution.PackResolver.resolve(new com.ash.drishti.api.resolution.PackResolver.Layout(l.site(), l.kernel(), l.modules(),
-                    l.store(), null, l.extra()), r.active(), com.ash.drishti.api.resolution.ResolutionSettings::yaml).packs().get(name);
+                    null, l.extra(), l.homes()), r.active(), com.ash.drishti.api.resolution.ResolutionSettings::yaml).packs().get(name);
         }
         return at != null ? at.dir() : packsDir.resolve(name);
     }

@@ -29,14 +29,14 @@ import org.junit.jupiter.api.Test;
 /**
  * Guard G9 (i7a): one reader of the modules folder. Outside {@code ModuleBoot} (and {@code ModuleFiles}, its file helper), no main class
  * names {@code cache/modules}, reads {@code drishti.modules.home} or reads {@code active.yaml}: every reader asks the boot result. The one
- * allowed exception while the old store still exists is {@link #EXCEPTIONS}; it is empty when the old store is gone.
+ * is none: the old store is gone ({@link #EXCEPTIONS} is empty).
  */
 class NoModuleFolderReaderTest {
 
     /** The boot and its file helper: the only readers. */
     static final Set<String> READERS = Set.of("ModuleBoot.java", "ModuleFiles.java");
-    /** The one class allowed to read the old store until it is deleted: {@code LegacyModules} (I5); I8 deletes it and empties this set. */
-    static final Set<String> EXCEPTIONS = Set.of("LegacyModules.java");
+    /** No exception: the old store is gone. */
+    static final Set<String> EXCEPTIONS = Set.of();
 
     static final Pattern FORBIDDEN = Pattern.compile("cache/modules|drishti\\.modules\\.home|active\\.yaml");
 

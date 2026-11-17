@@ -153,14 +153,11 @@
       </section>
 
       <section class="pd-pane" data-pane="deploy" aria-labelledby="pdh-deploy" hidden>
-        <h2 id="pdh-deploy" class="bs-h">6. Deploy</h2>
-        <p class="text-muted-d">The one module deploy: the package goes to the module store (checked once more by the server) and a plan installs it. A single node installs
-          when you apply; a cluster shows the plan per node, and a second administrator may have to apply it (four eyes).</p>
-        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-install disabled>Install on this node</button>
-          <button type="button" class="btn-pill btn-ghost" data-plan disabled>Plan for the cluster</button>
-          <button type="button" class="btn-pill btn-accent" data-apply hidden>Apply the plan</button>
-          <a class="btn-pill btn-ghost" data-open hidden>Open the screen</a></p>
-        <div class="pd-grid pd-plan" data-plan-grid hidden></div>
+        <h2 id="pdh-deploy" class="bs-h">6. Install</h2>
+        <p class="text-muted-d">A module is a file and a restart: download the <code>.dmod</code>, copy it into the server's modules folder (the folder beside the
+          server's jar; on a cluster, into every node's, one node after another) and restart the server. Admin → Modules lists it once it is running.</p>
+        <p class="bs-actions"><a class="btn-pill btn-accent" data-download-install hidden download>Download the .dmod</a>
+          <button type="button" class="btn-pill btn-ghost" data-bind disabled>Propose the data binding</button></p>
         <p class="bs-status" data-deploy-msg role="status" aria-live="polite"></p>
       </section>
 

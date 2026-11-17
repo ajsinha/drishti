@@ -64,6 +64,6 @@ the port is in use.
 
 All jars live under the home. Drishti's own jar (the server's executable jar, exactly one) is in `<DRISHTI_HOME>/lib`. Your jars live in
 `<DRISHTI_HOME>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`): the jars every connector and module may use, read at start, the one place for a JDBC
-driver or a connector plugin; an upgrade keeps them. The data folder holds `run`, `logs`, `tmp`, `dumps`, `delta` and `modules/` (`.dmod` packages, auto-deployed on a single node):
-[ADMIN_GUIDE.md section 22.1](../docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder). Every option, the environment they read, a cluster of three on one machine and
+driver or a connector plugin; an upgrade keeps them. The data folder holds `run`, `logs`, `tmp`, `dumps`, `delta` and `modules/` (the `.dmod` cache and leftovers; the packages themselves sit in `<home>/modules`):
+[ADMIN_GUIDE.md section 22.1](../docs/guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder). Every option, the environment they read, a cluster of three on one machine and
 on three machines, and the errors: [DEPLOYMENT_AND_QA_GUIDE.md section 7](../docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).

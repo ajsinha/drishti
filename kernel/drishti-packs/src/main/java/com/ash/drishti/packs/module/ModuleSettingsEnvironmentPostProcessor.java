@@ -89,9 +89,6 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
                 }
             }
         }
-        for (com.ash.drishti.registry.ModulePackages.Package p : Distributions.packages(env)) {
-            add(out, YAML.valueToTree(p.manifest()));
-        }
         return out;
     }
 

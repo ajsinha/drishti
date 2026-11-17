@@ -201,9 +201,9 @@ It is a library; a host (the kernel, from i5 also the console) makes one `Module
 `ModuleHost`. With no module folder, or an empty one, it does nothing.
 
 ```java
-ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), kernelContext, kernelClassLoader, host, tombstonesDir);
+ModuleRuntime rt = new ModuleRuntime(KernelFacts.ofKernel(), kernelContext, kernelClassLoader, host);
 List<ModuleHealth> rows = rt.start(List.of(modulesDir), ModuleDiscovery.readActive(activeYaml), id -> enabled(id));
-rt.routes().lookup("/m/genomics/variants/c1");          // 200 draw it, 308 moved, 404 off, 410 removed (a tombstone)
+rt.routes().lookup("/m/genomics/variants/c1");          // 200 draw it, 308 moved, 404 off
 rt.unload("genomics", ModuleRuntime.Leave.REMOVE, hot);  // the design's steps 1-9; hot drops the class loader and checks it is collected
 ```
 
@@ -287,25 +287,25 @@ mvn -B -s sdk/settings.xml archetype:generate -DarchetypeGroupId=com.ash.drishti
 cd greet && mvn -s ../sdk/settings.xml -Ddrishti.home=.. verify    # the test, java/greet/target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C14
 cp java/greet/target/dmod/greet-0.1.0.dmod ../modules/             # the modules folder beside the jar: a server loads its packages at start
 curl -s localhost:18480/api/v1/greet/greeting/Asha                 # the module's REST API, mounted by the kernel (after a restart)
-rm ../modules/greet-0.1.0.dmod                                     # removed the same way: its paths answer 410 at the next start
+rm ../modules/greet-0.1.0.dmod                                     # removed the same way: its paths are unknown (404) at the next start
 ```
 
 (To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
 Maven command: writes go to the folder, reads fall back to `~/.m2`.) The `.dmod` sits directly in `<Drishti folder>/modules` (one folder for every tool and the
 server; discovery lists `*.dmod` there and nothing else); at start the server checks its hash list and the fourteen checks, unpacks it under
 `<data folder>/cache/modules/` and loads it (a single node needs no `config/placement.yaml` entry: a module the file does not name is placed on it,
-and Health notes *single node: placed here*). In a cluster a module is deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
+and Health notes *single node: placed here*). In a cluster the same file goes into every node's modules folder, one node restarted after the other ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 **Production loads only verified `.dmod` packages.**
 
-**Edit → reload, in development mode.** While you work on a module, the kernel can load its source folder without packing a `.dmod` and
-reload it whenever it changes, as Tomcat runs an unpacked web application. The module project's folder (the one with `module.yaml` at its top) sits under
+**Edit → restart, in development mode.** While you work on a module, the kernel can load its source folder without packing a `.dmod`, as
+Tomcat runs an unpacked web application; a change shows at the next start. The module project's folder (the one with `module.yaml` at its top) sits under
 `<Drishti folder>/modules/`; the commands run from the Drishti folder.
 
 ```bash
 # once: a development server (single node, never the prod or production profile): the module folders under modules/ load as they are, unverified
 python3 tools/drishti.py start server --modules-dev
-# the loop: edit, rebuild the module, and the kernel reloads it (unload, leak check, load)
-python3 tools/drishti.py build modules greet      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
+# the loop: edit, rebuild the module, restart the server
+python3 tools/drishti.py build modules greet      # the server log says "modules from the boot: ... greet" and Health marks it development (unverified)
 ```
 
 Development mode loads the folder **unverified** (no hash list, no checks), and Health and Admin → Modules mark
@@ -339,7 +339,7 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 | `SourcePlugin` (the plugin API, `com.ash.drishti.api`): a **connector extension** | routed under its own name while the module is loaded, started with `module-dir` (the installed module) and `data-dir` (`<data>/modules/<id>`); the genomics module's VCF reader (section 1.9). A connector only one module's kinds use ships inside the module; a jar every part may use (a JDBC driver) goes in the lib folder |
 | `function.FunctionProvider` | adds its functions to Rachana (the archetype's `<id>_greet(name)` in any expression, Sutra or measure); a name already taken refuses the start |
 | `engines.ComputeEngine` | lists and starts it as the engine registry would at start (its switch and needs apply) |
-| `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404, removed: 410 |
+| `@ModuleApi` + `@RestController` | mounts its endpoints under `/api/v1/<prefix>/` (its manifest's `api.prefix`); off: 404 |
 | `module.DrishtiModule` (the manifest's `java.entry`) | started with the kernel's `ModuleContext` (kinds as rows, settings `drishti.module.<id>.*`, its data folder, audit, the business date); stopped before its context closes |
 | `approvals.ApprovalSource`, `explain.Explainer`, `view.ViewAugmenter`, `pivot.PivotSourceProvider` | the Approvals queue, Explain this number, the views, the pivot's sources |
 | `health.HealthFigures`, `capacity.CapacityFigures` | Health and the capacity page |
@@ -392,7 +392,7 @@ failure a sentence naming the file and the fix:
 | C11 Functions answer | loaded into `ModuleRuntime`, every function word has a route that answers 200 |
 | C12 Two people at once | no static field that is not final, and no static collection that is not unmodifiable (the class initialiser's `List.of`, `Map.copyOf`, `Collections.unmodifiable…`, `Stream.toList`), in the module's classes; a field that is one value for the whole engine on purpose carries `@EngineWide("why")` (kernel API) |
 | C13 Off means gone | switched off, every route answers 404 and nothing stays loaded |
-| C14 Absent everywhere | removed, every route answers 410, no contribution is left, Health says REMOVED |
+| C14 Absent everywhere | stopped, no contribution is left and the class loader is collected |
 
 `ModuleCliTest` (in `drishti-server`) runs these paths without Maven: it generates a module from the archetype's templates, compiles it, packs it with the Python packager, passes the fourteen checks through `ModuleCli`, adds a visual, and a broken copy fails the checks with their words.
 
@@ -428,14 +428,13 @@ unprefixed static file is refused whole**, and Admin → Modules and `GET /api/m
 ships (`modules/<id>/`, `module_manifests_dir`) while the server lists them loaded. The console asks every
 `modules.parts_refresh_seconds` (5) and at once after an apply in Admin → Modules.
 
-**When the module goes** (switched off or removed) every surface goes with it: its pages answer the Module removed A page (410 removed,
-404 off), its statics 410/404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
+**When the module goes** (switched off or removed) every surface goes with it: its pages answer the not-available page (404), its statics 404, its menu entries, Home cards, words (*… is not available: needs module X*), Help section, AI tools and lens
 links disappear; an open page of it is frozen under the notice within 15 seconds; saved work that uses it (Sutras, BI reports and
 dashboards, baskets in Build; saved searches in Forms; alert rules) stays, marked *needs module X* and not openable, and comes back on reinstall. Nothing of it
 is kept per person.
 
 **A page reads its module's API** through the console: `api('genes/TP53')` in a template is `/m/<id>/api/genes/TP53`, which the console
-reads from the server's `/api/v1/<id>/genes/TP53` as the person (GET only; 410 removed, 404 off). The page's own script draws the rows
+reads from the server's `/api/v1/<id>/genes/TP53` as the person (GET only; 404 off). The page's own script draws the rows
 with Drishti Elements (`Drishti.elements.grid`, `Drishti.elements.load('drishti-chart')`).
 
 ### 1.8 A module's own visual (the custom-visual SDK)
@@ -465,7 +464,7 @@ visuals:
 **Where it shows.** The module's pages load the library (`/m/<id>/elements/<library>/<module version>/<file>`) and draw the kind with
 `new Chart(el, {kind: 'genomics.lollipop', ...})`. The **Elements gallery** asks the console for the hosted modules' visuals
 (`GET /api/elements/visuals`), loads each library and gives each kind a page drawn from its `sample()`; a module that is off or removed
-is not listed, so its visual is gone from the gallery (and its library answers 404 or 410). The library registers the kind once
+is not listed, so its visual is gone from the gallery (and its library answers 404). The library registers the kind once
 (`kindOf` first) and exposes `Drishti.elements.visuals.<module>.ready`.
 
 ### 1.9 The genomics sample, step by step
@@ -692,7 +691,7 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
   `TokenScopeGuardTest`, `ArrowAnswersTest`). Its jar is the one stage 2 starts.
 
 Before it starts, with no server running from the checkout, the drill moves a server's state left in the data folder by an earlier
-run (`modules/installed/`, `identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
+run (`identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
 so every drill starts from the same data folder; nothing is deleted.
 
 **Stage 2** (the long runs side by side, each with its own log in `<data dir>/drill/`; all must pass):
@@ -3724,21 +3723,18 @@ python3 tools/drishti.py module inspect java/freight/build/dmod/freight-0.1.0.dm
 
 | Where | How | What you see |
 |---|---|---|
-| your own machine, while you edit | a development server on the module folder: `python tools/drishti.py start server --modules-dev` (the project's folder sits under `<Drishti folder>/modules/`); every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
+| your own machine, while you edit | a development server on the module folder: `python tools/drishti.py start server --modules-dev` (the project's folder sits under `<Drishti folder>/modules/`); restart it after a rebuild ([section 1.6](#16-the-module-sdk)) | the log's *modules from the boot: … freight*; Health marks it *development (unverified)* |
 | your own machine, the package alone | `python3 tools/drishti.py module run java/freight/build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
 | one server | put the `.dmod` into `<Drishti folder>/modules/` and restart; the server checks, unpacks and loads it | Admin → Modules: *LOADED* |
-| a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
+| a cluster | place its parts (section 12.5), then the same file into every node's modules folder and a restart, one node after another ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster)) | Admin → Modules on each node: *LOADED* |
 
 On a single node (no cluster) a module that `config/placement.yaml` does not name is placed on that node: it loads with no placement
 entry, and Health notes *freight: single node: placed here*. In a cluster there is no all-nodes default: a third-party module runs only
-where `config/placement.yaml` places it ([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)), and one placed on no node
-is refused at deploy (`DRS-1033`).
+where `config/placement.yaml` places it ([CLUSTER_GUIDE.md section 1.9](CLUSTER_GUIDE.md#19-module-placement)).
 
-**7. Remove and reinstall.** One server: take the `.dmod` out of the modules folder; put it back to reinstall. A cluster:
-`drishti.py module disable freight --reason …` (its API answers `404 DRS-1025`) or `module remove freight --reason …` (`410 DRS-1028`,
-its pages say it is no longer installed), each applied by a second administrator; `module plan install freight --version 0.1.0 --reason …`
-reinstalls. Saved work that uses it is kept, marked *needs module freight*, and comes back with it
-([HOW_IT_FITS.md section 6](../../HOW_IT_FITS.md#6-a-modules-life)).
+**7. Remove and reinstall.** Take the `.dmod` out of the modules folder and restart (its paths are unknown, `404`); put it back and restart to
+reinstall. To pause a module without removing it, `enabled: false` in the module's switch file (its API answers `404 DRS-1025`). Saved
+work that uses it is kept, marked *needs module freight*, and comes back with it ([HOW_IT_FITS.md section 6](../../HOW_IT_FITS.md#6-a-modules-life)).
 
 ### 12.2 How to create a plugin (a connector type)
 
@@ -3910,10 +3906,9 @@ and write `/static/img/drishti_<name>.<ext>`; or give a `data:` URL. The logo is
 pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the page's icon link, so SVG, PNG or ICO.
 
 **2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
-the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
-manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK
-project's `modules/<id>/module.yaml` (every module's one layout). So a third-party `.dmod` installed once (dropped in,
-or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus, packs and Help come from; a module
+the modules the server booted (the `.dmod` packages of `<Drishti folder>/modules/`, each read from its unpacked cache folder, or under
+the development switch the source folder `modules/<id>/module.yaml`, every module's one layout). So a third-party `.dmod` dropped into the
+modules folder is listed by its id with nothing copied elsewhere. That is where its words, menus, packs and Help come from; a module
 with `required: false` and no manifest anywhere adds none. The console reads no manifest: the server compiles the distribution and
 sends it with every module in its installation answer (`GET /api/v1/console/bootstrap`), asked again whenever `/public/about`'s
 `stamps.installation` changes, so a package installed after the start joins a running console's distribution and a removed one leaves it.
@@ -4183,12 +4178,12 @@ modules:
 *UI*: Admin → Cluster → Modules, *Plan a placement*, a second administrator *Applies*; the matrix shows `api` on both nodes, `compute`
 on the heavy one. *CLI*: `POST /api/v1/admin/cluster/placement/plans` `{placement, reason}`, then `…/plans/{id}/apply`.
 
-**Step 9 · Deployed.** *UI*: Admin → Modules → Deploy: upload `freight-0.1.0.dmod`, *Plan* (each node: what it does now and after), and a
-second administrator *Applies*: staged on both placed nodes, then activated together. *CLI*:
+**Step 9 · Installed.** *UI*: Admin → Modules on each node lists `freight`. *CLI*: the same file into each node's modules folder, then a restart,
+one node after the other:
 
 ```bash
-python3 tools/drishti.py module deploy java/freight/target/dmod/freight-0.1.0.dmod --reason "first install" --out plan.json
-python3 tools/drishti.py module apply plan.json          # another administrator
+cp java/freight/target/dmod/freight-0.1.0.dmod <each node's Drishti folder>/modules/       # the modules folder beside the jar
+# restart the node (python3 tools/drishti.py stop server / start server), then the next one
 python3 tools/drishti.py module list
 ```
 

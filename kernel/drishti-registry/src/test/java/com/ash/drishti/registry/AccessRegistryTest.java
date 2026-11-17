@@ -318,7 +318,7 @@ class AccessRegistryTest {
 
     @Test
     void aContentModuleIsReadFromItsOwnDmodManifest() throws IOException {
-        Path manifests = modules.getParent().resolve("module-sources");
+        Path manifests = modules.getParent().resolve("checkout").resolve("modules");
         write(manifests.resolve("capital-markets/module.yaml"), """
                 format: 1
                 id: capitalmarkets
@@ -332,7 +332,8 @@ class AccessRegistryTest {
                 """);
         write(manifests.resolve("hello/module.yaml"), "format: 1\nid: hello\nversion: 1.0.0\njava: {jars: [hello.jar]}\n");
         ClassLoader cl = new URLClassLoader(new URL[] {jar.toUri().toURL()}, null);
-        EmbeddedAccessRegistry r = new EmbeddedAccessRegistry(new YamlAccessStore(modules, access, cl, manifests), overrides::get, clock);
+        EmbeddedAccessRegistry r = new EmbeddedAccessRegistry(new YamlAccessStore(modules, access, cl,
+                () -> com.ash.drishti.api.resolution.ModuleHomes.source(manifests.getParent())), overrides::get, clock);
         // a code module whose jar is not here is known by its folder manifest: its content counts, its code is absent (section 18.1)
         assertThat(r.modules()).extracting(ModuleState::id).contains("capitalmarkets", "hello");
         assertThat(r.moduleOn("capitalmarkets")).isTrue();                     // the optional requirement does not switch it off

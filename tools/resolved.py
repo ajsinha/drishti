@@ -164,7 +164,6 @@ class Layout:
     site: Path | None
     kernel: Path | None
     modules: Path | None
-    store: Path | None
     installed: Path | None
     extra: tuple = field(default_factory=tuple)
 
@@ -176,7 +175,7 @@ class Resolution:
         self.doc = doc
         self.version = doc.get("version")
         lay = doc.get("layout") or {}
-        self.layout = Layout(*(_path(lay.get(k)) for k in ("site", "kernel", "modules", "store", "installed")),
+        self.layout = Layout(*(_path(lay.get(k)) for k in ("site", "kernel", "modules", "installed")),
                              tuple(Path(x) for x in lay.get("extra") or []))
         self.packs = Packs({n: Pack(n, Path(p["dir"]), Path(p["manifest"]), p.get("layer") or "", p.get("module"), p.get("origin") or "")
                             for n, p in (doc.get("packs") or {}).items()})

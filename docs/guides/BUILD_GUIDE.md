@@ -1907,7 +1907,7 @@ Design: a Sutra's YAML beside its live screen on real rows, drawn again as you e
         ▼
 Finalize: the module written, its pack linted and tested, packed as a .dmod, the fourteen checks
         ▼
-Deploy: the one module deploy (a single node installs; a cluster plans, then applies)
+Install: the download and the words that say how to install it (a file and a restart)
 ```
 
 ### 8.1 The six steps
@@ -1945,8 +1945,7 @@ Sutra marked *edited*; a YAML the server refuses shows its problems in place of 
 (`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module verify --conformance`: the **fourteen conformance
 checks** are listed as they pass. The `.dmod` can be downloaded.
 
-**6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder named by `builder.pack_designer_modules_dir` (an absolute path; with none set it is refused and **Plan for the cluster** is the way), where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
-plan** installs it: the server requires a second administrator to apply a plan (four eyes, as in Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
+**6. Install.** A module is a file and a restart: **Download the .dmod**, copy it into the server's modules folder (the folder beside the server's jar; on a cluster into every node's, one node after another) and restart the server; Admin → Modules lists it once it is running. **Propose the data binding** proposes the binding of the new module's kinds to Admin → Data bindings (a second administrator approves it).
 
 ### 8.1.1 The same on the command line
 
@@ -1961,8 +1960,8 @@ sends. Both routes run `tools/packgen/module_from_jsonl.py`; the page runs it as
 ### 8.1.2 Settings
 
 `builder.pack_designer_max_mb` (uploaded bytes per workspace, 4096), `builder.pack_designer_max_files` (500), `builder.pack_designer_ttl_hours` (72),
-`builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default),
-`builder.pack_designer_modules_dir` (where **Install on this node** puts the `.dmod`) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
+`builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default)
+and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
 
 ### 8.1.3 From JSON Schema
 
@@ -2379,8 +2378,8 @@ Data, **Map**, **Layout**, Finalize and Deploy.
   table + where* only reads a table a site already lands several systems in (`where: SOURCE_SYSTEM = '<SYS>'`); optionally a Kafka
   listener, off until the site sets its servers.
 - **Finalize.** The module `source-<system>` is written and checked: `module.yaml`, the connector, the map (`mappings/`), the inbox rule
-  (`dataload.yaml`: `<system>-*.jsonl*`, the date from the name) and the module's **section** of the kind's page (`sections:`). **Deploy** is the
-  one module deploy of step 6.
+  (`dataload.yaml`: `<system>-*.jsonl*`, the date from the name) and the module's **section** of the kind's page (`sections:`). **Install** is
+  step 6: the download.
 
 The module's `sections:` entry names a fragment (`sutras/trade-swapone.v1.fragment.yaml`) and the kind it joins. While the module runs, the
 fragment's panels are appended to every Sutra of that kind and shown when their own `when:` holds (here `$.SOURCE_SYSTEM == 'SWAPONE'`: the
@@ -5332,7 +5331,7 @@ dataload:
       date-from: name
 ```
 
-Auto-deploy loads the module within seconds. You should see `source-swapone` listed as running on **Admin → Modules**, with all fourteen checks passed.
+Copy the `.dmod` into the server's modules folder and restart the server. You should see `source-swapone` listed as loaded on **Admin → Modules**.
 
 ### Step 4 · Drop the file in the inbox
 
@@ -5423,12 +5422,8 @@ You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not 
 **In the UI.** **Admin → Modules**, `source-swapone`, **Disable**. The trades of SwapOne leave the trade kind, the section leaves the page, and nothing
 else changes. **Enable** brings them back.
 
-**On the command line.**
-
-```bash
-python3 tools/drishti.py module disable source-swapone
-python3 tools/drishti.py module enable source-swapone
-```
+**On the command line.** The switch is the file below and the server's API: `POST /api/v1/admin/modules` with `{"module": "source-swapone", "enabled": false, "reason": "..."}`
+writes it (an administrator; audited). A change takes effect at the next start.
 
 **The YAML.** `config/modules/source-swapone.yaml` holds `enabled: false` while it is off.
 

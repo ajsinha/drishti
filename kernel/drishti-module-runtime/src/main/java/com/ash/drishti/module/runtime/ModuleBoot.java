@@ -17,7 +17,6 @@ package com.ash.drishti.module.runtime;
 
 import com.ash.drishti.api.resolution.ModuleHomes;
 import com.ash.drishti.api.resolution.ModuleHomes.Origin;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -79,11 +78,30 @@ public final class ModuleBoot {
     public static final String HOME_SETTING = "drishti.modules.home";
 
     /**
-     * {@code drishti.modules.packages} (default true): false makes the process ignore the {@code .dmod} files of the modules folder and take
-     * its modules from the folders and the old store, as before i7a. For the kernel's own tests that serve the module sources in a checkout
-     * where packages were built (until E1 puts them on fixtures); deleted with the old path in i7a's I8.
+     * {@code drishti.modules.sources} (default false): the module source folders of the modules folder are the modules (read: manifests,
+     * packs, console parts, data needs; not loaded as code), instead of any package. For the tests of the shipped files in a checkout, where
+     * the module's own classes are already on the class path; the development switch ({@code drishti.modules.dev}) reads them the same way
+     * and also loads them.
      */
-    public static final String PACKAGES_SETTING = "drishti.modules.packages";
+    public static final String SOURCES_SETTING = "drishti.modules.sources";
+
+    /** Whether the setting asks for source folders: {@code true}. */
+    public static boolean sourcesAsked(String setting) {
+        return "true".equalsIgnoreCase(setting == null ? "" : setting.strip());
+    }
+
+    /** Its environment variable. */
+    public static final String HOME_ENV = "DRISHTI_MODULES_HOME";
+
+    /**
+     * The modules folder a property lookup names ({@link #HOME_SETTING}, else {@code <home>/modules}), absolute; null for {@code none}. The
+     * one place a tool or a command line asks for it (a server gets it resolved at launch).
+     */
+    public static Path folderOf(java.util.function.Function<String, String> property) {
+        String v = property.apply(HOME_SETTING);
+        String home = v == null || v.isBlank() ? com.ash.drishti.api.Roots.named(HOME_SETTING, HOME_ENV, "modules").toString() : v.strip();
+        return ModuleHomes.NONE.equals(home) ? null : Path.of(home).toAbsolutePath().normalize();
+    }
 
     /**
      * The modules folder of this process as its settings name it (the one reader of that setting, for the module host and the first-party
@@ -93,11 +111,6 @@ public final class ModuleBoot {
     public static Path processHome(java.util.function.Function<String, String> property) {
         String home = property.apply(HOME_SETTING);
         return home == null || home.isBlank() || "none".equals(home.strip()) ? null : Path.of(home.strip()).toAbsolutePath().normalize();
-    }
-
-    /** Whether packages in the modules folder are used: {@code drishti.modules.packages} is not {@code false}. */
-    public static boolean usePackages(String setting) {
-        return !"false".equalsIgnoreCase(setting == null ? "" : setting.strip());
     }
 
     /** The extension of a module package. */
@@ -121,7 +134,7 @@ public final class ModuleBoot {
     /** How often a running server refreshes its in-use markers ({@link #markInUse}); well inside {@link #IN_USE_FRESH}. */
     public static final Duration IN_USE_REFRESH = Duration.ofMinutes(5);
 
-    /** The old store's module registry under {@code <data>/modules}: read once for the upgrade note, never written. */
+    /** The old store's module registry under {@code <data>/modules}: a leftover, never read. */
     public static final String OLD_REGISTRY = "registry.json";
 
     /**
@@ -241,7 +254,6 @@ public final class ModuleBoot {
         FirstParty list = firstParty(modulesHome, notes);
         KernelFacts withList = facts.withBuild(facts.kernelBuild(), list);
         Map<Path, String> leftovers = leftovers(modulesHome, cacheRoot);
-        notes.addAll(oldRegistryNotes(cacheRoot));
         if (devFolders != null && !devFolders.isEmpty()) {
             development(devFolders, withList, modules, refused);
             notes.add("development switch on: modules come from their source folders; no .dmod is read; the cache is not swept");
@@ -457,32 +469,6 @@ public final class ModuleBoot {
                 modules.put(id, list.get(0));
             }
         });
-    }
-
-    /**
-     * The upgrade note of the old store: each module {@code <data>/modules/registry.json} names OFF or REMOVED, told once per boot with
-     * the one switch that remains. The file is not otherwise read and never written.
-     */
-    @SuppressWarnings("unchecked")
-    private static List<String> oldRegistryNotes(Path cacheRoot) {
-        Path data = dataFolder(cacheRoot);
-        Path file = data == null ? null : data.resolve("modules").resolve(OLD_REGISTRY);
-        if (file == null || !Files.isRegularFile(file)) {
-            return List.of();
-        }
-        List<String> out = new ArrayList<>();
-        try {
-            for (Object o : new ObjectMapper().readValue(file.toFile(), List.class)) {
-                if (o instanceof Map<?, ?> e && e.get("id") != null
-                        && ("OFF".equals(String.valueOf(e.get("state"))) || "REMOVED".equals(String.valueOf(e.get("state"))))) {
-                    String id = String.valueOf(e.get("id"));
-                    out.add(id + ": was off in the old store: set enabled: false in config/modules/" + id + ".yaml");
-                }
-            }
-        } catch (IOException | RuntimeException e) {
-            out.add(file.toAbsolutePath().normalize() + " (the old store) does not read: " + e.getMessage());
-        }
-        return out;
     }
 
     /** The data folder: the cache root's grandparent ({@code <data>/cache/modules}), or null without a cache root. */

@@ -21,14 +21,14 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
- * The few tests that still serve the repository's module SOURCES (drishti.modules.home = modules/, packages off) while the module path cannot
+ * The few tests that still serve the repository's module SOURCES (drishti.modules.home = modules/, sources on) while the module path cannot
  * give them what they read: the economy packs' samples through the package (MapPanelTest, the equivalence and explain tests of world-economy)
  * and the module host test's own folder beside the shipped modules. I8 removes this class
  * when the packages serve them. Properties are put back when the class ends.
  */
 public final class ModuleSources implements BeforeAllCallback, AfterAllCallback {
 
-    private static final String[] KEYS = {"drishti.modules.home", "drishti.modules.packages"};
+    private static final String[] KEYS = {"drishti.modules.home", "drishti.modules.sources"};
     private static final ExtensionContext.Namespace NS = ExtensionContext.Namespace.create(ModuleSources.class);
 
     @Override
@@ -38,7 +38,7 @@ public final class ModuleSources implements BeforeAllCallback, AfterAllCallback 
             context.getStore(NS).put(k, v == null ? "\u0000" : v);
         }
         System.setProperty(KEYS[0], java.nio.file.Path.of(TestRoots.repo(), "modules").toAbsolutePath().normalize().toString());
-        System.setProperty(KEYS[1], "false");
+        System.setProperty(KEYS[1], "true");
     }
 
     @Override

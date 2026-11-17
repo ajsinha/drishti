@@ -171,12 +171,12 @@ class ModuleOverridesTest {
         assertThat(Files.readString(view.resolve(ModuleOverrides.LIST))).contains("path: 'capitalmarkets/packs/us-equities/pack.yaml'",
                 "applied: '" + view.resolve("capital-markets/packs/us-equities/pack.yaml") + "'");
 
-        Path home = tmp.resolve("store/installed/capitalmarkets/2.0.0");                                    // the same key for the store
+        Path home = tmp.resolve("modules-cache/capitalmarkets/2.0.0");                                    // the same key for the store
         write(home.resolve("module.yaml"), "id: capitalmarkets\n");
         write(home.resolve("packs/us-equities/pack.yaml"), "pack: us-equities\n");
         try {
             ModuleOverrides.activate(List.of(o), tmp.resolve("data"));
-            Path iv = ModuleOverrides.installed(home, "capitalmarkets");
+            Path iv = viewOf(home, "capitalmarkets", "2.0.0");
             assertThat(Files.readString(iv.resolve("packs/us-equities/pack.yaml"))).contains("(site)");
             assertThat(ModuleOverrides.installedFiles()).extracting(ModuleOverrides.File::path)
                     .containsExactly("capitalmarkets/packs/us-equities/pack.yaml");
@@ -189,7 +189,7 @@ class ModuleOverridesTest {
 
     @Test
     void aModuleInstalledFromItsDmodIsReadFromItsViewWhileOverridden() throws Exception {
-        Path home = tmp.resolve("store/installed/banking/1.0.0");
+        Path home = tmp.resolve("modules-cache/banking/1.0.0");
         write(home.resolve("module.yaml"), "id: banking\npacks: [trading]\n");
         write(home.resolve("packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"), "title: Endur cash\n");
         write(home.resolve("java/drishti-banking.jar"), "jar");
@@ -200,23 +200,23 @@ class ModuleOverridesTest {
         write(o.resolve("banking/packs/trading/run.sh"), "rm -rf /\n");
         try {
             ModuleOverrides.activate(List.of(o), tmp.resolve("data"));
-            Path view = ModuleOverrides.installed(home, "banking");
+            Path view = viewOf(home, "banking", "1.0.0");
             assertThat(ModuleOverrides.installedRefused()).hasSize(3).anySatisfy(x -> assertThat(x).contains("java/ holds the module's code"))
                     .anySatisfy(x -> assertThat(x).contains("a .sh file is code"));
             assertThat(view.resolve("packs/trading/run.sh")).doesNotExist();
-            assertThat(view).isEqualTo(tmp.resolve("data/overrides/installed/banking/1.0.0"));
+            assertThat(view).isEqualTo(tmp.resolve("data/overrides/modules/banking/1.0.0-development"));
             assertThat(Files.readString(view.resolve("packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"))).contains("(site)");
             assertThat(Files.readString(view.resolve("module.yaml"))).contains("id: banking");         // the identity is never overridden
             assertThat(view.resolve("java")).doesNotExist();
-            assertThat(ModuleOverrides.installed(home, "economy")).isEqualTo(home);                   // nothing for it: its own folder
+            assertThat(viewOf(home, "economy", "1.0.0")).isEqualTo(home);                   // nothing for it: its own folder
 
             Files.delete(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"));
             Files.delete(o.resolve("banking/module.yaml"));
             Files.delete(o.resolve("banking/java/drishti-banking.jar"));
             Files.delete(o.resolve("banking/packs/trading/run.sh"));
-            assertThat(ModuleOverrides.installed(home, "banking")).isEqualTo(home);
+            assertThat(viewOf(home, "banking", "1.0.0")).isEqualTo(home);
             assertThat(view).doesNotExist();
-            assertThat(tmp.resolve("data/overrides/installed")).doesNotExist();
+            assertThat(tmp.resolve("data/overrides/modules")).doesNotExist();
         } finally {
             ModuleOverrides.activate(List.of(), null);
         }
@@ -233,5 +233,11 @@ class ModuleOverridesTest {
     private static void write(Path f, String text) throws Exception {
         Files.createDirectories(f.getParent());
         Files.writeString(f, text);
+    }
+
+    /** The view of a booted module's folder under the data folder's {@code overrides/modules} (the rule a boot's modules get). */
+    private Path viewOf(Path home, String id, String version) {
+        ModuleHomes.Home h = new ModuleHomes.Home(id, version, home, null, ModuleHomes.Origin.DEVELOPMENT);
+        return ModuleOverrides.view(h, tmp.resolve("data").resolve("overrides").resolve("modules")).dir();
     }
 }

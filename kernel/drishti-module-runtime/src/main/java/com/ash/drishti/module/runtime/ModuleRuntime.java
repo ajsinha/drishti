@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -42,9 +41,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  */
 public final class ModuleRuntime implements AutoCloseable {
 
-    /** How a module leaves: switched off (pages 404, may come back) or removed (pages 410, tombstones). */
-    public enum Leave { DISABLE, REMOVE }
-
     /** What an unload did: each step's line, the failures (retried at the next unload) and the leak check's verdict (null when not hot). */
     public record UnloadReport(String module, List<String> steps, List<String> failures, Boolean leakFree) {
     }
@@ -55,7 +51,6 @@ public final class ModuleRuntime implements AutoCloseable {
     private final ApplicationContext parent;
     private final ClassLoader kernelLoader;
     private final ModuleHost host;
-    private final Path tombstones;
     private final RouteTable routes = new RouteTable();
     private final Contributions contributions = new Contributions();
     private final Claims claims;
@@ -71,14 +66,12 @@ public final class ModuleRuntime implements AutoCloseable {
      * @param parent       the host's Spring context, parent of every module's (null for none)
      * @param kernelLoader the kernel's loader, asked first by every module loader (section 4.4)
      * @param host         the host's part of loading and unloading
-     * @param tombstones   the folder of tombstone files ({@code modules/tombstones/}), or null for none
      */
-    public ModuleRuntime(KernelFacts facts, ApplicationContext parent, ClassLoader kernelLoader, ModuleHost host, Path tombstones) {
+    public ModuleRuntime(KernelFacts facts, ApplicationContext parent, ClassLoader kernelLoader, ModuleHost host) {
         this.facts = facts;
         this.parent = parent;
         this.kernelLoader = kernelLoader == null ? ModuleRuntime.class.getClassLoader() : kernelLoader;
         this.host = host == null ? new ModuleHost() { } : host;
-        this.tombstones = tombstones;
         this.claims = new Claims(facts);
     }
 
@@ -97,12 +90,20 @@ public final class ModuleRuntime implements AutoCloseable {
     }
 
     /**
-     * Discovers, verifies, orders and loads every module of the folders. {@code enabled} is the site switch (V9: off is not a refusal).
+     * Discovers, verifies, orders and loads every module of the folders ({@link ModuleDiscovery}). {@code enabled} is the site switch (V9: off is not a refusal).
      * Returns every module's Health row.
      */
-    public List<ModuleHealth> start(List<Path> folders, Map<String, String> active, Predicate<String> enabled) {
-        ModuleDiscovery.Found found = ModuleDiscovery.discover(folders, active == null ? Map.of() : active);
+    public List<ModuleHealth> start(List<Path> folders, Predicate<String> enabled) {
+        ModuleDiscovery.Found found = ModuleDiscovery.discover(folders);
         found.refused().forEach((id, e) -> refuse(id, "", e));
+        return start(found, enabled);
+    }
+
+    /**
+     * Verifies, orders and loads the candidates (the module boot's, or discovery's); {@code refused} are modules already refused before
+     * this (their words are kept as their Health rows).
+     */
+    public List<ModuleHealth> start(ModuleDiscovery.Found found, Predicate<String> enabled) {
         KernelFacts f = facts;
         if (facts.knownKinds() != null) {
             Set<String> kinds = new HashSet<>(facts.knownKinds());
@@ -272,7 +273,7 @@ public final class ModuleRuntime implements AutoCloseable {
      * loader now and runs the leak check (P5, and every test); otherwise the loader stays loaded but unreachable until the next restart (P2).
      * Refused while another loaded module requires it.
      */
-    public synchronized UnloadReport unload(String id, Leave leave, boolean hot) {
+    public synchronized UnloadReport unload(String id, boolean hot) {
         if (!loaded.containsKey(id)) {
             throw new IllegalArgumentException(id + " is not loaded");
         }
@@ -284,7 +285,7 @@ public final class ModuleRuntime implements AutoCloseable {
         List<String> steps = new ArrayList<>();
         List<String> failures = new ArrayList<>();
         String version = known.get(id).manifest().version();
-        stepsOneToSix(id, version, leave, steps, failures);
+        stepsOneToSix(id, version, steps, failures);
         claims.release(id);
         // 7 server (in its own frame, so nothing here holds the loader during the leak check)
         LeakCheck check = stopServerPart(id, hot, failures);
@@ -298,43 +299,32 @@ public final class ModuleRuntime implements AutoCloseable {
             }
             steps.add("7 stopped: context closed, class loader dropped (" + (leakFree ? "leak-free" : "LEAK") + ")");
         }
-        // 8 mark saved work
-        if (leave == Leave.REMOVE) {
-            step(failures, () -> writeTombstone(id, version));
-            steps.add("8 tombstone written" + (tombstones == null ? " (no tombstone folder here)" : ""));
-        } else {
-            steps.add("8 nothing to mark (off)");
-        }
         // 9 record
         failures.addAll(contributions.withdraw(id, 9));
-        health.put(id, new ModuleHealth(id, version, leave == Leave.REMOVE ? ModuleHealth.State.REMOVED : ModuleHealth.State.OFF, null,
-                leave == Leave.REMOVE ? "no longer installed" : "administrator", failures));
-        step(failures, () -> host.event(leave == Leave.REMOVE ? "module.removed" : "module.stopped", id));
-        steps.add("9 recorded");
-        LOG.info("module {} {}: {}", id, leave == Leave.REMOVE ? "removed" : "off", failures.isEmpty() ? "clean" : failures);
+        health.put(id, new ModuleHealth(id, version, ModuleHealth.State.OFF, null, "administrator", failures));
+        step(failures, () -> host.event("module.stopped", id));
+        steps.add("8 recorded");
+        LOG.info("module {} off: {}", id, failures.isEmpty() ? "clean" : failures);
         return new UnloadReport(id, List.copyOf(steps), List.copyOf(failures), leakFree);
     }
 
     /** Steps 1-6 of an unload, under the module's own loader (in their own frame, so nothing holds the loader during the leak check). */
-    private void stepsOneToSix(String id, String version, Leave leave, List<String> steps, List<String> failures) {
+    private void stepsOneToSix(String id, String version, List<String> steps, List<String> failures) {
         Thread t = Thread.currentThread();
         ClassLoader tccl = t.getContextClassLoader();
         ModuleClassLoader own = loaded.get(id).loader();
         try {
             if (own != null) {
-                t.setContextClassLoader(own);      // steps 1-6 call into the module (its listeners, drain, withdrawals) under its own loader
+                t.setContextClassLoader(own);      // steps 1-6 call into the module (its listeners, withdrawals) under its own loader
             }
             // 1 gate closes
             health.put(id, new ModuleHealth(id, version, ModuleHealth.State.LEAVING, null, null, loaded.get(id).notes()));
-            RouteTable.Snapshot s = routes.state(id, leave == Leave.REMOVE ? RouteTable.State.TOMBSTONE : RouteTable.State.OFF);
+            RouteTable.Snapshot s = routes.state(id, RouteTable.State.OFF);
             failures.addAll(contributions.withdraw(id, 1));
-            steps.add("1 gate closed: " + s.of(id).size() + " routes " + (leave == Leave.REMOVE ? "tombstoned" : "off") + " (table v" + s.version() + ")");
+            steps.add("1 gate closed: " + s.of(id).size() + " routes off (table v" + s.version() + ")");
             // 2 tell
             step(failures, () -> host.event("module.leaving", id));
             steps.add("2 told: module.leaving");
-            // 3 drain
-            step(failures, () -> host.drain(id));
-            steps.add("3 drained");
             // 4-6 contributions, content, console
             for (int step = 4; step <= 6; step++) {
                 int before = contributions.of(id).size();
@@ -377,20 +367,6 @@ public final class ModuleRuntime implements AutoCloseable {
         LeakCheck check = new LeakCheck(id, m.loader());
         closeQuietly(null, m.loader());
         return check;
-    }
-
-    private void writeTombstone(String id, String version) {
-        if (tombstones == null) {
-            return;
-        }
-        ModuleCandidate c = known.get(id);
-        StringBuilder y = new StringBuilder("# the module's names, kept for saved work (needs module " + id + ")\n");
-        y.append("module: ").append(id).append("\nversion: ").append(version).append("\nremoved: ").append(Instant.now()).append('\n');
-        y.append("routes:\n");
-        routes.snapshot().of(id).forEach(r -> y.append("  - {id: ").append(r.id()).append(", path: \"").append(r.path()).append("\"}\n"));
-        y.append("claims:\n");
-        Claims.of(c, routes.snapshot().of(id)).forEach(cl -> y.append("  - \"").append(cl).append("\"\n"));
-        Dmod.write(tombstones.resolve(id + ".yaml"), y.toString());
     }
 
     private static void step(List<String> failures, Runnable r) {
@@ -454,7 +430,7 @@ public final class ModuleRuntime implements AutoCloseable {
         return Optional.ofNullable(health.get(id));
     }
 
-    /** Stops every loaded module, dependants first (a shutdown: no tombstones, routes off). */
+    /** Stops every loaded module, dependants first (a shutdown: routes off). */
     @Override
     public synchronized void close() {
         List<String> order = new ArrayList<>(loaded.keySet());
@@ -462,7 +438,7 @@ public final class ModuleRuntime implements AutoCloseable {
             boolean progressed = false;
             for (String id : List.copyOf(order)) {
                 try {
-                    unload(id, Leave.DISABLE, false);
+                    unload(id, false);
                     order.remove(id);
                     progressed = true;
                 } catch (IllegalStateException required) {
