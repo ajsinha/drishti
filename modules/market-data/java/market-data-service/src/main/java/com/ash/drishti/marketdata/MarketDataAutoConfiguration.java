@@ -23,7 +23,7 @@ import org.springframework.context.annotation.FilterType;
 /**
  * The market-data module's server part (docs/architecture/KERNEL_AND_MODULES.md section 3.3; THIN_CONSOLE_DESIGN.md step S8a): the
  * manifest's {@code java.spring}, made by the module host in market-data's own child context. It brings the Market landings' figures
- * ({@code /api/v1/market-data/landing}); it reads the kernel only through its API, as the person ({@code KernelCalls}).
+ * ({@code /api/v1/market-data/landing}); it reads the kernel only through its API, as the person ({@code Kernel}, typed).
  */
 @AutoConfiguration
 @ComponentScan(basePackages = "com.ash.drishti.marketdata", excludeFilters = {

@@ -52,6 +52,12 @@ public interface ModuleContext {
     /** Records an entry in the kernel's audit log, as the module. */
     void audit(String action, Map<String, Object> detail);
 
+    /**
+     * The kernel's typed services, as the module asks the kernel for what it does not hold (the same bean its Spring context injects from
+     * the kernel's context); every call is made for the {@link com.ash.drishti.kernel.api.services.Person} of a request.
+     */
+    com.ash.drishti.kernel.api.services.Kernel kernel();
+
     /** Today's business date. */
     LocalDate businessDate();
 

@@ -66,6 +66,14 @@ public final class ModuleWiring {
         this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()), budget);
     }
 
+    private volatile Supplier<com.ash.drishti.kernel.api.services.Kernel> kernel = () -> null;
+
+    /** The typed kernel services a started module's {@code ModuleContext.kernel()} answers. */
+    public ModuleWiring kernel(Supplier<com.ash.drishti.kernel.api.services.Kernel> services) {
+        this.kernel = services == null ? () -> null : services;
+        return this;
+    }
+
     private volatile Supplier<com.ash.drishti.server.bindings.BindingService> bindings = () -> null;
 
     /** The data gate a loaded module's declared needs join (its manifest's {@code data: {needs: …}}), withdrawn when it stops. */
@@ -156,7 +164,7 @@ public final class ModuleWiring {
         List<DrishtiModule> started = new ArrayList<>();
         try {
             for (DrishtiModule m : ModuleBridge.found(module, DrishtiModule.class)) {
-                m.start(new KernelModuleContext(module.id(), router, audit, dataDir.resolve("modules").resolve(module.id()), env));
+                m.start(new KernelModuleContext(module.id(), router, audit, dataDir.resolve("modules").resolve(module.id()), env, kernel));
                 started.add(m);
             }
         } catch (RuntimeException | LinkageError e) {

@@ -292,10 +292,13 @@ What each door of a REST path does for a typed call:
 | `RequestsInFlight`, `RequestActivity` | not counted again: the request that made the typed call already holds its slot |
 | `PathGuard`, `RequestSizeFilter` | not applicable: no path, no body |
 
-`TypedCallParityTest` holds the parity: every call the landings make, typed and over the loopback, for an administrator, a masked role, a
+`TypedCallParityTest` holds the parity: every call the landings make, typed and over REST, for an administrator, a masked role, a
 row-ruled role, a role the kind is closed to, a lens, an earlier date box, another language, a read-only API token and a scoped one, several
-people at once, and again with the business today fixed. Until the landings move to the typed services, `KernelCalls` (each call
-`GET`/`POST` over this server's own API on the loopback) answers them.
+people at once, and again with the business today fixed. The trading and market-data landings call these services: a module's Spring
+context takes `Kernel` from the kernel's context (or asks `ModuleContext.kernel()`), the landing's controller asks for the person of the
+request (`Kernel.person()`), and every read is a typed call of that person. No module calls its own server over HTTP (`NoLoopbackTest`);
+the one exception until I13's operations carry them is the trading landings' six `/risk/*` calls, which pass the temporary `RiskBridge`
+(`TODO(I13)`).
 
 ### 2.4 What stays kernel-only, and why
 

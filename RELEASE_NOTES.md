@@ -48,8 +48,6 @@ the release tag is `v2.9.11.i_6`.
 
 ## Known limits
 
-- The trading and market-data landings still read the kernel's API over this server's own loopback address (`LoopbackKernelCalls`);
-  an in-process call replaces it in i7.
 - A FORM's rules are still evaluated twice, in the browser (`drishti_form-expr.js`, as people type) and on the server (`FormExpr`); one
   home is planned for i7.
 

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.marketdata;
 
-import com.ash.drishti.kernel.api.module.KernelCalls.Caller;
+import com.ash.drishti.kernel.api.module.Asker;
 import java.util.Map;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +42,7 @@ public class MarketLandingController {
 
     @GetMapping("/{part}")
     public ResponseEntity<Map<String, Object>> part(@PathVariable("part") String part) {
-        Caller c = landing.caller();
+        Asker c = landing.caller();
         Map<String, Object> out = switch (part) {
             case "desk" -> landing.desk(c);
             case "moves" -> landing.moves(c);

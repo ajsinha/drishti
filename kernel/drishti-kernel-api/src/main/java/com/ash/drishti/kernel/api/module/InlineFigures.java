@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * in with the measures wanted ({@code sum(MTM)}, {@code median(S)}, {@code stddev_pop(H)}, a formula of aggregates) and the engine's
  * cells come back. The engine aggregates (compensated sums, exact medians, Welford's deviations); nothing in a module adds up a figure.
  *
- * <p>{@link KernelCalls.Caller#figures} asks and answers {@link Figures}: {@link Figures#get} a cell's figure by its {@code as} name (a
+ * <p>{@link Asker#figures} asks and answers {@link Figures}: {@link Figures#get} a cell's figure by its {@code as} name (a
  * null member is the total along that axis), {@link Figures#members} the row members in the engine's order. No rows: nothing is asked
  * and every figure is null. The kernel implements the asking and the reading of the engine's answer; this holds the request's words.
  */

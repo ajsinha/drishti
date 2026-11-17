@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.module.runtime;
 
-import com.ash.drishti.kernel.api.module.KernelCalls;
 import com.ash.drishti.kernel.api.module.PersonCache;
 import java.time.Clock;
 import java.util.LinkedHashMap;
@@ -26,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
- * The kernel's {@link PersonCache}, made by {@link KernelCalls#cache} (the server's and the conformance harness's): at most {@code size}
+ * The kernel's {@link PersonCache}, made by {@link com.ash.drishti.kernel.api.services.Kernel#cache} (the server's and the conformance harness's): at most {@code size}
  * answers, each for {@code ttlMillis}, the least recently used going first; one computation per key at a time (two panels asking for the
- * same reads wait for one answer). Every key holds the person's {@link KernelCalls.Caller#key()}: nothing is shared between people.
+ * same reads wait for one answer). Every key holds the person's {@link com.ash.drishti.kernel.api.services.Person#key()}: nothing is shared between people.
  *
  * @param <V> the answer
  */

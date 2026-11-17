@@ -39,6 +39,11 @@ public class KernelDates implements BusinessDates {
     }
 
     @Override
+    public java.util.Set<LocalDate> holidays() {
+        return new java.util.LinkedHashSet<>(dates.holidays(dates.earliest(), dates.current().plusYears(1)));
+    }
+
+    @Override
     public LocalDate selected(Person p) {
         return RequestPerson.of(p).asOf().businessDate();
     }

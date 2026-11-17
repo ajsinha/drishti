@@ -23,7 +23,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,11 +31,16 @@ import org.junit.jupiter.api.Test;
  */
 class NoLoopbackTest {
 
-    @Disabled("i7a: enabled in I14 (K4: landings typed, LoopbackKernelCalls and KernelCalls deleted)")
     @Test
     void noMainClassCallsItsOwnServerOverTheLoopback() throws IOException {
         assertThat(offenders(RepositoryFiles.root())).isEmpty();
     }
+
+    /**
+     * TODO(I13): the one class left on this server's own API, the bridge of the trading landings' {@code /risk/*} calls until those are typed
+     * operations of the banking module; removed from here with the class.
+     */
+    static final Set<String> UNTIL_OPERATIONS = Set.of("kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RiskLoopbackBridge.java");
 
     /** True when the source builds a loopback URL from the server's own port. */
     static boolean loopsBack(String source) {
@@ -48,7 +52,8 @@ class NoLoopbackTest {
         List<String> out = new ArrayList<>();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/") && loopsBack(Files.readString(p))) {
+            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/") && !UNTIL_OPERATIONS.contains(rel)
+                    && loopsBack(Files.readString(p))) {
                 out.add(rel);
             }
         }

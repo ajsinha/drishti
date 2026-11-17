@@ -22,6 +22,11 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **The landings are typed; the loopback is deleted (I14, K4).** The trading and market-data landings ask the kernel through `Kernel` (taken from the kernel's
+  context, also `ModuleContext.kernel()`) as the person of the request, through `Asker` (the typed services answered as the JSON-shaped maps the landings read),
+  not over HTTP to this server. `LoopbackKernelCalls`, `KernelCalls` (and its `Refused`) are gone; `Kernel.Refused` remains. `BusinessDates.holidays()` joins the
+  typed API (the landings' business-day arithmetic). The six `/risk/*` calls of the trading landings pass the temporary `RiskBridge` until they are operations
+  (`TODO(I13)`). The landing recordings are byte-equal; the stand-ins implement the typed services; `NoLoopbackTest` (G13) is on.
 - **An applied correction is read at once (write-back).** The overlays and owned values cached per record were dropped only after the apply had closed the draft and told
   the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
   unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped

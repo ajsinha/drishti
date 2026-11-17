@@ -18,7 +18,8 @@ package com.ash.drishti.marketdata;
 import com.ash.drishti.bicompute.rows.InlinePivot;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.module.InlineFigures;
-import com.ash.drishti.kernel.api.module.KernelCalls;
+import com.ash.drishti.kernel.api.services.Kernel;
+import com.ash.drishti.kernel.api.services.Kernel.Refused;
 import com.ash.drishti.kernel.api.module.PersonCache;
 import com.ash.drishti.kernel.api.pivot.Viewer;
 import com.ash.drishti.module.runtime.InlinePivotFigures;
@@ -41,7 +42,7 @@ import org.yaml.snakeyaml.Yaml;
 
 /**
  * The stand-in server of Drishti Market's landings (MarketLandingRecordTest): the server's API as {@link MarketLanding} reads it through
- * {@link KernelCalls}, over market data with known problems, one of each check. Its answers are shaped as the server's (search rows of
+ * {@link Kernel}, over market data with known problems, one of each check. Its answers are shaped as the server's (search rows of
  * {@code $.FIELD} values, raw documents with provenance, one field's history with each point's data date, the business date); the pivot
  * engine's {@code /pivot/inline} is the engine's own ({@link InlinePivot}); a lens is the repository's file. The business date is
  * 2026-09-30.
@@ -55,7 +56,7 @@ import org.yaml.snakeyaml.Yaml;
  * History: every curve's TEN_Y has 21 real business days, CRV-EUR-OIS jumping on the last; the EUR/USD vol surface holds the business date
  * only (so its tile shows no change); the CDS spreads hold both days. With {@code history} false no day but the last holds its own data.
  */
-final class MarketStandIn implements KernelCalls {
+final class MarketStandIn implements Kernel {
 
     static final LocalDate BUSINESS = LocalDate.of(2026, 9, 30);
     static final List<String> TENORS = List.of("1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "15Y", "20Y", "30Y");
@@ -115,12 +116,12 @@ final class MarketStandIn implements KernelCalls {
     }
 
     @Override
-    public Caller caller() {
+    public com.ash.drishti.kernel.api.services.Person person() {
         Person p = current.get();
         if (p == null) {
-            throw new IllegalStateException("a caller is the person of a request: there is no request on this thread");
+            throw new IllegalStateException("a person is the person of a request: there is no request on this thread");
         }
-        return new Call(p, null);
+        return new Held(p, null);
     }
 
     @Override
@@ -128,8 +129,168 @@ final class MarketStandIn implements KernelCalls {
         return new KernelPersonCache<>(size, ttlMillis);                   // the kernel's own, as the server gives it
     }
 
+    /** One person of the stand-in on one date box (null: live), as the kernel's typed {@code Person}. */
+    private record Held(Person p, LocalDate day) implements com.ash.drishti.kernel.api.services.Person {
+        @Override
+        public String user() {
+            return p.user();
+        }
+
+        @Override
+        public String display() {
+            return p.display();
+        }
+
+        @Override
+        public boolean admin() {
+            return p.admin();
+        }
+
+        @Override
+        public List<String> roles() {
+            return p.roles();
+        }
+
+        @Override
+        public String lens() {
+            return p.lens();
+        }
+
+        @Override
+        public com.ash.drishti.api.AsOf asOf() {
+            return day == null ? com.ash.drishti.api.AsOf.LATEST : com.ash.drishti.api.AsOf.of(day);
+        }
+
+        @Override
+        public String key() {
+            return String.join("\u0001", p.user(), String.join(",", p.roles()), p.lens(), day == null ? "live" : day.toString());
+        }
+
+        @Override
+        public com.ash.drishti.kernel.api.services.Person onDate(LocalDate d) {
+            return new Held(p, d);
+        }
+
+        String dayText() {
+            return day == null ? BUSINESS.toString() : day.toString();
+        }
+    }
+
+    private Held held(com.ash.drishti.kernel.api.services.Person p, String what) {
+        Held h = (Held) p;
+        asked.add(h.user() + " " + what);
+        return h;
+    }
+
     @Override
-    public Map<String, Object> lens(String name) {
+    public com.ash.drishti.kernel.api.services.Records records() {
+        return new com.ash.drishti.kernel.api.services.Records() {
+            @Override
+            public com.ash.drishti.kernel.api.services.SearchAnswer search(com.ash.drishti.kernel.api.services.Person p, String query) {
+                Held h = held(p, "GET /search");
+                return Typed.search(wire(MarketStandIn.this.search(query)));
+            }
+
+            @Override
+            public java.util.Optional<com.ash.drishti.kernel.api.services.RawRecord> raw(com.ash.drishti.kernel.api.services.Person p,
+                    com.ash.drishti.api.EntityRef ref) {
+                Held h = held(p, "GET /entities/" + ref.kind() + "/raw");
+                try {
+                    return java.util.Optional.of(Typed.raw(wire(MarketStandIn.this.raw(ref.kind(), ref.id()))));
+                } catch (Refused e) {
+                    if ("DRS-1001".equals(e.code())) {
+                        return java.util.Optional.empty();
+                    }
+                    throw e;
+                }
+            }
+        };
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.BusinessDates dates() {
+        return new com.ash.drishti.kernel.api.services.BusinessDates() {
+            @Override
+            public LocalDate current() {
+                return BUSINESS;
+            }
+
+            @Override
+            public java.util.Set<LocalDate> holidays() {
+                return java.util.Set.of(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 11, 11), LocalDate.of(2026, 11, 26));
+            }
+
+            @Override
+            public LocalDate selected(com.ash.drishti.kernel.api.services.Person p) {
+                Held h = held(p, "GET /business-date");
+                return h.day() == null ? current() : h.day();
+            }
+
+            @Override
+            public boolean live(com.ash.drishti.kernel.api.services.Person p) {
+                return ((Held) p).day() == null;
+            }
+        };
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.PersonSettings settings() {
+        throw new UnsupportedOperationException("the market landings read no settings");
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.LiveQueries live() {
+        throw new UnsupportedOperationException("the market landings read no live sets");
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Pivots pivots() {
+        return new com.ash.drishti.kernel.api.services.Pivots() {
+            @Override
+            public com.ash.drishti.kernel.api.services.CellSet inline(com.ash.drishti.kernel.api.services.Person p,
+                    com.ash.drishti.kernel.api.services.InlineRequest request) {
+                throw new UnsupportedOperationException("the stand-in answers figures only");
+            }
+
+            @Override
+            public InlineFigures.Figures figures(com.ash.drishti.kernel.api.services.Person p, List<InlineFigures.Field> fields, List<List<Object>> rows,
+                    List<Map<String, Object>> values, String by, String across, Map<String, Object> top) {
+                Held h = held(p, "POST /pivot/inline");
+                return InlinePivotFigures.ask(b -> {          // the kernel's asking, over this stand-in's pivot engine
+                    try {
+                        return wire(InlinePivot.of(wire(b)).query(Viewer.of(h.user())));
+                    } catch (DrishtiException e) {
+                        throw new Refused(e.errorCode().httpStatus(), e.errorCode().code(), e.getMessage());
+                    }
+                }, fields, rows, values, by, across, top);
+            }
+        };
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Lenses lenses() {
+        return (lens, block) -> lensFile(lens).get(block) instanceof Map<?, ?> m ? wire(m) : Map.of();
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.History history() {
+        return (p, ref, path, days, to) -> {
+            held(p, "GET /history/" + ref.kind() + "/series");
+            return Typed.series(ref.kind(), ref.id(), wire(MarketStandIn.this.series(ref.kind(), ref.id(), path, days)));
+        };
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Access access() {
+        throw new UnsupportedOperationException("the stand-in holds no access doors");
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Operations operations() {
+        throw new UnsupportedOperationException("the stand-in holds no operations");
+    }
+
+    Map<String, Object> lensFile(String name) {
         if (name == null || name.isBlank()) {
             return Map.of();
         }
@@ -349,87 +510,61 @@ final class MarketStandIn implements KernelCalls {
         }
     }
 
-    /** One person's calls on one date box (null: live). */
-    private final class Call implements Caller {
-        private final Person p;
-        private final LocalDate day;
-
-        Call(Person p, LocalDate day) {
-            this.p = p;
-            this.day = day;
+    /** The stand-in's JSON-shaped answers as the kernel's typed records (what the landings read back through {@code Asker}). */
+    static final class Typed {
+        private Typed() {
         }
 
-        @Override
-        public String user() {
-            return p.user();
+        @SuppressWarnings("unchecked")
+        static Map<String, Object> map(Object o) {
+            return o instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         }
 
-        @Override
-        public String display() {
-            return p.display();
+        @SuppressWarnings("unchecked")
+        static List<Map<String, Object>> list(Object o) {
+            return o instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         }
 
-        @Override
-        public boolean admin() {
-            return p.admin();
+        static com.ash.drishti.api.EntityRef ref(Object r) {
+            Map<String, Object> m = map(r);
+            return com.ash.drishti.api.EntityRef.of((String) m.get("kind"), (String) m.get("id"));
         }
 
-        @Override
-        public String lens() {
-            return p.lens();
+        static long num(Object o) {
+            return o instanceof Number n ? n.longValue() : 0;
         }
 
-        @Override
-        public String key() {
-            return String.join("\u0001", p.user(), String.join(",", p.roles()), p.lens(), day == null ? "live" : day.toString());
-        }
-
-        @Override
-        public Caller onDate(LocalDate d) {
-            return new Call(p, d);
-        }
-
-        @Override
-        public Map<String, Object> get(String path, Map<String, ?> params) {
-            asked.add(p.user() + " GET " + path);
-            String[] parts = path.split("/");
-            Object answer;
-            if ("/business-date".equals(path)) {
-                answer = businessDate(day);
-            } else if ("/search".equals(path)) {
-                answer = search(String.valueOf(params.get("q")));
-            } else if (path.startsWith("/entities/") && path.endsWith("/raw")) {
-                answer = raw(parts[2], "~".equals(parts[3]) ? String.valueOf(params.get("id")) : decode(parts[3]));
-            } else if (path.startsWith("/history/") && path.endsWith("/series")) {
-                answer = series(parts[2], "~".equals(parts[3]) ? String.valueOf(params.get("id")) : decode(parts[3]), String.valueOf(params.get("path")),
-                        Integer.parseInt(String.valueOf(params.get("days"))));
-            } else {
-                throw new Refused(404, "DRS-4040", "the stand-in has no GET " + path);
+        static com.ash.drishti.kernel.api.services.SearchAnswer search(Map<String, Object> a) {
+            List<com.ash.drishti.kernel.api.services.SearchAnswer.Row> rows = new ArrayList<>();
+            for (Map<String, Object> r : list(a.get("rows"))) {
+                rows.add(new com.ash.drishti.kernel.api.services.SearchAnswer.Row(ref(r.get("ref")), (String) r.get("title"), map(r.get("values"))));
             }
-            return wire(answer);
+            return new com.ash.drishti.kernel.api.services.SearchAnswer("", String.valueOf(a.get("kind")), "", "", "", false, 0, List.of(), Map.of(),
+                    num(a.get("scanned")), num(a.get("matched")), Boolean.TRUE.equals(a.get("partial")), List.of(), 0,
+                    null, a.get("noData") instanceof Map<?, ?> ? map(a.get("noData")) : null, rows, null);
         }
 
-        @Override
-        public InlineFigures.Figures figures(List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
-                String by, String across, Map<String, Object> top) {
-            return InlinePivotFigures.ask(this, fields, rows, values, by, across, top);   // the kernel's asking, over this stand-in's /pivot/inline
+        static com.ash.drishti.kernel.api.services.RawRecord raw(Map<String, Object> a) {
+            Object day = map(a.get("provenance")).get("businessDate");
+            com.ash.drishti.api.Provenance prov = new com.ash.drishti.api.Provenance("stand-in", 0, java.time.Instant.EPOCH, false,
+                    day == null ? null : LocalDate.parse(String.valueOf(day)));
+            return new com.ash.drishti.kernel.api.services.RawRecord(ref(a.get("ref")), prov, com.ash.drishti.api.DataNode.of(a.get("data")));
         }
 
-        @Override
-        public Map<String, Object> post(String path, Object body, Map<String, ?> params) {
-            asked.add(p.user() + " POST " + path);
-            if (!"/pivot/inline".equals(path)) {
-                throw new Refused(404, "DRS-4040", "the stand-in has no POST " + path);
+        static com.ash.drishti.kernel.api.services.LivePage live(Map<String, Object> a) {
+            return new com.ash.drishti.kernel.api.services.LivePage(map(a.get("set")), Boolean.TRUE.equals(a.get("live")), (int) num(a.get("total")),
+                    num(a.get("seq")), (int) num(a.get("offset")), list(a.get("rows")), map(a.get("search")), null);
+        }
+
+        static com.ash.drishti.kernel.api.services.Series series(String kind, String id, Map<String, Object> a) {
+            List<com.ash.drishti.kernel.api.services.Series.Point> pts = new ArrayList<>();
+            for (Map<String, Object> p : list(a.get("points"))) {
+                pts.add(new com.ash.drishti.kernel.api.services.Series.Point(LocalDate.parse(String.valueOf(p.get("date"))), p.get("value"),
+                        p.get("dataDate") == null ? null : LocalDate.parse(String.valueOf(p.get("dataDate"))), (String) p.get("source"),
+                        p.get("generation") == null ? null : num(p.get("generation"))));
             }
-            try {
-                return wire(InlinePivot.of(wire(body)).query(Viewer.of(p.user())));
-            } catch (DrishtiException e) {
-                throw new Refused(e.errorCode().httpStatus(), e.errorCode().code(), e.getMessage());
-            }
-        }
-
-        private static String decode(String s) {
-            return java.net.URLDecoder.decode(s, java.nio.charset.StandardCharsets.UTF_8);
+            return new com.ash.drishti.kernel.api.services.Series(com.ash.drishti.api.EntityRef.of(kind, id), String.valueOf(a.get("path")),
+                    (String) a.get("label"), pts, !Boolean.FALSE.equals(a.get("dated")));
         }
     }
 }
