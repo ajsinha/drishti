@@ -64,15 +64,15 @@
      blocked. data-checked-seq on host counts the answers that arrived (a test waits on it). Server away: away is true, the fields stay editable
      and Save still sends (the server checks every save). */
   function checker(host, build, onAnswer) {
-    var c = { last: null, away: false, sent: 0, seen: 0, timer: null };
+    var c = { last: null, away: false, retried: false, sent: 0, seen: 0, timer: null };
     function send() {
       clearTimeout(c.timer); c.timer = null;
       var my = ++c.sent, req = build();
       req.sutra = page.sutra; req.design = page.design;
       return fetch(drishti_url('/api/forms/check'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(req) })
         .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
-        .then(function (a) { if (my < c.sent) { return c.last; } a.step = req.step || ''; c.last = a; c.away = false; return c.last; },
-          function () { if (my === c.sent) { c.away = true; } return c.last; })
+        .then(function (a) { if (my < c.sent) { return c.last; } a.step = req.step || ''; c.last = a; c.away = false; c.retried = false; return c.last; },
+          function () { if (my === c.sent) { c.away = true; if (!c.retried) { c.retried = true; setTimeout(function () { if (c.sent === my) { send(); } }, 1000); } } return c.last; })
         .then(function (a) { if (my === c.sent) { host.setAttribute('data-checked-seq', String(++c.seen)); onAnswer(a); } return a; });
     }
     c.ask = function () { clearTimeout(c.timer); c.timer = setTimeout(send, WAIT); };

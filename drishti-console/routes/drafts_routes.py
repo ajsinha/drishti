@@ -79,7 +79,7 @@ async def lookup(request: Request):
 
 
 CHECK_KEYS = ("sutra", "design", "panel", "values", "checked", "carried", "auto", "step")
-CHECK_WAIT = 3.0
+CHECK_WAIT = 10.0                                        # a cold server under load may take longer than 3 s; the page asks once more after 1 s when a check failed
 CHECK_LIMIT = 64 * 1024
 
 
