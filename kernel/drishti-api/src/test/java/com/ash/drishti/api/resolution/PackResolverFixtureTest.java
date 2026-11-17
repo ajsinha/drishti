@@ -63,12 +63,14 @@ class PackResolverFixtureTest {
             });
             List<String> active = (List<String>) c.getOrDefault("active", List.of());
             long before = count(root);
-            PackResolver.Layout layout = PackResolver.Layout.of(root.resolve("site"), root.resolve("modules"), root.resolve("store"));
+            PackResolver.Layout layout = PackResolver.Layout.of(root.resolve("site"), root.resolve("modules"));
+            layout = new PackResolver.Layout(layout.site(), layout.kernel(), layout.modules(), layout.installed(), layout.extra(),
+                    ModuleHomes.source(root));
             if (c.get("booted") instanceof Map<?, ?> booted) {                // the module boot's result: the modules and their folders
                 List<ModuleHomes.Home> homes = new ArrayList<>();
                 booted.forEach((id, dir) -> homes.add(new ModuleHomes.Home(String.valueOf(id), "1.0.0",
                         root.resolve(String.valueOf(dir)).toAbsolutePath().normalize(), "0".repeat(64), ModuleHomes.Origin.FIRST_PARTY)));
-                layout = new PackResolver.Layout(layout.site(), layout.kernel(), layout.modules(), layout.store(), layout.installed(), layout.extra(),
+                layout = new PackResolver.Layout(layout.site(), layout.kernel(), layout.modules(), layout.installed(), layout.extra(),
                         ModuleHomes.of(homes));
             }
             PackResolver.Result r = PackResolver.resolve(layout, active::contains, ResolutionSettings::yaml);

@@ -1,11 +1,9 @@
-# The kernel internals banking still reaches: packages outside com.ash.drishti.kernel.api and banking's own, one per line.
+# The kernel internals banking still reaches: packages outside the kernel API (com.ash.drishti.kernel.api, com.ash.drishti.api) and banking's own, one per line.
 # Kept true by BankingReachTest: a package banking starts to reach fails it; a package no longer reached must be removed. The list only
 # shrinks: banking becomes a .dmod in wave 2 and passes conformance check C1 (no kernel internals) when it is empty.
 # Recorded 2026-11-10: 42 packages (19 of drishti-server, 23 of the kernel's libraries) reached in the sources; then the packages only
-# the compiled classes reach (a line with "# bytecode") and the third-party libraries banking shares with the kernel ("# library"),
-# which the package's allowance needs too (the class loader gives banking exactly these packages of the kernel).
-com.ash.drishti.api
-com.ash.drishti.api.compute
+# the compiled classes reach (a line with "# bytecode"), which the package's allowance needs too. No third-party library is listed:
+# every library the kernel ships reaches every module through its class loader, kernel first (section 4.4).
 com.ash.drishti.bicompute.core
 com.ash.drishti.bicompute.functions
 com.ash.drishti.common
@@ -47,8 +45,3 @@ com.ash.drishti.server.playground
 com.ash.drishti.server.security
 com.ash.drishti.server.shard
 com.ash.drishti.server.collab.snapshot   # bytecode
-com.github.benmanes.caffeine.cache   # library
-org.apache.kafka.clients.consumer   # library
-org.apache.kafka.common   # library
-org.apache.kafka.common.serialization   # library
-org.yaml.snakeyaml   # library

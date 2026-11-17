@@ -46,6 +46,9 @@ public final class ModuleVerifier {
     }
 
     /** The note a module of development mode carries in Health. */
+    /** The start of a note naming a library the module carries that the kernel ships (its copy is not used; section 4.4). */
+    public static final String LIBRARY_WARNING = "warning: library: ";
+
     public static final String DEVELOPMENT = "development (unverified): an exploded folder loaded in development mode, not a verified .dmod";
 
     private java.util.function.Predicate<ModuleCandidate> development = c -> false;
@@ -65,11 +68,13 @@ public final class ModuleVerifier {
         if (dev) {
             notes.add(DEVELOPMENT);
         }
-        // V1: id = folder, version = folder
-        if (!dev && c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
-                || !m.version().equals(c.dir().getFileName().toString())) {
+        // V1: the folder is named after the module: <id>/<version> (the tools), or <id>/<version>-<hash> (the boot's cache)
+        Path parent = c.dir().getParent();
+        String folder = c.dir().getFileName().toString();
+        if (!dev && (parent == null || !m.id().equals(parent.getFileName().toString())
+                || !(folder.equals(m.version()) || folder.startsWith(m.version() + "-")))) {
             throw new ModuleRefusedException("V1", label + ": module.yaml's id and version must name its folder <id>/<version> (found "
-                    + c.dir().getParent().getFileName() + "/" + c.dir().getFileName() + ")");
+                    + (parent == null ? "" : parent.getFileName() + "/") + folder + ")");
         }
         // V2: hashes (signature from release j)
         if (!dev) {
@@ -80,6 +85,8 @@ public final class ModuleVerifier {
         notes.add(0, origin.line());
         FirstParty.allowance(m, origin, facts.kernelBuild());
         packageRules(c, notes);
+        // the kernel's libraries always win (section 4.4): a module's own copy of one is never used, so it is named
+        facts.libraries().warnings(c).forEach(w -> notes.add(LIBRARY_WARNING + w));
         // V3: the API ranges this host knows
         for (String r : DmodManifest.RANGES) {
             String have = facts.versions().get(r);

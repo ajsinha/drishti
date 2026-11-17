@@ -77,7 +77,6 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "admin-bindings": ("/admin/bindings", {}),
     "admin-cluster-modules": ("/admin/net?tab=modules", {}),
     "admin-modules": ("/admin/modules", {}),
-    "admin-deploy": ("/admin/modules/deploy", {}),
     "admin-white-label": ("/admin/white-label", {}),
     "help": ("/help", {}),
     "elements-gallery": ("/elements?mode=docs", {}),
@@ -89,7 +88,7 @@ GROUPS: dict[str, tuple[str, ...]] = {
     "home": ("home", "home-risk", "home-trading", "home-market", "home-markets", "world", "help", "elements-gallery", "elements-playground"),
     "var": ("var-bank", "var-desk", "var-basket", "why-it-moved", "mr-cube", "frtb", "simm", "exposure"),
     "pages": ("pivot", "bi-report", "form", "trades", "curves", "fund", "useq"),
-    "admin": ("admin-connectors", "admin-loads", "admin-upload", "admin-bindings", "admin-cluster-modules", "admin-modules", "admin-deploy",
+    "admin": ("admin-connectors", "admin-loads", "admin-upload", "admin-bindings", "admin-cluster-modules", "admin-modules",
               "admin-white-label"),
 }
 

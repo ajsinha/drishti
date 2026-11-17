@@ -33,6 +33,34 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
   unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped
   the moment the transaction ends (`EditLog.afterTx`, committed or rolled back) for every writer: apply, withdrawal, refusal at the source, follower copy. `EditRecordsCacheTest`.
+- **The kernel's libraries always win (I9, B3).** A module's class loader is plain parent-first: the kernel (the JDK, the kernel API and every
+  library the server jar ships), then the site's `lib/ext` jars, then the module's own `java/` and `lib/` jars. A module's copy of a kernel library
+  is never used; a library the kernel does not ship comes from the module; kernel internals (`com.ash.drishti.` outside the kernel API) stay
+  hidden except a first-party allowance; no module sees another. `KernelFacts.SHARED` (12 prefixes) is gone. New `KernelLibraries` reads
+  `META-INF/drishti/kernel-libraries.txt`, which `packaging/drishti-app` generates (one line per jar of `BOOT-INF/lib`: `group:artifact:version`,
+  its name, its package prefixes) and checks against `BOOT-INF/lib` after the repackaging; a module carrying one of them gets one sentence naming
+  the module, the library and both versions: WARN at load, the module's Health notes, `module verify` (`N library warnings`, `--json`
+  `libraryWarnings`). The thread context class loader is the module's on the runtime's calls into it (load, the unload steps). Banking's
+  `kernel-internals.txt` drops its five `# library` lines (Caffeine, Kafka clients, SnakeYAML) and its two `com.ash.drishti.api` lines (the
+  kernel API, as the loader and C1 see it); `BankingReachTest` counts `com.ash.drishti.api.*` as the API and refuses a `# library` line. A kernel
+  `META-INF/services` file reaches a module's loader only when every provider it names is a class the module may take from the kernel.
+  Guard G10 `KernelLibrariesWinTest` (a module's Jackson copy, a `lib/ext` copy, a `META-INF/services` file in both, the warning in verify, log and
+  Health). KERNEL_AND_MODULES §4.4, DEVELOPER_GUIDE (a module's libraries).
+- **The deployment machinery is deleted (I8a, B4).** A module is a file in the modules folder and a restart. Gone: the module store and its plans with
+  four-eyes approvals, stage and activate across the nodes, auto-deploy, the hot swap and the drain, `ModuleDeployService`, `ModuleAutoDeploy`, `NodeCalls`,
+  `ModuleRouteFilter`, the deploy endpoints of `ModuleDeployController` (`/api/v1/admin/modules/{store,deployments}`, `/api/v1/net/modules/{stage,activate,abort,rollback,unload,registry}`,
+  `/api/v1/modules/gone`), Admin → Modules → Deploy, the token scope `modules:deploy`, the "removed" state (410 `DRS-1028`, tombstones, `ErrorCode` `MODULE_GONE`,
+  `MODULE_DEPLOY_REFUSED`, `MODULE_DEPLOY_FAILED`, `module_removed.html`: its 404 and "not part of this distribution" cases stay as `module_unavailable.html`), `Leave.REMOVE`,
+  `ModuleHost.drain`, `RouteTable.State.TOMBSTONE`, `ModuleHealth.State.REMOVED`, `LegacyModules` (the old store and folders adapter), `ModulePackages`, the readers of
+  `active.yaml` and `registry.json`, `FirstParty.shipped`, `ModuleDiscovery`'s `active` argument, `pick` and `HOST_FOLDERS`, the settings `drishti.modules.path`, `.autodeploy`,
+  `.autodeploy-seconds`, `.shipped`, `drishti.module-deploy.*`, `drishti.module-manifests-dir` and `drishti.modules.packages`. What stays of `ModuleNode` is its reads
+  (`entries`, `needs`, `status`, `fingerprint`, `consoleFolder`, `routes`) over the boot result, now with each module's content hash; the three console endpoints,
+  `/api/v1/modules/needs`, `/route` and `/api/v1/net/modules/status` moved to `ModulePublicController` (I8c rewrites them). The module host loads the boot's candidates
+  (`ModuleBoot.current()`), the modules of the packages beside the jar, or under `drishti.modules.dev` their source folders; the new `drishti.modules.sources` reads source folders
+  without loading them (the kernel's own tests of the shipped files). `ModuleHomes.resolve` has no fallback: without a boot there is no module. `drishti.py module` keeps `pack`,
+  `verify`, `check`, `inspect`, `visual` and `run` (the others return as file operations in I8b); the Pack Designer's last step is the download and the words that say how to install it.
+  Conformance check C14 now asserts that a stopped module leaves no contribution and no leaked class loader. Guard G9 has no exception.
+
 - **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
   `drishti-packs` and `drishti-it`: pack tests, the Sutra equivalence tests, module host and distribution tests, `ConsoleAnswersRecordTest`, the source-system modules,
   `OneTablePerSystemTest`) on the **built packages** (`target/modules-home`: `packaging/dist`'s `.dmod` files and the six source-system modules, packed by `tools/modulepack.py`),
@@ -1272,7 +1300,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   at the first start that finds jars in either, the server moves them into lib, writes `lib/moved-<date-time>.bak` and Health says so;
   `drishti.sources.plugin-dir` is deprecated (ignored, said in Health) for one release. `external_lib/python` stays the console's.
 - **The kernel loads modules** (2.9.11.i2 + i3, wave 2; [DEVELOPER_GUIDE.md sections 1.6 and 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute),
-  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)). A loaded `.dmod`
+  [ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)). A loaded `.dmod`
   module's beans of the kernel API's provider types are seen by the kernel while it is loaded and withdrawn when it unloads (the
   registration bridge): a `KindProvider` is routed like any source, a new `function.FunctionProvider` adds Rachana functions, a
   `ComputeEngine` joins the engine registry, and approval sources, explainers, view augmenters, pivot sources, Health and capacity figures,
@@ -1290,7 +1318,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   shared with modules). `ModuleHostServerTest` loads the archetype module and a three-jar module, uses their kind, function and route from
   the kernel, reloads on an edit, unloads (410), reinstalls and unloads again, leak-free each time; and deploys and removes a dropped package.
 - **The console part of a module** (2.9.11.i2 + i3; [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-a-modules-console-part),
-  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): the console hosts a module's `console/` part
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)): the console hosts a module's `console/` part
   declaratively under `/m/<id>/`, from the server's registry (`GET /public/modules/console` and the part's zip) or from the modules the
   product ships: `plugin.yaml` format 2's routes (a page of the module's own templates, rendered in its own Jinja environment over
   `kernel/page.html` and the Elements macros of `kernel/elements.html`; a Sutra route opens the kernel's page of its word), menus, words,
@@ -1317,8 +1345,8 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   their data; a search's time taken is quietened like the VaR timings; a module's kinds keep their file order (Admin → Modules listed them
   in a different order on each start); Admin → White label opens in a fraction of a second (it parsed every pack file once per command,
   about 20 s per distribution).
-- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module),
-  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)): a `.dmod` is uploaded once to the module store
+- **Module deployment, cluster-first** (2.9.11.i2 + i3, wave 3; [CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster),
+  [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)): a `.dmod` is uploaded once to the module store
   (`POST /api/v1/admin/modules/store`, the fifteen conformance checks, kept by id and version, never rebuilt); a plan says per node what
   happens, following the placement (unplaced nodes receive nothing); a second administrator applies it: phase 1 stages on every placed node
   (each checks the SHA-256 and V1–V9 itself, the package sent in chunks over Drishti\*net), phase 2 activates; any failure rolls every

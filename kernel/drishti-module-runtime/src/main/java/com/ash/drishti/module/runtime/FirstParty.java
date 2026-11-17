@@ -45,9 +45,6 @@ import java.util.TreeMap;
  */
 public final class FirstParty {
 
-    /** Where the product ships its list, inside the server's jar. */
-    public static final String RESOURCE = "META-INF/drishti/first-party.yaml";
-
     /** A module's origin as verified, with the words saying why. */
     public record Origin(boolean firstParty, String why) {
 
@@ -76,27 +73,6 @@ public final class FirstParty {
     /** No list: every module is third-party. */
     public static FirstParty none() {
         return NONE;
-    }
-
-    /**
-     * The list the product ships: the file {@code first-party.yaml} beside the packages in the process's modules folder
-     * (written by {@code drishti.py build modules}), else {@link #RESOURCE} on the loader's class path (a
-     * test's), else none. The server's jar holds no list: modules are packages beside it.
-     */
-    public static FirstParty shipped(ClassLoader loader) {
-        Path home = ModuleBoot.processHome(System::getProperty);
-        if (home != null && ModuleBoot.usePackages(System.getProperty(ModuleBoot.PACKAGES_SETTING))) {
-            Path file = home.resolve(ModuleBoot.FIRST_PARTY_FILE);
-            if (Files.isRegularFile(file)) {
-                return read(file);
-            }
-        }
-        ClassLoader l = loader == null ? FirstParty.class.getClassLoader() : loader;
-        try (InputStream in = l.getResourceAsStream(RESOURCE)) {
-            return in == null ? NONE : parse(in, "first-party.yaml");
-        } catch (IOException e) {
-            throw new UncheckedIOException(RESOURCE + " does not read", e);
-        }
     }
 
     /** A list from a file (the module tool's {@code --first-party}). */

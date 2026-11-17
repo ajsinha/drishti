@@ -15,9 +15,11 @@
 -->
 # Admin → Modules: three mock-ups (for the owner's choice, before I8b builds it)
 
+Status: design, not built (mock-ups; the commands below are the planned ones).
+
 Shared content (all three): every module with id, title, version, origin, content hash (short), on/off switch with reason, parts placed per node,
 problems (stale package, refused verify, need not met, library duplicate), each node's fingerprint and whether the nodes agree, "Download .dmod" and the
-install/upgrade commands (planned: `drishti.py module install`, `verify`, `restart`; nothing deploys from the browser), and a "module not installed" list for saved work.
+install/upgrade commands (the install command, `verify`, `restart`; nothing deploys from the browser), and a "module not installed" list for saved work.
 Admin-only. Built later from Drishti Elements only (grid, chips, cards, inputs, tabs); these files use the vendored 2.4.0 tokens and chip CSS.
 Sample data: 10 modules, 3 nodes (drishti-main, b, c); capitalmarkets stale, source-swapone refused, market-data/economy warnings, trading differs on drishti-c.
 

@@ -135,30 +135,23 @@ public final class ResolveCli {
         if (com.ash.drishti.api.resolution.ModuleHomes.of(process).isPresent()) {
             return ConfigResolution.ofProcess();
         }
-        String folderSetting = com.ash.drishti.api.resolution.LegacyModules.folderSetting(process);
-        Path folder = com.ash.drishti.api.resolution.LegacyModules.NONE.equals(folderSetting) ? null : Path.of(folderSetting).toAbsolutePath().normalize();
+        Path folder = com.ash.drishti.module.runtime.ModuleBoot.folderOf(process);
         String setting = process.apply(com.ash.drishti.api.resolution.ModuleOverrides.SETTING);
-        boolean packages = folder != null && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(folder);
-        if (!packages && (setting == null || setting.isBlank())) {
-            return ConfigResolution.ofProcess();                         // the old store and folders, nothing laid over: read as they are
-        }
+        boolean sources = Boolean.parseBoolean(String.valueOf(process.apply(com.ash.drishti.packs.LaunchRoots.DEV)).strip())
+                || com.ash.drishti.module.runtime.ModuleBoot.sourcesAsked(process.apply(com.ash.drishti.module.runtime.ModuleBoot.SOURCES_SETTING));
         String dataSetting = process.apply("drishti.data.dir");
         Path data = Path.of(dataSetting == null || dataSetting.isBlank() ? com.ash.drishti.api.Roots.data() : dataSetting.strip()).toAbsolutePath().normalize();
         java.util.List<Path> dirs = com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, com.ash.drishti.api.Roots.home());
-        com.ash.drishti.packs.LaunchRoots.Booted b = com.ash.drishti.packs.LaunchRoots.bootModules(folder, data, process, dirs,
+        com.ash.drishti.packs.LaunchRoots.Booted b = com.ash.drishti.packs.LaunchRoots.bootModules(folder, data, sources, dirs,
                 data.resolve("tmp").resolve("resolve").resolve("overrides").resolve("modules"), false);
         Map<String, String> published = new java.util.HashMap<>(b.properties());
-        if (b.legacyView() != null) {
-            published.put(com.ash.drishti.api.resolution.LegacyModules.HOME, b.legacyView().toString());
-            published.put(com.ash.drishti.api.resolution.LegacyModules.HOME_OLD, b.legacyView().toString());
-        }
         return ConfigResolution.offline(k -> published.containsKey(k) ? published.get(k) : process.apply(k));
     }
 
     /** A folder of packs read as a site of its own (its packs and group folders, its {@code core} as the kernel's), with no modules. */
     static ConfigResolution siteOnly(Path site) {
         return ConfigResolution.build(new com.ash.drishti.api.resolution.ResolutionSettings(site, site.resolve("no-installed-packs"),
-                site.resolve("core"), site.resolve("no-modules"), site.resolve("no-module-store"), java.util.List.of(),
+                site.resolve("core"), site.resolve("no-modules"), java.util.List.of(),
                 com.ash.drishti.api.resolution.ModuleHomes.none()), id -> false);
     }
 
@@ -171,7 +164,6 @@ public final class ResolveCli {
         layout.put("site", text(l.site()));
         layout.put("kernel", text(l.kernel()));
         layout.put("modules", text(l.modules()));
-        layout.put("store", text(l.store()));
         layout.put("installed", text(l.installed()));
         layout.put("extra", l.extra().stream().map(ResolveCli::text).toList());
         doc.put("layout", layout);

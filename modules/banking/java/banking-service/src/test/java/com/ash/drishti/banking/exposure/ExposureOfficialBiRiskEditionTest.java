@@ -21,6 +21,6 @@ import org.springframework.test.context.TestPropertySource;
  * Every test of {@link ExposureOfficialBiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): the official exposure records in BI (the counterparty-exposure model, in the edition's datasets) work
  * under Drishti Risk exactly as on the full product.
  */
-@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions", "drishti.module-manifests-dir=../../../../modules"})
+@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions"})
 class ExposureOfficialBiRiskEditionTest extends ExposureOfficialBiTest {
 }

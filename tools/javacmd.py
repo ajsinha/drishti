@@ -318,8 +318,7 @@ def root_flags(args: list, cwd=None, env=None) -> list:
         out.append(f"-Ddrishti.home={home}")
     if not _named("drishti.data.dir", ("DRISHTI_DATA_DIR",), args, env):
         out.append(f"-Ddrishti.data.dir={home / 'data'}")
-    if not _named("drishti.modules.home", ("DRISHTI_MODULES_HOME", "DRISHTI_MODULE_MANIFESTS_DIR"), args, env) \
-            and not _named("drishti.module-manifests-dir", (), args, env):
+    if not _named("drishti.modules.home", ("DRISHTI_MODULES_HOME",), args, env):
         out.append(f"-Ddrishti.modules.home={REPO / 'modules'}")
     return out
 

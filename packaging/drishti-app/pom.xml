@@ -53,6 +53,61 @@
           <outputDirectory>${project.basedir}/../../kernel/drishti-server/target</outputDirectory>
         </configuration>
       </plugin>
+      <!-- META-INF/drishti/kernel-libraries.txt (KERNEL_AND_MODULES.md section 4.4): every jar the server jar holds in BOOT-INF/lib, as
+           group:artifact:version, its name and its package prefixes. The kernel's libraries always win in a module's class loader; the
+           list names a module's own copy of one (a warning at load and in `module verify`). Generated from the runtime dependencies (the
+           jars the repackaging puts in BOOT-INF/lib), then checked against BOOT-INF/lib of the repackaged jar. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>kernel-libraries-list</id>
+            <phase>generate-resources</phase>
+            <goals><goal>list</goal></goals>
+            <configuration>
+              <includeScope>runtime</includeScope>
+              <outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+              <outputFile>${project.build.directory}/kernel-libraries.list</outputFile>
+              <silent>true</silent>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.3</version>
+        <executions>
+          <execution>
+            <id>kernel-libraries</id>
+            <phase>generate-resources</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <mainClass>com.ash.drishti.module.runtime.KernelLibraries</mainClass>
+              <arguments>
+                <argument>generate</argument>
+                <argument>${project.build.directory}/kernel-libraries.list</argument>
+                <argument>${project.build.outputDirectory}/META-INF/drishti/kernel-libraries.txt</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- after the repackaging (declared after spring-boot-maven-plugin, same phase) -->
+            <id>kernel-libraries-check</id>
+            <phase>package</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <mainClass>com.ash.drishti.module.runtime.KernelLibraries</mainClass>
+              <arguments>
+                <argument>check</argument>
+                <argument>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</argument>
+                <argument>${project.build.outputDirectory}/META-INF/drishti/kernel-libraries.txt</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

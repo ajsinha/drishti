@@ -106,7 +106,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
     # module -----------------------------------------------------------------------------------------------
-    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), verify a package and run the conformance checks C1-C14 (the server jar's own verifier), inspect one; deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
+    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), verify a package and run the conformance checks C1-C14 (the server jar's own verifier), inspect one; run one module alone")
     mp = add(mg, "pack", h.cmd_module, "module pack: a module folder (module.yaml at its root) -> <out>/<id>-<version>.dmod, the same bytes on every run, plus its .sha256; "
              "no Java needed", [],
              "examples:\n  drishti.py module pack modules/trading\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
@@ -149,7 +149,7 @@ def build_parser(h) -> argparse.ArgumentParser:
             mp.add_argument("--id", dest="module_id", required=True, help="the module's id")
             mp.add_argument("--name", required=True, help="the kind's name (lower-case, digits, -)")
             mp.add_argument("--title", help="the visual's title")
-    load_module("modulecli", "modulecli.py").register(h, mg, add, srv, js)   # deploy, plan, apply, list, remove, disable, enable, upgrade, run
+    load_module("modulecli", "modulecli.py").register(h, mg, add, srv, js)   # run
 
     # pack -------------------------------------------------------------------------------------------------
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")

@@ -17,13 +17,12 @@ A module's console part is the ``console/`` folder of its ``.dmod`` (``plugin.ya
 menus, words, Home cards), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
 reads them and runs nothing of them: no module Python is imported, no route is registered by a module. Two sources, one way:
 
-* the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed, and the
-  modules the product ships as folders while the server has them loaded; an active version's part arrives as a zip
+* the server's module registry (``GET /public/modules/console``): every module this server booted, active or off; an active version's part arrives as a zip
   (``/public/modules/console/<id>/<version>``) and is kept under ``<cache>/<id>/<version>/``. The console reads no modules folder
   (THIN_CONSOLE_DESIGN.md, step S2).
 
 What a snapshot holds is swapped whole (copy-on-write, no lock on the request path) and holds nothing of any person (session isolation):
-the parts that are active, the modules that are gone (off or removed, with the names they owned, so saved work says *needs module X*),
+the parts that are active, the modules that are off (with the names they own, so saved work says *needs module X*),
 and the parts refused (a check failed: a copy of Drishti Elements or of a vendored library, a file without the ``drishti_`` prefix, code in
 the console part, a template that reaches past ``kernel/`` and its own namespace). A refused part is absent, and Admin -> Modules says why.
 """
@@ -112,7 +111,7 @@ class Part:
 
 @dataclass(frozen=True)
 class Gone:
-    """A module that is off or removed: its title, state and the names it owned (``function W``, ``kind k``, ``lens l``)."""
+    """A module that is off: its title, state and the names it owns (``function W``, ``kind k``, ``lens l``)."""
     id: str
     title: str
     state: str
@@ -126,7 +125,7 @@ class Gone:
 
     @property
     def text(self) -> str:
-        return f"needs module {self.id}" + (" (off)" if self.state == "off" else " (not installed)")
+        return f"needs module {self.id} (off)"
 
 
 @dataclass(frozen=True)

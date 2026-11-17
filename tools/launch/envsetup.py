@@ -101,7 +101,7 @@ def setup(a, env: dict | None = None) -> int:
     pk = modulesbuild.packages(modules)
     line("ok" if pk else "todo", "modules (packages)", f"{modules}  ({roots['modules'][1]}): {len(pk)} .dmod file(s)" + ("" if pk else "; python tools/drishti.py build modules"))
     # what an older release kept under the data folder: no longer read, safe to delete (never deleted here)
-    for old in ("installed", "store", "shipped", "staging", "tombstones", "registry.json", "active.yaml"):
+    for old in ("installed", "store", "shipped", "staging", "tombstones", "registry.json"):
         if (data / "modules" / old).exists():
             line("todo", "old modules leftover", f"{data / 'modules' / old}: not read any more, safe to delete")
     # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted

@@ -53,7 +53,7 @@ class ModuleBootTest {
     private Path home;
     private Path data;
     private Path cache;
-    private final KernelFacts facts = new KernelFacts(Map.of("kernel", "0.5"), Set.of(), Set.of(), null, f -> true, 0, false, true, List.of(),
+    private final KernelFacts facts = new KernelFacts(Map.of("kernel", "0.5"), Set.of(), Set.of(), null, f -> true, 0, false, true, KernelLibraries.none(),
             null, null);
 
     @BeforeEach
@@ -147,7 +147,7 @@ class ModuleBootTest {
     void theOldStoreIsNeverReadAndAStaleCacheFolderIsSwept() throws IOException {
         Path old = data.resolve("modules").resolve("installed").resolve("demo").resolve("0.9.0");
         Dmod.write(old.resolve("module.yaml"), manifest("demo", "0.9.0", ">=0.4"));
-        Dmod.write(data.resolve("modules").resolve("installed").resolve("active.yaml"), "modules: {demo: 0.9.0}\n");
+        Dmod.write(data.resolve("modules").resolve("installed").resolve("anything.txt"), "demo 0.9.0\n");
         Path stale = Files.createDirectories(cache.resolve("demo").resolve("0.9.0-0123456789abcdef"));
         Dmod.write(stale.resolve("module.yaml"), manifest("demo", "0.9.0", ">=0.4"));
         Path gone = Files.createDirectories(cache.resolve("retired").resolve("2.0.0-fedcba9876543210"));
@@ -423,18 +423,16 @@ class ModuleBootTest {
         assertThat(ModuleBoot.source(tmp.resolve("no-checkout"), facts).modules()).isEmpty();
     }
 
-    /** B1 (d), (e): the old store's registry names a module off or removed: told once, with the switch that remains; the file is a leftover. */
+    /** The old store's registry is a leftover: named as safe to delete, never read. */
     @Test
-    void theOldRegistrysOffModulesAreToldOnce() throws IOException {
+    void theOldRegistryIsALeftoverNeverRead() throws IOException {
         Dmod.write(data.resolve("modules").resolve(ModuleBoot.OLD_REGISTRY), """
-                [{"id": "banking", "state": "OFF"}, {"id": "economy", "state": "REMOVED"}, {"id": "trading", "state": "ACTIVE"}]
+                [{"id": "banking", "state": "OFF"}]
                 """);
 
         ModuleBoot.Result r = ModuleBoot.boot(home, cache, true, facts, List.of());
 
-        assertThat(r.notes()).contains("banking: was off in the old store: set enabled: false in config/modules/banking.yaml",
-                "economy: was off in the old store: set enabled: false in config/modules/economy.yaml");
-        assertThat(r.notes()).noneSatisfy(n -> assertThat(n).startsWith("trading:"));
+        assertThat(r.notes()).noneSatisfy(n -> assertThat(n).contains("old store"));
         assertThat(r.leftovers()).containsEntry(data.resolve("modules").resolve(ModuleBoot.OLD_REGISTRY).toAbsolutePath().normalize(),
                 ModuleBoot.SAFE_TO_DELETE);
     }

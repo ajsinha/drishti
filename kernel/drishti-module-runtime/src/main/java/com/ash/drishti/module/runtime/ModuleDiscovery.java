@@ -24,13 +24,13 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Discovery (KERNEL_AND_MODULES.md section 4.2): lists every {@code <path>/<id>/<version>/module.yaml} of the module folders in order, picks
- * the version the old store names active (else the highest; i6's deployment, until i7a's I8), and reads each manifest (V1). The first folder holding an id wins. Nothing
- * else of a module is touched. A manifest that does not read is reported as refused, never thrown.
+ * Discovery (KERNEL_AND_MODULES.md section 4.2): reads the manifest (V1) of each exploded module folder it is given: a folder with a
+ * {@code module.yaml} at its root, or a folder whose subfolders each have one. The module boot's candidates ({@link ModuleBoot.Result#candidates})
+ * do not come through here; this is the tools' and the tests' way to load a module from a folder. A manifest that does not read is reported
+ * as refused, never thrown.
  */
 public final class ModuleDiscovery {
 
@@ -41,11 +41,8 @@ public final class ModuleDiscovery {
     private ModuleDiscovery() {
     }
 
-    /** Discovers the modules of the folders; {@code active} maps an id to its active version (may be empty). */
-    /** The host's own folders a modules folder may hold beside the modules (the deploy store and its work areas): never a module id. */
-    public static final java.util.Set<String> HOST_FOLDERS = java.util.Set.of("installed", "staging", "tombstones", "store", "lib");
-
-    public static Found discover(List<Path> folders, Map<String, String> active) {
+    /** Discovers the modules of the folders; the first folder holding an id wins. */
+    public static Found discover(List<Path> folders) {
         List<ModuleCandidate> out = new ArrayList<>();
         Map<String, ModuleRefusedException> refused = new LinkedHashMap<>();
         Map<String, Boolean> seen = new LinkedHashMap<>();
@@ -53,53 +50,29 @@ public final class ModuleDiscovery {
             if (!Files.isDirectory(folder)) {
                 continue;
             }
-            if (Files.isRegularFile(folder.resolve(DmodManifest.FILE))) {    // an exploded module itself (development mode only)
-                try (InputStream in = Files.newInputStream(folder.resolve(DmodManifest.FILE))) {
-                    DmodManifest m = DmodManifest.read(in, folder.getFileName().toString());
+            List<Path> dirs = Files.isRegularFile(folder.resolve(DmodManifest.FILE)) ? List.of(folder) : list(folder);
+            for (Path dir : dirs) {
+                if (!Files.isDirectory(dir) || dir.getFileName().toString().startsWith(".") || !Files.isRegularFile(dir.resolve(DmodManifest.FILE))) {
+                    continue;
+                }
+                String where = dir.getFileName().toString();
+                if (VersionRange.isVersion(where) && dir.getParent() != null && dir.getParent().getFileName() != null) {
+                    where = dir.getParent().getFileName().toString();           // <id>/<version>: a refusal is named by the id
+                }
+                try (InputStream in = Files.newInputStream(dir.resolve(DmodManifest.FILE))) {
+                    DmodManifest m = DmodManifest.read(in, where);
                     if (seen.putIfAbsent(m.id(), true) == null) {
-                        out.add(new ModuleCandidate(m, folder, null));
+                        out.add(new ModuleCandidate(m, dir, null));
                     }
                 } catch (ModuleRefusedException e) {
-                    refused.put(folder.getFileName().toString(), e);
+                    refused.put(where, e);
                 } catch (IOException e) {
-                    refused.put(folder.getFileName().toString(), new ModuleRefusedException("V1", folder + ": module.yaml does not read: "
-                            + e.getMessage(), e));
-                }
-                continue;
-            }
-            for (Path idDir : list(folder)) {
-                String id = idDir.getFileName().toString();
-                if (!Files.isDirectory(idDir) || seen.containsKey(id) || id.startsWith(".") || HOST_FOLDERS.contains(id)) {
-                    continue;
-                }
-                Optional<Path> version = pick(idDir, active.get(id));
-                if (version.isEmpty()) {
-                    continue;
-                }
-                seen.put(id, true);
-                Path dir = version.get();
-                try (InputStream in = Files.newInputStream(dir.resolve(DmodManifest.FILE))) {
-                    DmodManifest m = DmodManifest.read(in, id + " " + dir.getFileName());
-                    Path dmod = idDir.resolve(Dmod.fileName(m.id(), m.version()));
-                    out.add(new ModuleCandidate(m, dir, Files.isRegularFile(dmod) ? dmod : null));
-                } catch (ModuleRefusedException e) {
-                    refused.put(id, e);
-                } catch (IOException e) {
-                    refused.put(id, new ModuleRefusedException("V1", id + ": module.yaml does not read: " + e.getMessage(), e));
+                    refused.put(where, new ModuleRefusedException("V1", dir + ": module.yaml does not read: " + e.getMessage(), e));
                 }
             }
         }
         out.sort(Comparator.comparing(ModuleCandidate::id));
         return new Found(List.copyOf(out), refused);
-    }
-
-    private static Optional<Path> pick(Path idDir, String active) {
-        List<Path> versions = list(idDir).stream()
-                .filter(p -> Files.isRegularFile(p.resolve(DmodManifest.FILE)) && VersionRange.isVersion(p.getFileName().toString())).toList();
-        if (active != null) {
-            return versions.stream().filter(p -> p.getFileName().toString().equals(active)).findFirst();
-        }
-        return versions.stream().max((a, b) -> VersionRange.compare(a.getFileName().toString(), b.getFileName().toString()));
     }
 
     private static List<Path> list(Path dir) {

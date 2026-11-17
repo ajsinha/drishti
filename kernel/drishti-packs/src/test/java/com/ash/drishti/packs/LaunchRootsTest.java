@@ -116,15 +116,6 @@ class LaunchRootsTest {
     }
 
     @Test
-    void aFolderAnotherKeyNamesWinsOverNone(@TempDir Path tmp) throws Exception {
-        Path home = install(tmp);
-        LaunchRoots.Result r = resolve(Map.of("drishti.home", home.toString(), "drishti.modules.home", "none",
-                "drishti.module-manifests-dir", home.resolve("modules").toString()));
-        assertThat(r.problems()).isEmpty();
-        assertThat(r.values()).containsEntry("drishti.modules.home", home.resolve("modules").toString());
-    }
-
-    @Test
     void extraPackFoldersMustBeThere(@TempDir Path tmp) throws Exception {
         Path home = install(tmp);
         LaunchRoots.Result r = resolve(Map.of("drishti.home", home.toString(), "drishti.packs.extra-dirs", home.resolve("gone").toString()));
@@ -188,7 +179,7 @@ class LaunchRootsTest {
         Map<String, String> p = new HashMap<>(published);
         p.put("drishti.packs.site-dir", home.resolve("config/packs").toString());
         p.put("drishti.data.dir", home.resolve("data").toString());
-        p.put(com.ash.drishti.api.resolution.LegacyModules.HOME, home.resolve("modules").toString());
+        p.put(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, home.resolve("modules").toString());
         return com.ash.drishti.api.resolution.ConfigResolution.build(com.ash.drishti.api.resolution.ResolutionSettings.of(p::get), id -> true);
     }
 
@@ -207,10 +198,9 @@ class LaunchRootsTest {
         Files.writeString(home.resolve("modules/trading/module.yaml"), "id: trading\nversion: 1.0.0\n");
         Path data = home.resolve("data");
         try {
-            LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), data, k -> null, java.util.List.of(),
+            LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), data, false, java.util.List.of(),
                     data.resolve("overrides/modules"), false);
 
-            assertThat(b.packaged()).isTrue();
             assertThat(b.homes().homes().keySet()).containsExactly("genomics");
             Path dir = b.homes().dir("genomics").orElseThrow();
             assertThat(dir).startsWith(data.resolve("cache")).isNotEqualTo(src);
@@ -222,7 +212,7 @@ class LaunchRootsTest {
             Path site = tmp.resolve("site-overrides");
             Files.createDirectories(site.resolve("genomics/packs/genes"));
             Files.writeString(site.resolve("genomics/packs/genes/notes.yaml"), "note: the site's\n");
-            LaunchRoots.Booted v = LaunchRoots.bootModules(home.resolve("modules"), data, k -> null, java.util.List.of(site),
+            LaunchRoots.Booted v = LaunchRoots.bootModules(home.resolve("modules"), data, false, java.util.List.of(site),
                     data.resolve("overrides/modules"), false);
             Path view = v.homes().dir("genomics").orElseThrow();
             assertThat(view).startsWith(data.resolve("overrides/modules/genomics"));
@@ -234,20 +224,21 @@ class LaunchRootsTest {
         }
     }
 
-    /** With no package in the modules folder (until i7a's I8) the modules are the old folders and store; nothing claims a boot on packages. */
+    /** With no package in the modules folder no module is booted (source folders are read only under the development switch). */
     @Test
-    void withNoPackageTheModulesAreTheOldFolders(@TempDir Path tmp) throws Exception {
+    void withNoPackageNoModuleIsBootedUnlessDevelopment(@TempDir Path tmp) throws Exception {
         Path home = install(tmp.resolve("home"));
         Files.createDirectories(home.resolve("modules/trading"));
-        Files.writeString(home.resolve("modules/trading/module.yaml"), "id: trading\nversion: 1.0.0\n");
+        Files.writeString(home.resolve("modules/trading/module.yaml"), GENOMICS.replace("genomics", "trading"));
 
-        LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), home.resolve("data"), k -> null, java.util.List.of(),
+        LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), home.resolve("data"), false, java.util.List.of(),
                 home.resolve("data/overrides/modules"), true);
+        assertThat(b.homes().homes()).isEmpty();
 
-        assertThat(b.packaged()).isFalse();
-        assertThat(b.homes().dir("trading")).contains(home.resolve("modules/trading").toAbsolutePath().normalize());
-        assertThat(b.properties()).containsOnlyKeys("drishti.module.dir.trading");
-        assertThat(b.report()).contains("no package in");
-        assertThat(LaunchRoots.bootModules(null, null, k -> null, java.util.List.of(), null, true).homes().homes()).isEmpty();
+        LaunchRoots.Booted d = LaunchRoots.bootModules(home.resolve("modules"), home.resolve("data"), true, java.util.List.of(),
+                home.resolve("data/overrides/modules"), true);
+        assertThat(d.homes().dir("trading")).contains(home.resolve("modules/trading").toAbsolutePath().normalize());
+        assertThat(d.properties()).containsKeys("drishti.module.dir.trading", com.ash.drishti.api.resolution.ModuleHomes.PROPERTY);
+        assertThat(LaunchRoots.bootModules(null, null, false, java.util.List.of(), null, true).homes().homes()).isEmpty();
     }
 }
