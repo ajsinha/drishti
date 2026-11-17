@@ -158,6 +158,15 @@ def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
         pg.goto(base + "/m/genomics/showcase")                    # the real server first: no showcase packs, said in words
         pg.wait_for_selector("[data-showcase-missing]", timeout=20000)
         assert "association" in pg.get_attribute("[data-showcase-missing]", "data-showcase-missing")
+        # the module's API not served (the owner's i6 stack: 404, an HTML page): the page says which call failed and what to do, never "Loading…" for ever
+        pg.route("**/m/genomics/api/showcase/status*", lambda r: r.fulfill(status=404, content_type="text/html", body="<html>Not Found</html>"))
+        pg.goto(base + "/m/genomics/showcase")
+        pg.wait_for_selector("[data-showcase][data-state=failed] [data-showcase-failed='showcase/status']", timeout=20000)
+        said = pg.text_content("[data-showcase-failed]")
+        assert "showcase/status" in said and "HTTP 404" in said and "Admin → Modules" in said, said
+        assert pg.text_content("[data-showcase-selection]") == "Not loaded"
+        pg.unroute("**/m/genomics/api/showcase/status*")
+        errors.clear()                                            # the browser logs the refused fetch itself
         _showcase_api(pg, asked)
         pg.goto(base + "/m/genomics/showcase")
         pg.wait_for_selector("[data-showcase][data-state=ready]", timeout=30000)

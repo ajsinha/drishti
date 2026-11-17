@@ -54,6 +54,51 @@ class ContentBiStoreTest {
                 List.of("bi-viewer"), List.of(), List.of(), "", null, T, T, "ann", published > 0 ? T : null, published > 0 ? "ann" : "");
     }
 
+    /**
+     * A person's first requests side by side (the board designer lists the workspaces and saves an item at once), on one node and on two: each
+     * finds no personal workspace and creates it; exactly one creates it, the others take it, and every request then saves its item. (A plain
+     * save after the absent read was a create-only write, and all but one answered 409 DRS-5057.)
+     */
+    @Test
+    void manyRequestsCreatingOnePersonalWorkspaceAtOnceAllSucceedAndOneCreatesIt() throws Exception {
+        ContentBiStore a = node("a");
+        ContentBiStore b = node("b");
+        int n = 16;
+        java.util.concurrent.CyclicBarrier together = new java.util.concurrent.CyclicBarrier(n);
+        java.util.concurrent.atomic.AtomicInteger created = new java.util.concurrent.atomic.AtomicInteger();
+        List<Throwable> failed = new java.util.concurrent.CopyOnWriteArrayList<>();
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(n)) {
+            for (int i = 0; i < n; i++) {
+                ContentBiStore s = i % 2 == 0 ? a : b;
+                String itemId = "bi-" + i;
+                pool.submit(() -> {
+                    try {
+                        together.await();
+                        BiStore.Workspace w = s.workspace("u-ann-1234").orElseGet(() -> {
+                            BiStore.Created<BiStore.Workspace> c = s.createWorkspace(new BiStore.Workspace("u-ann-1234", "My workspace", "", true, "ann", false, T, "ann"));
+                            if (c.created()) {
+                                created.incrementAndGet();
+                            }
+                            return c.value();
+                        });
+                        assertThat(w.owner()).isEqualTo("ann");
+                        s.saveItem(item(itemId, w.id(), "v: 1", 0));
+                        s.saveWorkspace(w);                    // a later save on the same request compares against what is there
+                    } catch (Throwable t) {
+                        failed.add(t);
+                    }
+                    return null;
+                });
+            }
+        }
+        assertThat(failed).isEmpty();
+        assertThat(created.get()).isEqualTo(1);
+        assertThat(a.itemsIn("u-ann-1234")).hasSize(n);
+        assertThat(b.createWorkspace(new BiStore.Workspace("u-ann-1234", "Other", "", true, "ann", false, T, "ann")))
+                .extracting(BiStore.Created::created).isEqualTo(false);
+        assertThat(a.workspace("u-ann-1234")).get().extracting(BiStore.Workspace::name).isEqualTo("My workspace");
+    }
+
     @Test
     void aWorkspaceAndAnItemMadeOnOneNodeAreSeenEditedAndPublishedOnTheOther() {
         ContentBiStore a = node("a");

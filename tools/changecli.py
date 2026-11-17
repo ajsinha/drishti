@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import urllib.parse
 
+import entitypath
+
 EPILOG = ("examples:\n  drishti.py change propose --kind trade --id MX-50000001 --set NOTIONAL=26000000 --from NOTIONAL=25000000 --reason \"booking typo\"\n"
           "  drishti.py change submit d-4ab964fa3060 --reason \"booking typo\"\n"
           "  drishti.py change list --state awaiting\n  drishti.py change show chg-01JB3Z5V9Q8R7S6T5U4V3W2X1Y\n"
@@ -103,7 +105,7 @@ def register(groups, srv, ctx: dict) -> None:
             else:
                 render_change(res, print)
             return 0 if res.get("state") not in ("refused", "conflicted", "rejected") else 1
-        res = api.json("GET", f"/api/v1/entities/{q(a.kind_)}/{q(a.id_)}/history")
+        res = api.json("GET", entitypath.url("/api/v1/entities", a.kind_, a.id_, "/history"))
         if a.json:
             say_json(res)
         else:

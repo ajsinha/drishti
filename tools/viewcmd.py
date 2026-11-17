@@ -21,11 +21,7 @@ ladders, timelines, waterfalls and bars, series, graphs, links; anything else is
 from __future__ import annotations
 
 import json
-import urllib.parse
-
-
-def q(s: str) -> str:
-    return urllib.parse.quote(s, safe="")
+import entitypath
 
 
 def split_ref(ref: str) -> tuple[str, str]:
@@ -37,8 +33,7 @@ def split_ref(ref: str) -> tuple[str, str]:
 
 def path_for(ref: str, date: str | None, suffix: str = "", panel: str | None = None) -> str:
     kind, doc = split_ref(ref)
-    params = [f"{k}={q(v)}" for k, v in (("asOf", date), ("panel", panel)) if v]
-    return f"/api/v1/views/{q(kind)}/{q(doc)}{suffix}" + ("?" + "&".join(params) if params else "")
+    return entitypath.url("/api/v1/views", kind, doc, suffix, [("asOf", date), ("panel", panel)])   # an id with a / goes in the query
 
 
 def table(headers: list[str], rows: list[list], say, indent: str = "  ", right: set[int] = frozenset(), width: int = 60) -> None:

@@ -74,6 +74,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hostaddr  # noqa: E402
 import javacmd  # noqa: E402
 import procs  # noqa: E402
+try:
+    import clusterlakes  # noqa: E402  (PyYAML: the console's Python has it)
+except ImportError:                              # load_stack says what to do
+    clusterlakes = None
 
 
 STACK = ROOT / "deploy" / "stack"        # the default cluster: stack.yaml, nodes/ and the git-ignored secrets.env
@@ -105,13 +109,11 @@ def notice(text: str) -> None:
 
 # -- configuration -----------------------------------------------------------------------------------------------------------------
 def load_stack() -> dict:
-    try:
-        import yaml
-    except ImportError:
+    if clusterlakes is None:
         sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv; python tools/drishti.py setup makes it)")
     if not at.file.exists():
         sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
-    return yaml.safe_load(at.file.read_text(encoding="utf-8"))
+    return clusterlakes.read_stack(at.file.read_text(encoding="utf-8"))   # YAML 1.2 booleans: a node's off: list stays a list
 
 
 def python() -> str:
@@ -274,21 +276,9 @@ def lake_dir(name: str) -> Path:
 
 
 def build_lake(stack: dict, name: str) -> None:
-    """data/stack/lakes/<name>: synthetic trades of stack.yaml's lakes entry (tools/bench/trades.py), when the lake has no tables yet."""
-    lake = lake_dir(name)
-    if (lake / "trading").is_dir():
-        return
-    spec = (stack.get("lakes") or {}).get(name)
-    if not spec:
-        sys.exit(f"lake {name} is not in stack.yaml (lakes) and {lake} has no trades")
-    tmp = at.stack_data / "tmp" / f"lake-{name}"
-    tmp.mkdir(parents=True, exist_ok=True)
-    n = str(spec.get("per-day", 1500))
-    say(f"building lake {name}: {spec['systems']}, {n} trades a day for {spec.get('days', 2)} days ({lake})")
-    subprocess.run([python(), str(ROOT / "tools" / "bench" / "trades.py"), "--lake", str(lake), "--tmp", str(tmp), "--days", str(spec.get("days", 2)),
-                    "--min", n, "--max", n, "--systems", spec["systems"], "--counterparties", str(spec.get("counterparties", 300))],
-                   check=True, env={**os.environ, "TMPDIR": str(tmp)})
-    shutil.rmtree(tmp, ignore_errors=True)
+    """data/stack/lakes/<name>: synthetic trades of stack.yaml's lakes entry (tools/bench/trades.py), ending on the cluster's business
+    today: built when missing or when it ends on another day (tools/launch/clusterlakes.py)."""
+    clusterlakes.build_lake(stack, name, lake_dir(name), at.stack_data / "tmp", python(), say)
 
 
 def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
@@ -373,7 +363,11 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
         args += ["--settings", settings]
     for flag in node.get("jvm", []):
         args.append(f"--java-opt={flag}")             # one argument: a JVM flag starts with a dash
-    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
+    own = None if node.get("home") == "repo" else Path(env.get("DRISHTI_CONNECTORS_DIR") or cwd / "connectors")
+    off = clusterlakes.switched_off(node, lake_dir(node["lake"]) if node.get("lake") else None, own, ROOT / "config" / "lakes")
+    if len(off) > len(node.get("off") or []):
+        say(f"{name}: off on this node, its lake holds none of their tables: {', '.join(off[len(node.get('off') or []):])}")
+    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in off] + list(node.get("args", [])):
         args.append(f"--server-arg={arg}")
     return run_command("server", "start", args, env) == 0
 

@@ -25,6 +25,8 @@ import datetime
 import time
 import urllib.parse
 
+import entitypath
+
 
 def q(s: str) -> str:
     return urllib.parse.quote(s, safe="")
@@ -132,7 +134,7 @@ def open_view(api, kind: str, doc: str, date: str, latest: bool) -> dict:
     row = {"kind": kind, "id": doc, "date": date, "status": "ok", "panels": 0, "empty": 0, "ms": None, "detail": ""}
     t0 = time.perf_counter()
     try:
-        v = api.json("GET", f"/api/v1/views/{q(kind)}/{q(doc)}?asOf={date}")
+        v = api.json("GET", entitypath.url("/api/v1/views", kind, doc, params={"asOf": date}))   # an id with a / goes in the query
     except Exception as e:                       # noqa: BLE001
         row["ms"] = round((time.perf_counter() - t0) * 1000, 1)
         if status_of(e) == 404 and not latest:

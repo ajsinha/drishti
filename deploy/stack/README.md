@@ -86,6 +86,18 @@ The synthetic lakes are laid out as the demo lake's file says (`config/lakes/dem
 (`DRISHTI_LAKES_DIR`) with its root, `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only
 the root differs.
 
+A synthetic lake **ends on the cluster's business today**: the lake entry's `end:`, else `DRISHTI_BUSINESS_TODAY` of `settings:`, else
+this machine's date, rolled back to a business day. A lake that ends on another day (built before the cluster's today was fixed, or on an
+earlier day) is built again beside the old one (`data/stack/lakes/<name>-next`) and swapped in on the next `start cluster` of a node
+that reads it; the node must be stopped. Otherwise the node holds no trade of the day its servers ask for, and the cluster's grouped pages
+(a counterparty's trades) miss its trades.
+
+A node with `lake:` **switches off every connector whose tables its lake does not hold**: of the connectors it may run (the modules'
+templates, its packs' connectors and its own connector files) each that reads the demo lake or an official results lake (a lake rooted at
+`${DRISHTI_DELTA_ROOT}`) with none of its tables in the synthetic lake, with the node's `off:` list. Those kinds are served by the nodes
+that hold them ([CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md), "Is the pack here but not the data?"), never reported DOWN, and a
+new module's connector needs no new line here. `start cluster` names them.
+
 ## Secrets
 
 The repository is public, so no secret is ever in it. `secrets.env` holds three:
@@ -129,7 +141,7 @@ Add one entry under `nodes:` in `stack.yaml`, for example:
     heap: 1536m
     lake: shared            # a lake of stack.yaml's lakes (built when missing), or a new one you add there
     packs: trading
-    off: [trade-murex]      # the connectors this node switches off
+    off: [trade-murex]      # connectors this node switches off besides those whose tables its lake does not hold
     args: [--drishti.security.registered-users-only=false]
 ```
 

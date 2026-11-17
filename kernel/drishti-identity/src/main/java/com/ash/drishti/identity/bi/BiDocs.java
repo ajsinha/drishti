@@ -147,14 +147,20 @@ public final class BiDocs {
         return v;
     }
 
-    /** Creates a document that must not exist yet; false when it does. */
+    /**
+     * Creates a document that must not exist yet; false when it does. Either way this thread's next {@link #save} of the key compares against
+     * what is there now (the new version; after a false, the version its next {@link #get} reads), never against the absence it read before.
+     */
     public boolean create(String key, Object value) {
+        Map<String, Seen> mine = seen.get();
         try {
-            store.put(key, bytes(value), null);
+            String v = store.put(key, bytes(value), null);
+            mine.put(key, new Seen(v, System.currentTimeMillis()));
             touched(key);
             return true;
         } catch (DrishtiException e) {
             if (e.errorCode() == ErrorCode.CONTENT_CONFLICT) {
+                mine.remove(key);
                 return false;
             }
             throw e;

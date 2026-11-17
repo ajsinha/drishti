@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.identity.bi;
 
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.content.ContentStore;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -124,6 +126,19 @@ public final class ContentBiStore implements BiStore {
                 w.reviewRequired(), w.createdAt(), w.createdBy() == null ? "" : w.createdBy());
         docs.save(workspaceKey(w.id()), n);
         return n;
+    }
+
+    @Override
+    public Created<Workspace> createWorkspace(Workspace w) {
+        Workspace n = new Workspace(w.id(), w.name(), w.description() == null ? "" : w.description(), w.personal(), w.owner() == null ? "" : w.owner(),
+                w.reviewRequired(), w.createdAt(), w.createdBy() == null ? "" : w.createdBy());
+        String key = workspaceKey(w.id());
+        if (docs.create(key, n)) {
+            return new Created<>(n, true);
+        }
+        // another request (or node) made it first: the one there is the workspace
+        return new Created<>(docs.get(key, Workspace.class).map(BiDocs.Read::value).orElseThrow(() ->
+                new DrishtiException(ErrorCode.CONTENT_CONFLICT, "workspace '" + w.id() + "' was created and removed elsewhere meanwhile: try again")), false);
     }
 
     @Override

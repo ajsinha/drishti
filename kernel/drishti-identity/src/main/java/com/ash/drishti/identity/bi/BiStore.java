@@ -74,6 +74,15 @@ public interface BiStore {
 
     Workspace saveWorkspace(Workspace w);
 
+    /**
+     * Creates the workspace when none of its id exists yet, as one step (a person's first requests arrive side by side: each finds no personal
+     * workspace and makes one); the one that exists afterwards, and whether this call made it.
+     */
+    Created<Workspace> createWorkspace(Workspace w);
+
+    /** What a create-if-missing left: the stored value and whether this call created it. */
+    record Created<T>(T value, boolean created) {}
+
     /** Removes the workspace with its members, items and their versions. */
     void deleteWorkspace(String id);
 

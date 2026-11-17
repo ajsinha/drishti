@@ -85,7 +85,7 @@ public final class EditRuntime implements AutoCloseable {
         this.log = new EditLog(ds);
         this.records = new EditRecords(ds);
         this.requests = new ChangeRequests(ds);
-        this.layer = new EditLayer(records, settings.enabled());
+        this.layer = new EditLayer(records, settings.enabled(), today);
         router.layer(layer);
         EditCluster.Plan plan = EditCluster.plan(settings, log.postgres(), clustered, node);
         this.cluster = new EditCluster(runCluster, plan, settings.lanes());
