@@ -115,9 +115,13 @@ public final class PackBi {
         String id = gov.packWorkspace();
         BiStore.Workspace w = store.workspace(id).orElse(null);
         if (w == null && create) {
-            w = store.saveWorkspace(new BiStore.Workspace(id, "Pack content", "BI content that deployed packs carry. Each item is updated by the next version of its pack.", false, p.user(), false, Instant.now(), p.user()));
-            store.setMember(new BiStore.Member(id, p.user(), "admin", Instant.now(), p.user()));
-            audit.record(p.user(), "bi-workspace-created", id, "for the BI content of deployed packs");
+            BiStore.Created<BiStore.Workspace> made = store.createWorkspace(new BiStore.Workspace(id, "Pack content",
+                    "BI content that deployed packs carry. Each item is updated by the next version of its pack.", false, p.user(), false, Instant.now(), p.user()));
+            w = made.value();
+            if (made.created()) {                        // two pack loads side by side: one makes it, the other takes it
+                store.setMember(new BiStore.Member(id, p.user(), "admin", Instant.now(), p.user()));
+                audit.record(p.user(), "bi-workspace-created", id, "for the BI content of deployed packs");
+            }
         }
         return w;
     }

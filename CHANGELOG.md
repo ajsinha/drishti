@@ -71,6 +71,18 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   query with `~` in its place, as every `{kind}/{id}` endpoint accepts and the console and the script client already do; `history` uses it
   too. `test_entitypath.py` (with a guard that no tool quotes an id into an entity path) and a smoke case in `test_cli_extras.py`. The other
   3 (counterparty-trades of drishti-b/c counterparties on 2026-11-06) were missing data: the cluster lakes ended on 2026-10-16 (above).
+- **A person's first BI requests side by side (backlog).** The personal workspace was made by a read (absent) and a save; the save after an
+  absent read is a create-only write, so when the board designer listed the workspaces and saved an item at once every request but one
+  answered `409 DRS-5057` (`test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis`, flaky since i5). `BiStore.createWorkspace`
+  creates when missing as one step and returns the one there (content store: a create-only write, the loser reads the winner's; database:
+  under the store's write lock); the personal and the pack-content workspaces use it, audited once. `BiDocs.create` leaves the thread's next
+  save comparing against the new version. `ContentBiStoreTest` (16 requests over two nodes at once).
+- **One "today" in write-back's overlays (backlog).** `EditLayer` read a record with no business date, and "How this view was built", at the
+  UTC clock's date; it takes `BusinessDates::current` like `EditHandler` (`drishti.business-date.today` holds). `EditLayerTodayTest`.
+- **The genomics showcase says what failed (backlog).** When a call of the module's API fails (`showcase/status` answered 404 on the
+  owner's stack, an HTML page) the screens showed "Loading…" for ever: they now show which call failed, the server's words with the HTTP
+  status and what to do (a missing API: the genomics module on in Admin → Modules on that server). Browser case in
+  `test_genomics_walk_browser.py`; GENOMICS_SHOWCASE.md section 8.
 
 ## 2.9.11.i6 (2026-11-16)
 

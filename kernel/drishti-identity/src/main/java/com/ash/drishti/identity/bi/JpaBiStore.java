@@ -92,6 +92,14 @@ public final class JpaBiStore implements BiStore {
         }));
     }
 
+    @Override
+    public Created<Workspace> createWorkspace(Workspace w) {
+        return locked(() -> {
+            Optional<Workspace> there = workspace(w.id());
+            return there.isPresent() ? new Created<>(there.get(), false) : new Created<>(saveWorkspace(w), true);
+        });
+    }
+
     /** Removes the workspace with its members, items and their versions. */
     @Override
     public void deleteWorkspace(String id) {

@@ -193,10 +193,14 @@ public final class BiService {
     BiStore.Workspace personal(Principal p) {
         String id = personalId(p.user());
         return store.workspace(id).orElseGet(() -> {
-            BiStore.Workspace w = store.saveWorkspace(new BiStore.Workspace(id, "My workspace", "Drafts only you can see. Move an item to a shared workspace to publish it.",
-                    true, p.user(), false, Instant.now(), p.user()));
-            audit.record(p.user(), "bi-workspace-created", id, "personal");
-            return w;
+            // a person's first requests come side by side (the designer asks for its workspaces and saves an item at once): one creates, the
+            // others take the one it made (a plain save of each would refuse all but one with 409 DRS-5057)
+            BiStore.Created<BiStore.Workspace> w = store.createWorkspace(new BiStore.Workspace(id, "My workspace",
+                    "Drafts only you can see. Move an item to a shared workspace to publish it.", true, p.user(), false, Instant.now(), p.user()));
+            if (w.created()) {
+                audit.record(p.user(), "bi-workspace-created", id, "personal");
+            }
+            return w.value();
         });
     }
 
