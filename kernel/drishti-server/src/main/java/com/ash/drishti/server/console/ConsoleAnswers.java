@@ -23,7 +23,7 @@ import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.server.edition.EditionContext;
 import com.ash.drishti.server.engines.EngineCluster;
 import com.ash.drishti.server.modules.ModuleConfiguration;
-import com.ash.drishti.server.modules.deploy.ModuleNode;
+import com.ash.drishti.server.modules.ModuleNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

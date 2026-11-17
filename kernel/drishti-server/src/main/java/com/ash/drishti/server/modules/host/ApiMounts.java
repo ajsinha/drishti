@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.modules.deploy;
+package com.ash.drishti.server.modules.host;
 
 import com.ash.drishti.kernel.api.module.ModuleApi;
 import com.ash.drishti.module.runtime.Contributions;

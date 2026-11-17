@@ -18,7 +18,6 @@ package com.ash.drishti.server.modules;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.module.runtime.RouteTable;
-import com.ash.drishti.server.modules.deploy.ModuleNode;
 import com.ash.drishti.server.net.NetCallFilter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,10 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
  * What the server tells the console and its peers about the modules it booted (KERNEL_AND_MODULES.md sections 4.7 and 14.2.1):
  * {@code /api/v1/modules/…} for every signed-in person (what a saved artefact needs, a console path's route), {@code /public/modules/…}
  * for the console (the console parts, the manifests a distribution reads), and {@code /api/v1/net/modules/status} for the cluster's nodes.
- * Nothing here changes a module: a module is a file beside the server and a restart.
- *
- * <p>TODO(I8c): rewritten over the boot result with the content hash in the cluster digest; the reads below are the minimal move of what
- * the deleted deployment controller kept.
+ * Nothing here changes a module: a module is a file beside the server and a restart. Every read is over the boot result
+ * ({@link ModuleNode}); the cluster compares the nodes' modules through their digests ({@link ModuleNode#identity()}) and
+ * Admin → Modules shows that comparison ({@code GET /api/v1/admin/modules}, {@link ModuleAdminController}).
  */
 @RestController
 public class ModulePublicController {

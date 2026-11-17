@@ -25,7 +25,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.module.runtime.ModuleHealth;
 import com.ash.drishti.module.conformance.ModuleConformance;
-import com.ash.drishti.server.modules.deploy.ModuleNode;
+import com.ash.drishti.server.modules.ModuleNode;
 import com.ash.drishti.testkit.ModuleFixtures;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
