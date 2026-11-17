@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The detached console (docs/architecture/THIN_CONSOLE_DESIGN.md step S0, section 5.2): ``drishti-console/`` copied alone into a folder
-that holds nothing of the server's, started as a real console process in front of a real server (tests/detached_console.py), serves the
+"""The detached console (docs/architecture/THIN_CONSOLE_DESIGN.md step S0, section 5.2): ``drishti-console/`` copied with what ships beside it
+(Help's documents) into a folder that holds nothing of the server's, started as a real console process in front of a real server (tests/detached_console.py), serves the
 sitemap's pages without a fault, learns the installation's answer and the server's version, and reads no file outside its own folders but
 the remaining readers each later step deletes (``KNOWN_READERS``, by console file; the list only shrinks: a reader not on it fails; the
 test prints every reader it saw, the checklist of the steps). From Drill A it is a permanent test of the drill.
@@ -30,16 +30,13 @@ from test_workbench_browser import browser  # noqa: F401 - the fixture
 from wb_live import _stack
 
 #: the console files that still read outside the console's folder, each with the step that ends it (THIN_CONSOLE_DESIGN.md section 5)
+#: Help's documents are the console's own (section 4.1): they ship beside it (detached_console.SHIPPED) and are no reader.
 KNOWN_READERS = {
-    "core/settings_page.py": "S6: docs/admin/CONFIGURATION.md and the server's YAML for Help -> Configuration",
     "core/config_editor.py": "S6: the settings documents for Admin -> Configuration",
-    "core/lakes.py": "S8: the lake build on the console's machine",
-    "core/lake_maint.py": "S8: lake maintenance on the console's machine",
+    "core/lakes.py": "S8: the lake build on the console's machine (a console elsewhere says where it runs and reads nothing)",
+    "core/lake_maint.py": "S8: lake maintenance on the console's machine (a console elsewhere says where it runs and reads nothing)",
     "core/external_lib.py": "S6: the external library folder beside the repository (to become an explicit setting)",
-    "core/guides.py": "S6: the repository's docs/ (Help ships with the console: docs_dir becomes the console's own copy)",
-    "routes/common.py": "S6: Help's library over the repository's docs/",
-    "core/knowledge.py": "S6: the glossary under docs/",
-    "core/examples.py": "S6: the Studio examples under docs/",
+    "core/guides.py": "S6: Help's library lists the install folder (help.docs_dir's parent) for the root documents shipped beside docs/",
 }
 
 

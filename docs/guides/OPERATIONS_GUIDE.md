@@ -2804,7 +2804,10 @@ partition columns and **Promote** for real columns. 3. **Where it goes**: a new 
 date is there; the pack whose connector should read it; **Bind** writes the connector's file (validated, atomic, audited, history kept); **Tell the
 server** announces each date. 4. **Build**: a separate process running `tools/lake/build.py` with the same lock and summary; the page shows progress,
 the rows per date and classifier, the rejects by reason and a link to one record. The process never holds a token: binding and announcing are done by
-the console as the administrator.
+the console as the administrator. The build, lake maintenance and a table's own page run beside the lakes, with the lake engine of the install's
+`tools/` (`builder.tools_dir`): a console on another machine (one that holds only its own folder and the documents shipped with it) shows the Lakes page
+and a table's page with *This console is not on the server's machine*, offers no form, and still lists the lake files as the server reads them; open
+the page on a console on the server's machine.
 
 ### 16.5 Scheduling the jobs
 

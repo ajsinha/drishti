@@ -179,6 +179,12 @@ class Lakes:
         self.uploads: dict[str, Upload] = {}
         self.jobs: dict[str, Job] = {}
 
+    def here(self) -> bool:
+        """Whether this console runs on the server's machine, beside the lakes: the lake build, maintenance and a table's detail run here,
+        with the tools' lake engine (``builder.tools_dir``/lake). A console elsewhere (one that holds only its own folder,
+        THIN_CONSOLE_DESIGN.md Q7) says these pages need a console on the server's machine until they become server jobs (step S8)."""
+        return (self.cfg.tools_dir / "lake" / "build.py").is_file()
+
     # -------------------------------------------------------------------------------------------- housekeeping
 
     def _expire(self) -> None:

@@ -33,9 +33,8 @@ release tag `v2.9.11.i_6`.
 - **The console's tests follow the server's answers.** The recorded installation answers (`tests/answers`, written by
   ConsoleAnswersRecordTest) carry what the server sends: `limits` and `commands` (each word's pack, module and whether it loads) beside
   the distribution, modules, engines and under-construction, and the Admin pages an administrator's person answer lists; the tests
-  name their distribution, brand and workspace through the server's answer (`server_answers.follow`, `branded`, `installed`, `serve`)
-  and the trading and market landings through a stand-in of the modules' APIs (`landing_server.py`), never through files the
-  console no longer reads.
+  name their distribution, brand and workspace through the server's answer (`server_answers.follow`, `branded`, `installed`, `serve`),
+  never through files the console no longer reads.
 
 - **The console's pages draw with the vendored Drishti Elements again.** drishti-grid requires drishti-chart (its bullet cells,
   `drishti-elements.json`), so `base.html` loads drishti-chart once, before drishti-grid, on every page (the grid threw on load and every
@@ -69,6 +68,24 @@ release tag `v2.9.11.i_6`.
   module's jar inside) instead of packing its folder, which holds no jar. The Pack designer browser test names the console's
   `builder.pack_designer_modules_dir` (the scratch server's modules folder), as a site does; the anywhere test keeps the drill's
   `DRISHTI_RESOLVED_CACHE`.
+- **The Trading and Market landings' figures are recorded by the modules' own tests, and the console's tests replay them.**
+  `MarketLandingRecordTest` and `TradingLandingRecordTest` run each module's landing (as its controller answers) over a stand-in server of
+  their own (`MarketStandIn`, `TradingStandIn`: the market data with one known problem of each check; the desk, books, trades, VaR, limits
+  and counterparty exposure the console's Python used), prove the figures the Python worked out before S8a (the desk's tiles, curves and
+  biggest moves, every quality check; "my" scope, P&L, today's events, VaR and limits, by trader, the new-trade check) and two people at
+  once, and record every answer the console's tests read in `drishti-console/tests/answers/landings/` (`market-data.json`,
+  `trading.json`), per person, lens and View as choice. `RecordedAnswers` (drishti-testroots) keeps these and the installation answers of
+  `ConsoleAnswersRecordTest` alike: `-Ddrishti.record=true` writes them, otherwise a recording older than the module's code fails the
+  Java test. The console's `market_fake.py` and `trading_fake.py` replay the recordings (`landing_answers.py`) and hold no figure, so the
+  Market and Trading landing browser tests and `test_edition.py`'s landing tests answer again; the stand-ins answer `/pivot/inline`
+  through `InlinePivot` (drishti-bicompute), the one reading of an inline pivot body, which `PivotController` now uses too. The Trader
+  desk's blotter card scrolls its grid inside the card (for a frame while the grid measured itself the page scrolled sideways).
+- **A console that is not on the server's machine serves Help and says where Admin → Lakes runs.** Help's documents ship with the
+  console (THIN_CONSOLE_DESIGN.md section 4.1: `<install>/docs` and the root documents beside the console, as both console images copy
+  them; `test_console_ships_its_help.py` holds the images to that list), and the detached-console test now copies the console as it ships,
+  so Help's pages answer and their readers leave the known list. Admin → Data loads → Lakes and a lake table's page, on a console with no
+  lake engine beside it (`Lakes.here`), answer with "this console is not on the server's machine", offer no form, and still list the
+  server's own read-only answer of its lake files (Q7), instead of an empty page and a 404.
 - **One server jar in `lib/`, of this version.** The tools refuse a jar in `<home>/lib` whose version differs from `.mvn/maven.config` ("lib/ holds ...-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run python tools/drishti.py build jar"; two jars stay refused); `build jar` and the drill's gate replace an older Drishti server jar there (never `lib/ext`), and the gate's Python checks that run the jar wait for the jar the gate just built.
 - **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
   designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)
