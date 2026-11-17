@@ -57,8 +57,8 @@ def _free_port() -> int:
 
 
 def _env(**more: str) -> dict[str, str]:
-    """The caller's environment without any DRISHTI_ setting but the Java home and the lake cache (nothing leaks in from the drill), plus ``more``."""
-    keep = {"DRISHTI_JAVA_HOME", "DRISHTI_LAKE_CACHE", "DRISHTI_PYTHON"}
+    """The caller's environment without any DRISHTI_ setting but the Java home and the lake and resolver caches (nothing leaks in from the drill), plus ``more``."""
+    keep = {"DRISHTI_JAVA_HOME", "DRISHTI_LAKE_CACHE", "DRISHTI_PYTHON", "DRISHTI_RESOLVED_CACHE"}
     env = {k: v for k, v in os.environ.items() if not k.startswith("DRISHTI_") or k in keep}
     env.update(more)
     return env

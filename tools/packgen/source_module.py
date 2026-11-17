@@ -281,6 +281,15 @@ def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
     src = ROOT / "modules" / n["pack"]
     if not (src / "module.yaml").is_file():
         return []
+    import yaml
+    if (yaml.safe_load((src / "module.yaml").read_text(encoding="utf-8")) or {}).get("java") is not None:
+        # a module with code (its manifest's java: block) is not packed from its folder: its jar is the build's, and the build packs it
+        # (packaging/dist: <pack>-<version>.dmod beside the product's other modules)
+        built = sorted((ROOT / "packaging" / "dist" / "target" / "classes" / "drishti" / "modules").glob(f"{n['pack']}-*.dmod"))
+        if not built:
+            print(f"the module {n['pack']} this one requires has code and is not built: run python tools/drishti.py build jar first; "
+                  "its runtime checks are left without it", file=sys.stderr)
+        return ["--with", str(built[-1])] if built else []
     out = dist / "requires"
     out.mkdir(parents=True, exist_ok=True)
     if MFJ.module_tool(cli, a, "pack", str(src), "--out", str(out)):
