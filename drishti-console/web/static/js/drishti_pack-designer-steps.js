@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Build -> New pack: the Pack designer, part two: Design (the Sutras, one's YAML beside its live screen on real rows, re-rendered as it is
- * edited), Finalize (the module and its fifteen checks) and Deploy (the one module deploy). Drishti Elements only: Grid, CodeEditor, Select. */
+ * edited), Finalize (the module and its fifteen checks) and Install (the download, and how to install it). Drishti Elements only: Grid, CodeEditor, Select. */
 (function () {
   'use strict';
   var D = window.Drishti.PackDesigner;
@@ -119,7 +119,7 @@
   D.on('show', function (step) {
     if (step === 'design' && editor) { editor.refresh(); if (grid) { grid.refresh(); } }
     if (step === 'finalize') { $('[data-finalize]').disabled = !S.analysis || !S.canAuthor || (S.mode === 'source' && !S.mapping); }
-    if (step === 'deploy') { $('[data-plan]').disabled = !S.result || !S.isAdmin; $('[data-install]').disabled = !S.result || !S.isAdmin; }
+    if (step === 'deploy') { $('[data-bind]').disabled = !S.result || !S.isAdmin; }
   });
 
   // ---- step 5: finalize ------------------------------------------------------------------------------------------------------------
@@ -189,74 +189,26 @@
       a.textContent = 'Download ' + S.result.dmod + ' (' + D.bytes(S.result.bytes) + ')';
       D.sumOf('finalize', n + ' of 15 checks passed');
       D.sumOf('deploy', 'ready: ' + S.result.name + ' ' + S.result.version);
-      $('[data-plan]').disabled = !S.isAdmin;
-      $('[data-install]').disabled = !S.isAdmin;
+      var d2 = $('[data-download-install]');
+      d2.href = a.href;
+      d2.hidden = false;
+      d2.textContent = 'Download ' + S.result.dmod;
+      $('[data-bind]').disabled = !S.isAdmin;
       D.say('The module ' + S.result.name + ' ' + S.result.version + ' is made: ' + n + ' of 15 checks passed.');
     });
   });
 
-  // ---- step 6: deploy ---------------------------------------------------------------------------------------------------------------
-  var planGrid = null;
-  function drawPlan(plan) {
-    var rows = [];
-    var nodes = plan.nodes || plan.placement || plan.steps || [];
-    (Array.isArray(nodes) ? nodes : Object.keys(nodes).map(function (k) { return Object.assign({ node: k }, nodes[k]); })).forEach(function (n) {
-      rows.push({ node: String(n.node || n.id || n.name || 'this node'), action: String(n.action || plan.action || 'install'), state: String(n.state || n.status || plan.state || 'planned') });
-    });
-    if (!rows.length) { rows.push({ node: 'this node', action: plan.action || 'install', state: plan.state || 'planned' }); }
-    var host = $('[data-plan-grid]');
-    host.hidden = false;
-    if (planGrid) { planGrid.setRows(rows); return; }
-    planGrid = new G.Grid(host, { rows: rows, getRowId: function (r) { return r.node; }, layout: 'wells', density: 'compact', chrome: false, rowSelection: 'none', label: 'The plan per node',
-      columns: [{ field: 'node', header: 'Node', width: 260 }, { field: 'action', header: 'Action', width: 120 }, { field: 'state', header: 'State', width: 200 }] });
-    host.style.height = '140px';
-  }
-  function openLink() {
-    if (S.mode === 'source') { $('[data-open]').hidden = true; return; }      // a source module has no screen of its own: the kind's pages show its rows
-    var first = S.analysis.sutras[0], key = S.analysis.kinds[first.kind].key, id = first.samples[0] || {};
-    key.split('.').forEach(function (k) { id = id && id[k]; });
-    var a = $('[data-open]');
-    a.href = drishti_url('/m/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(first.kind) + '/' + encodeURIComponent(id));
-    a.textContent = 'Open the screen of ' + id;
-    a.hidden = false;
-  }
+  // ---- step 6: install (the download is above; the data binding is proposed here) ----------------------------------------------------
   var dmsg = $('[data-deploy-msg]');
   function dsay(t, bad) { dmsg.textContent = t || ''; dmsg.classList.toggle('bad', !!bad); }
-  $('[data-install]').addEventListener('click', function () {
-    $('[data-install]').disabled = true;
-    dsay('Putting the module in the modules folder ...');
-    D.api('POST', D.ws() + '/deploy/install', {}).then(function (r) {
-      $('[data-install]').disabled = false;
+  $('[data-bind]').addEventListener('click', function () {
+    $('[data-bind]').disabled = true;
+    dsay('Proposing the data binding ...');
+    D.api('POST', D.ws() + '/deploy/binding', { reason: 'Pack designer: ' + S.result.name + ' ' + S.result.version }).then(function (r) {
+      $('[data-bind]').disabled = false;
       if (!r.ok) { dsay(D.why(r), true); return; }
-      D.sumOf('deploy', 'installed on this node');
-      openLink();
-      dsay(S.result.name + ' is installed: ' + r.body.installed + '. Auto-deploy checks and loads it within seconds (Admin → Modules shows it).');
-    });
-  });
-  $('[data-plan]').addEventListener('click', function () {
-    $('[data-plan]').disabled = true;
-    dsay('Uploading the module to the store and planning the install ...');
-    D.api('POST', D.ws() + '/deploy/plan', { reason: 'Pack designer: ' + S.result.name + ' ' + S.result.version }).then(function (r) {
-      $('[data-plan]').disabled = false;
-      if (!r.ok) { dsay(D.why(r), true); return; }
-      S.plan = r.body.plan;
-      drawPlan(S.plan);
-      $('[data-apply]').hidden = false;
-      D.sumOf('deploy', 'planned: ' + (S.plan.id || ''));
-      dsay('Planned ' + (S.plan.id || '') + '. Apply it to install ' + S.result.name + '.');
-    });
-  });
-  $('[data-apply]').addEventListener('click', function () {
-    $('[data-apply]').disabled = true;
-    dsay('Applying ...');
-    D.api('POST', D.ws() + '/deploy/apply', { id: S.plan.id, comment: 'Pack designer' }).then(function (r) {
-      $('[data-apply]').disabled = false;
-      if (!r.ok) { dsay(D.why(r), true); return; }
-      S.plan = r.body;
-      drawPlan(S.plan);
-      D.sumOf('deploy', 'applied');
-      dsay(S.result.name + ' is deployed (' + (S.plan.state || 'applied') + ').');
-      openLink();
+      D.sumOf('deploy', 'binding proposed');
+      dsay('The data binding of ' + S.result.name + ' is proposed: a second administrator approves it (Admin → Data bindings).');
     });
   });
   D.on('kind', function () { summary(); });

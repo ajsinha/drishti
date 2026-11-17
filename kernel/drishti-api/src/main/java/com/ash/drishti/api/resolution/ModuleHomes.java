@@ -52,9 +52,12 @@ public final class ModuleHomes {
     /**
      * The setting that carries the whole value ({@link #toProperty()}) to every reader with a property lookup: the server's environment
      * (the launch puts it first), a child process ({@code -D}), a command line that booted. Absent: no package was booted, and the readers
-     * take the modules of the old store and folders ({@code LegacyModules}, until i7a's I8).
+     * have no module.
      */
     public static final String PROPERTY = "drishti.module.homes";
+
+    /** {@code none} as the modules folder's setting: no module folder (a kernel-only server; the unit tests). */
+    public static final String NONE = "none";
 
     /** The word {@link Home#identity()} and {@link #fingerprint()} use for a module without a content hash. */
     public static final String NO_CONTENT_HASH = "development";
@@ -217,10 +220,10 @@ public final class ModuleHomes {
 
     /**
      * The modules every reader with a property lookup takes: the published value ({@link #PROPERTY}: the module boot ran on packages),
-     * else, until i7a's I8, the modules of the old store and folders ({@link LegacyModules}).
+     * else none.
      */
     public static ModuleHomes resolve(java.util.function.Function<String, String> property) {
-        return of(property).orElseGet(() -> LegacyModules.homes(property));
+        return of(property).orElseGet(ModuleHomes::none);
     }
 
     /** The value a property lookup carries ({@link #PROPERTY}), if any: what the launch or the parent process published. */

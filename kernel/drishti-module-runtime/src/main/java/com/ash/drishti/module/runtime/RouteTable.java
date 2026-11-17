@@ -25,9 +25,9 @@ import java.util.function.UnaryOperator;
 
 /**
  * The live route table (KERNEL_AND_MODULES.md section 9.8): every module's routes in one immutable {@link Snapshot}, looked up per request
- * without a lock and replaced atomically (copy-on-write) when a module is loaded, switched off or on, or removed. Each entry carries its
- * module, function, permission and state, so a lookup answers: draw it (200), moved (308), not available (404, the module is off) or gone
- * (410, a tombstone of a removed module). Nothing per person is held here. The console's dispatcher for {@code /m/{id}/{path}} and the
+ * without a lock and replaced atomically (copy-on-write) when a module is loaded or switched off or on. Each entry carries its
+ * module, function, permission and state, so a lookup answers: draw it (200), moved (308) or not available (404, the module is off).
+ * Nothing per person is held here. The console's dispatcher for {@code /m/{id}/{path}} and the
  * kernel's API mount ask the same table.
  */
 public final class RouteTable {
@@ -36,7 +36,7 @@ public final class RouteTable {
     public enum Kind { PAGE, SUTRA, MOVED, API }
 
     /** A route's state. */
-    public enum State { ACTIVE, OFF, TOMBSTONE }
+    public enum State { ACTIVE, OFF }
 
     /**
      * One route.
@@ -50,7 +50,7 @@ public final class RouteTable {
      * @param function   the function that gates it, or null
      * @param permission the permission it needs, or null
      * @param alias      a short path answering the same route ({@code /var}), or null
-     * @param state      active, off or tombstone
+     * @param state      active or off
      */
     public record Route(String module, String version, String id, String path, Kind kind, String target, String function, String permission,
             String alias, State state) {
@@ -80,7 +80,6 @@ public final class RouteTable {
                     if (params != null) {
                         int status = switch (r.state()) {
                             case OFF -> 404;
-                            case TOMBSTONE -> 410;
                             case ACTIVE -> r.kind() == Kind.MOVED ? 308 : 200;
                         };
                         return Optional.of(new Match(r, params, status));
@@ -108,7 +107,7 @@ public final class RouteTable {
         return current.get().lookup(path);
     }
 
-    /** Puts a module's routes, replacing whatever it had (a tombstone included: a reinstall restores the paths). */
+    /** Puts a module's routes, replacing whatever it had. */
     public Snapshot register(String module, List<Route> routes) {
         for (Route r : routes) {
             if (!r.module().equals(module)) {
@@ -122,12 +121,12 @@ public final class RouteTable {
         });
     }
 
-    /** Sets every route of a module to a state: off (switched off), active (on again), tombstone (removed). */
+    /** Sets every route of a module to a state: off (switched off), active (on again). */
     public Snapshot state(String module, State state) {
         return swap(all -> all.stream().map(r -> r.module().equals(module) ? r.with(state) : r).toList());
     }
 
-    /** Drops a module's routes entirely (a tombstone that expired, or a module that never loaded). */
+    /** Drops a module's routes entirely (a module that never loaded). */
     public Snapshot remove(String module) {
         return swap(all -> all.stream().filter(r -> !r.module().equals(module)).toList());
     }

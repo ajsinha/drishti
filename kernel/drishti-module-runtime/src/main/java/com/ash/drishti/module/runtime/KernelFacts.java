@@ -66,7 +66,7 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
     public static KernelFacts ofKernel() {
         return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true,
                 KernelLibraries.of(KernelFacts.class.getClassLoader()), thisBuild(),
-                FirstParty.shipped(KernelFacts.class.getClassLoader()));
+                FirstParty.none());
     }
 
     /** A copy with more versions known (the host adds rachana, contracts, plugin-api, elements as it knows them). */

@@ -15,20 +15,14 @@
  */
 package com.ash.drishti.server.modules.deploy;
 
-import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.kernel.api.health.HealthFigures;
-import com.ash.drishti.server.net.PeerCalls;
 import com.ash.drishti.server.placement.PlacementService;
-import java.nio.file.Path;
-import java.time.Clock;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,37 +31,9 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-/** Module deployment's beans: this node's module runtime and registry, the coordinator, the route gate and the Health figure. */
+/** The module host's beans: this node's module runtime and the Health figure. */
 @Configuration(proxyBeanMethods = false)
 public class ModuleDeployConfiguration {
-
-    /**
-     * The module folders ({@code drishti.modules.path}, commas or the path separator; default {@code <data folder>/modules}): unpacked
-     * modules ({@code <id>/<version>/}) loaded at start, and the {@code .dmod} packages auto-deploy watches.
-     */
-    static List<Path> modulesPath(Environment env) {
-        List<Path> folders = new ArrayList<>();
-        String setting = env.getProperty("drishti.modules.path", Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "modules").toString());
-        for (String s : setting.split("[," + java.io.File.pathSeparator + "]")) {
-            if (!s.isBlank()) {
-                folders.add(Path.of(s.strip()).toAbsolutePath().normalize());
-            }
-        }
-        return folders;
-    }
-
-    /**
-     * Auto-deploy ({@code drishti.modules.autodeploy}): {@code true}, {@code false}, or unset for on with a single node and off in a cluster
-     * (Drishti*net running), where plan → apply is the way.
-     */
-    static boolean autodeploy(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
-        String v = env.getProperty("drishti.modules.autodeploy", "");
-        if (!v.isBlank()) {
-            return Boolean.parseBoolean(v.strip());
-        }
-        com.ash.drishti.server.net.NetService n = net.getIfAvailable();
-        return n == null || !n.running();
-    }
 
     static {
         // a library object made while a module's code ran keeps that thread's context class loader: the Hadoop configuration of a
@@ -94,90 +60,6 @@ public class ModuleDeployConfiguration {
         }
     }
 
-    @Bean
-    public ModuleAutoDeploy moduleAutoDeploy(ModuleDeployService deploy, ModuleNode node, Environment env) {
-        return new ModuleAutoDeploy(modulesPath(env), deploy, node);
-    }
-
-    /** The auto-deploy watch: a look at the module folders every {@code drishti.modules.autodeploy-seconds}, after the modules started. */
-    @Bean(destroyMethod = "shutdownNow")
-    public java.util.concurrent.ScheduledExecutorService moduleAutoDeployWatch(ModuleAutoDeploy auto, Environment env,
-            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
-        java.util.concurrent.ScheduledExecutorService s = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
-                Thread.ofVirtual().name("drishti-module-autodeploy").factory());
-        long every = Math.max(1, env.getProperty("drishti.modules.autodeploy-seconds", Long.class, 5L));
-        s.scheduleWithFixedDelay(() -> {
-            try {
-                if (started && autodeploy(env, net)) {
-                    auto.scan();
-                }
-                ModuleNode node = nodeRef;
-                if (started && node != null && node.developmentMode()) {
-                    node.reloadChanged();
-                }
-            } catch (RuntimeException e) {
-                LoggerFactory.getLogger(ModuleAutoDeploy.class).warn("auto-deploy: {}", e.toString());
-            }
-        }, every, every, java.util.concurrent.TimeUnit.SECONDS);
-        return s;
-    }
-
-    private volatile boolean started;
-    private volatile ModuleNode nodeRef;
-
-    static Path root(Environment env) {
-        String dir = env.getProperty("drishti.module-deploy.dir", "");
-        if (!dir.isBlank()) {
-            return Path.of(dir).toAbsolutePath().normalize();
-        }
-        String data = env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data());
-        return (packaged(env) ? Path.of(data, "cache", "module-host") : Path.of(data, "modules")).toAbsolutePath().normalize();
-    }
-
-    /** Whether the process's modules folder holds packages ({@code *.dmod}): then the folder is the truth about which modules run. */
-    static boolean packaged(Environment env) {
-        Path home = com.ash.drishti.module.runtime.ModuleBoot.processHome(env::getProperty);
-        return home != null
-                && com.ash.drishti.module.runtime.ModuleBoot.usePackages(env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.PACKAGES_SETTING))
-                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(home);
-    }
-
-    /**
-     * With packages beside the jar the module host's own folder is a cache of them ({@code <data>/cache/module-host}: what was
-     * installed, what an administrator switched): made again from the packages at every start, so a package replaced, upgraded or taken
-     * away between two starts is what runs, never an older copy kept in a store (until the host's store is deleted, i7a I8).
-     */
-    private static void freshHost(Path root) {
-        if (!java.nio.file.Files.exists(root)) {
-            return;
-        }
-        try (java.util.stream.Stream<Path> all = java.nio.file.Files.walk(root)) {
-            for (Path p : (Iterable<Path>) all.sorted(java.util.Comparator.reverseOrder())::iterator) {
-                java.nio.file.Files.deleteIfExists(p);
-            }
-        } catch (java.io.IOException ex) {
-            LoggerFactory.getLogger(ModuleNode.class).warn("the module host's folder {} was not cleared: {}", root, ex.toString());
-        }
-    }
-
-    /**
-     * Development mode (the switch lives in {@link com.ash.drishti.packs.LaunchRoots#DEV}, default false): the folders of
-     * {@code drishti.modules.path} are loaded as exploded modules, unverified, and reloaded when they change. Refused (with an error in
-     * the log, and nothing exploded loaded) where {@link com.ash.drishti.packs.LaunchRoots#devRefusal} says so.
-     */
-    static List<Path> development(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
-        if (!com.ash.drishti.packs.LaunchRoots.devAsked(env)) {
-            return List.of();
-        }
-        com.ash.drishti.server.net.NetService n = net.getIfAvailable();
-        String refused = com.ash.drishti.packs.LaunchRoots.devRefusal(env, n != null && n.running());
-        if (refused != null) {
-            LoggerFactory.getLogger(ModuleNode.class).error("{}=true is refused: {}; only verified .dmod packages load", com.ash.drishti.packs.LaunchRoots.DEV, refused);
-            return List.of();
-        }
-        return modulesPath(env);
-    }
-
     @Bean(destroyMethod = "close")
     public ModuleNode moduleNode(PlacementService placement, ApplicationContext ctx, Environment env,
             ObjectProvider<com.ash.drishti.server.net.NetService> net) {
@@ -193,11 +75,6 @@ public class ModuleDeployConfiguration {
             }));
             return out;
         });
-        long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;
-        if (packaged(env)) {
-            freshHost(root(env));
-        }
-        List<Path> folders = development(env, net);
         com.ash.drishti.server.modules.host.ModuleWiring wiring = new com.ash.drishti.server.modules.host.ModuleWiring(
                 () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRegistry.class).getIfAvailable(),
                 () -> ctx.getBeanProvider(com.ash.drishti.server.engines.EngineRegistry.class).getIfAvailable(),
@@ -210,16 +87,13 @@ public class ModuleDeployConfiguration {
                 .sutras(() -> ctx.getBeanProvider(com.ash.drishti.rachana.SutraRegistry.class).getIfAvailable())
                 .python(() -> ctx.getBeanProvider(com.ash.drishti.compute.ComputeService.class).getIfAvailable(),
                         m -> placement.computePartHere(m.id()));
-        return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring)
+        KernelFacts facts = com.ash.drishti.module.runtime.ModuleBoot.current().map(com.ash.drishti.module.runtime.ModuleBoot.Result::facts)
+                .orElseGet(KernelFacts::ofKernel);
+        return new ModuleNode(facts, placement, mounts, wiring)
+                .development(com.ash.drishti.packs.LaunchRoots.devAsked(env),
+                        () -> com.ash.drishti.packs.LaunchRoots.devRefusal(env, net.getIfAvailable() != null && net.getIfAvailable().running()))
                 .siteSwitch(id -> ctx.getBeanProvider(com.ash.drishti.registry.AccessRegistry.class).getIfAvailable() == null
                         || ctx.getBean(com.ash.drishti.registry.AccessRegistry.class).module(id).map(s -> s.enabled() && s.licensed()).orElse(true));
-    }
-
-    @Bean
-    public ModuleDeployService moduleDeployService(ModuleNode node, PlacementService placement, PeerCalls peers, AuditLog audit, Environment env) {
-        NodeCalls calls = new NodeCalls(node, placement::self, peers,
-                Duration.ofSeconds(env.getProperty("drishti.module-deploy.node-call-seconds", Long.class, 120L)));
-        return new ModuleDeployService(root(env), node, placement, calls, audit, Clock.systemUTC());
     }
 
     /**
@@ -238,12 +112,7 @@ public class ModuleDeployConfiguration {
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         try {
-            nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
-            if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
-                e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
-                        e.getApplicationContext().getEnvironment()).resolve("shipped"), e.getApplicationContext().getEnvironment()), "the distribution")
-                        .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
-            }
+            e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
         } finally {
             // the modules are in: a connector that named a module's engine class before they loaded starts now (the start's order, not a
             // retry); one whose class is still missing fails in words from here on
@@ -253,48 +122,10 @@ public class ModuleDeployConfiguration {
             e.getApplicationContext().getBeanProvider(com.ash.drishti.server.PackReloader.class).ifAvailable(com.ash.drishti.server.PackReloader::modulesLoaded);
             firstLoad.run();
         }
-        started = true;
-    }
-
-    /**
-     * The first-party modules the distribution carries: the packages ({@code *.dmod}) beside the server's jar, in the modules folder
-     * of this process, written by {@code drishti.py build modules}), copied out to {@code folder} so they install like any
-     * package. The server's jar holds none; with no modules folder (or {@code none}) the list is empty.
-     */
-    static List<Path> shipped(Path folder, Environment env) {
-        if (!packaged(env)) {
-            return List.of();
-        }
-        List<Path> found = com.ash.drishti.module.runtime.ModuleBoot.packages(com.ash.drishti.module.runtime.ModuleBoot.processHome(env::getProperty));
-        List<Path> out = new ArrayList<>();
-        try {
-            if (found.isEmpty()) {
-                return out;
-            }
-            java.nio.file.Files.createDirectories(folder);
-            for (Path from : found) {
-                Path to = folder.resolve(from.getFileName().toString());
-                java.nio.file.Files.copy(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                out.add(to);
-            }
-        } catch (java.io.IOException ex) {
-            throw new java.io.UncheckedIOException("the modules folder's packages do not read", ex);
-        }
-        return out;
-    }
-
-    /** After placement's guard (4): removed 410, off 404, a swap waited for, requests counted for the drain. */
-    @Bean
-    public FilterRegistrationBean<ModuleRouteFilter> moduleRouteFilter(ModuleNode node, Environment env) {
-        FilterRegistrationBean<ModuleRouteFilter> r = new FilterRegistrationBean<>(
-                new ModuleRouteFilter(node, env.getProperty("drishti.module-deploy.swap-wait-seconds", Long.class, 30L) * 1000));
-        r.addUrlPatterns("/api/*");
-        r.setOrder(5);
-        return r;
     }
 
     @Bean
-    public HealthFigures moduleDeployHealth(ModuleNode node, ObjectProvider<ModuleDeployService> deploy) {
+    public HealthFigures moduleDeployHealth(ModuleNode node) {
         return new HealthFigures() {
             @Override
             public String key() {

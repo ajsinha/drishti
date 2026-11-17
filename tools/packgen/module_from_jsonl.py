@@ -31,8 +31,8 @@
 4. Packs modules/<name>/ into dist/<name>-<version>.dmod with the one packager and runs its fourteen checks.
 5. --source-for KIND --system SYS: the files are a new booking system's source of an existing kind, not a new kind: a source module
    (tools/packgen/source_module.py: the field map proposed from every record, connectors, the map file, the inbox rule, docs).
-6. --deploy: one node, the package is dropped into the modules folder (--modules-dir, auto-deploy loads it); a cluster (--server),
-   it is uploaded and planned (`module deploy`), and a second administrator applies the plan (`module apply`).
+6. --deploy: the package is dropped into the server's modules folder (--modules-dir); restart the server to load it (a cluster: every
+   node, one after another). A module is a file and a restart.
 """
 from __future__ import annotations
 
@@ -80,9 +80,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     g.add_argument("--no-binding", action="store_true", help="write no binding and no connector file (the site binds the kinds later, Admin -> Data bindings)")
     g.add_argument("--dist", type=pathlib.Path, help="where the .dmod is written (default dist/)")
     g.add_argument("--publisher", default="local", help="publisher id in module.yaml (default local)")
-    g.add_argument("--deploy", action="store_true", help="install the .dmod: into --modules-dir (one node), or with --server upload and plan it (a cluster)")
-    g.add_argument("--modules-dir", type=pathlib.Path, help="the server's modules folder (drishti.modules.path; default $DRISHTI_MODULES_PATH, else <data folder>/modules)")
-    g.add_argument("--reason", help="--deploy on a cluster: why (kept in the audit log)")
+    g.add_argument("--deploy", action="store_true", help="drop the .dmod into the server's modules folder (--modules-dir); restart the server to load it")
+    g.add_argument("--modules-dir", type=pathlib.Path, help="the server's modules folder (drishti.modules.home; default $DRISHTI_MODULES_HOME, else <Drishti folder>/modules)")
     g.add_argument("--workers", type=int, default=max(1, min(8, (os.cpu_count() or 2) // 3)),
                    help="processes reading the files, a file each (default: a third of the cores, at most 8); every record is read either way")
     import source_module as SMOD
@@ -315,9 +314,9 @@ def module_check(cli, a, dmod, *with_modules) -> int:
 def modules_dir(a) -> pathlib.Path:
     if a.modules_dir:
         return a.modules_dir.resolve()
-    if os.environ.get("DRISHTI_MODULES_PATH"):
-        return pathlib.Path(os.environ["DRISHTI_MODULES_PATH"]).resolve()
-    return (pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data") / "modules").resolve()
+    if os.environ.get("DRISHTI_MODULES_HOME"):
+        return pathlib.Path(os.environ["DRISHTI_MODULES_HOME"]).resolve()
+    return (ROOT / "modules").resolve()
 
 
 def run(a, cli, say=print) -> int:
@@ -329,8 +328,6 @@ def run(a, cli, say=print) -> int:
         raise cli.CliError("--name is required (or --source-for KIND --system SYS for a source of an existing kind)", 2)
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", a.name):
         raise cli.CliError("--name is lower-case letters, digits and '-'", 2)
-    if a.deploy and getattr(a, "server", None) and not a.reason:
-        raise cli.CliError("--deploy on a cluster (--server) needs --reason", 2)
     mod = (a.out or ROOT / "modules" / a.name).resolve()
     if not a.dry_run and mod.exists() and any(mod.iterdir()) and not a.force:
         raise cli.CliError(f"{mod} exists; pass --force to replace it", 2)
@@ -380,10 +377,8 @@ def run(a, cli, say=print) -> int:
     if rc or chk:
         return 1
     if a.deploy:
-        if getattr(a, "server", None) and not a.modules_dir:
-            return cli.main(["module", "deploy", str(dmod), "--reason", a.reason or "pack new", *(["--server", a.server] if a.server else [])])
         target = modules_dir(a)
         target.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(dmod, target / dmod.name)
-        say(f"deployed: {target / dmod.name} (auto-deploy checks, installs and loads it; Admin -> Modules shows it)")
+        say(f"copied: {target / dmod.name} (restart the server to load it; Admin -> Modules lists it)")
     return 0

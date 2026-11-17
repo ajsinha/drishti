@@ -96,14 +96,10 @@ public class ModuleConfiguration {
         return r;
     }
 
-    /** Just before the engine gate (4), after the caller is known: a module that is off says so, before its engines are asked. */
+    /** Just before the engine gate (4), after the caller is known: a module that is not loaded here says so, before its engines are asked. */
     @Bean
-    public FilterRegistrationBean<ModuleGateFilter> moduleGateFilter(AccessRegistry registry, Started started,
-            ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
-        // a package the module node holds (loaded, switched off or removed) is the node's to answer: its own 404 DRS-1025 or 410 DRS-1028
-        java.util.function.Predicate<String> here = id -> started.loaded(id) || java.util.Optional.ofNullable(node.getIfAvailable())
-                .flatMap(n -> n.entry(id)).isPresent();
-        FilterRegistrationBean<ModuleGateFilter> r = new FilterRegistrationBean<>(new ModuleGateFilter(registry, here));
+    public FilterRegistrationBean<ModuleGateFilter> moduleGateFilter(AccessRegistry registry, Started started) {
+        FilterRegistrationBean<ModuleGateFilter> r = new FilterRegistrationBean<>(new ModuleGateFilter(registry, started::loaded));
         r.addUrlPatterns("/api/*");
         r.setOrder(3);
         return r;

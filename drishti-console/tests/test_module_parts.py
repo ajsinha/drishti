@@ -77,10 +77,10 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
     assert c.get("/api/modules/hosted").json()["hosted"]["greeter"]["version"] == "1.0.0"
     assert c.get("/build?type=sutras").text.count("needs module greeter") == 0
 
-    reg.state = "removed"                                                              # removed: every door goes
+    reg.state = "off"                                                                  # off: every door goes, with a 404
     gone = c.get("/m/greeter/hello/asha")
-    assert gone.status_code == 410 and "no longer installed" in gone.text and "needs module greeter" in gone.text
-    assert c.get("/m/greeter/static/1.0.0/drishti_module.css").status_code == 410
+    assert gone.status_code == 404 and "switched off" in gone.text
+    assert c.get("/m/greeter/static/1.0.0/drishti_module.css").status_code == 404
     assert "/m/greeter/hello/world" not in c.get("/t").text
     assert 'data-home-card="GREETER world"' not in c.get("/").text
     assert "/help/section/module-greeter" not in c.get("/help").text
@@ -88,13 +88,10 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
     assert "needs%20module%20greeter" in said or "needs+module+greeter" in said
     build = c.get("/build?type=sutras").text                                           # the saved Sutra: kept, marked, not openable
     assert 'data-needs-module="greeter"' in build and "greetings-board" in build and "/studio?sutra=greetings-board" not in build
-    assert c.get("/api/modules/hosted").json()["gone"]["greeter"]["state"] == "removed"
+    assert c.get("/api/modules/hosted").json()["gone"]["greeter"]["state"] == "off"
     assert 'data-needs-module="greeter"' in c.get("/forms").text                      # the saved search: kept, marked
 
-    reg.state = "off"                                                                  # switched off: 404, not 410
-    assert c.get("/m/greeter/hello/asha").status_code == 404
-
-    reg.state = "active"                                                               # reinstalled: all back
+    reg.state = "active"                                                               # switched on again: all back
     assert c.get("/m/greeter/hello/asha").status_code == 200
     assert "/m/greeter/hello/world" in _menu_links(c.get("/t").text)
     assert "greeter: the guide" in c.get("/help/section/module-greeter").text

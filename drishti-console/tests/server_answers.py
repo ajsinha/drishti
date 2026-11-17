@@ -94,7 +94,7 @@ def module_zip(folder: Path) -> bytes:
 @lru_cache(maxsize=1)
 def _shipped() -> dict:
     """The product's own content modules shipped as folders with a console part and no code (``modules/<id>/module.yaml`` without a
-    ``java:`` block, with ``console/plugin.yaml``): id -> (folder, version, title), as the server's ModuleDeployController.shipped reads them."""
+    ``java:`` block, with ``console/plugin.yaml``): id -> (folder, version, title), as the server's module list (ModulePublicController) reads them."""
     import yaml
 
     out = {}

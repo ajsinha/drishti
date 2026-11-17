@@ -776,7 +776,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(lake_routes.router)
     app.include_router(net_routes.router)
     from routes import module_admin_routes
-    app.include_router(module_admin_routes.router)     # Admin -> Modules and Deploy; a removed module's paths (KERNEL_AND_MODULES.md 7.6, 12.10)
+    app.include_router(module_admin_routes.router)     # Admin -> Modules; a module's paths when it is off or unknown (KERNEL_AND_MODULES.md)
     app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)

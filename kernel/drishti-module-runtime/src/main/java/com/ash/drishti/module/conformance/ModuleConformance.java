@@ -604,8 +604,8 @@ public final class ModuleConformance {
         List<String> absent = new ArrayList<>();
         try {
             // C11 and C13: load, every word answers through a route; switched off, every route answers 404
-            Path modules = install(dmod, m, work.resolve("run-off"), with);
-            try (ModuleRuntime rt = runtime(work.resolve("run-off"), facts)) {
+            List<Path> modules = install(dmod, m, work.resolve("run-off"), with);
+            try (ModuleRuntime rt = runtime(facts)) {
                 if (load(rt, modules, m, answer)) {
                     Map<String, RouteTable.Route> byWord = new LinkedHashMap<>();
                     rt.routes().snapshot().of(m.id()).forEach(r -> {
@@ -621,7 +621,7 @@ public final class ModuleConformance {
                             answer.add("function " + w + " answers " + status(rt, r) + " at " + r.path());
                         }
                     }
-                    ModuleRuntime.UnloadReport rep = rt.unload(m.id(), ModuleRuntime.Leave.DISABLE, true);
+                    ModuleRuntime.UnloadReport rep = rt.unload(m.id(), true);
                     off.addAll(rep.failures());
                     for (RouteTable.Route r : rt.routes().snapshot().of(m.id())) {
                         if (status(rt, r) != 404) {
@@ -635,22 +635,17 @@ public final class ModuleConformance {
                     off.add("the module did not load (see C11)");
                 }
             }
-            // C14: removed, every surface gone, nothing left in the registry, its saved work marked
+            // C14: stopped for good, every surface gone: nothing contributed is left and the class loader is collected
             modules = install(dmod, m, work.resolve("run-remove"), with);
-            try (ModuleRuntime rt = runtime(work.resolve("run-remove"), facts)) {
+            try (ModuleRuntime rt = runtime(facts)) {
                 if (load(rt, modules, m, absent)) {
-                    ModuleRuntime.UnloadReport rep = rt.unload(m.id(), ModuleRuntime.Leave.REMOVE, true);
+                    ModuleRuntime.UnloadReport rep = rt.unload(m.id(), true);
                     absent.addAll(rep.failures());
-                    for (RouteTable.Route r : rt.routes().snapshot().of(m.id())) {
-                        if (status(rt, r) != 410) {
-                            absent.add("removed, " + r.path() + " answers " + status(rt, r) + " (it must answer 410 Gone)");
-                        }
-                    }
                     if (!rt.contributions().of(m.id()).isEmpty()) {
-                        absent.add("removed, these contributions are left: " + rt.contributions().of(m.id()));
+                        absent.add("stopped, these contributions are left: " + rt.contributions().of(m.id()));
                     }
-                    if (rt.health(m.id()).map(ModuleHealth::state).orElse(null) != ModuleHealth.State.REMOVED) {
-                        absent.add("removed, Health does not say REMOVED");
+                    if (rt.loaded(m.id()).isPresent()) {
+                        absent.add("stopped, the module is still loaded");
                     }
                 }
             }
@@ -664,25 +659,27 @@ public final class ModuleConformance {
         return out;
     }
 
-    private static Path install(Path dmod, DmodManifest m, Path run, List<Path> with) throws IOException {
+    private static List<Path> install(Path dmod, DmodManifest m, Path run, List<Path> with) throws IOException {
         ModuleFolder.delete(run);
         Path modules = run.resolve("modules");
+        List<Path> dirs = new ArrayList<>();
         for (Path w : with) {
             Path peek = run.resolve("peek");
             Dmod.unpack(w, peek);
             DmodManifest wm = ModuleFolder.manifest(peek);
             ModuleFolder.delete(peek);
-            Dmod.unpack(w, modules.resolve(wm.id()).resolve(wm.version()));
-            Files.copy(w, modules.resolve(wm.id()).resolve(w.getFileName()));
+            Path wat = modules.resolve(wm.id()).resolve(wm.version());
+            Dmod.unpack(w, wat);
+            dirs.add(wat);
         }
         Path at = modules.resolve(m.id()).resolve(m.version());
         Dmod.unpack(dmod, at);
-        Files.copy(dmod, modules.resolve(m.id()).resolve(dmod.getFileName()));
-        return modules;
+        dirs.add(at);
+        return dirs;
     }
 
-    private static ModuleRuntime runtime(Path run, KernelFacts facts) {
-        return new ModuleRuntime(facts, null, ModuleConformance.class.getClassLoader(), HARNESS, run.resolve("tombstones"));
+    private static ModuleRuntime runtime(KernelFacts facts) {
+        return new ModuleRuntime(facts, null, ModuleConformance.class.getClassLoader(), HARNESS);
     }
 
     /** The harness's {@code KernelCalls}: there is no person of a request here, and no lens file. */
@@ -722,8 +719,8 @@ public final class ModuleConformance {
         }
     };
 
-    private static boolean load(ModuleRuntime rt, Path modules, DmodManifest m, List<String> problems) {
-        List<ModuleHealth> rows = rt.start(List.of(modules), Map.of(), id -> true);
+    private static boolean load(ModuleRuntime rt, List<Path> modules, DmodManifest m, List<String> problems) {
+        List<ModuleHealth> rows = rt.start(modules, id -> true);
         ModuleHealth h = rows.stream().filter(r -> r.id().equals(m.id())).findFirst().orElse(null);
         if (h == null || h.state() != ModuleHealth.State.LOADED) {
             problems.add("the module runtime did not load it: " + (h == null ? "not found" : h.line()));

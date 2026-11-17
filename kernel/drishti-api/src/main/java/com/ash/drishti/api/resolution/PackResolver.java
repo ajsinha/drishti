@@ -35,8 +35,7 @@ import java.util.stream.Stream;
  *   {@code config/packs}. A site pack of a shipped pack's name replaces it only when its {@code pack.yaml} says {@code replaces: <pack>};
  *   otherwise the clash is refused (a problem naming both) and the shipped pack is read;</li>
  *   <li><b>the active modules</b>: each active module's manifest {@code packs:} list ({@code folder} + {@code list}), in the folder the
- *   module boot gave it ({@link ModuleHomes}: its cache folder, or in source mode its source folder); with no package booted, until
- *   i7a's I8, the old store and folders ({@link LegacyModules});</li>
+ *   module boot gave it ({@link ModuleHomes}: its cache folder, or in source mode its source folder);</li>
  *   <li><b>the kernel</b>: {@code <site>/core/<pack>} (core, gleif, compute-demo).</li>
  * </ol>
  * The same name twice in one layer is an error naming both places, and neither is read. A module that is not active brings no pack (its
@@ -79,7 +78,7 @@ public final class PackResolver {
      * @param home   the folder of its {@code module.yaml}
      * @param folder its packs folder (null when it declares none)
      * @param packs  the packs its manifest lists, in order
-     * @param source     in words: {@code modules/trading}, {@code the module store's genomics 1.2.0}
+     * @param source     in words: {@code modules/trading}
      * @param connectors its connector templates' folder (null: none)
      * @param dataload   its inbox rules file (null: none)
      * @param requires   the modules it requires (not the optional ones)
@@ -93,32 +92,29 @@ public final class PackResolver {
      * @param site    the site's packs folder ({@code config/packs})
      * @param kernel  the kernel's packs folder ({@code config/packs/core})
      * @param modules   the modules folder ({@code modules}; null: none): shown; read for modules only with no {@code homes}
-     * @param store     the module store of i6 ({@code <data>/modules}; null: none): read only with no {@code homes}
-     * @param installed the packs an administrator deployed, read before the site's folder (null: none)
-     * @param homes     the module boot's result: every module and its folder; null: none was booted, the old store and folders are read
-     *                  ({@link LegacyModules}, until i7a's I8)
+         * @param installed the packs an administrator deployed, read before the site's folder (null: none)
+     * @param homes     the module boot's result: every module and its folder; null: none was booted
      */
-    public record Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra, ModuleHomes homes) {
+    public record Layout(Path site, Path kernel, Path modules, Path installed, List<Path> extra, ModuleHomes homes) {
 
         public Layout {
             extra = extra == null ? List.of() : List.copyOf(extra);
         }
 
-        /** As above, the modules from the old store and folders. */
-        public Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra) {
-            this(site, kernel, modules, store, installed, extra, null);
+        /** As above, no module booted. */
+        public Layout(Path site, Path kernel, Path modules, Path installed, List<Path> extra) {
+            this(site, kernel, modules, installed, extra, null);
         }
 
         /** As above, with no extra folders of packs. */
-        public Layout(Path site, Path kernel, Path modules, Path store, Path installed) {
-            this(site, kernel, modules, store, installed, List.of());
+        public Layout(Path site, Path kernel, Path modules, Path installed) {
+            this(site, kernel, modules, installed, List.of());
         }
 
         /** The layout of a site folder, its kernel folder {@code <site>/core}, no deployed packs. */
-        public static Layout of(Path site, Path modules, Path store) {
+        public static Layout of(Path site, Path modules) {
             Path s = site.toAbsolutePath().normalize();
-            return new Layout(s, s.resolve("core"), modules == null ? null : modules.toAbsolutePath().normalize(),
-                    store == null ? null : store.toAbsolutePath().normalize(), null);
+            return new Layout(s, s.resolve("core"), modules == null ? null : modules.toAbsolutePath().normalize(), null);
         }
     }
 
@@ -232,7 +228,7 @@ public final class PackResolver {
 
     /**
      * Every module, by id: each home of the module boot's result ({@link Layout#homes()}), read from the folder it gives; with no result,
-     * until i7a's I8, the old store and folders through {@link LegacyModules} (the store's active installs win an id).
+     * none.
      */
     public static Map<String, Module> modules(Layout layout, Function<Path, Map<String, Object>> yaml, List<String> problems) {
         Map<String, Module> out = new TreeMap<>();
@@ -240,10 +236,6 @@ public final class PackResolver {
             for (ModuleHomes.Home h : layout.homes().homes().values()) {
                 module(h.dir(), source(h, layout), yaml, problems, out);
             }
-            return out;
-        }
-        for (LegacyModules.Found f : LegacyModules.read(layout.modules(), layout.store(), problems)) {
-            module(f.dir(), f.source(), yaml, problems, out);
         }
         return out;
     }

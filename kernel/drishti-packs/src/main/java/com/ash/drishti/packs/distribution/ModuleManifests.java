@@ -70,20 +70,9 @@ public final class ModuleManifests {
      * in requirement order.
      */
     public static Map<String, Entry> read(com.ash.drishti.api.resolution.ModuleHomes homes) {
-        return read(homes, List.of());
-    }
-
-    /** As above, with the packaged modules ({@link com.ash.drishti.registry.ModulePackages#read}): a package's manifest is the one read. */
-    public static Map<String, Entry> read(com.ash.drishti.api.resolution.ModuleHomes homes, List<com.ash.drishti.registry.ModulePackages.Package> packages) {
         Map<String, Entry> byId = new TreeMap<>();
         for (com.ash.drishti.api.resolution.ModuleHomes.Home h : homes.homes().values()) {
             module(h.dir(), byId);
-        }
-        for (com.ash.drishti.registry.ModulePackages.Package p : packages) {
-            Entry e = ofDmod(YAML.valueToTree(p.manifest()), null);
-            if (!e.id().isEmpty()) {
-                byId.put(e.id(), e);
-            }
         }
         Map<String, Entry> ordered = new LinkedHashMap<>();
         byId.keySet().forEach(id -> visit(id, byId, ordered, new LinkedHashSet<>()));

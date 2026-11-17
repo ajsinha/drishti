@@ -44,7 +44,7 @@ class DistributionsTest {
     static StandardEnvironment boot(Object... site) {
         Map<String, Object> s = new LinkedHashMap<>();
         s.put(Distributions.DIR, DIR.toString());
-        s.put(Distributions.MODULES_DIR, MODULES.toString());
+        s.put(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, SOURCE.toProperty());   // the checkout's modules, as a boot gives them
         s.put("drishti.packs.dir", "../../config/packs");
         for (int i = 0; i < site.length; i += 2) {
             s.put((String) site[i], site[i + 1]);
@@ -129,27 +129,28 @@ class DistributionsTest {
     }
 
     /**
-     * A distribution sees a module installed as a .dmod in the module store (no manifest in the modules folder), read by the registry's
-     * one package reader: its function words are the distribution's; a module neither in the folder nor packaged is still refused.
+     * A distribution sees a module the boot gave it (a folder of its own, no manifest in the checkout): its function words are the
+     * distribution's; a module the boot did not give is refused.
      */
     @Test
-    void anInstalledDmodIsSeenByADistribution(@org.junit.jupiter.api.io.TempDir Path tmp) throws Exception {
-        Path store = tmp.resolve("data/modules");
-        Path version = java.nio.file.Files.createDirectories(store.resolve("installed/freight/0.1.0"));
-        java.nio.file.Files.writeString(store.resolve("installed/active.yaml"), "modules:\n  freight: \"0.1.0\"\n");   // as the module node writes it
+    void aBootedModuleIsSeenByADistribution(@org.junit.jupiter.api.io.TempDir Path tmp) throws Exception {
+        Path version = java.nio.file.Files.createDirectories(tmp.resolve("freight"));
         java.nio.file.Files.writeString(version.resolve("module.yaml"), "format: 1\nid: freight\nversion: 0.1.0\ndomain: logistics\n"
                 + "functions: [{word: SHIP}]\nconsole: {menus: [freight]}\n");
         Path file = tmp.resolve("drishti.freight.yaml");
         java.nio.file.Files.writeString(file, "format: 1\ndistribution: drishti.freight\nbrand: {product: Drishti Freight}\n"
                 + "modules:\n  - { id: freight }\nkernel-packs: []\nlenses: {offered: [research], default: research}\n");
-        StandardEnvironment env = boot("drishti.distribution", file.toString(), Distributions.MODULES_DIR, tmp.resolve("no-folder").toString(),
+        var homes = com.ash.drishti.api.resolution.ModuleHomes.of(List.of(new com.ash.drishti.api.resolution.ModuleHomes.Home("freight", "0.1.0",
+                version, null, com.ash.drishti.api.resolution.ModuleHomes.Origin.DEVELOPMENT)));
+        StandardEnvironment env = boot("drishti.distribution", file.toString(), com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, homes.toProperty(),
                 "drishti.data.dir", tmp.resolve("data").toString());
         Distribution d = Distributions.of(env);
         assertThat(d.modules()).containsExactly("freight");
         assertThat(d.commands()).contains("SHIP");
         assertThat(d.domains()).containsEntry("freight", "logistics");
-        java.nio.file.Files.delete(store.resolve("installed/active.yaml"));          // not installed any more: refused, with words
-        assertThatThrownBy(() -> Distributions.of(env)).hasMessageContaining("is not a shipped or installed .dmod");
+        assertThatThrownBy(() -> boot("drishti.distribution", file.toString(), com.ash.drishti.api.resolution.ModuleHomes.PROPERTY,
+                com.ash.drishti.api.resolution.ModuleHomes.none().toProperty(), "drishti.data.dir", tmp.resolve("data").toString()))
+                .hasMessageContaining("is not among the modules this server booted");
     }
 
     @Test

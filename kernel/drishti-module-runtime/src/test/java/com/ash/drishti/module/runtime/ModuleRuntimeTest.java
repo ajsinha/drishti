@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
@@ -47,7 +46,25 @@ class ModuleRuntimeTest {
                 events.add(name + " " + module);
             }
         };
-        return new ModuleRuntime(facts, null, ModuleRuntime.class.getClassLoader(), host, tmp.resolve("tombstones"));
+        return new ModuleRuntime(facts, null, ModuleRuntime.class.getClassLoader(), host);
+    }
+
+    /** The module folders {@code modules/<id>/<version>/} the test modules were installed into, as discovery takes them. */
+    private List<Path> dirs() {
+        List<Path> out = new ArrayList<>();
+        if (!Files.isDirectory(modules())) {
+            return out;
+        }
+        try (java.util.stream.Stream<Path> ids = Files.list(modules()).sorted()) {
+            for (Path id : ids.toList()) {
+                try (java.util.stream.Stream<Path> versions = Files.list(id).sorted()) {
+                    versions.filter(v -> Files.isRegularFile(v.resolve("module.yaml"))).forEach(out::add);
+                }
+            }
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        return out;
     }
 
     private ModuleHealth only(ModuleRuntime rt, String id) {
@@ -57,9 +74,9 @@ class ModuleRuntimeTest {
     @Test
     void noModulesChangesNothing() throws Exception {
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());
-        assertThat(rt.start(List.of(tmp.resolve("absent")), Map.of(), id -> true)).isEmpty();
+        assertThat(rt.start(List.of(tmp.resolve("absent")), id -> true)).isEmpty();
         Files.createDirectories(modules());
-        assertThat(rt.start(List.of(modules()), Map.of(), id -> true)).isEmpty();
+        assertThat(rt.start(dirs(), id -> true)).isEmpty();
         assertThat(rt.routes().snapshot().routes()).isEmpty();
         rt.close();
     }
@@ -75,26 +92,25 @@ class ModuleRuntimeTest {
                 public void event(String name, String module) {
                     events.add(name + " " + module);
                 }
-            }, tmp.resolve("tombstones"));
-            List<ModuleHealth> rows = rt.start(List.of(modules()), Map.of(), id -> true);
+            });
+            List<ModuleHealth> rows = rt.start(dirs(), id -> true);
             assertThat(rows).extracting(ModuleHealth::state).containsExactly(ModuleHealth.State.LOADED);
             assertThat(only(rt, "hello").notes()).anyMatch(n -> n.startsWith("unsigned"));
             assertThat(events).containsExactly("module.started hello");
 
             boolean[] withdrawn = {false};
             inspect(rt, kernel, withdrawn);
-            ModuleRuntime.UnloadReport r = rt.unload("hello", ModuleRuntime.Leave.REMOVE, true);
+            ModuleRuntime.UnloadReport r = rt.unload("hello", true);
             assertThat(r.failures()).isEmpty();
             assertThat(r.leakFree()).isTrue();
-            assertThat(r.steps()).hasSize(9);
+            assertThat(r.steps()).hasSize(7);
             assertThat(withdrawn[0]).isTrue();
             assertThat(rt.contributions().of("hello")).isEmpty();
             assertThat(rt.loaded("hello")).isEmpty();
-            assertThat(rt.routes().lookup("/m/hello/greet/world").orElseThrow().status()).isEqualTo(410);
-            assertThat(rt.routes().lookup("/api/v1/hello/x").orElseThrow().status()).isEqualTo(410);
-            assertThat(only(rt, "hello").state()).isEqualTo(ModuleHealth.State.REMOVED);
-            assertThat(Files.readString(tmp.resolve("tombstones/hello.yaml"))).contains("function HELLO", "/m/hello/greet/{name}");
-            assertThat(events).containsExactly("module.started hello", "module.leaving hello", "module.removed hello");
+            assertThat(rt.routes().lookup("/m/hello/greet/world").orElseThrow().status()).isEqualTo(404);
+            assertThat(rt.routes().lookup("/api/v1/hello/x").orElseThrow().status()).isEqualTo(404);
+            assertThat(only(rt, "hello").state()).isEqualTo(ModuleHealth.State.OFF);
+            assertThat(events).containsExactly("module.started hello", "module.leaving hello", "module.stopped hello");
         }
     }
 
@@ -135,8 +151,8 @@ class ModuleRuntimeTest {
                 public boolean placedHere(DmodManifest manifest) {
                     return false;
                 }
-            }, tmp.resolve("tombstones"));
-            List<ModuleHealth> rows = rt.start(List.of(modules()), Map.of(), id -> true);
+            });
+            List<ModuleHealth> rows = rt.start(dirs(), id -> true);
             assertThat(rows).singleElement().satisfies(h -> {
                 assertThat(h.state()).isEqualTo(ModuleHealth.State.NOT_PLACED);
                 assertThat(h.reason()).contains("placement.yaml");
@@ -150,12 +166,12 @@ class ModuleRuntimeTest {
     void loadAndUnloadManyTimesWithoutLeaking() {
         new TestModule("hello").install(tmp, modules());
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());
-        rt.start(List.of(modules()), Map.of(), id -> true);
+        rt.start(dirs(), id -> true);
         for (int i = 0; i < 5; i++) {
-            ModuleRuntime.UnloadReport r = rt.unload("hello", ModuleRuntime.Leave.DISABLE, true);
+            ModuleRuntime.UnloadReport r = rt.unload("hello", true);
             assertThat(r.leakFree()).as("round " + i).isTrue();
             assertThat(rt.routes().lookup("/m/hello/greet/a").orElseThrow().status()).isEqualTo(404);
-            rt.start(List.of(modules()), Map.of(), id -> true);
+            rt.start(dirs(), id -> true);
             assertThat(rt.routes().lookup("/m/hello/greet/a").orElseThrow().status()).isEqualTo(200);
         }
         rt.close();
@@ -172,10 +188,10 @@ class ModuleRuntimeTest {
         app.install(tmp, modules());
         List<String> events = new ArrayList<>();
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), events);
-        rt.start(List.of(modules()), Map.of(), id -> true);
+        rt.start(dirs(), id -> true);
         assertThat(events).containsExactly("module.started base", "module.started app");
         assertThat(rt.loaded("base").orElseThrow().loader()).isNull();
-        assertThatThrownBy(() -> rt.unload("base", ModuleRuntime.Leave.REMOVE, true)).hasMessageContaining("required by app 1.0.0");
+        assertThatThrownBy(() -> rt.unload("base", true)).hasMessageContaining("required by app 1.0.0");
         rt.close();
         assertThat(rt.health()).allMatch(h -> h.state() == ModuleHealth.State.OFF);
     }
@@ -184,30 +200,16 @@ class ModuleRuntimeTest {
     void switchedOffIsNotARefusal() {
         new TestModule("hello").install(tmp, modules());
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());
-        rt.start(List.of(modules()), Map.of(), id -> false);
+        rt.start(dirs(), id -> false);
         assertThat(only(rt, "hello").state()).isEqualTo(ModuleHealth.State.OFF);
         assertThat(rt.routes().lookup("/m/hello/greet/a")).isEmpty();
-    }
-
-    @Test
-    void activeVersionAndFirstFolderWin() {
-        TestModule v1 = new TestModule("hello");
-        v1.install(tmp, modules());
-        TestModule v2 = new TestModule("hello");
-        v2.version = "1.2.0";
-        v2.install(tmp, modules());
-        assertThat(ModuleDiscovery.discover(List.of(modules()), Map.of()).candidates().get(0).manifest().version()).isEqualTo("1.2.0");
-        assertThat(ModuleDiscovery.discover(List.of(modules()), Map.of("hello", "1.0.0")).candidates().get(0).manifest().version())
-                .isEqualTo("1.0.0");
-        Dmod.write(tmp.resolve("active.yaml"), "modules:\n  hello: 1.0.0\n");
-        assertThat(com.ash.drishti.api.resolution.LegacyModules.readActive(tmp.resolve("active.yaml"))).containsEntry("hello", "1.0.0");
     }
 
     // ---- refusals: each leaves the module absent, with plain words
 
     private ModuleHealth refused(KernelFacts facts, String id) {
         ModuleRuntime rt = runtime(facts, new ArrayList<>());
-        rt.start(List.of(modules()), Map.of(), x -> true);
+        rt.start(dirs(), x -> true);
         ModuleHealth h = only(rt, id);
         assertThat(h.state()).as(h.line()).isEqualTo(ModuleHealth.State.REFUSED);
         assertThat(rt.loaded(id)).isEmpty();
@@ -276,7 +278,7 @@ class ModuleRuntimeTest {
         d.functions = "[{word: DD}]";
         d.install(tmp, modules());
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());
-        rt.start(List.of(modules()), Map.of(), x -> true);
+        rt.start(dirs(), x -> true);
         assertThat(only(rt, "a").reason()).contains("cycle");
         assertThat(only(rt, "b").reason()).contains("cycle");
         assertThat(only(rt, "c").reason()).contains("needs nowhere >=1.2; it is not installed");
@@ -304,7 +306,7 @@ class ModuleRuntimeTest {
         three.alias = "/admin/x";
         three.install(tmp, modules());
         ModuleRuntime rt = runtime(KernelFacts.ofKernel(), new ArrayList<>());
-        rt.start(List.of(modules()), Map.of(), x -> true);
+        rt.start(dirs(), x -> true);
         assertThat(only(rt, "one").state()).isEqualTo(ModuleHealth.State.LOADED);
         assertThat(only(rt, "two").reason()).contains("function SAME is claimed by one");
         assertThat(only(rt, "three").reason()).contains("alias /admin/x is a reserved name");
@@ -328,7 +330,7 @@ class ModuleRuntimeTest {
                 .contains("needs kind greeting, which no module or the kernel provides");
         assertThat(refused(KernelFacts.ofKernel().withBudget(32, true), "hello").reason()).contains("needs 64 MB; 32 MB");
         ModuleRuntime warned = runtime(KernelFacts.ofKernel().withBudget(32, false), new ArrayList<>());
-        warned.start(List.of(modules()), Map.of(), x -> true);
+        warned.start(dirs(), x -> true);
         assertThat(only(warned, "hello").notes()).anyMatch(n -> n.startsWith("warning:"));
         warned.close();
     }

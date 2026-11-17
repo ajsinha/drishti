@@ -42,10 +42,6 @@ public interface ModuleHost {
     default void started(LoadedModule module, Contributions contributions) {
     }
 
-    /** Unload step 3: let in-flight requests and runs of the module finish, then cancel them (bounded by the host's limits). */
-    default void drain(String module) {
-    }
-
     /** Unload step 7, before the child context closes: stop the module's entry. */
     default void stopping(LoadedModule module) {
     }

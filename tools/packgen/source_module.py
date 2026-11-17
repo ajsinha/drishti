@@ -366,10 +366,8 @@ def run(a, cli, say=print) -> int:
     if chk:
         return 1
     if a.deploy:
-        if getattr(a, "server", None) and not a.modules_dir:
-            return cli.main(["module", "deploy", str(dmod), "--reason", a.reason or "pack new --source-for", *(["--server", a.server] if a.server else [])])
         target = MFJ.modules_dir(a)
         target.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(dmod, target / dmod.name)
-        say(f"deployed: {target / dmod.name} (auto-deploy checks, installs and loads it; Admin -> Modules shows it)")
+        say(f"copied: {target / dmod.name} (restart the server to load it; Admin -> Modules lists it)")
     return 0

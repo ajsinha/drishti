@@ -88,15 +88,15 @@ def test_install_remove_and_reinstall_in_the_browser(browser, console):
         assert page.locator('a[href="/help/section/module-greeter"]').count() >= 1      # its Help
 
         page.goto(url + "/m/greeter/hello/asha")                                         # a page of it stays open while it goes
-        reg.state = "removed"
+        reg.state = "off"
         page.evaluate("Drishti.moduleGoneCheck()")
         page.locator('[data-module-gone="greeter"]').wait_for()
-        assert "no longer installed" in page.locator('[data-module-gone="greeter"]').inner_text()
+        assert "switched off" in page.locator('[data-module-gone="greeter"]').inner_text()
 
         r = page.goto(url + "/m/greeter/hello/asha")                                     # Module removed A
-        assert r.status == 410
+        assert r.status == 404
         notice = page.locator(".mod-notice").inner_text()
-        assert "greeter is no longer installed on this system" in notice and "needs module greeter" in notice
+        assert "greeter module is switched off" in notice
         assert page.get_by_role("link", name="Go to Home").count() == 1
         assert "/m/greeter/hello/world" not in _menu(page)
         page.goto(url + "/")

@@ -46,15 +46,13 @@ import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4) boots from its file alone: the thin kernel (drishti-server, no banking)
- * with the genomics module, built here from its sources (modules/genomics, the SDK's layout) and installed as an administrator would. Its
+ * with the genomics module, built here from its sources (modules/genomics, the SDK's layout) and dropped into the modules folder as an administrator would. Its
  * brand, the Research lens, none of the kernel's packs (no counterparty, book or desk) and no risk word; the module loaded, its VCF reader
  * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fourteen checks.
  */
-@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)   // genomics arrives by the drop below, built from its sources
 @SpringBootTest(properties = {"drishti.distribution=genomics", "drishti.distributions-dir=../../config/distributions",
-        "drishti.module-manifests-dir=../../modules", "drishti.packs.dir=../../config/packs",
+        "drishti.packs.dir=../../config/packs",
         "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.modules.autodeploy-seconds=3600",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/genomics-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class GenomicsDistributionServerTest {
@@ -65,21 +63,15 @@ class GenomicsDistributionServerTest {
     @Autowired MockMvc mvc;
     @Autowired ModuleNode node;
     @Autowired SourceRouter router;
-    @Autowired com.ash.drishti.server.modules.deploy.ModuleAutoDeploy auto;
     final ObjectMapper json = new ObjectMapper();
-    private static volatile boolean deployed;
+    private static final java.util.Map<String, String> KEPT = new java.util.LinkedHashMap<>();
 
-    /** The dropped package deployed once (auto-deploy's look at the folder: the hash list, the fourteen checks, installed, loaded). */
-    @org.junit.jupiter.api.BeforeEach
-    void deployOnce() {
-        if (!deployed) {
-            assertThat(auto.scan()).containsExactly("deployed genomics 0.1.0");
-            deployed = true;
+    /** The package dropped into the modules folder before the server starts (the launch boots it from the process's settings). */
+    @org.junit.jupiter.api.BeforeAll
+    static synchronized void drop() throws IOException {
+        for (String k : List.of("drishti.modules.home", "drishti.modules.sources", "drishti.modules.dev")) {
+            KEPT.put(k, System.getProperty(k));
         }
-    }
-
-    @DynamicPropertySource
-    static synchronized void modules(DynamicPropertyRegistry r) throws IOException {
         if (work == null) {
             work = Path.of(System.getProperty("drishti.test.dir", System.getProperty("java.io.tmpdir"))).resolve("genomics-" + System.nanoTime());
             dmod = genomics(work);
@@ -87,7 +79,24 @@ class GenomicsDistributionServerTest {
             Files.copy(dmod, work.resolve("modules").resolve(dmod.getFileName()));     // dropped in, as an administrator would
             ModuleFixtures.write(work.resolve("placement.yaml"), "modules:\n  genomics:\n    parts:\n      api: { nodes: [local] }\n");
         }
-        r.add("drishti.modules.path", () -> work.resolve("modules").toString());
+        System.setProperty("drishti.modules.home", work.resolve("modules").toString());
+        System.clearProperty("drishti.modules.sources");
+        System.clearProperty("drishti.modules.dev");
+    }
+
+    @org.junit.jupiter.api.AfterAll
+    static synchronized void restore() {
+        KEPT.forEach((k, v) -> {
+            if (v == null) {
+                System.clearProperty(k);
+            } else {
+                System.setProperty(k, v);
+            }
+        });
+    }
+
+    @DynamicPropertySource
+    static synchronized void settings(DynamicPropertyRegistry r) {
         r.add("drishti.placement.file", () -> work.resolve("placement.yaml").toString());
         r.add("drishti.data.dir", () -> work.resolve("data").toString());
         r.add("drishti.bindings.file", () -> work.resolve("bindings.yaml").toString());

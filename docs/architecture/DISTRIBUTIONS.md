@@ -170,14 +170,12 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 `config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
 path). What each module holds is read from **its own manifest**, never from a hand list: every module's `modules/<id>/module.yaml`
 (one layout for all, [KERNEL_AND_MODULES.md section 8.10](KERNEL_AND_MODULES.md#810-the-one-module-layout)), the `.dmod` manifest (`packs.list`, `functions`,
-`compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is the server's `drishti.module-manifests-dir`
-(`DRISHTI_MODULE_MANIFESTS_DIR`; default `./modules`). A listed module brings the modules it requires (banking brings
+`compute.engines`, `console.menus`, `docs.domains`, `requires`). The modules are the ones the server booted from its modules folder
+(`drishti.modules.home`, `DRISHTI_MODULES_HOME`; default `./modules`). A listed module brings the modules it requires (banking brings
 market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module with code (banking,
-genomics, trading, market-data) keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The `.dmod` packages the server ships and
-those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console reads
+genomics, trading, market-data) keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The console reads
 none of these files: it draws the server's installation answer (`GET /api/v1/console/bootstrap`, the compiled distribution and every
-module with its menus), asked again when `/public/about`'s `stamps.installation` changes, so a package installed or removed while it runs
-joins or leaves its distribution. A file may name the kernel's packs it takes
+module with its menus), asked again when `/public/about`'s `stamps.installation` changes. A file may name the kernel's packs it takes
 (`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
@@ -257,7 +255,7 @@ Deployment and QA guide has the step-by-step for each on Linux, macOS and Window
 modules folder, made by `python tools/drishti.py build modules` (Maven's `packaging/dist` packs those with Java; banking is put through the
 fourteen checks there, with market-data beside it). At start the server installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
 off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
-module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the
+module. The access registry reads these manifests (installed when its manifest is among the modules the server booted), so their packs and functions are the
 modules'. Banking's code is no longer on the kernel's class path; its in-process wiring survives only as its own tests' harness.
 
 **Not yet.** The packs still load from `config/packs` (the packages carry copies); logos and favicons beyond the eye are blank until a

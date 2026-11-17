@@ -80,7 +80,7 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
         Path r = root.toAbsolutePath().normalize();
         Path site = r.resolve("config/packs");
         return build(new ResolutionSettings(site, site.resolve("no-installed-packs"), site.resolve("core"), r.resolve(ModuleHomes.SOURCE_MODULES),
-                site.resolve("no-module-store"), List.of(), ModuleHomes.source(r)), id -> true);
+                List.of(), ModuleHomes.source(r)), id -> true);
     }
 
     /**

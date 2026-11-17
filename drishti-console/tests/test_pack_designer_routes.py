@@ -141,33 +141,24 @@ def test_the_live_screen_previews_and_checks_the_analysed_sutra(client, author):
         assert client.post(f"/build/pack/api/ws/{wid}/{step}", json=[1]).status_code == 400, step
 
 
-def test_deploy_installs_or_plans_a_made_module_and_refuses_what_is_not_ready(client, author, backend, monkeypatch, tmp_path):
+def test_install_is_the_download_and_the_binding_proposal_refuses_what_is_not_ready(client, author, backend, monkeypatch, tmp_path):
     wid = make(client)
-    assert client.post(f"/build/pack/api/ws/{wid}/deploy/install", json={}).status_code == 409       # no module made yet
-    assert client.post(f"/build/pack/api/ws/{wid}/deploy/plan", json={}).status_code == 409
-    assert client.post(f"/build/pack/api/ws/{wid}/deploy/frobnicate", json={}).status_code == 400
-    assert client.post(f"/build/pack/api/ws/{wid}/deploy/install", json=[1]).status_code == 400
-    assert client.post(f"/build/pack/api/ws/no-such-ws/deploy/install", json={}).status_code == 404
+    assert client.post(f"/build/pack/api/ws/{wid}/deploy/binding", json={}).status_code == 409       # no module made yet
+    assert client.post(f"/build/pack/api/ws/{wid}/deploy/install", json={}).status_code == 400       # no server install any more: a download
+    assert client.post(f"/build/pack/api/ws/{wid}/deploy/plan", json={}).status_code == 400
+    assert client.post(f"/build/pack/api/ws/{wid}/deploy/binding", json=[1]).status_code == 400
+    assert client.post(f"/build/pack/api/ws/no-such-ws/deploy/binding", json={}).status_code == 404
     d = folder(client, wid)
     (d / "dist").mkdir()
     (d / "dist" / "my-bank-1.0.0.dmod").write_bytes(b"PK\x03\x04")
     (d / "result.json").write_text(json.dumps({"dmod": "my-bank-1.0.0.dmod", "name": "my-bank", "version": "1.0.0"}))
-    modules = tmp_path / "modules"
-    monkeypatch.setitem(client.app.state.settings._data.setdefault("builder", {}), "pack_designer_modules_dir", str(modules))
-    r = client.post(f"/build/pack/api/ws/{wid}/deploy/install", json={"reason": "first"})
-    assert r.status_code == 200 and (modules / "my-bank-1.0.0.dmod").is_file()
+    assert client.get(f"/build/pack/api/ws/{wid}/dmod").content == b"PK\x03\x04"                      # the package: the one way to install it
     calls = []
 
     async def admin(method, path, ident, body=None, timeout=None, **params):
         calls.append((method, path, body))
         return {"id": "plan-1"}
-
-    async def upload(path, ident, data, headers=None, timeout=None):
-        calls.append(("UPLOAD", path, data))
-        return {"stored": True}
     monkeypatch.setattr(backend, "admin", admin)
-    monkeypatch.setattr(backend, "admin_upload", upload, raising=False)
-    r = client.post(f"/build/pack/api/ws/{wid}/deploy/plan", json={"reason": "first"})
-    assert r.status_code == 200 and r.json()["plan"] == {"id": "plan-1"}
-    assert ("UPLOAD", "/modules/store", b"PK\x03\x04") in calls
-    assert ("POST", "/modules/deployments/plans", {"action": "install", "module": "my-bank", "version": "1.0.0", "reason": "first"}) in calls
+    r = client.post(f"/build/pack/api/ws/{wid}/deploy/binding", json={"reason": "first"})
+    assert r.status_code == 200 and "binding" in r.json()
+    assert not [c for c in calls if "/modules/" in c[1]]                                              # nothing is deployed to the server
