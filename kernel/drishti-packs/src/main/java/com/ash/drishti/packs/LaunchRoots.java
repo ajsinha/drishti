@@ -84,6 +84,26 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     /** The connectors folder's environment variable, read as is by the older readers. */
     static final String CONNECTORS_ENV = "DRISHTI_CONNECTORS_DIR";
 
+    /** The development switch: modules are loaded unpacked and unverified and reloaded on change (a developer's own server). */
+    public static final String DEV = "drishti.modules.dev";
+
+    /** Whether the development switch is asked for ({@code drishti.modules.dev=true}); {@link #devRefusal} says whether it is allowed. */
+    public static boolean devAsked(org.springframework.core.env.Environment env) {
+        return env.getProperty(DEV, Boolean.class, false);
+    }
+
+    /**
+     * Why the development switch is refused, or null when it is allowed (or not asked for): never in a cluster, never under the
+     * {@code prod} or {@code production} profile (production loads only verified {@code .dmod} packages).
+     */
+    public static String devRefusal(org.springframework.core.env.Environment env, boolean inCluster) {
+        if (!devAsked(env)) {
+            return null;
+        }
+        return inCluster ? "this server is in a cluster"
+                : env.acceptsProfiles(org.springframework.core.env.Profiles.of("prod", "production")) ? "the profile is production" : null;
+    }
+
     /** A relative path setting taken under the install folder: its key, its absolute value, where the relative value came from. */
     public record Anchored(String key, String path, String from) {
     }

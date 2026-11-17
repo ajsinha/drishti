@@ -203,7 +203,10 @@ def boot_and_check(record: bool, keep: bool) -> int:
     t0 = time.monotonic()
     jars = sorted((ROOT / "lib").glob("drishti-server-*-exec.jar"))
     if not jars:
-        raise SystemExit("smoke: FAILED: no server jar (the gate's build copies it to lib/: python tools/drishti.py build jar)")
+        raise SystemExit("smoke: FAILED: no server jar (the gate's build copies it to lib/: python tools/drishti.py build all)")
+    if not list((ROOT / "modules").glob("*.dmod")) or not (ROOT / "modules" / "first-party.yaml").is_file():
+        # the images copy modules/*.dmod and first-party.yaml (the server jar holds no module): build them first
+        raise SystemExit("smoke: FAILED: no module packages in modules/ (python tools/drishti.py build modules)")
     for kind in ("server", "console"):
         sh("docker", "build", "-q", "--network", "host", "--label", LABEL, "-f", f"deploy/docker/{kind}.Dockerfile",
            "-t", f"drishti-{kind}:{TAG}", ".", stdout=subprocess.DEVNULL)

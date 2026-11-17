@@ -383,7 +383,7 @@ public final class ModuleBoot {
     }
 
     /** The {@code .dmod} files of the modules folder, sorted; folders and other files are not read. */
-    private static List<Path> packages(Path modulesHome) {
+    public static List<Path> packages(Path modulesHome) {
         if (modulesHome == null || !Files.isDirectory(modulesHome)) {
             return List.of();
         }

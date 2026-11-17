@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``drishti.py setup`` (prepare this machine) and ``drishti.py build jar`` (the server jar into <home>/lib).
+"""``drishti.py setup`` (prepare this machine) and ``drishti.py build jar`` (the server jar into <home>/lib; the modules: modulesbuild.py).
 
 setup, idempotent, on Linux, macOS and Windows alike: checks Python and Java 21+ (says which java and why), shows the install folder
 (DRISHTI_HOME, read only), the data folder (DRISHTI_DATA_DIR, writable) and the modules folder with where each came from, makes the data
@@ -32,7 +32,7 @@ from procs import LaunchError, say
 import javacmd  # noqa: E402 - tools/ is on the path through procs
 
 #: the folders a data folder holds (docs/DEPLOYMENT_AND_QA_GUIDE.md, "Prepare your environment")
-DATA_LAYOUT = ("run", "logs", "tmp", "dumps", "modules", "delta")
+DATA_LAYOUT = ("run", "logs", "tmp", "dumps", "delta")
 #: the variables setup reports (a secret's value is never shown)
 ENV_VARS = ("DRISHTI_HOME", "DRISHTI_DATA_DIR", "DRISHTI_MODULES_HOME", "DRISHTI_JAVA_HOME", "JAVA_HOME", "DRISHTI_PYTHON", "DRISHTI_PORT",
             "DRISHTI_CONSOLE_PORT", "DRISHTI_SERVER_URL", "DRISHTI_LIB_PATH", "DRISHTI_TMP_DIR", "DRISHTI_DISTRIBUTION", "DRISHTI_PACKS",
@@ -97,7 +97,13 @@ def setup(a, env: dict | None = None) -> int:
         todo.append(f"make the data folder's {', '.join(missing)}")
     else:
         line("ok", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; writable)")
-    line("ok" if modules.is_dir() else "todo", "modules", f"{modules}  ({roots['modules'][1]})")
+    import modulesbuild
+    pk = modulesbuild.packages(modules)
+    line("ok" if pk else "todo", "modules (packages)", f"{modules}  ({roots['modules'][1]}): {len(pk)} .dmod file(s)" + ("" if pk else "; python tools/drishti.py build modules"))
+    # what an older release kept under the data folder: no longer read, safe to delete (never deleted here)
+    for old in ("installed", "store", "shipped", "staging", "tombstones", "registry.json", "active.yaml"):
+        if (data / "modules" / old).exists():
+            line("todo", "old modules leftover", f"{data / 'modules' / old}: not read any more, safe to delete")
     # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted
     import module_layout
     for note in module_layout.leftovers(modules):
@@ -152,8 +158,12 @@ def setup(a, env: dict | None = None) -> int:
     settings = javacmd.settings()[0]
     say("\nNext steps" + (f" (python is {Path(sys.executable).name}; on Windows use py or python):" if procs.windows() else ":"))
     steps = [*problems, *todo]
+    import modulesbuild
     if not jar:
-        steps.append("python tools/drishti.py build jar")
+        steps.append("python tools/drishti.py build all   (the server jar into lib/ and the modules into modules/)")
+    else:
+        steps += [f"python tools/drishti.py build modules   ({w})" for w in modulesbuild.missing_report(modules)[:1]]
+        steps += [f"{w}" for w in modulesbuild.fresh_report(modules, jar)[:3]]
     steps += [f"python tools/drishti.py --settings {settings or ini} lake demo --engine java   (the demo lake)",
               f"python tools/drishti.py --settings {settings or ini} start all --demo   (server and console; drishti.py status, drishti.py stop all)"]
     for i, s in enumerate(dict.fromkeys(steps), 1):
@@ -196,12 +206,30 @@ def build_jar(a, env: dict | None = None) -> int:
     if r.returncode:
         say("the build failed: see Maven's messages above")
         return 1
+    jar = copy_exec_jar(a, home)
+    if jar is not None:
+        import modulesbuild
+        roots = javacmd.launch_roots(None, None, env, javacmd.settings()[1])
+        problems = modulesbuild.missing_report(roots["modules"][0]) + modulesbuild.fresh_report(roots["modules"][0], jar)
+        if problems:
+            say("the modules are not beside this jar (a module is a package in the modules folder, never inside the jar):")
+            for p in problems:
+                say("  " + p)
+            say("python tools/drishti.py build modules   builds them for this jar (build all does the jar and the modules)")
+        elif modulesbuild.module_folders(roots["modules"][0]):
+            say(f"the modules in {roots['modules'][0]} are current for this jar")
+    return 0
+
+
+def copy_exec_jar(a, home: Path, say_it: bool = False):
+    """The newest exec jar Maven wrote under kernel/drishti-server/target, copied into <home>/lib (one server jar there; lib/ext untouched);
+    the jar in lib/. With --no-copy: left where it is and None."""
     built = sorted((home / "kernel" / "drishti-server" / "target").glob(javacmd.JAR_GLOB), key=lambda p: p.stat().st_mtime)
     if not built:
         raise LaunchError("Maven finished but wrote no drishti-server-*-exec.jar under kernel/drishti-server/target")
     if a.no_copy:
         say(f"built {built[-1]} (--no-copy: not copied into {home / 'lib'})")
-        return 0
+        return None
     lib = javacmd.lib_dir(home)
     lib.mkdir(parents=True, exist_ok=True)
     for old in lib.glob(javacmd.JAR_GLOB):              # one server jar in lib: the one just built; lib/ext (the site's jars) is never touched
@@ -211,4 +239,4 @@ def build_jar(a, env: dict | None = None) -> int:
     shutil.copy2(built[-1], part)
     os.replace(part, lib / built[-1].name)
     say(f"built {built[-1].name}; copied into {lib}")
-    return 0
+    return lib / built[-1].name

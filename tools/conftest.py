@@ -24,3 +24,21 @@ if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
     _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
     os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
     atexit.register(shutil.rmtree, _RESOLVED, True)
+
+
+def pytest_sessionstart(session):
+    """R2: refuse a session over packages older than their module folders (the tests would pass on old content), naming the fix."""
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        return                                                       # the controller already asked
+    import sys
+    from pathlib import Path
+    launch = str(Path(__file__).resolve().parents[1] / "tools" / "launch")
+    tools = str(Path(__file__).resolve().parents[1] / "tools")
+    for d in (tools, launch):
+        if d not in sys.path:
+            sys.path.insert(0, d)
+    import modulesbuild
+    said = modulesbuild.session_refusal(Path(__file__).resolve().parents[1])
+    if said:
+        import pytest
+        pytest.exit(said, returncode=3)

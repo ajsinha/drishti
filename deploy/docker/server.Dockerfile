@@ -13,7 +13,7 @@ COPY config/ui-kit/ config/ui-kit/
 COPY config/alerts/ config/alerts/
 # the launch roots (docs/admin/CONFIGURATION.md, "Launch roots"): the modules (their packs, connectors, engines) and the configuration
 # the server reads at start, at the absolute paths the ENV below names; the server never takes a root from its working folder
-COPY modules/ modules/
+COPY modules/*.dmod modules/first-party.yaml modules/
 COPY config/distributions/ config/distributions/
 COPY config/engines/ config/engines/
 COPY config/lakes/ config/lakes/

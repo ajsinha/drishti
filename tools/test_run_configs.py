@@ -60,6 +60,9 @@ class RunConfigs(unittest.TestCase):
             elif f.name == "Drishti build server jar.run.xml":  # IntelliJ's build: the one way, drishti.py build jar (the jar into lib/)
                 self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
                 self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
+            elif f.name == "Drishti build modules.run.xml":     # IntelliJ's modules build: drishti.py build modules (the packages into <home>/modules)
+                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
+                self.assertIn("build modules", o.get("PARAMETERS"), f.name)
             else:                                            # the distributions' consoles beside the servers (run-configs/, the repository root)
                 self.assertTrue(f.name.startswith("Drishti console ("), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
                 self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
@@ -120,3 +123,14 @@ def test_the_server_run_configurations_carry_the_domain_modules():
     build = (folder / "Drishti build server jar.run.xml").read_text(encoding="utf-8")
     # one way to build: `drishti.py build jar` (Maven clean package of drishti-app, then the jar into <home>/lib), so lib/ never goes stale
     assert '$PROJECT_DIR$/tools/drishti.py' in build and 'build jar"' in build and "MavenRunConfiguration" not in build
+
+
+def test_the_debug_configuration_builds_the_modules_first_and_the_dev_switch_one_does_not():
+    """A module is a package beside the jar: the debug server builds them before it launches (python tools/drishti.py build modules);
+    the dev switch configuration loads the module folders as they are (DRISHTI_MODULES_DEV) and builds nothing."""
+    folder = ROOT / "run-configs"
+    debug = (folder / "Drishti server (debug-friendly).run.xml").read_text(encoding="utf-8")
+    assert 'run_configuration_name="Drishti build modules"' in debug
+    dev = (folder / "Drishti server (dev switch).run.xml").read_text(encoding="utf-8")
+    assert 'name="DRISHTI_MODULES_DEV" value="true"' in dev and "RunConfigurationTask" not in dev
+

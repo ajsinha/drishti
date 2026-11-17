@@ -65,7 +65,7 @@ def test_the_lake_nodes_switch_off_every_connector_whose_tables_their_lake_does_
 
 
 def test_a_nodes_own_connector_files_count_in_both_forms(tmp_path):
-    lake, own, modules, lakes = tmp_path / "lake", tmp_path / "connectors", tmp_path / "modules", tmp_path / "lakes"
+    lake, own, lakes = tmp_path / "lake", tmp_path / "connectors", tmp_path / "lakes"
     _table(lake, "trading", "trade_endur")
     own.mkdir()
     lakes.mkdir()
@@ -75,7 +75,7 @@ def test_a_nodes_own_connector_files_count_in_both_forms(tmp_path):
     (own / "gleif-store.yaml").write_text("plugin: delta\nsettings: {root: '${DRISHTI_DELTA_ROOT:./data/delta}', domain: gleif}\n", encoding="utf-8")
     (own / "trade-endur.yaml").write_text("plugin: delta\nsettings: {lake: demo, lake-tables: trading.trade_endur}\n", encoding="utf-8")
     (own / "rules.yaml").write_text("plugin: delta\nsettings: {lake: regulators, lake-tables: rules.rule}\n", encoding="utf-8")
-    off = clusterlakes.switched_off({"name": "n", "packs": "trading", "off": ["x"]}, lake, own, lakes, modules)
+    off = clusterlakes.switched_off({"name": "n", "packs": "trading", "off": ["x"]}, lake, own, lakes, [])
     assert off == ["x", "funds-store", "gleif-store"], "a lake of its own root (regulators) is not the synthetic lake's business"
 
 

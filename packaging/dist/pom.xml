@@ -25,18 +25,20 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-modules</artifactId>
+  <packaging>pom</packaging>
   <name>drishti-modules</name>
   <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): banking
     (with its code and its kernel-internals allowance, stamped with the kernel build of this build), market-data, trading, capital-markets and
-    economy and genomics, each packed by the Python packager (tools/modulepack.py) into drishti/modules/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
-    Banking, market-data, trading and genomics (the modules with a server part) go through the fourteen conformance checks (ModuleCli verify) as part of the build. The full distribution (drishti-app) installs these modules
-    by default; the thin jar (drishti-kernel-app) carries first-party.yaml only.</description>
+    economy and genomics, each packed by the Python packager (tools/modulepack.py) into target/dmod/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
+    Banking, market-data, trading and genomics (the modules with a server part) go through the fourteen conformance checks (ModuleCli verify) as part of the build.
+    Nothing here goes into the server jar: the packages are copied beside it by "python tools/drishti.py build modules" (into the install's modules folder).
+    Each is stamped for the kernel build of drishti.kernel.jar: the exec jar of this reactor by default, the jar in lib/ when "build modules" runs alone.</description>
   <properties>
-    <drishti.dmods>${project.build.outputDirectory}/drishti/modules</drishti.dmods>
+    <drishti.dmods>${project.build.directory}/dmod</drishti.dmods>
     <drishti.jars>${project.build.directory}/module-jars</drishti.jars>
     <drishti.repo>${project.basedir}/../..</drishti.repo>
     <!-- the build of this kernel, stamped into a module with a kernel-internals allowance (never a default: the jar of this reactor) -->
-    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}.jar</drishti.kernel.jar>
+    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
     <drishti.python>python3</drishti.python>
     <skipTests>false</skipTests>
   </properties>
@@ -44,6 +46,9 @@
     <!-- the kernel on the tool's class path: its build (META-INF/build-info.properties) is the one banking is stamped for -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>
+    <!-- build order only (the exec jar the packages are stamped for exists first); nothing of it is used -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-app</artifactId><version>${project.version}</version><type>pom</type><scope>provided</scope>
+      <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions></dependency>
     <!-- banking's jars go into its package, never on the kernel's class path -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><scope>provided</scope></dependency>
@@ -162,7 +167,7 @@
             <configuration>
               <arguments>
                 <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.dmods}</argument>
-                <argument>--out</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--out</argument><argument>${drishti.dmods}/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>
@@ -175,7 +180,7 @@
               <skip>${skipTests}</skip>
               <arguments>
                 <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/banking-1.0.0.dmod</argument><argument>--conformance</argument>
-                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--first-party</argument><argument>${drishti.dmods}/first-party.yaml</argument>
                 <argument>--with</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
               </arguments>
             </configuration>
@@ -188,7 +193,7 @@
               <skip>${skipTests}</skip>
               <arguments>
                 <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument><argument>--conformance</argument>
-                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--first-party</argument><argument>${drishti.dmods}/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>
@@ -200,7 +205,7 @@
               <skip>${skipTests}</skip>
               <arguments>
                 <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/trading-1.0.0.dmod</argument><argument>--conformance</argument>
-                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--first-party</argument><argument>${drishti.dmods}/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>
@@ -212,7 +217,7 @@
               <skip>${skipTests}</skip>
               <arguments>
                 <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/genomics-0.1.0.dmod</argument><argument>--conformance</argument>
-                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--first-party</argument><argument>${drishti.dmods}/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>

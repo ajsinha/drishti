@@ -63,6 +63,8 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--heap", metavar="SIZE", help="the heap limit, -Xmx (default 2g; 4g with --demo)")
         p.add_argument("--jar", metavar="FILE", help="a server jar for a one-off run (default the newest in <home>/lib: drishti.py build jar)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+        p.add_argument("--modules-dev", action="store_true", help="the development switch (drishti.modules.dev): module source folders are loaded as they are, unverified "
+                                                                  "(no .dmod needed, no stale check); refused in a cluster and under prod")
         p.add_argument("--packs", metavar="LIST", help="the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)")
         p.add_argument("--engine", help="the Delta engine: native, hadoop or auto (DRISHTI_DELTA_ENGINE)")
         p.add_argument("--lake-root", metavar="DIR", help="the Delta lake root (DRISHTI_DELTA_ROOT)")
@@ -211,6 +213,8 @@ def cmd_status(a, extra) -> int:
     dirs = [Path(d).resolve() for d in a.data_dir] if a.data_dir else [roots["data"][0]]
     for k in ("home", "data", "modules"):
         procs.say(f"{k:<8} {roots[k][0]}  ({roots[k][1]})")
+    import modulesbuild
+    procs.say(f"{'packages':<8} " + (", ".join(p.name.removesuffix(modulesbuild.PACKAGE) for p in modulesbuild.packages(roots["modules"][0])) or "none (.dmod files in the modules folder)"))
     j = javacmd.describe_java(None, None, env)
     procs.say(f"{'java':<8} {j['java'] or '-'}  ({j['why'] or j['problem']}{'' if j['ok'] else '; ' + j['problem']})")
     procs.say("")
@@ -226,6 +230,12 @@ def cmd_setup(a, extra) -> int:
 
 def cmd_build(a, extra) -> int:
     import envsetup
+    import modulesbuild
+    if a.cmd == "modules":
+        return _run(modulesbuild.build_modules, a)
+    if a.cmd == "all":
+        a.ids = []
+        return _run(modulesbuild.build_modules, a, None, True)
     return _run(envsetup.build_jar, a)
 
 
@@ -244,7 +254,7 @@ def register(groups, add) -> None:
     s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install drishti-console/requirements.txt")
     s.set_defaults(func=cmd_setup, cmd=None)
 
-    b = groups.add_parser("build", help="build jar: the server jar with Maven (clean package, never install), copied into <home>/lib")
+    b = groups.add_parser("build", help="build jar|modules|all: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")
     bs = b.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     bj = bs.add_parser("jar", help="build jar: mvn -q clean package -DskipTests -pl :drishti-app -am, then the exec jar into <home>/lib", formatter_class=RAW,
                        description="Builds the server's exec jar with the install's Maven wrapper (Java from the one lookup: --java-home, "
@@ -255,6 +265,19 @@ def register(groups, add) -> None:
     bj.add_argument("--no-copy", action="store_true", help="leave the jar in kernel/drishti-server/target only")
     bj.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
     bj.set_defaults(func=cmd_build)
+    for verb, text in (("modules", "the module packages (.dmod) and first-party.yaml into <home>/modules, stamped for the server jar in <home>/lib"),
+                       ("all", "the server jar into <home>/lib, then the modules into <home>/modules: one Maven run, everything stamped for that jar")):
+        bm = bs.add_parser(verb, help=f"build {verb}: {text}", formatter_class=RAW,
+                           description=f"Builds {text}. The server jar holds no module: a module is a package beside it. Modules with Java are built "
+                                       "and packed by Maven (packaging/dist, through the one packer tools/modulepack.py); the others are packed from their folders.",
+                           epilog=f"examples:\n  {P} build {verb}" + (f"\n  {P} build modules banking\n  {P} build modules source-endur   (no Maven: packed from its folder)" if verb == "modules" else ""))
+        if verb == "modules":
+            bm.add_argument("ids", nargs="*", metavar="ID", help="only these modules (default: every module folder under <home>/modules)")
+        bm.add_argument("--java-home", metavar="DIR", help="the JDK to build with (Java 21+)")
+        bm.add_argument("--offline", action="store_true", help="Maven offline (-o)")
+        bm.add_argument("--no-copy", action="store_true", help=("leave the jar in kernel/drishti-server/target only" if verb == "all" else argparse.SUPPRESS))
+        bm.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
+        bm.set_defaults(func=cmd_build)
 
     for verb, fn in (("start", cmd_start), ("stop", cmd_stop)):
         g = groups.add_parser(verb, help=f"{verb} server|console|all|cluster: " + ("start Drishti (Java 21+, the jar of <home>/lib, logs and pid files under the data folder)"

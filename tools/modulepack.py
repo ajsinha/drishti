@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import os
 import sys
 import zipfile
@@ -94,14 +95,23 @@ def kernel_build_of(lib: Path) -> str | None:
 
 
 def _build_of_jars(jars) -> str | None:
+    """The build of the first server jar that says it: a thin jar holds META-INF/build-info.properties; the executable jar holds the
+    thin one as BOOT-INF/lib/drishti-server-<version>.jar (the server's own classes are not in it)."""
     for jar in jars:
         try:
             with zipfile.ZipFile(jar) as z:
+                names = set(z.namelist())
                 for name in ("BOOT-INF/classes/META-INF/build-info.properties", "META-INF/build-info.properties"):
-                    if name in z.namelist():
+                    if name in names:
                         props = _properties(z.read(name).decode("utf-8", "replace"))
                         if props.get("build.artifact") == "drishti-server":
                             return f"{props.get('build.version')}+{props.get('build.time')}"
+                for nested in sorted(n for n in names if n.startswith("BOOT-INF/lib/drishti-server-") and n.endswith(".jar")):
+                    with zipfile.ZipFile(io.BytesIO(z.read(nested))) as inner:
+                        if "META-INF/build-info.properties" in inner.namelist():
+                            props = _properties(inner.read("META-INF/build-info.properties").decode("utf-8", "replace"))
+                            if props.get("build.artifact") == "drishti-server":
+                                return f"{props.get('build.version')}+{props.get('build.time')}"
         except zipfile.BadZipFile:
             continue
     return None

@@ -126,7 +126,10 @@ def test_banking_is_not_a_carrier_of_the_market_data_pack():
 
 
 def test_every_module_with_a_java_block_is_shipped_or_listed_as_not_shipped_with_a_reason():
-    with_code = {p.parent.name for p in MODULES.glob("*/module.yaml") if (yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("java")}
+    if not verifier_built():
+        pytest.skip("needs the server jar in lib/ (python tools/drishti.py build jar): the modules are asked of its resolver")
+    import resolved
+    with_code = {mid for mid, m in resolved.module_list().items() if (yaml.safe_load((m.home / "module.yaml").read_text(encoding="utf-8")) or {}).get("java")}
     shipped = shipped_by_dist()
     missing = sorted(with_code - shipped - set(NOT_SHIPPED))
     assert not missing, f"{missing}: has a java: block but packaging/dist does not pack it (add pack-<module> there, or list it in NOT_SHIPPED with the reason)"

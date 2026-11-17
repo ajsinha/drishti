@@ -29,7 +29,7 @@ COPY config/packs/ shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ shipped/ui-kit/
 # the modules and the distribution files ship in the image (config/ is the node's EFS mount): absolute roots below
-COPY modules/ shipped/modules/
+COPY modules/*.dmod modules/first-party.yaml shipped/modules/
 COPY config/distributions/ shipped/distributions/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
 COPY bin/drishti-node.sh bin/drishti-node.sh

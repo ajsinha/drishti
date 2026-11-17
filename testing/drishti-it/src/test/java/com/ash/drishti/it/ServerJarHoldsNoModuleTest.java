@@ -23,13 +23,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
  * Guard G1 (i7a): the server's executable jar is the kernel and nothing else. It holds no {@code .dmod}, no {@code first-party.yaml} and
  * no class of a module's package ({@code com/ash/drishti/<module>/}): a module is a package beside the jar, never inside it. The jar is
- * the one {@code -Ddrishti.exec.jar=FILE} names (the build sets it once the modules are built beside the jar).
+ * the one {@code -Ddrishti.exec.jar=FILE} names (the pom sets it: the exec jar of this reactor, built before this project).
  */
 class ServerJarHoldsNoModuleTest {
 
@@ -37,7 +36,10 @@ class ServerJarHoldsNoModuleTest {
     static final List<String> MODULE_PACKAGES = List.of("com/ash/drishti/banking/", "com/ash/drishti/trading/", "com/ash/drishti/marketdata/",
             "com/ash/drishti/genomics/");
 
-    @Disabled("i7a: enabled in I6 (A3 build: modules beside the jar, drishti-app without drishti-modules)")
+    /** The jars of the modules (and of the build that packs them): never among the server jar's nested libraries. */
+    static final List<String> MODULE_JARS = List.of("drishti-modules-", "drishti-banking-", "drishti-compute-banking-", "drishti-trading-",
+            "drishti-market-data-", "genomics-");
+
     @Test
     void theExecJarHoldsNoModule() throws IOException {
         String named = System.getProperty("drishti.exec.jar", "");
@@ -54,7 +56,8 @@ class ServerJarHoldsNoModuleTest {
             f.stream().map(e -> e.getName()).forEach(n -> {
                 String leaf = n.substring(n.lastIndexOf('/') + 1);
                 boolean inModulePackage = MODULE_PACKAGES.stream().anyMatch(p -> n.contains(p));
-                if (leaf.endsWith(".dmod") || leaf.equals("first-party.yaml") || inModulePackage) {
+                boolean moduleJar = n.startsWith("BOOT-INF/lib/") && MODULE_JARS.stream().anyMatch(leaf::startsWith);
+                if (leaf.endsWith(".dmod") || leaf.equals("first-party.yaml") || inModulePackage || moduleJar) {
                     out.add(n);
                 }
             });
@@ -67,11 +70,13 @@ class ServerJarHoldsNoModuleTest {
     void theScanSeesAModuleInAJar(@org.junit.jupiter.api.io.TempDir Path tmp) throws IOException {
         Path jar = tmp.resolve("bad.jar");
         try (var out = new java.util.jar.JarOutputStream(Files.newOutputStream(jar))) {
-            for (String n : List.of("BOOT-INF/classes/com/ash/drishti/banking/Var.class", "modules/banking-1.0.0.dmod", "ok/Kernel.class")) {
+            for (String n : List.of("BOOT-INF/classes/com/ash/drishti/banking/Var.class", "modules/banking-1.0.0.dmod", "BOOT-INF/lib/drishti-modules-1.jar",
+                    "BOOT-INF/lib/drishti-server-1.jar", "ok/Kernel.class")) {
                 out.putNextEntry(new java.util.zip.ZipEntry(n));
                 out.closeEntry();
             }
         }
-        assertThat(holding(jar)).containsExactly("BOOT-INF/classes/com/ash/drishti/banking/Var.class", "modules/banking-1.0.0.dmod");
+        assertThat(holding(jar)).containsExactly("BOOT-INF/classes/com/ash/drishti/banking/Var.class", "modules/banking-1.0.0.dmod",
+                "BOOT-INF/lib/drishti-modules-1.jar");
     }
 }

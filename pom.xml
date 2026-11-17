@@ -81,9 +81,8 @@
     <module>modules/banking</module>
     <module>modules/trading</module>
     <module>modules/market-data</module>
-    <module>packaging/dist</module>
     <module>packaging/drishti-app</module>
-    <module>packaging/drishti-kernel-app</module>
+    <module>packaging/dist</module>
     <module>testing/drishti-it</module>
     <module>testing/drishti-benchmarks</module>
   </modules>
@@ -205,7 +204,6 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>

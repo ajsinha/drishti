@@ -131,18 +131,31 @@ def _yaml(path: Path):
         return None
 
 
-def definitions(modules: Path, packs: Iterable[str], own: Path | None) -> dict[str, dict]:
-    """Every connector a node may run, by name: the modules' templates, the connectors of its packs (pack.yaml connectors:) and its own
-    connector files (the node's connectors folder), the later winning."""
+def module_homes() -> list[Path]:
+    """The folder of every module the server boots (the Java resolver's answer, read through tools/resolved.py), by id."""
+    import resolved
+    return [m.home for _, m in sorted(resolved.module_list().items())]
+
+
+def pack_manifests(packs: Iterable[str]) -> list[Path]:
+    """The pack.yaml of each named pack (the Java resolver's answer, read through tools/resolved.py)."""
+    import resolved
+    found = (resolved.current().packs.find(n) for n in packs)
+    return [p.manifest for p in found if p is not None]
+
+
+def definitions(modules: Iterable[Path], packs: Iterable[str], own: Path | None, manifests: Iterable[Path] = ()) -> dict[str, dict]:
+    """Every connector a node may run, by name: the modules' templates (``modules``: each module's folder), the connectors of its packs
+    (pack.yaml connectors:) and its own connector files (the node's connectors folder), the later winning."""
     out: dict[str, dict] = {}
-    for f in sorted(modules.glob("*/connectors/*.yaml")):
+    modules = list(modules)
+    for f in sorted(f for m in modules for f in m.glob("connectors/*.yaml")):
         d = _yaml(f)
         if isinstance(d, dict):
             out[str(d.get("name") or f.stem)] = d
-    wanted = set(packs)
-    for f in sorted(modules.glob("*/packs/*/pack.yaml")):
+    for f in manifests:
         d = _yaml(f)
-        if isinstance(d, dict) and d.get("pack") in wanted:
+        if isinstance(d, dict):
             out.update({str(k): v for k, v in (d.get("connectors") or {}).items() if isinstance(v, dict)})
     for f in sorted(own.glob("*.yaml")) if own and own.is_dir() else []:
         d = _yaml(f)
@@ -170,11 +183,11 @@ def tables_missing(defs: dict[str, dict], lake: Path, lakes: set[str]) -> list[s
     return sorted(out)
 
 
-def switched_off(node: dict, lake: Path | None, own: Path | None, lakes_dir: Path, modules: Path = ROOT / "modules") -> list[str]:
+def switched_off(node: dict, lake: Path | None, own: Path | None, lakes_dir: Path, modules: Iterable[Path] | None = None) -> list[str]:
     """The connectors a node starts switched off: the cluster file's off: list, and, for a node with a synthetic lake, every connector
     whose tables that lake does not hold."""
     off = list(node.get("off") or [])
     if lake is not None:
         packs = [p.strip() for p in str(node.get("packs") or "").split(",") if p.strip()]
-        off += [c for c in tables_missing(definitions(modules, packs, own), lake, root_lakes(lakes_dir)) if c not in off]
+        off += [c for c in tables_missing(definitions(module_homes(), packs, own, pack_manifests(packs)) if modules is None else definitions(modules, packs, own), lake, root_lakes(lakes_dir)) if c not in off]
     return off

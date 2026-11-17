@@ -350,7 +350,8 @@ def test_setup_check_changes_nothing_and_setup_is_idempotent(tmp_path):
     r = run("setup", "--check", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
     assert r.returncode == 1 and not data.exists() and not envs.exists(), r.stdout
     r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
-    assert all((data / d).is_dir() for d in ("run", "logs", "tmp", "modules", "delta")), r.stdout + r.stderr
+    assert all((data / d).is_dir() for d in ("run", "logs", "tmp", "delta")), r.stdout + r.stderr
+    assert not (data / "modules").exists(), "the modules are packages in <home>/modules, not a folder of the data folder"
     assert not (data / "lib").exists(), "every jar is under the home (lib, lib/ext), never the data folder"
     ini = (envs / "dev.ini").read_text(encoding="utf-8")
     assert f"drishti.home={ROOT.resolve().as_posix()}" in ini and f"drishti.data.dir={data.resolve().as_posix()}" in ini

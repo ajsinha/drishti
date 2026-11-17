@@ -138,6 +138,23 @@ def find_jar(given: str | None, home: Path) -> Path:
         raise LaunchError(str(e), 2 if given else 1) from None
 
 
+def check_modules(a, modules: Path, jar: Path) -> str:
+    """The modules beside the jar: how many packages the folder holds (a line for the start's output); LaunchError in words when this
+    checkout's packages cannot be run: sources and no package, or a package older than its folder or built for another jar (R2).
+    An install holds packages and no sources and is never stale; an empty folder starts a server with no module (Health says so)."""
+    import modulesbuild
+    dmods = modulesbuild.packages(modules)
+    if getattr(a, "modules_dev", False):
+        return f"modules: development switch on, the module folders of {modules} load as they are (unverified)"
+    problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
+    if problems:
+        raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
+                          + "\n(python tools/drishti.py build all builds the jar and every module; start server --modules-dev loads the folders as they are)")
+    if not dmods:
+        return f"modules: none ({modules} holds no .dmod: the server starts with no module)"
+    return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"
+
+
 def start(a, env: dict | None = None) -> int:
     """Starts one server (or a cluster node) from the options of ``drishti.py start server``; the exit code."""
     env = dict(os.environ if env is None else env)
@@ -181,6 +198,7 @@ def start(a, env: dict | None = None) -> int:
     why = javacmd.locate_java(None, a.java_home, env)[1]
     major = javacmd.java_version(java)
     jar = find_jar(a.jar, home)
+    modules_line = check_modules(a, roots["modules"][0], jar)
     if not (home / "config" / "packs").is_dir():
         warn(f"no config/packs/ in {home}: the server starts without domain packs")
 
@@ -228,6 +246,8 @@ def start(a, env: dict | None = None) -> int:
         flags.append(f"-Ddrishti.settings.file={settings}")
     workdir = Path(a.workdir).resolve() if a.workdir else home
     flags += memory_flags(workdir, env)
+    if getattr(a, "modules_dev", False):
+        flags.append("-Ddrishti.modules.dev=true")
     flags += list(a.java_opt or [])
     args = [f"--server.port={port}"]
     if a.background:
@@ -239,6 +259,7 @@ def start(a, env: dict | None = None) -> int:
         f"packs {env.get('DRISHTI_PACKS') or 'the default'}, data {server_data}")
     for line in roots_line(roots, java, why):
         say(line)
+    say("  " + modules_line)
     if net:
         say(f"  Drishti*net folder {net}, advertising {url}")
     if dev:

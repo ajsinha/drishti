@@ -194,6 +194,42 @@ def server_jar() -> Path:
     return JAR
 
 
+#: beside the pinned modules: the names, sizes and SHA-256 of the files they were copied from
+MODULES_SOURCE = "modules.source"
+
+
+def modules_pin() -> Path:
+    """<data>/stack/modules/: the running copy of THE modules of <home>/modules (the .dmod files and first-party.yaml), by the same rule
+    as the jar: refreshed at every start whenever they differ from what was copied (names, sizes and SHA-256, never times), so a rebuild
+    never changes the files under a running node, and a node restarted alone gets the same jar and the same packages. Each node is given
+    this folder (DRISHTI_MODULES_HOME). In a checkout the packages must be current first (the same words as ``start server``)."""
+    import modulesbuild
+    src = javacmd.launch_roots(None, None, dict(os.environ), javacmd.settings()[1])["modules"][0]
+    problems = modulesbuild.missing_report(src) or modulesbuild.fresh_report(src, javacmd.server_jar())
+    if problems:
+        sys.exit("the modules beside the jar are not current:\n  " + "\n  ".join(problems) + "\n(python tools/drishti.py build all)")
+    files = [*modulesbuild.packages(src), *([src / "first-party.yaml"] if (src / "first-party.yaml").is_file() else [])]
+    dest = at.data / "stack" / "modules"
+    want = "\n".join(f"{f.name} {f.stat().st_size} {_sha256(f)}" for f in files)
+    mark = dest / MODULES_SOURCE
+    try:
+        have = mark.read_text(encoding="utf-8").strip() if dest.is_dir() else ""
+    except OSError:
+        have = ""
+    if have != want:
+        dest.mkdir(parents=True, exist_ok=True)
+        for f in files:
+            part = dest / (f.name + ".part")
+            shutil.copy2(f, part)
+            os.replace(part, dest / f.name)
+        for old in [*dest.glob("*" + modulesbuild.PACKAGE), *dest.glob("first-party.yaml")]:
+            if old.name not in {f.name for f in files}:
+                old.unlink()
+        mark.write_text(want + "\n", encoding="utf-8")
+        say(f"modules: {len([f for f in files if f.name.endswith(modulesbuild.PACKAGE)])} package(s) copied to {dest}")
+    return dest
+
+
 # -- process ids -----------------------------------------------------------------------------------------------------------------
 def pid_file(name: str) -> Path:
     if name == CONSOLE or name.startswith(CONSOLE + "-"):         # console, or console-<name> of a stack file's consoles: list
@@ -334,7 +370,7 @@ def run_command(module: str, verb: str, args: list[str], env: dict | None = None
         javacmd.set_settings(before[0] or None, before[1])
 
 
-def start_node(stack: dict, node: dict, jar: Path) -> bool:
+def start_node(stack: dict, node: dict, jar: Path, modules: Path | None = None) -> bool:
     """One node through ``drishti.py start server``: its Drishti*net folder, its own data folder (a node with a home of its own), the stack's
     settings and secrets, in the background; pid, log and temp folder in the data folder (<data>/run/server-<node>.pid)."""
     name, port = node["name"], node["port"]
@@ -351,6 +387,8 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
     node_data = env.pop("DRISHTI_NODE_DATA", "")
     env.pop("DRISHTI_DATA_DIR", None)
     env["DRISHTI_PYTHON"] = python()
+    if modules is not None:
+        env["DRISHTI_MODULES_HOME"] = str(modules)        # the pinned copy: every node runs the same packages
     if stack.get("java") and not (env.get("DRISHTI_JAVA_HOME") or env.get("JAVA_HOME")):
         env["DRISHTI_JAVA_HOME"] = javacmd.java_home_of(stack["java"])   # the cluster file's java:, when nothing names a JDK
     args = ["--node", name, "--node-dir", env.pop("DRISHTI_NET_DIR"), "--port", str(port), "--heap", str(node.get("heap", "1536m")),
@@ -424,10 +462,11 @@ def start(names: list[str]) -> int:
         return 2
     secrets()
     jar = server_jar()
+    modules = modules_pin()
     ok = True
     for node in stack["nodes"]:
         if not names or node["name"] in names:
-            ok = start_node(stack, node, jar) and ok
+            ok = start_node(stack, node, jar, modules) and ok
     for c in consoles(stack):
         if _console_named(c, names):
             ok = start_console(stack, c) and ok

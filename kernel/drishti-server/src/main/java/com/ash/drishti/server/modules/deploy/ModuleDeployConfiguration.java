@@ -131,19 +131,18 @@ public class ModuleDeployConfiguration {
     }
 
     /**
-     * Development mode ({@code drishti.modules.dev}, default false): the folders of {@code drishti.modules.path} are loaded as exploded
-     * modules, unverified, and reloaded when they change. Refused (with an error in the log, and nothing exploded loaded) in a cluster and
-     * under the {@code prod} or {@code production} profile: production loads only verified {@code .dmod} packages.
+     * Development mode (the switch lives in {@link com.ash.drishti.packs.LaunchRoots#DEV}, default false): the folders of
+     * {@code drishti.modules.path} are loaded as exploded modules, unverified, and reloaded when they change. Refused (with an error in
+     * the log, and nothing exploded loaded) where {@link com.ash.drishti.packs.LaunchRoots#devRefusal} says so.
      */
     static List<Path> development(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
-        if (!env.getProperty("drishti.modules.dev", Boolean.class, false)) {
+        if (!com.ash.drishti.packs.LaunchRoots.devAsked(env)) {
             return List.of();
         }
         com.ash.drishti.server.net.NetService n = net.getIfAvailable();
-        String refused = n != null && n.running() ? "this server is in a cluster"
-                : env.acceptsProfiles(org.springframework.core.env.Profiles.of("prod", "production")) ? "the profile is production" : null;
+        String refused = com.ash.drishti.packs.LaunchRoots.devRefusal(env, n != null && n.running());
         if (refused != null) {
-            LoggerFactory.getLogger(ModuleNode.class).error("drishti.modules.dev=true is refused: {}; only verified .dmod packages load", refused);
+            LoggerFactory.getLogger(ModuleNode.class).error("{}=true is refused: {}; only verified .dmod packages load", com.ash.drishti.packs.LaunchRoots.DEV, refused);
             return List.of();
         }
         return modulesPath(env);
@@ -209,7 +208,7 @@ public class ModuleDeployConfiguration {
             nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
             if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
                 e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
-                        e.getApplicationContext().getEnvironment()).resolve("shipped")), "the distribution")
+                        e.getApplicationContext().getEnvironment()).resolve("shipped"), e.getApplicationContext().getEnvironment()), "the distribution")
                         .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
             }
         } finally {
@@ -225,27 +224,29 @@ public class ModuleDeployConfiguration {
     }
 
     /**
-     * The first-party modules the distribution carries ({@code drishti/modules/*.dmod} on the class path: the full jar has banking,
-     * market-data, capital-markets and economy; the thin jar none), copied out to {@code folder} so they install like any package.
+     * The first-party modules the distribution carries: the packages ({@code *.dmod}) beside the server's jar, in the modules folder
+     * ({@code drishti.modules.home}, written by {@code drishti.py build modules}), copied out to {@code folder} so they install like any
+     * package. The server's jar holds none; with no modules folder (or {@code none}) the list is empty.
      */
-    static List<Path> shipped(Path folder) {
+    static List<Path> shipped(Path folder, Environment env) {
+        String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
+        if (home.isEmpty() || "none".equals(home)) {
+            return List.of();
+        }
+        List<Path> found = com.ash.drishti.module.runtime.ModuleBoot.packages(Path.of(home).toAbsolutePath().normalize());
         List<Path> out = new ArrayList<>();
         try {
-            org.springframework.core.io.Resource[] all = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(
-                    ModuleDeployConfiguration.class.getClassLoader()).getResources("classpath*:drishti/modules/*.dmod");
-            if (all.length == 0) {
+            if (found.isEmpty()) {
                 return out;
             }
             java.nio.file.Files.createDirectories(folder);
-            for (org.springframework.core.io.Resource r : all) {
-                Path to = folder.resolve(java.util.Objects.requireNonNull(r.getFilename()));
-                try (java.io.InputStream in = r.getInputStream()) {
-                    java.nio.file.Files.copy(in, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                }
+            for (Path from : found) {
+                Path to = folder.resolve(from.getFileName().toString());
+                java.nio.file.Files.copy(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 out.add(to);
             }
         } catch (java.io.IOException ex) {
-            throw new java.io.UncheckedIOException("the distribution's modules do not read", ex);
+            throw new java.io.UncheckedIOException("the modules folder's packages do not read", ex);
         }
         return out;
     }
