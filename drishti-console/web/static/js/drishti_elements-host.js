@@ -18,6 +18,7 @@
    routes are told to Elements. The live-set client, the grid's pivot link and the data client read these endpoints (with none they
    say the feature is off); the loader learns Drishti's own libraries (drishti-insight, drishti-renderer, drishti-risk), which live
    under static/elements/, so a page may load them by name. */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
   var E = window.Drishti && window.Drishti.elements, core = E && E.core;
