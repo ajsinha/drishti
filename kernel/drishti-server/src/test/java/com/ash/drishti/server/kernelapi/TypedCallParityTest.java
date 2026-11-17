@@ -67,7 +67,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code drishti.business-date.today} fixed.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.live-sets.modules-dir=../../modules",
+        "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
         "drishti.lenses-dir=../../config/lenses", "drishti.rachana.hot-reload=false",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db", "drishti.identity.iterations=1000",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
@@ -333,7 +333,7 @@ class TypedCallParityTest {
     @org.springframework.context.annotation.Import(Probes.class)
     @NestedTestConfiguration(NestedTestConfiguration.EnclosingConfiguration.OVERRIDE)
     @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-            "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.live-sets.modules-dir=../../modules",
+            "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
             "drishti.lenses-dir=../../config/lenses", "drishti.rachana.hot-reload=false", "drishti.business-date.today=2026-11-06",
             "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db",
             "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",

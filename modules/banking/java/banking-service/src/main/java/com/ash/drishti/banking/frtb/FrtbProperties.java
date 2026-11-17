@@ -41,9 +41,10 @@ public record FrtbProperties(Boolean enabled, String parametersDir, String sensi
 
     public FrtbProperties {
         enabled = enabled == null || enabled;
-        // config/engines/frtb-sa.yaml names it under ${drishti.modules.home}; without that file, under the server's modules folder (LaunchRoots)
-        parametersDir = blank(parametersDir) ? java.nio.file.Path.of(com.ash.drishti.api.Roots.modules(), "banking", "packs",
-                "market-risk", "capital").toString() : parametersDir.strip();
+        // config/engines/frtb-sa.yaml names it under ${drishti.module.dir.banking}; without that file, under banking's folder as the module
+        // boot gave it (KERNEL_AND_MODULES.md section 4.2.1)
+        parametersDir = blank(parametersDir) || parametersDir.strip().startsWith("/packs/") ? bankingDir().resolve("packs").resolve("market-risk")
+                .resolve("capital").toString() : parametersDir.strip();
         sensitivityKind = blank(sensitivityKind) ? "position-sensitivity" : sensitivityKind.strip();
         factorKind = blank(factorKind) ? "risk-factor" : factorKind.strip();
         defaultRiskKind = blank(defaultRiskKind) ? "default-risk" : defaultRiskKind.strip();
@@ -53,6 +54,14 @@ public record FrtbProperties(Boolean enabled, String parametersDir, String sensi
         recipesDir = blank(recipesDir) ? com.ash.drishti.api.Roots.data("frtb/recipes") : recipesDir.strip();
         cacheMinutes = cacheMinutes == null || cacheMinutes < 1 ? 10 : cacheMinutes;
         playgroundTemplate = playgroundTemplate == null ? "" : playgroundTemplate.strip();
+    }
+
+    /** Banking's folder as the module boot gave this process ({@code ModuleHomes}: published, else read from the process's settings). */
+    private static java.nio.file.Path bankingDir() {
+        return com.ash.drishti.api.resolution.ModuleHomes.current().flatMap(h -> h.dir("banking"))
+                .or(() -> com.ash.drishti.api.resolution.ModuleHomes.resolve(System::getProperty).dir("banking"))
+                .orElseThrow(() -> new IllegalStateException("the FRTB parameters' folder: banking is not among the modules the boot gave this"
+                        + " process; set drishti.frtb.parameters-dir (DRISHTI_FRTB_PARAMETERS)"));
     }
 
     /** The defaults (tests, and a server without the block). */

@@ -72,6 +72,64 @@ class ModuleHomesTest {
         assertThat(h.dirProperties()).containsOnlyKeys("drishti.module.dir.banking");
     }
 
+    /** The vector {@code tools/test_resolved.py} checks its own fingerprint of a modules folder against: one formula, two languages. */
+    @Test
+    void theFingerprintIsTheSha256OfTheIdentityLines() {
+        ModuleHomes h = ModuleHomes.of(List.of(home("banking", A),
+                new ModuleHomes.Home("genomics", "0.1.0", Path.of("/src/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
+
+        assertThat(h.fingerprint()).isEqualTo("f7339103d32cab19ed228794976e07e9be7eb28dc4f104c10dceaba7d2cf2f29");
+    }
+
+    @Test
+    void theValueTravelsAsOneSettingWhateverItsFolders() {
+        ModuleHomes h = ModuleHomes.of(List.of(home("banking", A), new ModuleHomes.Home("genomics", "0.1.0",
+                Path.of("/src/a folder, with: odd%chars/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
+
+        assertThat(ModuleHomes.fromProperty(h.toProperty())).isEqualTo(h);
+        assertThat(ModuleHomes.fromProperty("")).isEqualTo(ModuleHomes.none());
+        assertThat(ModuleHomes.of(k -> ModuleHomes.PROPERTY.equals(k) ? h.toProperty() : null)).contains(h);
+        assertThat(ModuleHomes.of(k -> null)).isEmpty();
+        assertThatThrownBy(() -> ModuleHomes.fromProperty("banking:1.0.0")).hasMessageContaining("is not <id>:<version>");
+    }
+
+    @Test
+    void sourceModeReadsEveryModuleFolderOfACheckout(@org.junit.jupiter.api.io.TempDir Path tmp) throws java.io.IOException {
+        java.nio.file.Files.createDirectories(tmp.resolve("modules/capital-markets"));
+        java.nio.file.Files.writeString(tmp.resolve("modules/capital-markets/module.yaml"), "id: CapitalMarkets\nversion: 1.2.0\n");
+        java.nio.file.Files.createDirectories(tmp.resolve("modules/dist"));                     // no module.yaml: not a module
+        java.nio.file.Files.createDirectories(tmp.resolve("modules/bare"));
+        java.nio.file.Files.writeString(tmp.resolve("modules/bare/module.yaml"), "packs: []\n");
+
+        ModuleHomes h = ModuleHomes.source(tmp);
+
+        assertThat(h.homes().keySet()).containsExactly("bare", "capitalmarkets");
+        assertThat(h.home("capitalmarkets").orElseThrow().version()).isEqualTo("1.2.0");
+        assertThat(h.home("capitalmarkets").orElseThrow().dir()).isEqualTo(tmp.resolve("modules/capital-markets").toAbsolutePath().normalize());
+        assertThat(h.home("bare").orElseThrow().origin()).isEqualTo(ModuleHomes.Origin.DEVELOPMENT);
+        assertThat(ModuleHomes.source(tmp.resolve("no-checkout")).homes()).isEmpty();
+    }
+
+    /** With no published value, until i7a's I8, the readers take the old store and folders: the folders, then the store's active installs. */
+    @Test
+    void withNoBootTheOldStoreAndFoldersAreRead(@org.junit.jupiter.api.io.TempDir Path tmp) throws java.io.IOException {
+        java.nio.file.Files.createDirectories(tmp.resolve("modules/genomics"));
+        java.nio.file.Files.writeString(tmp.resolve("modules/genomics/module.yaml"), "id: genomics\nversion: 0.1.0\n");
+        Path installed = java.nio.file.Files.createDirectories(tmp.resolve("data/modules/installed/genomics/0.2.0"));
+        java.nio.file.Files.writeString(installed.resolve("module.yaml"), "id: genomics\nversion: 0.2.0\n");
+        java.nio.file.Files.writeString(tmp.resolve("data/modules/installed/active.yaml"), "modules: {genomics: 0.2.0}\n");
+        java.util.Map<String, String> p = java.util.Map.of(LegacyModules.HOME, tmp.resolve("modules").toString(), "drishti.data.dir",
+                tmp.resolve("data").toString());
+
+        ModuleHomes h = ModuleHomes.resolve(p::get);
+
+        assertThat(h.home("genomics").orElseThrow().version()).as("the store's active install wins the id").isEqualTo("0.2.0");
+        assertThat(ModuleHomes.resolve(k -> LegacyModules.HOME.equals(k) ? LegacyModules.NONE : null).homes()).isEmpty();
+        ModuleHomes booted = ModuleHomes.of(List.of(home("banking", A)));
+        assertThat(ModuleHomes.resolve(k -> ModuleHomes.PROPERTY.equals(k) ? booted.toProperty() : p.get(k))).as("a boot's value wins")
+                .isEqualTo(booted);
+    }
+
     private static ModuleHomes.Home home(String id, String hash) {
         return new ModuleHomes.Home(id, "1.0.0", Path.of("/cache/" + id), hash, ModuleHomes.Origin.FIRST_PARTY);
     }

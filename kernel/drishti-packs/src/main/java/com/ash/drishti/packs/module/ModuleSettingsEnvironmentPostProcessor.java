@@ -77,20 +77,17 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
         env.getPropertySources().addLast(new MapPropertySource(SOURCE + "-info", info));
     }
 
-    /** The settings schema of every module whose manifest declares one, by module id (the manifests folder, then the packaged modules). */
+    /** The settings schema of every module whose manifest declares one, by module id (the module boot's modules, then the packaged ones). */
     public static Map<String, ModuleSettingsSchema> schemas(org.springframework.core.env.Environment env) {
         Map<String, ModuleSettingsSchema> out = new LinkedHashMap<>();
-        Path dir = com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.modules.home", env.getProperty(Distributions.MODULES_DIR, com.ash.drishti.api.Roots.modules())));
-        if (Files.isDirectory(dir)) {
-            try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
-                for (Path m : modules) {
-                    Path f = m.resolve("module.yaml");
-                    if (Files.isRegularFile(f)) {
-                        add(out, YAML.readTree(f.toFile()));
-                    }
+        for (com.ash.drishti.api.resolution.ModuleHomes.Home h : Distributions.homes(env).homes().values()) {
+            Path f = h.dir().resolve("module.yaml");
+            if (Files.isRegularFile(f)) {
+                try {
+                    add(out, YAML.readTree(f.toFile()));
+                } catch (IOException e) {
+                    throw new IllegalStateException("the module manifest " + f + " cannot be read: " + e.getMessage(), e);
                 }
-            } catch (IOException e) {
-                throw new IllegalStateException("module manifests under " + dir + " cannot be read: " + e.getMessage(), e);
             }
         }
         for (com.ash.drishti.registry.ModulePackages.Package p : Distributions.packages(env)) {

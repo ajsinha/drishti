@@ -34,14 +34,23 @@ import java.util.function.Function;
  * @param siteDir      the site's packs ({@code drishti.packs.site-dir}, its former name {@code drishti.packs.dir}; default {@code ./config/packs})
  * @param installedDir packs an administrator deployed, part of the site ({@code drishti.packs.installed-dir}; default {@code <data>/packs/installed})
  * @param kernelDir    the kernel's packs ({@code drishti.kernel.packs-dir}; default {@code ./config/packs/core}), never read as site packs
- * @param modulesHome  the modules shipped as folders ({@code drishti.modules.home}; default {@code ./modules})
- * @param modulesPath  the store of modules installed from a {@code .dmod} ({@code drishti.modules.path}, else {@code drishti.module-deploy.dir};
- *                     default {@code <data>/modules})
+ * @param modulesHome  the modules folder ({@link LegacyModules#HOME}; default {@code ./modules}): shown in the layout; its modules are read
+ *                     from it only when no package was booted ({@link LegacyModules}, until i7a's I8)
+ * @param modulesPath  the module store of i6 ({@code drishti.modules.path}, else {@code drishti.module-deploy.dir}; default
+ *                     {@code <data>/modules}): read only through {@link LegacyModules}, and only when no package was booted
+ * @param homes        the module boot's result (packages, or source mode); null: no package was booted, the modules come from the old
+ *                     store and folders, read at each resolution
  */
-public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath, List<Path> extraDirs) {
+public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath, List<Path> extraDirs,
+        ModuleHomes homes) {
 
     public ResolutionSettings {
         extraDirs = extraDirs == null ? List.of() : List.copyOf(extraDirs);
+    }
+
+    /** As above, the modules from the old store and folders. */
+    public ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir, Path modulesHome, Path modulesPath, List<Path> extraDirs) {
+        this(siteDir, installedDir, kernelDir, modulesHome, modulesPath, extraDirs, null);
     }
 
     /** As above, with no extra folders of packs. */
@@ -49,25 +58,33 @@ public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir
         this(siteDir, installedDir, kernelDir, modulesHome, modulesPath, List.of());
     }
 
+    /** These settings with the module boot's result as the modules. */
+    public ResolutionSettings withHomes(ModuleHomes h) {
+        return new ResolutionSettings(siteDir, installedDir, kernelDir, modulesHome, modulesPath, extraDirs, h);
+    }
+
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
-    /** The settings of a server or a tool, from its resolved properties (null when not set). */
+    /**
+     * The settings of a server or a tool, from its resolved properties (null when not set). The modules: the module boot's result the
+     * properties carry ({@link ModuleHomes#PROPERTY}), else the old store and folders.
+     */
     public static ResolutionSettings of(Function<String, String> property) {
         String data = or(property.apply("drishti.data.dir"), com.ash.drishti.api.Roots.data());
         String newSite = property.apply("drishti.packs.site-dir");
         String site = or(newSite, or(property.apply("drishti.packs.dir"), com.ash.drishti.api.Roots.config("packs")));
-        String home = or(property.apply("drishti.modules.home"), or(property.apply("drishti.module-manifests-dir"), com.ash.drishti.api.Roots.modules()));
-        String store = or(property.apply("drishti.modules.path"), or(property.apply("drishti.module-deploy.dir"), data + "/modules"));
+        String home = LegacyModules.folderSetting(property);
+        String store = LegacyModules.storeSetting(property);
         return new ResolutionSettings(abs(site), abs(or(property.apply("drishti.packs.installed-dir"), data + "/packs/installed")),
                 abs(or(property.apply("drishti.kernel.packs-dir"), site + "/core")), abs(home), abs(store),
                 // a test's or a tool's own folders of packs (drishti.packs.extra-dirs, the retired example packs): part of the site, after it
                 java.util.Arrays.stream(or(property.apply("drishti.packs.extra-dirs"), "").split(",")).map(String::strip).filter(x -> !x.isEmpty())
-                        .map(ResolutionSettings::abs).toList());
+                        .map(ResolutionSettings::abs).toList(), ModuleHomes.of(property).orElse(null));
     }
 
     /** The pack resolver's layout of these settings. */
     public PackResolver.Layout layout() {
-        return new PackResolver.Layout(siteDir, kernelDir, modulesHome, modulesPath, installedDir, extraDirs);
+        return new PackResolver.Layout(siteDir, kernelDir, modulesHome, modulesPath, installedDir, extraDirs, homes);
     }
 
     /** Reads a YAML file into a map: empty for an empty file; a broken file throws, naming it. */

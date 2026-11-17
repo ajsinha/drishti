@@ -165,4 +165,89 @@ class LaunchRootsTest {
         LaunchRoots.anchorSettings(java.util.List.of("drishti.collab.dir"), k -> "collab", null, problems);
         assertThat(String.join("; ", problems)).contains("drishti.collab.dir is 'collab', a relative path").contains("drishti.home");
     }
+
+    private static final String GENOMICS = """
+            format: 1
+            id: genomics
+            version: 0.1.0
+            title: Genomics
+            about: A module built in tests
+            domain: testing
+            publisher: {name: Drishti tests, id: drishti-tests}
+            licence: {feature: genomics}
+            kernel: ">=0.4"
+            rachana: ">=1.0"
+            contracts: ">=1.0"
+            plugin-api: ">=2.0"
+            elements: ">=2.4 <3"
+            packs: {folder: packs, list: [genes]}
+            """;
+
+    /** The resolution of a server whose settings carry the boot's result: its packs folder from the boot. */
+    private static com.ash.drishti.api.resolution.ConfigResolution resolution(Path home, Map<String, String> published) {
+        Map<String, String> p = new HashMap<>(published);
+        p.put("drishti.packs.site-dir", home.resolve("config/packs").toString());
+        p.put("drishti.data.dir", home.resolve("data").toString());
+        p.put(com.ash.drishti.api.resolution.LegacyModules.HOME, home.resolve("modules").toString());
+        return com.ash.drishti.api.resolution.ConfigResolution.build(com.ash.drishti.api.resolution.ResolutionSettings.of(p::get), id -> true);
+    }
+
+    /**
+     * i7a I5: when the modules folder holds packages the module boot runs on them (KERNEL_AND_MODULES.md section 4.2.1); its result is
+     * published as settings, and the resolution reads each module from its cache folder, or from its own view when the site overrides a file.
+     */
+    @Test
+    void theModuleBootRunsOnPackagesWhenTheModulesFolderHoldsAny(@TempDir Path tmp) throws Exception {
+        Path home = install(tmp.resolve("home"));
+        Path src = tmp.resolve("src/genomics");
+        com.ash.drishti.module.runtime.Dmod.write(src.resolve("module.yaml"), GENOMICS);
+        com.ash.drishti.module.runtime.Dmod.write(src.resolve("packs/genes/pack.yaml"), "pack: genes\n");
+        com.ash.drishti.module.runtime.Dmod.pack(src, home.resolve("modules/genomics-0.1.0.dmod"));
+        Files.createDirectories(home.resolve("modules/trading"));                          // a source folder beside the packages: not read
+        Files.writeString(home.resolve("modules/trading/module.yaml"), "id: trading\nversion: 1.0.0\n");
+        Path data = home.resolve("data");
+        try {
+            LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), data, k -> null, java.util.List.of(),
+                    data.resolve("overrides/modules"), false);
+
+            assertThat(b.packaged()).isTrue();
+            assertThat(b.homes().homes().keySet()).containsExactly("genomics");
+            Path dir = b.homes().dir("genomics").orElseThrow();
+            assertThat(dir).startsWith(data.resolve("cache")).isNotEqualTo(src);
+            assertThat(b.properties()).containsKeys(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, "drishti.module.dir.genomics");
+            assertThat(com.ash.drishti.api.resolution.ModuleHomes.current()).contains(b.homes());
+            assertThat(resolution(home, b.properties()).packDir("genes")).isEqualTo(dir.resolve("packs/genes"));
+            assertThat(resolution(home, b.properties()).packs().modules()).containsOnlyKeys("genomics");
+
+            Path site = tmp.resolve("site-overrides");
+            Files.createDirectories(site.resolve("genomics/packs/genes"));
+            Files.writeString(site.resolve("genomics/packs/genes/notes.yaml"), "note: the site's\n");
+            LaunchRoots.Booted v = LaunchRoots.bootModules(home.resolve("modules"), data, k -> null, java.util.List.of(site),
+                    data.resolve("overrides/modules"), false);
+            Path view = v.homes().dir("genomics").orElseThrow();
+            assertThat(view).startsWith(data.resolve("overrides/modules/genomics"));
+            assertThat(view.resolve("packs/genes/notes.yaml")).isRegularFile();
+            assertThat(dir.resolve("packs/genes/notes.yaml")).as("the cache folder is never written").doesNotExist();
+            assertThat(v.overrides().view()).isEqualTo(data.resolve("overrides/modules"));
+        } finally {
+            com.ash.drishti.api.resolution.ModuleOverrides.activate(java.util.List.of(), null);
+        }
+    }
+
+    /** With no package in the modules folder (until i7a's I8) the modules are the old folders and store; nothing claims a boot on packages. */
+    @Test
+    void withNoPackageTheModulesAreTheOldFolders(@TempDir Path tmp) throws Exception {
+        Path home = install(tmp.resolve("home"));
+        Files.createDirectories(home.resolve("modules/trading"));
+        Files.writeString(home.resolve("modules/trading/module.yaml"), "id: trading\nversion: 1.0.0\n");
+
+        LaunchRoots.Booted b = LaunchRoots.bootModules(home.resolve("modules"), home.resolve("data"), k -> null, java.util.List.of(),
+                home.resolve("data/overrides/modules"), true);
+
+        assertThat(b.packaged()).isFalse();
+        assertThat(b.homes().dir("trading")).contains(home.resolve("modules/trading").toAbsolutePath().normalize());
+        assertThat(b.properties()).containsOnlyKeys("drishti.module.dir.trading");
+        assertThat(b.report()).contains("no package in");
+        assertThat(LaunchRoots.bootModules(null, null, k -> null, java.util.List.of(), null, true).homes().homes()).isEmpty();
+    }
 }

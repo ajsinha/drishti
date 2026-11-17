@@ -234,7 +234,7 @@ public class ConsoleAnswers {
         }
         try {
             return com.ash.drishti.packs.distribution.Distributions.read(f, dir.resolve(com.ash.drishti.packs.distribution.Distributions.KERNEL),
-                    com.ash.drishti.packs.distribution.Distributions.modulesHome(env),
+                    com.ash.drishti.packs.distribution.Distributions.homes(env),
                     Path.of(env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"))),
                     com.ash.drishti.packs.distribution.Distributions.packages(env));
         } catch (IllegalStateException e) {

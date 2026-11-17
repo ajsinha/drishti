@@ -211,7 +211,13 @@ public final class LoaderProcess implements LoadRunner {
             cmd.add("-D" + com.ash.drishti.lakeconfig.Lakes.PROPERTY + "=" + com.ash.drishti.lakeconfig.Lakes.dir().toAbsolutePath());
             // the launch roots this process resolved (LaunchRoots, the settings file): the loader takes no folder from its working folder.
             // The data folder is not among them: the lake files' settings (Lakes.environment(), below) give it, as this process reads it
-            for (String key : List.of("drishti.home", "drishti.config.dir", "drishti.modules.home", "drishti.settings.file")) {
+            // and the module boot's result (KERNEL_AND_MODULES.md section 4.2.1): every module's folder and, after a boot on packages, the
+            // whole value; the loader never boots or unpacks itself
+            List<String> keys = new ArrayList<>(List.of("drishti.home", "drishti.config.dir", com.ash.drishti.api.resolution.LegacyModules.HOME,
+                    "drishti.settings.file", com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, "drishti.modules.dev"));
+            System.getProperties().stringPropertyNames().stream().filter(k -> k.startsWith(com.ash.drishti.api.resolution.ModuleHomes.DIR_PROPERTY))
+                    .sorted().forEach(keys::add);
+            for (String key : keys) {
                 String v = System.getProperty(key);
                 if (v != null && !v.isBlank()) {
                     cmd.add("-D" + key + "=" + v);

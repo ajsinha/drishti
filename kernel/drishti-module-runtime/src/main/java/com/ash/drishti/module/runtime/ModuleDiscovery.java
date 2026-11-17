@@ -15,11 +15,8 @@
  */
 package com.ash.drishti.module.runtime;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,7 +29,7 @@ import java.util.stream.Stream;
 
 /**
  * Discovery (KERNEL_AND_MODULES.md section 4.2): lists every {@code <path>/<id>/<version>/module.yaml} of the module folders in order, picks
- * the version {@code active.yaml} names (else the highest), and reads each manifest (V1). The first folder holding an id wins. Nothing
+ * the version the old store names active (else the highest; i6's deployment, until i7a's I8), and reads each manifest (V1). The first folder holding an id wins. Nothing
  * else of a module is touched. A manifest that does not read is reported as refused, never thrown.
  */
 public final class ModuleDiscovery {
@@ -40,8 +37,6 @@ public final class ModuleDiscovery {
     /** What discovery found: the candidates, and the modules refused at V1 (id → words). */
     public record Found(List<ModuleCandidate> candidates, Map<String, ModuleRefusedException> refused) {
     }
-
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     private ModuleDiscovery() {
     }
@@ -96,26 +91,6 @@ public final class ModuleDiscovery {
         }
         out.sort(Comparator.comparing(ModuleCandidate::id));
         return new Found(List.copyOf(out), refused);
-    }
-
-    /** Reads {@code active.yaml} ({@code modules: {id: version}} or the map at the top); empty when the file is absent. */
-    public static Map<String, String> readActive(Path file) {
-        if (file == null || !Files.isRegularFile(file)) {
-            return Map.of();
-        }
-        try {
-            Map<String, Object> m = DmodManifest.map(YAML.readValue(file.toFile(), Object.class));
-            Map<String, Object> mods = m.get("modules") instanceof Map<?, ?> ? DmodManifest.map(m.get("modules")) : m;
-            Map<String, String> out = new LinkedHashMap<>();
-            mods.forEach((k, v) -> {
-                if (DmodManifest.str(v) != null) {
-                    out.put(k, DmodManifest.str(v));
-                }
-            });
-            return out;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static Optional<Path> pick(Path idDir, String active) {

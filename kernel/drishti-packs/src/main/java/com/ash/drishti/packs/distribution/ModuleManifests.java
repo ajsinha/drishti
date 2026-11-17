@@ -65,16 +65,19 @@ public final class ModuleManifests {
     private ModuleManifests() {
     }
 
-    /** Every module manifest under {@code dir}, by id, in requirement order; an empty map when the folder does not exist. */
-    public static Map<String, Entry> read(Path dir) {
-        return read(dir, List.of());
+    /**
+     * Every module manifest of the module boot's result ({@link com.ash.drishti.api.resolution.ModuleHomes}: each module's folder), by id,
+     * in requirement order.
+     */
+    public static Map<String, Entry> read(com.ash.drishti.api.resolution.ModuleHomes homes) {
+        return read(homes, List.of());
     }
 
     /** As above, with the packaged modules ({@link com.ash.drishti.registry.ModulePackages#read}): a package's manifest is the one read. */
-    public static Map<String, Entry> read(Path dir, List<com.ash.drishti.registry.ModulePackages.Package> packages) {
+    public static Map<String, Entry> read(com.ash.drishti.api.resolution.ModuleHomes homes, List<com.ash.drishti.registry.ModulePackages.Package> packages) {
         Map<String, Entry> byId = new TreeMap<>();
-        if (dir != null && Files.isDirectory(dir)) {
-            folder(dir, byId);
+        for (com.ash.drishti.api.resolution.ModuleHomes.Home h : homes.homes().values()) {
+            module(h.dir(), byId);
         }
         for (com.ash.drishti.registry.ModulePackages.Package p : packages) {
             Entry e = ofDmod(YAML.valueToTree(p.manifest()), null);
@@ -87,30 +90,27 @@ public final class ModuleManifests {
         return ordered;
     }
 
-    private static void folder(Path dir, Map<String, Entry> byId) {
-        try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
-            for (Path m : modules) {
-                Path dmod = m.resolve("module.yaml");               // every module's manifest at its folder's top (one layout)
-                if (Files.isRegularFile(dmod)) {
-                    Entry e = ofDmod(tree(dmod), dmod);
-                    byId.put(e.id(), e);
-                }
-                if (!Files.isDirectory(m.resolve(JAVA))) {
-                    continue;
-                }
-                try (DirectoryStream<Path> parts = Files.newDirectoryStream(m.resolve(JAVA), Files::isDirectory)) {
-                    for (Path part : parts) {
-                        Path jar = part.resolve(IN_JAR);
-                        if (Files.isRegularFile(jar)) {
-                            for (Entry e : ofJar(tree(jar), jar)) {
-                                byId.put(e.id(), e);
-                            }
-                        }
+    /** One module's manifests: its {@code module.yaml} at its folder's top (one layout), then its parts' jar manifests in its sources. */
+    private static void module(Path m, Map<String, Entry> byId) {
+        Path dmod = m.resolve("module.yaml");
+        if (Files.isRegularFile(dmod)) {
+            Entry e = ofDmod(tree(dmod), dmod);
+            byId.put(e.id(), e);
+        }
+        if (!Files.isDirectory(m.resolve(JAVA))) {
+            return;
+        }
+        try (DirectoryStream<Path> parts = Files.newDirectoryStream(m.resolve(JAVA), Files::isDirectory)) {
+            for (Path part : parts) {
+                Path jar = part.resolve(IN_JAR);
+                if (Files.isRegularFile(jar)) {
+                    for (Entry e : ofJar(tree(jar), jar)) {
+                        byId.put(e.id(), e);
                     }
                 }
             }
         } catch (IOException e) {
-            throw new IllegalStateException("module manifests under " + dir + " cannot be read: " + e.getMessage(), e);
+            throw new IllegalStateException("module manifests under " + m + " cannot be read: " + e.getMessage(), e);
         }
     }
 

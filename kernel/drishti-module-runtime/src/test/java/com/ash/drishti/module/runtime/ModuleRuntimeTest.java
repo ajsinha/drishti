@@ -200,7 +200,7 @@ class ModuleRuntimeTest {
         assertThat(ModuleDiscovery.discover(List.of(modules()), Map.of("hello", "1.0.0")).candidates().get(0).manifest().version())
                 .isEqualTo("1.0.0");
         Dmod.write(tmp.resolve("active.yaml"), "modules:\n  hello: 1.0.0\n");
-        assertThat(ModuleDiscovery.readActive(tmp.resolve("active.yaml"))).containsEntry("hello", "1.0.0");
+        assertThat(com.ash.drishti.api.resolution.LegacyModules.readActive(tmp.resolve("active.yaml"))).containsEntry("hello", "1.0.0");
     }
 
     // ---- refusals: each leaves the module absent, with plain words

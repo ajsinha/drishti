@@ -62,7 +62,7 @@ import org.springframework.context.ApplicationContext;
 
 /**
  * This node's side of module deployment (KERNEL_AND_MODULES.md sections 4.11.4, 7.6 and 12): the one {@link ModuleRuntime} of the server,
- * the installed modules ({@code modules/installed/<id>/<version>/} and {@code active.yaml}), the staging area of a deployment's phase 1,
+ * the installed modules ({@code modules/installed/<id>/<version>/} and the store's active versions, {@link com.ash.drishti.api.resolution.LegacyModules#ACTIVE}), the staging area of a deployment's phase 1,
  * activation (phase 2), rollback and unload, and the node's copy of the cluster's module registry ({@code registry.json}: every module the
  * cluster deployed, active, off or removed, with the names it owned). A node that holds no part of a module keeps only its registry entry:
  * it forwards the module's requests (placement) and, once the module is removed, answers its paths 410 and marks saved work that used it.
@@ -135,7 +135,7 @@ public final class ModuleNode implements AutoCloseable {
         this.installed = root.resolve("installed");
         this.staging = root.resolve("staging");
         this.tombstones = root.resolve("tombstones");
-        this.activeFile = installed.resolve("active.yaml");
+        this.activeFile = installed.resolve(com.ash.drishti.api.resolution.LegacyModules.ACTIVE);
         this.registryFile = root.resolve("registry.json");
         this.facts = facts;
         this.placement = placement;
@@ -219,9 +219,9 @@ public final class ModuleNode implements AutoCloseable {
             }
             Map<String, String> active = new LinkedHashMap<>();
             for (Path f : folders) {
-                ModuleDiscovery.readActive(f.resolve("active.yaml")).forEach(active::putIfAbsent);
+                com.ash.drishti.api.resolution.LegacyModules.readActive(f.resolve(com.ash.drishti.api.resolution.LegacyModules.ACTIVE)).forEach(active::putIfAbsent);
             }
-            active.putAll(ModuleDiscovery.readActive(activeFile));
+            active.putAll(com.ash.drishti.api.resolution.LegacyModules.readActive(activeFile));
             List<ModuleHealth> rows = runtime.start(all, active, id -> (!registry.containsKey(id) || registry.get(id).state() == State.ACTIVE)
                     && siteSwitch.test(id));
             if (!folders.isEmpty()) {
@@ -437,7 +437,7 @@ public final class ModuleNode implements AutoCloseable {
             if (!Files.isDirectory(from)) {
                 throw refused(id + " " + version + " is not staged here (" + deployment + ")");
             }
-            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            Map<String, String> active = new LinkedHashMap<>(com.ash.drishti.api.resolution.LegacyModules.readActive(activeFile));
             String previous = runtime.loaded(id).map(m -> m.manifest().version()).orElse(null);
             boolean existed = Files.isDirectory(installed.resolve(id).resolve(version));
             Path to = installed.resolve(id).resolve(version);
@@ -514,7 +514,7 @@ public final class ModuleNode implements AutoCloseable {
     public Map<String, Object> rollback(String id, String version, String previous) {
         lock.lock();
         try {
-            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            Map<String, String> active = new LinkedHashMap<>(com.ash.drishti.api.resolution.LegacyModules.readActive(activeFile));
             String now = runtime.loaded(id).map(m -> m.manifest().version()).orElse(null);
             Map<String, Object> out = new LinkedHashMap<>();
             if (previous != null) {
@@ -555,7 +555,7 @@ public final class ModuleNode implements AutoCloseable {
                 out.put("steps", List.of("nothing of it was loaded here"));
                 out.put("failures", List.of());
             }
-            Map<String, String> active = new LinkedHashMap<>(ModuleDiscovery.readActive(activeFile));
+            Map<String, String> active = new LinkedHashMap<>(com.ash.drishti.api.resolution.LegacyModules.readActive(activeFile));
             if (leave == ModuleRuntime.Leave.REMOVE && active.remove(id) != null) {
                 writeActive(active);
             }

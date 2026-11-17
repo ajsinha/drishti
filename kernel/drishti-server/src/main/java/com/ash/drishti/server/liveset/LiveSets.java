@@ -729,33 +729,21 @@ public final class LiveSets implements AutoCloseable {
         open.clear();
     }
 
-    /** The folders the declarations are read from: each module's {@code blotters/} (module on), then the site's. */
-    public static List<Path> folders(Path modulesRoot, Path siteDir, Predicate<String> moduleOn) {
-        List<Path> out = new ArrayList<>();
-        if (modulesRoot != null && Files.isDirectory(modulesRoot)) {
-            try (Stream<Path> ms = Files.list(modulesRoot)) {
-                ms.sorted().forEach(m -> {
-                    if (moduleOn.test(m.getFileName().toString())) {
-                        if (Files.isDirectory(m.resolve("blotters"))) {
-                            out.add(m.resolve("blotters"));
-                        }
-                    }
-                });
-            } catch (IOException e) {
-                LOG.warn("live sets: {} cannot be listed: {}", modulesRoot, e.getMessage());
+    /**
+     * The folders the declarations are read from, each with its module (null: the site's): each module's {@code blotters/} in the folder
+     * the module boot gave it (module on), then the site's.
+     */
+    public static Map<Path, String> folders(com.ash.drishti.api.resolution.ModuleHomes homes, Path siteDir, Predicate<String> moduleOn) {
+        Map<Path, String> out = new java.util.LinkedHashMap<>();
+        for (com.ash.drishti.api.resolution.ModuleHomes.Home h : homes.homes().values()) {
+            if (moduleOn.test(h.id()) && Files.isDirectory(h.dir().resolve("blotters"))) {
+                out.put(h.dir().resolve("blotters"), h.id());
             }
         }
         if (siteDir != null) {
-            out.add(siteDir);
+            out.put(siteDir, null);
         }
         return out;
-    }
-
-    /** The module a declarations folder belongs to: {@code modules/<id>/blotters} → {@code id}. */
-    public static String moduleOf(Path dir) {
-        Path p = dir.getFileName() != null && dir.getFileName().toString().equals("blotters") ? dir.getParent() : null;
-        return p == null || p.getParent() == null || !"modules".equals(String.valueOf(p.getParent().getFileName())) ? null
-                : p.getFileName().toString();
     }
 
     /** Unused by the engine; keeps the masking contract in one place for callers. */

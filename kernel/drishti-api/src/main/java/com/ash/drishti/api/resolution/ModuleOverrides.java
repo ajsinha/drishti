@@ -47,12 +47,14 @@ import java.util.stream.Stream;
  * {@code lib/}, {@code python/}, {@code engines/}), any file of a {@link #CODE_TYPES code type} wherever it sits, and a symbolic link (never
  * followed): an override folder changes what a module says, never what it runs. Such a file is refused in words and not used.
  *
- * <p>The rule is applied once, at launch, before any reader: when at least one file overrides, the server reads its modules from a
- * <b>view</b>, {@code <data>/overrides/modules}, the modules folder copied (only what changed since the last start) with the overrides laid
- * over it, and {@code drishti.modules.home} names the view; every reader (the pack resolver, Sutras, the console part, the blotters, the
- * data needs, Help) then sees the overridden file without knowing the rule exists. The module's own folder is never written. The view's
- * {@value #LIST} names every overridden file with its source, which Admin → Health shows and the console's resolver reads. A module the
- * resolver reads from the module store (installed from its {@code .dmod}) gets the same rule where its folder is picked ({@link #installed}).
+ * <p>The rule is applied once, at launch, before any reader. A module the boot took from a package gets a <b>view</b> of its own
+ * ({@link #view}): {@code <data>/overrides/modules/<id>/<version>-<hash16>/}, its cache folder copied (only what changed since the last
+ * start) with the overrides laid over it, and the boot's result names the view as the module's folder; every reader (the pack resolver,
+ * Sutras, the console part, the blotters, the data needs, Help) then sees the overridden file without knowing the rule exists. The
+ * module's own folder is never written. With no package booted (until i7a's I8, {@link LegacyModules}), the modules folder as a whole gets
+ * the view {@code <data>/overrides/modules} ({@link #apply}), which the launch names as the modules folder, and a module of the old store
+ * the same rule where its folder is picked ({@link #installed}). The whole view's {@value #LIST} names every overridden file with its
+ * source, which Admin → Health shows.
  */
 public final class ModuleOverrides {
 
@@ -303,6 +305,32 @@ public final class ModuleOverrides {
     private static final Map<String, List<File>> INSTALLED = new java.util.concurrent.ConcurrentSkipListMap<>();
     private static final Map<String, List<String>> INSTALLED_REFUSED = new java.util.concurrent.ConcurrentSkipListMap<>();
 
+    /**
+     * The start's report of the per-module views ({@link #view}): the override folders, the view root, the files and refusals (kept with
+     * the installed modules' in {@link #installedFiles}, {@link #installedRefused}) and the override folders' module ids no module booted
+     * under ({@code waiting}).
+     */
+    public static Result viewsReport(Path modulesHome, Path viewRoot, java.util.Set<String> booted) {
+        List<String> refused = new ArrayList<>();
+        java.util.Set<String> waiting = new java.util.TreeSet<>();
+        for (Path dir : activeDirs) {
+            if (!Files.isDirectory(dir)) {
+                refused.add(dir + " (" + SETTING + ") is not a folder: nothing in it is used");
+                continue;
+            }
+            for (Entry e : entries(dir, refused)) {
+                String[] parts = e.rel().split("/", 2);
+                if (parts.length < 2) {
+                    refused.add(e.file() + ": an override sits under a module's id (<module id>/<path inside the module>), the same relative path as the module's file");
+                } else if (!booted.contains(parts[0])) {
+                    waiting.add(parts[0] + "/" + parts[1] + " <- " + e.file() + ": no module '" + parts[0] + "' booted from " + modulesHome);
+                }
+            }
+        }
+        boolean any = !installedFiles().isEmpty();
+        return new Result(any ? viewRoot : null, modulesHome, activeDirs, List.of(), List.copyOf(refused), List.copyOf(waiting));
+    }
+
     /** The files applied to installed modules' views now (Admin → Health lists them with the start's), by the module's id. */
     public static List<File> installedFiles() {
         return INSTALLED.values().stream().flatMap(List::stream).toList();
@@ -320,9 +348,33 @@ public final class ModuleOverrides {
      * folder itself (and a view left from an earlier start is removed). The installed folder is never written.
      */
     public static Path installed(Path home, String id) {
+        Path data = activeData;
+        if (data == null || home == null || home.getFileName() == null) {
+            return home;
+        }
+        return view(home, id, data.resolve("overrides").resolve("installed").resolve(id).resolve(home.getFileName().toString()));
+    }
+
+    /**
+     * The rule for a module the boot took from a package: when an override folder holds files under {@code <id>/}, the folder its readers
+     * use is {@code <viewRoot>/<id>/<version>-<hash16 | development>/} (a server's {@code <data>/overrides/modules}; a command line's own),
+     * its folder copied with the overrides laid over it; else its own folder (and a view left from an earlier start is removed). The
+     * module's folder is never written. {@link #activate} names the override folders first.
+     */
+    public static ModuleHomes.Home view(ModuleHomes.Home home, Path viewRoot) {
+        if (activeData == null || viewRoot == null) {
+            return home;
+        }
+        String key = home.version() + "-" + (home.contentHash16() == null ? ModuleHomes.NO_CONTENT_HASH : home.contentHash16());
+        Path v = view(home.dir(), home.id(), viewRoot.resolve(home.id()).resolve(key));
+        return v.equals(home.dir()) ? home : new ModuleHomes.Home(home.id(), home.version(), v, home.contentHash(), home.origin());
+    }
+
+    /** One view of one module's folder, brought up to date under the one lock (file work: a lock, never {@code synchronized}). */
+    private static Path view(Path home, String id, Path view) {
         LOCK.lock();
         try {
-            return installedLocked(home, id);
+            return installedLocked(home, id, view);
         } finally {
             LOCK.unlock();
         }
@@ -331,13 +383,12 @@ public final class ModuleOverrides {
     /** One view is brought up to date at a time (file work: a lock, never {@code synchronized}). */
     private static final java.util.concurrent.locks.ReentrantLock LOCK = new java.util.concurrent.locks.ReentrantLock();
 
-    private static Path installedLocked(Path home, String id) {
+    private static Path installedLocked(Path home, String id, Path view) {
         List<Path> dirs = activeDirs;
         Path data = activeData;
         if (data == null || dirs.isEmpty() || home == null || home.getFileName() == null) {
             return home;
         }
-        Path view = data.resolve("overrides").resolve("installed").resolve(id).resolve(home.getFileName().toString());
         try {
             Map<String, File> files = new TreeMap<>();
             List<String> refused = new ArrayList<>();

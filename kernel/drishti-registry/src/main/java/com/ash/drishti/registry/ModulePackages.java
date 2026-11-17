@@ -32,9 +32,10 @@ import java.util.Set;
 /**
  * The one reader of the modules that come as packages (KERNEL_AND_MODULES.md section 3.3), for the registry and the distributions alike:
  * the distribution's first-party ones (the ids of its {@code META-INF/drishti/first-party.yaml}, each read from its
- * {@code drishti/modules/<id>-<version>.dmod} on the class path), then every other active module of the module store
- * ({@code <store>/installed/active.yaml}, each {@code installed/<id>/<version>/module.yaml}). A package's manifest wins over a manifest
- * folder's copy of the same module.
+ * {@code drishti/modules/<id>-<version>.dmod} on the class path), then every other active module of the module store (its active
+ * versions read through {@link com.ash.drishti.api.resolution.LegacyModules}, each {@code installed/<id>/<version>/module.yaml}). A
+ * package's manifest wins over a manifest folder's copy of the same module. i6's deployment: read only when no package was booted, until
+ * i7a's I8.
  */
 public final class ModulePackages {
 
@@ -58,12 +59,7 @@ public final class ModulePackages {
      * @param property a setting, resolved (null when not set)
      */
     public static Path store(java.util.function.Function<String, String> property) {
-        String deploy = property.apply("drishti.module-deploy.dir");
-        if (deploy != null && !deploy.isBlank()) {
-            return Path.of(deploy.strip());
-        }
-        String data = property.apply("drishti.data.dir");
-        return Path.of(data == null || data.isBlank() ? com.ash.drishti.api.Roots.data() : data.strip(), "modules");
+        return com.ash.drishti.api.resolution.LegacyModules.deployStore(property);
     }
 
     /**
@@ -107,21 +103,20 @@ public final class ModulePackages {
         } catch (IOException | RuntimeException e) {
             warnings.add("first-party.yaml: " + e.getMessage());
         }
-        Path active = store == null ? null : store.resolve("installed").resolve("active.yaml");
+        Path active = store == null ? null : com.ash.drishti.api.resolution.LegacyModules.activeFile(store);
         if (active == null || !Files.isRegularFile(active)) {
             return out;
         }
-        Map<String, Object> versions;
+        Map<String, String> versions;
         try {
-            Map<String, Object> m = readMap(active);                 // the node writes modules: {id: version}; the map at the top reads too
-            versions = m.get("modules") instanceof Map<?, ?> mods ? (Map<String, Object>) mods : m;
+            versions = com.ash.drishti.api.resolution.LegacyModules.readActive(active);   // modules: {id: version}; the map at the top reads too
         } catch (RuntimeException e) {
             warnings.add(active.getFileName() + ": " + e.getMessage());
             return out;
         }
-        for (Map.Entry<String, Object> e : versions.entrySet()) {
+        for (Map.Entry<String, String> e : versions.entrySet()) {
             String id = e.getKey();
-            Path manifest = store.resolve("installed").resolve(id).resolve(String.valueOf(e.getValue())).resolve("module.yaml");
+            Path manifest = com.ash.drishti.api.resolution.LegacyModules.installed(store, id, e.getValue()).resolve("module.yaml");
             if (seen.contains(id) || !Files.isRegularFile(manifest) || !"ACTIVE".equals(states.getOrDefault(id, "ACTIVE"))) {
                 continue;
             }

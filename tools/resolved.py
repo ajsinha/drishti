@@ -35,6 +35,7 @@ import os
 import re
 import subprocess
 import threading
+import zipfile
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -262,6 +263,70 @@ def _override_dirs(home: Path) -> list[Path]:
             for x in _override_setting().split(",") if x.strip()]
 
 
+def _identity(manifest: str, dir_name: str, content_hash: str | None) -> str:
+    """One module's identity line as ``ModuleHomes.Home.identity()`` writes it: ``<id> <version> <content hash | development>``."""
+    import yaml
+    m = yaml.safe_load(manifest) or {}
+    m = m if isinstance(m, dict) else {}
+    mid = str(m.get("id") or dir_name).strip().lower()
+    version = str(m.get("version") if m.get("version") is not None else "0.0.0").strip()
+    return f"{mid} {version} {content_hash or 'development'}"
+
+
+def modules_fingerprint(folder: Path) -> str:
+    """``ModuleHomes.fingerprint()`` of what the module boot takes from a modules folder (KERNEL_AND_MODULES.md section 4.2.1), worked out
+    without the jar so it can key the cache: its packages (``*.dmod``, each ``<id> <version> <SHA-256 of its META-INF/DMOD.MF>``) when it
+    holds any, else its source folders (``<id> <version> development``); the SHA-256 of those lines in id order, each ending in a newline.
+    A rebuilt module (new content) or a changed manifest changes it; ``ModuleHomesTest`` holds the same vector as ``test_resolved.py``."""
+    folder = Path(folder)
+    packages = sorted(folder.glob("*.dmod")) if folder.is_dir() else []
+    files = packages or (sorted(p / "module.yaml" for p in folder.iterdir() if (p / "module.yaml").is_file()) if folder.is_dir() else [])
+    key = (str(folder), tuple((str(f), *_stat(f)) for f in files))
+    with _LOCK:
+        hit = _FINGERPRINTS.get(key)
+    if hit:
+        return hit
+    lines: dict[str, str] = {}
+    for f in packages:
+        try:
+            with zipfile.ZipFile(f) as z:
+                line = _identity(z.read("module.yaml").decode("utf-8"), f.stem, hashlib.sha256(z.read("META-INF/DMOD.MF")).hexdigest())
+        except (OSError, KeyError, zipfile.BadZipFile, ValueError):
+            line = f"{f.name} unreadable {f.stat().st_size if f.exists() else 0}"
+        lines.setdefault(line.split(" ", 1)[0], line)
+    if not packages and folder.is_dir():
+        for d in sorted(p for p in folder.iterdir() if (p / "module.yaml").is_file()):
+            try:
+                line = _identity((d / "module.yaml").read_text(encoding="utf-8"), d.name, None)
+            except (OSError, ValueError):
+                continue
+            lines.setdefault(line.split(" ", 1)[0], line)
+    text = "".join(lines[k] + "\n" for k in sorted(lines))
+    out = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    with _LOCK:
+        if len(_FINGERPRINTS) > 64:
+            _FINGERPRINTS.clear()
+        _FINGERPRINTS[key] = out
+    return out
+
+
+_FINGERPRINTS: dict[tuple, str] = {}
+
+
+def _stat(f: Path) -> tuple:
+    try:
+        st = f.stat()
+        return st.st_mtime_ns, st.st_size
+    except OSError:
+        return None, None
+
+
+def _fingerprints(args: tuple) -> list[str]:
+    """The modules' fingerprint of every modules folder the answer reads: a checkout named (source mode) and this install's."""
+    named = [Path(a) for a in args[1::2] if a and not a.startswith("--")]
+    return [modules_fingerprint(r / "modules") for r in dict.fromkeys(named + [javacmd.find_home()[0]])]
+
+
 def _cache_dir() -> Path:
     """``DRISHTI_RESOLVED_CACHE`` (a test run's own folder: the test harness sets it, so a run never writes under the data folder),
     else ``<data>/tmp/resolved``."""
@@ -276,7 +341,7 @@ def _ask(args: tuple) -> dict:
         raise Unbuilt(f"the tools read where everything is from the kernel jar, and there is none: {e}") from e
     stamp = _stamp(_inputs(args))
     env_key = (sorted((k, v) for k, v in os.environ.items() if k.startswith("DRISHTI_")) + [("overrides", _override_setting())]) if not args else []
-    key = hashlib.sha256(json.dumps([list(args), list(stamp), env_key, str(jar)], default=str).encode()).hexdigest()[:32]
+    key = hashlib.sha256(json.dumps([list(args), list(stamp), env_key, str(jar), _fingerprints(args)], default=str).encode()).hexdigest()[:32]
     cached = _cache_dir() / f"{key}.json"
     try:
         return json.loads(cached.read_text(encoding="utf-8"))
@@ -303,7 +368,7 @@ def _ask(args: tuple) -> dict:
 
 
 def _resolution(args: tuple) -> Resolution:
-    stamp = _stamp(_inputs(args))
+    stamp = _stamp(_inputs(args)) + tuple(_fingerprints(args))
     with _LOCK:
         hit = _MEMO.get(args)
         if hit and hit[0] == stamp:

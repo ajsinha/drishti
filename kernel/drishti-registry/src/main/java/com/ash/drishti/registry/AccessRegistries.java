@@ -48,17 +48,18 @@ public final class AccessRegistries {
             return "true".equals(s) || "on".equals(s) || "yes".equals(s);
         };
         java.util.function.Supplier<Path> store = () -> ModulePackages.store(property);   // where the module node installs, read when used
-        return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader, manifests(property), store), overrides,
-                Clock.systemUTC());
+        // the module boot's result when it ran on packages (the launch publishes it); else, until i7a's I8, the modules folder and the store
+        com.ash.drishti.api.resolution.ModuleHomes booted = com.ash.drishti.api.resolution.ModuleHomes.of(property).orElse(null);
+        return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader,
+                booted == null ? manifests(property) : null, store, () -> booted), overrides, Clock.systemUTC());
     }
 
     /**
-     * The modules shipped as folders: {@code drishti.modules.home} (its former name {@code drishti.module-manifests-dir}; default
-     * {@code <home>/modules}; a relative value is under the install folder), the same setting the one resolution reads (KERNEL_AND_MODULES.md section 18.2). No folder is derived from
-     * another folder's position.
+     * The modules folder of the old layout ({@link com.ash.drishti.api.resolution.LegacyModules#folderSetting}; a relative value is under
+     * the install folder), read only when no package was booted, until i7a's I8.
      */
     static Path manifests(Function<String, String> property) {
-        return com.ash.drishti.api.Roots.anchored(orDefault(property.apply("drishti.modules.home"), orDefault(property.apply("drishti.module-manifests-dir"), com.ash.drishti.api.Roots.modules())));
+        return com.ash.drishti.api.Roots.anchored(com.ash.drishti.api.resolution.LegacyModules.folderSetting(property));
     }
 
     private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();

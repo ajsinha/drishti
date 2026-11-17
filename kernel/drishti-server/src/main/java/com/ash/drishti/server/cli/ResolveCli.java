@@ -121,39 +121,45 @@ public final class ResolveCli {
     }
 
     /**
-     * This process's resolution with the site's overrides of module files applied by the one rule the server applies at its start
-     * (KERNEL_AND_MODULES.md section 18.10, {@code ModuleOverrides}; {@code drishti.overrides.dir} or {@code DRISHTI_OVERRIDES_DIR}): the
-     * modules folder read is the view of the modules folder with the overrides laid over it, kept apart from a running server's view
-     * ({@code <data>/tmp/resolve/overrides/modules}), and modules installed from their {@code .dmod} take the same rule. The modules
-     * folder itself is never written.
+     * This process's resolution: its modules from the module boot (KERNEL_AND_MODULES.md section 4.2.1, {@code LaunchRoots.bootModules}
+     * with no sweep), with the site's overrides of module files laid over by the one rule the server applies at its start (section 18.10,
+     * {@code drishti.overrides.dir} or {@code DRISHTI_OVERRIDES_DIR}), in views kept apart from a running server's
+     * ({@code <data>/tmp/resolve/overrides/modules}). A module's own folder is never written. A value a parent process published is taken as
+     * it is.
      */
     static ConfigResolution withOverrides() {
         java.util.function.Function<String, String> process = k -> {
             String v = System.getProperty(k);
             return v != null ? v : System.getenv(k.toUpperCase(java.util.Locale.ROOT).replace('.', '_').replace('-', '_'));
         };
-        String setting = process.apply(com.ash.drishti.api.resolution.ModuleOverrides.SETTING);
-        if (setting == null || setting.isBlank()) {
+        if (com.ash.drishti.api.resolution.ModuleHomes.of(process).isPresent()) {
             return ConfigResolution.ofProcess();
         }
-        com.ash.drishti.api.resolution.ResolutionSettings s = com.ash.drishti.api.resolution.ResolutionSettings.of(process);
+        String folderSetting = com.ash.drishti.api.resolution.LegacyModules.folderSetting(process);
+        Path folder = com.ash.drishti.api.resolution.LegacyModules.NONE.equals(folderSetting) ? null : Path.of(folderSetting).toAbsolutePath().normalize();
+        String setting = process.apply(com.ash.drishti.api.resolution.ModuleOverrides.SETTING);
+        boolean packages = folder != null && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(folder);
+        if (!packages && (setting == null || setting.isBlank())) {
+            return ConfigResolution.ofProcess();                         // the old store and folders, nothing laid over: read as they are
+        }
         String dataSetting = process.apply("drishti.data.dir");
         Path data = Path.of(dataSetting == null || dataSetting.isBlank() ? com.ash.drishti.api.Roots.data() : dataSetting.strip()).toAbsolutePath().normalize();
         java.util.List<Path> dirs = com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, com.ash.drishti.api.Roots.home());
-        com.ash.drishti.api.resolution.ModuleOverrides.activate(dirs, data);
-        var applied = com.ash.drishti.api.resolution.ModuleOverrides.apply(s.modulesHome(), dirs, data.resolve("tmp").resolve("resolve").resolve("overrides").resolve("modules"));
-        if (applied.view() == null) {
-            return ConfigResolution.ofProcess();
+        com.ash.drishti.packs.LaunchRoots.Booted b = com.ash.drishti.packs.LaunchRoots.bootModules(folder, data, process, dirs,
+                data.resolve("tmp").resolve("resolve").resolve("overrides").resolve("modules"), false);
+        Map<String, String> published = new java.util.HashMap<>(b.properties());
+        if (b.legacyView() != null) {
+            published.put(com.ash.drishti.api.resolution.LegacyModules.HOME, b.legacyView().toString());
+            published.put(com.ash.drishti.api.resolution.LegacyModules.HOME_OLD, b.legacyView().toString());
         }
-        String view = applied.view().toString();
-        return ConfigResolution.offline(k -> "drishti.modules.home".equals(k) || "drishti.module-manifests-dir".equals(k) ? view : process.apply(k));
+        return ConfigResolution.offline(k -> published.containsKey(k) ? published.get(k) : process.apply(k));
     }
 
     /** A folder of packs read as a site of its own (its packs and group folders, its {@code core} as the kernel's), with no modules. */
     static ConfigResolution siteOnly(Path site) {
-        Map<String, String> p = Map.of("drishti.packs.site-dir", site.toString(), "drishti.modules.home", site.resolve("no-modules").toString(),
-                "drishti.packs.installed-dir", site.resolve("no-installed-packs").toString(), "drishti.modules.path", site.resolve("no-module-store").toString());
-        return ConfigResolution.build(com.ash.drishti.api.resolution.ResolutionSettings.of(p::get), id -> false);
+        return ConfigResolution.build(new com.ash.drishti.api.resolution.ResolutionSettings(site, site.resolve("no-installed-packs"),
+                site.resolve("core"), site.resolve("no-modules"), site.resolve("no-module-store"), java.util.List.of(),
+                com.ash.drishti.api.resolution.ModuleHomes.none()), id -> false);
     }
 
     /** The document (above). */

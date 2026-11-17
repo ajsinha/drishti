@@ -73,7 +73,10 @@ public final class ModuleBoot {
     public static final String FIRST_PARTY_FILE = "first-party.yaml";
 
     /** The folder of a checkout that holds the module source folders (source mode). */
-    public static final String SOURCE_MODULES = "modules";
+    public static final String SOURCE_MODULES = ModuleHomes.SOURCE_MODULES;
+
+    /** The setting of the modules folder ({@code <DRISHTI_HOME>/modules}), the folder the boot reads its packages from. */
+    public static final String HOME_SETTING = "drishti.modules.home";
 
     /** The extension of a module package. */
     public static final String EXTENSION = ".dmod";
@@ -289,12 +292,7 @@ public final class ModuleBoot {
 
     /** The module folders of a checkout ({@code <checkout>/modules/<id>/} holding a {@code module.yaml}), sorted; the one listing of them. */
     public static List<Path> sourceFolders(Path checkout) {
-        Path modules = checkout.resolve(SOURCE_MODULES);
-        if (!Files.isDirectory(modules)) {
-            return List.of();
-        }
-        return ModuleFiles.list(modules).stream().filter(p -> Files.isRegularFile(p.resolve(DmodManifest.FILE)))
-                .map(p -> p.toAbsolutePath().normalize()).toList();
+        return ModuleHomes.folders(checkout.resolve(SOURCE_MODULES));
     }
 
     /**
@@ -372,6 +370,16 @@ public final class ModuleBoot {
         }
         notes.addAll(ModuleFiles.unpack(f.file(), f.dir()));
         Dmod.verify(f.dir(), f.file(), label);
+    }
+
+    /** The cache root under a data folder: {@code <data>/cache/modules}, where the packages are unpacked. */
+    public static Path cacheRoot(Path data) {
+        return data.resolve("cache/modules");
+    }
+
+    /** Whether the modules folder holds at least one package ({@code *.dmod}): what decides that the boot runs on packages. */
+    public static boolean hasPackages(Path modulesHome) {
+        return !packages(modulesHome).isEmpty();
     }
 
     /** The {@code .dmod} files of the modules folder, sorted; folders and other files are not read. */

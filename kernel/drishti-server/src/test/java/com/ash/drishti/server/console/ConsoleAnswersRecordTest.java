@@ -48,14 +48,14 @@ class ConsoleAnswersRecordTest {
     @Test
     void theRecordedBootstrapsAreTheServersAnswers() throws Exception {
         Path dir = REPO.resolve("config/distributions");
-        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(REPO.resolve("modules"));
+        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(com.ash.drishti.api.resolution.ModuleHomes.source(REPO));
         List<String> lenses = lensNames(REPO.resolve("config/lenses"));
         Map<String, List<String>> mapping = EditionEnvironmentPostProcessor.featureMapping(dir, "console");
         ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
         RecordedAnswers rec = RecordedAnswers.under(REPO, "");
         try (Stream<Path> s = Files.list(dir)) {
             for (Path f : s.filter(p -> p.getFileName().toString().matches("drishti\\.[a-z0-9-]+\\.yaml")).sorted().toList()) {
-                Distribution d = Distributions.read(f, dir.resolve(Distributions.KERNEL), REPO.resolve("modules"), REPO.resolve("config/packs"));
+                Distribution d = Distributions.read(f, dir.resolve(Distributions.KERNEL), com.ash.drishti.api.resolution.ModuleHomes.source(REPO), REPO.resolve("config/packs"));
                 Map<String, Object> doc = new LinkedHashMap<>();
                 doc.put("schema", ConsoleAnswers.SCHEMA);
                 Map<String, Object> dist = ConsoleDistribution.of(d, REPO.resolve("config/lenses"), lenses, mapping);

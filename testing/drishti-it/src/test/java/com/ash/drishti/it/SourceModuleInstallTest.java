@@ -19,7 +19,8 @@ import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.dataload.Routes;
-import com.ash.drishti.lakeconfig.ModuleDirs;
+import com.ash.drishti.api.resolution.LegacyModules;
+import com.ash.drishti.api.resolution.ModuleHomes;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.testkit.ModuleFixtures;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * A source module as a real package: {@code source-swapone} packed by the one packer (tools/modulepack.py), installed under {@code modules/installed/<id>/<version>/}
- * (what a deployment stages), seen through {@link ModuleDirs} (its inbox rules and its connector templates), then uninstalled and gone.
+ * (what a deployment stages), seen through {@link LegacyModules} (its inbox rules and its connector templates), then uninstalled and gone.
  */
 class SourceModuleInstallTest {
 
@@ -71,14 +72,19 @@ class SourceModuleInstallTest {
         }
     }
 
-    /** The module's rules as the server reads them: the dataload file of each module folder {@link ModuleDirs} lists. */
+    /** The module folders of the old store as the readers take them ({@link LegacyModules}, until i7a's I8). */
+    private static List<Path> dirs(Path store) {
+        return LegacyModules.read(null, store, new ArrayList<>()).stream().map(LegacyModules.Found::dir).toList();
+    }
+
+    /** The module's rules as the server reads them: the dataload file of each module folder of the store. */
     private static List<Routes.ModuleRules> rulesOf(Path modules) throws Exception {
         List<Routes.ModuleRules> out = new ArrayList<>();
         YAMLMapper yaml = new YAMLMapper();
-        for (Path m : ModuleDirs.of(modules)) {
+        for (Path m : dirs(modules)) {
             JsonNode d = yaml.readTree(Files.readString(m.resolve("module.yaml"))).path("dataload");
             if (d.isTextual()) {
-                out.add(new Routes.ModuleRules(ModuleDirs.idOf(m), yaml.readTree(Files.readString(m.resolve(d.asText())))));
+                out.add(new Routes.ModuleRules(ModuleHomes.development(m).id(), yaml.readTree(Files.readString(m.resolve(d.asText())))));
             }
         }
         return out;
@@ -94,15 +100,16 @@ class SourceModuleInstallTest {
         assertThat(dmod).isRegularFile();
 
         Path modules = tmp.resolve("modules");
-        assertThat(ModuleDirs.of(modules)).as("nothing installed yet").isEmpty();
+        assertThat(dirs(modules)).as("nothing installed yet").isEmpty();
         assertThat(rulesOf(modules)).isEmpty();
 
         Path installed = modules.resolve("installed/source-swapone/1.0.0");     // what a deployment stages
         Files.createDirectories(installed);
         Dmod.unpack(dmod, installed);
+        Files.writeString(LegacyModules.activeFile(modules), "modules: {source-swapone: 1.0.0}\n");   // and names active
 
-        assertThat(ModuleDirs.of(modules)).containsExactly(installed);
-        assertThat(ModuleDirs.idOf(installed)).isEqualTo("source-swapone");
+        assertThat(dirs(modules)).containsExactly(installed);
+        assertThat(ModuleHomes.development(installed).id()).isEqualTo("source-swapone");
         List<Routes.ModuleRules> rules = rulesOf(modules);
         assertThat(rules).hasSize(1);
         JsonNode rule = rules.get(0).document().path("dataload").path("rules").get(0);
@@ -117,7 +124,7 @@ class SourceModuleInstallTest {
         assertThat(installed.resolve("mappings/swapone-trade.yaml")).isRegularFile();
 
         delete(modules.resolve("installed/source-swapone"));                       // uninstalled
-        assertThat(ModuleDirs.of(modules)).as("the module's folder is gone").isEmpty();
+        assertThat(dirs(modules)).as("the module's folder is gone").isEmpty();
         assertThat(rulesOf(modules)).as("its inbox rules are gone").isEmpty();
     }
 }

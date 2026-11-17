@@ -166,9 +166,10 @@ public class LiveSetConfiguration {
         sets.validator(spec -> problems(spec, formats::has, kind -> contractFields(packs, kind)));
         Predicate<String> on = DomainFolders.on(env);
         // the launch roots are absolute by now (LaunchRoots): the modules folder and the site's config folder, never the process's folder
-        Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", env.getRequiredProperty("drishti.modules.home")));   // the one modules setting (section 18.2)
         Path site = Path.of(env.getProperty("drishti.live-sets.dir", Path.of(env.getRequiredProperty("drishti.config.dir"), "blotters").toString()));
-        sets.load(LiveSets.folders(modules, site, on), LiveSets::moduleOf);
+        // each module's blotters in the folder the module boot gave it (KERNEL_AND_MODULES.md section 4.2.1)
+        java.util.Map<Path, String> folders = LiveSets.folders(com.ash.drishti.packs.distribution.Distributions.homes(env), site, on);
+        sets.load(new java.util.ArrayList<>(folders.keySet()), folders::get);
         fields.addSource(sets::rules);
         EditRuntime rt = edits.getIfAvailable();
         if (rt != null) {

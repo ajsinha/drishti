@@ -710,8 +710,8 @@ public final class ModuleDeployService {
         return stored().stream().anyMatch(s -> s.id().equals(id));
     }
 
-    /** The active versions on this node ({@code active.yaml}). */
+    /** The active versions on this node (the store's {@link com.ash.drishti.api.resolution.LegacyModules#ACTIVE}). */
     public Map<String, String> activeHere() {
-        return ModuleDiscovery.readActive(node.root().resolve("installed").resolve("active.yaml"));
+        return com.ash.drishti.api.resolution.LegacyModules.readActive(com.ash.drishti.api.resolution.LegacyModules.activeFile(node.root()));
     }
 }

@@ -19,10 +19,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,6 +48,13 @@ public final class ModuleHomes {
 
     /** The system property that carries a module's folder to a child process: {@code drishti.module.dir.<id>}. */
     public static final String DIR_PROPERTY = "drishti.module.dir.";
+
+    /**
+     * The setting that carries the whole value ({@link #toProperty()}) to every reader with a property lookup: the server's environment
+     * (the launch puts it first), a child process ({@code -D}), a command line that booted. Absent: no package was booted, and the readers
+     * take the modules of the old store and folders ({@code LegacyModules}, until i7a's I8).
+     */
+    public static final String PROPERTY = "drishti.module.homes";
 
     /** The word {@link Home#identity()} and {@link #fingerprint()} use for a module without a content hash. */
     public static final String NO_CONTENT_HASH = "development";
@@ -170,6 +179,110 @@ public final class ModuleHomes {
             throw new IllegalStateException(e);
         }
     }
+
+    /**
+     * The value as one setting ({@link #PROPERTY}): one entry per module in id order, separated by {@code ,}; each entry
+     * {@code <id>:<version>:<content hash or development>:<origin>:<folder>} with the folder URL-encoded (UTF-8), so no character of a path
+     * can break it. {@link #fromProperty} reads it back to an equal value.
+     */
+    public String toProperty() {
+        StringBuilder b = new StringBuilder();
+        for (Home h : homes.values()) {
+            if (!b.isEmpty()) {
+                b.append(',');
+            }
+            b.append(h.id()).append(':').append(h.version()).append(':').append(h.contentHash() == null ? NO_CONTENT_HASH : h.contentHash())
+                    .append(':').append(h.origin().name()).append(':')
+                    .append(java.net.URLEncoder.encode(h.dir().toAbsolutePath().normalize().toString(), StandardCharsets.UTF_8));
+        }
+        return b.toString();
+    }
+
+    /** The value {@link #toProperty()} wrote; an empty text is no module. A malformed entry throws, naming it. */
+    public static ModuleHomes fromProperty(String text) {
+        List<Home> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return none();
+        }
+        for (String entry : text.strip().split(",")) {
+            String[] f = entry.split(":", 5);
+            if (f.length != 5) {
+                throw new IllegalArgumentException(PROPERTY + ": '" + entry + "' is not <id>:<version>:<hash>:<origin>:<folder>");
+            }
+            out.add(new Home(f[0], f[1], Path.of(java.net.URLDecoder.decode(f[4], StandardCharsets.UTF_8)),
+                    NO_CONTENT_HASH.equals(f[2]) ? null : f[2], Origin.valueOf(f[3])));
+        }
+        return of(out);
+    }
+
+    /**
+     * The modules every reader with a property lookup takes: the published value ({@link #PROPERTY}: the module boot ran on packages),
+     * else, until i7a's I8, the modules of the old store and folders ({@link LegacyModules}).
+     */
+    public static ModuleHomes resolve(java.util.function.Function<String, String> property) {
+        return of(property).orElseGet(() -> LegacyModules.homes(property));
+    }
+
+    /** The value a property lookup carries ({@link #PROPERTY}), if any: what the launch or the parent process published. */
+    public static Optional<ModuleHomes> of(java.util.function.Function<String, String> property) {
+        String v = property.apply(PROPERTY);
+        return v == null ? Optional.empty() : Optional.of(fromProperty(v));
+    }
+
+    /**
+     * The module source folders of a folder ({@code <folder>/<name>/} holding a {@code module.yaml}), sorted, absolute: the one listing of
+     * source folders, for source mode ({@link #source}, {@code ModuleBoot.source}) and the development switch.
+     */
+    public static List<Path> folders(Path folder) {
+        if (folder == null || !java.nio.file.Files.isDirectory(folder)) {
+            return List.of();
+        }
+        try (java.util.stream.Stream<Path> s = java.nio.file.Files.list(folder)) {
+            return s.filter(p -> java.nio.file.Files.isRegularFile(p.resolve(MANIFEST))).map(p -> p.toAbsolutePath().normalize()).sorted().toList();
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(folder + " cannot be listed: " + e.getMessage(), e);
+        }
+    }
+
+    /** A module's manifest file. */
+    public static final String MANIFEST = "module.yaml";
+
+    /** The folder of a checkout that holds its module source folders. */
+    public static final String SOURCE_MODULES = "modules";
+
+    /**
+     * Source mode (KERNEL_AND_MODULES.md section 4.2.1, the i7a decision on {@code --root}): every module folder of a checkout,
+     * {@code <checkout>/modules/<name>/}, read where it lies: origin development, no content hash, nothing unpacked. What the command-line
+     * tools and the tests of the shipped files mean ({@code resolve --json --root}); its id and version are its {@code module.yaml}'s
+     * (the id lower case; the folder's name without one; {@code 0.0.0} without a version). Two folders of one id: the first is kept.
+     */
+    public static ModuleHomes source(Path checkout) {
+        Map<String, Home> out = new TreeMap<>();
+        for (Path dir : folders(checkout.toAbsolutePath().normalize().resolve(SOURCE_MODULES))) {
+            Home h = development(dir);
+            out.putIfAbsent(h.id(), h);
+        }
+        return new ModuleHomes(out);
+    }
+
+    /** A source folder's home (origin development): the id and version of its {@code module.yaml}. */
+    public static Home development(Path dir) {
+        Map<?, ?> m;
+        try {
+            Object v = YAML.readValue(dir.resolve(MANIFEST).toFile(), Object.class);
+            m = v instanceof Map<?, ?> x ? x : Map.of();
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(dir.resolve(MANIFEST) + " cannot be read: " + e.getMessage(), e);
+        }
+        Object id = m.get("id");
+        String name = id == null || String.valueOf(id).isBlank() ? String.valueOf(dir.getFileName()) : String.valueOf(id);
+        Object version = m.get("version");
+        return new Home(name.strip().toLowerCase(java.util.Locale.ROOT), version == null ? "0.0.0" : String.valueOf(version).strip(),
+                dir.toAbsolutePath().normalize(), null, Origin.DEVELOPMENT);
+    }
+
+    private static final com.fasterxml.jackson.databind.ObjectMapper YAML =
+            new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
 
     /** {@code drishti.module.dir.<id>} → the module's absolute folder, in id order: what a child process is given. */
     public Map<String, String> dirProperties() {

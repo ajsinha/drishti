@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -36,12 +35,11 @@ class NoModuleFolderReaderTest {
 
     /** The boot and its file helper: the only readers. */
     static final Set<String> READERS = Set.of("ModuleBoot.java", "ModuleFiles.java");
-    /** Classes allowed to read the old store until it is deleted (I5 adds {@code LegacyModules}; I8 empties this set). */
-    static final Set<String> EXCEPTIONS = Set.of();
+    /** The one class allowed to read the old store until it is deleted: {@code LegacyModules} (I5); I8 deletes it and empties this set. */
+    static final Set<String> EXCEPTIONS = Set.of("LegacyModules.java");
 
     static final Pattern FORBIDDEN = Pattern.compile("cache/modules|drishti\\.modules\\.home|active\\.yaml");
 
-    @Disabled("i7a: enabled in I5 (B2: every reader asks the boot result; LegacyModules the one exception until I8)")
     @Test
     void onlyTheBootReadsTheModulesFolder() throws IOException {
         assertThat(offenders(RepositoryFiles.root())).isEmpty();

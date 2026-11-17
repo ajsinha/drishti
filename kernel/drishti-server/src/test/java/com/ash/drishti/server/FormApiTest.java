@@ -33,7 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Query by form: the form of a kind, its criteria compiled, and the compiled command run by the ordinary search (regular expressions included). */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.live-sets.modules-dir=../../modules",
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.searcher.kinds[0]=trade", "drishti.security.roles.searcher.raw=true",
         "drishti.security.roles.masked.kinds[0]=trade", "drishti.security.roles.masked.raw=false",

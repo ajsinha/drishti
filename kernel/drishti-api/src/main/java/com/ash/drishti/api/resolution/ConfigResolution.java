@@ -70,16 +70,17 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
 
     /**
      * A checkout's resolution with every module on (the {@code all} distribution): what a test or a tool of the shipped files means. The
-     * tools read it through {@code resolve --json --root} ({@code tools/resolved.py repository()}). Not installed as the process's current one.
+     * tools read it through {@code resolve --json --root} ({@code tools/resolved.py repository()}). Its modules are the checkout's source
+     * folders in source mode ({@link ModuleHomes#source}): read where they lie, never a package, never the cache. Not installed as the
+     * process's current one.
      *
      * @param root the repository's root (holds {@code config/packs} and {@code modules})
      */
     public static ConfigResolution repository(Path root) {
         Path r = root.toAbsolutePath().normalize();
-        Map<String, String> p = Map.of("drishti.packs.site-dir", r.resolve("config/packs").toString(), "drishti.modules.home", r.resolve("modules").toString(),
-                "drishti.packs.installed-dir", r.resolve("config/packs/no-installed-packs").toString(),
-                "drishti.modules.path", r.resolve("config/packs/no-module-store").toString());
-        return build(ResolutionSettings.of(p::get), id -> true);
+        Path site = r.resolve("config/packs");
+        return build(new ResolutionSettings(site, site.resolve("no-installed-packs"), site.resolve("core"), r.resolve(ModuleHomes.SOURCE_MODULES),
+                site.resolve("no-module-store"), List.of(), ModuleHomes.source(r)), id -> true);
     }
 
     /**

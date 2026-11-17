@@ -37,6 +37,8 @@ class DistributionsTest {
 
     static final Path DIR = Path.of(TestRoots.repo(), "config", "distributions");
     static final Path MODULES = Path.of(TestRoots.repo(), "modules");
+    /** The checkout's modules in source mode (KERNEL_AND_MODULES.md section 4.2.1). */
+    static final com.ash.drishti.api.resolution.ModuleHomes SOURCE = com.ash.drishti.api.resolution.ModuleHomes.source(Path.of(TestRoots.repo()));
     static final String PRODUCT_DEFAULTS = "Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'";
 
     static StandardEnvironment boot(Object... site) {
@@ -58,7 +60,7 @@ class DistributionsTest {
     }
 
     static Distribution read(String name) {
-        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.KERNEL), MODULES, Path.of(TestRoots.repo(), "config", "packs"));
+        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.KERNEL), SOURCE, Path.of(TestRoots.repo(), "config", "packs"));
     }
 
     @Test
@@ -98,7 +100,7 @@ class DistributionsTest {
 
     @Test
     void theModulesManifestsDriveTheFilterAndARequiredModuleComesAlong() {
-        java.util.Map<String, ModuleManifests.Entry> known = ModuleManifests.read(MODULES);
+        java.util.Map<String, ModuleManifests.Entry> known = ModuleManifests.read(SOURCE);
         assertThat(known).containsKeys("banking", "market-data", "capitalmarkets", "economy");
         List<String> order = List.copyOf(known.keySet());
         assertThat(order.indexOf("market-data")).isLessThan(order.indexOf("banking"));
@@ -109,8 +111,9 @@ class DistributionsTest {
         assertThat(DIR.resolve("modules.yaml")).doesNotExist();                       // the hand mapping is gone: one source of truth
         assertThat(ModuleManifests.withRequired(List.of("banking"), known)).containsExactly("banking", "market-data");
         assertThat(read("risk").packs()).contains("market-data", "trading").doesNotContain("world-economy", "us-equities");
-        assertThatThrownBy(() -> Distributions.read(Distributions.file(DIR, "risk"), DIR.resolve(Distributions.KERNEL), Path.of("no-such"),
-                Path.of(TestRoots.repo(), "config", "packs"))).hasMessageContaining("has no manifest");
+        assertThatThrownBy(() -> Distributions.read(Distributions.file(DIR, "risk"), DIR.resolve(Distributions.KERNEL),
+                com.ash.drishti.api.resolution.ModuleHomes.none(), Path.of(TestRoots.repo(), "config", "packs")))
+                .hasMessageContaining("is not among the modules this server booted");
     }
 
     /** Risk carries the trade blotter (the trading module) and the six source modules, listed in its file; Finance has neither. */

@@ -243,7 +243,6 @@ drishti:
     window-capacity: 5000            # records waiting for one viewer before it is told to resync instead (back-pressure)
     default-max-rows: 250000         # the most records a kind's default set reads into memory when its store cannot page it (a kind a lake keeps as columns is paged from the lake, uncapped); beyond it the set says capped
     store-timeout-seconds: 120       # how long a set paged from the lake may take to read the columns it orders by, and a page's records
-    modules-dir: ${drishti.modules.home}   # where the modules' declarations are read from (modules/<id>/blotters/*.blotter.yaml, the modules that are on)
     dir: ${drishti.config.dir}/blotters   # the site's own declarations (*.blotter.yaml); a declaration with a problem is set aside (DRS-9307) and listed in Admin
     edits-off: ""                    # declaration ids whose edits the site switches off (comma-separated): their grids are read-only
   index:

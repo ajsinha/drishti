@@ -108,11 +108,17 @@ public final class Distributions {
             return builtInAll();                                       // a server with no config/distributions folder: today's product
         }
         String packsDir = env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
-        return read(f, dir.resolve(KERNEL), modulesHome(env), Path.of(packsDir), packages(env));
+        return read(f, dir.resolve(KERNEL), homes(env), Path.of(packsDir), packages(env));
     }
 
-    /** The packaged modules of the environment's server (shipped first-party, then the module store's active ones), as the registry reads them. */
+    /**
+     * The packaged modules of i6 (shipped first-party, then the module store's active ones), as the registry reads them: only when no
+     * package was booted (until i7a's I8); after a boot on packages, the boot's modules are the packages ({@link #homes}) and this is empty.
+     */
     public static List<com.ash.drishti.registry.ModulePackages.Package> packages(Environment env) {
+        if (com.ash.drishti.api.resolution.ModuleHomes.of(env::getProperty).isPresent()) {
+            return List.of();
+        }
         return com.ash.drishti.registry.ModulePackages.read(Distributions.class.getClassLoader(),
                 com.ash.drishti.registry.ModulePackages.store(env::getProperty), Set.of(), new ArrayList<>());
     }
@@ -122,12 +128,18 @@ public final class Distributions {
      * requirement order. The console's distributions read the same list ({@code GET /public/modules/manifests}).
      */
     public static Map<String, ModuleManifests.Entry> known(Environment env) {
-        return ModuleManifests.read(modulesHome(env), packages(env));
+        return ModuleManifests.read(homes(env), packages(env));
     }
 
-    /** The modules shipped as folders: {@code drishti.modules.home}, its former name {@code drishti.module-manifests-dir} (section 18.2). */
-    public static Path modulesHome(Environment env) {
-        return com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.modules.home", env.getProperty(MODULES_DIR, com.ash.drishti.api.Roots.modules())));
+    /** The modules of this server: the module boot's result (KERNEL_AND_MODULES.md section 4.2.1), each with the folder it is read from. */
+    public static com.ash.drishti.api.resolution.ModuleHomes homes(Environment env) {
+        return com.ash.drishti.api.resolution.ModuleHomes.resolve(k -> {
+            try {
+                return env.getProperty(k);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        });
     }
 
     /** Drishti All with no file: every module, no filter, the product's own brand. */
@@ -139,12 +151,12 @@ public final class Distributions {
     }
 
     /** Reads a distribution file and compiles it against the kernel's file, the module manifests and the packs folder. */
-    public static Distribution read(Path file, Path kernelFile, Path modulesDir, Path packsDir) {
-        return read(file, kernelFile, modulesDir, packsDir, List.of());
+    public static Distribution read(Path file, Path kernelFile, com.ash.drishti.api.resolution.ModuleHomes homes, Path packsDir) {
+        return read(file, kernelFile, homes, packsDir, List.of());
     }
 
-    /** As above, with the packaged modules (shipped and installed {@code .dmod}s, {@link com.ash.drishti.registry.ModulePackages}). */
-    public static Distribution read(Path file, Path kernelFile, Path modulesDir, Path packsDir,
+    /** As above, with the packaged modules of i6 (shipped and installed {@code .dmod}s, {@link com.ash.drishti.registry.ModulePackages}). */
+    public static Distribution read(Path file, Path kernelFile, com.ash.drishti.api.resolution.ModuleHomes homes, Path packsDir,
             List<com.ash.drishti.registry.ModulePackages.Package> packages) {
         if (!Files.isRegularFile(file)) {
             throw new IllegalStateException("no distribution file " + file.toAbsolutePath().normalize() + " (set " + DIR
@@ -152,7 +164,7 @@ public final class Distributions {
         }
         JsonNode spec = tree(file);
         JsonNode kernel = Files.isRegularFile(kernelFile) ? tree(kernelFile).path("kernel") : YAML.createObjectNode();
-        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(modulesDir, packages);
+        Map<String, ModuleManifests.Entry> known = ModuleManifests.read(homes, packages);
         String id = spec.path("distribution").asText("").strip();
         if (id.isEmpty()) {
             throw new IllegalStateException("distribution file " + file + " has no 'distribution:' id (drishti.<name>)");
@@ -175,8 +187,9 @@ public final class Distributions {
             if (!mid.isEmpty() && (!m.isObject() || m.path("enabled").asBoolean(true))) {
                 listed.add(mid);
                 if (!known.containsKey(mid) && m.path("required").asBoolean(true)) {
-                    throw new IllegalStateException("distribution " + id + " requires the module '" + mid + "', which has no manifest under "
-                            + modulesDir.toAbsolutePath().normalize() + " (modules/<id>/module.yaml) and is not a shipped or installed .dmod");
+                    throw new IllegalStateException("distribution " + id + " requires the module '" + mid + "', which is not among the modules "
+                            + "this server booted (" + (homes.homes().isEmpty() ? "none" : String.join(", ", homes.homes().keySet()))
+                            + ") and is not a shipped or installed .dmod");
                 }
             }
         }

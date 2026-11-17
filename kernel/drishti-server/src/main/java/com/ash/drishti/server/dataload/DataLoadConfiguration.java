@@ -117,13 +117,13 @@ public class DataLoadConfiguration {
     }
 
     /**
-     * The inbox rules of the modules that are on ({@code <modules folder>/<id>/module.yaml}, its {@code dataload:}: a file name, read from the
-     * module's folder, or the rules inline), read at each cycle so that switching a module off or on changes the rules at once. The modules
-     * folder is {@code drishti.live-sets.modules-dir}.
+     * The inbox rules of the modules that are on (each module's {@code module.yaml}, its {@code dataload:}: a file name, read from the
+     * module's folder, or the rules inline), read at each cycle so that switching a module off or on changes the rules at once. The
+     * module's folder is the one the module boot gave it, through the resolution.
      */
     static Supplier<java.util.List<Routes.ModuleRules>> moduleRules(Environment env, ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
         return () -> {
-            // the resolution's modules that are on, wherever each is (its folder under drishti.modules.home, or its installed .dmod);
+            // the resolution's modules that are on, each in the folder the module boot gave it;
             // a rules file that cannot be read is a problem of the resolution (Health, DRS-1048), never a silent empty list
             java.util.List<Routes.ModuleRules> out = new java.util.ArrayList<>();
             com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);   // the current one: a switch rebuilds it

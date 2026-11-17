@@ -20,9 +20,9 @@ import java.nio.file.Path;
 /**
  * The named roots every default folder sits under (docs/admin/CONFIGURATION.md, "Launch roots"), for code that has no Spring environment
  * or needs a default: the install folder ({@code drishti.home}), the configuration folder ({@code drishti.config.dir}, default
- * {@code <home>/config}), the data folder ({@code drishti.data.dir}, default {@code <home>/data}) and the modules folder
- * ({@code drishti.modules.home}, default {@code <home>/modules}). Each is a system property (the server publishes its resolved values at
- * start, the launchers pass them) or its environment variable. A relative value is under the install folder; nothing is ever taken from
+ * {@code <home>/config}) and the data folder ({@code drishti.data.dir}, default {@code <home>/data}). The modules folder is the module
+ * boot's alone: a module's folder is asked of the boot result ({@code ModuleHomes}), never derived from a root. Each is a system property
+ * (the server publishes its resolved values at start, the launchers pass them) or its environment variable. A relative value is under the install folder; nothing is ever taken from
  * the process's working folder: with no install folder named, a default is refused with a message naming the setting.
  */
 public final class Roots {
@@ -33,8 +33,6 @@ public final class Roots {
     public static final String HOME_ENV = "DRISHTI_HOME";
     /** The configuration folder. */
     public static final String CONFIG = "drishti.config.dir";
-    /** The modules folder. */
-    public static final String MODULES = "drishti.modules.home";
 
     private Roots() {
     }
@@ -78,9 +76,12 @@ public final class Roots {
         return base(DataDir.PROPERTY, DataDir.ENV, "data").resolve(sub).normalize().toString();
     }
 
-    /** The modules folder. */
-    public static String modules() {
-        return base(MODULES, "DRISHTI_MODULES_HOME", "modules").toString();
+    /**
+     * A folder setting of a process with no Spring environment: the system property, else its environment variable, else
+     * {@code <home>/<underHome>}; absolute (a relative value is under the install folder).
+     */
+    public static Path named(String property, String env, String underHome) {
+        return base(property, env, underHome);
     }
 
     /**

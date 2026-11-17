@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * record is written to Endur's topic; a correction made on the old version is refused, naming who changed the record.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
-        "DRISHTI_STREAM_ENDUR=true", "drishti.live-sets.modules-dir=../../modules", "logging.level.org.apache.kafka=ERROR", "logging.level.kafka=ERROR",
+        "DRISHTI_STREAM_ENDUR=true", "logging.level.org.apache.kafka=ERROR", "logging.level.kafka=ERROR",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.edit.file=../../config/edit/edit.yaml", "DRISHTI_EDIT_ENABLED=true",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/kafka-edit-${random.uuid}.db",

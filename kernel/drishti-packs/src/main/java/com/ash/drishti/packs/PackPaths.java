@@ -93,8 +93,8 @@ public final class PackPaths {
 
     /**
      * The settings of the resolution of a server (docs/architecture/KERNEL_AND_MODULES.md section 18.2): the site's packs
-     * ({@code drishti.packs.site-dir}, former name {@code drishti.packs.dir}), the deployed ones, the kernel's, the modules folder
-     * ({@code drishti.modules.home}) and the module store ({@code drishti.modules.path}).
+     * ({@code drishti.packs.site-dir}, former name {@code drishti.packs.dir}), the deployed ones, the kernel's, and the modules: the module
+     * boot's result the launch put in the environment ({@code ModuleHomes}), else, until i7a's I8, the old store and folders.
      */
     public static com.ash.drishti.api.resolution.ResolutionSettings settings(Environment env) {
         return com.ash.drishti.api.resolution.ResolutionSettings.of(k -> Modules.property(env, k));

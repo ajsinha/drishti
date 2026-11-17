@@ -34,9 +34,9 @@ import java.util.stream.Stream;
  *   <li><b>the site</b>: {@code <site>/<pack>} (and {@code <site>/<domain>/<pack>}), {@code drishti.packs.site-dir}, default
  *   {@code config/packs}. A site pack of a shipped pack's name replaces it only when its {@code pack.yaml} says {@code replaces: <pack>};
  *   otherwise the clash is refused (a problem naming both) and the shipped pack is read;</li>
- *   <li><b>the active modules</b>: each active module's manifest {@code packs:} list ({@code folder} + {@code list}), in its development
- *   folder ({@code modules/<dir>/module.yaml}) or its installed {@code .dmod}
- *   ({@code <store>/installed/<id>/<version>}, named by {@code <store>/installed/active.yaml}, which wins over the development copy);</li>
+ *   <li><b>the active modules</b>: each active module's manifest {@code packs:} list ({@code folder} + {@code list}), in the folder the
+ *   module boot gave it ({@link ModuleHomes}: its cache folder, or in source mode its source folder); with no package booted, until
+ *   i7a's I8, the old store and folders ({@link LegacyModules});</li>
  *   <li><b>the kernel</b>: {@code <site>/core/<pack>} (core, gleif, compute-demo).</li>
  * </ol>
  * The same name twice in one layer is an error naming both places, and neither is read. A module that is not active brings no pack (its
@@ -45,9 +45,6 @@ import java.util.stream.Stream;
  * {@code kernel/drishti-api/src/test/resources/pack-resolution/cases.yaml}. Every reader of packs asks this, never a folder.
  */
 public final class PackResolver {
-
-    /** The folders under the modules tree without a module.yaml already noted (once each). */
-    private static final java.util.Set<Path> NOTED = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /** The layer a pack came from. */
     public enum Layer {
@@ -95,14 +92,21 @@ public final class PackResolver {
      *
      * @param site    the site's packs folder ({@code config/packs})
      * @param kernel  the kernel's packs folder ({@code config/packs/core})
-     * @param modules   the development tree of the modules ({@code modules}; null: none)
-     * @param store     the module store ({@code <data>/modules}; null: none)
+     * @param modules   the modules folder ({@code modules}; null: none): shown; read for modules only with no {@code homes}
+     * @param store     the module store of i6 ({@code <data>/modules}; null: none): read only with no {@code homes}
      * @param installed the packs an administrator deployed, read before the site's folder (null: none)
+     * @param homes     the module boot's result: every module and its folder; null: none was booted, the old store and folders are read
+     *                  ({@link LegacyModules}, until i7a's I8)
      */
-    public record Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra) {
+    public record Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra, ModuleHomes homes) {
 
         public Layout {
             extra = extra == null ? List.of() : List.copyOf(extra);
+        }
+
+        /** As above, the modules from the old store and folders. */
+        public Layout(Path site, Path kernel, Path modules, Path store, Path installed, List<Path> extra) {
+            this(site, kernel, modules, store, installed, extra, null);
         }
 
         /** As above, with no extra folders of packs. */
@@ -227,37 +231,29 @@ public final class PackResolver {
     }
 
     /**
-     * Every module on disk, by id: the development tree's ({@code <modules>/<dir>/module.yaml}: every module's one layout),
-     * then the module store's active installs, which win an id.
+     * Every module, by id: each home of the module boot's result ({@link Layout#homes()}), read from the folder it gives; with no result,
+     * until i7a's I8, the old store and folders through {@link LegacyModules} (the store's active installs win an id).
      */
     public static Map<String, Module> modules(Layout layout, Function<Path, Map<String, Object>> yaml, List<String> problems) {
         Map<String, Module> out = new TreeMap<>();
-        if (layout.modules() != null && Files.isDirectory(layout.modules())) {
-            for (Path dir : dirs(layout.modules())) {
-                if (Files.isRegularFile(dir.resolve("module.yaml"))) {        // one layout: the module's files at its folder's top
-                    module(dir, layout.modules().relativize(dir).toString().replace('\\', '/'), yaml, problems, out);
-                } else if (NOTED.add(dir)) {                                   // an old build folder (modules/dist): a note, not a failure
-                    System.getLogger(PackResolver.class.getName()).log(System.Logger.Level.INFO, dir + ": no module.yaml, not a module, "
-                            + "skipped (an old build folder? delete it)");
-                }
+        if (layout.homes() != null) {
+            for (ModuleHomes.Home h : layout.homes().homes().values()) {
+                module(h.dir(), source(h, layout), yaml, problems, out);
             }
+            return out;
         }
-        Path installed = layout.store() == null ? null : layout.store().resolve("installed");
-        if (installed != null && Files.isRegularFile(installed.resolve("active.yaml"))) {
-            try {
-                if (yaml.apply(installed.resolve("active.yaml")).get("modules") instanceof Map<?, ?> active) {
-                    for (Map.Entry<?, ?> e : active.entrySet()) {
-                        Path home = installed.resolve(String.valueOf(e.getKey())).resolve(String.valueOf(e.getValue())).normalize();
-                        if (home.startsWith(installed) && Files.isRegularFile(home.resolve("module.yaml"))) {
-                            module(ModuleOverrides.installed(home, String.valueOf(e.getKey())), "the module store's " + e.getKey() + " " + e.getValue(), yaml, problems, out);
-                        }
-                    }
-                }
-            } catch (RuntimeException e) {
-                problems.add(installed.resolve("active.yaml") + " cannot be read: " + e.getMessage());
-            }
+        for (LegacyModules.Found f : LegacyModules.read(layout.modules(), layout.store(), problems)) {
+            module(f.dir(), f.source(), yaml, problems, out);
         }
         return out;
+    }
+
+    /** A booted module's source in words: its folder under the modules folder (source mode), else its package and origin. */
+    private static String source(ModuleHomes.Home h, Layout layout) {
+        if (layout.modules() != null && h.dir().startsWith(layout.modules())) {
+            return layout.modules().relativize(h.dir()).toString().replace('\\', '/');
+        }
+        return h.origin() == ModuleHomes.Origin.DEVELOPMENT ? h.dir().toString() : h.id() + "-" + h.version() + ".dmod (" + h.origin().word() + ")";
     }
 
     private static void module(Path home, String source, Function<Path, Map<String, Object>> yaml, List<String> problems, Map<String, Module> out) {

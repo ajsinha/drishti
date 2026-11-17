@@ -39,8 +39,10 @@ import java.util.stream.Stream;
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>
- *   <li>the content modules' own manifests, {@code modules/<id>/module.yaml} (the {@code .dmod} manifest, KERNEL_AND_MODULES.md section
- *       3.3): the one source of what a content module is (a module with {@code java:} is read from its jar);</li>
+ *   <li>the content modules' own manifests, each module's {@code module.yaml} (the {@code .dmod} manifest, KERNEL_AND_MODULES.md section
+ *       3.3) in the folder the module boot gave it ({@code ModuleHomes}; with no package booted, until i7a's I8, the modules folder's
+ *       {@code <dir>/module.yaml} and the old store's packages): the one source of what a content module is (a module with {@code java:}
+ *       is read from its jar);</li>
  *   <li>the lenses the jars ship, {@value #LENSES} (each module ships the lenses that compose it);</li>
  *   <li>the site's {@code config/modules/<id>.yaml}: the administrator's switch ({@code enabled}), or the whole manifest of a content-only
  *       module ({@code code: false});</li>
@@ -64,6 +66,7 @@ public final class YamlAccessStore implements AccessStore {
     private final ClassLoader loader;
     private final Path manifestsDir;
     private final java.util.function.Supplier<Path> store;
+    private final java.util.function.Supplier<com.ash.drishti.api.resolution.ModuleHomes> homes;
 
     /**
      * @param modulesDir the site's module files ({@code config/modules})
@@ -90,6 +93,16 @@ public final class YamlAccessStore implements AccessStore {
 
     /** As above, the module store looked up at every read (the server's settings may be completed after the registry is made). */
     public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path manifestsDir, java.util.function.Supplier<Path> store) {
+        this(modulesDir, accessDir, loader, manifestsDir, store, () -> null);
+    }
+
+    /**
+     * As above, with the module boot's result ({@code homes}, asked at every read): when it gives one (the boot ran on packages), each
+     * module's manifest is read from its folder there, and neither the modules folder nor the old store is read.
+     */
+    public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader, Path manifestsDir, java.util.function.Supplier<Path> store,
+            java.util.function.Supplier<com.ash.drishti.api.resolution.ModuleHomes> homes) {
+        this.homes = homes == null ? () -> null : homes;
         this.store = store == null ? () -> null : store;
         this.modulesDir = modulesDir;
         this.accessDir = accessDir;
@@ -123,35 +136,44 @@ public final class YamlAccessStore implements AccessStore {
             }
         }
         java.util.Set<String> before = new java.util.HashSet<>(modules.keySet());
-        packaged(modules, warnings);
-        java.util.Set<String> packagedIds = new java.util.HashSet<>(modules.keySet());
-        packagedIds.removeAll(before);
-        if (manifestsDir != null && Files.isDirectory(manifestsDir)) {      // the content modules' own manifests: one source of truth
-            try (Stream<Path> dirs = Files.list(manifestsDir)) {
-                for (Path f : dirs.map(d -> d.resolve("module.yaml"))
-                        .filter(Files::isRegularFile).sorted().toList()) {
-                    String where = manifestsDir.relativize(f).toString().replace('\\', '/');
-                    where = "modules/" + where;
-                    try {
-                        Map<String, Object> raw = readMap(f);
-                        if (raw.get("java") != null && modules.containsKey(ModuleManifest.norm(String.valueOf(raw.get("id"))))) {
-                            continue;                                  // a module with code whose jar is here: its jar's manifest is the one read
-                        }
-                        ModuleManifest m = ModuleManifest.ofDmod(raw, where);
-                        if (packagedIds.contains(m.id())) {
-                            continue;                                  // the installed package's manifest is the one read
-                        }
-                        if (modules.putIfAbsent(m.id(), m) != null) {
-                            warnings.add(where + ": a second manifest of the module '" + m.id() + "'; the first is kept");
-                        }
-                    } catch (RuntimeException ex) {
-                        warnings.add(where + ": " + ex.getMessage());
+        com.ash.drishti.api.resolution.ModuleHomes booted = homes.get();
+        Map<Path, String> manifests = new LinkedHashMap<>();                 // each module's own manifest file -> where, in words
+        if (booted != null) {                                              // the boot's modules: one folder each, nothing else read
+            booted.homes().values().forEach(h -> manifests.put(h.dir().resolve("module.yaml"), "module " + h.id() + " " + h.version()));
+        } else {
+            packaged(modules, warnings);
+            if (manifestsDir != null && Files.isDirectory(manifestsDir)) {
+                try {
+                    for (Path d : com.ash.drishti.api.resolution.ModuleHomes.folders(manifestsDir)) {
+                        manifests.put(d.resolve("module.yaml"), "modules/" + manifestsDir.relativize(d.resolve("module.yaml")).toString().replace('\\', '/'));
                     }
+                } catch (java.io.UncheckedIOException ex) {
+                    warnings.add(manifestsDir + ": " + ex.getMessage());
                 }
-            } catch (IOException ex) {
-                warnings.add(manifestsDir + ": " + ex.getMessage());
             }
         }
+        java.util.Set<String> packagedIds = new java.util.HashSet<>(modules.keySet());
+        packagedIds.removeAll(before);
+        manifests.forEach((f, where) -> {                                  // the content modules' own manifests: one source of truth
+            if (!Files.isRegularFile(f)) {
+                return;
+            }
+            try {
+                Map<String, Object> raw = readMap(f);
+                if (raw.get("java") != null && modules.containsKey(ModuleManifest.norm(String.valueOf(raw.get("id"))))) {
+                    return;                                                // a module with code whose jar is here: its jar's manifest is the one read
+                }
+                ModuleManifest m = ModuleManifest.ofDmod(raw, where);
+                if (packagedIds.contains(m.id())) {
+                    return;                                                // the installed package's manifest is the one read
+                }
+                if (modules.putIfAbsent(m.id(), m) != null) {
+                    warnings.add(where + ": a second manifest of the module '" + m.id() + "'; the first is kept");
+                }
+            } catch (RuntimeException ex) {
+                warnings.add(where + ": " + ex.getMessage());
+            }
+        });
         Map<String, Boolean> switches = new LinkedHashMap<>();
         for (Path f : yamlFiles(modulesDir)) {
             String id = ModuleManifest.norm(f.getFileName().toString().replaceFirst("\\.ya?ml$", ""));
