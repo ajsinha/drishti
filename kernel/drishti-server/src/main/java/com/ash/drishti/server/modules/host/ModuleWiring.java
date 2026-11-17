@@ -161,6 +161,7 @@ public final class ModuleWiring {
         where.put("data-dir", dataDir.resolve("modules").resolve(module.id()).toString());
         folders.put(module.id(), Map.copyOf(where));
         int n = bridge.connect(module, contributions);
+        operations(module, contributions);
         List<DrishtiModule> started = new ArrayList<>();
         try {
             for (DrishtiModule m : ModuleBridge.found(module, DrishtiModule.class)) {
@@ -186,6 +187,20 @@ public final class ModuleWiring {
             }
         }
         LOG.info("module {}: {} contributions connected, {} entr{} started", module.id(), n, started.size(), started.size() == 1 ? "y" : "ies");
+    }
+
+    /**
+     * The module's operations ({@code @Operation} on the beans of its own child context) join the kernel's registry, and are withdrawn
+     * with its routes, first, when it unloads (KERNEL_AND_MODULES.md section 2.3). Two of one name stop its start.
+     */
+    private static void operations(LoadedModule module, Contributions contributions) {
+        if (module.context() == null || module.context().getParent() == null) {
+            return;
+        }
+        module.context().getParent().getBeanProvider(com.ash.drishti.server.kernelapi.OperationRegistry.class).ifAvailable(r -> {
+            Runnable w = r.register(module.id(), module.context());
+            contributions.add(module.id(), Contributions.Surface.ROUTE, "operations of " + module.id(), null, w);
+        });
     }
 
     /** Unload step 7, before its context closes: the module's entry stops. */

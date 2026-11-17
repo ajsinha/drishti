@@ -33,4 +33,11 @@ public @interface Operation {
 
     /** The operation's name within its module ({@code var.scope}). */
     String value();
+
+    /**
+     * On a provider's method: the REST path the operation answers as ({@code "POST /api/v1/<prefix>/<path>"}), whose doors it passes: the
+     * token's scope, the module and function gate, the engine gate and the part it is placed with. Empty (the default, and always on a
+     * consumer's interface): the module's own doors, its {@code api} part, and a token scope no API token holds.
+     */
+    String rest() default "";
 }
