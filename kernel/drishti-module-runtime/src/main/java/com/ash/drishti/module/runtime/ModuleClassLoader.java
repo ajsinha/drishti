@@ -33,7 +33,8 @@ import org.springframework.core.SmartClassLoader;
  * is therefore never used ({@link KernelLibraries} warns of it at load and in {@code module verify}); a library the kernel does not ship
  * comes from the module's jars. One filter: a class of {@code com.ash.drishti.} outside the kernel API ({@link #KERNEL_API}) is never the
  * kernel's (its internals stay invisible) unless it is in the module's verified kernel-internals allowance; it can only be the module's own.
- * No module sees another module's classes.
+ * No module sees another module's classes. Resources follow the same order; a kernel {@code META-INF/services} file is handed on only when
+ * every provider it names is a class the module may take from the kernel.
  */
 public final class ModuleClassLoader extends URLClassLoader implements SmartClassLoader {
 
@@ -130,7 +131,7 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
             if (u == null && lib != null) {
                 u = lib.getResource(name);
             }
-            if (u != null) {
+            if (u != null && servable(name, u)) {
                 return u;
             }
         }
@@ -142,9 +143,9 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
     public Enumeration<URL> getResources(String name) throws IOException {
         Set<URL> out = new LinkedHashSet<>();
         if (kernelMayGiveResource(name)) {
-            out.addAll(Collections.list(kernel.getResources(name)));
+            Collections.list(kernel.getResources(name)).stream().filter(u -> servable(name, u)).forEach(out::add);
             if (lib != null) {
-                out.addAll(Collections.list(lib.getResources(name)));
+                Collections.list(lib.getResources(name)).stream().filter(u -> servable(name, u)).forEach(out::add);
             }
         }
         out.addAll(Collections.list(findResources(name)));
@@ -164,6 +165,30 @@ public final class ModuleClassLoader extends URLClassLoader implements SmartClas
             } catch (ClassNotFoundException e2) {
                 return null;
             }
+        }
+    }
+
+    /**
+     * A kernel-side resource as this loader may hand it on: a {@code META-INF/services} file only when every provider it names is a class
+     * this loader may take from the kernel (the kernel's own providers are kernel internals: a {@code ServiceLoader} with a module's loader
+     * would name a class it cannot load). Every other resource as it is.
+     */
+    private boolean servable(String name, URL u) {
+        String n = name.startsWith("/") ? name.substring(1) : name;
+        if (!n.startsWith("META-INF/services/")) {
+            return true;
+        }
+        try (java.io.InputStream in = u.openStream()) {
+            for (String line : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                int hash = line.indexOf('#');
+                String provider = (hash >= 0 ? line.substring(0, hash) : line).strip();
+                if (!provider.isEmpty() && !kernelMayGive(provider)) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

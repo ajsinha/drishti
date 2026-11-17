@@ -78,6 +78,7 @@ class KernelLibrariesWinTest {
         g10.extraJarResources.put(SERVICES, "module\n");
         Path dir = g10.install(tmp, tmp.resolve("modules"));
         Files.writeString(Files.createDirectories(tmp.resolve("kernel-res/META-INF/services")).resolve("g10.Probe"), "kernel\n");
+        Files.writeString(tmp.resolve("kernel-res/META-INF/services/g10.Internal"), "# a kernel provider\n" + ModuleRuntime.class.getName() + "\n");
 
         KernelFacts facts = KernelFacts.ofKernel().withLibraries(fixtureList());
         String sentence = "gten 1.0.0 carries jackson-databind 2.17.1 (jackson-databind-2.17.1.jar); the kernel's jackson-databind 2.21.4 is used "
@@ -128,6 +129,10 @@ class KernelLibrariesWinTest {
         assertThat(text(urls.get(1))).isEqualTo("module");
         assertThat(text(m.getResource(SERVICES))).isEqualTo("kernel");
         assertThat(kernel.getResource(SERVICES)).isNotNull();
+        // a kernel service file naming a kernel internal is not handed on (a ServiceLoader with the module's loader could not load it)
+        assertThat(kernel.getResource("META-INF/services/g10.Internal")).isNotNull();
+        assertThat(Collections.list(m.getResources("META-INF/services/g10.Internal"))).isEmpty();
+        assertThat(m.getResource("META-INF/services/g10.Internal")).isNull();
     }
 
     @Test

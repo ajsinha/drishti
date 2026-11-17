@@ -598,9 +598,9 @@ the site's lib jars, and only then the module's own jars (`java/`, then `lib/`):
   first-party module's declared `kernel-internals:` allowance (section 3.3). The allowance lists kernel packages only: no library needs a
   line in it. The conformance check C1 fails a module class that imports anything else of `com.ash.drishti.`.
 - **No module sees another module's classes**; modules talk through kinds, functions and events.
-- **Resources** follow the same order: `getResources` lists the kernel's, then the site's, then the module's (a `ServiceLoader` with a
-  module's loader also finds the kernel's providers; the kernel's own collection of a module's providers takes only those of the module's
-  loader).
+- **Resources** follow the same order: `getResources` lists the kernel's, then the site's, then the module's; a kernel `META-INF/services`
+  file is listed only when every provider it names is a class the module may take from the kernel (a `ServiceLoader` with a module's loader
+  also finds the providers of the kernel's libraries; the kernel's own collection of a module's providers takes only those of the module's loader).
 - **The thread context class loader** is the module's loader on every call the runtime makes into the module (its configuration classes,
   its context's start, the unload steps) and is restored after.
 - **Spring**: each module gets a **child `ApplicationContext`** with the module's class loader; its parent exposes only the kernel API
