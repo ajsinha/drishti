@@ -34,12 +34,16 @@ ROOT = CONSOLE.parent
 LONG = max(BROWSER_WAIT_MS, 240_000)                    # the read, the draft and the fifteen checks are real work
 
 
+MODULES_DIR = "DRISHTI_CONSOLE__BUILDER__PACK_DESIGNER_MODULES_DIR"   # the console's builder.pack_designer_modules_dir (it works out no server folder)
+
+
 @pytest.fixture(scope="session")
 def designer(tmp_path_factory):
     work = tmp_path_factory.mktemp("pdui-server")
-    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_FILES_ROOT")}
+    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_FILES_ROOT", MODULES_DIR)}
     os.environ["DRISHTI_DATA_DIR"] = str(work / "data")                 # the jobs write the files store where the scratch server reads it
     os.environ["DRISHTI_FILES_ROOT"] = str(work / "data" / "files")
+    os.environ[MODULES_DIR] = str(work / "data" / "modules")             # Install on this node: the scratch server's modules folder, named
     try:
         yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)
     finally:

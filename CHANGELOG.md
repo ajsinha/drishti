@@ -49,6 +49,12 @@ release tag `v2.9.11.i_6`.
   The detached console's copy leaves the virtual environment out (a checkout's `.venv` linked to itself looped the copy); the
   render sign-in test's host serves the vendored Elements tree beside the renderer; the genomics top-bar test lists its stand-in in the
   distribution's answer (the distribution is a frozen view).
+- **Pack designer: a source module of a code module checks green again.** The standalone module tool carries Spring Boot's
+  auto-configuration (a module's server part is one: trading's did not start in the conformance harness, so every check that loads it
+  failed); a source module's runtime checks load the module it requires from the build's own package (`packaging/dist`, the code
+  module's jar inside) instead of packing its folder, which holds no jar. The Pack designer browser test names the console's
+  `builder.pack_designer_modules_dir` (the scratch server's modules folder), as a site does; the anywhere test keeps the drill's
+  `DRISHTI_RESOLVED_CACHE`.
 - **One server jar in `lib/`, of this version.** The tools refuse a jar in `<home>/lib` whose version differs from `.mvn/maven.config` ("lib/ holds ...-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run python tools/drishti.py build jar"; two jars stay refused); `build jar` and the drill's gate replace an older Drishti server jar there (never `lib/ext`), and the gate's Python checks that run the jar wait for the jar the gate just built.
 - **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
   designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)
