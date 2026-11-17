@@ -143,7 +143,10 @@ def test_a_pack_s_answer_is_asked_once_per_digest_and_its_files_once_per_content
     assert server.asked["pack"] == asked["pack"] and server.asked["file"] == asked["file"], "an unchanged pack is not asked again"
     assert "changed by a caller" not in second[0]["examples"], "each caller its own copy"
     help_file = next(server_side.rglob("help.yaml"))
-    help_file.write_text(help_file.read_text() + "\n# touched\n")                         # the pack changes on the server
+    text = help_file.read_text()
+    assert "terminal: helpdesk-pack" in text
+    # the pack changes on the server: its answer changes (a comment alone changes no answer, so no digest and no ask, as on the server)
+    help_file.write_text(text.replace("terminal: helpdesk-pack", "terminal: helpdesk-pack\n  bi: helpdesk-pack"))
     _run(packs.current(server, _Me()))
     assert server.asked["pack"] == asked["pack"] + 1, "a changed pack (its digest) is asked again"
     assert server.asked["file"] == asked["file"], "a guide whose content did not change is not fetched again"
