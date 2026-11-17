@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Where ViewModels and frames come from (CLIENT_RENDERER.md section 10): the console's own JSON (/api/view/{kind}/{id}, the person's
-   session) by default, with a bearer token when the host gives a token provider (the token exchange of ELEMENTS.md section 8), and the
+   session) by default, with a bearer token when the host gives a token provider (the token exchange of Drishti Elements' docs/DESIGN.md), and the
    device class (X-Drishti-Device, MOBILE_DISPLAY.md section 6) when the host says it. Every failure is a problem with a DRS code, words
    and the fix. */
 

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-risk's columns for the exposure, FRTB-SA and SIMM screens (ELEMENTS.md 4.8): one way to write a label column and a money
+/* drishti-risk's columns for the exposure, FRTB-SA and SIMM screens (Drishti Elements' docs/DESIGN.md 4.8): one way to write a label column and a money
    column, so the screens do not each carry their own. The money is the screen's own rule (compact for exposure, two decimals for a
    capital charge, whole units for initial margin), given as a function; a total row (`total` or `blank` true) leaves an empty figure empty.
 

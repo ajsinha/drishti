@@ -25,6 +25,7 @@ import time
 import urllib.request
 
 import pytest
+from core import elements_pin
 
 from page_walk import dedupe, menu_links, new_page, open_page, report
 from test_workbench_browser import browser  # noqa: F401 - the fixture
@@ -109,7 +110,7 @@ def test_the_gallery_shows_the_modules_visual(genomics, browser):
     base = str(genomics)
     pg = new_page(browser)
     try:
-        pg.goto(base + "/static/gallery/drishti_gallery.html#c=genomics.lollipop")
+        pg.goto(base + elements_pin.URL + "/gallery/drishti_gallery.html?visuals=/api/elements/visuals#c=genomics.lollipop")   # the vendored gallery, asked for the modules' visuals
         pg.wait_for_function("() => window.__gallery && window.__gallery.demos.some((d) => d.id === 'genomics.lollipop')", timeout=30000)
         pg.wait_for_selector("drishti-chart canvas", timeout=20000)
         assert pg.evaluate("() => window.__gallery.id") == "genomics.lollipop"

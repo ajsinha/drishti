@@ -307,9 +307,14 @@
     var E = root.Drishti && root.Drishti.elements;
     if (o.live) { return o.live; }
     if (E && E.data) { return E.data; }
-    if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { return require('../elements/drishti-data/drishti_data.js'); }
+    if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {   // the vendored Drishti Elements beside static/js (one folder: the pin)
+      var vendor = require('path').join(__dirname, '..', 'vendor', 'drishti-elements');
+      return require(require('path').join(vendor, require('fs').readdirSync(vendor)[0], 'elements', 'drishti-data', 'drishti_data.js'));
+    }
     if (typeof root.importScripts === 'function' && root.location) {
-      var base = String(root.location.href).replace(/js\/(?:drishti_)?live-hub\.js.*$/, ''), v = /[?&]v=([^&]+)/.exec(root.location.href);
+      // Drishti Elements' root: the page's drishti-core told it (drishti_channel.js adds elements=), else the static root beside this script
+      var href = String(root.location.href), el = /[?&]elements=([^&]+)/.exec(href), v = /[?&]v=([^&]+)/.exec(href);
+      var base = el ? decodeURIComponent(el[1]) : href.replace(/js\/(?:drishti_)?live-hub\.js.*$/, '');
       root.importScripts(base + 'elements/drishti-core/drishti_core.js' + (v ? '?v=' + v[1] : ''), base + 'elements/drishti-data/drishti_data.js' + (v ? '?v=' + v[1] : ''));
       return root.Drishti.elements.data;
     }

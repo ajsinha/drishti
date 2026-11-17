@@ -16,10 +16,10 @@
 /* One rendered screen in one container (CLIENT_RENDERER.md sections 4, 10, 11 and 12): it paints a ViewModel, applies live patches and
    streamed messages, navigates in place with its own back stack, and tells the host what happens through drishti:* events on the
    container. A static ViewModel, a live one and a streamed (ephemeral, GenUI) one all go through the same paint and the same patch. */
-import { PanelCharts } from '../../drishti-chart/src/drishti_index.js';
+import { PanelCharts } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-chart/src/drishti_index.js';
 import { h, icon, str, clear } from './drishti_dom.js';
 import * as assets from './drishti_assets.js';
-import * as GraphLib from '../../drishti-graph/src/drishti_index.js';
+import * as GraphLib from '../../../vendor/drishti-elements/2.4.0/elements/drishti-graph/src/drishti_index.js';
 import { view, stripItem, banners, body } from './drishti_view.js';
 import { panel } from './drishti_kinds.js';
 import { enhance } from './drishti_behave.js';
@@ -30,7 +30,7 @@ import { startBehaviours } from './drishti_console.js';
 import { aboutSheet } from './drishti_about.js';
 import { embedRecords } from './drishti_console.js';
 import { signInFor, gate } from './drishti_signin.js';
-import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 const NAV = ['in-place', 'host', 'new-window', 'follow'];
 const BEHAVIOURS = ['library', 'host', 'console'];

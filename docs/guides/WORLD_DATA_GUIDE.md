@@ -1669,8 +1669,7 @@ run without the network fails in words and the lake keeps its latest date.
 
 - **Genomics** reference facts (`tools/packgen/genomics/reference.py`: gene coordinates, UniProt accessions, dbSNP ids) are
   typed in by hand from public references; there is no fetcher to wrap. A script would query Ensembl and UniProt.
-- **Region maps** (`tools/maps/build_regions.py`, Natural Earth, public domain) are console assets, not a pack; that tool
-  keeps its own download.
+- **Region maps** (Natural Earth, public domain) come with Drishti Elements (its own map tool keeps its own download), not a pack.
 - **FRED** (the market-data pack's `fred-feed`) needs a personal API key and FRED's terms limit redistribution of some
   series; it is left to the live connector.
 

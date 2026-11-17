@@ -51,7 +51,7 @@ afterwards.
 11. [`design`: the Screen Designer over REST](#11-design-the-screen-designer-over-rest)
 12. [`bi` and `tables`](#12-bi-and-tables)
 13. [The risk engines: `var`, `exposure`, `sens`, `frtb`, `simm`, `pivot`](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot)
-14. [`compute`, `contract`, `elements` and `feed`](#14-compute-contract-elements-and-feed)
+14. [`compute`, `contract` and `feed`](#14-compute-contract-and-feed)
 15. [Store loaders: `tools/load-*.sh`](#15-store-loaders-toolsload-sh)
 16. [Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`](#16-generators-toolspackgen-toolssamplegen-toolsrealdata)
 17. [Developer tools](#17-developer-tools)
@@ -83,7 +83,7 @@ codes and, where it helps scripts, `--json`.
 | `approvals`, `change`, `edits` | `approvals` list, show, approve, reject, withdraw, ask; `change` propose, submit, list, show, history; `edits status` | REST | [11](#approvals-the-one-approvals-queue) |
 | `bi`, `tables` | `bi workspace`, `catalogue`, `expr`, `migrate`, `sql`, `model`, `mq`, `transform`, `item`, `dataset`, `runs`, `statement`; `tables` list, check, preview, lineage, offer, migrate | REST; the Java `tables` tool | [12](#12-bi-and-tables) |
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
-| `compute`, `contract`, `elements`, `feed` | reactive connectors; data contracts; Drishti Elements bundles; the data feeds | REST; `tools/contracts.py`; `tools/elements/`; `tools/feeds/` | [14](#14-compute-contract-elements-and-feed) |
+| `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
 | `docs` | `docs shots` | `tools/docs/screenshots.py` (Playwright) | [17](#docs-shots-screenshots) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
 
@@ -3797,7 +3797,7 @@ drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk 
 drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
-## 14. `compute`, `contract`, `elements` and `feed`
+## 14. `compute`, `contract` and `feed`
 
 ### `compute`: reactive connectors
 
@@ -3857,27 +3857,12 @@ python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/dri
 line with what it does and an example, from the packs, their contracts and `tools/commands.builtin.yaml` (the command line's own words and
 forms). `--check` fails when it is stale; a console test runs the same check.
 
-### `elements`: Drishti Elements for other applications
+### Drishti Elements
 
-Drishti Elements (the JavaScript and CSS libraries) for other applications (`tools/elements/cli.py`, with `dist.py`, `pack.py` and
-`dts.py` beside it; the guide [EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)). Offline, Python only; nothing is published.
-
-- `elements pack --libs core,grid,chart [--theme dark|light|<theme>] [--out DIR] [--include-domain banking] [--no-engines] [--maps]`:
-  one `drishti-elements.js` and one `drishti-elements.css` with exactly the named libraries and the ones they require (deepest
-  first), the vendored engines they need (ECharts) unless `--no-engines`, and `drishti-elements-pack.json` (what is inside, with SRI
-  hashes). The output and its first comment name every library and version inside. A library licensed with a domain module
-  (drishti-risk: banking) is refused (exit 1) unless `--include-domain banking`; an unknown library is refused too. `--libs all`:
-  every library the licence allows. Default folder `target/elements/pack`.
-- `elements dist [--out DIR] [--include-domain banking] [--only zip|npm]`: the release archive `drishti-elements-<version>.zip` and the
-  npm tarballs `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`); with banking the archive is
-  `drishti-elements-<version>+banking.zip` and drishti-risk's tarball is added. Default folder `target/elements`.
-- `elements webjar-tree --out DIR [--version V]`: the WebJar's files; the Maven profile runs it
-  (`./mvnw -P elements -pl :drishti-elements package`).
-
-```bash
-python3 tools/drishti.py elements pack --libs core,grid,chart --theme dark --out build/vendor/drishti
-python3 tools/drishti.py elements dist
-```
+Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
+`tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
+([USING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/USING.md)). Drishti has no `elements` command; how the console
+holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md).
 
 ### `feed`: the data feeds
 
@@ -4001,7 +3986,7 @@ of Parquet.
 | `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`2.9.11.i6`), `--tag` the release tag (`v2.9.11.i_6`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |
-| `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the one Elements version in `drishti_elements.json`): the pack generators write it into a module's `elements:` |
+| `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the pinned Drishti Elements, the folder under `static/vendor/drishti-elements/`): the pack generators write it into a module's `elements:` |
 | `tools/duplicates.py` | the copy-paste detector (PMD CPD through `tools/cpd/pom.xml`, 100 tokens) over Java, JavaScript and Python, excluding tests, generated files, `static/vendor`, `render/1.2.0` and `web/embed`; fails if a language has more duplicated lines than `tools/cpd/baseline.txt` (the gate runs it); `--report [N]` lists the biggest groups, `--write` lowers the baseline, never raising it |
 | `tools/code_volume.py` | lines of Java main and test, console Python and console JavaScript per release tag from git; `--write` replaces the table in [BENCHMARK.md](../admin/BENCHMARK.md#22-code-volume-by-release) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |

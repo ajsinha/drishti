@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-risk's grid preset (ELEMENTS.md 4.8): every table of the VaR and exposure screens is a <drishti-grid> in the `terminal` layout
+/* drishti-risk's grid preset (Drishti Elements' docs/DESIGN.md 4.8): every table of the VaR and exposure screens is a <drishti-grid> in the `terminal` layout
    (the product owner's default for VaR screens, 2026-11-07) and density, made the same way. The figures are the server's: a VaR, an ES
    or any column marked `additive: false` is never summed in the browser (clientAggregation false, the console's policy), and the
    preset's columns say which are which. A screen gives its columns and rows; the preset gives the rest:
@@ -22,7 +22,7 @@
 
    The screen keeps its own command line and keys, so the grid's chrome (its command line, wells, toolbar and function keys) is off
    unless asked (chrome: true); the status bar and Explain stay. A row click calls onRow(row, event) (drill to a scope, open a trade). */
-import { defineGridElement } from '../../drishti-grid/src/drishti_index.js';
+import { defineGridElement } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
 
 /** What every risk table starts from. */
 export const RISK_GRID_DEFAULTS = Object.freeze({ layout: 'terminal', density: 'terminal', chrome: false, checkboxes: false,

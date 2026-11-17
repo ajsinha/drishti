@@ -23,6 +23,24 @@
 The thin console, Drishti Elements 2.4.0 and the genomics showcase. The version shown everywhere is `2.9.11.i6` (`.mvn/maven.config`), the
 release tag `v2.9.11.i_6`.
 
+- **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
+  designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)
+  (tag `v2.4.0`, the same owner and proprietary licence). Drishti holds its release tree, unchanged, at
+  `drishti-console/web/static/vendor/drishti-elements/2.4.0/` (the folder's name is the pin, `core/elements_pin.py`; `VENDOR.md` row) with
+  ECharts, ECharts GL, CodeMirror, Apache Arrow JS and the map shapes inside it, and keeps no second copy: templates load it through
+  `ELEMENTS_DIR`, console scripts through drishti-core's `staticUrl`, the embed routes and the element sheets through `elements_pin`;
+  `static/js/drishti_elements-host.js` tells it the console's endpoints (live, changes, pivot page, capabilities) and registers Drishti's
+  own three libraries (insight, renderer, risk), which are built by the vendored build tool; drishti-rachana reads `world-regions.yaml` and
+  `formats.yaml` from the copy as a Maven resource (`drishti.elements.version`); `/elements` opens the vendored gallery with the modules'
+  visuals. Deleted: the moved sources, gallery, sheets, engines, tools (`tools/elements/`, `tools/maps/`, the API and catalogue
+  generators, the `elements` command, the WebJar module) and docs (`ELEMENTS.md`, `ELEMENTS_API.md`, EMBED_GUIDE sections 13 and 14 now
+  point to the Elements docs). New: [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md) and the guard
+  `test_elements_vendored.py` (one pin, the copy unedited by its SHA-384s, nothing moved left behind, the host script matches the
+  manifest); the version, licence, budget, guard and Node tests now cover Drishti's own libraries. About 100,000 lines of source leave
+  Drishti for one vendored release tree.
+- **test_packs:** the stand-in pack's change on the server now changes its answer (a comment alone changes no digest, on the server as in
+  the stand-in), so the console asks again.
+
 - **The genomics showcase reads its own data packs only.** The board and the protein workbench read the kinds the packs
   `genomics-showcase` and `protein-engineering` declare (`study-gene`, `study-sample`, `study-variant`, `variant-call`, `association`,
   `cnv-segment`, `pathway-gene`; `protein`, `residue`, `residue-contact`, `dms-score`, `design`, `design-mutation`, `design-round`), never
@@ -970,7 +988,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   reactor and passing C1 to C15. Drishti Genomics boots the thin kernel and the module from its file alone: the Research lens, none of the
   kernel's packs (`kernel-packs: []`), no finance anywhere; a module project's manifest is read from `src/dmod/`.
 - **The custom-visual SDK** ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk),
-  [ELEMENTS.md section 7.4](docs/architecture/ELEMENTS.md#74-a-modules-own-visual-types-the-visual-registry-for-modules)). A module ships
+  [ELEMENTS.md section 7.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A module ships
   its own visual type as a kind of drishti-chart's registry in its Elements library, built from drishti-chart's primitives, and declares
   it under `visuals:`; the gallery shows it while the module is hosted and not after it goes (`GET /api/elements/visuals`). The first is
   `genomics.lollipop`; `mvn drishti:visual -Dname=<name>` is the template. A module's pages read its API through `/m/<id>/api/`.
@@ -1528,12 +1546,12 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Fixed: the World lens's map landing draws the US sectors and the largest funds** (the capital-markets switch was set only on the
   explorer landing), and on a phone the known-at field takes a row of its own under the business date (its date and time were 19 px wide)
   and a table's rows-per-page Select is finger-sized (its control stayed 24 px tall).
-- **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
   called with `widgets` on a `Form` already drawn draws its fields again with them, the values kept. The page's GET address and every
   criterion's name (`op.`, `v.`, `v2.`, `cs.<path>`) are unchanged.
-- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
   Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
   Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
@@ -1546,7 +1564,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   CSS deleted. **drishti-inputs**: a form the server drew (`data-di-form`, `formOf`, `upgradeForms`; an embedded `Form` stops its
   page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
   formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
-- **Selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **Selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   a `Form`'s select field (every form on `Form`: the Admin screens, the alert form, the query form, BI's panes, the editors) is a
   `<drishti-select>` with search, type-ahead and the keys of the rest of the kit; drishti-grid's select cell editor is a `Select` that opens on
   the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick
@@ -1556,7 +1574,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
   (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
-- **The native-select sweep, first half: the libraries and BI on `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **The native-select sweep, first half: the libraries and BI on `Select`** ([ELEMENTS.md section 8.2](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   drishti-grid (a table's rows per page, the phone pivot's measure), drishti-chart (the studio's options, the map's metric), drishti-graph's
   group, size and colour pickers and drishti-tree's size-by and move-to draw drishti-inputs' `Select`, so those four libraries require
   drishti-inputs (the manifest lists it before the grid; the harness pages load it). Every BI page and script follows: the catalogue's
@@ -1567,7 +1585,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   `selectElement(doc, options, attrs)`; such a Select, and a page's `<drishti-select native>`, fires `change` and `input` for a pick as a native select did; the element's
   `value`, `disabled` and `focus()` reach the control, and a named one's field reads and sets it (`form.elements.<name>.value`). The guard's
   allow-list: 69 files and 149 selects → 39 and 78 (and to none with the screens below). Names, `data-*` hooks and the saved YAML are unchanged.
-- **The screens outside BI on `Select`** ([ELEMENTS.md section 15](docs/architecture/ELEMENTS.md#15-build-checklist)): every native
+- **The screens outside BI on `Select`** ([ELEMENTS.md section 15](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)): every native
   select of Account settings, alerts, Approvals, Build (the design's control kind and theme, the controls, form and versions tabs, the
   new-design registry), the designer (grid, modes, sentences, settings, outline, describe), Help › Configuration, reports and
   subscriptions, the calculator, the data view, discussions, the query form, Functions, the pivot and its Why, What-if and playground
@@ -1575,15 +1593,15 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   record forms' enum and lookup cells (it opens on the value; a pick saves), the refresh interval, the table chart, and the banking
   plugin's trading landing, market-risk ladder and scenario matrix is drishti-inputs' `<drishti-select>`: search on a long list,
   type-ahead, the kit's keys; a form submits the same names; 39 files and 78 selects off the guard's allow-list.
-- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
   not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).
-- **The Phone and Tablet orders on the kit's `LayoutModel`** ([ELEMENTS.md section 8.9](docs/architecture/ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)):
+- **The Phone and Tablet orders on the kit's `LayoutModel`** ([ELEMENTS.md section 8.9](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   a page's arrangement on a device is a breakpoint of drishti-designer's `LayoutModel` (its order, hidden visuals, heights and, new in the kit,
   wide items and a named step); the report's `layouts` are written as before (an unchanged report's YAML is the same byte for byte).
 - **The editors remember the designer layout on the server**: `EditorService`'s prefs keep `layout` (studio, side by side, terminal) with
   the mode and the YAML pane, per person (`PUT /api/v1/tables/editor/prefs` `{layout}`; another value is `422`).
-- **One outline** ([ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-graph-and-drishti-tree)): drishti-designer's own
+- **One outline** ([ELEMENTS.md section 8.8](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)): drishti-designer's own
   outline (`drishti_outline.js`, 286 lines) is folded into drishti-tree's `TreeOutline` and deleted; the kit re-exports it as `Outline`
   (drishti-designer 0.2.0 requires drishti-tree 0.2.0; `_designer_kit.html` loads drishti-tree). `TreeOutline` (292 → 526 lines) takes
   nested nodes (`nodes`, `setNodes`: a detail, an icon, `fixed` rows that are drop places, the host's class and `data-*` on each row, every
@@ -1594,7 +1612,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **The workbench's menus on drishti-inputs** (Add panel, Bind field, File, Ship, the command palette, a dropped field's kinds): `Listbox`
   under a search ranked by `searchOptions`, placed by drishti-core (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and
   its CSS deleted). `Listbox` gains `followActive`; `searchOptions` ranks a label that is the word first.
-- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   Collaboration (search, holds, export, verify, the list toggles, a comment's hide reason), Data loads (the filter embedded in its GET
   form, Announce, Expectations with a repeatable row per kind), Embedding (filter, new application, the secret, rotate) and Lakes ›
   Maintain (the choices, settings, a new schedule) are drawn by the same machinery as part 2: `core/form_kit.py`'s field helpers, the one
@@ -1606,14 +1624,14 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Fixed: an unchecked "Active" saved as active.** The alert form, a scheduled report and a subscription read a missing `enabled` field
   (an unchecked checkbox is not sent) as on; now as off, and the subscribe form drawn again after a refusal keeps the box as it was. Tests
   in `test_alert_routes.py` and `test_dist_routes.py`.
-- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
   through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
   of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
   filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
   `addHook`.
-- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
   fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
   one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
@@ -1686,7 +1704,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
   (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
   designer is built on, shown as the BI report designer and as the form designer. Design only.
-- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
   286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
   **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
@@ -1694,7 +1712,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   own formula widget folded into the `Form`'s; the model editor's Overview (name, title, in words) and Masks are live `Form`s; the Sutra
   designer's columns checklist is `Form`'s checkboxes. drishti-designer's `Inspector` takes `form` and `head`. The kit guard gains a rule:
   no console script draws a label and an input in a loop over a schema's properties or fields (an allow-list of 2 that only shrinks).
-- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
   unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
   structured options and the record forms' fields (beside the table and in the drawer's steps). **drishti-inputs 0.3.0**: `Form` gains
@@ -1704,7 +1722,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
   query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
   the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
-- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
   field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
   HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
@@ -1719,7 +1737,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
   `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
   own branch).
-- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   conditional formatting (each rule a live `Form` whose fields follow its kind; the 2.1 short form a Form's repeatable rows), the theme
   designer's name, series colours (repeatable rows: add, remove, move; 3 to 12), colours and type, Edit interactions, the tooltip page,
   the page's layout, the report's theme and kiosk rotation, a board tile's report, visual and alert, and the visual's, page's and
@@ -1782,7 +1800,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   modules' 530-line cap.
 - **Tests**: `test_docs_rot.py` knows the figures capture's test-only variables (`DRISHTI_FIGURES_OUT`, `DRISHTI_FIGURES_BASELINE`).
 
-- **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](docs/architecture/ELEMENTS.md), the AG Grid migration
+- **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md), the AG Grid migration
   guide): `treeData` with a `datasource`, `isServerSideGroup(row)` and `getServerSideGroupKey(row)` — the server answers the tree one
   level at a time (`treeData: true` in the block request, `groupKeys` the path of the node whose children are asked); a node is a row
   with the server's figures, a closed node reopens from its cached blocks, a sort or filter asks every open level again,
@@ -1804,7 +1822,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   Select demo; the harness and `test_elements_inputs_browser.py` test it by keyboard, type-ahead, search and ARIA; the screens' browser
   tests pick through it (`tests/select_helpers.py`).
 
-- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
   in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
   dates, the record forms and their cells, Explain's dates) is upgraded in place to the date picker and keeps sending its ISO date;
@@ -1822,7 +1840,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
 
 - **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
-  [ELEMENTS.md section 8.9](docs/architecture/ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
+  [ELEMENTS.md section 8.9](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)): one layout canvas over a
   layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
   undo and redo on one command stack or by snapshots), the palette, the inspector (a drishti-inputs Form), the outline, the YAML pane kept
   in step with the model both ways (Studio's reader and schema assistant moved into it) and the designer shell of EDITORS.md in the three
@@ -1831,7 +1849,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   in place of the suggestion strip); the table, model and Python editors' shell and YAML. `drishti_studio-yaml.js`,
   `drishti_studio-assist.js` and `drishti_cm-yaml.js` deleted. drishti-inputs extended for it (CodeEditor: updateValue, highlight,
   cursor, completeAfter, tabLeaves, YAML's Enter; Form: live). The standing rule **no bespoke UI**
-  ([ELEMENTS.md section 3.1](docs/architecture/ELEMENTS.md#31-standing-rule-no-bespoke-ui)) and its guard `test_designer_kit_guard.py`
+  ([ELEMENTS.md section 3.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)) and its guard `test_designer_kit_guard.py`
   (an allow-list of the screens still moving that only shrinks; every authoring screen and its state in section 12.3). The gallery has a
   designer in each layout and a flow canvas; ELEMENTS_API.md covers the kit.
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
@@ -1856,8 +1874,8 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   and its table added to the demo lake, where it would have read `data/delta/demo/risk-results`; such a connector reads another shipped
   lake's tables and is now left as it is.
 
-- **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
-- **Drishti Elements distributed** ([ELEMENTS.md section 8.7](docs/architecture/ELEMENTS.md#87-as-built-the-distribution); the guide
+- **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+- **Drishti Elements distributed** ([ELEMENTS.md section 8.7](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md); the guide
   [Using Drishti Elements in your app](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)): other applications take the libraries as files kept
   inside the organisation, never from a public CDN or registry. `drishti.py elements pack --libs core,grid,chart [--theme dark]`
   writes one JavaScript file and one style sheet with exactly those libraries and what they require (core+grid+chart: 1.8 MB, 555 KB
@@ -1869,10 +1887,10 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (`META-INF/resources/webjars/drishti-elements/<version>/`). The three forms hold the same bytes and are reproducible. Apps override
   any design token after the sheet for their own theme. The manifest's duplicate entries of drishti-inputs and drishti-data are gone and
   it gains `assets` (the folders a library reads at run time).
-- **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+- **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
   an offline Python build (`tools/elements/build.py`, `--check`), a loader (`Drishti.elements.load('drishti-grid')`), and the API
-  reference generated from the typed JSDoc ([ELEMENTS_API.md](docs/guides/ELEMENTS_API.md), `tools/docs/elements_api.py --check`).
+  reference generated from the typed JSDoc ([ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md), `tools/docs/elements_api.py --check`).
 - **drishti-core 1.0.0**: numbers by the server's rules (half up on the decimal value, the true minus, the named formats generated from
   `formats.yaml`, compact, percent, basis points, currency, a locale's separators), business dates and ranges, the theme tokens
   generated from `drishti_tokens.css` with WCAG contrast arithmetic, an API client (errors in words with their DRS code, GET retries,
@@ -1893,7 +1911,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   WebSocket; the server-side model's invalidate, purge and data-changed notice; group and pivot totals changed by difference, and
   non-additive ones asked of the server again, debounced. 40 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
   [BENCHMARK.md](docs/admin/BENCHMARK.md).
-- **drishti-grid 0.2.0, the visual layer** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+- **drishti-grid 0.2.0, the visual layer** ([ELEMENTS.md section 8.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   `new Grid(element, options)` and `<drishti-grid>` (no framework, no shadow root) draw the engine in the three layouts of g1, all
   built: `wells` (the default: fields with search and the four wells above the grid, Explain in a drawer that follows the selection),
   `panel` (a side tool panel with grouped fields, checkboxes, the wells two by two, pivot mode, grand total column, subtotals above and
@@ -1909,7 +1927,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
   every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
   The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
-- **drishti-inputs 0.1.0** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+- **drishti-inputs 0.1.0** ([ELEMENTS.md section 8.2](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   business-date pickers keyed by holiday calendars (rules with weekend rolls, n-th weekdays and Easter, or the server's dates; unions
   such as US+UK; T-1, month-end, typed `T-3`, `ME`, `6 Nov 2026`; non-business days refused in words), a date-range picker with twelve
   presets that move with the business date, a tree picker (compact partial selection, children from the server with loading and
@@ -1930,7 +1948,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (`cellValueChanged`, `editTransaction`) with undo and redo; a paste of a range from Excel (quoted cells, one value filling a range);
   Delete over a range; a write-back hook (applied, refused with the old values back, or proposed) and four eyes (cells marked until a
   proposal is decided). `grid.followFilters(bus)` follows a filter bar.
-- **drishti-grid 0.4.0, the AG Grid-style adapter** ([ELEMENTS.md section 6](docs/architecture/ELEMENTS.md#6-the-ag-grid-style-adapter),
+- **drishti-grid 0.4.0, the AG Grid-style adapter** ([ELEMENTS.md section 6](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md),
   [the migration guide](docs/guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app)): an application written for AG Grid Enterprise's pivoting moves to
   drishti-grid by changing one call, `createGridFromAgOptions(el, gridOptions)`. Drishti never uses AG Grid; the adapter is written from
   its public documentation only. Column definitions (defaults, types, groups, getters, formatters, comparators, classes and safe styles),
@@ -1950,7 +1968,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (`drishti-inputs/drishti_harness.html`), 23 more Node tests (`inputs`, `data`, `grid-edit`) and one browser test file
   (`test_elements_inputs_browser.py`). The console's pickers, forms, editors, live connections and Arrow reader that move onto these
   later are listed in ELEMENTS.md 8.2.
-- **drishti-chart 0.1.0, with maps** ([ELEMENTS.md section 8.3](docs/architecture/ELEMENTS.md#83-as-built-drishti-chart-its-maps-and-drishti-risk)):
+- **drishti-chart 0.1.0, with maps** ([ELEMENTS.md section 8.3](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   one engine-neutral spec over the vendored ECharts (kind, data inline or a server's answer, encodings x, y, series, size and colour,
   drishti-core's formats, axes, legend, annotations as lines, bands, points and texts, conditional marks and colours, interactions);
   the kinds line, area, bar (grouped, stacked, stacked to 100%, horizontal), scatter, bubble, histogram, waterfall, box plot, heatmap
@@ -1976,7 +1994,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (`drishti-chart/drishti_harness.html`: every kind, mode and map level), 19 Node tests (`chart.test.mjs`, `maps.test.mjs`: the spec, the
   translator, the kinds, the risk figures, the map loader on every one of the 252 region files) and one browser test file
   (`test_elements_chart_browser.py`).
-- **The Elements gallery** ([ELEMENTS.md section 8.4](docs/architecture/ELEMENTS.md#84-as-built-the-gallery), mock-up g4): the live
+- **The Elements gallery** ([ELEMENTS.md section 8.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md), mock-up g4): the live
   documentation of every component, a static page that needs no server (`static/gallery/drishti_gallery.html`, from the file system
   too) and the console's `/elements` (a Build page, under Build → Learn). Both modes of g4, the playground the default: the searchable
   list of libraries and components with version and badge (no server needed, needs a Drishti server, banking module licence; the
@@ -1992,7 +2010,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   types (a `@typedef` was read as `@type` and dropped). 9 Node tests (`gallery.test.mjs`), the routes' tests and one browser file
   (`test_elements_gallery_browser.py`, 5 tests, about 18 s).
 - **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/ARCHITECTURE.md#302-the-renderer-as-an-elements-library),
-  [ELEMENTS.md section 8.5](docs/architecture/ELEMENTS.md#85-as-built-drishti-renderer)). The product owner's rule: no renderer-private
+  [ELEMENTS.md section 8.5](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). The product owner's rule: no renderer-private
   grid, chart, format, live or input code; the console and the renderer draw panels with the same components. Tables, trees, drills, the
   pivot kind and every chart's Data table are **drishti-grid's document table** (the server's table, element for element 1.2.0's markup,
   with sort, filter, paging, trees and drills); the nested pivot in `behaviours: 'console'` is **drishti-grid's grid with tree data** (new:
@@ -2138,7 +2156,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
-- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS.md#121-the-migration-checklist)):
+- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   - **The Pivot screen** (`PIVOT`, and its presets the MR cube `MCUBE` and the CCR cube) is drawn by drishti-grid in its `wells`
     layout: the catalogue's fields, a document's paths by their grain and the engine's measures are the grid's fields; the wells, the
     member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
@@ -2167,7 +2185,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
     the grid's style (its budget raised on purpose to 27 KB gzip).
   - Not moved yet (listed in ELEMENTS.md 12.1): BI's matrix (needs values on rows and the tabular layout in drishti-grid), the
     other charts (BI's visuals, Chart any table: the chart migration), BI's date and time controls.
-- **Elements migration: the general screens** ([ELEMENTS.md section 8.6](docs/architecture/ELEMENTS.md#86-as-built-the-general-screens-moved-history-data-admin-help-landings-live)):
+- **Elements migration: the general screens** ([ELEMENTS.md section 8.6](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   the history and data pages, Admin, Help, the landings and every view's tables, charts and live connection draw with the libraries
   (BI, the Pivot, VaR and exposure move on their own branches).
   - **Tables**: every server table's sort, filter box, column funnels, pages, rows per page, keys and a zoomed panel's fit are
@@ -2192,7 +2210,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
     sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
     drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
   - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
-- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/ELEMENTS.md#122-the-var-and-exposure-family-step-9-2911e-the-migration-checklist)):
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
   every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
   currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
   headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the
@@ -2213,7 +2231,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (about 12 s on a cold console, longer on a busy machine); the console now renders them once in a worker thread as it starts, Help's
   search renders what is missing off the event loop, and the rendered pages are shared by every pack set's library. **The Approvals
   queue drops a stale list**: an answer to an older filter that arrives after a newer one no longer replaces it.
-- **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
+- **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
   `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
   what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
   Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no

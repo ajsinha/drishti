@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* One page of a report inside <drishti-report> (docs/architecture/ELEMENTS.md section 18): the tabs and the bar, the 12-column grid of visual frames, the
+/* One page of a report inside <drishti-report> (Drishti Elements' docs/DESIGN.md): the tabs and the bar, the 12-column grid of visual frames, the
    state the reader builds (slicers, the marks selected on other visuals, the business date) and each visual's query, one at a time and at most three at once.
    It draws with the console's own report code (static/js/bi-*.js, loaded as classic scripts into window.drishtiBi), so a visual looks and behaves as in the
    viewer; only the transport (the embed API with the host's token) and the page chrome are the element's. Everything is built with DOM calls and text:

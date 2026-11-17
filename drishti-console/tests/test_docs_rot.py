@@ -58,7 +58,9 @@ NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/sr
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
            # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
-           "docs/architecture/pack-resolution-inventory.md")
+           "docs/architecture/pack-resolution-inventory.md",
+           # the Elements separation runbook, carried out in i6: its paths are of the source tree before the split
+           "docs/plans/ELEMENTS_SPLIT_RUNBOOK.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -366,7 +368,7 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 # Variables a document makes up for the reader: a CI secret, the placeholder form of the console's variables.
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE",   # tutorial 10: a shell variable holding the console's address, beside DRISHTI_SERVER
-                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE",   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
+                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE",   # read only by tests/test_var_family_figures_browser.py (Drishti Elements' docs/DESIGN.md 12.2)
                 "DRISHTI_SWEEP_ROLE", "DRISHTI_SWEEP_BASE"}   # read only by tests/test_command_sweep_browser.py (TEST_HARNESS.md 3.27)
 # Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (bi/REPORTS.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}

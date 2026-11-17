@@ -393,7 +393,6 @@ def build_parser(h) -> argparse.ArgumentParser:
     load_module("feedcli", "feeds/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|migrate (2.9.11.e)
-    load_module("elementscli", "elements/cli.py").register(groups, add)                                      # elements pack|dist|webjar-tree (2.9.11.e)
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
         p = add(vw, name, h.cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")

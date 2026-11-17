@@ -27,7 +27,7 @@
 import { Screen } from './drishti_screen.js';
 import { KINDS } from './drishti_kinds.js';
 import { problem } from './drishti_net.js';
-import { ELEMENTS_VERSION } from '../../drishti-core/src/drishti_index.js';
+import { ELEMENTS_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 import { trustedTypesActive } from './drishti_assets.js';
 import { strip } from './drishti_view.js';
 import { aboutBody } from './drishti_about.js';

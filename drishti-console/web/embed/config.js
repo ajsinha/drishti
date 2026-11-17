@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Shared settings and small helpers of the element library (ELEMENTS.md, build step 9). One mutable `cfg` per page: the host sets it
+/* Shared settings and small helpers of the element library (Drishti Elements' docs/DESIGN.md, build step 9). One mutable `cfg` per page: the host sets it
    through DrishtiElements.configure(...) or by assigning `tokenProvider` on any element. */
 export const MODULE_ORIGIN = new URL(import.meta.url).origin;
 export const API = '/embed/v1';

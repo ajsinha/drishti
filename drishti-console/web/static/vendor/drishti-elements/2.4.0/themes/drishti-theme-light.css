@@ -1,0 +1,245 @@
+/*
+ * Drishti Elements
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY.
+ *
+ * This file is the proprietary property of Ashutosh Sinha.
+ * Copying, use, modification or distribution of this file, via any medium,
+ * is not permitted except with the express prior written permission of the
+ * copyright holder.
+ *
+ * See the LICENSE file in the root of this repository.
+ */
+/* Drishti Elements theme light (light): every design token of drishti-core on :root.
+   An application overrides a token by setting it after this sheet (see the guide, Theming). Generated from drishti_tokens.css. */
+:root,
+:root[data-theme="light"] {
+  --d-bg: #f7f5f0;
+  --d-bg-2: #efebe3;
+  --d-surface: #ffffff;
+  --d-surface-2: #faf8f4;
+  --d-border: #e2dcd0;
+  --d-ink: #172440;
+  --d-muted: #55607a;
+  --d-faint: #60697e;
+  --d-accent: #985b0a;
+  --d-accent-strong: #7c4805;
+  --d-accent-tint: rgba(184, 110, 12, .10);
+  --d-on-accent: #ffffff;
+  --d-fill: var(--d-accent);
+  --d-fill-strong: var(--d-accent-strong);
+  --d-on-fill: var(--d-on-accent);
+  --d-link: #1f5fc4;
+  --d-pos: #1f5fc4;
+  --d-neg: #b4491a;
+  --d-ok: #1b784c;
+  --d-warn: #8a6100;
+  --d-bad: #b42323;
+  --d-highlight: rgba(31, 95, 196, .06);
+  --d-emph-bg: rgba(184, 110, 12, .16);
+  --d-glow: rgba(184, 110, 12, .22);
+  --d-grad-from: #b86e0c;
+  --d-grad-to: #1f5fc4;
+  --d-nav: rgba(247, 245, 240, .9);
+  --d-nav-from: #0e1628;
+  --d-nav-via: #16233f;
+  --d-nav-to: #0e1628;
+  --d-shadow: 0 10px 30px rgba(23, 36, 64, .10);
+  --d-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --d-font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+  --d-radius: 10px;
+  --d-market-violet: #6d28d9;
+  --d-trading-green: #1a7f4b;
+  --d-world-teal: #0b7468;
+  --d-cap-violet: #7a45a8;
+  --d-cap-teal: #11808a;
+  color-scheme: light;
+  --d-gold-from: #8a6100;
+  --d-gold-to: #c08a12;
+}
+
+:root {
+  --d-on-color: #ffffff;              
+  --d-paper: #ffffff;                 
+  --d-on-band: #ffffff;               
+  --d-band-hover: rgba(255, 255, 255, .16);
+  --d-band-pressed: rgba(255, 255, 255, .2);
+  --d-band-edge: rgba(255, 255, 255, .7);
+  --d-band-field-edge: rgba(255, 255, 255, .85);
+  --d-band-field-ink: #1b2433;        
+  --d-band-past-bg: #fff7d6;          
+  --d-band-past-ink: #6b4a00;
+  --d-band-past-edge: #ffd34d;
+  --d-band-button-ink: var(--d-accent-strong);   
+  --d-scrim: rgba(0, 0, 0, .45);      
+  --d-scrim-strong: rgba(0, 0, 0, .55);
+  --d-scrim-ink: rgba(5, 10, 15, .5);
+  --d-swatch-edge: rgba(128, 128, 128, .4);
+  --d-swatch-terminal-ground: #0e1628; --d-swatch-terminal-mark: #e8a33a;
+  --d-swatch-light-ground: #f7f5f0; --d-swatch-light-mark: #b86e0c;
+  --d-swatch-blue-ground: #f0f5fa; --d-swatch-blue-mark: #0079c1;
+  --d-swatch-wallstreet-ground: #000000; --d-swatch-wallstreet-mark: #fb8b1e;
+  --d-swatch-green-ground: #f7f5ef; --d-swatch-green-mark: #006039;
+  --d-swatch-crimson-ground: #f7f5f2; --d-swatch-crimson-mark: #a51c30;
+  --d-swatch-crimson-dark-ground: #151517; --d-swatch-crimson-dark-mark: #de6b81;
+  --d-swatch-terminal-green-ground: #06140e; --d-swatch-terminal-green-mark: #39e58c;
+  --d-swatch-terminal-crimson-ground: #14070b; --d-swatch-terminal-crimson-mark: #b3203a;
+  --d-swatch-terminal-blue-ground: #050f1e; --d-swatch-terminal-blue-mark: #3ab8ff;
+  --d-on-trading-green: #06210f;      
+  --d-heat-ink: #0d1424;
+  --d-heat-ok: #6fd29a;
+  --d-heat-near: #f0b54a;
+  --d-heat-breach: #ff7a7a;
+  --d-frtb-line: #26345a;             
+  --d-frtb-panel: #1b2744;
+  --d-frtb-link: #7fb2ff;
+  --d-frtb-amber: #e8a33a;
+  --d-frtb-hl: rgba(127, 178, 255, .10);
+  --d-frtb-muted: #93a0b8;
+  --d-frtb-bad: #ff7a7a;
+  --d-statement-focus: #2f6fde;       
+  --d-calc-edge: #444444;             
+  --d-form-problem: #cc3333;          
+  --d-print-ink: #111111;
+  --d-print-edge: #c9ced6;
+
+  
+  --d-elev-paper: 0 1px 4px rgba(0, 0, 0, .25);
+  --d-elev-raised: 0 2px 10px rgba(0, 0, 0, .18);
+  --d-elev-footer: 0 -4px 14px rgba(0, 0, 0, .06);
+  --d-elev-bar: 0 6px 18px rgba(0, 0, 0, .25);
+  --d-elev-pop: 0 6px 18px rgba(0, 0, 0, .35);
+  --d-elev-toast: 0 4px 18px rgba(0, 0, 0, .35);
+  --d-elev-panel: 0 6px 24px rgba(0, 0, 0, .25);
+  --d-elev-list: 0 8px 24px rgba(0, 0, 0, .25);
+  --d-elev-menu: 0 8px 24px rgba(0, 0, 0, .35);
+  --d-elev-sheet: 0 8px 28px rgba(0, 0, 0, .25);
+  --d-elev-dialog: 0 10px 40px rgba(0, 0, 0, .35);
+  --d-elev-drawer: -8px 0 20px rgba(0, 0, 0, .4);
+  --d-elev-side: -8px 0 24px color-mix(in srgb, #000 30%, transparent);
+  --d-elev-mega: 0 24px 48px -20px rgba(0, 0, 0, .55);
+}
+
+:root {
+  
+  --d-fs-9: 9px; --d-fs-9_5: 9.5px; --d-fs-9_6: 9.6px; --d-fs-9_92: 9.92px;
+  --d-fs-10: 10px; --d-fs-10_4: 10.4px; --d-fs-10_5: 10.5px; --d-fs-10_88: 10.88px;
+  --d-fs-11: 11px; --d-fs-11_2: 11.2px; --d-fs-11_5: 11.5px; --d-fs-11_52: 11.52px;
+  --d-fs-11_84: 11.84px; --d-fs-12: 12px; --d-fs-12_16: 12.16px; --d-fs-12_48: 12.48px;
+  --d-fs-12_5: 12.5px; --d-fs-12_8: 12.8px; --d-fs-13: 13px; --d-fs-13_12: 13.12px;
+  --d-fs-13_44: 13.44px; --d-fs-13_5: 13.5px; --d-fs-13_6: 13.6px; --d-fs-13_76: 13.76px;
+  --d-fs-14: 14px; --d-fs-14_08: 14.08px; --d-fs-14_4: 14.4px; --d-fs-14_72: 14.72px;
+  --d-fs-15: 15px; --d-fs-15_2: 15.2px; --d-fs-15_68: 15.68px; --d-fs-16: 16px;
+  --d-fs-16_32: 16.32px; --d-fs-16_8: 16.8px; --d-fs-17: 17px; --d-fs-17_28: 17.28px;
+  --d-fs-17_6: 17.6px; --d-fs-18: 18px; --d-fs-18_4: 18.4px; --d-fs-19_2: 19.2px;
+  --d-fs-20: 20px; --d-fs-20_8: 20.8px; --d-fs-21: 21px; --d-fs-21_6: 21.6px;
+  --d-fs-22: 22px; --d-fs-22_4: 22.4px; --d-fs-23_2: 23.2px; --d-fs-24: 24px;
+  --d-fs-25_6: 25.6px; --d-fs-28_8: 28.8px; --d-fs-30_4: 30.4px; --d-fs-32: 32px;
+  --d-fs-35_2: 35.2px;
+  
+  --d-fs-em-70: .7em; --d-fs-em-75: .75em; --d-fs-em-80: .8em; --d-fs-em-85: .85em;
+  --d-fs-em-88: .88em; --d-fs-em-90: .9em; --d-fs-em-105: 1.05em;
+  
+  --d-gold-from: #d4a017;           
+  --d-gold-to: #f3d36b;
+  --d-fs-display-1: clamp(2.2rem, 5.5vw, 4.2rem);
+  --d-fs-display-2: clamp(2rem, 4.4vw, 3.4rem);
+  --d-fs-display-3: clamp(1.6rem, 12cqi, 3.4rem);
+  --d-fs-display-4: clamp(1.6rem, 3vw, 2.4rem);
+  --d-fs-display-5: clamp(1.1rem, 16cqi, 2.2rem);
+  --d-fs-display-6: clamp(1.1rem, 9cqi, 1.9rem);
+  --d-fs-display-7: clamp(1.1rem, 16cqi, 1.8rem);
+  --d-fs-display-8: clamp(1.3rem, 2.6vw, 1.75rem);
+  --d-fs-display-9: clamp(1.2rem, 2.6vw, 1.75rem);
+  --d-fs-tile-number: clamp(var(--d-fs-14_4), 11cqi, var(--d-fs-display-6));   
+  --d-fs-display-10: clamp(1.15rem, 2vw, 1.4rem);
+
+  
+  --d-sp-0_32: 0.32px; --d-sp-0_8: 0.8px; --d-sp-1: 1px; --d-sp-1_6: 1.6px; --d-sp-1_92: 1.92px;
+  --d-sp-2: 2px; --d-sp-2_24: 2.24px; --d-sp-2_4: 2.4px; --d-sp-2_88: 2.88px; --d-sp-3: 3px;
+  --d-sp-3_2: 3.2px; --d-sp-3_52: 3.52px; --d-sp-4: 4px; --d-sp-4_48: 4.48px; --d-sp-4_8: 4.8px;
+  --d-sp-5: 5px; --d-sp-5_6: 5.6px; --d-sp-6: 6px; --d-sp-6_08: 6.08px; --d-sp-6_4: 6.4px;
+  --d-sp-6_72: 6.72px; --d-sp-7: 7px; --d-sp-7_2: 7.2px; --d-sp-8: 8px; --d-sp-8_8: 8.8px;
+  --d-sp-9: 9px; --d-sp-9_6: 9.6px; --d-sp-10: 10px; --d-sp-10_4: 10.4px; --d-sp-11: 11px;
+  --d-sp-11_2: 11.2px; --d-sp-12: 12px; --d-sp-12_8: 12.8px; --d-sp-13_6: 13.6px; --d-sp-14: 14px;
+  --d-sp-14_4: 14.4px; --d-sp-16: 16px; --d-sp-17_6: 17.6px; --d-sp-18: 18px; --d-sp-18_4: 18.4px;
+  --d-sp-19_2: 19.2px; --d-sp-20: 20px; --d-sp-20_8: 20.8px; --d-sp-21_6: 21.6px; --d-sp-22_4: 22.4px;
+  --d-sp-22: 22px; --d-sp-24: 24px; --d-sp-25_6: 25.6px; --d-sp-26: 26px; --d-sp-28_8: 28.8px; --d-sp-30: 30px;
+  --d-sp-32: 32px;
+
+  
+  --d-radius-1: 1px; --d-radius-2: 2px; --d-radius-3: 3px; --d-radius-3_2: 3.2px; --d-radius-4: 4px; --d-radius-4_8: 4.8px;
+  --d-radius-5: 5px; --d-radius-6: 6px; --d-radius-8: 8px; --d-radius-9: 9px; --d-radius-9_6: 9.6px; --d-radius-10: 10px;
+  --d-radius-12: 12px; --d-radius-13: 13px; --d-radius-14: 14px; --d-radius-15: 15px; --d-radius-16: 16px; --d-radius-17: 17px;
+  --d-radius-18: 18px; --d-radius-22: 22px; --d-radius-26: 26px;
+  --d-radius-pill: 999px;
+
+  
+  --d-dur-fast: 120ms; --d-dur-base: 200ms; --d-dur-slow: 320ms; --d-dur-shimmer: 1200ms;
+  --d-ease: cubic-bezier(.2, 0, 0, 1);
+
+  
+  --d-space-xs: var(--d-sp-4); --d-space-sm: var(--d-sp-6); --d-space-md: var(--d-sp-10); --d-space-lg: var(--d-sp-16); --d-space-xl: var(--d-sp-24);
+
+  
+  --d-z-bar: 1030;
+  --d-z-sheet: 1040;
+  --d-z-drawer: 1050;
+  --d-z-shade: 1055;
+  --d-z-popover: 1060;
+  --d-z-dropdown: 1100;
+  --d-z-about: 1190;
+  --d-z-menu: 1200;
+  --d-z-float: 1300;
+  --d-z-float-menu: 1350;
+  --d-z-drag: 1400;
+  --d-z-overlay: 2000;
+  --d-z-toast: 3000;
+  --d-z-confirm: 3500;
+
+  
+  --d-bp-xs: 480px; --d-bp-sm: 560px; --d-bp-bs-sm: 576px; --d-bp-narrow: 600px;
+  --d-bp-below-phone: 639.98px; --d-bp-phone: 640px; --d-bp-above-phone: 641px; --d-bp-tablet-s: 700px;
+  --d-bp-tablet: 720px; --d-bp-tablet-l: 760px; --d-bp-split: 800px; --d-bp-above-split: 800.02px;
+  --d-bp-above-split-px: 801px; --d-bp-laptop-s: 900px; --d-bp-laptop: 960px; --d-bp-laptop-l: 1000px;
+  --d-bp-desk: 1100px; --d-bp-above-desk: 1101px; --d-bp-wide: 1200px; --d-bp-wide-l: 1250px;
+  --d-bp-xl: 1400px; --d-bp-xl-l: 1500px; --d-bp-xxl: 1700px; --d-bp-xxl-l: 1750px;
+
+  
+  --d-density-data-comfortable: var(--d-fs-13_5); --d-density-data-compact: var(--d-fs-12_5); --d-density-data-terminal: var(--d-fs-11_5);
+  --d-density-control-comfortable: var(--d-fs-14); --d-density-control-compact: var(--d-fs-13); --d-density-control-terminal: var(--d-fs-12);
+}
+
+@media (prefers-reduced-motion: reduce) { :root { --d-dur-fast: 0ms; --d-dur-base: 0ms; --d-dur-slow: 0ms; --d-dur-shimmer: 0ms; }
+}
+
+@media print {
+  :root[data-theme], :root:not([data-theme]) {
+    --d-bg: #fff;
+    --d-bg-2: #fff;
+    --d-surface: #fff;
+    --d-surface-2: #f6f7f9;
+    --d-border: #c9ced6;
+    --d-ink: #111;
+    --d-muted: #555;
+    --d-faint: #888;
+    --d-link: #1f5fc4;
+    --d-accent: #8a5a00;
+    --d-accent-strong: #6b4600;
+    --d-accent-tint: #fff4df;
+    --d-pos: #1f5fc4;
+    --d-neg: #b3261e;
+    --d-ok: #1b7a3a;
+    --d-warn: #8a5a00;
+    --d-bad: #b3261e;
+    --d-emph-bg: #f1f1f1;
+    --d-highlight: #fff4df;
+    --d-nav: #fff;
+    --d-shadow: none;
+    --d-glow: none;
+    color-scheme: light;
+  }
+}

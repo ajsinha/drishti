@@ -29,6 +29,8 @@ import json
 import re
 from pathlib import Path
 
+from core.elements_pin import static_path
+
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 OUT_DIR = WEB / "elements"
@@ -48,8 +50,7 @@ ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 36 * 1024          # raised on purpose in 2.9.11.e (from 25 KB), to 36 KB in i4 for drishti-grid's live mode (the live chip, the record panel, the tray: every records list and blotter), and to 34 KB for the pivot field pickers (compact line, View and Rows pickers): drishti-grid's sheet, for the nested pivots tree rows draw with it, and drishti-inputs' sheet, for the controls' multi-select and dates; then drishti-graph's, for a view's graph panel, and drishti-tree's, for a table with children
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
 ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/drishti_tables.js", "static/js/drishti_colfilter.js", "static/js/drishti_tree-rows.js",
-                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js",
-                "static/elements/drishti-grid/src/drishti_doc-console.js")   # the tables' chart button (drishti-grid's console tables)
+                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
 ICON_NAME = re.compile(r"(?<![\w-])bi-([a-z0-9]+(?:-[a-z0-9]+)*)")
 BASE_ICON_CLASSES = {"bi"}          # the font's base rule is always kept
 _LICENCE = re.compile(r"\A/\*.*?\*/\s*", re.S)
@@ -138,7 +139,7 @@ def public_names(paths) -> str:
 
 
 def licence_header() -> str:
-    first = (STATIC / SHEETS[0]).read_text(encoding="utf-8")
+    first = (STATIC / SHEETS[1]).read_text(encoding="utf-8")     # the console's own header (SHEETS[0] is Drishti Elements' tokens sheet)
     return _LICENCE.match(first).group().rstrip() + "\n"
 
 
@@ -146,7 +147,7 @@ def icons_used() -> dict[str, list[str]]:
     """Every Bootstrap Icons glyph named in the macros and scripts, by the file that names it (sorted)."""
     found: dict[str, set[str]] = {}
     for rel in ICON_SOURCES:
-        path = WEB / rel
+        path = static_path(rel.removeprefix("static/")) if rel.startswith("static/") else WEB / rel
         if path.exists():
             for name in ICON_NAME.findall(path.read_text(encoding="utf-8")):
                 found.setdefault(name, set()).add(rel)
@@ -172,7 +173,7 @@ _REF = re.compile(r"var\((--d-[\w-]+)\)")
 
 def fixed_tokens() -> dict[str, str]:
     """The tokens of PRUNABLE's families declared once in drishti_tokens.css with a plain value (no var()), by name."""
-    text = re.sub(r"/\*.*?\*/", "", (STATIC / SHEETS[0]).read_text(encoding="utf-8"), flags=re.S)
+    text = re.sub(r"/\*.*?\*/", "", static_path(SHEETS[0]).read_text(encoding="utf-8"), flags=re.S)
     found: dict[str, list[str]] = {}
     for m in _DECL.finditer(text):
         found.setdefault(m.group(1), []).append(" ".join(m.group(2).split()))
@@ -203,7 +204,7 @@ def report_body() -> str:
     """The report sheet's rules (before its header), with the fixed tokens written in."""
     rules = glyph_rules()
     icons = [n for n in report_icons() if n in rules]      # a class such as bi-vis is not a glyph
-    parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in REPORT_SHEETS]
+    parts = [_compact(container_queries(shadow_css(static_path(s).read_text(encoding="utf-8")))) for s in REPORT_SHEETS]
     parts.append(REPORT_ADDENDUM)
     parts.append("".join(_compact(rules[n]) for n in icons))
     return inline_tokens("".join(parts), fixed_tokens())
@@ -216,7 +217,7 @@ def build() -> tuple[str, dict]:
     unknown = sorted(n for n in used if n not in rules)
     if unknown:
         raise ValueError(f"not Bootstrap Icons glyphs: {', '.join('bi-' + n for n in unknown)} (named in {sorted({f for n in unknown for f in used[n]})})")
-    parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in SHEETS]
+    parts = [_compact(container_queries(shadow_css(static_path(s).read_text(encoding="utf-8")))) for s in SHEETS]
     parts.append(ELEMENT_ADDENDUM)
     parts.append(_compact(rules[""]) + "".join(_compact(rules[n]) for n in used))
     body = prune_tokens(inline_tokens("".join(parts), fixed_tokens()), report_body())
@@ -242,7 +243,7 @@ def report_icons() -> list[str]:
     """The glyphs the report code names: ``icon('funnel')`` calls and literal ``bi-<glyph>`` classes in the sources <drishti-report> runs."""
     found: set[str] = set(REPORT_NAMED_ICONS)
     for rel in REPORT_ICON_SOURCES:
-        path = WEB / rel if rel.startswith("embed/") else STATIC / rel.removeprefix("static/")
+        path = WEB / rel if rel.startswith("embed/") else static_path(rel.removeprefix("static/"))
         if path.exists():
             text = path.read_text(encoding="utf-8")
             found.update(REPORT_ICON_CALL.findall(text))

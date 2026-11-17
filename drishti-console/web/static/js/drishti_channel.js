@@ -51,6 +51,9 @@
   // the hub beside this script (its src carries the console's base path), else the base-path URL drishti-core gives
   var HUB_URL = me && me.src ? me.src.replace(/(?:drishti_)?channel\.js(\?|$)/, 'drishti_live-hub.js$1')
     : drishti_url('/static/js/drishti_live-hub.js');
+  // the hub loads drishti-core and drishti-data from the vendored Drishti Elements: its root, as the page's drishti-core knows it
+  var ELEMENTS = window.Drishti && window.Drishti.elements && window.Drishti.elements.core ? window.Drishti.elements.core.staticUrl('') : '';
+  if (ELEMENTS) { HUB_URL += (HUB_URL.indexOf('?') < 0 ? '?' : '&') + 'elements=' + encodeURIComponent(ELEMENTS); }
   var meta = document.querySelector('meta[name="drishti-live"]');
   var WHO = meta ? meta.getAttribute('content') || '' : '';
   var TAB = Math.random().toString(36).slice(2) + Date.now().toString(36);

@@ -21,7 +21,7 @@
 {% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}exposure{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
@@ -73,4 +73,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

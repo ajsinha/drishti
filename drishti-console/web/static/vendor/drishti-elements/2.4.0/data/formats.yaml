@@ -1,0 +1,28 @@
+# Drishti Elements
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY.
+#
+# This file is the proprietary property of Ashutosh Sinha.
+# Copying, use, modification or distribution of this file, via any medium,
+# is not permitted except with the express prior written permission of the
+# copyright holder.
+#
+# See the LICENSE file in the root of this repository.
+
+# Core named formats for Sutra `fmt:` keys and fmt(...) calls (domain-neutral; packs add their own). A site can override or add formats with
+# drishti.rachana.formats-file. Negative numbers use the true minus sign (U+2212).
+formats:
+  text:     { type: text }
+  amount0:  { type: number, decimals: 0 }
+  amount2:  { type: number, decimals: 2 }
+  signed0:  { type: number, decimals: 0, sign: always }
+  signed2:  { type: number, decimals: 2, sign: always }
+  pct0:     { type: number, decimals: 0, scale: 100, suffix: "%" }
+  pct2:     { type: number, decimals: 2, scale: 100, suffix: "%" }
+  price2:   { type: number, decimals: 2 }
+  compact:  { type: compact, decimals: 1 }
+  date:     { type: date, pattern: yyyy-MM-dd }
+  dmy:      { type: date, pattern: dd MMM yyyy }

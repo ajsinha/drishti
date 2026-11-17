@@ -160,7 +160,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
 | `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
-| `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
+| `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
 | `modules/<module>/packs/<pack>/` (banking's in `modules/banking/packs/`), `config/packs/core/` | the packs (content, not code): the modules' and the kernel's `core` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)); a source module's connector templates in `modules/source-<system>/connectors/` |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
@@ -215,7 +215,7 @@ a test, a guide and a screenshot together.
 1. **Branch** from `develop`: `git switch -c my-first-change origin/develop`.
 2. **Find the one home.** Search before writing: `git grep -n "the thing you change"` across `drishti-console/`, `config/` and `docs/`.
    A screen is made of Elements: change the library (`drishti-console/web/static/elements/<library>/`) or the page's template, never a
-   one-off widget ([ELEMENTS_API.md](guides/ELEMENTS_API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
+   one-off widget ([ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
    A Java change follows the recipes of [DEVELOPER_GUIDE.md › Recipes](guides/DEVELOPER_GUIDE.md#5-recipes) (a REST endpoint, a
    configuration property, a console page, a source plugin).
 3. **Write the test first** beside its neighbours: a `drishti-console/tests/test_<area>.py` for the console (a `*_browser.py` when it needs
@@ -242,7 +242,7 @@ your change in the running console.
 | understand how a request travels through the code | [DEVELOPER_GUIDE.md › How a request travels](guides/DEVELOPER_GUIDE.md#4-how-a-request-travels-through-the-code) |
 | add a pack, a kind, a Sutra or a screen | [BUILD_GUIDE.md](guides/BUILD_GUIDE.md) and [tutorial 19](tutorials/19-build-a-pack-and-a-screen.md) |
 | add or change a connector | [DEVELOPER_GUIDE.md › Connectors](guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) |
-| use or extend the Elements libraries | [ELEMENTS_API.md](guides/ELEMENTS_API.md) |
+| use or extend the Elements libraries | [ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md) |
 | every command of `drishti.py` | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | every setting | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | install, deploy and verify a release on Windows, Linux or macOS | [DEPLOYMENT_AND_QA_GUIDE.md](DEPLOYMENT_AND_QA_GUIDE.md) |

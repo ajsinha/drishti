@@ -174,9 +174,9 @@ Format has **Bars** for a histogram, and **Level** and **Drill into countries** 
 
 ![The Charts group](../img/bi-visuals/designer-types.png) ![The map's wells](../img/bi-visuals/designer-build-map.png)
 
-**The map shapes.** `static/vendor/echarts/maps/world-countries.json` (Natural Earth 1:110m, 177 shapes), `world-points.json` (the
+**The map shapes.** `world-countries.json` (Natural Earth 1:110m, 177 shapes), `world-points.json` (the
 countries too small for those shapes, as points) and `regions/<ISO3>.json` (one country's admin-1 regions at 1:10m, simplified, coded by
-ISO 3166-2; 251 files, none over 200 KB, loaded when the map first opens that country), made by `tools/maps/build_regions.py`. The console
+ISO 3166-2; 251 files, none over 200 KB, loaded when the map first opens that country), in the vendored Drishti Elements (`vendor/echarts/maps/` of its release tree). The console
 serves them, and for `<drishti-report>` `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`.
 Natural Earth is public domain ([VENDOR.md](../../../drishti-console/web/static/vendor/VENDOR.md)). The same shapes draw the Sutra `map` panel.
 

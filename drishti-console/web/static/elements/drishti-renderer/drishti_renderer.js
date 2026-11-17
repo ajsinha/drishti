@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js", "drishti-chart": "../drishti-chart/drishti_chart.js", "drishti-data": "../drishti-data/drishti_data.js", "drishti-graph": "../drishti-graph/drishti_graph.js", "drishti-tree": "../drishti-tree/drishti_tree.js"};
+  var needs = {"drishti-core": "../../vendor/drishti-elements/2.4.0/elements/drishti-core/drishti_core.js", "drishti-grid": "../../vendor/drishti-elements/2.4.0/elements/drishti-grid/drishti_grid.js", "drishti-chart": "../../vendor/drishti-elements/2.4.0/elements/drishti-chart/drishti_chart.js", "drishti-data": "../../vendor/drishti-elements/2.4.0/elements/drishti-data/drishti_data.js", "drishti-graph": "../../vendor/drishti-elements/2.4.0/elements/drishti-graph/drishti_graph.js", "drishti-tree": "../../vendor/drishti-elements/2.4.0/elements/drishti-tree/drishti_tree.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -613,8 +613,11 @@
       if (o && o.sheet) { base.sheet = String(o.sheet); }
     }
     function statics(rel) {
-      const root = base.statics || new URL(staticUrl(''), document.baseURI).href;
+      const root = base.statics || new URL('../../../', new URL(staticUrl(''), document.baseURI)).href;
       return new URL(rel, root).href;
+    }
+    function elementsFile(rel) {
+      return statics('vendor/drishti-elements/' + ELEMENTS_VERSION + '/' + rel);
     }
     const once = new Map();
     function memoised(key, fn) {
@@ -639,7 +642,7 @@
       return policy;
     }
     function script(rel) {
-      const url = statics(rel);
+      const url = /^vendor\/(echarts|echarts-gl)\//.test(rel) ? elementsFile(rel) : statics(rel);   // the engines come with Drishti Elements
       return memoised('s:' + url, () => new Promise((resolve, reject) => {
         const s = document.createElement('script'), p = trusted();
         s.src = p ? p.createScriptURL(url) : url;
@@ -679,7 +682,7 @@
       });
     }
     const trustedTypesActive = () => !!trusted();
-    return { "setAssetBase": setAssetBase, "statics": statics, "memoised": memoised, "script": script, "echarts": echarts, "echartsGl": echartsGl, "geo": geo, "sheet": sheet, "RENDERER_SHEET_VERSION": RENDERER_SHEET_VERSION, "font": font, "trustedTypesActive": trustedTypesActive };
+    return { "setAssetBase": setAssetBase, "statics": statics, "elementsFile": elementsFile, "memoised": memoised, "script": script, "echarts": echarts, "echartsGl": echartsGl, "geo": geo, "sheet": sheet, "RENDERER_SHEET_VERSION": RENDERER_SHEET_VERSION, "font": font, "trustedTypesActive": trustedTypesActive };
   })();
   /* ---- src/drishti_behave.js ---- */
   __m["src/drishti_behave.js"] = (function () {
@@ -1051,7 +1054,7 @@
       const E = (window.Drishti && window.Drishti.elements) || {};
       if (!E.inputs) {
         try {
-          const res = await fetch(drishtiUrl(assets.statics('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
+          const res = await fetch(drishtiUrl(assets.elementsFile('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
           if (res.ok) {
             const sheet = new CSSStyleSheet();
             sheet.replaceSync(await res.text());

@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js"};
+  var needs = {"drishti-core": "../../vendor/drishti-elements/2.4.0/elements/drishti-core/drishti_core.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }

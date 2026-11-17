@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 #
 """The figures a screen shows, read the same way whether its tables are hand-built ``<table>`` elements (before Drishti Elements) or
-``<drishti-grid>`` (after, ELEMENTS.md section 12), so a screen moved onto the libraries can be compared with itself before the move:
+``<drishti-grid>`` (after, Drishti Elements' docs/DESIGN.md), so a screen moved onto the libraries can be compared with itself before the move:
 every table's rows as {heading: text}, every tile's label and value, and every chart's series (a hand-drawn SVG's bars, or drishti-chart's
 drawing). ``figures(page)`` reads them; ``compare(old, new)`` lists what differs (a heading only one side has is left out: a moved table
 may name its blank columns). The VaR family's comparison (tests/test_var_family_figures_browser.py) is built on it."""

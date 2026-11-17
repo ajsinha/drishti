@@ -16,8 +16,8 @@
 /* The state kit, the command palette's search, the bullet bar and the grid's cell drawings, under Node (the parts that need no document). */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as C from '../../web/static/elements/drishti-core/src/drishti_index.js';
-import * as K from '../../web/static/elements/drishti-chart/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import * as K from '../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-chart/src/drishti_index.js';
 
 test('the four states are named, and an unknown one is refused', () => {
   assert.deepEqual(Array.from(C.STATES), ['empty', 'loading', 'error', 'stale']);
@@ -50,7 +50,7 @@ test('the bullet: a scale with room past the limit, and words with the figure, t
 });
 
 test('the grid draws sparkline, bar and bullet cells through one chart bullet', async () => {
-  const G = await import('../../web/static/elements/drishti-grid/src/drishti_index.js');
+  const G = await import('../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js');
   const calls = [];
   const el = (tag) => ({ tag, children: [], setAttribute() {}, appendChild(c) { this.children.push(c); return c; }, append(...c) { c.forEach((x) => this.appendChild(x)); }, style: {},
     set className(v) { this.cls = v; }, set textContent(v) { this.text = v; } });
@@ -88,7 +88,7 @@ test('a kernel density peaks at 1 near the data, tenors sort by length, a diverg
 });
 
 test('grid: threshold and top rules colour the right figures, a view survives a share link, the heat preset formats every measure', async () => {
-  const G = await import('../../web/static/elements/drishti-grid/src/drishti_index.js');
+  const G = await import('../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js');
   const range = { min: 0, max: 100, maxAbs: 100 };
   assert.ok(G.cfBackground({ type: 'threshold', op: 'gt', value: 50, tone: 'bad' }, 60, range));
   assert.equal(G.cfBackground({ type: 'threshold', op: 'gt', value: 50 }, 40, range), null);
@@ -143,7 +143,7 @@ test('the selection history keeps each set once, newest first, and never an empt
 });
 
 test('query builder text: conditions round-trip, quoted values, lists, and the errors say what is wrong', async () => {
-  const I = await import('../../web/static/elements/drishti-inputs/src/drishti_index.js');
+  const I = await import('../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-inputs/src/drishti_index.js');
   const fields = [{ id: 'desk', type: 'enum', values: ['Rates', 'FX'] }, { id: 'var', type: 'number' }, { id: 'name' }];
   const q = I.parseQuery('desk in (Rates, FX) AND var >= 100 AND name = "Big Fund"', fields);
   assert.deepEqual(q, [{ field: 'desk', op: 'in', value: ['Rates', 'FX'] }, { field: 'var', op: 'ge', value: 100 }, { field: 'name', op: 'eq', value: 'Big Fund' }]);
@@ -156,7 +156,7 @@ test('query builder text: conditions round-trip, quoted values, lists, and the e
 });
 
 test('data: bins are counted once (page or worker), a worker-less page still answers, a feed says its gaps and its quiet', async () => {
-  const D = await import('../../web/static/elements/drishti-data/src/drishti_index.js');
+  const D = await import('../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-data/src/drishti_index.js');
   const r = D.binCounts(new Float64Array([0, 1, 1, 2, 9, NaN]), { bins: 5, extent: [0, 10] });
   assert.deepEqual(Array.from(r.counts), [3, 1, 0, 0, 1]);
   assert.equal(r.n, 5);
@@ -183,7 +183,7 @@ test('data: bins are counted once (page or worker), a worker-less page still ans
 });
 
 test('grid master-detail: Alt+Down opens the focused row\'s detail and Alt+Up closes it, only when the grid has a detail', async () => {
-  const G = await import('../../web/static/elements/drishti-grid/src/drishti_index.js');
+  const G = await import('../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js');
   const mk = (on) => new G.GridNavigator({ rowCount: () => 5, columnCount: () => 3, detailEnabled: () => on });
   const key = (k) => ({ key: k, altKey: true, ctrlKey: false, metaKey: false, shiftKey: false });
   const n = mk(true);

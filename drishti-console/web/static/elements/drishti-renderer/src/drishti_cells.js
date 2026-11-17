@@ -15,7 +15,7 @@
  */
 /* Cells, fields and entity links: the macros cell_text, tone, fields and entity of _macros/panels.html, as DOM. */
 import { h, str, toneClass } from './drishti_dom.js';
-import { chipList, isListValue, basePath, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { chipList, isListValue, basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 const enc = (s) => encodeURIComponent(String(s == null ? '' : s));
 

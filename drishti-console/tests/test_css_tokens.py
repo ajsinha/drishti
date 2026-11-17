@@ -12,18 +12,19 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console's CSS takes its values from the design tokens (static/css/drishti_tokens.css; docs/architecture/ELEMENTS.md, "Design
+"""The console's CSS takes its values from the design tokens (static/css/drishti_tokens.css; Drishti Elements' docs/DESIGN.md, "Design
 tokens"): no colour literal outside the token file, font sizes only from the type scale, @media widths only from the breakpoints, every
 token a rule names defined, and !important only on the allow-list below, which can only shrink."""
 import re
 from pathlib import Path
+from core import elements_pin
 
 import pytest
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
-TOKENS = CSS / "drishti_tokens.css"
+TOKENS = elements_pin.static_path("css/drishti_tokens.css")   # drishti-core's, in the vendored Drishti Elements
 # Sheets left out of the token checks while another branch rewrites them (none now). Only shrinks.
 PENDING: set = set()
 COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(")
@@ -173,8 +174,6 @@ IMPORTANT_ALLOW = {
     "drishti_phone.css|[data-phone-tier=\"more\"]:not(.ph-open)|display": _HIDE,
     "drishti_pivot.css|@media print .tr-tog|display": _PRINT,
     "drishti_record-forms.css|.fm-bad .fm-in|border-color": _INVALID,
-    "drishti_resize.css|html[data-rz-dragging=\"x\"]|cursor": _DRAG,
-    "drishti_resize.css|html[data-rz-dragging=\"y\"]|cursor": _DRAG,
     "drishti_screen-grid.css|@media (max-width: 640px) .sg-area > .sg-cells > .pnl|grid-column": _GRID,
     "drishti_screen-grid.css|@media (max-width: 640px) .sg-cells > *|grid-column": _GRID,
     "drishti_table-chart.css|@media print body.tc-open > *:not(.tc-dlg)|display": _PRINT,
@@ -209,7 +208,7 @@ IMPORTANT_ALLOW = {
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|animation": _MOTION,
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|transition": _MOTION,
 }
-IMPORTANT_CEILING = 90   # 2.9.11.e: 149 before the token pass; lower it with every entry that leaves the list
+IMPORTANT_CEILING = 88   # 2.9.11.e: 149 before the token pass; i6: drishti-core's resize sheet went with Drishti Elements; lower it with every entry that leaves the list
 
 
 def important_keys(name: str, text: str) -> list:

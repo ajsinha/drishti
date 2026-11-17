@@ -252,13 +252,16 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   where there is no Sutra the inference engine lays the screen out from the data; forms and phones
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
   lists everything people build, what it uses and what uses it.
-- **Drishti Elements**: the console's JavaScript and CSS as eleven libraries at one version (2.4.0) (core, inputs, grid, chart with maps, data, tree,
-  graph, insight, designer, renderer, and the banking module's risk). Every screen and every designer is drawn with them, guard tests
-  fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live, with the Elements Playground
-  to try one on your own data; a module adds its own domain library and visuals
-  ([ELEMENTS.md](docs/architecture/ELEMENTS.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md)).
-- **Embed** live views, panels and reports in your own web pages, or the libraries in your own application; they ship as files, a
-  release archive with SRI hashes, npm tarballs or a WebJar, never from a CDN ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
+- **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
+  graph, the designer kit) are [Drishti Elements](https://github.com/ajsinha/drishti-elements), a separate project by the same owner
+  with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
+  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/2.4.0/`, see
+  [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
+  Drishti keeps three libraries of its own on top (insight, renderer, and the banking module's risk). Every screen and every designer is
+  drawn with them, guard tests fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live,
+  offline; a module adds its own domain library and visuals.
+- **Embed** live views, panels and reports in your own web pages; they ship as files with SRI hashes, never from a CDN (the libraries
+  in your own application: Drishti Elements' release tree) ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
   [tutorial 20](docs/tutorials/20-embed-drishti.md)).
 - **Extend**: a connector, a plugin or a module ([Build a module](#build-a-module)), and the REST API ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md),
   [API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
@@ -365,7 +368,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
   `--distribution` and a second console in one data folder with `--name`:
   [DEPLOYMENT_AND_QA_GUIDE.md section 7](docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
-- **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
+- **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
 - **A local cluster of three** with its consoles, from one file: `tools/drishti.py start cluster` with [deploy/stack/stack.yaml](deploy/stack/README.md)
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
@@ -406,7 +409,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
 [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
-[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [ELEMENTS_API](docs/guides/ELEMENTS_API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_GUIDE.md),
+[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [Drishti Elements' API](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_GUIDE.md),
 [VIEWMODEL](docs/architecture/VIEWMODEL.md), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
 [the Knowledge primers](docs/knowledge/README.md). The design is [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and
 [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md); what changed and when, [RELEASE_NOTES.md](RELEASE_NOTES.md) and
@@ -442,33 +445,33 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 |---|---|---|
 | Java, product | 471k | 2,332 |
 | Java, tests | 183k | 1,152 |
-| Python, product (console, tools, loaders, feeds) | 151k | 755 |
-| Python, tests | 115k | 676 |
-| JavaScript, product (console and Elements) | 140k | 535 |
-| JavaScript, tests | 5k | 27 |
-| CSS | 20k | 125 |
-| HTML (templates and pages) | 43k | 386 |
-| YAML: configuration, Sutras, data contracts | 121k | 1,570 |
-| Markdown: guides, tutorials, design | 238k | 347 |
+| Python, product (console, tools, loaders, feeds) | 148k | 746 |
+| Python, tests | 112k | 664 |
+| JavaScript, product (console and its own Elements libraries) | 67k | 313 |
+| JavaScript, tests | 1.1k | 8 |
+| CSS | 17k | 106 |
+| HTML (templates and pages) | 42k | 377 |
+| YAML: configuration, Sutras, data contracts | 121k | 1,568 |
+| Markdown: guides, tutorials, design | 218k | 348 |
 
-About **825k lines of product code** and **304k lines of tests** (37% of the product code), with **238k lines of documentation**.
+About **746k lines of product code** and **296k lines of tests** (40% of the product code), with **218k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 52 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Maven modules | 51 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
 | Console routes | 672 |
 | Server REST handlers | 851 |
-| Drishti Elements | 11 libraries, 226 ES modules |
+| Drishti's own Elements libraries (Drishti Elements itself: vendored) | 3 libraries, 35 ES modules |
 | Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
 | Sutras in the shipped packs | 262 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,694: Java 1058, console 278, browser 193, tools 138, JavaScript 27 |
-| Documents under docs/ | 190 (25 guides, 11 tutorials) |
+| Test files | 1,663: Java 1058, console 277, browser 182, tools 138, JavaScript 8 |
+| Documents under docs/ | 192 (24 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 

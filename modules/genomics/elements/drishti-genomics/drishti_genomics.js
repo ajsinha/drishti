@@ -18,7 +18,7 @@
    /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
 
    Domain glue only: each kind maps the genomics module's answers and words onto drishti-chart's generic kinds and options (the owner's
-   rule: every drawing capability lives in the generic libraries; ELEMENTS.md section 7.4), so the card, theme, tooltips, Explain, the
+   rule: every drawing capability lives in the generic libraries; Drishti Elements' docs/DESIGN.md), so the card, theme, tooltips, Explain, the
    data table, export, the keyboard and linked selection come with them, and nothing is drawn here.
 
      genomics.manhattan   the association plot: drishti-chart's segmented scatter (the chromosomes as segments, the genome-wide and

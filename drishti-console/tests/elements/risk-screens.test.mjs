@@ -13,14 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR screens' charts as specs under Node (the screens moved onto Drishti Elements, ELEMENTS.md section 12 step 9): the backtest
+/* The VaR screens' charts as specs under Node (the screens moved onto Drishti Elements, Drishti Elements' docs/DESIGN.md step 9): the backtest
    showing the server's zone and count (the page's own count kept beside it for a check), the stress window's area with today's line,
    the candidates and the selection, the MR lens's histogram of the server's bins and its components' waterfall, and the scenario
    matrix's chart in each of its four types with the reference and the tail marked. Each spec passes checkSpec and builds; the drawn
    screens are tested in their browser files. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as C from '../../web/static/elements/drishti-chart/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/2.4.0/elements/drishti-chart/src/drishti_index.js';
 import '../../web/static/elements/drishti-risk/src/drishti_index.js';
 
 const th = C.chartTheme({ theme: 'terminal' });

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* <drishti-search>: search across Drishti from the host's page (docs/guides/ELEMENTS.md). A box and a short list of what matches: entities the signed-in user may
+/* <drishti-search>: search across Drishti from the host's page (docs/guides/Drishti Elements' docs/DESIGN.md). A box and a short list of what matches: entities the signed-in user may
    open, as the console's own type-ahead finds them (fields masked for the user are neither shown nor matched; an embedded call always masks). It needs the scope
    embed:search and is read-only. Picking a result fires the cancellable `drishti:select`; with `target="#view"` (a CSS selector of a <drishti-view> or <drishti-panel>)
    the element also points that view at the pick. Everything it draws is text (no markup from the server), in a Shadow DOM, with a constructable sheet (a host CSP

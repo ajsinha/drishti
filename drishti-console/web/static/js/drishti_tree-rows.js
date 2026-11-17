@@ -64,7 +64,8 @@
     var at = host.getRootNode ? host.getRootNode() : document, into = at === document || !at.host ? document.head : at;
     if (into.querySelector('link[data-grid-css]')) { return; }
     var l = document.createElement('link');
-    l.rel = 'stylesheet'; l.href = drishti_url(ROOT + 'elements/drishti-grid/drishti_grid.css' + (VER ? '?v=' + VER : '')); l.setAttribute('data-grid-css', '');
+    var core = window.Drishti && window.Drishti.elements && window.Drishti.elements.core;   // a console page: the vendored Drishti Elements' sheet
+    l.rel = 'stylesheet'; l.href = core && !/\/embed\//.test(ROOT) ? core.staticUrl('elements/drishti-grid/drishti_grid.css') : drishti_url(ROOT + 'elements/drishti-grid/drishti_grid.css' + (VER ? '?v=' + VER : '')); l.setAttribute('data-grid-css', '');
     into.appendChild(l);
   }
   var US = '\u001f';

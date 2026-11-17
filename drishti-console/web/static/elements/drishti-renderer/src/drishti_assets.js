@@ -19,7 +19,7 @@
    draw with. Nothing comes from a CDN. Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's
    static scripts. Where the files are: the static root drishti-core's loader knows (the folder its bundle came from, or configure()), or
    what the public entry (static/render/<version>/drishti-render.js) says from its own address (setAssetBase). */
-import { staticUrl, ELEMENTS_VERSION } from '../../drishti-core/src/drishti_index.js';
+import { staticUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 const base = { statics: null, sheet: null };
 
@@ -39,8 +39,18 @@ export function setAssetBase(o) {
  * @returns {string}
  */
 export function statics(rel) {
-  const root = base.statics || new URL(staticUrl(''), document.baseURI).href;
+  // by default the console's static root is three folders above Drishti Elements' root (static/vendor/drishti-elements/<version>/)
+  const root = base.statics || new URL('../../../', new URL(staticUrl(''), document.baseURI)).href;
   return new URL(rel, root).href;
+}
+
+/**
+ * The address of a file of Drishti Elements (vendored under the console's static root, at the version drishti-core says it is).
+ * @param {string} rel for example "vendor/echarts/echarts.min.js" or "elements/drishti-inputs/drishti_inputs.css"
+ * @returns {string}
+ */
+export function elementsFile(rel) {
+  return statics('vendor/drishti-elements/' + ELEMENTS_VERSION + '/' + rel);
 }
 
 const once = new Map();
@@ -80,7 +90,7 @@ function trusted() {
  * @returns {Promise<void>}
  */
 export function script(rel) {
-  const url = statics(rel);
+  const url = /^vendor\/(echarts|echarts-gl)\//.test(rel) ? elementsFile(rel) : statics(rel);   // the engines come with Drishti Elements
   return memoised('s:' + url, () => new Promise((resolve, reject) => {
     const s = document.createElement('script'), p = trusted();
     s.src = p ? p.createScriptURL(url) : url;

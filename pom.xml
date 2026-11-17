@@ -90,6 +90,9 @@
   </modules>
 
   <properties>
+    <!-- the pinned Drishti Elements (an external component, vendored: drishti-console/web/static/vendor/drishti-elements/<version>/,
+         docs/architecture/ELEMENTS_IN_DRISHTI.md); drishti-rachana reads its two tables from there; a guard holds it to the folder's name -->
+    <drishti.elements.version>2.4.0</drishti.elements.version>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -364,21 +367,13 @@
 
   <profiles>
     <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties. Only a module with tests of
-         its own takes it (a module built alone, such as drishti-elements in its profile, then needs nothing from the local repository) -->
+         its own takes it (a module built alone then needs nothing from the local repository) -->
     <profile>
       <id>testroots</id>
       <activation><file><exists>${project.basedir}/src/test/java</exists></file></activation>
       <dependencies>
         <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
       </dependencies>
-    </profile>
-    <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl :drishti-elements package` writes
-         packaging/drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
-    <profile>
-      <id>elements</id>
-      <modules>
-        <module>packaging/drishti-elements</module>
-      </modules>
     </profile>
     <!-- The Java API reference (IMPLEMENTATION_PLAN row 2g, docs/guides/CLI_REFERENCE.md › API references): `-P api-docs` runs Javadoc right
          after a module compiles, in the modules that set drishti.apidocs.skip to false, on the packages they name in

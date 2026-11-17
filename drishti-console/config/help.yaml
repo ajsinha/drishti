@@ -438,9 +438,9 @@ moved:
   docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements   # architecture/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  docs-architecture-elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements   # Drishti Elements' docs/DESIGN.md merged into guides/EMBED_GUIDE.md (2.9.7)
   docs-architecture-genui: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements   # architecture/GENUI.md merged into guides/EMBED_GUIDE.md (2.9.7)
-  elements-guide: embed-guide#5-the-elements-one-by-one   # guides/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  elements-guide: embed-guide#5-the-elements-one-by-one   # guides/Drishti Elements' docs/DESIGN.md merged into guides/EMBED_GUIDE.md (2.9.7)
   panels: rachana-reference   # guides/PANELS.md merged into guides/RACHANA_REFERENCE.md (2.9.7): no section, so /help/panels#<kind> keeps its #kind
   docs-architecture-build-workbench: rachana-reference#the-build-workbench-the-design   # architecture/BUILD_WORKBENCH.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   docs-architecture-context-help: rachana-reference#about-this-page-the-design-of-context-help   # architecture/CONTEXT_HELP.md merged into guides/RACHANA_REFERENCE.md (2.9.7)

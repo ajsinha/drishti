@@ -1,0 +1,76 @@
+DRISHTI ELEMENTS SOFTWARE LICENCE
+Proprietary. All rights reserved.
+
+Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+All rights reserved.
+
+-------------------------------------------------------------------------------
+1. OWNERSHIP
+-------------------------------------------------------------------------------
+
+Drishti Elements, including without limitation its source code, object code,
+design documents, specifications, algorithms, data formats, documentation,
+brand marks, and all other materials contained in this repository
+(collectively, the "Software"), is the sole and exclusive property of
+Ashutosh Sinha (the "Owner").
+
+The Software is protected by copyright law and international treaties. All
+right, title and interest in and to the Software, including all intellectual
+property rights therein, are and shall remain vested exclusively in the Owner.
+
+NO LICENCE IS GRANTED. The Software may be visible to the public, but no
+licence, right or interest in it is granted, whether by implication, estoppel
+or otherwise, except as expressly stated in a separate written agreement signed
+by the Owner. Viewing the Software is not a licence to use it.
+
+-------------------------------------------------------------------------------
+2. RESTRICTIONS
+-------------------------------------------------------------------------------
+
+Without the express prior written permission of the Owner, no person may:
+
+  (a) use, execute, or run the Software for any purpose;
+  (b) copy, reproduce, or create derivative works of the Software;
+  (c) modify, adapt, translate, or alter the Software;
+  (d) distribute, publish, sublicense, sell, rent, lease, lend, or otherwise
+      transfer the Software or any copy of it to any third party;
+  (e) make the Software available to any third party, in whole or in part;
+  (f) reverse engineer, decompile, or disassemble the Software, or attempt to
+      derive its source code, structure, or organisation, except to the extent
+      such restriction is expressly prohibited by applicable law;
+  (g) remove, obscure, or alter any copyright, trademark, or other proprietary
+      notice contained in or on the Software.
+
+-------------------------------------------------------------------------------
+3. NO WARRANTY
+-------------------------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+-------------------------------------------------------------------------------
+4. LIMITATION OF LIABILITY
+-------------------------------------------------------------------------------
+
+IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE, INCLUDING WITHOUT LIMITATION ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES, OR ANY LOSS OF PROFITS, REVENUE,
+DATA, OR BUSINESS INTERRUPTION.
+
+-------------------------------------------------------------------------------
+5. THIRD-PARTY COMPONENTS
+-------------------------------------------------------------------------------
+
+The folder vendor/ holds third-party components that are licensed separately by
+their respective owners. Those components remain subject to their own licence
+terms, which are kept beside each component and listed in vendor/VENDOR.md.
+Nothing in this Licence limits any right granted to any person under those
+third-party licences with respect to those components.
+
+-------------------------------------------------------------------------------
+
+For permission or questions, contact the Owner through the GitHub profile
+ajsinha.

@@ -296,7 +296,7 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
   include the Russell 2000 from IWM's holdings), market data, and for internal use only the IMF forecasts (world-economy), Yahoo prices
   (off as shipped) and market headlines. FRED needs `DRISHTI_FRED_API_KEY`; the Bank of England, OSFI and the Canada Gazette are internal
   only, and their releases say so.
-- **Drishti Elements** ([ELEMENTS.md](docs/architecture/ELEMENTS.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md)): the console's
+- **Drishti Elements** ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md), [ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)): the console's
   JavaScript and CSS as eleven libraries under one release train (Elements 1.0.0): drishti-core, -inputs, -grid (with an AG Grid-style
   adapter), -chart (with maps from the world to every country's first-level regions), -data, -tree, -graph, -insight, -designer,
   -renderer 2.0.0, and -risk, licensed with the banking module. **Every screen of the console is drawn with them**; the gallery at

@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 
 import pytest
+from core import elements_pin
 from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
@@ -59,8 +60,7 @@ def test_python_files_under_limit():
 
 def test_vendored_echarts_gl_needs_no_eval():
     """ECharts GL is patched so the strict CSP (no unsafe-eval) holds: see vendor/echarts-gl/PATCHED.md."""
-    from pathlib import Path
-    gl = (Path(__file__).resolve().parent.parent / "web/static/vendor/echarts-gl/echarts-gl.min.js").read_text(encoding="utf-8")
+    gl = elements_pin.static_path("vendor/echarts-gl/echarts-gl.min.js").read_text(encoding="utf-8")   # inside the vendored Drishti Elements
     assert 'new Function("width","height","dpr"' not in gl
     assert "(width|height|dpr)" in gl
 

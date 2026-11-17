@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The FRTB-SA and SIMM playgrounds' choices on drishti-inputs' Select (docs/architecture/ELEMENTS.md section 15): a method switch, the
+"""The FRTB-SA and SIMM playgrounds' choices on drishti-inputs' Select (Drishti Elements' docs/DESIGN.md): a method switch, the
 Compare with list (refilled from the server's switches, the choice kept) and SIMM's side are <drishti-select>s, and picking one asks
 the server again with the choice. The engine is stood in for by the browser's routes; skipped when Playwright or its Chromium is
 missing."""

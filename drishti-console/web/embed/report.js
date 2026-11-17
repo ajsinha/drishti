@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* <drishti-report>: a published BI report, or one page or one visual of it, inside another web application, in a Shadow DOM, no iframe (docs/architecture/ELEMENTS.md
+/* <drishti-report>: a published BI report, or one page or one visual of it, inside another web application, in a Shadow DOM, no iframe (Drishti Elements' docs/DESIGN.md
    section 18). It signs in like <drishti-view> (the host's token provider, an embed token on every call, fields masked whatever the user's roles), draws with the
    console's report code (report-page.js), follows the report's live tables over the page's one embed connection, and tells the host what happens through
    `drishti:*` events: loaded, filter-changed, page-changed, state, tick, masked, error and token-needed. */

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* <drishti-panel>: ONE panel of a view in a card of the host's own (docs/architecture/ELEMENTS.md section 5, build step 14). It is <drishti-view> with the
+/* <drishti-panel>: ONE panel of a view in a card of the host's own (Drishti Elements' docs/DESIGN.md, build step 14). It is <drishti-view> with the
    `panel` attribute: the same attributes, properties, methods and events, the header off unless the host asks for one, and `panel="legs"` meaning
    `panels="legs"`. The view is still built whole by the console (a panel can read the view's data); the element shows the one panel, live. */
 import { DrishtiView } from './element.js';

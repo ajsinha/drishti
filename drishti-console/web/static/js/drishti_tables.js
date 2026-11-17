@@ -28,13 +28,15 @@
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
   // where the chart kit comes from: beside this script (the console's /static/, or /embed/v2/ for the client-side renderer on another site)
   var ROOT = me && /\/js\/tables\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tables\.js.*$/, '') : drishti_url('/static/');
+  // a console page: ECharts from the vendored Drishti Elements, by drishti-core's static root (an embed: its routes beside it)
+  var ELEMENTS = !/\/embed\//.test(ROOT) && window.Drishti && window.Drishti.elements && window.Drishti.elements.core;
 
   // ---- Chart any table: the dialog and its scripts, loaded at the first use ------------------------------------------------
   var kit = null;
   function script(src) {
     return new Promise(function (ok, fail) {
       var x = document.createElement('script');
-      x.src = drishti_url(ROOT + src + (VER ? '?v=' + VER : ''));
+      x.src = /^(https?:)?\/\//.test(src) ? src + (VER ? '?v=' + VER : '') : drishti_url(ROOT + src + (VER ? '?v=' + VER : ''));   // an absolute address as it is
       x.onload = ok; x.onerror = function () { fail(new Error('could not load ' + src)); };
       document.head.appendChild(x);
     });
@@ -48,7 +50,7 @@
       document.head.appendChild(l);
     }
     var steps = [];
-    if (!window.echarts) { steps.push('vendor/echarts/echarts.min.js'); }
+    if (!window.echarts) { steps.push(ELEMENTS ? ELEMENTS.staticUrl('vendor/echarts/echarts.min.js') : 'vendor/echarts/echarts.min.js'); }
     if (!window.Drishti.pivotEngine && !((window.drishtiModules || {}).pivotEngine)) { steps.push('js/drishti_pivot-engine.js'); }
     if (!window.Drishti.tableChartEngine) { steps.push('js/drishti_table-chart-engine.js'); }
     if (!window.Drishti.tableChartSources) { steps.push('js/drishti_table-chart-sources.js'); }

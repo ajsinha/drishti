@@ -15,12 +15,13 @@
 """WCAG contrast is computed, not asserted: text >= 4.5:1, accents >= 3:1, for every theme."""
 import re
 from pathlib import Path
+from core import elements_pin
 
 import pytest
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-TOKENS = (Path(__file__).resolve().parent.parent / "web" / "static" / "css" / "drishti_tokens.css").read_text()
+TOKENS = elements_pin.static_path("css/drishti_tokens.css").read_text()   # drishti-core's, in the vendored Drishti Elements
 
 
 def _theme(name):

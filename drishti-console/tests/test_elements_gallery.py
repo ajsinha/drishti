@@ -11,9 +11,10 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The Elements gallery's wiring in the console (ELEMENTS.md section 10): /elements and /elements/gallery open the static page with the
-query kept, the page is a Build page (the edition gate's build feature, Build -> Learn's menu item), and every file the page loads is
-there. The gallery itself is tested in Node (tests/elements/gallery.test.mjs) and in a browser (test_elements_gallery_browser.py)."""
+"""The Elements gallery's wiring in the console (docs/architecture/ELEMENTS_IN_DRISHTI.md): /elements and /elements/gallery open the
+vendored release tree's gallery page with the query kept and the hosted modules' visuals asked for, the page is a Build page (the edition
+gate's build feature, Build -> Learn's menu item), and every file the page loads is there. The gallery itself is tested in the Drishti
+Elements project."""
 import re
 from pathlib import Path
 
@@ -22,21 +23,23 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from core.edition import FEATURE_PATHS
+from core import elements_pin as _pin
 from routes import elements_routes
 
 CONSOLE = Path(__file__).resolve().parents[1]
-GALLERY = CONSOLE / "web" / "static" / "gallery"
+GALLERY = _pin.ROOT / "gallery"
+PAGE = _pin.URL + "/gallery/drishti_gallery.html"
 
 
-def test_the_routes_open_the_static_gallery_with_the_query_kept():
+def test_the_routes_open_the_vendored_gallery_with_the_query_kept():
     app = FastAPI()
     app.include_router(elements_routes.router)
     c = TestClient(app)
     for path in ("/elements", "/elements/gallery"):
         r = c.get(path, follow_redirects=False)
-        assert r.status_code == 302 and r.headers["location"] == "/static/gallery/drishti_gallery.html"
+        assert r.status_code == 302 and r.headers["location"] == PAGE + "?visuals=/api/elements/visuals"
     r = c.get("/elements?mode=docs&c=pivot&tab=api", follow_redirects=False)
-    assert r.headers["location"] == "/static/gallery/drishti_gallery.html?mode=docs&c=pivot&tab=api"
+    assert r.headers["location"] == PAGE + "?mode=docs&c=pivot&tab=api&visuals=/api/elements/visuals"
 
 
 def test_it_is_a_build_page_listed_under_build_learn():

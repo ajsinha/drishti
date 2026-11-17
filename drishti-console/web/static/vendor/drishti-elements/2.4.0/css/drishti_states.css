@@ -1,0 +1,44 @@
+/*
+ * Drishti Elements
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY.
+ *
+ * This file is the proprietary property of Ashutosh Sinha.
+ * Copying, use, modification or distribution of this file, via any medium,
+ * is not permitted except with the express prior written permission of the
+ * copyright holder.
+ *
+ * See the LICENSE file in the root of this repository.
+ */
+/* The state kit (drishti-core drishti_states.js): empty, loading skeleton, error with a fix, stale. Tokens only, so every theme works in
+   dark and light. The shimmer (--drishti-skeleton-bg, drishti-shimmer) is shared by every skeleton, a grid cell's too. */
+
+:root { --drishti-skeleton-bg: linear-gradient(90deg, var(--d-bg-2), var(--d-highlight), var(--d-bg-2)); }
+@keyframes drishti-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.drishti-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--d-sp-4); padding: var(--d-sp-12_8) var(--d-sp-12);
+  text-align: center; color: var(--d-muted); line-height: 1.5; font-size: var(--d-fs-13); }
+.drishti-state[hidden] { display: none; }
+.drishti-state-compact { flex-direction: row; justify-content: flex-start; flex-wrap: wrap; text-align: left; padding: var(--d-sp-5) var(--d-sp-6); gap: var(--d-sp-6); }
+.drishti-state-overlay { position: absolute; inset: 0; background: color-mix(in srgb, var(--d-surface) 70%, transparent); pointer-events: none; }
+.drishti-state-overlay .drishti-state-fix { pointer-events: auto; }
+.drishti-state-empty { color: var(--d-faint); }
+.drishti-state-error { color: var(--d-bad); }
+.drishti-state-stale { color: var(--d-warn); border: 1px dashed var(--d-warn); border-radius: var(--d-radius); }
+.drishti-state-detail { color: var(--d-faint); font-size: var(--d-fs-12); }
+.drishti-state-fix { border: 1px solid currentColor; background: transparent; color: var(--d-link); font: inherit; font-size: var(--d-fs-12);
+  padding: var(--d-sp-2) var(--d-sp-10); border-radius: var(--d-radius-pill); cursor: pointer; text-decoration: none; }
+.drishti-state-fix:hover { background: var(--d-accent-tint); }
+.drishti-state-fix:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.drishti-skeleton { display: flex; flex-direction: column; gap: var(--d-sp-6); width: min(320px, 90%); }
+.drishti-state-compact .drishti-skeleton { width: 120px; }
+.drishti-skeleton-bar { display: block; height: 0.9em; border-radius: 3px; background: var(--drishti-skeleton-bg); background-size: 200% 100%;
+  animation: drishti-shimmer var(--d-dur-shimmer) linear infinite; }
+.drishti-skeleton-short { width: 60%; }
+.drishti-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .drishti-skeleton-bar { animation: none; background: var(--d-bg-2); } }
+@media (forced-colors: active) { .drishti-skeleton-bar { background: GrayText; } .drishti-state-error { border: 1px solid Mark; } .drishti-state-fix { border-color: LinkText; color: LinkText; } }
+@media print { .drishti-skeleton-bar { animation: none; } .drishti-state-fix { display: none; } }

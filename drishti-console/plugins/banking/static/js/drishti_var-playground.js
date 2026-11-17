@@ -77,7 +77,7 @@
   }
 
   // ------------------------------------------------------------------------------------------------------------ the columns
-  // The grid is drishti-grid in drishti-risk's terminal layout (ELEMENTS.md section 12): positions across as columns lettered as the
+  // The grid is drishti-grid in drishti-risk's terminal layout (Drishti Elements' docs/DESIGN.md): positions across as columns lettered as the
   // workbook's, scenarios and results down as rows; the six header rows (Position, Kind ... Input form) pinned under the letters and the
   // label column pinned on the left, so they stay in view as 500 positions by 509 scenarios scroll (only the cells in view are drawn).
   function build() {

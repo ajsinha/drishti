@@ -11,15 +11,17 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Drishti Elements (static/elements/), the quick file checks of the gate: the bundles and generated modules current (tools/elements/build.py
---check), the API reference current and every public symbol typed (tools/docs/elements_api.py --check), both run in this process, and our
-file names prefixed. The libraries' unit tests in Node and the exported workbook: test_elements_node.py (they start Node)."""
+"""Drishti's own Elements libraries (static/elements/: drishti-insight, drishti-renderer, drishti-risk), the quick file checks of the gate:
+their bundles current (the vendored Drishti Elements' tools/elements/build.py --root ... --check, run in this process), our file names
+prefixed, every module under the line cap. Their unit tests in Node: test_elements_node.py (it starts Node). Drishti Elements itself
+(the eight libraries) is an external component, vendored and checked by test_elements_vendored.py."""
 import importlib.util
 import json
 
 import pytest
 
 from conftest import CONSOLE
+from core import elements_pin
 from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
@@ -35,13 +37,9 @@ def _tool(name, path):
     return mod
 
 
-def test_the_bundles_and_generated_modules_are_current(capsys):
-    rc = _tool("drishti_elements_build", "tools/elements/build.py").main(["--check"])
-    assert rc == 0, capsys.readouterr()
-
-
-def test_the_api_reference_is_current_and_every_public_symbol_is_typed(capsys):
-    rc = _tool("drishti_elements_api", "tools/docs/elements_api.py").main(["--check"])
+def test_the_bundles_are_current(capsys):
+    build = _tool("drishti_elements_build", (elements_pin.ROOT / "tools" / "elements" / "build.py").relative_to(ROOT))
+    rc = build.main(["--root", str(ELEMENTS.parent), "--manifest", str(ELEMENTS / "drishti_elements.json"), "--header", str(ROOT / "config" / "license-header.txt"), "--check"])
     assert rc == 0, capsys.readouterr()
 
 
@@ -55,7 +53,7 @@ def test_every_file_of_ours_is_prefixed_and_every_library_is_in_the_manifest():
     for name, spec in manifest["libraries"].items():
         assert (ELEMENTS / name / spec["entry"]).is_file()
         for css in spec.get("css", []):
-            assert (CONSOLE / "web" / "static" / css).is_file(), f"{name} needs {css}"
+            assert elements_pin.static_path(css).is_file(), f"{name} needs {css}"   # the console's sheet, or Drishti Elements' (vendored)
 
 
 #: The size of one Elements module: the one code line cap of every source file (tools/code_cap.py; owner's rule): a module over it is

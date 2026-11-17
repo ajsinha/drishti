@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* <drishti-view>: a live Drishti view inside another web application, in a Shadow DOM, no iframe (docs/architecture/ELEMENTS.md section 5).
+/* <drishti-view>: a live Drishti view inside another web application, in a Shadow DOM, no iframe (Drishti Elements' docs/DESIGN.md).
    The state machine: every attribute or property change that matters aborts the request in flight and loads again, and only the
    latest load may paint (one sequence number and one AbortController per load). Subscriptions go over the page's one Connection;
    a hidden tab or a scrolled-away element gives its subscription back and takes it again; links are composed `drishti:navigate`

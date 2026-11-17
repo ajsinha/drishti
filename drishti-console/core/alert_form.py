@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The alert form as drishti-inputs draws it (docs/architecture/ELEMENTS.md section 12.3): the server sends a schema and its value, and the
+"""The alert form as drishti-inputs draws it (Drishti Elements' docs/DESIGN.md): the server sends a schema and its value, and the
 page's ``Form``, embedded in the POST form, draws every field with the name the form always submitted (``routes/alert_routes.body_from``
 reads the same names). The fields of one source, condition or trigger show only when it is chosen (``when``); a hidden field submits
 nothing. The model's measures and the filters' fields arrive from the server after a model is chosen (``Form.setOptions``); the filters

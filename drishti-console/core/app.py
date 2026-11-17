@@ -37,6 +37,7 @@ from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
 from core.nextpath import to_login
 from core import base_path as _base_path
+from core import elements_pin as _elements_pin
 from core import product_version as _product_version
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -95,7 +96,7 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
 # never an /api route: Calc code in the worker carries the user's session cookie, so any other route it could reach it
 # would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
 # The gallery's Playground frame (sandboxed, opaque origin): its scripts are inline (they are written into it); no network of any kind.
-PLAYGROUND_FRAME = "/static/gallery/drishti_playground-frame.html"
+PLAYGROUND_FRAME = _elements_pin.URL + "/gallery/drishti_playground-frame.html"   # the vendored Drishti Elements gallery's sandbox frame
 PLAYGROUND_CSP = ("default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; "
                   "frame-ancestors 'self'")
 WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
@@ -450,6 +451,7 @@ def create_app(settings: Settings) -> FastAPI:
                                                              if code == "DRS-4023" and kind not in _PAGE_KINDS
                                                              else drs_advice(settings.get("ui.error_advice"), code, kind, id_)),
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
+        ELEMENTS_DIR=_elements_pin.URL,      # the pinned Drishti Elements (static/vendor/drishti-elements/<version>): a page loads its libraries from here
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
         PRODUCT_NATIVE=settings.get("ui.product_native", ""),
@@ -741,7 +743,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
     app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
-    app.include_router(elements_routes.router)          # the Drishti Elements gallery (ELEMENTS.md section 10)
+    app.include_router(elements_routes.router)          # the Drishti Elements gallery (Drishti Elements' docs/DESIGN.md)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)

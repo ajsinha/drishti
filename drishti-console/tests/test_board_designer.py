@@ -68,7 +68,7 @@ def test_the_start_page_makes_a_board_as_a_report_with_a_board_page(client):
 def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     page = client.get("/bi/design/bi-1")
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
-    assert 'data-studio data-studio-kind="report"' in page.text and "/static/elements/drishti-designer/drishti_designer.js" in page.text
+    assert 'data-studio data-studio-kind="report"' in page.text and "/static/vendor/drishti-elements/2.4.0/elements/drishti-designer/drishti_designer.js" in page.text
     studio = (STATIC / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")     # BI Studio is the kit's DesignerShell: Explorer, open items, dock
     for part in ("new K.DesignerShell(", "docs: true", "collapsible: true", "{ id: 'problems', label: 'Problems' }", "{ id: 'query', label: 'Query' }", "shell.setObjects(", "shell.setDocs("):
         assert part in studio, part

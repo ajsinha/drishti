@@ -1293,7 +1293,7 @@ Details: [guides/bi/README.md](guides/bi/README.md), [guides/bi/README.md](guide
 
 **In the UI.** **Create → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
 (grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
-([ELEMENTS.md section 8.4](architecture/ELEMENTS.md#84-as-built-the-gallery)). A component that does not draw here will not draw on a screen
+([ELEMENTS.md section 8.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
 either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)

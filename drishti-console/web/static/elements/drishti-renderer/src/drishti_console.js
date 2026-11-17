@@ -15,7 +15,7 @@
  */
 /* behaviours: 'console' (CLIENT_RENDERER.md section 7.4): the console's richer behaviours inside the container. From the libraries:
    the tree rows and the drill-down (drishti-grid's document table, behave.js) and the nested pivot, drawn by drishti-grid's own grid
-   with tree data (nested.js). From the console, until their screens move onto the libraries (ELEMENTS.md section 12): the per-column
+   with tree data (nested.js). From the console, until their screens move onto the libraries (Drishti Elements' docs/DESIGN.md): the per-column
    filter funnels and Chart any table (drishti_tables.js, drishti_colfilter.js), Zoom (drishti_zoom.js) and the controls
    (drishti_controls.js, drawing its multi-select and dates with drishti-inputs, whose bundle and style sheet are added to the page
    first: a picker's list floats in the host's body), each ONE implementation, loaded once per page from the console that serves this
@@ -25,8 +25,8 @@ import * as assets from './drishti_assets.js';
 import { strip } from './drishti_view.js';
 import { personFetch } from './drishti_net.js';
 import { drawNestedPivots } from './drishti_nested.js';
-import { consoleTables } from '../../drishti-grid/src/drishti_index.js';
-import { textSortKey, compareTextKeys, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { consoleTables } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
+import { textSortKey, compareTextKeys, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 /** The console's scripts still loaded, in the order they need each other (colfilter before tables). */
 export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];
@@ -40,7 +40,7 @@ const loaded = () => assets.memoised('console-behaviours', async () => {
     // a picker's list floats in the host page's body: drishti-inputs' rules are adopted by the host's document as a constructed sheet
     // (a <link> to the console would be refused by a host CSP of style-src 'self'; an adopted sheet asks nothing of style-src)
     try {
-      const res = await fetch(drishtiUrl(assets.statics('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
+      const res = await fetch(drishtiUrl(assets.elementsFile('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
       if (res.ok) {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(await res.text());

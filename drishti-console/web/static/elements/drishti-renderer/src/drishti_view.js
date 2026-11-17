@@ -19,7 +19,7 @@ import { h, str, icon, toneClass } from './drishti_dom.js';
 import { cellText } from './drishti_cells.js';
 import { panel } from './drishti_kinds.js';
 import { arrange, gridDom } from './drishti_layout.js';
-import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
 
 /** The banners: a past date with no store, a different date shown, a partial page, a late source. */
 export function banners(R, vm) {
