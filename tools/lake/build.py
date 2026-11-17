@@ -182,8 +182,11 @@ def now_iso() -> str:
 
 def site_set(connector: str, template_settings: dict) -> dict:
     """The constants the connector's ``set:`` stamps into stored rows: its effective settings (the template, the site's override merged
-    over it, as the Java resolver merged them: tools/resolved.py), else ``template_settings`` when no layer has the connector."""
-    e = R.current().connectors.find(connector)
+    over it, as the Java resolver merged them: tools/resolved.py), else ``template_settings`` when no layer has the connector or there is no kernel jar to ask."""
+    try:
+        e = R.current().connectors.find(connector)
+    except R.Unbuilt:                                    # no kernel jar: no installation, so no site layer to merge (a load into an explicit
+        e = None                                         # --pack from a bare checkout or a test lane): the pack's own template is the answer
     st = e.settings if e is not None else {k: R.text_of(v) for k, v in R.flatten(template_settings or {}).items()}
     return {k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4}
 
@@ -195,7 +198,12 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     import yaml
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
     import packlake                                   # a lake-form template read with the pack's lake: entries
-    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
+    raw = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    own = [n for n, c in ((raw.get("connectors") if isinstance(raw.get("connectors"), dict) else None) or {}).items()
+           if isinstance(c, dict) and c.get("plugin") == "delta"]
+    # The Java resolver is asked for the source modules' templates only when the pack's own do not answer (a connector the pack does not
+    # declare, or none at all): a load into an explicit --pack that declares its connector runs where no kernel jar is built.
+    m = packlake.view(raw, modules=not own or bool(connector and connector not in own))
     out: dict = {"pack": m.get("pack") or pack.name}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
