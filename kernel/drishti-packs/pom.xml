@@ -32,6 +32,9 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
+    <!-- the module boot (ModuleBoot), so the launch (LaunchRoots) runs it before any reader asks api.resolution.ModuleHomes; one way:
+         drishti-module-runtime depends on drishti-kernel-api and drishti-api only, never on this project -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
   </dependencies>

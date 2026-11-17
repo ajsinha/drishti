@@ -34,6 +34,15 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   tests that run banking on the flat test class path (they cannot catch a module-path breakage; G14 is their counterpart), and
   `ModuleBootTest` holds the flat-folder rule (packages are read only directly in the modules folder). `DmodPythonPackTest` is in `module.runtime` and fails,
   not skips, with `-Ddrishti.test.requires-python=true`.
+- **The boot result as a plain value (I2).** `com.ash.drishti.api.resolution.ModuleHomes` in `drishti-api`: id → folder, version,
+  content hash (SHA-256 of `META-INF/DMOD.MF`: the same files give the same hash whatever the zip bytes or file times), origin;
+  `current()`, `identity()`, `fingerprint()`, `dirProperties()`. `ModuleBoot` fills it and `remember` publishes it; nothing reads it yet.
+  `drishti-packs` depends on `drishti-module-runtime`. Source mode: `ModuleBoot.source(checkout, facts)` boots a checkout's module
+  folders through the development path. In-use markers (`<version>-<hash16>.in-use-<node>`) keep a folder another node runs from the
+  sweep. Two boots racing on one cache no longer refuse the loser on Linux ("Directory not empty" is a plain `FileSystemException`; the
+  `.part` folder is per process and thread). The old store's `registry.json` is a named leftover, and its OFF or REMOVED modules are
+  told once with the switch that remains. Tests: `ModuleBootTest` (in use, race, content hash, source mode, the old registry),
+  `ModuleHomesTest`.
 
 ## 2.9.11.i6 (2026-11-16)
 

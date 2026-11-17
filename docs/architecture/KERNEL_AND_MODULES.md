@@ -465,6 +465,42 @@ every surface goes; saved work shows *needs module X*). Unlike Tomcat, nothing u
 At start, before any bean: list every `<path>/<id>/<version>/module.yaml`; pick the version `active.yaml` names (else the highest);
 parse each manifest against the manifest schema; build the dependency graph. Nothing else of a module is touched yet.
 
+#### 4.2.1 The module boot and its result
+
+`ModuleBoot` (`drishti-module-runtime`) is the one class that answers *which modules, from which file, unpacked where*, before any
+Spring context exists. It reads `<home>/modules/*.dmod` (files directly in that folder only), refuses in words a file not named
+`<id>-<version>.dmod` after its manifest, two files of one id and a module built for another kernel API, and unpacks each package into
+`<data>/cache/modules/<id>/<version>-<hash16>/` (the first 16 hex digits of the file's SHA-256) through a `.part-<pid>-<thread>` folder
+and one atomic move: two boots racing on one cache use the folder of whichever moved first. A present cache folder is checked against
+its `META-INF/DMOD.MF` and unpacked again when a file changed.
+
+Each module carries two hashes. The **file hash** (SHA-256 of the `.dmod`) names the cache folder only. The **content hash** (SHA-256 of
+the module's `META-INF/DMOD.MF`, the sorted `<sha-256>  <path>` list with no time in it) is the module's identity: two packages of the
+same files have the same content hash whatever their zip bytes, file times or build machine. `first-party.yaml` lists it, and the
+cluster digest compares it.
+
+**The plain value.** The boot's result is projected into `com.ash.drishti.api.resolution.ModuleHomes` (`drishti-api`, below every
+reader): id → *home* (`id`, `version`, `dir`, `contentHash`, `origin`: first-party, third-party or development). `ModuleBoot.remember`
+publishes it once per process; readers ask `ModuleHomes.current()`. `Home.identity()` is `<id> <version> <content hash>` (`development`
+without one), `fingerprint()` the SHA-256 of those lines in id order (equal on two processes exactly when they booted the same content),
+and `dirProperties()` the `drishti.module.dir.<id>` properties a child process is given. `drishti-packs` depends on
+`drishti-module-runtime`, so the launch can run the boot before any reader asks.
+
+**Source mode.** `ModuleBoot.source(checkout, facts)` boots a checkout's module folders (`<checkout>/modules/<id>/` with a
+`module.yaml`) through the development path: every module read where it lies, origin *development (unverified)*, no content hash,
+nothing unpacked or swept. It is what the command-line tools and the tests mean by "the shipped files" of a checkout; servers under
+test and the drill boot packages.
+
+**The sweep and the in-use markers.** The server (only it) deletes cache folders no present `.dmod` owns. Nodes that share one data
+folder through a rolling upgrade protect each other: a running server writes `<cache>/<id>/<version>-<hash16>.in-use-<node>` beside each
+of its folders (`ModuleBoot.markInUse`, refreshed every 5 minutes, removed at stop by `releaseInUse`), and the sweep keeps a folder with
+a marker younger than 15 minutes, saying so; an older marker is deleted.
+
+**The removed deployment store.** Its folders (`installed`, `store`, `shipped`, `staging`, `tombstones` under `<data>/modules` or the
+modules folder, `<data>/overrides/installed`) and `<data>/modules/registry.json` are never read for modules and never deleted: each is
+named once as *not read: safe to delete*. A module that `registry.json` names OFF or REMOVED is told once: *was off in the old store:
+set enabled: false in config/modules/&lt;id&gt;.yaml*.
+
 ### 4.3 Verification, in order
 
 Each step refuses with a reason code and words; a refused module is **absent everywhere** (section 4.9).
