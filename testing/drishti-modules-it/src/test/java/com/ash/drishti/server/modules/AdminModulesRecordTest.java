@@ -78,9 +78,15 @@ class AdminModulesRecordTest {
         rows.add(ModuleAdminController.switchRow(on("trading", "Trading", "risk"), true));
         Map<String, Object> switches = new LinkedHashMap<>();
         switches.put("modules", rows);
-        switches.put("licence", Map.of("customer", "example", "development", true, "modules", List.of(), "signed", false, "source", "none"));
+        Map<String, Object> licence = new LinkedHashMap<>();             // ordered: the recording is compared byte for byte
+        licence.put("customer", "example");
+        licence.put("modules", List.of());
+        licence.put("signed", false);
+        licence.put("development", true);
+        licence.put("source", "none");
+        switches.put("licence", licence);
         switches.put("lenses", List.of());
-        switches.put("store", Map.of());
+        switches.put("store", new LinkedHashMap<>());
         switches.put("warnings", List.of());
 
         List<ModuleClusterView.NodeModules> nodes = List.of(

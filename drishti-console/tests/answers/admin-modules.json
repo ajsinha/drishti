@@ -773,10 +773,10 @@
   },
   "licence" : {
     "customer" : "example",
-    "development" : true,
     "modules" : [ ],
-    "source" : "none",
-    "signed" : false
+    "signed" : false,
+    "development" : true,
+    "source" : "none"
   },
   "lenses" : [ ],
   "store" : { },
