@@ -77,7 +77,6 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "admin-bindings": ("/admin/bindings", {}),
     "admin-cluster-modules": ("/admin/net?tab=modules", {}),
     "admin-modules": ("/admin/modules", {}),
-    "admin-deploy": ("/admin/modules/deploy", {}),
     "admin-white-label": ("/admin/white-label", {}),
     "help": ("/help", {}),
     "elements-gallery": ("/elements?mode=docs", {}),

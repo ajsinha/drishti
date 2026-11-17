@@ -16,7 +16,7 @@
 
 JSON Lines files go up to a workspace on the server; the server reads every record (the code of ``drishti.py pack new``, run as a job:
 core/packdesigner.py), the page shows the combinations, the Sutras and their live screens, and the finished module (.dmod) is deployed through
-the one module deploy (single node: install; cluster: plan, then apply). ``/build/pack/new``, the old page, redirects here."""
+the module's download (a module is a file and a restart). ``/build/pack/new``, the old page, redirects here."""
 from __future__ import annotations
 
 import json
@@ -355,50 +355,24 @@ async def _propose_binding(b, me, d: Path, reason: str) -> dict:
     return out
 
 
-# ---- deploy: the one module deploy -------------------------------------------------------------------------------------------------
+# ---- install: a module is a file and a restart ---------------------------------------------------------------------------------------
 
 @router.post("/api/ws/{wid}/deploy/{action}")
 async def deploy(request: Request, wid: str, action: str):
-    """``install``: one node, the .dmod is put in the modules folder (auto-deploy installs it); ``plan``: the .dmod goes to the module store (the server checks it once) and a plan to install it is made; ``apply`` {id, comment}: the
-    plan is applied (a single node installs at once; a cluster needs a second administrator by four eyes when the server says so)."""
+    """``binding``: proposes the data binding of the new module's kinds (a second administrator approves it as any binding). The package itself
+    is the download (``GET /api/ws/{wid}/dmod``): the page says how to install it (copy it into the server's modules folder, restart)."""
     me = ident(request)
     if not me.is_admin:
-        return _problem(403, "deploying a module is for administrators", "DRS-5002")
+        return _problem(403, "installing a module is for administrators", "DRS-5002")
     ws = _ws(request)
     b = request.app.state.backend
     try:
         d = ws.path(scoped(me.user), wid)
         body = await _body(request)
-        if action == "install":                       # one node: the package goes to the modules folder, auto-deploy checks, installs and loads it
-            import os
-            import shutil
-            f = ws.dmod(d)
-            if f is None:
+        if action == "binding":
+            if ws.dmod(d) is None:
                 return _problem(409, "make the module first (step 5)")
-            # the server's modules folder, named in this console's settings (an absolute path): the console works out no server folder
-            # (THIN_CONSOLE_DESIGN.md 2.1; the job moves to the server with the pack design job, step S8)
-            setting = str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or "").strip()
-            if not setting or not Path(setting).is_absolute():
-                return _problem(409, "Install on this node needs builder.pack_designer_modules_dir: the server's modules folder as an "
-                                     "absolute path, on this machine. Or use Plan for the cluster, which sends the module to the server")
-            target = Path(setting)
-            target.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(f, target / f.name)
-            return {"installed": str(target / f.name), "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
-        if action == "plan":
-            f, r = ws.dmod(d), ws.result(d)
-            if f is None or r is None:
-                return _problem(409, "make the module first (step 5)")
-            stored = await b.admin_upload("/modules/store", me, f.read_bytes(), {}, timeout=600.0)
-            plan = await b.admin("POST", "/modules/deployments/plans", me, {"action": "install", "module": r["name"], "version": r["version"],
-                                                                         "reason": str(body.get("reason") or "Pack designer")[:500]})
-            return {"stored": stored, "plan": plan, "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
-        if action == "apply":
-            out = await b.admin("POST", f"/modules/deployments/{quote(str(body.get('id') or ''), safe='')}/apply", me,
-                                {"comment": str(body.get("comment") or "")[:500]}, timeout=600.0)
-            from core import modules as _modules
-            await request.app.state.module_parts.refresh(b, _modules.state().loaded, force=True)
-            return out
+            return {"binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}
     except (PD.DesignerError, BodyError) as e:
         return _problem(e.status, e.detail, getattr(e, "code", None))
     except BackendError as e:

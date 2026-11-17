@@ -72,7 +72,7 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
     /** The facts of this kernel: its API version (from {@code drishti-kernel-api}), the reserved names, every feature licensed, no budget. */
     public static KernelFacts ofKernel() {
         return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true, SHARED, thisBuild(),
-                FirstParty.shipped(KernelFacts.class.getClassLoader()));
+                FirstParty.none());
     }
 
     /** A copy with more versions known (the host adds rachana, contracts, plugin-api, elements as it knows them). */

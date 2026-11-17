@@ -35,7 +35,8 @@ class ModuleSettingsControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     void listsTheSettingsWithTheirSource() {
-        MockEnvironment env = new MockEnvironment().withProperty("drishti.module-manifests-dir", "../../modules")
+        MockEnvironment env = new MockEnvironment().withProperty(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY,
+                        com.ash.drishti.api.resolution.ModuleHomes.source(java.nio.file.Path.of("../..").toAbsolutePath().normalize()).toProperty())
                 .withProperty("drishti.module.banking.var.window", "500").withProperty("drishti.var.es-confidence", "0.9")
                 .withProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated", "drishti.var.hot-dates is read for one release: x");
         ModuleSettingsController c = new ModuleSettingsController(env, mock(Entitlements.class));

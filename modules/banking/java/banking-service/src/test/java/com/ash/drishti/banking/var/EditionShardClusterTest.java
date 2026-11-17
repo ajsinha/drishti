@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 class EditionShardClusterTest {
 
-    static final List<String> EDITION = List.of("--drishti.distribution=risk", "--drishti.distributions-dir=" + java.nio.file.Path.of(TestRoots.repo(), "config", "distributions").toAbsolutePath().normalize(), "--drishti.module-manifests-dir=" + java.nio.file.Path.of(TestRoots.repo(), "modules").toAbsolutePath().normalize());
+    static final List<String> EDITION = List.of("--drishti.distribution=risk", "--drishti.distributions-dir=" + java.nio.file.Path.of(TestRoots.repo(), "config", "distributions").toAbsolutePath().normalize());
     static final List<String> SCOPES = List.of("BANK", "NODE:MGMT~DESK-X", "NODE:LEGAL~LE-A", "NODE:LEGAL~LE-B", "LL:LL-A", "TRD:T1,T3,T5");
 
     static List<String> with(List<String> args) {

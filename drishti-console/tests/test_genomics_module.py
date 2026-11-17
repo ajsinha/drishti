@@ -85,12 +85,12 @@ def test_its_visual_is_in_the_gallery_while_hosted_and_gone_when_removed(client,
     assert set(mine) == {"genomics.lollipop", "genomics.manhattan", "genomics.oncoprint", "protein.dms", "protein.backbone", "protein.landscape"}
     assert mine["protein.dms"]["script"].endswith("/drishti_genomics.js") and client.get(mine["protein.dms"]["script"]).status_code == 200
 
-    removed = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "removed", "title": "Genomics", "console": False,
-                            "claims": ["function GENE", "function VARIANT", "function COHORT"]}], "fingerprint": "removed"}
+    removed = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "off", "title": "Genomics", "console": False,
+                            "claims": ["function GENE", "function VARIANT", "function COHORT"]}], "fingerprint": "off"}
     _fresh(client, tmp_path / "again", monkeypatch, removed)
     client.get("/t")
     assert not [x for x in client.get("/api/elements/visuals").json()["visuals"] if x["module"] == "genomics"]
-    assert client.get(v["script"]).status_code == 410
+    assert client.get(v["script"]).status_code == 404
     assert client.get("/m/genomics/genes/TP53").status_code in (404, 410)          # the server's route table says which
 
 

@@ -21,6 +21,6 @@ import org.springframework.test.context.TestPropertySource;
  * Every test of {@link VarApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): scopes, contributions, the trade path, baskets, captures and the pre-deal what-if work
  * under Drishti Risk exactly as on the full product. The test's own packs (the site's drishti.packs.enabled) win over the distribution's; the commands stay Drishti Risk's.
  */
-@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions", "drishti.module-manifests-dir=../../../../modules"})
+@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions"})
 class VarApiRiskEditionTest extends VarApiTest {
 }

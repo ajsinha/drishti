@@ -151,9 +151,9 @@ class ModulePythonTest {
                 public void started(LoadedModule module, Contributions contributions) {
                     py.install(module, contributions);
                 }
-            }, tmp.resolve("tombstones"));
+            });
             for (int round = 1; round <= 2; round++) {
-                List<ModuleHealth> rows = rt.start(List.of(modules), Map.of(), id -> true);
+                List<ModuleHealth> rows = rt.start(List.of(modules.resolve("pyeng").resolve("1.0.0")), id -> true);
                 assertThat(rows).extracting(ModuleHealth::state).containsExactly(ModuleHealth.State.LOADED);
                 assertThat(compute.hasPool("m-pyeng")).isTrue();
                 assertThat(Files.isRegularFile(site.resolve("tinylib/__init__.py"))).isTrue();
@@ -166,7 +166,7 @@ class ModulePythonTest {
                 assertThat(((Number) r.rows().get(0).get("LIB")).longValue()).isEqualTo(42);      // the module's own wheel, imported by its engine
                 assertThat(r.worker()).startsWith("test/m-pyeng#");
 
-                ModuleRuntime.UnloadReport u = rt.unload("pyeng", ModuleRuntime.Leave.DISABLE, true);
+                ModuleRuntime.UnloadReport u = rt.unload("pyeng", true);
                 assertThat(u.failures()).isEmpty();
                 assertThat(rt.contributions().of("pyeng")).isEmpty();
                 assertThat(compute.hasPool("m-pyeng")).isFalse();

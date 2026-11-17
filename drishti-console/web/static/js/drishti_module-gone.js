@@ -15,8 +15,8 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* An open page of a module that goes (docs/architecture/KERNEL_AND_MODULES.md section 12.4): the shell, not the module's own script, asks
- * every 15 seconds whether the page's module is still hosted; when it is off or removed the page is frozen (inert: no more input, the
- * module's script is not called again) under the kernel's notice "<module> is no longer installed on this system" with Go to Home. On any
+ * every 15 seconds whether the page's module is still hosted; when it is off the page is frozen (inert: no more input, the
+ * module's script is not called again) under the kernel's notice "<module> is switched off" with Go to Home. On any
  * page, a module's slot (an element with data-module-slot) goes with its module. Inert on pages that hold nothing of a module. */
 (function () {
   'use strict';
@@ -35,10 +35,9 @@
     box.setAttribute('data-module-gone', m.id);
     var h = document.createElement('h1');
     h.className = 'ib-h2';
-    h.textContent = m.state === 'off' ? (m.title + ' is switched off') : (m.title + ' is no longer installed on this system');
+    h.textContent = m.title + ' is switched off';
     var p = document.createElement('p');
-    p.textContent = 'Nothing you saved is lost: work that uses it is kept, marked "needs module ' + m.id + '", and comes back when it is ' +
-      (m.state === 'off' ? 'switched on again.' : 'reinstalled.');
+    p.textContent = 'Nothing you saved is lost: work that uses it is kept, marked "needs module ' + m.id + '", and comes back when it is switched on again.';
     var a = document.createElement('a');
     a.className = 'btn-pill ib-btn';
     a.href = drishti_url('/');

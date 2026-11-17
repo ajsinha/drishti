@@ -51,10 +51,8 @@ import java.util.stream.Stream;
  * ({@link #view}): {@code <data>/overrides/modules/<id>/<version>-<hash16>/}, its cache folder copied (only what changed since the last
  * start) with the overrides laid over it, and the boot's result names the view as the module's folder; every reader (the pack resolver,
  * Sutras, the console part, the blotters, the data needs, Help) then sees the overridden file without knowing the rule exists. The
- * module's own folder is never written. With no package booted (until i7a's I8, {@link LegacyModules}), the modules folder as a whole gets
- * the view {@code <data>/overrides/modules} ({@link #apply}), which the launch names as the modules folder, and a module of the old store
- * the same rule where its folder is picked ({@link #installed}). The whole view's {@value #LIST} names every overridden file with its
- * source, which Admin → Health shows.
+ * module's own folder is never written. The whole view's {@value #LIST} names every overridden file with its source, which Admin → Health
+ * shows.
  */
 public final class ModuleOverrides {
 
@@ -290,11 +288,11 @@ public final class ModuleOverrides {
         }
     }
 
-    /** The override folders and the data folder of this server's start (LaunchRoots): the rule for the module store's installs. */
+    /** The override folders and the data folder of this server's start (LaunchRoots): the rule for each module's view. */
     private static volatile List<Path> activeDirs = List.of();
     private static volatile Path activeData;
 
-    /** Sets the override folders and the data folder at a server's start ({@link #installed} reads them); empty folders: no rule. */
+    /** Sets the override folders and the data folder at a server's start ({@link #view} reads them); empty folders: no rule. */
     public static void activate(List<Path> dirs, Path data) {
         activeDirs = dirs == null ? List.of() : List.copyOf(dirs);
         activeData = data;
@@ -339,20 +337,6 @@ public final class ModuleOverrides {
     /** The files refused for installed modules' views (a code file, a link...), in words. */
     public static List<String> installedRefused() {
         return INSTALLED_REFUSED.values().stream().flatMap(List::stream).toList();
-    }
-
-    /**
-     * The same rule for a module installed from its {@code .dmod} ({@code <store>/installed/<id>/<version>}, which the resolver reads before
-     * the modules folder's copy): when an override folder holds files under {@code <id>/}, the folder the resolver reads is the view
-     * {@code <data>/overrides/installed/<id>/<version>}, the installed folder copied with the overrides laid over it; else the installed
-     * folder itself (and a view left from an earlier start is removed). The installed folder is never written.
-     */
-    public static Path installed(Path home, String id) {
-        Path data = activeData;
-        if (data == null || home == null || home.getFileName() == null) {
-            return home;
-        }
-        return view(home, id, data.resolve("overrides").resolve("installed").resolve(id).resolve(home.getFileName().toString()));
     }
 
     /**

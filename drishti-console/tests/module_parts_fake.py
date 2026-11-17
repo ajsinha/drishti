@@ -84,20 +84,19 @@ class Registry:
                 return archetype_zip(self.extra)
             if shipped is not None and not path.startswith("/public/modules/console/greeter/"):
                 return await shipped(path, raw=raw, timeout=timeout)
-            raise BackendError(410 if self.state == "removed" else 404, "DRS-4040", path)
+            raise BackendError(404, "DRS-4040", path)
 
         before = backend._send
 
         async def send(method, path, ident=None, **kw):
             if path == "/modules/needs":
-                gone = self.state in ("off", "removed")
-                words = "needs module greeter" + (" (off)" if self.state == "off" else " (not installed)")
+                gone = self.state == "off"
+                words = "needs module greeter (off)"
                 return {"needs": {i["id"]: [{"module": "greeter", "title": "greeter", "state": self.state, "words": words}]
                                   for i in kw["json"]["items"] if gone and ("greeter-greeting" in i["text"] or "GREETER" in i["text"])}}
             if path == "/modules/route":
-                status = {"active": 200, "off": 404, "removed": 410}.get(self.state or "", 404)
-                return {"status": status, "module": "greeter" if self.state else None, "title": "greeter", "state": self.state,
-                        "by": "admin-two", "at": "2026-11-10T10:42:00Z", "deployment": "dpl-7"}
+                status = {"active": 200, "off": 404}.get(self.state or "", 404)
+                return {"status": status, "module": "greeter" if self.state else None, "title": "greeter", "state": self.state}
             return await before(method, path, ident, **kw)
 
         put = (lambda o, n, v: monkeypatch.setattr(o, n, v, raising=False)) if monkeypatch is not None else setattr   # None: a stand-in of its own

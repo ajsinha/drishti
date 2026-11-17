@@ -126,19 +126,6 @@ def test_a_connector_preview_sends_the_draft_and_the_kind_and_refuses_a_body_tha
     assert client.post("/admin/connectors/api/api-docs/preview", json={"plugin": "file"}).status_code == 400
 
 
-def test_a_module_package_is_stored_and_an_empty_one_is_refused(client, backend, monkeypatch):
-    calls = []
-    serving(backend, monkeypatch, calls)
-    assert client.post("/admin/modules/api/upload", content=b"PK\x03\x04dmod", headers=OCTET).status_code == 200
-    assert ("UPLOAD", "/modules/store", b"PK\x03\x04dmod") in calls
-    n = len(calls)
-    r = client.post("/admin/modules/api/upload", content=b"", headers=OCTET)
-    assert r.status_code == 400 and "choose a .dmod" in r.text
-    assert len(calls) == n
-    serving(backend, monkeypatch, calls, refuse=BackendError(422, "DRS-1031", "not a module"))
-    assert client.post("/admin/modules/api/upload", content=b"junk", headers=OCTET).status_code == 422
-
-
 def test_a_hidden_comment_is_unhidden_and_a_bad_id_never_reaches_the_server(client, backend, monkeypatch):
     seen = []
 

@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.registry;
 
-import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Locale;
 import java.util.function.Function;
@@ -47,19 +46,10 @@ public final class AccessRegistries {
             String s = v.strip().toLowerCase(Locale.ROOT);
             return "true".equals(s) || "on".equals(s) || "yes".equals(s);
         };
-        java.util.function.Supplier<Path> store = () -> ModulePackages.store(property);   // where the module node installs, read when used
-        // the module boot's result when it ran on packages (the launch publishes it); else, until i7a's I8, the modules folder and the store
+        // the module boot's result (the launch publishes it): each module's manifest is read from its folder
         com.ash.drishti.api.resolution.ModuleHomes booted = com.ash.drishti.api.resolution.ModuleHomes.of(property).orElse(null);
         return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader,
-                booted == null ? manifests(property) : null, store, () -> booted), overrides, Clock.systemUTC());
-    }
-
-    /**
-     * The modules folder of the old layout ({@link com.ash.drishti.api.resolution.LegacyModules#folderSetting}; a relative value is under
-     * the install folder), read only when no package was booted, until i7a's I8.
-     */
-    static Path manifests(Function<String, String> property) {
-        return com.ash.drishti.api.Roots.anchored(com.ash.drishti.api.resolution.LegacyModules.folderSetting(property));
+                () -> booted), overrides, Clock.systemUTC());
     }
 
     private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();

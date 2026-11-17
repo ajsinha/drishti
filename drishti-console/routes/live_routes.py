@@ -56,7 +56,7 @@ async def _call(request: Request, method: str, path: str, body=None):
 
 
 def _missing(request: Request):
-    return render(request, "module_removed.html", route={"status": 404}, path=request.url.path, me=ident(request), status_code=404)
+    return render(request, "module_unavailable.html", route={"status": 404}, path=request.url.path, me=ident(request), status_code=404)
 
 
 @router.get("/live/{live_id}")
@@ -72,7 +72,7 @@ async def page(request: Request, live_id: str):
     if spec is None:
         from core import modules
         if not modules.module_on(LIVE_MODULE):          # the module that declares the sets is not part of this distribution: say so, plainly
-            return render(request, "module_removed.html", route={"status": 200, "state": "absent", "module": LIVE_MODULE, "title": "Trading",
+            return render(request, "module_unavailable.html", route={"status": 200, "state": "absent", "module": LIVE_MODULE, "title": "Trading",
                                                                    "what": f"The live set '{live_id}'"}, path=request.url.path, me=ident(request))
         return _missing(request)
     return render(request, "live/live.html", live_id=live_id, spec=spec, screen="live")

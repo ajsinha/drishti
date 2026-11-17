@@ -16,7 +16,6 @@
 package com.ash.drishti.server.modules.host;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,12 +28,9 @@ import com.ash.drishti.common.Extensions;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.kernel.api.health.HealthFigures;
-import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.ModuleHealth;
-import com.ash.drishti.module.runtime.ModuleRuntime;
 import com.ash.drishti.server.modules.deploy.ModuleNode;
 import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.testkit.ModuleFixtures;
@@ -56,20 +52,20 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The kernel loads modules (docs/architecture/KERNEL_AND_MODULES.md sections 4 and 12): two {@code .dmod} modules in the folder of
- * {@code drishti.modules.path} load at the server's start, the SDK's archetype module and a module of several jars (a service jar, a compute
- * jar and a third-party jar under {@code lib/}). Each contributes a kind, a Rachana function, a REST route and a page, used from the
- * kernel as its own; unloaded, every one is gone (the route answers 410); put back, they return, and the class loader is collected each time.
+ * The kernel loads modules (docs/architecture/KERNEL_AND_MODULES.md sections 4 and 12): three {@code .dmod} packages in the modules folder
+ * ({@code drishti.modules.home}) are booted and load at the server's start, the SDK's archetype module twice (hello, greeter) and a module
+ * of several jars (a service jar, a compute jar and a third-party jar under {@code lib/}). Each contributes a kind, a Rachana function, a
+ * REST route and a page, used from the kernel as its own. Nothing is deployed or removed while the server runs: a module is a file and a
+ * restart (the unload and its leak check are the module runtime's own tests and the conformance check C14).
  */
-@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.modules.dev=true",
-        "drishti.modules.autodeploy-seconds=3600"})
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading"})
 @AutoConfigureMockMvc
 class ModuleHostServerTest {
 
     private static Path folder;
     private static Path work;
     private static Path lib;
+    private static final Map<String, String> KEPT = new LinkedHashMap<>();
 
     @Autowired
     MockMvc mvc;
@@ -80,19 +76,42 @@ class ModuleHostServerTest {
     @Autowired
     SourceRegistry sources;
 
-    @DynamicPropertySource
-    static synchronized void modules(DynamicPropertyRegistry r) throws IOException {
+    /** The modules folder with its packages, named before the server starts (the launch reads it from the process's settings). */
+    @org.junit.jupiter.api.BeforeAll
+    static synchronized void packages() throws IOException {
+        for (String k : List.of("drishti.modules.home", "drishti.modules.sources", "drishti.modules.dev")) {
+            KEPT.put(k, System.getProperty(k));
+        }
         if (folder == null) {
             work = Path.of(System.getProperty("drishti.test.dir", System.getProperty("java.io.tmpdir"))).resolve("module-host-" + System.nanoTime());
             folder = work.resolve("modules");
             lib = sharedLib(work);
-            install(archetypeModule(work), folder);
-            install(multiJarModule(work), folder);
+            Files.createDirectories(folder);
+            for (Path dmod : List.of(archetypeModule(work), multiJarModule(work), archetypeModule(work, "greeter"))) {
+                Files.copy(dmod, folder.resolve(dmod.getFileName().toString()));
+            }
         }
-        r.add("drishti.modules.path", () -> folder.toString());
+        System.setProperty("drishti.modules.home", folder.toString());
+        System.clearProperty("drishti.modules.sources");
+        System.clearProperty("drishti.modules.dev");
+    }
+
+    @org.junit.jupiter.api.AfterAll
+    static synchronized void restore() {
+        KEPT.forEach((k, v) -> {
+            if (v == null) {
+                System.clearProperty(k);
+            } else {
+                System.setProperty(k, v);
+            }
+        });
+    }
+
+    @DynamicPropertySource
+    static synchronized void settings(DynamicPropertyRegistry r) throws IOException {
         r.add("drishti.lib.path", () -> lib.toString());
-        // hello and demo are placed by name on this node ("local" without a cluster); greeter, dropped in later, is not named: on a single
-        // node a module with no placement is placed here by default
+        // hello and demo are placed by name on this node ("local" without a cluster); greeter is not named: on a single node a module
+        // with no placement is placed here by default
         Path placement = work.resolve("placement.yaml");
         if (!Files.exists(placement)) {
             ModuleFixtures.write(placement, "modules:\n" + String.join("", java.util.stream.Stream.of("hello", "demo")
@@ -102,31 +121,15 @@ class ModuleHostServerTest {
     }
 
     @Test
-    void modulesLoadAtStartAndAreUsedFromTheKernelThenUnloadLeakFreeAndComeBack() throws Exception {
+    void modulesLoadAtStartAndAreUsedFromTheKernel() throws Exception {
         assertThat(node.runtime().health()).extracting(ModuleHealth::id, ModuleHealth::state).contains(
-                org.assertj.core.groups.Tuple.tuple("demo", ModuleHealth.State.LOADED), org.assertj.core.groups.Tuple.tuple("hello", ModuleHealth.State.LOADED));
+                org.assertj.core.groups.Tuple.tuple("demo", ModuleHealth.State.LOADED), org.assertj.core.groups.Tuple.tuple("hello", ModuleHealth.State.LOADED),
+                org.assertj.core.groups.Tuple.tuple("greeter", ModuleHealth.State.LOADED));
         used();
-        // development mode's edit -> reload: a changed file reloads the module, leak-checked
-        Path page = folder.resolve("demo/1.0.0/console/pages/widget.html");
-        Files.writeString(page, "<section data-drishti-module=\"demo\">an edited widget</section>\n");
-        Files.setLastModifiedTime(page, java.nio.file.attribute.FileTime.fromMillis(System.currentTimeMillis() + 5_000));
-        assertThat(node.reloadChanged()).anySatisfy(l -> assertThat(l).startsWith("demo changed: unloaded (leak-free)"));
-        used();
-        // the off switch: off (404), back with a rescan
-        assertThat(node.unload("hello", ModuleRuntime.Leave.DISABLE).get("leakFree")).isEqualTo(true);
-        mvc.perform(get("/api/v1/hello/greeting/Asha")).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1025"));
-        // removed: everything gone, its routes 410
-        Map<String, Object> r = node.unload("demo", ModuleRuntime.Leave.REMOVE);
-        assertThat((List<?>) r.get("failures")).isEmpty();
-        assertThat(r.get("leakFree")).as("the multi-jar module's class loader is collected").isEqualTo(true);
-        gone();
-        // reinstalled (the folder looked at again): everything back, and gone again without a leak
-        assertThat(node.rescan()).filteredOn(h -> !h.id().equals("greeter")).extracting(ModuleHealth::state).containsOnly(ModuleHealth.State.LOADED);
-        used();
-        assertThat(node.unload("demo", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
-        assertThat(node.unload("hello", ModuleRuntime.Leave.REMOVE).get("leakFree")).isEqualTo(true);
-        gone();
-        assertThat(Extensions.describe(null)).isEmpty();
+        assertThat(node.entries()).extracting(ModuleNode.Entry::id).containsExactly("demo", "greeter", "hello");
+        assertThat(node.entry("demo").orElseThrow().version()).isEqualTo("1.0.0");
+        assertThat(node.needs("see /api/v1/demo/shout/x")).as("a module that is on needs nothing").isEmpty();
+        assertThat(Extensions.describe(null)).isNotEmpty();
     }
 
     private void used() throws Exception {
@@ -151,13 +154,12 @@ class ModuleHostServerTest {
         assertThat(page("/m/demo/old")).isEqualTo(308);
         // Health: the module's own figures and the host's card
         assertThat(Extensions.of(HealthFigures.class)).extracting(HealthFigures::key).contains("demo-module");
-        assertThat(node.status().toString()).contains("development (unverified)", "KIND_PROVIDER", "FUNCTION", "endpoint /api/v1/demo/shout/{text}");
+        assertThat(node.status().toString()).contains("third-party", "KIND_PROVIDER", "FUNCTION", "endpoint /api/v1/demo/shout/{text}");
         assertThat(DemoState.started()).isTrue();
     }
 
     @Test
     void theSharedLibIsSeenByModulesAndJdbcButNeverReplacesAKernelClass() throws Exception {
-        node.rescan();                                            // the modules, whatever another test of the class left
         com.ash.drishti.common.SharedLib l = com.ash.drishti.common.SharedLib.get();
         assertThat(l.jars()).extracting(com.ash.drishti.common.SharedLib.Jar::name).containsExactly("acme-lib.jar");
         assertThat(l.jars().get(0).sha256()).hasSize(64);
@@ -169,30 +171,11 @@ class ModuleHostServerTest {
     }
 
     @Test
-    void aDroppedPackageIsDeployedAndRemovedWhenItsFileGoes(@Autowired com.ash.drishti.server.modules.deploy.ModuleAutoDeploy auto,
-            @Autowired com.ash.drishti.server.placement.PlacementService placement) throws Exception {
-        Path dmod = Files.copy(archetypeModule(work, "greeter"), folder.resolve("greeter-0.1.0.dmod"));
-        assertThat(auto.scan()).containsExactly("deployed greeter 0.1.0");
-        // no placement entry: a single node places it here, and Health says so
+    void aModuleWithNoPlacementEntryIsPlacedHereOnASingleNode(@Autowired com.ash.drishti.server.placement.PlacementService placement) throws Exception {
         assertThat(placement.health().get("notes")).isEqualTo(List.of("greeter: single node: placed here"));
         mvc.perform(get("/api/v1/greeter/greeting/Asha")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.greeting").value("Hello, Asha, from the greeter module"));
         assertThat(eval("greeter_greet('Ravi')")).isEqualTo("Hello, Ravi, from the greeter module");
-        assertThat(auto.scan()).isEmpty();                       // nothing changed, nothing done
-        Files.delete(dmod);
-        assertThat(auto.scan()).containsExactly("removed greeter");
-        mvc.perform(get("/api/v1/greeter/greeting/Asha")).andExpect(status().isGone());
-        assertThatThrownBy(() -> eval("greeter_greet('Ravi')")).isInstanceOf(ElException.class);
-    }
-
-    private void gone() throws Exception {
-        assertThat(sources.plugin("demo-widgets")).isEmpty();
-        assertThat(router.documents("demo-widget", AsOf.LATEST, d -> { })).isFalse();
-        assertThatThrownBy(() -> eval("demo_shout('hi')")).isInstanceOf(ElException.class);
-        mvc.perform(get("/api/v1/demo/shout/quiet")).andExpect(status().isGone()).andExpect(jsonPath("$.code").value("DRS-1028"));
-        assertThat(page("/m/demo/widgets/W1")).isEqualTo(410);
-        assertThat(Extensions.describe("demo")).isEmpty();
-        assertThat(DemoState.started()).isFalse();
     }
 
     private int page(String path) {
@@ -366,15 +349,6 @@ class ModuleHostServerTest {
                 """);
         ModuleFixtures.write(src.resolve("console/pages/widget.html"), "<section data-drishti-module=\"demo\">a widget</section>\n");
         return ModuleFixtures.pack(src, List.of(svc, compute, lib), work.resolve("dist"));
-    }
-
-    /** Installs a package as an administrator would: unpacked under {@code <modules>/<id>/<version>/}, the package beside it. */
-    private static void install(Path dmod, Path modules) throws IOException {
-        String name = dmod.getFileName().toString();
-        String id = name.substring(0, name.lastIndexOf('-'));
-        String version = name.substring(name.lastIndexOf('-') + 1, name.length() - ".dmod".length());
-        Dmod.unpack(dmod, modules.resolve(id).resolve(version));
-        Files.copy(dmod, modules.resolve(id).resolve(name));
     }
 
     /** The demo module's entry, seen from outside its class loader. */

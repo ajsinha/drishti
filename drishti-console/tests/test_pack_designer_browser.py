@@ -14,7 +14,7 @@
 """Build -> New pack, the Pack designer, in a browser against a REAL scratch server (the repackaged jar on a free port, sign-in on): a small
 multi-file JSON Lines set (tests/pdui_data.py: three files, one gzipped, six PRODUCT_TYPE x SOURCE_SYSTEM combinations, one rare) is dropped, every
 record is read on the server, the combinations are seen with their counts (the rare one marked), a Sutra's YAML is edited and its live screen
-changes, the module is finalized (the fourteen checks) and deployed to the server, and the screen of a trade opens. Also the layout at desktop and
+changes, the module is finalized (the fourteen checks) and downloaded, with the words that say how to install it. Also the layout at desktop and
 phone width, and the old URL's redirect. Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py)."""
 import os
 import pathlib
@@ -34,16 +34,12 @@ ROOT = CONSOLE.parent
 LONG = max(BROWSER_WAIT_MS, 240_000)                    # the read, the draft and the fourteen checks are real work
 
 
-MODULES_DIR = "DRISHTI_CONSOLE__BUILDER__PACK_DESIGNER_MODULES_DIR"   # the console's builder.pack_designer_modules_dir (it works out no server folder)
-
-
 @pytest.fixture(scope="session")
 def designer(tmp_path_factory):
     work = tmp_path_factory.mktemp("pdui-server")
-    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_FILES_ROOT", MODULES_DIR)}
+    keep = {k: os.environ.get(k) for k in ("DRISHTI_DATA_DIR", "DRISHTI_FILES_ROOT")}
     os.environ["DRISHTI_DATA_DIR"] = str(work / "data")                 # the jobs write the files store where the scratch server reads it
     os.environ["DRISHTI_FILES_ROOT"] = str(work / "data" / "files")
-    os.environ[MODULES_DIR] = str(work / "data" / "modules")             # Install on this node: the scratch server's modules folder, named
     try:
         yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)
     finally:
@@ -72,7 +68,7 @@ def test_the_old_url_redirects_to_the_designer(browser, designer):
     ctx.close()
 
 
-def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_deployed(browser, designer, tmp_path):
+def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_downloaded(browser, designer, tmp_path):
     base = str(designer)
     files = pdui_data.make(ROOT / "data" / "pdui-test" / tmp_path.name)     # generated under the worktree's data/, never committed
     try:
@@ -129,22 +125,13 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
         page.locator("[data-download]:not([hidden])").wait_for(timeout=LONG * 2)
         assert "15 of 15 checks passed" in page.locator("[data-sum=finalize]").inner_text()
 
-        # 6 Deploy: the one module deploy
+        # 6 Install: a module is a file and a restart: the page offers the download and says how to install it
         page.click("[data-go=deploy]")
-        page.click("[data-install]")                                    # one node: the modules folder, auto-deploy installs it
-        page.locator("[data-open]:not([hidden])").wait_for(timeout=LONG)
-        assert "is installed" in page.locator("[data-deploy-msg]").inner_text()
-        href = page.locator("[data-open]").get_attribute("href")
-        import time
-        deadline, r = time.monotonic() + 120, None
-        while time.monotonic() < deadline:                              # auto-deploy checks and loads the module within seconds
-            r = page.request.get(base + href)
-            if r.status == 200:
-                break
-            time.sleep(2)  # wait-ok: auto-deploy loads the module within seconds; the route is polled
-        assert r.status == 200, (href, r.status, r.text()[:300])
-        page.goto(base + "/admin/modules?module=pdui-trades")
-        assert "pdui-trades" in page.locator("body").inner_text()
+        page.locator("[data-download-install]:not([hidden])").wait_for(timeout=LONG)
+        assert "modules folder" in page.locator("[data-pane=deploy]").inner_text() and "restart" in page.locator("[data-pane=deploy]").inner_text()
+        href = page.locator("[data-download-install]").get_attribute("href")
+        r = page.request.get(base + href)
+        assert r.status == 200 and r.body()[:2] == b"PK", (href, r.status)       # the .dmod itself
         ctx.close()
     finally:
         import shutil
@@ -153,8 +140,7 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
 
 def test_an_array_of_records_becomes_a_child_table_by_a_switch(browser, designer, tmp_path):
     """Kind and keys lists each array of records with a switch: LEGS (2.5 a deal on average) is a child kind at once; switched off and read
-    again, it is gone; CASHFLOWS (1.5) switched on becomes one. Runs AFTER the test that deploys a module, on purpose: an analysis in a server that holds a deployed
-    site module must still draft (the `sutra design` JVM reads the site's installed modules' packs)."""
+    again, it is gone; CASHFLOWS (1.5) switched on becomes one. Runs after the test that makes a module, on purpose."""
     import json
     base = str(designer)
     folder = ROOT / "data" / "pdui-test" / ("children-" + tmp_path.name)

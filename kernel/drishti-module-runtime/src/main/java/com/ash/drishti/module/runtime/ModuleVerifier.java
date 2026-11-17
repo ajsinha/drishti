@@ -65,11 +65,13 @@ public final class ModuleVerifier {
         if (dev) {
             notes.add(DEVELOPMENT);
         }
-        // V1: id = folder, version = folder
-        if (!dev && c.dir().getParent() == null || !m.id().equals(c.dir().getParent().getFileName().toString())
-                || !m.version().equals(c.dir().getFileName().toString())) {
+        // V1: the folder is named after the module: <id>/<version> (the tools), or <id>/<version>-<hash> (the boot's cache)
+        Path parent = c.dir().getParent();
+        String folder = c.dir().getFileName().toString();
+        if (!dev && (parent == null || !m.id().equals(parent.getFileName().toString())
+                || !(folder.equals(m.version()) || folder.startsWith(m.version() + "-")))) {
             throw new ModuleRefusedException("V1", label + ": module.yaml's id and version must name its folder <id>/<version> (found "
-                    + c.dir().getParent().getFileName() + "/" + c.dir().getFileName() + ")");
+                    + (parent == null ? "" : parent.getFileName() + "/") + folder + ")");
         }
         // V2: hashes (signature from release j)
         if (!dev) {

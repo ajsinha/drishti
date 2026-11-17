@@ -64,8 +64,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             new Root("config", List.of("drishti.config.dir"), HOME, "config", false),
             new Root("packs", List.of("drishti.packs.site-dir", "drishti.packs.dir"), "config", "packs", false),
             new Root("kernel packs", List.of("drishti.kernel.packs-dir"), "packs", "core", false),
-            new Root("modules", List.of(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING,
-                    com.ash.drishti.api.resolution.LegacyModules.HOME_OLD), HOME, "modules", true),
+            new Root("modules", List.of(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING), HOME, "modules", true),
             new Root("module switches", List.of("drishti.modules.dir"), "config", "modules", false),
             new Root("access", List.of("drishti.access.dir"), "config", "access", false),
             new Root("lakes", List.of("drishti.lakes.dir"), "config", "lakes", false),
@@ -74,7 +73,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     /** The keys the settings file set (server main, before Spring): their origin is the file. */
     public static final String FROM_FILE = "drishti.settings.file.keys";
     /** The modules folder {@code none}: the server has no modules (a kernel-only server; the unit tests). */
-    public static final String NONE = com.ash.drishti.api.resolution.LegacyModules.NONE;
+    public static final String NONE = com.ash.drishti.api.resolution.ModuleHomes.NONE;
     /** The modules folder's setting: the module boot's. */
     static final String MODULES = com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING;
     /** The name of the shipped defaults (the server's own application.yaml): a value from there was not named by anyone. */
@@ -226,61 +225,47 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
 
     /**
      * What the module boot gave one start (KERNEL_AND_MODULES.md section 4.2.1): the modules (with the site's overrides laid over, each
-     * module's folder its view where an override applies), whether they came from packages, what the overrides rule did, the words for
-     * the log, and, with no package, the modules folder's whole view that replaces the modules folder (null: none).
+     * module's folder its view where an override applies), what the overrides rule did, and the words for the log.
      */
-    public record Booted(com.ash.drishti.api.resolution.ModuleHomes homes, boolean packaged,
-            com.ash.drishti.api.resolution.ModuleOverrides.Result overrides, String report, Path legacyView) {
+    public record Booted(com.ash.drishti.api.resolution.ModuleHomes homes, com.ash.drishti.api.resolution.ModuleOverrides.Result overrides,
+            String report) {
 
         /** The settings that carry the result to every reader and child process: {@code drishti.module.dir.<id>}, and the whole value. */
         public Map<String, String> properties() {
             Map<String, String> out = new LinkedHashMap<>(homes.dirProperties());
-            if (packaged) {
-                out.put(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, homes.toProperty());
-            }
+            out.put(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY, homes.toProperty());
             return out;
         }
     }
 
     /**
-     * The module boot of one process (the server: {@code sweep}; a command line: no sweep, its own view folder). When the modules folder
-     * holds packages ({@code *.dmod}), {@code ModuleBoot} reads, verifies and unpacks them, and the site's overrides are laid over each
-     * module's cache folder in a view of its own under {@code viewRoot}. When it holds none, until i7a's I8, the modules come from the old
-     * store and folders ({@code LegacyModules}), with the overrides laid over the modules folder as a whole ({@code viewRoot}). Publishes
-     * the result for the process ({@code ModuleHomes.current()}).
+     * The module boot of one process (the server: {@code sweep}; a command line: no sweep, its own view folder). {@code ModuleBoot}
+     * reads, verifies and unpacks the packages ({@code *.dmod}) of the modules folder, or, in source mode, the module source folders of that
+     * folder; the site's overrides are laid over each module's folder in a view of its own under {@code viewRoot}.
+     * Publishes the result for the process ({@code ModuleHomes.current()}).
      *
      * @param modulesHome the modules folder (null: none)
-     * @param data        the data folder (the cache and the old store's default under it)
-     * @param property    the process's settings (the old store's setting)
+     * @param data        the data folder (the cache is under it)
+     * @param sources     the module source folders of the modules folder instead of any package (source mode, or the development switch)
      * @param dirs        the site's override folders (empty: none)
      * @param viewRoot    where the overrides' views go
      * @param sweep       true only for the server
      */
-    public static Booted bootModules(Path modulesHome, Path data, Function<String, String> property, List<Path> dirs, Path viewRoot, boolean sweep) {
+    public static Booted bootModules(Path modulesHome, Path data, boolean sources, List<Path> dirs, Path viewRoot, boolean sweep) {
         com.ash.drishti.api.resolution.ModuleOverrides.activate(dirs, data);   // the same rule for every module of this process
         if (modulesHome == null || data == null) {
             var none = com.ash.drishti.api.resolution.ModuleHomes.none();
             com.ash.drishti.api.resolution.ModuleHomes.publish(none);
-            return new Booted(none, false, null, "Modules: none (" + MODULES + "=" + NONE + ")", null);
+            return new Booted(none, null, "Modules: none (" + MODULES + "=" + NONE + ")");
         }
-        if (com.ash.drishti.module.runtime.ModuleBoot.usePackages(property.apply(com.ash.drishti.module.runtime.ModuleBoot.PACKAGES_SETTING))
-                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(modulesHome)) {
-            var r = com.ash.drishti.module.runtime.ModuleBoot.remember(com.ash.drishti.module.runtime.ModuleBoot.boot(modulesHome,
-                    com.ash.drishti.module.runtime.ModuleBoot.cacheRoot(data), sweep, com.ash.drishti.module.runtime.KernelFacts.ofKernel(), List.of()));
-            List<com.ash.drishti.api.resolution.ModuleHomes.Home> viewed = new ArrayList<>();
-            r.homes().homes().values().forEach(h -> viewed.add(com.ash.drishti.api.resolution.ModuleOverrides.view(h, viewRoot)));
-            var homes = com.ash.drishti.api.resolution.ModuleHomes.publish(com.ash.drishti.api.resolution.ModuleHomes.of(viewed));
-            var o = com.ash.drishti.api.resolution.ModuleOverrides.viewsReport(modulesHome, viewRoot, homes.homes().keySet());
-            return new Booted(homes, true, o, r.report() + (dirs.isEmpty() ? "" : "\n" + o.report()), null);
-        }
-        var o = com.ash.drishti.api.resolution.ModuleOverrides.apply(modulesHome, dirs, viewRoot);
-        Path folder = o.view() != null ? o.view() : modulesHome;
-        var homes = com.ash.drishti.api.resolution.ModuleHomes.publish(com.ash.drishti.api.resolution.LegacyModules.homes(folder,
-                Path.of(com.ash.drishti.api.resolution.LegacyModules.storeSetting(property)).toAbsolutePath().normalize()));
-        String report = "Modules: " + (homes.homes().isEmpty() ? "none" : String.join(", ", homes.homes().keySet())) + " (no package in "
-                + modulesHome + ": the module folders and the old store, until i7a's I8)"
-                + (o.view() != null || !o.refused().isEmpty() ? "\n" + o.report() : "");
-        return new Booted(homes, false, o, report, o.view());
+        var r = com.ash.drishti.module.runtime.ModuleBoot.remember(com.ash.drishti.module.runtime.ModuleBoot.boot(modulesHome,
+                com.ash.drishti.module.runtime.ModuleBoot.cacheRoot(data), sweep && !sources, com.ash.drishti.module.runtime.KernelFacts.ofKernel(),
+                sources ? com.ash.drishti.api.resolution.ModuleHomes.folders(modulesHome) : List.of()));
+        List<com.ash.drishti.api.resolution.ModuleHomes.Home> viewed = new ArrayList<>();
+        r.homes().homes().values().forEach(h -> viewed.add(com.ash.drishti.api.resolution.ModuleOverrides.view(h, viewRoot)));
+        var homes = com.ash.drishti.api.resolution.ModuleHomes.publish(com.ash.drishti.api.resolution.ModuleHomes.of(viewed));
+        var o = com.ash.drishti.api.resolution.ModuleOverrides.viewsReport(modulesHome, viewRoot, homes.homes().keySet());
+        return new Booted(homes, o, r.report() + (dirs.isEmpty() ? "" : "\n" + o.report()));
     }
 
     /**
@@ -297,28 +282,20 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             setting = null;
         }
         boolean none = modules == null || NONE.equals(modules.toString()) || data == null;
-        Function<String, String> property = k -> {
-            Object v = values.get(k);
-            try {
-                return v != null ? v.toString() : env.getProperty(k);
-            } catch (IllegalArgumentException e) {
-                return null;
-            }
-        };
-        Booted b = bootModules(none ? null : Path.of(modules.toString()), data == null ? null : Path.of(data.toString()), property,
+        boolean dev = devAsked(env);
+        String refusal = dev ? devRefusal(env, false) : null;
+        if (refusal != null) {
+            log.error(DEV + "=true is refused: " + refusal + "; only verified .dmod packages load");
+            dev = false;
+        }
+        boolean sources = dev || com.ash.drishti.module.runtime.ModuleBoot.sourcesAsked(env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.SOURCES_SETTING));
+        Booted b = bootModules(none ? null : Path.of(modules.toString()), data == null ? null : Path.of(data.toString()), sources,
                 none ? List.of() : com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, homePath),
                 data == null ? null : Path.of(data.toString()).resolve("overrides").resolve("modules"), true);
         synchronized (OVERRIDES) {
             if (b.overrides() != null) {
                 OVERRIDES.put(env, b.overrides());
             }
-        }
-        if (b.legacyView() != null) {                                   // the old way: the modules folder's whole view is the modules folder
-            values.put(MODULES, b.legacyView().toString());
-            if (values.containsKey(com.ash.drishti.api.resolution.LegacyModules.HOME_OLD)) {
-                values.put(com.ash.drishti.api.resolution.LegacyModules.HOME_OLD, b.legacyView().toString());
-            }
-            values.put(com.ash.drishti.api.resolution.ModuleOverrides.SOURCE_HOME, modules.toString());
         }
         values.putAll(b.properties());
         log.info(b.report());

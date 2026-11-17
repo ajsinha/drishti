@@ -110,21 +110,14 @@ class ModuleHomesTest {
         assertThat(ModuleHomes.source(tmp.resolve("no-checkout")).homes()).isEmpty();
     }
 
-    /** With no published value, until i7a's I8, the readers take the old store and folders: the folders, then the store's active installs. */
+    /** With no published value the readers take no module; a boot's value is the one they take. */
     @Test
-    void withNoBootTheOldStoreAndFoldersAreRead(@org.junit.jupiter.api.io.TempDir Path tmp) throws java.io.IOException {
+    void withNoBootThereIsNoModule(@org.junit.jupiter.api.io.TempDir Path tmp) throws java.io.IOException {
         java.nio.file.Files.createDirectories(tmp.resolve("modules/genomics"));
         java.nio.file.Files.writeString(tmp.resolve("modules/genomics/module.yaml"), "id: genomics\nversion: 0.1.0\n");
-        Path installed = java.nio.file.Files.createDirectories(tmp.resolve("data/modules/installed/genomics/0.2.0"));
-        java.nio.file.Files.writeString(installed.resolve("module.yaml"), "id: genomics\nversion: 0.2.0\n");
-        java.nio.file.Files.writeString(tmp.resolve("data/modules/installed/active.yaml"), "modules: {genomics: 0.2.0}\n");
-        java.util.Map<String, String> p = java.util.Map.of(LegacyModules.HOME, tmp.resolve("modules").toString(), "drishti.data.dir",
-                tmp.resolve("data").toString());
+        java.util.Map<String, String> p = java.util.Map.of("drishti.data.dir", tmp.toString());
 
-        ModuleHomes h = ModuleHomes.resolve(p::get);
-
-        assertThat(h.home("genomics").orElseThrow().version()).as("the store's active install wins the id").isEqualTo("0.2.0");
-        assertThat(ModuleHomes.resolve(k -> LegacyModules.HOME.equals(k) ? LegacyModules.NONE : null).homes()).isEmpty();
+        assertThat(ModuleHomes.resolve(p::get).homes()).as("a folder of modules is not read here").isEmpty();
         ModuleHomes booted = ModuleHomes.of(List.of(home("banking", A)));
         assertThat(ModuleHomes.resolve(k -> ModuleHomes.PROPERTY.equals(k) ? booted.toProperty() : p.get(k))).as("a boot's value wins")
                 .isEqualTo(booted);
