@@ -39,7 +39,7 @@
   <div class="mod-tiles" data-modules-tiles>
     <div class="mod-tile" data-tile="modules"><div class="mod-tl">Modules</div><div class="mod-tv">{{ c.modules }}</div><div class="mod-ts">{{ c.on }} on &middot; {{ c.off }} off</div></div>
     <div class="mod-tile" data-tile="nodes"><div class="mod-tl">Nodes</div><div class="mod-tv {{ 'mod-bad' if c.nodesDiffer else 'mod-ok' }}">{{ c.nodesAgree }} / {{ c.nodes }}</div><div class="mod-ts">{{ 'agree' if not c.nodesDiffer else (c.nodesDiffer ~ ' differ') }}</div></div>
-    <div class="mod-tile" data-tile="fingerprint"><div class="mod-tl">Fingerprint</div><div class="mod-tv mono">{{ (data.fingerprint or {}).short or '-' }}</div><div class="mod-ts">{{ 'all nodes' if (data.fingerprint or {}).agree else 'the majority' }}</div></div>
+    <div class="mod-tile" data-tile="fingerprint"><div class="mod-tl">Fingerprint</div><div class="mod-tv mono" data-snapshot-mask>{{ (data.fingerprint or {}).short or '-' }}</div><div class="mod-ts">{{ 'all nodes' if (data.fingerprint or {}).agree else 'the majority' }}</div></div>
     <div class="mod-tile" data-tile="problems"><div class="mod-tl">Problems</div><div class="mod-tv {{ 'mod-bad' if (c.problems or 0) - (c.warnings or 0) else '' }}">{{ (c.problems or 0) - (c.warnings or 0) }}</div><div class="mod-ts">{{ c.warnings or 0 }} warning{{ '' if c.warnings == 1 else 's' }}</div></div>
     <div class="mod-tile" data-tile="stale"><div class="mod-tl">Stale</div><div class="mod-tv {{ 'mod-warn' if c.stale else '' }}">{{ c.stale or 0 }}</div><div class="mod-ts">built for another kernel</div></div>
     <div class="mod-tile" data-tile="notLoaded"><div class="mod-tl">Not loaded</div><div class="mod-tv">{{ c.notLoaded or 0 }}</div><div class="mod-ts">refused or waiting</div></div>
@@ -69,7 +69,7 @@
           <td><a href="{{ BASE }}/admin/modules?module={{ m.id|urlencode }}" data-pick="{{ m.id }}"><b>{{ m.id }}</b></a><div class="text-muted-d">{{ m.title }}</div></td>
           <td><span class="st {{ 'st-bad' if probs else ('st-warn' if warns else ('' if not m.on else 'st-ok')) }}">{{ status }}</span>{% if m.origin and m.origin not in ('first-party',) %} <span class="text-muted-d">{{ m.origin }}</span>{% endif %}</td>
           <td class="mono">{{ m.version or '-' }}</td>
-          {% for cell in m.cells %}<td data-cell="{{ cell.node }}" data-differs="{{ 'true' if cell.differs else 'false' }}"><span class="mod-cell mod-{{ cellclass(cell)|trim }}" title="{{ cell.state }}{% if cell.contentHash %} {{ cell.contentHash }}{% endif %}">{{ cell.short if (cell.short and cell.state in ('loaded', 'on', 'leaving', 'off')) else cell.state }}</span></td>{% endfor %}
+          {% for cell in m.cells %}<td data-cell="{{ cell.node }}" data-differs="{{ 'true' if cell.differs else 'false' }}"><span class="mod-cell mod-{{ cellclass(cell)|trim }}" data-snapshot-mask title="{{ cell.state }}{% if cell.contentHash %} {{ cell.contentHash }}{% endif %}">{{ cell.short if (cell.short and cell.state in ('loaded', 'on', 'leaving', 'off')) else cell.state }}</span></td>{% endfor %}
         </tr>
       {% endfor %}
       </tbody>
@@ -84,7 +84,7 @@
     <dl class="mod-facts">
       <dt>Version</dt><dd class="mono">{{ m.version or '-' }}</dd>
       <dt>Origin</dt><dd>{{ m.origin or '-' }}</dd>
-      <dt>Content hash</dt><dd class="mono">{{ m.contentHash or '-' }}</dd>
+      <dt>Content hash</dt><dd class="mono" data-snapshot-mask>{{ m.contentHash or '-' }}</dd>
       <dt>File</dt><dd class="mono">{{ m.file or '-' }}</dd>
       <dt>Switch</dt><dd data-detail-switch>{{ 'on' if m.on else 'off' }}{% if m.reason %} &middot; {{ m.reason }}{% endif %}{% if m.switchSource %} <span class="text-muted-d">({{ m.switchSource }})</span>{% endif %}</dd>
       <dt>Licensed</dt><dd>{{ 'yes' if m.licensed else 'no' }}</dd>
