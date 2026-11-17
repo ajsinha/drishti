@@ -20,7 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
-import com.ash.drishti.module.runtime.ModuleDiscovery;
 import com.ash.drishti.module.runtime.ModuleRuntime;
 import com.ash.drishti.module.runtime.RouteTable;
 import com.ash.drishti.module.runtime.placement.ModuleParts;
