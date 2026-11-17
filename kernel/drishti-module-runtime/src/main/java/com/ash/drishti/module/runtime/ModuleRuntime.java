@@ -67,9 +67,9 @@ public final class ModuleRuntime implements AutoCloseable {
     private volatile ClassLoader libraries;
 
     /**
-     * @param facts        what the host is (versions, reserved names, licence, budget, shared libraries)
+     * @param facts        what the host is (versions, reserved names, licence, budget, the kernel's libraries)
      * @param parent       the host's Spring context, parent of every module's (null for none)
-     * @param kernelLoader the loader the shared list is asked of (the kernel's)
+     * @param kernelLoader the kernel's loader, asked first by every module loader (section 4.4)
      * @param host         the host's part of loading and unloading
      * @param tombstones   the folder of tombstone files ({@code modules/tombstones/}), or null for none
      */
@@ -90,7 +90,7 @@ public final class ModuleRuntime implements AutoCloseable {
         return this;
     }
 
-    /** The site's shared lib loader ({@code drishti.lib.path}, default {@code <home>/lib/ext}): every module sees its jars after its own (null: none). */
+    /** The site's shared lib loader ({@code drishti.lib.path}, default {@code <home>/lib/ext}): every module sees its jars after the kernel's, before its own (null: none). */
     public ModuleRuntime libraries(ClassLoader lib) {
         this.libraries = lib;
         return this;
@@ -116,7 +116,9 @@ public final class ModuleRuntime implements AutoCloseable {
         for (ModuleCandidate c : found.candidates()) {
             known.put(c.id(), c);
             try {
-                notes.put(c.id(), verifier.verify(c));
+                List<String> n = verifier.verify(c);
+                n.stream().filter(w -> w.startsWith("warning: ")).forEach(w -> LOG.warn("module {}: {}", c.manifest().label(), w));
+                notes.put(c.id(), n);
                 origins.put(c.id(), f.firstParty().origin(c.manifest(), c.dir()));
                 ok.add(c);
             } catch (ModuleRefusedException e) {
@@ -173,7 +175,8 @@ public final class ModuleRuntime implements AutoCloseable {
                     urls.add(c.dir().resolve(j).toUri().toURL());
                 }
                 List<String> allowance = FirstParty.allowance(c.manifest(), facts.firstParty().origin(c.manifest(), c.dir()), facts.kernelBuild());
-                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, facts.shared(), libraries, allowance);
+                loader = new ModuleClassLoader(c.id(), urls.toArray(URL[]::new), kernelLoader, libraries, allowance);
+                t.setContextClassLoader(loader);     // the kernel calls into the module (its classes, its context) under its own loader
                 ctx = new AnnotationConfigApplicationContext();
                 ctx.setId("module:" + c.id());
                 ctx.setDisplayName("module " + c.manifest().label());
@@ -193,7 +196,6 @@ public final class ModuleRuntime implements AutoCloseable {
                 if (java.entry() != null) {
                     classes.add(loader.loadClass(java.entry()));
                 }
-                t.setContextClassLoader(loader);
                 if (!classes.isEmpty()) {
                     ctx.register(classes.toArray(Class<?>[]::new));
                 }
@@ -282,23 +284,7 @@ public final class ModuleRuntime implements AutoCloseable {
         List<String> steps = new ArrayList<>();
         List<String> failures = new ArrayList<>();
         String version = known.get(id).manifest().version();
-        // 1 gate closes
-        health.put(id, new ModuleHealth(id, version, ModuleHealth.State.LEAVING, null, null, loaded.get(id).notes()));
-        RouteTable.Snapshot s = routes.state(id, leave == Leave.REMOVE ? RouteTable.State.TOMBSTONE : RouteTable.State.OFF);
-        failures.addAll(contributions.withdraw(id, 1));
-        steps.add("1 gate closed: " + s.of(id).size() + " routes " + (leave == Leave.REMOVE ? "tombstoned" : "off") + " (table v" + s.version() + ")");
-        // 2 tell
-        step(failures, () -> host.event("module.leaving", id));
-        steps.add("2 told: module.leaving");
-        // 3 drain
-        step(failures, () -> host.drain(id));
-        steps.add("3 drained");
-        // 4-6 contributions, content, console
-        for (int step = 4; step <= 6; step++) {
-            int before = contributions.of(id).size();
-            failures.addAll(contributions.withdraw(id, step));
-            steps.add(step + " withdrew " + (before - contributions.of(id).size()) + (step == 4 ? " contributions" : step == 5 ? " content" : " console surfaces"));
-        }
+        stepsOneToSix(id, version, leave, steps, failures);
         claims.release(id);
         // 7 server (in its own frame, so nothing here holds the loader during the leak check)
         LeakCheck check = stopServerPart(id, hot, failures);
@@ -327,6 +313,37 @@ public final class ModuleRuntime implements AutoCloseable {
         steps.add("9 recorded");
         LOG.info("module {} {}: {}", id, leave == Leave.REMOVE ? "removed" : "off", failures.isEmpty() ? "clean" : failures);
         return new UnloadReport(id, List.copyOf(steps), List.copyOf(failures), leakFree);
+    }
+
+    /** Steps 1-6 of an unload, under the module's own loader (in their own frame, so nothing holds the loader during the leak check). */
+    private void stepsOneToSix(String id, String version, Leave leave, List<String> steps, List<String> failures) {
+        Thread t = Thread.currentThread();
+        ClassLoader tccl = t.getContextClassLoader();
+        ModuleClassLoader own = loaded.get(id).loader();
+        try {
+            if (own != null) {
+                t.setContextClassLoader(own);      // steps 1-6 call into the module (its listeners, drain, withdrawals) under its own loader
+            }
+            // 1 gate closes
+            health.put(id, new ModuleHealth(id, version, ModuleHealth.State.LEAVING, null, null, loaded.get(id).notes()));
+            RouteTable.Snapshot s = routes.state(id, leave == Leave.REMOVE ? RouteTable.State.TOMBSTONE : RouteTable.State.OFF);
+            failures.addAll(contributions.withdraw(id, 1));
+            steps.add("1 gate closed: " + s.of(id).size() + " routes " + (leave == Leave.REMOVE ? "tombstoned" : "off") + " (table v" + s.version() + ")");
+            // 2 tell
+            step(failures, () -> host.event("module.leaving", id));
+            steps.add("2 told: module.leaving");
+            // 3 drain
+            step(failures, () -> host.drain(id));
+            steps.add("3 drained");
+            // 4-6 contributions, content, console
+            for (int step = 4; step <= 6; step++) {
+                int before = contributions.of(id).size();
+                failures.addAll(contributions.withdraw(id, step));
+                steps.add(step + " withdrew " + (before - contributions.of(id).size()) + (step == 4 ? " contributions" : step == 5 ? " content" : " console surfaces"));
+            }
+        } finally {
+            t.setContextClassLoader(tccl);
+        }
     }
 
     /** Step 7: stop the entry, close the child context; hot: drop the loader and return its leak check (null when nothing to check). */

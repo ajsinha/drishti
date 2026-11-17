@@ -53,7 +53,7 @@ class ModuleBootTest {
     private Path home;
     private Path data;
     private Path cache;
-    private final KernelFacts facts = new KernelFacts(Map.of("kernel", "0.5"), Set.of(), Set.of(), null, f -> true, 0, false, true, List.of(),
+    private final KernelFacts facts = new KernelFacts(Map.of("kernel", "0.5"), Set.of(), Set.of(), null, f -> true, 0, false, true, KernelLibraries.none(),
             null, null);
 
     @BeforeEach

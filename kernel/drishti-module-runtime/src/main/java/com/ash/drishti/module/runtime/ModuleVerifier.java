@@ -46,6 +46,9 @@ public final class ModuleVerifier {
     }
 
     /** The note a module of development mode carries in Health. */
+    /** The start of a note naming a library the module carries that the kernel ships (its copy is not used; section 4.4). */
+    public static final String LIBRARY_WARNING = "warning: library: ";
+
     public static final String DEVELOPMENT = "development (unverified): an exploded folder loaded in development mode, not a verified .dmod";
 
     private java.util.function.Predicate<ModuleCandidate> development = c -> false;
@@ -80,6 +83,8 @@ public final class ModuleVerifier {
         notes.add(0, origin.line());
         FirstParty.allowance(m, origin, facts.kernelBuild());
         packageRules(c, notes);
+        // the kernel's libraries always win (section 4.4): a module's own copy of one is never used, so it is named
+        facts.libraries().warnings(c).forEach(w -> notes.add(LIBRARY_WARNING + w));
         // V3: the API ranges this host knows
         for (String r : DmodManifest.RANGES) {
             String have = facts.versions().get(r);

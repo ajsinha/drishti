@@ -22,6 +22,17 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **The kernel's libraries always win (I9, B3).** A module's class loader is plain parent-first: the kernel (the JDK, the kernel API and every
+  library the server jar ships), then the site's `lib/ext` jars, then the module's own `java/` and `lib/` jars. A module's copy of a kernel library
+  is never used; a library the kernel does not ship comes from the module; kernel internals (`com.ash.drishti.` outside the kernel API) stay
+  hidden except a first-party allowance; no module sees another. `KernelFacts.SHARED` (12 prefixes) is gone. New `KernelLibraries` reads
+  `META-INF/drishti/kernel-libraries.txt`, which `packaging/drishti-app` generates (one line per jar of `BOOT-INF/lib`: `group:artifact:version`,
+  its name, its package prefixes) and checks against `BOOT-INF/lib` after the repackaging; a module carrying one of them gets one sentence naming
+  the module, the library and both versions: WARN at load, the module's Health notes, `module verify` (`N library warnings`, `--json`
+  `libraryWarnings`). The thread context class loader is the module's on the runtime's calls into it (load, the unload steps). Banking's
+  `kernel-internals.txt` drops its five `# library` lines (Caffeine, Kafka clients, SnakeYAML); `BankingReachTest` refuses one coming back.
+  Guard G10 `KernelLibrariesWinTest` (a module's Jackson copy, a `lib/ext` copy, a `META-INF/services` file in both, the warning in verify, log and
+  Health). KERNEL_AND_MODULES §4.4, DEVELOPER_GUIDE (a module's libraries).
 - **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
   `drishti-packs` and `drishti-it`: pack tests, the Sutra equivalence tests, module host and distribution tests, `ConsoleAnswersRecordTest`, the source-system modules,
   `OneTablePerSystemTest`) on the **built packages** (`target/modules-home`: `packaging/dist`'s `.dmod` files and the six source-system modules, packed by `tools/modulepack.py`),

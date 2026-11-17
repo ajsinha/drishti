@@ -63,7 +63,9 @@ class BankingReachTest {
         }
         Set<String> recorded = new TreeSet<>();
         for (String line : Files.readAllLines(BANKING.resolve("kernel-internals.txt"))) {
-            // a "# bytecode" or "# library" line is for the package's allowance (what the compiled classes reach), not the sources
+            assertThat(line).as("the kernel's libraries reach every module through its class loader: no \"# library\" line in "
+                    + "kernel-internals.txt").doesNotContain("# library");
+            // a "# bytecode" line is for the package's allowance (what the compiled classes reach), not the sources
             if (!line.isBlank() && !line.startsWith("#") && !line.contains("#")) {
                 recorded.add(line.trim());
             }

@@ -52,6 +52,10 @@ final class TestModule {
     String alias;
     final Map<String, String> extraFiles = new LinkedHashMap<>();
     final Map<String, String> extraJarClasses = new LinkedHashMap<>();
+    /** Resources put in the module's own jar (path in the jar to its text). */
+    final Map<String, String> extraJarResources = new LinkedHashMap<>();
+    /** Third-party jars of the package's {@code lib/} (file name to the jar to copy). */
+    final Map<String, Path> libJars = new LinkedHashMap<>();
 
     TestModule(String id) {
         this.id = id;
@@ -73,6 +77,14 @@ final class TestModule {
         extraFiles.forEach((p, text) -> Dmod.write(src.resolve(p), text));
         if (java) {
             jar(work, src.resolve("java/" + id + ".jar"));
+            libJars.forEach((name, from) -> {
+                try {
+                    Files.createDirectories(src.resolve("lib"));
+                    Files.copy(from, src.resolve("lib").resolve(name));
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
         }
         Path dmod = Dmod.pack(src, work.resolve(Dmod.fileName(id, version)));
         Path dir = modules.resolve(id).resolve(version);
@@ -110,7 +122,7 @@ final class TestModule {
                 functions: %s
                 resources: {memory-mb: 64}
                 """.formatted(id, version, id, id, kernel, requires, conflicts, id, id, prefix, functions)
-                + (java ? "java: {jars: [" + id + ".jar], spring: [" + (spring == null ? pkg + ".HelloConfig" : spring) + "]}\n" : "") + extraManifest;
+                + (java ? "java: {jars: [" + id + ".jar], lib: [" + String.join(", ", libJars.keySet()) + "], spring: [" + (spring == null ? pkg + ".HelloConfig" : spring) + "]}\n" : "") + extraManifest;
     }
 
     private void jar(Path work, Path jar) {
@@ -148,6 +160,7 @@ final class TestModule {
         if (javac.run(null, null, null, args.toArray(String[]::new)) != 0) {
             throw new IllegalStateException("the test module's sources do not compile");
         }
+        extraJarResources.forEach((p, text) -> Dmod.write(classes.resolve(p), text));
         Dmod.write(jar, "");
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar)); Stream<Path> s = Files.walk(classes)) {
             for (Path p : s.filter(Files::isRegularFile).sorted().toList()) {
@@ -161,7 +174,7 @@ final class TestModule {
     }
 
     /** The test class path, with the manifest-only jar surefire may use expanded. */
-    private static String classPath() {
+    static String classPath() {
         List<String> out = new ArrayList<>();
         for (String e : System.getProperty("java.class.path").split(File.pathSeparator)) {
             out.add(e);
