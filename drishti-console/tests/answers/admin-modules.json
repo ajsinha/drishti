@@ -1,7 +1,7 @@
 {
   "contract" : "admin-modules/1",
   "self" : "drishti-main",
-  "kernel" : "2.9.11.i7a",
+  "kernel" : "2.9.11.i9",
   "counts" : {
     "modules" : 10,
     "on" : 7,
@@ -57,7 +57,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
     "short" : "68ba9b33",
@@ -67,13 +67,13 @@
       "drishti-b" : [ "api", "compute", "console" ],
       "drishti-c" : [ "api", "compute", "console" ]
     },
-    "file" : "banking-2.9.11.i7a.dmod",
+    "file" : "banking-2.9.11.i9.dmod",
     "majority" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
       "short" : "68ba9b33",
       "origin" : "first-party",
@@ -82,7 +82,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
       "short" : "68ba9b33",
       "origin" : "first-party",
@@ -91,7 +91,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
       "short" : "68ba9b33",
       "origin" : "first-party",
@@ -157,19 +157,19 @@
       "node" : "drishti-main",
       "kind" : "stale",
       "severity" : "problem",
-      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
     }, {
       "module" : "capitalmarkets",
       "node" : "drishti-b",
       "kind" : "stale",
       "severity" : "problem",
-      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
     }, {
       "module" : "capitalmarkets",
       "node" : "drishti-c",
       "kind" : "stale",
       "severity" : "problem",
-      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
     } ]
   }, {
     "id" : "economy",
@@ -183,7 +183,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
     "short" : "6fda2b82",
@@ -193,13 +193,13 @@
       "drishti-b" : [ "api", "console" ],
       "drishti-c" : [ "api", "console" ]
     },
-    "file" : "economy-2.9.11.i7a.dmod",
+    "file" : "economy-2.9.11.i9.dmod",
     "majority" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
       "short" : "6fda2b82",
       "origin" : "first-party",
@@ -208,7 +208,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
       "short" : "6fda2b82",
       "origin" : "first-party",
@@ -217,7 +217,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
       "short" : "6fda2b82",
       "origin" : "first-party",
@@ -229,19 +229,19 @@
       "node" : "drishti-main",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     }, {
       "module" : "economy",
       "node" : "drishti-b",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     }, {
       "module" : "economy",
       "node" : "drishti-c",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     } ]
   }, {
     "id" : "genomics",
@@ -309,7 +309,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
     "short" : "f58ff5e1",
@@ -319,13 +319,13 @@
       "drishti-b" : [ "api", "console" ],
       "drishti-c" : [ "api", "console" ]
     },
-    "file" : "market-data-2.9.11.i7a.dmod",
+    "file" : "market-data-2.9.11.i9.dmod",
     "majority" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
       "short" : "f58ff5e1",
       "origin" : "first-party",
@@ -334,7 +334,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
       "short" : "f58ff5e1",
       "origin" : "first-party",
@@ -343,7 +343,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
       "short" : "f58ff5e1",
       "origin" : "first-party",
@@ -355,19 +355,19 @@
       "node" : "drishti-main",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     }, {
       "module" : "market-data",
       "node" : "drishti-b",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     }, {
       "module" : "market-data",
       "node" : "drishti-c",
       "kind" : "library",
       "severity" : "warning",
-      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+      "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
     } ]
   }, {
     "id" : "source-calypso",
@@ -381,7 +381,7 @@
     "switchSource" : "config/modules/source-calypso.yaml",
     "loaded" : false,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
     "short" : "966f5d21",
@@ -391,13 +391,13 @@
       "drishti-b" : [ ],
       "drishti-c" : [ ]
     },
-    "file" : "source-calypso-2.9.11.i7a.dmod",
+    "file" : "source-calypso-2.9.11.i9.dmod",
     "majority" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "off",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
       "short" : "966f5d21",
       "origin" : "first-party",
@@ -406,7 +406,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "off",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
       "short" : "966f5d21",
       "origin" : "first-party",
@@ -415,7 +415,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "off",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
       "short" : "966f5d21",
       "origin" : "first-party",
@@ -435,7 +435,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
     "short" : "148fe5be",
@@ -445,13 +445,13 @@
       "drishti-b" : [ "api" ],
       "drishti-c" : [ "api" ]
     },
-    "file" : "source-endur-2.9.11.i7a.dmod",
+    "file" : "source-endur-2.9.11.i9.dmod",
     "majority" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
       "short" : "148fe5be",
       "origin" : "first-party",
@@ -460,7 +460,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
       "short" : "148fe5be",
       "origin" : "first-party",
@@ -469,7 +469,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
       "short" : "148fe5be",
       "origin" : "first-party",
@@ -489,7 +489,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
     "short" : "31d32960",
@@ -499,13 +499,13 @@
       "drishti-b" : [ "api" ],
       "drishti-c" : [ "api" ]
     },
-    "file" : "source-murex-2.9.11.i7a.dmod",
+    "file" : "source-murex-2.9.11.i9.dmod",
     "majority" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
     "differs" : false,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
       "short" : "31d32960",
       "origin" : "first-party",
@@ -514,7 +514,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
       "short" : "31d32960",
       "origin" : "first-party",
@@ -523,7 +523,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
       "short" : "31d32960",
       "origin" : "first-party",
@@ -615,7 +615,7 @@
     "switchSource" : "shipped",
     "loaded" : true,
     "restartNeeded" : false,
-    "version" : "2.9.11.i7a",
+    "version" : "2.9.11.i9",
     "origin" : "first-party",
     "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
     "short" : "0035e3be",
@@ -625,13 +625,13 @@
       "drishti-b" : [ "api", "console" ],
       "drishti-c" : [ "api" ]
     },
-    "file" : "trading-2.9.11.i7a.dmod",
+    "file" : "trading-2.9.11.i9.dmod",
     "majority" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
     "differs" : true,
     "cells" : [ {
       "node" : "drishti-main",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
       "short" : "0035e3be",
       "origin" : "first-party",
@@ -640,7 +640,7 @@
     }, {
       "node" : "drishti-b",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
       "short" : "0035e3be",
       "origin" : "first-party",
@@ -649,7 +649,7 @@
     }, {
       "node" : "drishti-c",
       "state" : "loaded",
-      "version" : "2.9.11.i7a",
+      "version" : "2.9.11.i9",
       "contentHash" : "dcc296b526fcdca5c4dc110583271cf7962c746b6cce133b9274896b72a00576",
       "short" : "dcc296b5",
       "origin" : "first-party",
@@ -661,7 +661,7 @@
       "node" : "drishti-c",
       "kind" : "differs",
       "severity" : "problem",
-      "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+      "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i9) (the majority); drishti-c booted dcc296b5 (2.9.11.i9)"
     } ]
   } ],
   "disagree" : [ {
@@ -672,62 +672,62 @@
       "0035e3be" : [ "drishti-b", "drishti-main" ],
       "dcc296b5" : [ "drishti-c" ]
     },
-    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i9) (the majority); drishti-c booted dcc296b5 (2.9.11.i9)"
   } ],
   "problems" : [ {
     "module" : "capitalmarkets",
     "node" : "drishti-main",
     "kind" : "stale",
     "severity" : "problem",
-    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
   }, {
     "module" : "capitalmarkets",
     "node" : "drishti-b",
     "kind" : "stale",
     "severity" : "problem",
-    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
   }, {
     "module" : "capitalmarkets",
     "node" : "drishti-c",
     "kind" : "stale",
     "severity" : "problem",
-    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"
   }, {
     "module" : "economy",
     "node" : "drishti-main",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "economy",
     "node" : "drishti-b",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "economy",
     "node" : "drishti-c",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "economy 2.9.11.i9 carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "market-data",
     "node" : "drishti-main",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "market-data",
     "node" : "drishti-b",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "market-data",
     "node" : "drishti-c",
     "kind" : "library",
     "severity" : "warning",
-    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    "text" : "market-data 2.9.11.i9 carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
   }, {
     "module" : "source-swapone",
     "node" : "drishti-main",
@@ -751,7 +751,7 @@
     "node" : "drishti-c",
     "kind" : "differs",
     "severity" : "problem",
-    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i9) (the majority); drishti-c booted dcc296b5 (2.9.11.i9)"
   } ],
   "install" : {
     "modulesFolder" : "/opt/drishti/modules",

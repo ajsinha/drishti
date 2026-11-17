@@ -35,7 +35,7 @@ def test_the_page_draws_the_recorded_answer(client):
         assert f'data-tile="{tile}"' in page, tile
     assert "2 / 3" in page and "b1ac0a79" in page
     assert page.count("data-modules-banner") == 1 and 'data-banner-module="trading"' in page and "Copy fix command" in page
-    assert "trading-2.9.11.i7a.dmod" in page                                       # the fix command names the module's file
+    assert "trading-2.9.11.i9.dmod" in page                                       # the fix command names the module's file
     for node in ("drishti-main", "drishti-b", "drishti-c"):
         assert f'data-node="{node}"' in page
     assert page.count("<tr data-module=") == 10

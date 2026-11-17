@@ -79,11 +79,11 @@ class ModuleDigestClusterTest {
     /** What a node's module boot would publish: banking and trading (of this content), a stale package, a library copy warned of. */
     static void boot(String node, String trading, String fingerprint) {
         List<Digest.ModuleEntry> modules = List.of(
-                new Digest.ModuleEntry("banking", "2.9.11.i7a", BANKING, "first-party", "loaded", List.of("api", "compute"),
+                new Digest.ModuleEntry("banking", "2.9.11.i9", BANKING, "first-party", "loaded", List.of("api", "compute"),
                         List.of(new Digest.Problem("library", "warning", "banking: lib/guava-33.jar: the kernel ships guava 33.3; the kernel's is used"))),
                 new Digest.ModuleEntry("capitalmarkets", null, null, null, "stale", List.of(),
-                        List.of(new Digest.Problem("stale", "problem", "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"))),
-                new Digest.ModuleEntry("trading", "2.9.11.i7a", trading, "first-party", "loaded", List.of("api", "console"), List.of()));
+                        List.of(new Digest.Problem("stale", "problem", "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i9: install the matching module"))),
+                new Digest.ModuleEntry("trading", "2.9.11.i9", trading, "first-party", "loaded", List.of("api", "console"), List.of()));
         String fp = fingerprint.repeat(32);
         cluster.node(node).bean(DigestService.class).modules(() -> modules, () -> fp);
     }

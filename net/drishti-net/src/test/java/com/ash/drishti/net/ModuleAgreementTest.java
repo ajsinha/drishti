@@ -39,7 +39,7 @@ class ModuleAgreementTest {
     static final String B = "c".repeat(64);
 
     static Digest.ModuleEntry mod(String id, String hash) {
-        return new Digest.ModuleEntry(id, "2.9.11.i7a", hash, "first-party", "loaded", List.of("api"), List.of());
+        return new Digest.ModuleEntry(id, "2.9.11.i9", hash, "first-party", "loaded", List.of("api"), List.of());
     }
 
     static Digest digest(String node, List<Digest.ModuleEntry> modules, String fingerprint) {
@@ -64,7 +64,7 @@ class ModuleAgreementTest {
         assertThat(t.agree()).isFalse();
         assertThat(t.majority()).isEqualTo(X);
         assertThat(t.differing()).containsExactly("c");
-        assertThat(t.words()).contains("nodes disagree on module trading", "c booted bbbbbbbb (2.9.11.i7a)", "a, b booted aaaaaaaa", "(the majority)");
+        assertThat(t.words()).contains("nodes disagree on module trading", "c booted bbbbbbbb (2.9.11.i9)", "a, b booted aaaaaaaa", "(the majority)");
 
         CapabilityTable table = CapabilityTable.of("a", a, List.of(member("a"), member("b"), member("c")), Map.of("b", b, "c", c), Map.of());
         assertThat(table.warnings()).filteredOn(w -> w.what().equals("modules")).singleElement()

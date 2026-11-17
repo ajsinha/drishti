@@ -15,7 +15,7 @@
 """The product version, from its one home (.mvn/maven.config; drishti-console/core/product_version.py reads it).
 
   python3 tools/version.py                print the version (2.9.11.i5)
-  python3 tools/version.py --tag          print the release tag (v2.9.11.i_5; 2.9.11.i7a is v2.9.11.i_7a)
+  python3 tools/version.py --tag          print the release tag (v2.9.11.i_5)
   python3 tools/version.py --check TAG    exit 0 when TAG is the current version's tag, else 1 (the release check)
 """
 from __future__ import annotations

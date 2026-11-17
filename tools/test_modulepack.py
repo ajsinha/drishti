@@ -124,11 +124,11 @@ def test_the_allowance_is_stamped_with_the_kernel_build(tmp_path):
     m = _module(tmp_path, "kernel-internals: java/kernel-internals.txt\n")
     (m / "java").mkdir()
     (m / "java" / "kernel-internals.txt").write_text("# the allowance\ncom.ash.one  # why\ncom.ash.two\n", encoding="utf-8")
-    dmod, _ = modulepack.pack(m, out=tmp_path / "o", kernel_build="2.9.11.i7a+20261116")
+    dmod, _ = modulepack.pack(m, out=tmp_path / "o", kernel_build="2.9.11.i9+20261116")
     with zipfile.ZipFile(dmod) as z:
         text = z.read("module.yaml").decode()
     assert "kernel-internals:\n- com.ash.one\n- com.ash.two\n" in text
-    assert text.rstrip().endswith("kernel-build: '2.9.11.i7a+20261116'")
+    assert text.rstrip().endswith("kernel-build: '2.9.11.i9+20261116'")
     with pytest.raises(modulepack.PackError, match="--kernel-build"):
         modulepack.pack(m, out=tmp_path / "o2", lib_dir=tmp_path / "no-lib")
 

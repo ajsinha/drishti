@@ -33,6 +33,9 @@ HISTORY = {"CHANGELOG.md", "RELEASE_NOTES.md", ".mvn/maven.config", "drishti-con
 HISTORY_PREFIX = (
     "kernel/drishti-server/src/test/resources/capacity/",       # recorded benchmark vectors
     "kernel/drishti-server/src/main/resources/capacity/template/",   # the planner workbook's cached cells; its jar input is filled with the server's version
+    "docs/plans/",                                                # the release plans name the releases they plan
+    "docs/lenses/mockups/",                                       # mock-ups show example figures
+    "drishti-console/tests/answers/",                             # recorded server answers
     "docs/architecture/",                                         # design documents and mock-ups name releases of the plan
 )
 SKIP_SUFFIX = (".png", ".jpg", ".gif", ".pdf", ".zip", ".jar", ".gz", ".xlsx", ".ico", ".woff", ".woff2", ".parquet")
