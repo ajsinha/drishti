@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* <drishti-about>: the "About this page" layers of one view (where each number comes from, what the sources are, the masks and rules that applied to this reader)
-   in a panel of the host's own, without the view (docs/guides/Drishti Elements' docs/DESIGN.md). It signs in like <drishti-view> (the host's token provider; scope embed:about), asks
+   in a panel of the host's own, without the view (docs/guides/ELEMENTS.md). It signs in like <drishti-view> (the host's token provider; scope embed:about), asks
    the console for the About body, and draws it sanitised in a Shadow DOM. Links in it open the console in a new tab. */
 import { API, cfg, esc, problem } from './config.js';
 import { authed, onTokenNeeded, providerChanged } from './tokens.js';

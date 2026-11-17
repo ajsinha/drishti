@@ -110,3 +110,34 @@ def shipped_part(mid: str, version: str) -> bytes | None:
     """``GET /public/modules/console/<id>/<version>`` of a shipped folder module (None: not one, or not that version)."""
     at = _shipped().get(mid)
     return module_zip(at[0]) if at is not None and at[1] == version else None
+
+
+NAMES = ("product", "tagline", "owner", "copyright", "notice")      # pinned by the distribution file (ConsoleDistribution.NAMES)
+
+
+def branded(name: str = "all", lenses=(), **brand) -> dict:
+    """The installation's answer of distribution ``name`` as a site's own distribution file with ``brand:`` would compile it on the server
+    (ConsoleDistribution): the names and notices pinned, every other brand key (``product_native``, ``logo``…) in the layer under the
+    site's own settings; ``lenses``: the ones the file offers (none unless named). The console reads no distribution file; a rebranded
+    console is one whose server says so."""
+    doc = bootstrap(name, list(lenses))
+    d = doc["distribution"]
+    d["brand"] = {**(d.get("brand") or {}), **brand}
+    settings = d.setdefault("settings", {})
+    pinned = (settings.get("pinned") or {}).get("ui") or {}
+    layer = (settings.get("layer") or {}).get("ui") or {}
+    for k, v in brand.items():
+        (pinned if k in NAMES else layer)[k] = v
+    settings["pinned"], settings["layer"] = {"ui": pinned}, {"ui": layer}
+    doc["digest"] = hashlib.sha256(json.dumps(doc, sort_keys=True).encode()).hexdigest()[:16]
+    return doc
+
+
+def installed(name: str = "all"):
+    """The installation answer of distribution ``name`` as the console's sitemap reads it (core/menus.py ``spec_of``): each module's row
+    by id, with its ``console-menus``, and the answer's digest, the way :class:`core.edition.Editions` keeps them after it follows."""
+    from types import SimpleNamespace
+
+    doc = bootstrap(name)
+    return SimpleNamespace(server_modules={str(m["id"]): m for m in doc.get("modules") or [] if isinstance(m, dict) and m.get("id")},
+                           _digest=doc["digest"])

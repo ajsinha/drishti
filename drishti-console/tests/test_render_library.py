@@ -20,6 +20,7 @@ import json
 import re
 
 from core import render_dist as rd
+from core import elements_pin  # the vendored Drishti Elements
 from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 SRC = rd.FOLDER
@@ -86,7 +87,7 @@ def test_every_kind_of_the_grammar_is_drawn():
     drawn = set(re.findall(r"'([a-z]+)'", kinds))
     macro = set(re.findall(r"p\.kind (?:==|in) \[?'([a-z]+)'", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")))
     macro |= set(re.findall(r"'([a-z]+)'", re.search(r"p\.kind in \(([^)]*)\)", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")).group(1)))
-    assert len(drawn) == 22 and macro <= drawn, sorted(macro - drawn)
+    assert len(drawn) == 23 and macro <= drawn, sorted(macro - drawn)
 
 
 def test_the_renderer_draws_with_the_libraries_and_keeps_no_grid_chart_format_or_live_code_of_its_own():
@@ -99,7 +100,7 @@ def test_the_renderer_draws_with_the_libraries_and_keeps_no_grid_chart_format_or
     assert not gone & set(src), "the renderer's private table, chart and format modules are gone (no dual machinery)"
     joined = "\n".join(src.values())
     for lib in ("drishti-grid", "drishti-chart", "drishti-core", "drishti-data"):
-        assert f"../../{lib}/src/drishti_index.js" in joined, lib
+        assert f"/vendor/drishti-elements/{elements_pin.VERSION}/elements/{lib}/src/drishti_index.js" in joined, lib   # the vendored copy
 
 
 def test_the_playground_asks_for_sign_in_first():

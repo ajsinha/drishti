@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The one live connection per page and server (Drishti Elements' docs/DESIGN.md 7.3): every element's subscription goes over one /embed/v1/channel, a stream
+/* The one live connection per page and server (ELEMENTS.md 7.3): every element's subscription goes over one /embed/v1/channel, a stream
    read with fetch and a ReadableStream (an EventSource cannot send the Authorization header). Subscriptions are added and removed with
    POSTs on the open channel; a lost stream reconnects with backoff and the elements repaint; a fresh token goes to the open channel
    before the old one runs out. */
@@ -56,7 +56,7 @@ export class Connection {
       if (!res.ok) { throw new Error('channel ' + res.status); }
     } catch (e) { this.loss(); }                    // the channel is gone (or the console is): start afresh
   }
-  // The stream outlives its token (Drishti Elements' docs/DESIGN.md 7.2): a fresh one goes to the open channel before the old one runs out, and at once
+  // The stream outlives its token (ELEMENTS.md 7.2): a fresh one goes to the open channel before the old one runs out, and at once
   // when the console says (event: token). The channel is not reopened, so no element repaints.
   async renew() {
     clearTimeout(this.renewTimer);

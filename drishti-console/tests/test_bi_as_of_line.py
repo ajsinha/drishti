@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from core import elements_pin  # the vendored Drishti Elements (its core sheets)
+
 STATIC = Path(__file__).resolve().parent.parent / "web" / "static"
 node = shutil.which("node")
 needs_node = pytest.mark.skipif(node is None, reason="needs Node to run the shared report code")
@@ -72,5 +74,5 @@ def test_the_line_uses_the_themes_warning_colour_in_every_theme():
     css = (STATIC / "css" / "drishti_bi-report.css").read_text(encoding="utf-8")
     assert re.search(r"\.bi-asof-foot\s*\{[^}]*var\(--d-warn", css)
     assert re.search(r'\[data-asof-note\]\[data-asof-aligned="false"\]\s*\{[^}]*var\(--d-warn', css)
-    tokens = (STATIC / "css" / "drishti_tokens.css").read_text(encoding="utf-8")
+    tokens = elements_pin.static_path("css/drishti_tokens.css").read_text(encoding="utf-8")
     assert len(re.findall(r"--d-warn:\s*#[0-9a-fA-F]{6}", tokens)) >= 3, "terminal, light and contrast each define the warning colour"

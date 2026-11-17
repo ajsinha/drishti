@@ -27,6 +27,7 @@ import yaml
 from conftest import CONSOLE
 from core.auth import Identity
 from core.menus import spec_of
+import server_answers
 from core.module_parts import ModuleParts
 from module_parts_fake import Registry
 from test_distributions import _app, _client
@@ -102,7 +103,7 @@ def test_create_holds_the_designers_and_bi_and_the_old_menus_are_gone(backend, m
     panel = _panel(page, "Create")
     for href in ("/build/pack/designer", "/build/connector/designer", "/build/new"):
         assert f'href="{href}"' in panel, href
-    create = next(m for m in spec_of(CONSOLE)["menus"] if m["id"] == "create")
+    create = next(m for m in spec_of(CONSOLE, server_answers.installed())["menus"] if m["id"] == "create")
     assert create["gather"] == ["bi", "build"]                                  # BI's items follow the person's BI powers (none in the stand-in)
 
 
@@ -125,7 +126,7 @@ def test_the_old_per_module_top_menus_are_not_drawn_beside_domains(backend, monk
 
 @pytest.mark.parametrize("name", ["all", "risk", "finance", "genomics"])
 def test_every_distribution_names_only_menus_the_sitemap_has(name):
-    have = {m["id"] for m in spec_of(CONSOLE)["menus"]}
+    have = {m["id"] for m in spec_of(CONSOLE, server_answers.installed())["menus"]}
     d = yaml.safe_load((CONSOLE.parent / "config" / "distributions" / f"drishti.{name}.yaml").read_text(encoding="utf-8"))
     for mid in (d.get("menus") or {}).get("top") or []:
         assert mid in have, (name, mid)

@@ -20,6 +20,8 @@ from pathlib import Path
 
 from conftest import FIXTURES
 
+from core import elements_pin  # the vendored Drishti Elements (its core sheets)
+
 WEB = Path(__file__).resolve().parent.parent / "web"
 
 
@@ -108,7 +110,7 @@ def test_the_f1_key_yields_to_the_drawer_and_the_drawer_is_wired_to_the_guide():
 def test_the_drawer_uses_theme_tokens_only():
     css = (WEB / "static" / "css" / "drishti_about.css").read_text()
     assert not re.search(r"#[0-9a-fA-F]{3,6}\b|rgba?\(", css)                      # colours come from drishti_tokens.css, so all seven themes work
-    tokens = (WEB / "static" / "css" / "drishti_tokens.css").read_text()
+    tokens = elements_pin.static_path("css/drishti_tokens.css").read_text()
     for t in set(re.findall(r"var\((--d-[a-z0-9-]+)\)", css)):
         assert t + ":" in tokens, t
 

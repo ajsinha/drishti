@@ -28,8 +28,9 @@ from core.app import create_app
 from core.build_registry import loaded
 from core.config import load_settings
 from core import menus
+import server_answers
 
-SPEC = menus.spec_of(CONSOLE)   # the kernel's pages (config/sitemap.yaml) with the modules' menus from their manifests
+SPEC = menus.spec_of(CONSOLE, server_answers.installed())   # the kernel's pages (config/sitemap.yaml) with the modules' menus from the server's installation answer
 HELP = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text(encoding="utf-8"))
 BANKING_WORDS = {"VAR", "EXP", "FRSA", "SIMM", "SMAT", "MCUBE", "SWIN", "VRES", "VOFF", "VLIM", "TVAL", "PNLV", "DPNL", "PNL",
                  "SENS", "CPTY", "NSET", "LIM", "XWIF", "CCUBE", "TRD", "CTRD", "PTRD", "LTRD", "BOOK", "DESK", "TRDR", "POS"}

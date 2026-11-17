@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements: the library entry (Drishti Elements' docs/DESIGN.md). Importing it defines <drishti-view>, <drishti-panel>, <drishti-report>, <drishti-about> and <drishti-search> and publishes
+/* Drishti Elements: the library entry (docs/architecture/ELEMENTS.md section 5). Importing it defines <drishti-view>, <drishti-panel>, <drishti-report>, <drishti-about> and <drishti-search> and publishes
    window.DrishtiElements; importing it twice is harmless. The code is split into ES modules served under /embed/v1/m/:
    config, tokens, sanitize (allow-list and Trusted Types policy), assets (sheet, icon font, scripts), connection (one per page),
    enhancers (the console's scripts on the shadow root), frames (live patches), element (the state machine of <drishti-view>) and

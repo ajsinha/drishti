@@ -81,7 +81,7 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
     if about:
-        assert app.state.editions.learn(about)
+        assert server_answers.follow(app, about)
 
     async def current(cookie, _backend):
         return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles, admin=bool({"*", "admin"} & set(roles)))
