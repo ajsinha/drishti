@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # What the packer brings in from the repository (paths from this folder) and what it trims from the module's own folder, so each file keeps
-# one home: `trim` strips a pack of what a module does not carry (tests, tools, samples; its connector templates travel
+# one home: `trim` strips a pack of what a module does not carry (tests, tools; never its samples, the records a read falls back to when no lake
+# is built, so an install answers what the source tree answers; its connector templates travel
 # with it, the read-only templates the site's connector files are merged over), `copy` brings in the lens and the tutorial. This list itself is not packed.
 trim:
 - path: packs/market-data

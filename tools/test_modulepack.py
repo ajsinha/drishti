@@ -23,6 +23,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -143,6 +144,21 @@ def test_content_yaml_brings_content_in_and_trims_and_is_not_packed(tmp_path):
     names = _names(modulepack.pack(m, out=tmp_path / "o")[0])
     assert "data/shared/keep/k.yaml" in names
     assert "content.yaml" not in names and "packs/a.yaml" not in names and not any("skip" in n for n in names)
+
+
+@pytest.mark.parametrize("served", sorted(modulepack.SERVED))
+def test_content_yaml_never_leaves_out_what_a_pack_serves(tmp_path, served):
+    m = _module(tmp_path)
+    (m / "content.yaml").write_text(f"trim:\n- {{path: packs, leave-out: [tests, {served}]}}\n", encoding="utf-8")
+    with pytest.raises(modulepack.PackError, match="serves at run time"):
+        modulepack.pack(m, out=tmp_path / "o")
+
+
+def test_no_shipped_module_leaves_out_what_a_pack_serves():
+    for f in sorted((ROOT / "modules").glob("*/content.yaml")):
+        spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        for e in (spec.get("trim") or []) + (spec.get("copy") or []):
+            assert not {str(x).strip("/").split("/")[-1] for x in e.get("leave-out") or []} & modulepack.SERVED, f"{f}: {e}"
 
 
 def test_first_party_lists_the_sha256_of_each_hash_list(tmp_path):
