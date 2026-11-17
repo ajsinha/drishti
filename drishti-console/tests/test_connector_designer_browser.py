@@ -41,9 +41,7 @@ SECOND, SECOND_PASSWORD = "cd-second-admin", "cd-second-pass-2026"
 @pytest.fixture(scope="session")
 def designer(tmp_path_factory):
     work = tmp_path_factory.mktemp("cdui-server")
-    none = work / "no-modules"                                        # the one server jar over an empty modules folder: a connector and its bindings need no module
-    none.mkdir()
-    yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET, "DRISHTI_MODULES_HOME": str(none)}, work=work, auth=True)
+    yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)   # the one server jar, its modules beside it
 
 
 def sign_in(page, base, user="drishti-dev-admin", password="drishti-dev-admin123"):
