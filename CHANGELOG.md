@@ -22,6 +22,10 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **An applied correction is read at once (write-back).** The overlays and owned values cached per record were dropped only after the apply had closed the draft and told
+  the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
+  unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped
+  the moment the transaction ends (`EditLog.afterTx`, committed or rolled back) for every writer: apply, withdrawal, refusal at the source, follower copy. `EditRecordsCacheTest`.
 - **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
   `drishti-packs` and `drishti-it`: pack tests, the Sutra equivalence tests, module host and distribution tests, `ConsoleAnswersRecordTest`, the source-system modules,
   `OneTablePerSystemTest`) on the **built packages** (`target/modules-home`: `packaging/dist`'s `.dmod` files and the six source-system modules, packed by `tools/modulepack.py`),

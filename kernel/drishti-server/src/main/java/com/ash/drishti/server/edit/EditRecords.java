@@ -37,8 +37,9 @@ import javax.sql.DataSource;
  * ({@code drishti_overlay}: a dated value laid over the source's at read time, with the source's value beside it), <b>owned</b> values
  * ({@code drishti_owned}: the kind is Drishti's own), and each record's <b>version</b> ({@code drishti_edit_version}: +1 per applied
  * change, the {@code basedOn} a form opens on). The writes run on the apply's own connection and transaction; an overlay or owned
- * row already written for a change id is not written again (a replayed apply is safe). Reads are cached per record and dropped when a
- * change to it is applied (or a follower learns one).
+ * row already written for a change id is not written again (a replayed apply is safe). Reads are cached per record; a write takes the
+ * record out of the cache for as long as its transaction is open and drops what is cached once it ends ({@link EditLog#afterTx}), so the
+ * moment an apply commits (and its state "applied" can be read) every read shows the new value, with no wait for {@link #forget}.
  */
 public final class EditRecords {
 
@@ -74,6 +75,8 @@ public final class EditRecords {
     private final Map<String, List<Owned>> ownedCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(100_000)
             .expireAfterAccess(java.time.Duration.ofHours(1)).<String, List<Owned>>build().asMap();
     private final java.util.concurrent.atomic.AtomicLong forgotten = new java.util.concurrent.atomic.AtomicLong();
+    // records a transaction is writing (how many open writes each): read from the database and never cached until the write ends
+    private final Map<String, Integer> writing = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile boolean any = true;
 
     public EditRecords(DataSource ds) {
@@ -97,6 +100,7 @@ public final class EditRecords {
 
     /** Writes an overlay row unless this change already wrote this path. */
     public void overlay(Connection c, Overlay o) throws SQLException {
+        writing(o.kind(), o.entity());
         try (PreparedStatement s = c.prepareStatement("INSERT INTO drishti_overlay (change_id, path, kind, entity, value, source_value, business_date, "
                 + "valid_until, state, by_user, applied_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM drishti_overlay WHERE change_id = ? AND path = ?)")) {
             s.setString(1, o.changeId());
@@ -119,6 +123,7 @@ public final class EditRecords {
 
     /** Sets an owned value (the newest change holds it). */
     public void owned(Connection c, Owned o) throws SQLException {
+        writing(o.kind(), o.entity());
         try (PreparedStatement d = c.prepareStatement("DELETE FROM drishti_owned WHERE kind = ? AND entity = ? AND path = ?")) {
             d.setString(1, o.kind());
             d.setString(2, o.entity());
@@ -175,11 +180,33 @@ public final class EditRecords {
 
     /** Withdraws a change's overlays (a source that refused the command later, or an operator). */
     public void withdraw(Connection c, String changeId) throws SQLException {
+        try (PreparedStatement s = c.prepareStatement("SELECT DISTINCT kind, entity FROM drishti_overlay WHERE change_id = ?")) {
+            s.setString(1, changeId);
+            try (ResultSet r = s.executeQuery()) {
+                while (r.next()) {
+                    writing(r.getString(1), r.getString(2));
+                }
+            }
+        }
         try (PreparedStatement s = c.prepareStatement("UPDATE drishti_overlay SET state = ? WHERE change_id = ?")) {
             s.setString(1, WITHDRAWN);
             s.setString(2, changeId);
             s.executeUpdate();
         }
+    }
+
+    /**
+     * A write to a record in the open transaction: until it ends the record is read from the database and never kept (a read now sees
+     * the record as it was, a read after the commit the new value); when it ends, what was cached is dropped.
+     */
+    private void writing(String kind, String entity) {
+        String key = Change.keyOf(kind, entity);
+        writing.merge(key, 1, Integer::sum);                 // first marked, then counted: a read that missed the mark is never kept
+        forget(kind, entity);
+        EditLog.afterTx(() -> {
+            forget(kind, entity);                            // dropped before the mark goes: no read in between keeps the old value
+            writing.computeIfPresent(key, (k, n) -> n == 1 ? null : n - 1);
+        });
     }
 
     /** Drops what is cached for a record (after an apply commits, or a follower learns one). */
@@ -203,9 +230,12 @@ public final class EditRecords {
             return List.of();
         }
         String key = Change.keyOf(kind, entity);
+        long before = forgotten.get();                       // taken before the write mark is looked at (see writing)
+        if (writing.containsKey(key)) {
+            return read(kind, entity);
+        }
         List<Overlay> got = overlayCache.get(key);
         if (got == null) {                                   // read outside the map's lock; a concurrent reader may read it too
-            long before = forgotten.get();
             got = read(kind, entity);
             if (forgotten.get() == before) {                 // nothing was applied meanwhile: safe to keep
                 overlayCache.putIfAbsent(key, got);
@@ -254,11 +284,11 @@ public final class EditRecords {
             return List.of();
         }
         String key = Change.keyOf(kind, entity);
-        List<Owned> cached = ownedCache.get(key);
+        long before = forgotten.get();                       // taken before the write mark is looked at (see writing)
+        List<Owned> cached = writing.containsKey(key) ? null : ownedCache.get(key);
         if (cached != null) {
             return cached;
         }
-        long before = forgotten.get();
         {
             List<Owned> out = new ArrayList<>();
             try (Connection c = ds.getConnection();
@@ -275,7 +305,7 @@ public final class EditRecords {
                 throw EditLog.failed("read the owned values of " + kind + " " + entity, e);
             }
             List<Owned> got = List.copyOf(out);
-            if (forgotten.get() == before) {
+            if (forgotten.get() == before && !writing.containsKey(key)) {
                 ownedCache.putIfAbsent(key, got);
             }
             return got;

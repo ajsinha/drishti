@@ -563,6 +563,9 @@ public final class EditLog {
 
     /** Runs {@code body} in one transaction on a borrowed connection; rolls back on any failure. */
     <T> T tx(TxBody<T> body, String what) {
+        List<Runnable> outer = AFTER_TX.get();
+        List<Runnable> after = new ArrayList<>();
+        AFTER_TX.set(after);
         try (Connection c = ds.getConnection()) {
             boolean auto = c.getAutoCommit();
             c.setAutoCommit(false);
@@ -578,6 +581,29 @@ public final class EditLog {
             }
         } catch (SQLException e) {
             throw failed(what, e);
+        } finally {
+            if (outer == null) {
+                AFTER_TX.remove();
+            } else {
+                AFTER_TX.set(outer);
+            }
+            after.forEach(Runnable::run);                           // committed or rolled back: the transaction is over
+        }
+    }
+
+    /** What runs once the transaction this thread is in has ended (committed or rolled back); runs at once outside one (auto-commit). */
+    private static final ThreadLocal<List<Runnable>> AFTER_TX = new ThreadLocal<>();
+
+    /**
+     * Runs {@code r} when the transaction this thread is in (one of {@link #tx}) ends, committed or rolled back; at once when the
+     * thread is in none (its write was auto-committed). {@link EditRecords} uses it so its cache never outlives a write.
+     */
+    static void afterTx(Runnable r) {
+        List<Runnable> after = AFTER_TX.get();
+        if (after == null) {
+            r.run();
+        } else {
+            after.add(r);
         }
     }
 
