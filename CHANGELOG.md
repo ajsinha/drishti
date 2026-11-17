@@ -30,6 +30,22 @@ release tag `v2.9.11.i_6`.
   from `data-maps`) and names the pivot page to drishti-grid, so its Pivot link is drawn; the panel macros draw any list of plain values
   as chips, by drishti-core's rule (`core/list_value.py`). Test runs keep the resolver's cached answers in their own folder
   (`DRISHTI_RESOLVED_CACHE`), never under `data/tmp/resolved`.
+- **Charts draw again on every page, and the risk playgrounds open.** `base.html` loads ECharts before drishti-chart, as Elements'
+  manifest names it drishti-chart's engine (with drishti-chart already on the page the Elements loader never loaded its engine, so the
+  genomics gene page and every chart a page asked the loader for stayed empty); the pages' own ECharts tags are gone (one copy). The
+  VaR, FRTB-SA and SIMM playgrounds load drishti-risk in their scripts block, after the page's libraries (it threw "needs
+  drishti-chart"), and `_risk_elements.html` adds only drishti-risk. The workbench's command palette closes on Escape whatever is typed
+  (its search box's own Escape only emptied the text). The genomics showcase clears a map selection without drishti-chart's
+  `clearBrush` (it threw in ECharts once a redraw had taken the rectangle away) and gives the design campaign its frames in the spec
+  (`landscapeFrames`: Play the rounds and the slider work). The console's hosted module parts unpack into a folder of their own and
+  rename it into place, so two console workers never trip over one another's copy.
+- **Test harness:** the recorded installation answers carry the banking module's engines again (`ConsoleAnswersRecordTest` read
+  `modules/<module>/java/<part>/` too shallow); a test console that names a distribution starts from that distribution's recorded answer;
+  the stand-in server lists and hands over the shipped folder modules' console parts (economy, capital markets) as the server does,
+  while its about answer lists them loaded; the greeter stand-in is listed in the installation answer while installed; the renderer and
+  tree-rows browser tests read Elements from the vendored tree. `tools/drill.sh` exports `DRISHTI_RESOLVED_CACHE` as its own folder for
+  every tool and test it starts (the gate's `--check` generators wrote the resolver's answers under `data/tmp/resolved`, which failed
+  the drill's data check), and each writer of that cache writes a file of its own before renaming it into place.
 - **One server jar in `lib/`, of this version.** The tools refuse a jar in `<home>/lib` whose version differs from `.mvn/maven.config` ("lib/ holds ...-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run python tools/drishti.py build jar"; two jars stay refused); `build jar` and the drill's gate replace an older Drishti server jar there (never `lib/ext`), and the gate's Python checks that run the jar wait for the jar the gate just built.
 - **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
   designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)

@@ -83,6 +83,9 @@
             return { id: 'wb.' + i, title: it.label, detail: it.detail, group: it.badge || 'Commands', run: function () { ctx.yaml.flush(); it.run(); say(it.label + '.'); } };
           });
         } });
+      // its search box is an <input type="search">, whose own Escape empties the text and leaves the dialog open: Escape closes it at
+      // once, as the palette's keys say (Up, Down, Enter, Escape), whatever is typed
+      pal.input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); pal.close(); } });
       return pal;
     }
     function open() { palette().open(); }

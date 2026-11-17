@@ -77,3 +77,36 @@ def module_zip(folder: Path) -> bytes:
             for f in files:
                 z.write(f, f.relative_to(folder).as_posix())
     return buf.getvalue()
+
+
+MODULES = Path(__file__).resolve().parents[2] / "modules"
+
+
+@lru_cache(maxsize=1)
+def _shipped() -> dict:
+    """The product's own content modules shipped as folders with a console part and no code (``modules/<id>/module.yaml`` without a
+    ``java:`` block, with ``console/plugin.yaml``): id -> (folder, version, title), as the server's ModuleDeployController.shipped reads them."""
+    import yaml
+
+    out = {}
+    for f in sorted(MODULES.glob("*/module.yaml")):
+        manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if manifest.get("java") is not None or not (f.parent / "console" / "plugin.yaml").is_file():
+            continue
+        mid = str(manifest.get("id") or f.parent.name)
+        out[mid] = (f.parent, str(manifest.get("version") or "0"), str(manifest.get("title") or mid))
+    return out
+
+
+def shipped_listing(loaded) -> dict:
+    """``GET /public/modules/console`` of a server with no module deployed: the shipped folder modules it loaded (``loaded``: the modules its
+    about answer lists; None, every one), each active with its console part."""
+    rows = [{"id": mid, "version": ver, "state": "active", "title": title, "console": True, "claims": []}
+            for mid, (_, ver, title) in _shipped().items() if loaded is None or mid in loaded]
+    return {"modules": rows, "fingerprint": "shipped|" + ",".join(r["id"] for r in rows)}
+
+
+def shipped_part(mid: str, version: str) -> bytes | None:
+    """``GET /public/modules/console/<id>/<version>`` of a shipped folder module (None: not one, or not that version)."""
+    at = _shipped().get(mid)
+    return module_zip(at[0]) if at is not None and at[1] == version else None

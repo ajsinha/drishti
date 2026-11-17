@@ -28,6 +28,7 @@ settings (``DRISHTI_*`` variables, the switch files), as a loader or a command l
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
@@ -290,13 +291,14 @@ def _ask(args: tuple) -> dict:
         raise Unbuilt(f"the resolver refused ({run.returncode}): {(run.stderr or run.stdout).strip()[:400]}")
     text = run.stdout[run.stdout.find("\n{") + 1:] if not run.stdout.startswith("{") else run.stdout   # anything printed before the document
     doc = json.loads(text)
+    tmp = cached.with_name(f"{cached.name}.{os.getpid()}-{threading.get_ident()}.writing")   # each writer its own: workers share the folder
     try:
         cached.parent.mkdir(parents=True, exist_ok=True)
-        tmp = cached.with_name(cached.name + ".writing")
         tmp.write_text(json.dumps(doc), encoding="utf-8")
         tmp.replace(cached)
     except OSError:
-        pass
+        with contextlib.suppress(OSError):
+            tmp.unlink(missing_ok=True)
     return doc
 
 

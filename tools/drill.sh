@@ -169,6 +169,9 @@ while (( other_workers + 20 > mem_gb && other_workers > 2 )); do other_workers=$
 # five minutes, before the browser workers reach their peak; the memory floor (DRILL_MIN_FREE_GB) holds a test back while memory is short.
 browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb 24 --threads "$cpus")}
 export DRISHTI_LAKE_CACHE="${DRISHTI_LAKE_CACHE:-$(pwd -P)/$DATA/tmp/lake-cache}"   # the demo lakes, built once per hash (tools/drillkit/lake_cache.py)
+# the Java resolver's answers the tools cache (tools/resolved.py): every tool, test and lane the drill starts keeps them in the drill's
+# own folder, never in data/tmp/resolved, which the drill checks is left unchanged (data_unchanged)
+export DRISHTI_RESOLVED_CACHE="${DRISHTI_RESOLVED_CACHE:-$DRILL_TMP/resolved}"
 LANE_LIMIT=${DRILL_LANE_LIMIT:-10800}   # a console lane that runs three hours has hung: it fails the drill instead of blocking it
 echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers workers, other $other_workers workers"
 

@@ -87,10 +87,12 @@ _editions_init = _edition.Editions.__init__
 
 
 def _answered_editions(self, *a, **kw):
-    """A console built in a test starts as one whose server has answered: the recorded installation answer of Drishti All (the server's
-    own, tests/answers; THIN_CONSOLE_DESIGN.md 5.2). A test of another distribution follows its answer (server_answers.follow)."""
+    """A console built in a test starts as one whose server has answered: the recorded installation answer (the server's own,
+    tests/answers; THIN_CONSOLE_DESIGN.md 5.2) of the distribution the console names (``--distribution``: the server compiles that one,
+    Q3), else of Drishti All. A test whose server runs another distribution follows its answer (server_answers.follow)."""
     _editions_init(self, *a, **kw)
-    self.follow(server_answers.bootstrap("all"))
+    short = self.own_name[len("drishti."):] if self.own_name.startswith("drishti.") else self.own_name
+    self.follow(server_answers.bootstrap(short if self.own_distribution and (server_answers.ANSWERS / f"bootstrap-{short}.json").is_file() else "all"))
 
 
 _edition.Editions.__init__ = _answered_editions
@@ -139,6 +141,18 @@ class FakeBackend:
             off, lim = int(q.get("offset") or 0), int(q.get("limit") or 500)
             return {**page, "rows": page["rows"][off:off + lim], "offset": off}
         return {"unread": 0} if path.endswith("/count") else {"items": []}
+
+    async def public(self, path, raw=False, timeout=30.0):
+        """The server's public module answers (core/module_parts.py): the shipped folder modules' console parts, listed while the server
+        has them loaded (the modules its about answer lists, as this console learned them) and handed over as the server zips them."""
+        from core import modules as _modules
+
+        if path == "/public/modules/console":
+            return server_answers.shipped_listing(_modules.state().loaded)
+        parts = path.split("/")
+        if len(parts) == 6 and path.startswith("/public/modules/console/") and (z := server_answers.shipped_part(parts[4], parts[5])) is not None:
+            return z
+        raise BackendError(404, "DRS-4040", path)
 
     async def engine(self, method, path, ident, /, body=None, raw=False, accept="", timeout=None, **params):
         """A compute engine (core/backend.py ``engine``): the stand-in has none switched on, so it answers as a server with that engine

@@ -75,6 +75,7 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=genomics")
     reg = Registry()
     reg.install(backend, monkeypatch)
+    reg.listed(app, monkeypatch)
     from core import modules
     here = modules.module_on                                                    # this distribution runs the genomics module only (and the stand-in)
     monkeypatch.setattr(modules, "module_on", lambda m: here(m) and str(m or "core") in {"core", "genomics", "greeter"})

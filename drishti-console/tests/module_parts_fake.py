@@ -60,14 +60,30 @@ class Registry:
         return {"modules": [{"id": "greeter", "version": self.version, "state": self.state, "title": "greeter", "console": self.state == "active",
                              "claims": self.CLAIMS}], "fingerprint": self.state}
 
+    def listed(self, app, monkeypatch=None) -> None:
+        """The installation's answer lists the module, as the server's lists an installed package beside the shipped ones (a module the
+        answer does not list draws no menu or card: core/menus.py module_active)."""
+        eds = app.state.editions
+        row = {"id": "greeter", "title": "greeter", "domain": "testing", "words": ["GREETER"], "features": [], "loaded": True,
+               "state": "active", "version": self.version}
+        mods = {**(eds.server_modules or {}), "greeter": row}
+        (monkeypatch.setattr if monkeypatch is not None else setattr)(eds, "server_modules", mods)
+
     def install(self, backend, monkeypatch) -> None:
         from core.backend import BackendError
 
+        shipped = getattr(backend, "public", None)              # the server's own shipped modules beside the deployed one
+
         async def public(path, raw=False, timeout=30.0):
             if path == "/public/modules/console":
-                return self.listing()
+                mine = self.listing()
+                theirs = await shipped(path) if shipped is not None else {"modules": [], "fingerprint": ""}
+                return {"modules": mine["modules"] + [m for m in theirs["modules"] if m["id"] != "greeter"],
+                        "fingerprint": f"{mine['fingerprint']}|{theirs['fingerprint']}"}
             if path == f"/public/modules/console/greeter/{self.version}" and self.state == "active":
                 return archetype_zip(self.extra)
+            if shipped is not None and not path.startswith("/public/modules/console/greeter/"):
+                return await shipped(path, raw=raw, timeout=timeout)
             raise BackendError(410 if self.state == "removed" else 404, "DRS-4040", path)
 
         before = backend._send

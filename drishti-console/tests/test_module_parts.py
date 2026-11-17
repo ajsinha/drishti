@@ -28,6 +28,7 @@ from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 def _console(client, tmp_path, reg: Registry, backend, monkeypatch) -> TestClient:
     reg.install(backend, monkeypatch)
+    reg.listed(client.app, monkeypatch)
     _fresh(client, tmp_path, monkeypatch)
     return client
 

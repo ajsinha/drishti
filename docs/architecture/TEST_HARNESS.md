@@ -283,7 +283,9 @@ The browser tests read one of these, the shared test lake (section 3.12).
 
 The Java resolver's answers that the tools read (`tools/resolved.py`) are cached by their inputs under `<data>/tmp/resolved`, or under
 `DRISHTI_RESOLVED_CACHE` when it is set. The console tests' and the tools tests' `conftest.py` set it to the test run's own temporary folder
-(removed at its end), so a test run never writes under the repository's `data/`, which the drill checks is left unchanged.
+(removed at its end), and `tools/drill.sh` exports it as its own `<drill tmp>/resolved` for every tool, test and lane it starts (the
+gate's `--check` generators too), so neither a test run nor a drill writes under the repository's `data/`, which the drill checks is
+left unchanged.
 `python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
 
 ### 3.16 Affected tests

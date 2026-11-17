@@ -6718,7 +6718,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_REDIS_USER` | the Redis loader | none | tools | The Redis loader's user |
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder`, `drishti.regulatory.reports-dir` (engine) | `<data>/reports` | engine, server | where report files are written |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | server | the scheduler; run it on one server of a group (reports still run by hand) |
-| `DRISHTI_RESOLVED_CACHE` | the resolver answers' cache folder | `<data>/tmp/resolved` | tools | Where tools/resolved.py keeps the Java resolver's answers, by a key of their inputs; the console and tools tests set it to the test run's own temporary folder, so a test run writes nothing under data/ |
+| `DRISHTI_RESOLVED_CACHE` | the resolver answers' cache folder | `<data>/tmp/resolved` | tools | Where tools/resolved.py keeps the Java resolver's answers, by a key of their inputs; the console and tools tests and the drill set it to their own temporary folder, so a test run or a drill writes nothing under data/ |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | server | run the rest source as itself (one instance) |
 | `DRISHTI_REST_URL` | `drishti.sources.plugins.rest.settings.base-url` | `http://localhost:9000/api` | server | the REST service's base URL |
 | `DRISHTI_S3_ENABLED` | `drishti.sources.plugins.s3.enabled` | `false` | server | run the s3 source as itself |

@@ -78,7 +78,8 @@
   <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script>{# drishti-inputs: drishti_app.js upgrades the page's date fields and long checkbox lists with it #}
   <script src="{{ BASE }}/static/js/drishti_app.js?v={{ ASSET_V }}"></script>
   <script src="{{ BASE }}/static/js/drishti_busy.js?v={{ ASSET_V }}"></script>
-  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{# drishti-chart before drishti-grid: the grid requires it (its bullet cells; drishti-elements.json), so every page has it once; ECharts is loaded by the pages that draw charts #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{# ECharts, drishti-chart's engine (its "scripts" in drishti-elements.json): a page that loads drishti-chart by tag loads its engine first, as the Elements loader would; the loader skips the engine of a library already on the page #}
+  <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{# drishti-chart before drishti-grid: the grid requires it (its bullet cells; drishti-elements.json), so every page has it once, after its engine #}
   <script src="{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script>{# drishti-grid: every table's sort, filter and pages (its console tables, drishti_tables.js hosts them) #}
   <script src="{{ BASE }}/static/js/drishti_records.js?v={{ ASSET_V }}"></script>{# after drishti-grid, in order (no defer: the console pages load no deferred or module scripts); records everywhere: every table of records is the grid (live or static), mounted from a data-records host #}
   <script src="{{ BASE }}/static/js/drishti_colfilter.js?v={{ ASSET_V }}"></script>

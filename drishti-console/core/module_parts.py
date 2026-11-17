@@ -33,9 +33,11 @@ import asyncio
 import hashlib
 import io
 import logging
+import os
 import re
 import shutil
 import time
+import uuid
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -244,8 +246,9 @@ class ModuleParts:
         data = await backend.public(f"/public/modules/console/{quote(mid, safe='')}/{quote(ver, safe='')}", raw=True, timeout=60.0)
         if len(data) > MAX_ZIP:
             raise ValueError("the console part is larger than 64 MB")
-        tmp = folder.with_name(folder.name + ".incoming")
-        shutil.rmtree(tmp, ignore_errors=True)
+        # each fetch unpacks into a folder of its own and renames it into place: the console's workers share the cache, and the
+        # first whole copy stays (another worker's copy of the same version is the same files)
+        tmp = folder.with_name(f"{folder.name}.incoming-{os.getpid()}-{uuid.uuid4().hex[:8]}")
         with zipfile.ZipFile(io.BytesIO(data)) as z:
             for info in z.infolist():
                 target = (tmp / info.filename).resolve()
@@ -253,9 +256,17 @@ class ModuleParts:
                     continue                                    # nothing outside its own folder
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(z.read(info))
-        shutil.rmtree(folder, ignore_errors=True)
         folder.parent.mkdir(parents=True, exist_ok=True)
-        tmp.rename(folder)
+        if not (folder / "module.yaml").is_file():
+            shutil.rmtree(folder, ignore_errors=True)               # a copy left half-made
+            try:
+                tmp.rename(folder)
+                return
+            except OSError:
+                if not (folder / "module.yaml").is_file():
+                    shutil.rmtree(tmp, ignore_errors=True)
+                    raise
+        shutil.rmtree(tmp, ignore_errors=True)                      # another worker's whole copy is in place
 
     def _read(self, mid: str, folder: Path, source: str, parts: dict, refused: dict) -> None:
         manifest = _yaml(folder / "module.yaml")

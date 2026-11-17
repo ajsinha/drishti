@@ -167,7 +167,9 @@ def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
         pg.click("[data-showcase-clusters] button:has-text('C3 immune-hot')")
         pg.wait_for_function("() => document.querySelector('[data-showcase]').dataset.state === 'ready'")
         assert any(a.startswith("cohorts/ONC-1/oncoprint") and "cluster=C3%20immune-hot" in a for a in asked), asked
-        box = pg.locator('[data-chart="map"] canvas').bounding_box()
+        canvas = pg.locator('[data-chart="map"] canvas')
+        canvas.scroll_into_view_if_needed()                       # the mouse acts inside the viewport only: the map may sit below it
+        box = canvas.bounding_box()
         pg.mouse.move(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.3)
         pg.mouse.down()
         pg.mouse.move(box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.7, steps=6)
@@ -193,7 +195,7 @@ def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
         play = pg.locator('[data-chart="landscape"] [data-tool="play"]')
         assert "Play the rounds" in play.text_content()
         pg.eval_on_selector('[data-chart="landscape"] .dc-frame-slider', "(el) => { el.value = '0'; el.dispatchEvent(new Event('input', { bubbles: true })); }")
-        pg.wait_for_function("() => document.querySelector('.dc-frame-label').textContent.startsWith('Round 1')")
+        pg.wait_for_function("() => document.querySelector('[data-chart=landscape] .dc-frame-label').textContent.startsWith('Round 1')")
         pg.wait_for_selector('[data-grid="leaderboard"] [role="row"]', timeout=20000)
         assert any(a.startswith("proteins/HLXK7/leaderboard") and "round=1" in a for a in asked), asked
         assert not [e for e in errors if "favicon" not in e], errors

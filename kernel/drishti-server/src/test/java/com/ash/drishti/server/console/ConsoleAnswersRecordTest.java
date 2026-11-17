@@ -89,14 +89,17 @@ class ConsoleAnswersRecordTest {
     static List<Map<String, Object>> engines() throws Exception {
         List<Map<String, Object>> out = new ArrayList<>();
         Map<String, com.ash.drishti.server.engines.EngineCatalogue.Entry> all = new LinkedHashMap<>();
-        try (Stream<Path> s = Files.walk(REPO.resolve("modules"), 8)) {
-            for (Path f : s.filter(p -> p.toString().replace('\\', '/').endsWith("src/main/resources/" + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE))
-                    .sorted().toList()) {
+        // a module's jar parts are modules/<module>/java/<part>/ (KERNEL_AND_MODULES.md): each part's engines.yaml, in a sorted order
+        java.nio.file.PathMatcher jarPart = REPO.getFileSystem().getPathMatcher(
+                "glob:modules/*/java/*/src/main/resources/" + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE);
+        try (Stream<Path> s = Files.walk(REPO.resolve("modules"))) {
+            for (Path f : s.filter(p -> jarPart.matches(REPO.relativize(p))).sorted().toList()) {
                 try (java.io.InputStream in = Files.newInputStream(f)) {
                     all.putAll(com.ash.drishti.server.engines.EngineCatalogue.moduleEntries(in));
                 }
             }
         }
+        assertThat(all).as("the modules' engines (modules/<module>/java/<part>/src/main/resources/META-INF/drishti/engines.yaml)").isNotEmpty();
         com.ash.drishti.server.engines.EngineCatalogue.load().all().forEach(e -> all.putIfAbsent(e.id(), e));
         all.values().forEach(e -> out.add(com.ash.drishti.server.engines.EngineCluster.consoleRow(e, true, true)));
         return out;

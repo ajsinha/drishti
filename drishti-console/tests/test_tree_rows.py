@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from core import elements_pin
 from core.export import panel_rows
 
 STATIC = Path(__file__).resolve().parent.parent / "web" / "static" / "js"
@@ -109,13 +110,14 @@ ORIGIN = "http://tree.test"
 
 
 def _drive(browsers, body_html, steps, ready=".dt-tp"):
-    """Opens a page holding the panel, drishti-core, drishti-inputs (drishti-grid and drishti-tree need it), drishti-grid and drishti-tree and the tree rows (Playwright: the grid draws on
-    animation frames, which a real page runs), then runs ``steps(page)``; no error may reach the page."""
-    elements = STATIC.parent / "elements"
-    files = {"/core.js": elements / "drishti-core" / "drishti_core.js", "/inputs.js": elements / "drishti-inputs" / "drishti_inputs.js",
-             "/grid.js": elements / "drishti-grid" / "drishti_grid.js",
-             "/tree.js": elements / "drishti-tree" / "drishti_tree.js", "/rows.js": STATIC / "drishti_tree-rows.js",
-             "/grid.css": elements / "drishti-grid" / "drishti_grid.css", "/tree.css": elements / "drishti-tree" / "drishti_tree.css"}
+    """Opens a page holding the panel, drishti-core, drishti-inputs, drishti-chart and drishti-grid (the grid requires both), drishti-tree
+    and the tree rows (Playwright: the grid draws on animation frames, which a real page runs), then runs ``steps(page)``; no error may
+    reach the page. Elements' files are the vendored release's (core/elements_pin.py)."""
+    lib = elements_pin.static_path
+    files = {"/core.js": lib("elements/drishti-core/drishti_core.js"), "/inputs.js": lib("elements/drishti-inputs/drishti_inputs.js"),
+             "/chart.js": lib("elements/drishti-chart/drishti_chart.js"), "/grid.js": lib("elements/drishti-grid/drishti_grid.js"),
+             "/tree.js": lib("elements/drishti-tree/drishti_tree.js"), "/rows.js": STATIC / "drishti_tree-rows.js",
+             "/grid.css": lib("elements/drishti-grid/drishti_grid.css"), "/tree.css": lib("elements/drishti-tree/drishti_tree.css")}
     html = ('<!doctype html><html><head><link rel="stylesheet" href="/grid.css"><link rel="stylesheet" href="/tree.css"></head><body>'
             + body_html + "".join(f'<script src="{k}"></script>' for k in files if k.endswith(".js")) + "</body></html>")
 
