@@ -53,14 +53,38 @@ public final class PlacementGuardFilter extends OncePerRequestFilter {
         this.peers = peers;
     }
 
-    private Optional<ModuleParts> module(HttpServletRequest req) {
+    private Optional<Placed> module(HttpServletRequest req) {
         String path = RequestPaths.routed(req);
-        if (!path.startsWith("/api/v1/")) {
-            return Optional.empty();
+        return path.startsWith("/api/v1/") ? placed(placement, null, path) : Optional.empty();
+    }
+
+    /** A module's part that placement decides where it runs. */
+    public record Placed(String module, String part) {
+    }
+
+    /**
+     * The guard's rule for a path ({@code /api/v1/<prefix>/...}): the module's part that answers it, as the guard picks it; with no path,
+     * {@code module}'s {@code api} part. Empty when the module runs in process (on every node) or placement does not know it.
+     */
+    public static Optional<Placed> placed(PlacementService placement, String module, String path) {
+        if (path != null && path.startsWith("/api/v1/")) {
+            String rest = path.substring("/api/v1/".length());
+            String prefix = rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest;
+            return placement.byPrefix(prefix).filter(m -> !m.inProcess()).map(m -> new Placed(m.module(),
+                    m.partFor(path.substring(("/api/v1/" + m.prefix()).length())).map(ModuleParts.Part::name).orElse("api")));
         }
-        String rest = path.substring("/api/v1/".length());
-        String prefix = rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest;
-        return placement.byPrefix(prefix).filter(m -> !m.inProcess());
+        return placement.modules().stream().filter(m -> m.module().equals(module) && !m.inProcess()).findFirst()
+                .map(m -> new Placed(m.module(), "api"));
+    }
+
+    /** The words of {@code 503 DRS-1032} when the part runs nowhere this node may send it. */
+    public static String notHere(String module, String part, PlacementService.Route r, String self) {
+        return r.node() == null ? r.reason() : module + "'s " + part + " is not placed on " + self + " (" + r.reason() + ")";
+    }
+
+    /** The words of {@code 503 DRS-1032} when the node it was sent to did not answer. */
+    public static String unanswered(String module, String part, String node) {
+        return module + "'s " + part + " is unavailable right now (" + node + " did not answer); try again later";
     }
 
     @Override
@@ -70,9 +94,8 @@ public final class PlacementGuardFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
-        ModuleParts m = module(req).orElseThrow();
-        String rest = RequestPaths.routed(req).substring(("/api/v1/" + m.prefix()).length());
-        String part = m.partFor(rest).map(ModuleParts.Part::name).orElse("api");
+        Placed m = module(req).orElseThrow();
+        String part = m.part();
         PlacementService.Route r = placement.route(m.module(), part);
         if (r.here()) {
             res.setHeader(HEADER, placement.self());
@@ -82,8 +105,7 @@ public final class PlacementGuardFilter extends OncePerRequestFilter {
         boolean fromPeer = NetCaller.fromPeer() || req.getAttribute(NetCallFilter.PEER) != null;
         Principal p = req.getAttribute(Principal.ATTRIBUTE) instanceof Principal x ? x : null;
         if (r.node() == null || fromPeer || p == null || !peers.clustered()) {
-            String why = r.node() == null ? r.reason() : m.module() + "'s " + part + " is not placed on " + placement.self() + " (" + r.reason() + ")";
-            NetCallFilter.problem(res, 503, "DRS-1032", why);
+            NetCallFilter.problem(res, 503, "DRS-1032", notHere(m.module(), part, r, placement.self()));
             return;
         }
         byte[] body = req.getInputStream().readNBytes(MAX_BODY + 1);
@@ -94,8 +116,7 @@ public final class PlacementGuardFilter extends OncePerRequestFilter {
         String path = req.getRequestURI() + (req.getQueryString() == null ? "" : "?" + req.getQueryString());
         PeerCalls.Answer a = peers.call(r.node(), req.getMethod(), path, body, p, Duration.ofSeconds(60));
         if (a.status() == 0) {
-            NetCallFilter.problem(res, 503, "DRS-1032", m.module() + "'s " + part + " is unavailable right now (" + r.node()
-                    + " did not answer); try again later");
+            NetCallFilter.problem(res, 503, "DRS-1032", unanswered(m.module(), part, r.node()));
             return;
         }
         res.setStatus(a.status());

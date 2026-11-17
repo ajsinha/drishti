@@ -136,7 +136,7 @@ public final class EngineGateFilter extends OncePerRequestFilter {
         try {
             a = peers.call(node.get(), req.getMethod(), path, body, p);
         } catch (IOException e) {
-            problem(res, 502, "DRS-5052", "node " + node.get() + ", which runs " + registry.title(id) + ", is not reachable; try again shortly", id);
+            problem(res, 502, "DRS-5052", unreachable(registry, node.get(), id), id);
             return;
         }
         res.setStatus(a.status());
@@ -152,7 +152,17 @@ public final class EngineGateFilter extends OncePerRequestFilter {
     }
 
     private void off(HttpServletResponse res, String id) throws IOException {
-        problem(res, 404, "DRS-1020", "DRS-1020 " + EngineOffException.words(registry.title(id)), id);
+        problem(res, 404, "DRS-1020", off(registry, id), id);
+    }
+
+    /** The words of {@code 404 DRS-1020} for an engine that runs neither here nor (in a cluster) anywhere it may be sent. */
+    public static String off(EngineRegistry registry, String id) {
+        return "DRS-1020 " + EngineOffException.words(registry.title(id));
+    }
+
+    /** The words of {@code 502 DRS-5052}: the node that runs the engine did not answer. */
+    public static String unreachable(EngineRegistry registry, String node, String id) {
+        return "node " + node + ", which runs " + registry.title(id) + ", is not reachable; try again shortly";
     }
 
     static void problem(HttpServletResponse res, int status, String code, String detail, String engine) throws IOException {

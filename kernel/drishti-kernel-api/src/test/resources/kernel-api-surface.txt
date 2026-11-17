@@ -542,6 +542,7 @@
   services.LivePage public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.LivePage.set()
   services.LivePage public long com.ash.drishti.kernel.api.services.LivePage.seq()
   services.LiveQueries public abstract com.ash.drishti.kernel.api.services.LivePage com.ash.drishti.kernel.api.services.LiveQueries.query(com.ash.drishti.kernel.api.services.Person,java.lang.String,int)
+  services.Operation public abstract java.lang.String com.ash.drishti.kernel.api.services.Operation.rest()
   services.Operation public abstract java.lang.String com.ash.drishti.kernel.api.services.Operation.value()
   services.Operations public abstract <T> T com.ash.drishti.kernel.api.services.Operations.of(java.lang.String,java.lang.Class<T>)
   services.Operations public abstract boolean com.ash.drishti.kernel.api.services.Operations.available(java.lang.String)

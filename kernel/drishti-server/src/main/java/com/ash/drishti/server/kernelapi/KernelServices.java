@@ -86,15 +86,27 @@ public class KernelServices implements Kernel {
         }
         HttpServletRequest req = a.getRequest();
         Principal p = req.getAttribute(Principal.ATTRIBUTE) instanceof Principal x ? x : Principal.anonymous("anonymous");
+        AsOf asOf = AsOfResolver.read(req.getHeader(AsOfResolver.HEADER), req.getParameter("asOf"), req.getHeader(AsOfResolver.KNOWN_AT_HEADER),
+                req.getParameter("knownAt"), calendar);
+        java.util.List<String> scopes = req.getAttribute(TokenFilter.GRANT_ATTRIBUTE) instanceof TokenFilter.Grant g ? g.scopes() : null;
+        return person(p, req.getHeader(EditionContext.HEADER), asOf, scopes);
+    }
+
+    /**
+     * The person of an operation another node forwarded (KERNEL_AND_MODULES.md section 2.3): the identity its verified on-behalf-of claims
+     * carry, and the lens, date box, known-at and token scopes the calling node's person had.
+     */
+    RequestPerson person(Principal p, String lens, String dateBox, String knownAt, java.util.List<String> scopes) {
+        return person(p, lens, AsOfResolver.read(dateBox, null, knownAt, null, calendar), scopes);
+    }
+
+    private RequestPerson person(Principal p, String lens, AsOf asOf, java.util.List<String> scopes) {
         String display = "";
         com.ash.drishti.identity.UserService us = users.getIfAvailable();
         if (us != null) {
             display = us.find(p.user()).map(u -> u.displayName() == null ? "" : u.displayName()).orElse("");
         }
-        AsOf asOf = AsOfResolver.read(req.getHeader(AsOfResolver.HEADER), req.getParameter("asOf"), req.getHeader(AsOfResolver.KNOWN_AT_HEADER),
-                req.getParameter("knownAt"), calendar);
-        java.util.List<String> scopes = req.getAttribute(TokenFilter.GRANT_ATTRIBUTE) instanceof TokenFilter.Grant g ? g.scopes() : null;
-        return new RequestPerson(p, display, entitlements.isAdmin(p), req.getHeader(EditionContext.HEADER), asOf, scopes, calendar);
+        return new RequestPerson(p, display, entitlements.isAdmin(p), lens, asOf, scopes, calendar);
     }
 
     @Override
