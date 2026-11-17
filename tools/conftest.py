@@ -23,10 +23,15 @@ import tempfile
 if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
     _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
     os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
-    # the module boot of every Java command the tests start unpacks the packages into <data>/cache/modules: that data folder is this
-    # run's own too, never the repository's data/, which the drill checks is left unchanged
-    os.environ.setdefault("DRISHTI_DATA_DIR", os.path.join(_RESOLVED, "data"))
     atexit.register(shutil.rmtree, _RESOLVED, True)
+_OWNER = "DRISHTI_TEST_DATA_DIR_PID"
+if not os.environ.get("DRISHTI_DATA_DIR") or os.environ.get(_OWNER, str(os.getpid())) != str(os.getpid()):
+    # the module boot of every Java command the tests start unpacks the packages into <data>/cache/modules: that data folder is this
+    # process's own (also when the drill has set DRISHTI_RESOLVED_CACHE), never the repository's data/, which the drill checks is left unchanged
+    _DATA = tempfile.mkdtemp(prefix="drishti-data-")
+    os.environ["DRISHTI_DATA_DIR"] = _DATA
+    os.environ[_OWNER] = str(os.getpid())
+    atexit.register(shutil.rmtree, _DATA, True)
 
 
 def pytest_sessionstart(session):

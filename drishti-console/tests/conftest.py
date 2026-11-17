@@ -69,10 +69,20 @@ if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
 
     _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
     os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
-    # the module boot of every Java command the tests start (the resolver, sutra, the loaders) unpacks the packages into <data>/cache/modules:
-    # that data folder is this run's own too, never the repository's data/, which the drill checks is left unchanged
-    os.environ.setdefault("DRISHTI_DATA_DIR", str(Path(_RESOLVED) / "data"))
     atexit.register(shutil.rmtree, _RESOLVED, True)
+_DATA_OWNER2 = "DRISHTI_TEST_DATA_DIR_PID"
+if not os.environ.get("DRISHTI_DATA_DIR") or os.environ.get(_DATA_OWNER2, str(os.getpid())) != str(os.getpid()):
+    # the module boot of every Java command the tests start (the resolver, sutra, the loaders) unpacks the packages into <data>/cache/modules:
+    # that data folder is this process's own too (one per pytest process, also when the drill has set DRISHTI_RESOLVED_CACHE), never the
+    # repository's data/, which the drill checks is left unchanged
+    import atexit
+    import shutil
+    import tempfile
+
+    _JDATA = tempfile.mkdtemp(prefix="drishti-data-")
+    os.environ["DRISHTI_DATA_DIR"] = _JDATA
+    os.environ[_DATA_OWNER2] = str(os.getpid())
+    atexit.register(shutil.rmtree, _JDATA, True)
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)
 from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401 - the per-worker fixtures (TEST_HARNESS.md)

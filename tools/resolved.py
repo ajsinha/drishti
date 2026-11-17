@@ -349,6 +349,8 @@ def _ask(args: tuple) -> dict:
     java = javacmd.find_java()
     named = _override_setting() if not args else ""            # the overrides apply to this process's resolution (ResolveCli)
     flags = [f"-Ddrishti.overrides.dir={named}"] if named and not os.environ.get("DRISHTI_OVERRIDES_DIR") else []
+    if (os.environ.get("DRISHTI_RESOLVED_CACHE") or "").strip() and not (os.environ.get("DRISHTI_DATA_DIR") or "").strip():
+        flags.append(f"-Ddrishti.data.dir={_cache_dir() / 'data'}")   # a run with its own cache folder boots the modules into it, never the repository's data/
     cmd = javacmd.java_cmd(java, [*flags, "-jar", str(jar), "resolve", "--json", *args], cwd=javacmd.find_home()[0])   # the launch roots named
     run = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if run.returncode != 0:
