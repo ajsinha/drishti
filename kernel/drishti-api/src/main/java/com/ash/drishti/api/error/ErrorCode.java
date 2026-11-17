@@ -20,11 +20,17 @@ package com.ash.drishti.api.error;
  * 3 inference, 4 engine and graph, 5 API, 6 identity, 7 collaboration (shares, threads, the inbox), 8 embedded views. Codes are never reused.
  */
 public enum ErrorCode {
+    /** The entity asked for is not held by any source. */
     ENTITY_NOT_FOUND("DRS-1001", 404),
+    /** No source serves the kind asked for. */
     NO_SOURCE_FOR_KIND("DRS-1002", 404),
+    /** A source failed while answering a read. */
     SOURCE_FAILED("DRS-1003", 502),
+    /** A source did not answer within the read's budget. */
     SOURCE_TIMEOUT("DRS-1004", 504),
+    /** The JSON given could not be read or does not fit what the call expects. */
     INVALID_JSON("DRS-1005", 422),
+    /** A source plugin could not be loaded. */
     PLUGIN_LOAD_FAILED("DRS-1006", 500),
     /** A read "as known at" an instant from a store that keeps no earlier versions (it would show today's data). */
     NO_TIME_TRAVEL("DRS-1007", 400),
@@ -78,22 +84,35 @@ public enum ErrorCode {
     PLACEMENT_STALE("DRS-1031", 409),
     /** A module part with no placed node up (or not placed at all): unavailable, never run on an unplaced node. */
     MODULE_PART_UNAVAILABLE("DRS-1032", 503),
+    /** The Sutra text could not be parsed. */
     SUTRA_PARSE("DRS-2001", 422),
+    /** The Sutra parsed but is not valid (a rule of its kind is broken). */
     SUTRA_INVALID("DRS-2002", 422),
+    /** No Sutra of that name exists. */
     SUTRA_NOT_FOUND("DRS-2003", 404),
+    /** No proposal of that id exists. */
     PROPOSAL_NOT_FOUND("DRS-2005", 404),
+    /** The proposal changed or was decided since the caller read it. */
     PROPOSAL_CONFLICT("DRS-2006", 409),
+    /** The change needs a second person: the proposer may not approve their own proposal. */
     FOUR_EYES("DRS-2007", 403),
     /** A search form (the form: section of a pack, or a Design's Form tab) that is not valid YAML or names a field, type or operator wrongly. */
     FORM_INVALID("DRS-2060", 422),
     /** The history: section of a pack names a field, shape or limit wrongly. */
     HISTORY_INVALID("DRS-2061", 422),
+    /** An expression has a syntax error. */
     EL_SYNTAX("DRS-2101", 422),
+    /** An expression could not be evaluated over the values given. */
     EL_EVAL("DRS-2102", 422),
+    /** An inference (a model's or a rule's answer) failed. */
     INFERENCE_FAILED("DRS-3001", 500),
+    /** The command is not known. */
     COMMAND_UNKNOWN("DRS-4001", 400),
+    /** A view could not be produced. */
     VIEW_FAILED("DRS-4002", 500),
+    /** The business date given is not a date or is not allowed here. */
     BAD_BUSINESS_DATE("DRS-4003", 400),
+    /** The search given is not valid. */
     BAD_SEARCH("DRS-4004", 400),
     /** {@code ?panel=} of an explain call names no panel of the view. */
     EXPLAIN_NO_PANEL("DRS-4006", 404),
@@ -132,8 +151,11 @@ public enum ErrorCode {
      * the type-ahead. Its kind stays readable by the engines (VaR, exposure) that need it.
      */
     EDITION_COMMAND_HIDDEN("DRS-4023", 404),
+    /** The request is malformed or names something that is not valid. */
     BAD_REQUEST("DRS-5001", 400),
+    /** The cache asked for does not exist. */
     CACHE_NOT_FOUND("DRS-5004", 404),
+    /** The caller is signed in but may not do this. */
     FORBIDDEN("DRS-5002", 403),
     /** Input over a configured size or count limit (builder samples). */
     PAYLOAD_TOO_LARGE("DRS-5005", 413),
@@ -143,6 +165,7 @@ public enum ErrorCode {
     STALE_REVISION("DRS-5007", 409),
     /** A data file and its .ready refused by the checks of Admin, Data loads, Upload, or a file of the same name already waiting in the inbox. */
     READY_PUSH_REFUSED("DRS-5008", 409),
+    /** The caller is not signed in or the token is not valid. */
     UNAUTHENTICATED("DRS-5010", 401),
     /** A data-load announcement or a Data loads query names a pack that is not loaded (or one the caller may not reach: the two look the same). */
     LOAD_PACK_NOT_FOUND("DRS-5011", 404),
@@ -305,6 +328,7 @@ public enum ErrorCode {
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
     CONNECTOR_CONFLICT("DRS-5032", 409),
+    /** No connector of that name exists. */
     CONNECTOR_NOT_FOUND("DRS-5033", 404),
     /** A read connector's where, set or map cannot be used (DATA_LAKE_GUIDE.md section 6.2): the connector is refused at load. */
     CONNECTOR_SHAPE_INVALID("DRS-5034", 422),
@@ -318,14 +342,23 @@ public enum ErrorCode {
     ARTIFACT_CONFIRM("DRS-5043", 422),
     /** Admin, Artifacts: the action does not apply to this artifact (a pack template's connector is only disabled or reset) or an uploaded file is not valid. */
     ARTIFACT_INVALID("DRS-5044", 422),
+    /** No user of that name exists. */
     USER_NOT_FOUND("DRS-6001", 404),
+    /** A user of that name exists already. */
     USER_EXISTS("DRS-6002", 409),
+    /** The password does not meet the password rules. */
     WEAK_PASSWORD("DRS-6003", 422),
+    /** The name or password is wrong. */
     BAD_CREDENTIALS("DRS-6004", 401),
+    /** The account is locked after too many failed sign-ins. */
     ACCOUNT_LOCKED("DRS-6005", 423),
+    /** The change would leave the installation with no administrator. */
     LAST_ADMIN("DRS-6006", 409),
+    /** The user's details are not valid. */
     INVALID_USER("DRS-6007", 422),
+    /** No role of that name exists. */
     ROLE_NOT_FOUND("DRS-6008", 404),
+    /** The role is held by users and cannot be removed. */
     ROLE_IN_USE("DRS-6009", 409),
     /** The console refuses everything but the account page until a password change asked for is done. */
     PASSWORD_CHANGE_DUE("DRS-6010", 403),
@@ -339,14 +372,21 @@ public enum ErrorCode {
     COLLAB_RATE_LIMITED("DRS-7003", 429),
     /** Collaboration, the channel, or sharing for the kind's pack is off by policy. */
     SHARING_OFF("DRS-7004", 403),
+    /** No thread of that id exists. */
     THREAD_NOT_FOUND("DRS-7005", 404),
+    /** No comment of that id exists. */
     COMMENT_NOT_FOUND("DRS-7006", 404),
+    /** The thread is locked: no one may add to it. */
     THREAD_LOCKED("DRS-7007", 409),
+    /** The comment may no longer be edited, or not by this person. */
     NOT_EDITABLE("DRS-7008", 403),
+    /** The comment changed since the caller read it. */
     STALE_COMMENT("DRS-7009", 409),
+    /** The item is on hold and cannot be changed or removed. */
     ON_HOLD("DRS-7010", 423),
     /** Empty or too long text, a deny-pattern match, a masked copy with {@code on-masked-copy: reject}, or a bad pin. */
     TEXT_REFUSED("DRS-7011", 422),
+    /** The mail server is not configured or did not accept the message. */
     MAIL_UNAVAILABLE("DRS-7012", 503),
     /** A bridge test, or a post, failed or the bridge is not usable: bridges off, its URL variable unset or not allowed, or the endpoint refused. */
     BRIDGE_UNAVAILABLE("DRS-7013", 503),
@@ -684,10 +724,12 @@ public enum ErrorCode {
         this.httpStatus = httpStatus;
     }
 
+    /** The stable code ({@code DRS-nnnn}), never reused. */
     public String code() {
         return code;
     }
 
+    /** The HTTP status the API answers with for this error. */
     public int httpStatus() {
         return httpStatus;
     }

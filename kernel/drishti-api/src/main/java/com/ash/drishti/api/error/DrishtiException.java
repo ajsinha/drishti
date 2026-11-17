@@ -21,20 +21,24 @@ public class DrishtiException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     private final transient ErrorCode errorCode;
 
+    /** An error of the given code with its message. */
     public DrishtiException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }
 
+    /** An error of the given code with its message and the cause. */
     public DrishtiException(ErrorCode errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
     }
 
+    /** The error code this exception carries. */
     public ErrorCode errorCode() {
         return errorCode;
     }
 
+    /** The code, a space and the message. */
     @Override
     public String getMessage() {
         return errorCode.code() + " " + super.getMessage();

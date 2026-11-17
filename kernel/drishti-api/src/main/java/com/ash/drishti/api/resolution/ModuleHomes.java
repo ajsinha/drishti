@@ -294,16 +294,19 @@ public final class ModuleHomes {
         return out;
     }
 
+    /** Two values are equal when they hold the same modules (ids, versions, folders, content hashes and origins). */
     @Override
     public boolean equals(Object o) {
         return o instanceof ModuleHomes other && homes.equals(other.homes);
     }
 
+    /** A hash of the same modules {@link #equals} compares. */
     @Override
     public int hashCode() {
         return homes.hashCode();
     }
 
+    /** The modules, one id and version after the other, for a log line. */
     @Override
     public String toString() {
         return "ModuleHomes" + homes.keySet();
