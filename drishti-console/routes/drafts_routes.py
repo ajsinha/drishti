@@ -78,6 +78,30 @@ async def lookup(request: Request):
     return JSONResponse(got)
 
 
+CHECK_KEYS = ("sutra", "design", "panel", "values", "checked", "carried", "auto", "step")
+CHECK_WAIT = 3.0
+CHECK_LIMIT = 64 * 1024
+
+
+@lookup_router.post("/check")
+async def check(request: Request):
+    """A form's draft checked as people type (drishti_record-forms.js): ``/api/v1/forms/check`` as the signed-in person. The rules, the defaults
+    worked out and the hints are the server's; this passes the draft on and the answer back (``issues``, ``computed``, ``hints``, ``typed``)."""
+    try:
+        body = await json_body(request, limit=CHECK_LIMIT)
+    except BodyError as e:
+        return _bad(e.detail, e.status)
+    if not isinstance(body, dict):
+        return _bad("a form check is { sutra, panel, values, checked, carried, step }")
+    try:
+        got = await asyncio.wait_for(request.app.state.backend._send("POST", "/forms/check", ident(request), json={k: body[k] for k in CHECK_KEYS if k in body}), CHECK_WAIT)
+    except BackendError as e:
+        return _problem(e)
+    except asyncio.TimeoutError:
+        return JSONResponse({"code": "DRS-5001", "detail": "the check took too long"}, status_code=504)
+    return JSONResponse(got)
+
+
 @router.get("")
 async def list_drafts(request: Request):
     q = {k: v for k, v in request.query_params.items() if k in ("kind", "id", "sutra") and v}

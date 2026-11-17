@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
+        "drishti.business-date.today=2026-11-06",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/formcheck-${random.uuid}.db",
         "drishti.security.roles.trader.kinds[0]=*", "drishti.security.roles.trader.raw=true", "drishti.security.roles.trader.edit=true",
@@ -162,5 +163,23 @@ class FormCheckControllerTest {
         mvc.perform(post("/api/v1/forms/check").header("Authorization", out).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().is4xxClientError());
         mvc.perform(post("/api/v1/forms/check").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isUnauthorized());
+    }
+
+    /** One "today": the check as people type, the draft save and the edit handler read the business date, not the clock. */
+    @Test
+    void theCheckAndTheDraftSaveReadTheSameBusinessToday() throws Exception {
+        String tia = "Bearer " + tokens.mint("tia", List.of("trader"), 300);
+        for (String[] c : new String[][] {{"2026-11-05", "yes"}, {"2026-11-06", "no"}}) {
+            String body = "{\"sutra\":\"book-desk\",\"panel\":\"trades\",\"values\":{\"maturity_date\":\"" + c[0] + "\"},\"step\":\"what\"}";
+            JsonNode a = json.readTree(mvc.perform(post("/api/v1/forms/check").header("Authorization", tia).contentType(MediaType.APPLICATION_JSON)
+                    .content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+            assertThat(a.path("issues").findValuesAsText("message").stream().anyMatch(m -> m.contains("on or after 2026-11-06"))).as("check " + c[0])
+                    .isEqualTo(c[1].equals("yes"));
+            String draft = "{\"kind\":\"portfolio-trades\",\"id\":\"BOOK-RATES-2\",\"sutra\":\"book-desk\",\"panel\":\"trades\",\"mode\":\"new\","
+                    + "\"records\":[{\"values\":{\"maturity_date\":\"" + c[0] + "\"}}]}";
+            String got = mvc.perform(post("/api/v1/drafts").header("Authorization", tia).contentType(MediaType.APPLICATION_JSON).content(draft))
+                    .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+            assertThat(got.contains("on or after 2026-11-06")).as("draft save " + c[0]).isEqualTo(c[1].equals("yes"));
+        }
     }
 }

@@ -275,7 +275,6 @@ files:
   js/engines-menu.js: js/drishti_engines-menu.js
   js/exposure-charts.js: js/drishti_exposure-charts.js
   js/exposure-explorer.js: js/drishti_exposure-explorer.js
-  js/form-expr.js: js/drishti_form-expr.js
   js/form.js: js/drishti_form.js
   js/forms-home.js: js/drishti_forms-home.js
   js/frtb-sa.js: js/drishti_frtb-sa.js
@@ -511,9 +510,6 @@ globals:
     status: move
   drishtiFetchTable:
     to: fetchTable
-    status: move
-  drishtiFormExpr:
-    to: formExpr
     status: move
   drishtiForms:
     to: forms

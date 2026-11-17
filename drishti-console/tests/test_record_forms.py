@@ -52,7 +52,7 @@ def test_a_page_with_a_form_loads_the_form_scripts(client, backend, monkeypatch)
     assert "drishti_record-forms.js" not in client.get("/v/trade/IRS-47102").text
     monkeypatch.setattr(backend, "view", view)
     page = client.get("/v/trade/IRS-47102").text
-    assert "drishti_form-expr.js" in page and "drishti_record-forms.js" in page and "drishti_record-forms.css" in page
+    assert "drishti_form-expr.js" not in page and "drishti_record-forms.js" in page and "drishti_record-forms.css" in page
 
 
 def test_drafts_pass_through_as_the_person_with_the_issues_of_a_refusal(client, backend, monkeypatch):
@@ -94,6 +94,26 @@ def test_an_entity_lookup_passes_through_as_the_person(client, backend, monkeypa
     assert calls[-1] == ("GET", "/forms/lookup?kind=legal-entity&pack=core&q=bank&label=NAME")
     assert client.get("/api/forms/lookup?kind=legal-entity&q=deny").status_code == 403
     assert client.get("/api/forms/lookup?q=bank").status_code == 400
+
+
+def test_a_form_check_passes_through_as_the_person_and_only_the_known_keys(client, backend, monkeypatch):
+    calls = []
+
+    async def send(method, path, ident=None, **kw):
+        calls.append((method, path, kw.get("json")))
+        if (kw.get("json") or {}).get("panel") == "nope":
+            e = BackendError(400, "DRS-5001", "no panel nope")
+            e.extra = {"code": "DRS-5001", "detail": "no panel nope"}
+            raise e
+        return {"issues": [{"field": "notional", "message": "Notional is at least 0", "severity": "error"}], "computed": {}, "hints": [], "typed": {}}
+    monkeypatch.setattr(backend, "_send", send)
+    body = {"sutra": "book-desk", "panel": "trades", "values": {"notional": "-5"}, "checked": ["notional"], "carried": {}, "step": "what", "other": "x"}
+    got = client.post("/api/forms/check", json=body)
+    assert got.status_code == 200 and got.json()["issues"][0]["field"] == "notional"
+    assert calls[-1] == ("POST", "/forms/check", {k: v for k, v in body.items() if k != "other"})
+    assert client.post("/api/forms/check", json={**body, "panel": "nope"}).status_code == 400
+    assert client.post("/api/forms/check", json=[1]).status_code == 400
+    assert client.post("/api/forms/check", content="x", headers={"Content-Type": "text/plain"}).status_code == 415
 
 
 def test_customize_lets_people_edit_a_table_beside_or_in_its_cells():

@@ -59,6 +59,19 @@ def page(browser, base, path, theme="terminal", size=None):
     return pg
 
 
+def eventually(check, seconds=10):
+    """The server checks a draft a moment after the typing stops (250 ms and a round trip): a message is read when it has arrived, not at once."""
+    import time
+    end = time.time() + seconds
+    while True:
+        try:
+            return check()
+        except (AssertionError, Exception):
+            if time.time() > end:
+                raise
+            time.sleep(0.1)
+
+
 def forget_drafts(pg, base):
     for d in pg.request.get(base + "/api/drafts").json():
         pg.request.delete(base + "/api/drafts/" + d["draft"])
@@ -102,7 +115,7 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     assert "Say why the trade is above the desk limit" in side.locator("[data-path='comment'] .di-msg").inner_text()
     assert side.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
     pg.click("[data-fm-side] .fm-save")                          # an error: not saved, the field it names is focused
-    assert pg.evaluate("document.activeElement.getAttribute('data-field')") == "comment"
+    wait(pg, "document.activeElement.getAttribute('data-field') === 'comment'")
     assert pg.evaluate("Drishti.forms.state().trades.dirty")
     pg.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
     assert side.locator(".fm-error").count() == 0 and warn.count() == 1
@@ -162,7 +175,7 @@ def test_cells_edited_like_a_spreadsheet_with_reasons_under_the_row(stack, brows
     pg.keyboard.press("Control+A")
     pg.keyboard.type("100")
     pg.keyboard.press("Enter")
-    assert "fm-bad" in pg.get_attribute(cell.format(0), "class")
+    eventually(lambda: ("fm-bad" in pg.get_attribute(cell.format(0), "class")) or 1 / 0)
     assert "The new limit is below what's already used: raise it, or ask the owner first." in pg.locator("#p-buckets tr.fm-why").first.inner_text()
     assert pg.locator("#p-buckets .fm-toolbar [data-fm-badge]").inner_text() == "1 change not saved"
     assert "was " in pg.locator(cell.format(0) + " .fm-was").inner_text()
@@ -188,7 +201,7 @@ def test_cells_edited_like_a_spreadsheet_with_reasons_under_the_row(stack, brows
     pg.keyboard.press("Control+A")
     pg.keyboard.type("250,000,000")
     pg.keyboard.press("Enter")
-    assert pg.locator("#p-buckets tr.fm-why").count() == 0          # fixed: no reason left under any row
+    eventually(lambda: pg.locator("#p-buckets tr.fm-why").count() == 0 or (_ for _ in ()).throw(AssertionError(pg.locator("#p-buckets tr.fm-why").all_inner_texts())))
     pg.click(".fm-review-open")
     pg.click(".fm-review-box .fm-primary")
     wait(pg, "document.querySelector('#p-buckets .fm-badge-saved')")
@@ -242,18 +255,20 @@ def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     assert pg.locator("[data-fm-scrim]").is_visible()
     assert dr.locator(".fm-step").all_inner_texts() == ["1 · Who", "2 · What", "3 · Check"]
     dr.locator(".fm-next").click()                               # nothing chosen: Next says what is missing
-    assert "Counterparty is required" in dr.locator("[data-path='counterparty'] .di-msg").inner_text()
+    eventually(lambda: "Counterparty is required" in dr.locator("[data-path='counterparty'] .di-msg").inner_text(timeout=500) or 1 / 0)
     pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
     dr.locator(".fm-next").click()
-    assert dr.locator(".fm-step").nth(0).inner_text() == "1 · Who ✓"
+    eventually(lambda: dr.locator(".fm-step").nth(0).inner_text(timeout=500) == "1 · Who ✓" or 1 / 0)
     assert "So far: Counterparty" in dr.locator(".fm-sofar").inner_text()
-    assert "fill in the fields above" in dr.locator("[data-fm-hint]").inner_text()
+    eventually(lambda: "fill in the fields above" in dr.locator("[data-fm-hint]").inner_text(timeout=500) or 1 / 0)
     pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
     pg.fill("[data-fm-drawer] [data-field='notional']", "25m")
     pg.select_option("[data-fm-drawer] [data-field='currency']", "USD")
     pick_date(pg, "[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    eventually(lambda: ("PFE limit after this trade:" in dr.locator("[data-fm-hint]").inner_text(timeout=500)
+                        and "%)" in dr.locator("[data-fm-hint]").inner_text(timeout=500)) or 1 / 0)
     hint = dr.locator("[data-fm-hint]").inner_text()
-    assert "PFE limit after this trade:" in hint and " of " in hint and "%)" in hint
+    assert " of " in hint
     assert dr.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
     pg.screenshot(path=str(IMG / "form-drawer.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 860})
     dr.locator(".fm-save").click()
@@ -289,15 +304,16 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     assert dr.locator("[data-fm-open='legal_entity']").get_attribute("href") == "/v/legal-entity/" + kept
     dr.locator(".fm-next").click()
     pg.fill("[data-fm-drawer] [data-field='notional']", "lots")
-    assert dr.locator("[data-path='notional'] .di-msg").inner_text().strip() == "Notional is an amount (1,000,000, 1.5m or 250k)"
+    eventually(lambda: dr.locator("[data-path='notional'] .di-msg").inner_text(timeout=500).strip() == "Notional is an amount (1,000,000, 1.5m or 250k)" or 1 / 0)
     pg.fill("[data-fm-drawer] [data-field='notional']", "1.5m")
     assert dr.locator("[data-path='notional'] .di-unit").inner_text() == "—"
     pg.select_option("[data-fm-drawer] [data-field='currency']", "EUR")
     assert dr.locator("[data-path='notional'] .di-unit").inner_text() == "EUR"           # the currency the currency field holds
     fee = "[data-fm-drawer] [data-field='upfront_fee']"
-    assert pg.input_value(fee) == "1,500" and "Worked out: notional * 0.001" in dr.locator("[data-fm-auto]").inner_text()
+    eventually(lambda: pg.input_value(fee) == "1,500" or 1 / 0)
+    assert "Worked out: notional * 0.001" in dr.locator("[data-fm-auto]").inner_text()
     pg.fill("[data-fm-drawer] [data-field='notional']", "2m")
-    assert pg.input_value(fee) == "2,000"                       # worked out again as people type
+    eventually(lambda: pg.input_value(fee) == "2,000" or 1 / 0)                       # worked out again as people type
     pg.fill(fee, "2.5k")
     assert dr.locator("[data-fm-auto]").count() == 0             # typed over: no longer worked out
     pg.locator("[data-fm-drawer] [data-field='executed_at']").focus()
