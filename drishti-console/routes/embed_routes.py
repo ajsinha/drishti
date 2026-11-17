@@ -283,19 +283,28 @@ async def enhancer_js(request: Request, name: str):
             # the grid, the chart, the graph and the tree require drishti-inputs (they draw their choices with its Select), and the frozen
             # 1.x element loads elements-inputs after them: elements-core carries drishti-inputs too, once (a second load is skipped)
             core = _pin.static_path("elements/drishti-core/drishti_core.js")
-            body = (core.read_bytes() + b"\n" if name == "elements-core" else b"") + _inputs_once()
-            stamp = max(core.stat().st_mtime_ns, INPUTS_BUNDLE.stat().st_mtime_ns)
+            body = (core.read_bytes() + b"\n" if name == "elements-core" else b"") + _once("drishti-inputs")
+            stamp = max(core.stat().st_mtime_ns, _bundle("drishti-inputs").stat().st_mtime_ns)
+            return await send(request, body, "text/javascript", f'"{name}-{stamp:x}"')
+        if name in ("elements-grid", "elements-chart"):
+            # drishti-grid requires drishti-chart (drishti-elements.json) and the element loads elements-grid first: elements-grid carries
+            # drishti-chart too, once, and elements-chart is that same bundle once (a second load is skipped)
+            chart = _bundle("drishti-chart")
+            body = _once("drishti-chart") + (path.read_bytes() if name == "elements-grid" else b"")
+            stamp = max(chart.stat().st_mtime_ns, path.stat().st_mtime_ns)
             return await send(request, body, "text/javascript", f'"{name}-{stamp:x}"')
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
-INPUTS_BUNDLE = _pin.static_path("elements/drishti-inputs/drishti_inputs.js")
+def _bundle(library: str):
+    """A Drishti Elements library's bundle in the vendored copy."""
+    return _pin.static_path(f"elements/{library}/drishti_{library.removeprefix('drishti-')}.js")
 
 
-def _inputs_once() -> bytes:
-    """drishti-inputs' bundle, run only when the page has not registered it yet."""
-    return (b"if (!(window.Drishti && window.Drishti.elements && window.Drishti.elements.libs && window.Drishti.elements.libs['drishti-inputs'])) {\n"
-            + INPUTS_BUNDLE.read_bytes() + b"\n}\n")
+def _once(library: str) -> bytes:
+    """A library's bundle, run only when the page has not registered it yet."""
+    return (f"if (!(window.Drishti && window.Drishti.elements && window.Drishti.elements.libs && window.Drishti.elements.libs['{library}'])) {{\n".encode()
+            + _bundle(library).read_bytes() + b"\n}\n")
 
 
 @router.get("/views/{kind}/{id_:path}/about")

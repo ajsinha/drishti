@@ -64,6 +64,11 @@ bundle first, and drishti-core knows the folder it came from: a console script t
 embed routes beside them, which serve the same vendored files (`routes/embed_routes.py`, `routes/embed_v2_routes.py`). The live hub's
 shared worker learns the folder from the page (`drishti_channel.js` adds it to the worker's address).
 
+A page loads each library after the libraries it requires, as `drishti-elements.json` lists them: `base.html` loads drishti-core,
+drishti-data, drishti-inputs, then drishti-chart before drishti-grid (the grid's bullet cells are drishti-chart's), each once; a page that
+draws charts adds only ECharts (`vendor/echarts/echarts.min.js`), which drishti-chart looks up when it draws. The client-side renderer imports
+the libraries' modules from the same folder and loads their bundles and the map shapes from it too.
+
 ## 3. The host script
 
 `static/js/drishti_elements-host.js`, loaded by `base.html` straight after drishti-core's bundle, is the one place Drishti's routes are
