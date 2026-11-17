@@ -391,6 +391,7 @@ drishti:
     # A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
+      - /api/v1/admin/settings/secret-keys   # which of the console's own setting keys are secrets (keys only, no values): reads, writes nothing
       - /api/v1/modules/needs            # which saved items need a switched-off or removed module ("needs module X"): reads, writes nothing
       - /api/v1/pivot/query              # the pivot engine (bi/PIVOT.md): a view's answer, its estimate, a node opened, two dates compared,
       - /api/v1/pivot/estimate           # a cell's rows and an export: each reads as the caller and writes nothing

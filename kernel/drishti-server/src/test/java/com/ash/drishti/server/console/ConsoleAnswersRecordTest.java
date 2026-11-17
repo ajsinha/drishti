@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConsoleAnswersRecordTest {
 
-    static final Path REPO = Path.of("../..").toAbsolutePath().normalize();
+    static final Path REPO = Path.of(com.ash.drishti.testroots.TestRoots.repo());
     static final Path OUT = REPO.resolve("drishti-console/tests/answers");
 
     @Test
