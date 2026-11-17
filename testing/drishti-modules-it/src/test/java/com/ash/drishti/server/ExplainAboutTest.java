@@ -35,8 +35,10 @@ import org.springframework.test.web.servlet.MockMvc;
  * Layer 1 of About this page (docs/guides/RACHANA_REFERENCE.md): the packs' authored text for a kind, rendered over the
  * document the caller may see, so a field hidden for a role reads as the mask in the text and nothing derived from it leaks.
  */
-@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+        // the variant pages are the retired example genomics pack's (examples/packs, a fixture): the genomics module, which serves variant from its own
+        // VCF reader, is switched off as a site that runs that pack would
+        "drishti.modules.genomics.enabled=false",
         "drishti.packs.enabled=market-risk,genomics",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=PNL,LIMIT,significance",

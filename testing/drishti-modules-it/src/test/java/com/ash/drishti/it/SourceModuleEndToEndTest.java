@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -68,26 +67,14 @@ class SourceModuleEndToEndTest {
         return p;
     }
 
-    private static void copy(Path from, Path to) throws Exception {
-        try (Stream<Path> s = Files.walk(from)) {
-            for (Path f : s.toList()) {
-                Path t = to.resolve(from.relativize(f).toString());
-                if (Files.isDirectory(f)) {
-                    Files.createDirectories(t);
-                } else {
-                    Files.copy(f, t);
-                }
-            }
-        }
-    }
-
     @Test
     void aSwapOneFileInTheInboxIsListedAndTheSwitchTakesItAwayAndBack() throws Exception {
         Path root = repo();
         Path pack = Files.createDirectories(tmp.resolve("modules/banking/packs/trading"));
         Files.copy(root.resolve("modules/banking/packs/trading/pack.yaml"), pack.resolve("pack.yaml"));
-        Path module = tmp.resolve("modules/source-swapone");
-        copy(root.resolve("modules/source-swapone"), module);
+        // the module's package, booted as the launch boots it (the loader below resolves through it)
+        java.util.Map<String, String> booted = BootedPackages.boot(tmp.resolve("site"), "source-swapone");
+        Path module = BootedPackages.dir(booted, "source-swapone");
         YAMLMapper yaml = new YAMLMapper();
         // the inbox: the file and its .ready
         Path inbox = Files.createDirectories(tmp.resolve("data/inbox"));
@@ -118,7 +105,7 @@ class SourceModuleEndToEndTest {
                 + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n");
         // the loader's resolution: this site's modules folder (drishti.modules.home), every module on (KERNEL_AND_MODULES.md section 18)
         com.ash.drishti.api.resolution.ConfigResolution.install(com.ash.drishti.api.resolution.ConfigResolution.offline(
-                k -> k.equals("drishti.modules.home") ? tmp.resolve("modules").toString() : k.equals("drishti.packs.site-dir")
+                k -> booted.containsKey(k) ? booted.get(k) : k.equals("drishti.packs.site-dir")
                         ? tmp.resolve("config/packs").toString() : k.equals("drishti.data.dir") ? tmp.resolve("data").toString() : null));
         ByteArrayOutputStream said = new ByteArrayOutputStream();
         assertThat(LakeLoad.run(new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))

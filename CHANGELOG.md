@@ -32,6 +32,19 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   not over HTTP to this server. `LoopbackKernelCalls`, `KernelCalls` (and its `Refused`) are gone; `Kernel.Refused` remains. `BusinessDates.holidays()` joins the
   typed API (the landings' business-day arithmetic). The six `/risk/*` calls of the trading landings are operations of the banking module (`RiskFigures`, served by `RiskOperations`: `var.scope`,
   `var.contributions`, `var.official`, `var.history`, `var.whatif`, `exposure.predeal`), asked through `Kernel.operations()`. The landing recordings are byte-equal; the stand-ins implement the typed services; `NoLoopbackTest` (G13) is on.
+- **An installed server answers world-economy (I8c).** The economy package left out the world-economy pack's `samples/` (its `content.yaml` trimmed them), so a
+  server started from the packages, with no lake built, answered 404 / "no source holds jurisdiction/JUR-AUS" for every world-economy read (economies, regions,
+  jurisdictions, the map panel's countries), while the source tree answered; a lake could not be built from an install either (the demo lake's world-economy
+  tables are built from those samples). The samples travel now (a server from `build all` answers JUR-AUS and REGE-AU-NSW, and the Region economics sample
+  report answers from a `macro.region-economy` table built from the installed package's samples), and the packer (`tools/modulepack.py`) refuses a `trim` or
+  `copy` that leaves out what a pack serves (`samples`, `sutras`, `config`, `contracts`, `pack.yaml`; `test_modulepack.py`). The last six tests of
+  `testing/drishti-modules-it` on module sources (the economics and world-economy equivalence tests, `MapPanelTest`, `ExplainAboutTest`, `ExplainGlossaryTest`,
+  `AskEndToEndTest`) run on the packages; the explain tests switch the genomics module off (`drishti.modules.genomics.enabled=false`), whose VCF reader serves
+  `variant`, since their variant pages are the example genomics pack's. `ModuleSources` is deleted; `OnPackagesOnlyTest` fails when a test of the project points a
+  server at `modules/`, turns source mode or the development switch on, or brings it back. `SourceModuleEndToEndTest`, `OneTablePerSystemTest` and
+  `ModuleSettingsTest` read module source folders copied into a temporary modules folder, which no reader takes since I8a (calypso's rows went to
+  `trade_endur`, swapone's table was never written, the module's settings key was not mapped): they boot the source and banking packages the way
+  a launch does (`BootedPackages`, through `LaunchRoots.bootModules`) and read through the published `drishti.module.homes`.
 - **Operations: one module asks another, in process, through the REST path's doors (I13, K3).** A module serves `@Operation(value, rest)` methods from the
   beans of its own child context, registered as `<module>:<name>` when it starts (the module runtime's wiring) and withdrawn first when it unloads; two of one
   name stop its start. `kernel.operations().of(module, ConsumerView.class)` converts the consumer's records to the provider's and back by field name. A call

@@ -21,7 +21,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /** The world-economy pack's six generated politics-and-society screens draw what the inline ones drew (economics: {@link EconomicsSutraNextEquivalenceTest}). */
-@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.packs.enabled=world-economy",

@@ -58,10 +58,12 @@ class ModuleSettingsTest {
     }
 
     @Test
-    void theEnvironmentGivesTheModulesKeyToTheOldKeyAndHealthNamesTheOldKeysASiteSets() {
+    void theEnvironmentGivesTheModulesKeyToTheOldKeyAndHealthNamesTheOldKeysASiteSets(@org.junit.jupiter.api.io.TempDir Path work) {
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().addFirst(new MapPropertySource("Config resource 'file [application.local.yaml]' via location 'x'",
-                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3", "drishti.modules.home", "../../modules")));   // the modules folder's key (launch roots), over the forks' "none"
+                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3")));
+        // the banking package booted as the launch boots it, and its result put first as the launch puts it (LaunchRoots runs before this post-processor)
+        env.getPropertySources().addFirst(new MapPropertySource("launch roots", new java.util.LinkedHashMap<>(com.ash.drishti.it.BootedPackages.boot(work, "market-data", "banking"))));
         new ModuleSettingsEnvironmentPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("drishti.var.scenario-window")).as("the module's key reaches the code that reads the old key").isEqualTo("500");
         assertThat(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated"))

@@ -55,6 +55,9 @@ ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 DEFLATE_LEVEL = 6
 FILE_MODE = (0o100644) << 16
 _SKIP_DIRS = {"__pycache__"}
+#: What a pack serves at run time and content.yaml may never leave out: an install answers what the source tree answers (a pack's samples are
+#: the records a read falls back to when no lake is built; without them world-economy answered 404 on every installed server).
+SERVED = frozenset({"samples", "sutras", "config", "contracts", "pack.yaml"})
 
 
 class PackError(Exception):
@@ -173,6 +176,7 @@ def _bring_content(src: Path, entries: dict) -> None:
         if not p or ".." in p.split("/") or not any(k.startswith(p + "/") for k in entries):
             raise PackError(f"{f}: trim {e} needs a `path` of a folder inside the package")
         for x in e.get("leave-out") or []:
+            _never_served(f, e, x)
             gone = p + "/" + str(x).strip("/")
             for k in [k for k in entries if k == gone or k.startswith(gone + "/")]:
                 del entries[k]
@@ -182,6 +186,8 @@ def _bring_content(src: Path, entries: dict) -> None:
         if not to or ".." in to.split("/") or str(e.get("to", "")).startswith("/") or not frm.exists():
             raise PackError(f"{f}: copy {e} needs an existing `from` and a `to` inside the package")
         leave = {str(x) for x in e.get("leave-out") or []}
+        for x in leave:
+            _never_served(f, e, x)
         if frm.is_file():
             entries[to] = frm
             continue
@@ -191,6 +197,13 @@ def _bring_content(src: Path, entries: dict) -> None:
             for n in filenames:
                 if n not in leave and not n.endswith(".pyc"):
                     entries["/".join((to, *rel_dir.parts, n))] = Path(dirpath) / n
+
+
+def _never_served(f: Path, e: dict, x) -> None:
+    """A leave-out never names what a pack serves (:data:`SERVED`): what works from the source folder works from the package."""
+    if str(x).strip("/").split("/")[-1] in SERVED:
+        raise PackError(f"{f}: {e} leaves out {x}, which a pack serves at run time (an installed server would not have it): "
+                        f"only what a module does not carry (tests, tools) is left out")
 
 
 def _place_jars(m: dict, jars: list[Path], entries: dict) -> None:

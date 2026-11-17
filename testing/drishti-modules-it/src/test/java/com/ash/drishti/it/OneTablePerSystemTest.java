@@ -64,19 +64,6 @@ class OneTablePerSystemTest {
         return p;
     }
 
-    private static void copy(Path from, Path to) throws Exception {
-        try (Stream<Path> s = Files.walk(from)) {
-            for (Path f : s.toList()) {
-                Path t = to.resolve(from.relativize(f).toString());
-                if (Files.isDirectory(f)) {
-                    Files.createDirectories(t);
-                } else {
-                    Files.copy(f, t);
-                }
-            }
-        }
-    }
-
     @Test
     void everySystemLoadsIntoItsOwnTableAndTheTradeKindListsAllSixExactly() throws Exception {
         Path root = repo();
@@ -98,16 +85,15 @@ class OneTablePerSystemTest {
         assertThat(expected).hasSize(6);
 
         Path lake = tmp.resolve("lake");
-        for (String s : SYSTEMS) {                                         // every source module on, as a site runs them
-            copy(root.resolve("modules/source-" + s), tmp.resolve("modules/source-" + s));
-        }
+        // every source module on, as a site runs them: their packages, booted as the launch boots them
+        Map<String, String> booted = BootedPackages.boot(tmp.resolve("site"), SYSTEMS.stream().map(s -> "source-" + s).toArray(String[]::new));
         com.ash.drishti.api.resolution.ConfigResolution.install(com.ash.drishti.api.resolution.ConfigResolution.offline(
-                k -> k.equals("drishti.modules.home") ? tmp.resolve("modules").toString() : k.equals("drishti.packs.site-dir")
+                k -> booted.containsKey(k) ? booted.get(k) : k.equals("drishti.packs.site-dir")
                         ? tmp.resolve("config/packs").toString() : k.equals("drishti.data.dir") ? tmp.resolve("data").toString() : null));
         var cfgs = new LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         List<SourceSystems.System> installed = new ArrayList<>();
         for (String s : SYSTEMS) {
-            Path module = tmp.resolve("modules/source-" + s);
+            Path module = BootedPackages.dir(booted, "source-" + s);
             JsonNode rule = yaml.readTree(Files.readString(module.resolve("dataload.yaml"))).path("dataload").path("rules").get(0);
             String connector = rule.path("connector").asText();
             assertThat(connector).isEqualTo("trade-" + s);

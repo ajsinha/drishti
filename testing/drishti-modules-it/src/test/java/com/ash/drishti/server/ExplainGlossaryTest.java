@@ -35,8 +35,10 @@ import org.springframework.test.web.servlet.MockMvc;
  * page shows. A hidden field's definition is given and the meaning of its values is not; a derived kind explains its own
  * fields from its formula; {@code ?panel=} narrows the answer to one panel.
  */
-@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+        // the variant pages are the retired example genomics pack's (examples/packs, a fixture): the genomics module, which serves variant from its own
+        // VCF reader, is switched off as a site that runs that pack would
+        "drishti.modules.genomics.enabled=false",
         "drishti.packs.enabled=market-risk,genomics,trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=PNL,significance",
