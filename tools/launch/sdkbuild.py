@@ -147,7 +147,7 @@ def copy_typings_and_schemas(root: Path, sdk: Path) -> list[str]:
     return written
 
 
-def assemble(root: Path, sdk: Path, server_jar: Path | None = None) -> list[str]:
+def assemble(root: Path, sdk: Path, server_jar: Path | None = None, lenient: bool = False) -> list[str]:
     """Writes ``sdk`` (repo and parent folder) from the artifacts Maven built under ``root``; the files written, repository-relative."""
     version = _version(root)
     repo = sdk / "repo"
@@ -162,6 +162,8 @@ def assemble(root: Path, sdk: Path, server_jar: Path | None = None) -> list[str]
         written.append(f"{artifact}-{version}.pom")
         if packaging == "jar":
             jar = folder / "target" / f"{artifact}-{version}.jar"
+            if not jar.is_file() and lenient:
+                continue                       # no Maven run here: the jars the gate's build left are all there is (the archetype's is not among them)
             if not jar.is_file():
                 raise LaunchError(f"Maven finished but {jar} is not there")
             shutil.copy2(jar, out / jar.name)
@@ -212,22 +214,24 @@ def build_sdk(a, env: dict | None = None) -> int:
     env = dict(os.environ if env is None else env)
     roots = javacmd.launch_roots(None, None, env, javacmd.settings()[1])
     home = roots["home"][0]
-    sdk = home / "sdk"
+    sdk = Path(a.out).expanduser().resolve() if getattr(a, "out", None) else home / "sdk"
     cmd = [*envsetup.maven_command(home), "-q", *(["-o"] if a.offline else []), "clean", "package", "-DskipTests", "-pl", maven_projects(), "-am"]
     say(f"building the SDK: {' '.join(cmd[-6:])}")
+    no_maven = getattr(a, "no_maven", False)
     if a.dry_run:
         say(f"(dry run: nothing built) then {sdk} is written")
         return 0
-    java = javacmd.find_java(None, a.java_home, env)
-    env["JAVA_HOME"] = javacmd.java_home_of(java)
-    if subprocess.run(cmd, cwd=str(home), env=env).returncode:
-        say("the build failed: see Maven's messages above")
-        return 1
+    if not no_maven:
+        java = javacmd.find_java(None, a.java_home, env)
+        env["JAVA_HOME"] = javacmd.java_home_of(java)
+        if subprocess.run(cmd, cwd=str(home), env=env).returncode:
+            say("the build failed: see Maven's messages above")
+            return 1
     try:
         jar = javacmd.server_jar(None, home)
     except javacmd.JarError:
         jar = None
         say(f"no server jar in {home / 'lib'}: the SDK has no kernel-libraries.txt (python tools/drishti.py build jar, then build sdk again)")
-    files = assemble(home, sdk, jar)
+    files = assemble(home, sdk, jar, lenient=no_maven)
     say(f"{len(files)} file(s) in {sdk / 'repo'}; the parent pom in {sdk / 'drishti-module-parent'}")
     return 0

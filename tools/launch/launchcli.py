@@ -272,6 +272,8 @@ def register(groups, add) -> None:
                        formatter_class=RAW, description=__import__("sdkbuild").__doc__, epilog=f"examples:\n  {P} build sdk\n  {P} build sdk --offline")
     bk.add_argument("--java-home", metavar="DIR", help="the JDK to build with (Java 21+)")
     bk.add_argument("--offline", action="store_true", help="Maven offline (-o)")
+    bk.add_argument("--no-maven", action="store_true", help="no Maven: assemble from the jars and poms an earlier build left in target/ (the archetype's jar is then left out)")
+    bk.add_argument("--out", metavar="DIR", help="write the SDK folder here instead of <home>/sdk")
     bk.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
     bk.set_defaults(func=cmd_build)
     for verb, text in (("modules", "the module packages (.dmod) and first-party.yaml into <home>/modules, stamped for the server jar in <home>/lib"),
