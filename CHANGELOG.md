@@ -31,7 +31,10 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   `testing/drishti-modules-it` on module sources (the economics and world-economy equivalence tests, `MapPanelTest`, `ExplainAboutTest`, `ExplainGlossaryTest`,
   `AskEndToEndTest`) run on the packages; the explain tests switch the genomics module off (`drishti.modules.genomics.enabled=false`), whose VCF reader serves
   `variant`, since their variant pages are the example genomics pack's. `ModuleSources` is deleted; `OnPackagesOnlyTest` fails when a test of the project points a
-  server at `modules/`, turns source mode or the development switch on, or brings it back.
+  server at `modules/`, turns source mode or the development switch on, or brings it back. `SourceModuleEndToEndTest`, `OneTablePerSystemTest` and
+  `ModuleSettingsTest` read module source folders copied into a temporary modules folder, which no reader takes since I8a (calypso's rows went to
+  `trade_endur`, swapone's table was never written, the module's settings key was not mapped): they boot the source and banking packages the way
+  a launch does (`BootedPackages`, through `LaunchRoots.bootModules`) and read through the published `drishti.module.homes`.
 - **Operations: one module asks another, in process, through the REST path's doors (I13, K3).** A module serves `@Operation(value, rest)` methods from the
   beans of its own child context, registered as `<module>:<name>` when it starts (the module runtime's wiring) and withdrawn first when it unloads; two of one
   name stop its start. `kernel.operations().of(module, ConsumerView.class)` converts the consumer's records to the provider's and back by field name. A call

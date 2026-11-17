@@ -44,7 +44,8 @@ class OnPackagesOnlyTest {
             Pattern.compile("drishti\\.modules\\.packages\"?\\s*[=,]\\s*\"?false"),
             Pattern.compile("drishti\\.modules\\.sources\"?\\s*[=,]\\s*\"?true"),
             Pattern.compile("drishti\\.modules\\.dev\"?\\s*[=,]\\s*\"?true"),
-            Pattern.compile("drishti\\.modules\\.home\"?\\s*,\\s*[^)]*TestRoots\\.repo\\(\\)\\s*,\\s*\"modules\""));
+            Pattern.compile("drishti\\.modules\\.home\"?\\s*,\\s*[^)]*TestRoots\\.repo\\(\\)\\s*,\\s*\"modules\""),
+            Pattern.compile("drishti\\.modules\\.home\"?\\s*[=,]\\s*\"(\\.\\./)*modules/?\""));
 
     static final Path TESTS = Path.of(TestRoots.repo(), "testing", "drishti-modules-it", "src", "test").toAbsolutePath().normalize();
 
