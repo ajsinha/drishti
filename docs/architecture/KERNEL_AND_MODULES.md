@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1–C14), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/java/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, installation, sections 4.11.4, 4.11.8, 7.1 and 12 (a module is a file in the modules folder and a restart, a rolling restart node by node on a cluster, saved work marked *needs module X*, `drishti.py module install|remove|rollback|list|run`, Admin → Modules), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1–C14), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/java/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -481,28 +481,26 @@ Representative stub files with real-looking content:
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `${drishti.data.dir}/modules` | an ordered list of folders holding installed modules (`<id>/<version>/` unpacked + the `.dmod`); first match of an id wins; read-only to the server |
-| `drishti.modules.inbox` | `${drishti.data.dir}/modules-inbox` | where `module install` and Admin → Modules put an uploaded `.dmod` waiting for approval |
-| `drishti.modules.active` | `config/modules/active.yaml` | which version of each installed module is active (written by install, upgrade, rollback; four eyes) |
+| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<drishti.home>/modules` | the modules folder: one `<id>-<version>.dmod` file per module (files directly in it only); read by the module boot at start, read-only to the server |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
 | `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)) |
 | `drishti.lib.path` | `${drishti.home}/lib/ext` | **the site's shared jars, Tomcat `lib/` style** (kept on an upgrade; `<home>/lib` holds Drishti's own jar): every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
-| `drishti.modules.autodeploy` | `true` on a single node, `false` in a cluster | **Tomcat `webapps/` style**: a `.dmod` dropped into the modules folder is verified, exploded and loaded; deleting it unloads the module. In a cluster, deploy is plan → four-eyes apply (section 10), so one node never changes behind the others |
-| `drishti.modules.dev` | `false` | **development only**: a module's unpacked build folder loads without packing and reloads on change; Health marks it *development (unverified)*; refused in a cluster and in a production distribution |
+| `drishti.modules.dev` | `false` | **development only**: the module source folders of the modules folder are the modules, loaded unverified; Health marks each *development (unverified)*; refused in a cluster and in a production distribution |
+| `drishti.modules.sources` | `false` | **the kernel's own tests of the shipped files**: the module source folders of the modules folder are the modules, read (manifests, packs, console parts, data needs) and not loaded as code, because the module's classes are already on the class path |
 
-All folders live under the configurable data folder (no root litter, visible names); the server never writes to a module's folder.
+All folders live under the configurable data folder or the install folder (no root litter, visible names); the server never writes to a
+module's folder.
 
-**Dropping a `.dmod` in, like a `.war` in Tomcat** (product owner, 2026-11-10). The kernel **verifies before it unpacks** (section 4.3:
-hashes, the 15 checks, origin and exact kernel build), then **explodes** it into `modules/<id>/<version>/` (an unpack that would leave the
-folder is refused), then loads it. A new version is exploded **beside** the running one and `active.yaml` switches when it is ready, so
-the old version serves until then (the rolling upgrade of section 10 uses the same step). Deleting the file unloads the module (section 10:
-every surface goes; saved work shows *needs module X*). Unlike Tomcat, nothing unverified ever runs, except a development folder under
+**A module is a file and a restart.** Copy the `.dmod` into the modules folder and restart the server: the boot **verifies before it
+unpacks** (section 4.3: hashes, the 15 checks, origin and exact kernel build), unpacks the package once into the cache (section 4.2.1)
+and loads it. Replace the file to change the version, take it out to remove the module; each takes effect at the next start. Nothing is
+deployed to a running server, nothing is copied from one node to another, and nothing unverified runs, except a development folder under
 `drishti.modules.dev`.
 
 ### 4.2 Discovery
 
-At start, before any bean: list every `<path>/<id>/<version>/module.yaml`; pick the version `active.yaml` names (else the highest);
-parse each manifest against the manifest schema; build the dependency graph. Nothing else of a module is touched yet.
+At start, before any bean: list every `<home>/modules/*.dmod` (section 4.2.1); parse each manifest against the manifest schema; build the
+dependency graph. Nothing else of a module is touched yet.
 
 #### 4.2.1 The module boot and its result
 
@@ -535,24 +533,20 @@ folder through a rolling upgrade protect each other: a running server writes `<c
 of its folders (`ModuleBoot.markInUse`, refreshed every 5 minutes, removed at stop by `releaseInUse`), and the sweep keeps a folder with
 a marker younger than 15 minutes, saying so; an older marker is deleted.
 
-**Who runs it, and who reads it (i7a I5).** `LaunchRoots` runs the boot right after the launch roots (`bootModules`; the server sweeps,
-a command line such as `resolve --json` does not and keeps its overrides' views apart). When `<home>/modules` holds packages the result
-is the boot's, published for the process (`ModuleHomes.current()`) and as settings first in the environment: `drishti.module.homes`
-(the whole value) and `drishti.module.dir.<id>` (each folder, also for placeholders such as `${drishti.module.dir.banking:}`); the loader
-process is given both and never boots. When it holds none (a checkout before `build modules`, every server until i7a's I8), the
-modules come from the old store and folders through **one adapter, `LegacyModules`** (the only reader of the store's `active.yaml`),
-read at each ask so a deployment into the old store still shows at once. Every reader asks `ModuleHomes.resolve(property)`: the
-published value, else the adapter; none lists a modules folder or the cache (guard G9, `NoModuleFolderReaderTest`, with `LegacyModules`
-its one exception until I8). The readers: the resolver (`PackResolver`, `ConfigResolution`, `ResolveCli`), the overrides, the access
-registry (`YamlAccessStore`; `ModulePackages` only with no package), the distributions and module manifests, the module settings, the
-blotters (`LiveSets`), the loader process and banking's FRTB parameters. `tools/resolved.py` keys its cached answers on the
-fingerprint of the modules folder (`ModuleHomes.fingerprint()` worked out without the jar), so a rebuilt module never serves an old
-answer.
+**Who runs it, and who reads it.** `LaunchRoots` runs the boot right after the launch roots (`bootModules`; the server sweeps, a command
+line such as `resolve --json` does not and keeps its overrides' views apart). The result is published for the process
+(`ModuleHomes.current()`) and as settings first in the environment: `drishti.module.homes` (the whole value) and `drishti.module.dir.<id>`
+(each folder, also for placeholders such as `${drishti.module.dir.banking:}`); the loader process is given both and never boots. Every
+reader asks `ModuleHomes.resolve(property)`: the published value, else no module; none lists a modules folder or the cache (guard G9,
+`NoModuleFolderReaderTest`, which has no exception). The readers: the resolver (`PackResolver`, `ConfigResolution`, `ResolveCli`), the
+overrides, the access registry (`YamlAccessStore`), the distributions and module manifests, the module settings, the blotters
+(`LiveSets`), the loader process and banking's FRTB parameters. `tools/resolved.py` keys its cached answers on the fingerprint of the
+modules folder (`ModuleHomes.fingerprint()` worked out without the jar), so a rebuilt module never serves an old answer. The module
+host (`ModuleNode`) loads the boot's candidates into one `ModuleRuntime` at start; a module whose package was refused is absent.
 
-**The removed deployment store.** Its folders (`installed`, `store`, `shipped`, `staging`, `tombstones` under `<data>/modules` or the
-modules folder, `<data>/overrides/installed`) and `<data>/modules/registry.json` are never read for modules and never deleted: each is
-named once as *not read: safe to delete*. A module that `registry.json` names OFF or REMOVED is told once: *was off in the old store:
-set enabled: false in config/modules/&lt;id&gt;.yaml*.
+**Leftover folders.** The folders of an earlier release's deployment store (`installed`, `store`, `shipped`, `staging`, `tombstones`
+under `<data>/modules` or the modules folder, `<data>/overrides/installed`) and `<data>/modules/registry.json` are never read and never
+deleted: each is named once as *not read: safe to delete*.
 
 ### 4.3 Verification, in order
 
@@ -685,17 +679,16 @@ embed. What remains:
 
 ### 4.10 Restart versus hot load
 
-| What | P2 | P5 |
-|---|---|---|
-| Packs, Sutras, lenses, Help, BI content inside an installed module | **hot** (the pack reloader, as today) | hot |
-| Settings of a module | hot where the schema marks a key `hot: true`; else *restart needed* | same |
-| Data bindings | hot (section 5.8) | hot |
-| A module's pages, menus, words, Help (declared in `plugin.yaml`) | **hot** through the live route table (section 9.8): off, on and **remove** always; install and upgrade when the console part is declarative and the server has the module loaded | hot |
-| A module's code (Java, Python package, console context builders) | **restart**: install/upgrade/remove stages the change, Admin shows *restart needed*, a rolling restart applies it | **hot**: unload (stop, close context, drop loader), load the new version; refused when a leak check fails |
-| A module's static assets | with the code (versioned path) | same |
+| What | When a change counts |
+|---|---|
+| Packs, Sutras, lenses, Help, BI content inside a module | **hot** (the pack reloader) |
+| Settings of a module | hot where the schema marks a key `hot: true`; else *restart needed* |
+| Data bindings | hot (section 5.8) |
+| A module's pages, menus, words, Help (declared in `plugin.yaml`) and its code (Java, Python package, console context builders), static assets | at the **next start**: a module is a file and a restart; a module switched off is off from the next start |
 
-**The development build:** the SDK's harness and the developer's IDE run the kernel with a module folder pointing at the module's build
-output (`target/dmod/`), same loader, same checks, a development key (section 8.5). There is no "on the class path" second path.
+**The development build:** the SDK's harness and the developer's IDE run the kernel with the modules folder holding the module's source
+folder (`drishti.modules.dev`), same loader, same checks except the hash list, a development mark in Health (section 8.5). There is no
+"on the class path" second path.
 
 ### 4.11 Modules in a cluster
 
@@ -756,19 +749,16 @@ class `light` (a request to a path no other part declares belongs to it); a modu
   unless the placement says `allow-all: true` and a second administrator approves it.
 - **Health shows the effective placement**: per module and part, the nodes placed, active, leader (for singletons) and the memory used.
 
-#### 4.11.4 Install and activation across the placed nodes
+#### 4.11.4 Install on each node
 
-- **One action**: a deployment (section 7.6: `drishti.py module deploy … --plan` / `--apply`, or Admin → Modules → *Deploy*),
-  approved once (four eyes). No per-node install, no manual copying.
-- **Replication to placed nodes only**, over Drishti\*net (chunked, mutual TLS, the cluster key); each receiving node checks the SHA-256
-  and the signature itself (V2 on every node; a node never trusts another's verification). On AWS with EFS the identical path is read.
-- **Two-phase activation across the placed nodes**, run by the coordinator: (1) **stage** on each placed node: unpack, run V1–V9 locally
-  (kernel range, licence, claims, the memory check for the parts placed there), answer *ready* or *refused (reason)*; (2) **activate them
-  together** when all answered *ready* within `cluster.modules.stage-seconds` (300): the cluster configuration moves to version N+1 and each
-  placed node applies it (hot for declarative parts, at the rolling restart for code in P2: section 4.10), or **abort on all of them**
-  when one refused: staged files removed, nothing changed, the proposer sees which node and why.
-- **A late joiner** receives **only the modules placed on it** (by its name or its role) and serves them only after activation; a node
-  given a role later is staged and activated the same way.
+- **One file, every node.** A module is installed by copying its `.dmod` into the modules folder of each node (on AWS with EFS, the one
+  shared folder; the three nodes of the local stack share one checkout and so one folder) and restarting that node. No coordinator, no
+  per-node deployment, no replication: a node never receives a module from another.
+- **Every node verifies itself.** Each node's boot checks the hash list, the kernel range, the allowance and the licence (V1–V9) of its own
+  files; a node never trusts another's verification. A module refused on one node is absent there and shown in its Health.
+- **Placement decides who runs what.** A node boots every package of its folder and runs the parts placed on it (section 4.11.2); a node
+  with no part of a module forwards the module's requests to a placed node that is up (section 4.11.5).
+- **A late joiner** has its own modules folder: copy the packages it is placed for, start it, and it serves them from its start.
 
 #### 4.11.5 Routing and availability
 
@@ -777,7 +767,7 @@ class `light` (a request to a path no other part declares belongs to it); a modu
   next placed node, never an unplaced one.
 - **No placed node up** for a part: the part is **unavailable**, not absent. People see *Banking's VaR is unavailable right now (no
   compute node is up); try again later*; pages that need only the façade still work; saved artefacts, schedules (paused) and data stay;
-  nothing is tombstoned. Absent (section 12) is only for an off or removed module.
+  nothing is marked. Absent (section 12) is only for an off or missing module.
 
 #### 4.11.6 Drift
 
@@ -805,14 +795,15 @@ class `light` (a request to a path no other part declares belongs to it); a modu
 - **The live route table follows the registry's events** (`module.activated`, `module.unavailable`, `module.available`,
   `module.removed`): unavailable parts show the notice above, removal shows the notices of section 12.4.
 
-#### 4.11.8 Rolling upgrade and rollback
+#### 4.11.8 Rolling restart
 
-- For a short window (`cluster.modules.upgrade-window-minutes`, 30) two versions may run **across the placed nodes** when both are inside
-  each other's compatibility range. Each placed node advertises its version.
+- A cluster takes a new version of a module node by node: replace the file on one node, restart it, check Health, go on. For the window
+  of the roll two versions may run **across the nodes** when both are inside each other's compatibility range.
 - Requests are **pinned per session** to one version: the proxy routes the session only to placed nodes with that version, and the console
   serves the matching bundle (`/m/<id>/static/<version>/` lets both coexist), so a page always talks to the API version it was built for.
-  When the old version's last placed node is upgraded, pinned sessions get the *updated: reload* notice.
-- The placed nodes then converge; rollback is the same in reverse. A mixed set outside the window is drift (red).
+  When the old version's last placed node is restarted, pinned sessions get the *updated: reload* notice.
+- Rolling back is the same in reverse: the old file back, the node restarted. A mixed set after the roll is drift: the nodes' content
+  hashes of a module differ (`GET /api/v1/net/modules/status`).
 
 #### 4.11.9 Tests
 
@@ -1073,56 +1064,47 @@ decides). It cannot rename functions (command words are the modules').
 
 `drishti.py dist build drishti.finance.yaml` (P3) makes `drishti-finance-<version>.zip`: the kernel jar, the console, the connector
 plugins, the named `.dmod` files (unchanged, signed by their publishers), the distribution file and the brand's assets. Installing it is
-unzipping it; the modules are installed into `modules.path` on first start (approved by the installer's act, audited).
+unzipping it; the modules are the `.dmod` files of the distribution's modules folder, booted at the first start.
 
 ## 7. Lifecycle and tooling
 
 ### 7.1 The command line
+
+A module is a file and a restart: the commands are file operations that need no running server.
 
 | Command | Does |
 |---|---|
 | `drishti.py module new <id> --domain <d> [--template content|compute|full]` | a new module Maven project from the SDK archetype (section 8.3) |
 | `drishti.py module build [--sign-with dev|<key>]` | builds the jars (Maven), runs the module's tests against the SDK harness, checks (no secrets, no kernel internals, docs gates, contracts), writes `target/dmod/<id>-<version>.dmod` |
 | `drishti.py module sign <file> --key <publisher key>` | signs (or re-signs) a `.dmod` with a publisher key (an HSM or a key file; never stored in the repo) |
-| `drishti.py module verify <file> [--deep]` | V1–V7 against a running or offline kernel; `--deep` runs its conformance tests |
-| `drishti.py module deploy <file> --placement <file> --plan` / `--apply <plan>` | the scriptable deployment: plan, apply, status, approve, cancel, rollback (section 7.6); `install` below is its short form |
-| `drishti.py module install <file> [--place <part>=<roles or nodes> …]` | uploads to the inbox and proposes the install with its placement (four eyes); with approval: copies to the placed nodes only, stages, activates them together, writes `active.yaml`; *restart needed* on those nodes for code (section 4.11) |
-| `drishti.py module list [--json]` | `lsmod`: id, version, state, licence, taint, needs bound/unbound |
-| `drishti.py module info <id|file>` | `modinfo`: the manifest, signature, publisher, contributions, needs |
-| `drishti.py module run [--shots] [--two-people]` | the dev loop: the kernel + this module only, sample data, hot reload (section 8.4) |
-| `drishti.py module remove <id> [--version v]` | proposes removal (four eyes) with a removal report (what disappears, what is kept); refused while another active module requires it; section 12 |
-| `drishti.py module purge-state <id>` / `prune` | deletes a removed module's state folder (four eyes) / inactive versions' files |
-| `drishti.py module upgrade <file>` / `rollback <id>` | install a newer version beside the old; switch `active.yaml`; rollback switches back (both versions stay until `prune`) |
+| `drishti.py module verify <file> [--conformance]` | V1–V9 through the server jar's own verifier; `--conformance` runs the checks C1–C14 |
+| `drishti.py module list [--json]` | each `.dmod` of the modules folder: id, version, hash, origin; with `--server` also what the server loaded or refused and why |
+| `drishti.py module install <file>` | verifies the file and puts it in the modules folder (the same module's older file kept as the previous one); says *restart the server* |
+| `drishti.py module remove <id>` | takes the module's file out of the modules folder (kept as the previous one); says *restart the server* |
+| `drishti.py module rollback <id>` | puts the previous file back |
+| `drishti.py module run <file>` | the dev loop: the kernel + this module only on a free port (section 8.4) |
 | `drishti.py bindings list | set | migrate | check` | section 5 |
 | `drishti.py dist build | check <file>` | section 6 |
 
-Transcripts: [module new](kernel-and-modules/examples/cli/module-new.txt),
-[module build](kernel-and-modules/examples/cli/module-build.txt),
-[module install](kernel-and-modules/examples/cli/module-install.txt),
-[module list](kernel-and-modules/examples/cli/module-list.txt),
-[module remove](kernel-and-modules/examples/cli/module-remove.txt).
-
 ### 7.2 Admin → Modules
 
-The screen of mock-up (a): installed modules with version, publisher, state, licence, needs, taint; refused ones with the reason and the
-fix; *Install module…* (upload `.dmod` → verify report → propose); *Remove*, *Upgrade*, *Roll back*, *Switch off*; a pending-approvals strip
-(four eyes); *restart needed* banner with the nodes affected.
+The screen shows what this server booted: each module with its version, origin (first-party, third-party, development), whether it is
+loaded, on or off and why, the modules refused with the reason and the fix, the leftover folders of an earlier release named as safe to
+delete, the extra libraries (marked *lib*), and the switch (a reason is required, audited, effective at the next start). It installs,
+upgrades and removes nothing.
 
-### 7.3 Four-eyes install
+### 7.3 Who may install
 
-Install, upgrade, rollback, remove and every binding change are **proposals** in the Approvals inbox (the kernel's one approvals engine):
-the proposer cannot approve; the approver sees the verify report (signature, publisher, kernel range, dependencies, licence, needs and
-which would be unbound, resource budget, what it contributes: functions, APIs, lenses, Help) and the effect (*adds 60 functions, 6 lenses;
-needs 3 bindings you have not made*). Approved → applied at the next (rolling) restart in P2.
+Installing a module is a file operation on the server's modules folder, so it is the operating system's permissions and the site's own
+change process that decide who may do it; the kernel verifies every file at every start and refuses what fails a check. Data bindings,
+settings and the module switch stay **proposals** in the Approvals inbox (the kernel's one approvals engine): the proposer cannot approve.
 
 ### 7.4 Upgrade and rollback
 
-- Versions are installed side by side (`banking/3.0.0`, `banking/3.0.1`); `active.yaml` picks one.
-- Upgrade: verify the new one with the current set (dependents' ranges still met), approve, restart (rolling), `module.started` with the
-  new version; the module's `ModuleMigration` (P4) upgrades its own state files.
-- Rollback: switch `active.yaml` back, restart; state written by the newer version must be readable by the older or the module declares
-  `rollback: false` for that pair (then rollback is refused with words).
-- `module prune` deletes inactive versions after a retention (default: keep one previous).
+- Upgrade: replace the file (one package per module id) and restart; `module.started` carries the new version; the module's
+  `ModuleMigration` (P4) upgrades its own state files. A cluster restarts node by node (section 4.11.8).
+- Rollback: put the previous file back (`module rollback`) and restart; state written by the newer version must be readable by the older
+  or the module declares `rollback: false` for that pair (then rollback is refused with words).
 
 ### 7.5 Health and taint
 
@@ -1136,72 +1118,6 @@ needs 3 bindings you have not made*). Approved → applied at the next (rolling)
 | `U` unknown publisher | a publisher added to trust by the site, not Drishti's chain |
 
 Health shows *TAINTED (D: banking-dev 3.1.0-SNAPSHOT)*; support bundles carry it.
-
-### 7.6 Deployment: one API, a script and an Admin page
-
-Deploying a module onto a cluster (install, upgrade, move a part, undeploy, roll back) is possible **from a Python script and from an
-Admin page**, and both are thin clients of **one server API**: one way, no second implementation.
-
-**The deployment API** (kernel, `/api/v1/admin/modules/deployments`, administrators only, audited):
-
-| Call | Does |
-|---|---|
-| `POST …/plans` | takes a `.dmod` (uploaded to the module inbox, or one already in the store folder) and a placement (section 4.11); verifies signature, licence and kernel range; computes **the plan**: which parts go on which nodes, memory headroom per node, singleton leaders, what is replaced or removed, warnings (heavy parts, heavy-on-all refused without `allow-all`); **changes nothing**; returns the plan with its id and the **cluster fingerprint** it was computed against |
-| `POST …` (`{plan}`) | proposes applying a plan: a deployment in state `PROPOSED`, waiting for a second administrator (four eyes) |
-| `POST …/<id>/approve` | the approval (never by the proposer) |
-| `POST …/<id>/apply` | executes **that plan only**: refused with `DRS-1029` *the cluster changed since the plan* when the fingerprint, placement or module set differs; then copies to placed nodes, stages, verifies, activates together (section 4.11.4) |
-| `GET …/<id>` (and a live channel topic) | status per node and step: `copying`, `staged`, `verified`, `activated`, `failed (reason)` |
-| `POST …/<id>/cancel` | before activation: aborts on every placed node, staged files removed |
-| `POST …/<id>/rollback` | after activation: the previous active version and placement, as a new plan of its own (four eyes) |
-| `GET …` | the audit list: who proposed, who approved, the plan, the outcome, timings |
-
-Undeploy and *move a part* are plans too (placement without the module, or with a part's nodes changed); the same calls apply them.
-
-**The Python script: `drishti.py module deploy`** (part of the existing CLI, in `tools/modulecli.py`), Terraform-style:
-
-Run these from the Drishti folder (the repository root, or the install folder of a release).
-
-```
-drishti.py module deploy banking-3.0.1.dmod --placement config/placement.yaml --plan [--out plan.json] [--json]
-drishti.py module deploy --apply plan.json            # this plan only; non-zero exit on failure or a stale plan
-drishti.py module deploy status <deployment-id> [--watch] [--json]
-drishti.py module deploy approve <deployment-id> --reason "..."   # the second administrator
-drishti.py module deploy cancel | rollback <deployment-id>
-drishti.py module undeploy banking --plan                # a plan that removes it (section 12)
-```
-
-- **`--plan`** prints exactly what goes where, writes the plan file (the API's plan JSON, with its id and fingerprint), and changes nothing.
-- **`--apply <plan>`** proposes the plan if it is not yet proposed, waits for the approval (`--wait-approval`, default 0: return at once with
-  exit 3 *waiting for approval*), applies it, prints progress per node, and returns **0** on success, **1** on failure, **2** on a stale plan,
-  **3** while waiting for approval: scriptable in CI and schedulers.
-- **Auth**: an administrator's API token from `DRISHTI_TOKEN` (or the keyring the CLI already uses), **never on the command line**; the
-  server is `--server` or `DRISHTI_SERVER`.
-- **Wrappers for schedulers and CI**: `tools/deploy-module.sh` and `tools/deploy-module.ps1`, a few lines each, calling `drishti.py module
-  deploy` with the same arguments and exit codes (the project's convention for scripts people schedule: a `.sh` and a `.ps1` beside the
-  Python). No separate Python deploy script: one implementation (question Q20).
-- The full transcript for banking on the 3-node cluster: [cli/module-deploy.txt](kernel-and-modules/examples/cli/module-deploy.txt); the
-  plan file: [site/deployment-plan.json](kernel-and-modules/examples/site/deployment-plan.json).
-
-**The Admin page: Admin → Modules → Deploy**, a guided flow built only from Drishti Elements (the no-bespoke-UI rule):
-
-1. **Choose the `.dmod`**: upload, or pick from the module store folder; the signature, publisher, licence feature and kernel range are
-   verified and shown.
-2. **Placement**: per part, nodes or roles from a **node picker** that shows each node's role, free memory in the module budget and
-   current modules; heavy parts warn as they widen; heavy-on-all needs the explicit *allow all* confirmation.
-3. **The plan**: the same plan the CLI prints, from the same API call: the node × part matrix before and after, headroom, singletons,
-   warnings.
-4. **Approval**: proposed into the Approvals inbox; a second administrator approves (the page shows who must act).
-5. **Apply** with live progress per node (copy, stage, verify, activate) over the live channel, with *Cancel* before activation and
-   *Roll back* after.
-6. **Result**: links to Health, the node × module matrix (Admin → Cluster) and the deployment's audit entry.
-
-The same page offers **Upgrade** (a newer `.dmod`, placement carried over), **Move a part** (placement only) and **Undeploy**, each through
-the same plan, approve, apply steps. **Deployments** (a tab beside it) lists every deployment: who, what, the plan, the approval, the
-outcome. Mock-ups: section 17 (e).
-
-**Tests**: the CLI and the page produce **the identical plan** (byte-equal JSON) for the same `.dmod`, placement and cluster; `--apply` of a
-plan computed before a node joined, a placement change or another deployment is refused (exit 2, `DRS-1029`), from both front ends; four
-eyes holds on both (the proposer's approve is refused, from the CLI and the page); a failed stage on one node aborts on all and exits 1.
 
 ## 8. The Module SDK and the developer path
 
@@ -1542,7 +1458,7 @@ routes, read the raw request, set cookies or keep state (no mutable fields: an a
 - **CSP**: `script-src 'self'` and `style-src 'self'`; no inline, no remote origins; the module cannot change the policy.
 - **`drishti_` prefix** on every file (C4); vendor libraries are the kernel's only.
 - Served only to people for whom the module is on and whose lens uses it (today's `_module_asset_refused`, unchanged); a removed module's
-  paths answer 410 (section 12.10).
+  paths answer 404 (section 12.10).
 
 ### 9.8 Routes: declared, namespaced, live
 
@@ -1556,7 +1472,7 @@ routes, read the raw request, set cookies or keep state (no mutable fields: an a
   immutable **route table snapshot**; a new snapshot is built from the loaded modules' `plugin.yaml` files and swapped atomically when a
   `module.*` event or a cluster config version arrives (copy-on-write; no lock on the request path; nothing per person in it). Each entry
   carries the module, function, permission and state, so the dispatcher answers: render, *not available* (404 for an off module, as today),
-  or **tombstone** (410 for a removed one, section 12.10).
+  (404, section 12.10).
 - **What needs no console restart in P2**: switching a module off or on; **removing** a module (every page, word, menu, asset gone at
   once); installing, upgrading or rolling back a module whose console part is **declarative** (Sutras, templates, static, menus, words,
   Help: no `handlers:`), once the server reports it loaded.
@@ -1710,7 +1626,7 @@ The runtime is the glue drawn in section 1.1's picture.
 - **`drishti-module-runtime`** (a Java library, a Maven module of the kernel's build, published with the SDK) is the **one
   implementation** of: reading `module.yaml` and `plugin.yaml`; the verification checks V1–V9 (signature, hashes, kernel and Elements
   ranges, claims, reserved names); the **class loader per module** with its export list; the **live route table** (immutable snapshots
-  swapped on events, section 9.8); tombstones; the **unload sequence's** generic steps and the inventory that the **absence suite** records
+  swapped on events, section 9.8); the **unload sequence's** generic steps and the inventory that the **absence suite** records
   (section 12).
 - **Built** in `drishti-module-runtime` (package `com.ash.drishti.module.runtime`; [DEVELOPER_GUIDE.md section 1.5](../guides/DEVELOPER_GUIDE.md#15-the-module-runtime)):
   the `.dmod` packer, unpacker and hash list (`Dmod`; V2 verifies the hashes, an absent signature is a Health note until j), the manifest
@@ -1735,7 +1651,7 @@ The runtime is the glue drawn in section 1.1's picture.
   module. **This supersedes the Python handlers** of decision Q14 (section 15).
 - **The API proxy is console → kernel.** `/m/<id>/api/<path>` on the console forwards to `/api/v1/<prefix>/<path>` on the kernel that owns
   the module, as the person, with that kernel's token (section 9.5).
-- **Unload in the console** (section 12.2, step 6): the module's route-table entries become off or tombstones, its Jinjava environment and
+- **Unload in the console** (section 12.2, step 6): the module's route-table entries become off, its Jinjava environment and
   template cache are dropped, its static and Elements mounts are withdrawn, and its context-builder class loader is released. At the
   console's next rolling restart in P2 the loader goes; in P5 it goes at once, under the same leak check as the kernel's.
 
@@ -1747,11 +1663,9 @@ The runtime is the glue drawn in section 1.1's picture.
 - A module's **`console` part** (class `light`) is placed **on console nodes** like any other part: `console: { roles: [console] }` for every
   console, or named consoles (`consoles: [console-research]`) for a module that only some consoles show. **No compute node holds or
   serves a console part**, and no console holds server parts.
-- The deployer (section 7.6) plans console nodes like the others: the plan's node × part matrix has a column per console, the
-  two-phase activation stages the bundle on each placed console (verify, load into a staging route table) and activates them together
-  with the kernel nodes.
-- Drift covers consoles too: a console with a missing or other-version bundle is **red** in the matrix and serves the module's pages as
-  *unavailable* until *Resync*.
+- Placement (section 4.11.2) places console nodes like the others: the node × part matrix has a column per console, and each placed
+  console takes the module's console part from its server (`GET /public/modules/console/<id>/<version>`).
+- A console with a missing or other-version bundle serves the module's pages as *unavailable* until it has the server's.
 - The example: [examples/site/placement.yaml](kernel-and-modules/examples/site/placement.yaml) (two consoles, one of them for
   research only).
 
@@ -2043,113 +1957,107 @@ and may not ship, and how that is enforced.
 - **White labelling** follows: brand and theme are **tokens** chosen by the distribution file (section 6), never module CSS. A module looks
   right under every brand because it has no colours of its own.
 
-## 12. Offloading a module: everything disappears
+## 12. Taking a module away: everything disappears
 
-The owner's rule: **when a module is removed or disabled, all its pages, and everything else it brought, disappear**, at once, on every
-node, without breaking an open page, and without losing anything a person saved or any data the site holds.
+The owner's rule: **when a module is switched off or its file is taken out, all its pages, and everything else it brought, are gone** at
+the next start, on every node that restarted, and nothing a person saved and no data the site holds is lost.
 
-![Offloading a module: approved, gate closes, tell, drain, withdraw contributions, content, console, server, mark saved work, record; what stays and what goes](kernel-and-modules/diagrams/unload-sequence.svg)
+![Offloading a module: gate closes, tell, withdraw contributions, content, console, server, record; what stays and what goes](kernel-and-modules/diagrams/unload-sequence.svg)
 
-### 12.1 Four ways a module leaves
+### 12.1 Two ways a module is not there
 
-| | Disabled (switch off) | Removed | Upgraded | Rolled back |
-|---|---|---|---|---|
-| Trigger | `drishti.modules.<id>.enabled: false`, Admin switch (four eyes) | `module remove` (four eyes) | `module upgrade` (four eyes) | `module rollback` (four eyes) |
-| Files | kept | kept until `module prune` (rollback, reinstall) | old and new side by side | both kept |
-| Pages | **404** + notice *not available* (as today) | **410** + notice *no longer installed* (tombstones) | carried over by route id; changed paths 308 (`moved:`) | as upgraded, back |
-| Every other surface | withdrawn (12.3) | withdrawn (12.3) | withdrawn and re-added within the swap | same |
-| Open tabs | notice *switched off* | notice *no longer installed* | notice *updated: reload* | notice *changed: reload* |
-| Saved work | marked *needs module X (off)* | marked *needs module X (not installed)* | untouched, unless the new version drops a function it uses (then marked *needs VARX, removed in 0.2.0*) | same |
-| Schedules, alerts | paused | paused | kept | kept |
-| Data, bindings | stay | stay (bindings orphaned) | stay | stay |
-| Code in the processes (P2) | stays loaded, unreachable | unloaded at the next rolling restart | new code at the rolling restart | same |
-| Reverse | switch on | reinstall (approved): everything marked is restored | rollback | upgrade again |
+| | Switched off | File taken out |
+|---|---|---|
+| Trigger | `drishti.modules.<id>.enabled: false` or `config/modules/<id>.yaml`, then a restart | the `.dmod` removed from the modules folder, then a restart |
+| Files | kept | the package is gone (a copy may be kept as the previous one by `module remove`); its cache folder is swept |
+| Pages | **404** + notice *not available* | **404**: the module is unknown (nothing reveals what a site installed) |
+| Every other surface | never registered (12.3) | never registered (12.3) |
+| Open tabs | notice *switched off* once the console sees the module gone | the same |
+| Saved work | marked *needs module X (off)* | kept as saved; marked *needs module X* where the server still knows the names |
+| Schedules, alerts | paused | paused |
+| Data, bindings | stay | stay (bindings orphaned) |
+| Reverse | switch on, restart | put the file back, restart: everything marked works again |
+
+Nothing unloads a module while the server runs: a switched-off or missing module is simply never started. The unload sequence below
+is what a module's contributions go through when a server **stops** (and in the module runtime's own tests and the conformance check C14,
+which unload a module and look for leaks).
 
 ### 12.2 The unload sequence
 
-Ordered; the same for disable and remove except where marked. Each step is idempotent and logged; a failing step does not stop later
-steps (it is retried and shown in Health), because **refusing first** (step 1) already makes the module absent to everyone.
+Ordered. Each step is idempotent and logged; a failing step does not stop later steps (it is shown in Health).
 
-| # | Step | Server | Console |
-|---|---|---|---|
-| 0 | **Approved** | the change (four eyes) writes the cluster configuration version N+1: `genomics: REMOVED` (or `OFF`) | — |
-| 1 | **Gate closes** | the registry marks the module `LEAVING`: the module gate answers `DRS-1025` (off) or `DRS-1028` (*not installed*) for every new request; the scheduler starts nothing of it | the route-table snapshot is rebuilt with its entries as **off** or **tombstones**; words answer *not available* |
-| 2 | **Tell** | `module.leaving` on the bus and over `drishti-net` | every open tab of the module gets the event on its live channel (12.4) |
-| 3 | **Drain** | in-flight requests finish within `drishti.modules.drain-seconds` (30); running jobs, feed runs and Python runs get a cooperative cancel, then a hard cancel after `drishti.modules.cancel-seconds` (60) (12.5) | proxied calls in flight finish or time out with the same limits |
-| 4 | **Withdraw contributions** | every SPI registration in `ModuleContributions` (engines, `PivotProvider`s, `FunctionProvider`s, view augmenters, explainers, approval sources, sharded measures, Flight forms, capacity and health figures, AI tools, exports, playground templates); `KindProvider`s (its computed kinds become *not available*); its `CacheGroup`s cleared; pivot, BI and Explain cache entries tagged with the module dropped; event subscriptions removed | — |
-| 5 | **Withdraw content** | packs, kinds, contracts, Sutras, lenses, functions, Home cards, BI content, report definitions, feeds; the search index's entries tagged `module:<id>`; Help pages, guides, tutorials, glossary terms; designer palette entries (its panel types) | menus and the sitemap entries tagged `domain:<id>`; Help centre sections; command-line words, type-ahead and hints (the hooks are keyed by module) |
-| 6 | **Console** (on every console that holds the console part, through the shared runtime) | — | the module's Jinjava instance and its template cache dropped; static and Elements mounts withdrawn (paths answer 404/410); Elements manifest entries removed; its settings page removed; P2: its context-builder class loader stays loaded but unreachable (no route points at it) until the consoles' rolling restart |
-| 7 | **Server** | `DrishtiModule.stop()`; the child Spring context closed (its `DispatcherServlet` and every `@ModuleApi` mapping gone); the Python pool's import-path entry removed; P2 removal: the class loader is dropped at the next rolling restart (P5: now, with the leak check); disable keeps it loaded | — |
-| 8 | **Mark saved work** | the tombstone file `modules/tombstones/<id>.yaml` (its route ids, words, kinds, Sutras, report ids, API prefix) is written; saved artefacts that reference any of them show *needs module X* (12.6); schedules and alerts that need it pause; owners are notified once | — |
-| 9 | **Record** | audit line (who proposed, who approved, what was withdrawn, counts); the module's metrics series ended (meters removed from the registry; history kept); Health row `REMOVED` / `OFF`; the cluster fingerprint updated; `module.removed` / `module.stopped` | the route table version shown in Admin → Modules |
+| # | Step | Server |
+|---|---|---|
+| 1 | **Gate closes** | the module's routes answer *not available*; the scheduler starts nothing of it |
+| 2 | **Tell** | `module.leaving` on the bus |
+| 4 | **Withdraw contributions** | every SPI registration in `ModuleContributions` (engines, `PivotProvider`s, `FunctionProvider`s, explainers, approval sources, Flight forms, health figures, AI tools, exports, playground templates); its `KindProvider`s; its `CacheGroup`s cleared |
+| 5 | **Withdraw content** | packs, kinds, contracts, Sutras, lenses, functions, Home cards, BI content, report definitions, feeds; the search index's entries tagged `module:<id>`; Help pages, glossary terms; designer palette entries |
+| 6 | **Console** | static and Elements mounts withdrawn; its settings page removed |
+| 7 | **Server** | `DrishtiModule.stop()`; the child Spring context closed (its `@ModuleApi` mappings gone); the Python pool's import-path entry removed; the class loader dropped, with the leak check |
+| 8 | **Record** | the module's metrics series ended; Health row `OFF`; `module.stopped` |
 
-The transcript of a removal with every count: [cli/module-remove.txt](kernel-and-modules/examples/cli/module-remove.txt).
+(The steps keep the numbers of the design's earlier sequence; there is no step 3 and no step 9: nothing is drained, and nothing is
+written for saved work.)
 
 ### 12.3 The inventory: every surface and how it goes
 
 | Surface | Contributed by | Removed by (step) | The absence test asserts |
 |---|---|---|---|
-| Routes and pages | `plugin.yaml` `routes:` | route table → tombstones (1, 6) | every recorded URL answers 410 with the notice page (404 when off) |
+| Routes and pages | `plugin.yaml` `routes:` | route table → off (1, 6) | every recorded URL answers 404 with the notice page |
 | Menus | `plugin.yaml` `menus:` | sitemap entries tagged `domain:<id>` (5) | no menu, Admin tab or BI rail item links into the module, in every lens |
 | Lens entries | `lenses/lenses.yaml` | registry lenses withdrawn (5); a person on that lens falls back to the default lens with a notice | the lens list has none of its lenses |
 | Function / command words | `functions.yaml`, `plugin.yaml` `words:` | registry functions (5); console hooks (5) | each word answers *not available*; `FUNC` lists none |
 | Home cards and chips | `plugin.yaml` `home:`, `module.yaml` `home:` | lens cards (5) | Home in every lens has none |
 | Search index entries | Sutras, functions, Help, `search:` | entries tagged `module:<id>` (5) | a search for each of its words, titles and terms finds nothing |
-| Help pages, guides, tutorials | `docs/`, `help.yaml` | Help centre sections, the docs register rows (5) | Help index, Help search, guides list and tutorials list have none; their URLs 410 |
+| Help pages, guides, tutorials | `docs/`, `help.yaml` | Help centre sections, the docs register rows (5) | Help index, Help search, guides list and tutorials list have none; their URLs 404 |
 | Glossary | `docs/glossary.yaml` | glossary terms (5) | none of its terms |
-| Static assets | `console/static`, `elements/` | mounts withdrawn (6) | every recorded asset URL answers 410 |
-| REST endpoints | `@ModuleApi` | child context closed (7); gate first (1) | every recorded endpoint answers 410 `DRS-1028` (404 `DRS-1025` when off, as today) |
+| Static assets | `console/static`, `elements/` | mounts withdrawn (6) | every recorded asset URL answers 404 |
+| REST endpoints | `@ModuleApi` | child context closed (7); gate first (1) | every recorded endpoint answers 404 `DRS-1025` |
 | SPI registrations | `ServiceLoader`, beans | `ModuleContributions` withdrawn (4) | the registry of contributions has no entry whose class loader is the module's |
 | Scheduled jobs and feeds | `feeds/`, scheduler registrations | suspended, then removed (3, 5) | the scheduler lists none; no run starts after step 1 |
 | Python compute | `python.items`, packages | items unregistered (4), import path removed (7) | Build lists none; a run naming one is refused |
 | Caches (pivot, BI, Explain, its own) | `CacheGroup`, tagged entries | cleared (4) | cache reports have no group or entry tagged with it |
 | AI tools | `AiToolProvider` | withdrawn (4) | the assistant's tool list has none |
 | Settings pages | `settings/`, `plugin.yaml` `settings:` | page removed (6); stored values kept for reinstall | Admin → Modules has no settings tab for it |
-| Sutras | `packs/*/sutras/` | pack withdrawn (5) | no kind matches one of its Sutras; its Sutra URLs 410 |
+| Sutras | `packs/*/sutras/` | pack withdrawn (5) | no kind matches one of its Sutras; its Sutra URLs 404 |
 | Designer palettes | tier-3 panel types | palette entries (5) | the designer offers none |
 | Exports | `ExportProvider`, export buttons | withdrawn (4) | the export list has none; scheduled exports paused |
-| Audit | audit lines carry `module` | **kept** (audit is never removed); the removal itself is audited (9) | the removal's audit line exists |
+| Audit | audit lines carry `module` | **kept** (audit is never removed) | the module's audit lines are still there |
 | Metrics | meters named `<id>.*` | meters removed, series ended (9) | the metrics endpoint exposes none |
 | Event subscriptions | `events.subscribes` | removed (4) | publishing `data.loaded` reaches no handler of it |
-| Embeds and tokens | embed pages, `tokens/token-scopes.yaml` | scopes withdrawn (5); embed URLs 410 | its scopes are not grantable; embeds 410 |
+| Embeds and tokens | embed pages, `tokens/token-scopes.yaml` | scopes withdrawn (5); embed URLs 404 | its scopes are not grantable; embeds 404 |
 
 ### 12.4 Open browser tabs
 
-- The console's shell keeps one **live channel** per tab (today's `/api/channel`). On `module.leaving` the console sends a `module` event
-  (`{module, state: removed|off|upgraded, title}`) to every channel; the shell (the console's JavaScript, not the module's) handles it.
-- On a page **of** that module: the shell freezes the page's Elements (they stop polling and refuse input), shows the kernel's notice
-  *Genomics is no longer installed on this system* with *Go to Home* and, for administrators, the reason and the change id. The page's own
-  JS is not called again; nothing throws (Elements components are told to `detach()` first, and their data sources answer a typed
-  *module gone* result instead of failing requests).
+- The console's shell asks every 15 seconds whether the page's module is still hosted (`GET /api/modules/hosted`); the shell (the console's
+  JavaScript, not the module's) handles the answer.
+- On a page **of** a module that is now off: the shell freezes the page's Elements (they stop polling and refuse input) and shows the
+  kernel's notice *Genomics is switched off* with *Go to Home*. The page's own JS is not called again.
 - On a kernel page **with** module parts (a slot, a menu entry, a card, a palette): the shell removes the slot containers
   (`[data-module=genomics]`), refreshes menus and cards from the next answer, and shows a quiet notice.
-- A tab that was asleep reconnects, receives the current route-table version, and does the same; a navigation lands on the 410 page.
+- A navigation to a page of a module that is off or unknown lands on the 404 notice page.
 - Mock-up: section 17, (d).
 
 ### 12.5 In-flight requests and running jobs
 
-- **Requests**: new ones are refused at step 1; those already past the gate finish within `drain-seconds` (30), then are cancelled
-  (the client gets 503 `DRS-1028` with *the module was removed while this ran*).
-- **Jobs, feeds, Python runs**: none starts after step 1; running ones get a cooperative cancel at once, a hard cancel after
-  `cancel-seconds` (60); partial results are discarded, never published (a produced kind is written only on success).
-- **Long exports and scheduled reports**: cancelled the same way; their schedules pause (12.6).
-- **Four eyes and drain**: the approver sees *9 people have pages open, 2 calls in flight, 0 jobs running* before approving.
+A server that stops finishes the requests already inside within its shutdown grace period; jobs, feeds and Python runs get a cooperative
+cancel at once and a hard cancel after `cancel-seconds` (60); partial results are discarded, never published (a produced kind is written
+only on success). There is no drain of a module on a running server: a module is not unloaded while the server runs.
 
 ### 12.6 Users' saved artefacts
 
 Saved views, workspaces, dashboards, bookmarks, BI reports, notebooks, scheduled exports, alerts and subscriptions that reference a
 module's pages, words, kinds, Sutras or functions are **kept, marked and restored, never silently deleted**:
 
-- **How the kernel knows**: the tombstone file (step 8) lists what the module owned; when an artefact is listed or opened, a reference
-  that no longer resolves is looked up there and reported as *needs module genomics*. No artefact is rewritten and **no database change is
-  needed** (no migration; artefacts keep their stored form).
+- **How the kernel knows**: the modules of this boot (their API prefix, console paths, words and kinds: `ModuleNode.needs`) are looked up
+  in the artefact's stored text when it is listed or opened; a reference to a module that is off is reported as *needs module genomics*.
+  No artefact is rewritten and **no database change is needed** (no migration; artefacts keep their stored form).
 - **Shown**: in lists, the artefact keeps its place with a *needs genomics* chip and is not openable; a workspace or dashboard opens with
   the missing tiles replaced by a notice tile and everything else working; a BI report shows the visuals that depend on it as notices.
 - **Schedules and alerts** pause with status *paused: needs module genomics*; the owner is notified once.
-- **Reinstall**: references resolve again, chips disappear, paused items resume (same major version), or stay paused with the list of
+- **The module back**: references resolve again, chips disappear, paused items resume (same major version), or stay paused with the list of
   what is still missing (a new major that dropped something).
-- **Deletion** only by the owner (or an administrator acting for them), with the usual confirmation; tombstones are kept
-  `drishti.modules.tombstone-days` (365) (question Q16).
+- **Deletion** only by the owner (or an administrator acting for them), with the usual confirmation.
 
 ### 12.7 The data in lakes
 
@@ -2168,26 +2076,22 @@ removal and asserts neither sees the other's data or a broken page.
 
 ### 12.9 The cluster
 
-- Removal is a **cluster operation**: the change writes cluster configuration version N+1 and removes the module's placement; every
-  node closes its gate on receipt (unplaced nodes only stop forwarding) and confirms; the coordinator reports *3/3 confirmed*. A placed
-  node that does not confirm within `drishti.modules.confirm-seconds` (30) is left out of routing until it does.
-- Every node's **module fingerprint** (section 4.11.6) changes; a node that starts later with the `.dmod` still on its disk shows **amber**
-  (*present but not placed*) in the node × module matrix and serves nothing of it; a late joiner receives only what is placed on it.
-- Consoles are placement nodes (section 10.5): each console holding the console part confirms like any placed node, follows the cluster
-  registry's configuration version (section 4.11.4) and drops the module's cached console bundle; a console's route table is never ahead
-  of or behind the cluster by more than one event. A console in front of several kernels drops only the removed module's entries from that
-  kernel's route table (section 10.6).
+- A module is off or absent **per node**: each node boots the packages of its own modules folder (section 4.11.4). A module taken out of
+  one node's folder is absent there at that node's restart and its parts, if placed there, are unavailable on it (`503 DRS-1032`) while
+  the placement still names it; change the placement to move the work.
+- Every node's **module fingerprint** (section 4.11.6) changes with its modules; a node that starts with a `.dmod` the placement does not
+  name shows **amber** (*present but not placed*) in the node × module matrix and serves nothing of it.
+- Consoles are placement nodes (section 10.5): each console holding the console part follows the server's module list
+  (`GET /public/modules/console`) and drops a module's cached console bundle when the server no longer lists it; a console in front of
+  several kernels drops only that kernel's entries from its route table (section 10.6).
 
-### 12.10 What people see: the removed-module page, 410 or 404
+### 12.10 What people see: the not-available page, 404
 
-- **Removed** module's page, asset or API: **410 Gone** with `Cache-Control: no-store`. Pages render the kernel's notice page (in the
-  kernel shell, so menus and the command line still work): *This page belonged to Genomics, which is no longer installed on this system.*
-  with *Go to Home* and *Search*. **Administrators** also see *removed by alice, approved by bob on 2026-11-08 10:42 (CHG-2026-1108-0057)*
-  and a link to Admin → Modules. APIs answer an RFC 7807 problem: `DRS-1028`, *Module not installed*, `module: genomics`.
-- **Disabled** (or unlicensed, or refused) module: **404**, as today (*not available: the genomics module is off; ask your
-  administrator*): the module is still installed and may come back; nothing permanent is claimed.
-- **Never installed**: the ordinary 404 (no tombstone, so nothing reveals what other sites install).
-- **Recommendation** (question Q12): **410 for removed, 404 for off**; tombstones are what make 410 possible and are kept 365 days.
+- A module that is **switched off, refused or not installed**: **404**, with `Cache-Control: no-store`. Pages render the kernel's notice
+  page (in the kernel shell, so menus and the command line still work): *Not available: the genomics module is switched off; ask your
+  administrator* (off), or *There is no page at …* (unknown, so nothing reveals what other sites install), with *Go to Home* and *Search*.
+  APIs answer an RFC 7807 problem: `DRS-1025`, *module off*, `module: genomics`.
+- There is no 410: a module is not removed while the server runs, so there is no "gone" to tell apart from "off".
 
 ### 12.11 The "absent everywhere" guarantee, and how it is tested
 
@@ -2203,8 +2107,8 @@ conformance C14):
    list and type-ahead for each word; a search for each title, word and glossary term; the Help index; the asset list; the server's mapped
    endpoints (OpenAPI); the scheduler; the Python items; `ModuleContributions` entries; AI tools; cache reports; metrics names; the
    designer palette; settings pages; exports; event subscribers.
-3. **Remove** it (the four-eyes path with a test approver).
-4. **Assert each surface is gone**: every recorded URL 410 (404 for the *off* variant) with the right page or problem; every list,
+3. **Switch it off** (the module switch with a test approver, and a restart of the harness's context).
+4. **Assert each surface is gone**: every recorded URL 404 with the right page or problem; every list,
    index and registry without the module's entries; the kernel's own entries unchanged (the inventory diff is exactly the module's).
 5. **Assert the open tab** shows the notice, logged **no JavaScript error**, and made no further request to the module's paths.
 6. **Assert saved work** is marked, not changed or deleted; the export paused; the two people still isolated.
@@ -2214,7 +2118,7 @@ conformance C14):
 8. **Class loader released** (P5 hot unload, and in the harness from P2): a `WeakReference` to the module's class loader is cleared
    after GC within a bounded number of cycles; repeated 50 times (install/remove) without growth in metaspace or threads named
    `mod-<id>-…`.
-9. **Reinstall** and assert everything recorded is back and saved work resolves again.
+9. **Switch it on again** and assert everything recorded is back and saved work resolves again.
 
 A failure names the surface and the leftover (*search still finds "Variant explorer" (index entry 41922, tag module:genomics)*).
 
@@ -2282,8 +2186,8 @@ module id and version in the audit line.
 | Phase | Deliverables | Proof (gate) |
 |---|---|---|
 | **P1 · Kernel boundary to zero** (**i1**, with data standards and the drill under 60 minutes) | `drishti-kernel-api` jar (section 2.3: existing SPIs moved under `kernel.api`, new `DrishtiModule`, `ModuleContext`, `KindProvider`, `ModuleSettings`, `AiToolProvider`, `@ModuleApi`); banking compiled against it only; the 39-file allow list to **0**; `KindProvider` replaces banking's connector plugins; contracts' `storage:` → `binding-hint:`; `config/bindings.yaml` + `bindings migrate`; kernel API 1.0 frozen with `japicmp` baseline | kernel boots with **no modules** (economy and capital markets off too) and serves BI, Pivot, Build, Help, GLEIF; `domain_strings` empty; banking passes its suite; **VaR exactly equal** |
-| **P2 · Modules on one node, on today's console** (**i2**) | the `.dmod` format and packager (`module build`, unsigned dev key), `modules.path`, discovery and V1–V4, V6–V7 checks, **loading in the kernel through `drishti-module-runtime`** (section 10.4), class loader per module + child Spring context, REST mounting, Python per-module import path; **module pages served by the current (Python) console, declarative only** (section 14.2.1): plugin.yaml format 2, the live route table, per-module template namespaces, the API proxy (section 9), no console handlers in modules; **the unload sequence, tombstones and the absence suite** (section 12); **Elements control** (served only by the console, an Elements API range per module, the hash scan and conformance: section 11); Help merge, **the thin jar**, `module list | info | install | remove | verify`, **single-node deployment** (`module deploy` plan/apply and Admin → Modules → Deploy over the deployment API, four eyes: section 7.6), Admin → Modules (mock-up a), Admin → Data bindings (mock-up b), launchers/Docker/ECS/stack with the modules folder; the SDK (parent pom, archetype, `drishti-module-maven-plugin`, harness, `module new` / `run`); banking, economy and capital markets as `.dmod`s built as Maven projects; the developer guide + tutorial | **banking runs as a `.dmod`** and passes against the kernel alone (the harness: kernel thin jar + `banking.dmod`, nothing else); **install → remove → reinstall leaves nothing** (genomics and banking pass the absence suite); a `.dmod` carrying a copy of a vendored library is refused; the full drill on the thin jar + three modules; a drill with **no modules**; VaR exactly equal |
-| **P3 · Cluster and white label** (**i3**) | **placement** per node or role and per part, singletons, the heavy-work guards, `config/placement.yaml`; **cluster deployment** (plan and apply across the placed nodes, two-phase activation, late joiners, the node × module matrix, rolling upgrades pinned per session: section 4.11); the distribution file and `dist build`; branding literals to 0 (the 26-literal fix and its guard); `drishti.finance` (banking + capital markets + economy) as the default product; the **`genomics-sample`** module and `drishti.genomics`; white-label mock-up (c) built; Help/docs by distribution | **`drishti.genomics` boots from configuration only** (same kernel build, a different file and module set): no banking word on any page, in search, Help or assets (a crawler test); `drishti.finance` equals today's product (screenshots); **banking placed on main and b only, nothing on c**; failover stays inside the placement |
+| **P2 · Modules on one node, on today's console** (**i2**) | the `.dmod` format and packager (`module build`, unsigned dev key), the modules folder, discovery and V1–V4, V6–V7 checks, **loading in the kernel through `drishti-module-runtime`** (section 10.4), class loader per module + child Spring context, REST mounting, Python per-module import path; **module pages served by the current (Python) console, declarative only** (section 14.2.1): plugin.yaml format 2, the live route table, per-module template namespaces, the API proxy (section 9), no console handlers in modules; **the unload sequence and the absence suite** (section 12); **Elements control** (served only by the console, an Elements API range per module, the hash scan and conformance: section 11); Help merge, **the thin jar**, `module list | info | install | remove | verify`, **installation as a file and a restart** (section 7.1), Admin → Modules (mock-up a), Admin → Data bindings (mock-up b), launchers/Docker/ECS/stack with the modules folder; the SDK (parent pom, archetype, `drishti-module-maven-plugin`, harness, `module new` / `run`); banking, economy and capital markets as `.dmod`s built as Maven projects; the developer guide + tutorial | **banking runs as a `.dmod`** and passes against the kernel alone (the harness: kernel thin jar + `banking.dmod`, nothing else); **install → remove → reinstall leaves nothing** (genomics and banking pass the absence suite); a `.dmod` carrying a copy of a vendored library is refused; the full drill on the thin jar + three modules; a drill with **no modules**; VaR exactly equal |
+| **P3 · Cluster and white label** (**i3**) | **placement** per node or role and per part, singletons, the heavy-work guards, `config/placement.yaml`; **the cluster** (every node's own modules folder, late joiners, the node × module matrix, rolling restarts pinned per session: section 4.11); the distribution file and `dist build`; branding literals to 0 (the 26-literal fix and its guard); `drishti.finance` (banking + capital markets + economy) as the default product; the **`genomics-sample`** module and `drishti.genomics`; white-label mock-up (c) built; Help/docs by distribution | **`drishti.genomics` boots from configuration only** (same kernel build, a different file and module set): no banking word on any page, in search, Help or assets (a crawler test); `drishti.finance` equals today's product (screenshots); **banking placed on main and b only, nothing on c**; failover stays inside the placement |
 | **PC · The Drishti Console on Spring Boot** (**i5**) | `drishti-console-web` (Spring Boot 3, WebMVC on virtual threads, Jinjava, Spring Session JDBC on the two schema files, Spring Security with today's sign-in); **the console host of `drishti-module-runtime`** (the same declarative module parts as i2, re-hosted without changing any module; optional Java context builders through `drishti-console-api`); **Elements served from the Java console**; the **strangler migration of every route group**, banking's pages first (G0–G10, section 10.8), with the browser tests unchanged and JUnit/MockMvc replacing the pytest route tests; **consoles as placement nodes** (role `console`, 10.5); **one console in front of many kernels** (the kernel switcher, routing, failure isolation and tokens per kernel, a distribution per console: 10.6); the transform parse onto kernel Python workers (Python only on kernel-managed workers, 10.7); **enterprise single sign-on** (OIDC first, SAML 2.0, optional LDAP and Kerberos; the identity map with four eyes; a token per kernel; device code and client credentials for non-browser use; single logout: 10.11) with **the SSO integration guide** (a rewrite of ADMIN_GUIDE section 5: Entra ID, Okta, Ping and ADFS, Keycloak, claim mapping, troubleshooting) and its tutorial; **the Python console deleted at the end** | **every browser test passes against the Java console** with no Python console process; **page latency measured against today** (no page slower, the fan-out pages at least 30% faster: 10.9); every i2 module's pages unchanged on the Java console (the same `.dmod` files); one console in front of a finance and a genomics kernel, one stopped: only its pages grey; **the Python console is gone**; SSO passes the in-process mock IdP suite (OIDC and SAML) and one real provider's site checklist |
 | **P4 · Trust** (**j**, the security release; authentication and SSO are in i5) | signing with publisher keys, trust store, revocation, V5 with the signed licence, taint, `ModuleMigration`, CSP with SRI for module assets, signed kernel and connector plugins | tampered `.dmod` refused; unlicensed module absent; a revoked publisher's modules absent; rollback restores VaR exactly |
 | **P5 · Repository and hot load** (later) | an internal module repository (search, fetch, dependency download), hot code load/unload with the leak test, module marketplace only if the owner wants one | 50 load/unload cycles without a class-loader leak; hot upgrade under load with no failed request |
@@ -2358,15 +2262,15 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | Q9 | Repository layout: banking's sources stay in this repository under `modules/banking/` or move to their own repository | **stay in this repository** (one drill, one history) but build separately into a `.dmod`; a separate repository when a partner module exists |
 | Q10 | Default distribution of the repo's build | **`drishti.finance`** (today's product); `drishti.genomics` as a sample only, never shipped to customers |
 | Q11 | The kernel API version's start | **1.0 at the end of P2** (P1's API is 0.x and may change freely) |
-| Q12 | HTTP status for a removed module's pages and APIs: 410 Gone or 404 | **410 for removed** (tombstones), **404 for off, refused or unlicensed** (it may come back; nothing permanent claimed), the plain 404 for never installed; all `no-store` (section 12.10) |
+| Q12 | HTTP status for a missing module's pages and APIs: 410 Gone or 404 | **404** for off, refused, unlicensed or not installed (a module is never removed while the server runs, so there is no *gone* to tell apart; nothing reveals what a site installed); all `no-store` (section 12.10) |
 | Q13 | Hot page install: P2 or P3 | **P2 for off, on and remove** (the guarantee needs it) **and for declarative console parts** (Sutras, templates, static, menus); console context builders (Java, from i5) and server code at the rolling restart until P5 (section 9.8) |
 | Q14 | Console Python handlers in partner modules, or templates and Sutras only | **Superseded by Q22 (owner, 2026-11-08).** Was: *allowed, but optional and small: Python context builders only*. Now: there is **no Python in a module's console part**; in i2 modules have **no console handlers at all** (declarative hosting, section 14.2.1); from i5 a module's optional handlers are **small Java context builders** (`drishti-console-api`, no routes, no request, no state; section 10.4); a module with no builders installs fully hot |
 | Q15 | Top-level path aliases (`/var`) for partners, or only Drishti-signed modules | **Drishti-signed only by default**; a site may grant one partner module aliases (`allow-aliases`, four eyes); command words for all, checked against the reserved names (section 9.9) |
-| Q16 | How long tombstones (and the *needs module X* marks) are kept | **365 days** (`drishti.modules.tombstone-days`), then the artefacts show *needs a module that is no longer known* and are still never deleted automatically |
+| Q16 | How long the *needs module X* marks are kept | as long as the module is off or missing; saved work is never deleted automatically |
 | Q17 | Where the SDK and modules are published | **an internal Maven repository** (the one the build already uses) for the SDK artefacts and `.dmod` files from P2; the P5 module repository adds search and dependency download on top of it |
 | Q18 | Plugin format 1 (`routers:`) after P2 | **read for one release with a deprecation line in Health, then refused**: banking, economy and capital markets move to format 2 in the P2 branch itself (no dual machinery) |
 | Q19 | Placement by role or by node name as the recommended default (section 4.11.1) | **by role** (`role:risk-compute`): a new node with the role is staged automatically, replacing a machine changes no placement, and roles already drive Drishti\*net access; **node names allowed** for one-off placements (a single GPU box) and shown as such in Admin |
-| Q20 | Deployment from scripts: the CLI only, or also a standalone `tools/modules/deploy_module.py` | **the CLI (`drishti.py module deploy`) plus thin `tools/deploy-module.sh` / `.ps1` wrappers** for schedulers and CI (the project's script convention); no second Python implementation, both front ends call the one deployment API |
+| Q20 | Installing a module from scripts: the CLI only, or also a standalone script | **the CLI (`drishti.py module install`)**: a file operation, no server needed; no second implementation |
 | Q21 | How is Drishti divided? | **Three building blocks** (owner, 2026-11-08): the **Drishti Kernel** (Data & BI Kernel: connectors, lakes, grammar, engines, registry, cluster, Python workers; hosts server parts), the **Drishti Console** (Data & BI Console: shell, Elements, BI and pivot screens, Admin; hosts console parts; in front of one or many kernels) and **Drishti modules**; glued by `drishti-module-runtime`, the distribution file, the SDK and placement (section 1.1) |
 | Q22 | The console: keep Python, fold it into the kernel, or a separate Java application | **A separate Spring Boot web application** (owner, 2026-11-08): WebMVC on virtual threads, Jinjava, Spring Session and Security; **separate from the kernel** for isolation, independent scaling and restart, a smaller kernel attack surface and **one console in front of many kernels**; one module runtime shared with the kernel; Python only on kernel-managed workers (section 10) |
 | Q23 | What UI statics may exist | **Drishti Elements is the one controlled set** (owner, 2026-11-08): owned by the platform, served only by the console from its signed, versioned train with SRI and CSP; modules ship no copy of Elements, no vendored library and nothing from a CDN; an Elements API range per module, refused with a reason on a mismatch; conformance and load-time hash scans; changes through the platform team with an API diff gate (section 11) |
@@ -2519,10 +2423,7 @@ The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's s
 administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
 distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
 version, state, the reason when off, and **its folder**: the one the module boot gave it (section 4.2.1, `ModuleHomes`): the cache folder
-of its package, or its source folder in source mode (the view of section 18.10 when the site overrides a file). Until i7a's I8, a server
-whose modules folder holds no package takes its modules from the old store and folders through the one adapter `LegacyModules`:
-`<drishti.modules.home>/<dir>/` (every module's one layout, section 8.10), else the active version in the store,
-`<drishti.modules.path>/installed/<id>/<version>/`. The command line and the tools, which have no server, compute the same
+of its package, or its source folder in source mode (the view of section 18.10 when the site overrides a file). The command line and the tools, which have no server, compute the same
 from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
 
 ### 18.2 Settings: one per concept
@@ -2531,8 +2432,7 @@ from the distribution file and the switch files (licence not evaluated); the con
 |---|---|---|
 | `drishti.packs.site-dir` (`DRISHTI_PACKS_DIR`) | `./config/packs` | the site's own packs: `<dir>/<pack>/pack.yaml`, or one folder down (`<dir>/<group>/<pack>/`) |
 | `drishti.packs.installed-dir` | `<data>/packs/installed` | packs an administrator deployed (Admin → Packs, a registry); part of the site |
-| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<home>/modules` | the modules folder: the packages (`*.dmod`) the module boot reads (section 4.2.1); read by the boot alone, every other reader asks the boot's result. With no package in it (until i7a's I8) its source folders are the modules |
-| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the old store of modules installed from a `.dmod`, read only through `LegacyModules` with no package booted; gone in i7a's I8 |
+| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<home>/modules` | the modules folder: the packages (`*.dmod`) the module boot reads (section 4.2.1); read by the boot alone, every other reader asks the boot's result. Under `drishti.modules.dev` or `drishti.modules.sources` its source folders are the modules |
 | `drishti.module.dir.<id>`, `drishti.module.homes` | published at start | **not set by hand**: the boot's result as the launch publishes it (a module's folder; the whole value), for placeholders (`${drishti.module.dir.banking:}`) and child processes |
 | `drishti.modules.dir` (`DRISHTI_MODULES_DIR`) | `./config/modules` | the administrator's module switches (unchanged: an existing setting keeps its meaning) |
 | `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
@@ -2694,9 +2594,8 @@ the kind and is *not in your binding*.
 order; the first rule that matches a file wins. A rule that names no connector takes the kind's first read connector (18.6). A rules
 file that cannot be read is a problem in Health (DRS-1048), never an empty list.
 
-**One snapshot, replaced whole.** The server holds the current `ConfigResolution`. It is rebuilt when: a module is switched,
-installed, upgraded or unloaded (`module.started`, `module.stopped`); a file under `watchRoots()` changes (the site's folders, the
-module folders, the store's `active.yaml`); an administrator saves a connector, a binding or a pack switch; a pack is deployed.
+**One snapshot, replaced whole.** The server holds the current `ConfigResolution`. It is rebuilt when: a module is switched
+on or off (`module.started`, `module.stopped`); a file under `watchRoots()` changes (the site's folders and the booted modules' folders); an administrator saves a connector, a binding or a pack switch; a pack is deployed.
 The rebuild reads everything again, compares with the snapshot before, swaps, and publishes **one** event, `resolution.changed`
 (version, packs added and removed, connectors added, removed and changed, kinds whose binding changed, rules changed):
 

@@ -1307,29 +1307,20 @@ python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
 
 Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
 
-### `module deploy|upgrade|plan|remove|disable|enable|apply|reject|withdraw|status|list|run`: deploying on a cluster
+### `module run`: one module alone, on a free port
 
-The same server API as Admin → Modules → Deploy ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)). An
-administrator; a personal token also needs the `modules:deploy` scope.
+A module is a file beside the server and a restart: nothing deploys, upgrades or removes a module on a running server. `module run`
+is the developer's loop:
 
 ```bash
-python3 tools/drishti.py module deploy dist/greeter-1.0.0.dmod --reason "first install" --out plan.json   # upload once, then the plan
-python3 tools/drishti.py module apply plan.json                 # a second administrator: stage on the placed nodes, then activate
-python3 tools/drishti.py module upgrade dist/greeter-1.1.0.dmod --reason "new greeting"                # rolling, node by node
-python3 tools/drishti.py module plan install greeter --version 1.0.0 --reason "reinstall"              # a version already in the store
-python3 tools/drishti.py module disable greeter --reason "pause"    # also: remove, enable; each is a plan another administrator applies
-python3 tools/drishti.py module list                            # modules, state, version, placed nodes, the store, the plans waiting
-python3 tools/drishti.py module status dpl-3f9a12c0             # one deployment, per node
 python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's thin jar with this module only, on a free port
 ```
 
-`module remove`, `module disable` and `module enable` plan that action for a module; `module reject` (another administrator) and
-`module withdraw` (its proposer) close a waiting plan. The commands live in `tools/modulecli.py`. `deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fourteen conformance checks; the same version
-with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
-**0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
-administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps
-it, otherwise it is removed on exit) and starts `packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar` (or `--jar`); `--dry-run` prints the
-command. Hot reload while it runs is not built yet.
+It lays out a run folder (the package alone in its own modules folder, every part placed on this node; `--dir` keeps it, otherwise it
+is removed on exit) and starts the newest `lib/drishti-server-*-exec.jar` (or `--jar`) on a free port (never 18480) with
+`--drishti.modules.home` naming that folder; `--dry-run` prints the command. Unknown options are passed to the server. To install a
+module on a server, copy its `.dmod` into the server's modules folder (beside the jar) and restart it; on a cluster, into every node's,
+one node after another. Admin → Modules lists what each server booted. The commands live in `tools/modulecli.py`.
 
 ## 6. `data`: profile, ingest and load
 

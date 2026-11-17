@@ -47,7 +47,7 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 22. [Modules on or off](#22-modules-on-or-off)
 23. [Data bindings](#23-data-bindings)
 24. [White label: distributions](#24-white-label-distributions)
-25. [Modules and Deploy](#25-modules-and-deploy)
+25. [Modules](#25-modules)
 26. [Troubleshooting](#26-troubleshooting)
 
 ## 1. Signing in and out
@@ -1449,28 +1449,29 @@ offers none of its lenses, functions, packs or engines (its engines show *not in
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
 to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
-### 22.1 Module packages, auto-deploy and the shared lib folder
+### 22.1 Module packages and the shared lib folder
 
 Besides the modules built into the server, the kernel loads **module packages** (`.dmod`), each in its own class loader. Two folders,
-as in Tomcat: the module folder under the data folder, the shared lib folder under the install folder (every jar sits under the install
+as in Tomcat: the modules folder beside the server's jar, the shared lib folder under the install folder (every jar sits under the install
 folder, every piece of data under the data folder):
 
 | Folder | Setting | What it holds | When a change counts |
 |---|---|---|---|
-| `<data folder>/modules/` | `drishti.modules.path` (`DRISHTI_MODULES_PATH`, commas for several) | `.dmod` packages to deploy; the server keeps its own `installed/`, `store/`, `staging/` and `tombstones/` beside them | at once (auto-deploy) |
+| `<home>/modules/` | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | the `.dmod` packages of the server: one file per module, named `<id>-<version>.dmod` | at the next restart |
 | `<home>/lib/ext/` | `drishti.lib.path` (`DRISHTI_LIB_PATH`) | the site's jars every connector and module may use: JDBC drivers, connector plugins, a company's own libraries; kept on an upgrade | at the next restart |
 | `<home>/lib/` | none | Drishti's own server jar, shipped with a release | replaced on an upgrade |
 
-**Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
-deployment, exactly as an administrator's upload would be: its hash list verified, the fourteen conformance checks, installed under
-`installed/<id>/<version>/` and loaded; a new version is installed beside the old one and `active.yaml` switches to it when it is ready.
-A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
-in the audit log as `autodeploy`; a package that fails a check is logged and tried again only when its bytes change. `drishti.modules.autodeploy`:
-empty (the default) means **on for a single node and off in a cluster**, where modules are deployed by plan → apply with two administrators
-([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)); `true` or `false` decides outright. **Production loads only verified `.dmod` packages**; the
-development mode that loads a module's exploded build folder (`drishti.modules.dev`) is for a developer's own server, refused in a cluster
-and under the `prod` or `production` profile, and marks each such module *development (unverified)* in Health
-([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)).
+**A module is a file and a restart.** At start the server reads the `.dmod` files of the modules folder: each is verified (its hash list,
+the kernel's API ranges, the allowance and licence checks), unpacked once into `<data folder>/cache/modules/<id>/<version>-<hash>/` and
+loaded; a file that fails a check is refused in words (Health says which and why) and the rest start. Install a module by copying its
+file into the folder and restarting; upgrade by replacing the file (one package per module id: two versions of one module are refused);
+remove it by taking the file out and restarting. Nothing is deployed to a running server and nothing is copied from one node to another.
+A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). **Production loads only verified
+`.dmod` packages**; the development switch (`drishti.modules.dev`) reads the module source folders of the modules folder instead, loads
+them unverified, and is for a developer's own server: it is refused in a cluster and under the `prod` or `production` profile, and Health
+marks each such module *development (unverified)* ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)). Old folders
+of the earlier deployment store (`installed`, `store`, `shipped`, `staging`, `tombstones` under `<data folder>/modules`) are never read;
+Health names each as safe to delete.
 
 **The shared lib folder.** Every jar in `<home>/lib/ext/` (`drishti.lib.path`) is read once, at start, into one *lib* class loader under the kernel's.
 Connectors and modules see its classes, a JDBC driver in it is registered (a connector's `jdbc:` URL finds it), and a connector plugin
@@ -1597,7 +1598,7 @@ change the file and restart. **Admin → Health** summarises: the console's and 
 distribution file's `brand:` decides), nor is `drishti.edition` (`DRISHTI_EDITION`: a lens file is never an instance's filter); Health names any a
 site still sets.
 
-## 25. Modules and Deploy
+## 25. Modules
 
 **A module's settings.** A module describes its own settings in its manifest (`settings:`), and a site sets them as `drishti.module.<id>.<key>`. Banking's
 are the VaR window and confidences, the hierarchies' labels, the system-basket seed and the settings of its risk engines (var, exposure, frtb-sa, simm,
@@ -1606,28 +1607,17 @@ key winning; Health lists the old keys a site still sets. `GET /api/v1/admin/mod
 comes from (the module's key, the old key, or the default). Banking also declares its parts (`api` light, `compute` heavy, `feeds`), so Placement can put
 the compute on its own nodes.
 
-**Admin → Modules** (mock-up A, table and detail) lists every module of the cluster: its version, state (*LOADED*, *OFF*, *REMOVED*, *IN
-THE STORE*), the nodes it is placed on and the versions in the module store; the plans waiting for a second administrator are pinned on top
-with *Review*; the chosen module's detail shows its API prefix, the names it owns, the store's verify report and the actions (*Upgrade*,
-*Switch off*, *Remove*, *Switch on*, *Reinstall*), each a plan; every deployment is listed below with who proposed and applied it and the
-outcome.
+**Admin → Modules** lists every module of this installation: whether it is loaded, on or off and why, with the switch (section 22). It
+installs, upgrades and removes nothing: that is a file and a restart (section 22.1; on a cluster,
+[CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster)).
 
-**Admin → Modules → Deploy** (mock-up C, placement | plan): upload the `.dmod` (checked once with the fourteen conformance checks and kept
-in the store; a version is never rebuilt), see where it is placed (change that in Admin → Cluster → Modules, section 23.1), choose the
-action and say why, and *Plan*: the plan lists every node, what it does now and after, and that unplaced nodes receive nothing. A second
-administrator opens it (from *Review*) and *Applies*: staged on every placed node, then activated together (an upgrade: node by node, the
-others serving the old version meanwhile); a failure on any node rolls every node back and the page says which node and why. The same
-steps from a terminal: `drishti.py module deploy | apply | list` ([CLI_REFERENCE.md](CLI_REFERENCE.md)); the rules:
-[CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module).
-
-A removed module's pages show *… is no longer installed on this system* (410; administrators also see who removed it, when and the
-deployment), a switched-off one's *Not available* (404). Alert rules that use it show *paused · needs module X*; nothing saved is deleted,
-and a reinstall restores it.
+A module that is switched off answers `404` on its pages and API (*Not available*); a module whose file was taken out is unknown (`404`).
+Alert rules that use either show *paused · needs module X*; nothing saved is deleted, and the module back, it works again.
 
 **What the console shows of a module.** Its console part (its pages under `/m/<id>/`, menu entries, Home cards, command words, Help
 section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17-a-modules-console-part)) appears on every console within
-`modules.parts_refresh_seconds` (5) of the apply, at once on the console that applied it, and goes the same way when the module is
-switched off or removed: an open page of it is frozen under the notice, Build's lists and Forms' saved searches keep saved Sutras, reports, dashboards, baskets and searches
+`modules.parts_refresh_seconds` (5) of the server's start, and goes when the module is
+switched off or its file taken out and the server restarted: an open page of it is frozen under the notice, Build's lists and Forms' saved searches keep saved Sutras, reports, dashboards, baskets and searches
 that use it with a *needs module X* chip (not openable until it is back). A part that carries its own copy of Drishti Elements or of a
 vendored library, code, or a template that reaches past the kernel's layouts is refused (not shown anywhere); `GET /api/modules/hosted`
 lists what the console hosts, what is gone and what it refused, with the reasons.

@@ -22,6 +22,21 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **The deployment machinery is deleted (I8a, B4).** A module is a file in the modules folder and a restart. Gone: the module store and its plans with
+  four-eyes approvals, stage and activate across the nodes, auto-deploy, the hot swap and the drain, `ModuleDeployService`, `ModuleAutoDeploy`, `NodeCalls`,
+  `ModuleRouteFilter`, the deploy endpoints of `ModuleDeployController` (`/api/v1/admin/modules/{store,deployments}`, `/api/v1/net/modules/{stage,activate,abort,rollback,unload,registry}`,
+  `/api/v1/modules/gone`), Admin → Modules → Deploy, the token scope `modules:deploy`, the "removed" state (410 `DRS-1028`, tombstones, `ErrorCode` `MODULE_GONE`,
+  `MODULE_DEPLOY_REFUSED`, `MODULE_DEPLOY_FAILED`, `module_removed.html`: its 404 and "not part of this distribution" cases stay as `module_unavailable.html`), `Leave.REMOVE`,
+  `ModuleHost.drain`, `RouteTable.State.TOMBSTONE`, `ModuleHealth.State.REMOVED`, `LegacyModules` (the old store and folders adapter), `ModulePackages`, the readers of
+  `active.yaml` and `registry.json`, `FirstParty.shipped`, `ModuleDiscovery`'s `active` argument, `pick` and `HOST_FOLDERS`, the settings `drishti.modules.path`, `.autodeploy`,
+  `.autodeploy-seconds`, `.shipped`, `drishti.module-deploy.*`, `drishti.module-manifests-dir` and `drishti.modules.packages`. What stays of `ModuleNode` is its reads
+  (`entries`, `needs`, `status`, `fingerprint`, `consoleFolder`, `routes`) over the boot result, now with each module's content hash; the three console endpoints,
+  `/api/v1/modules/needs`, `/route` and `/api/v1/net/modules/status` moved to `ModulePublicController` (I8c rewrites them). The module host loads the boot's candidates
+  (`ModuleBoot.current()`), the modules of the packages beside the jar, or under `drishti.modules.dev` their source folders; the new `drishti.modules.sources` reads source folders
+  without loading them (the kernel's own tests of the shipped files). `ModuleHomes.resolve` has no fallback: without a boot there is no module. `drishti.py module` keeps `pack`,
+  `verify`, `check`, `inspect`, `visual` and `run` (the others return as file operations in I8b); the Pack Designer's last step is the download and the words that say how to install it.
+  Conformance check C14 now asserts that a stopped module leaves no contribution and no leaked class loader. Guard G9 has no exception.
+
 - **The tests that need the real modules have their own project (I7, E1).** `testing/drishti-modules-it` runs what needs a module (about 50 test classes moved out of `drishti-server`,
   `drishti-packs` and `drishti-it`: pack tests, the Sutra equivalence tests, module host and distribution tests, `ConsoleAnswersRecordTest`, the source-system modules,
   `OneTablePerSystemTest`) on the **built packages** (`target/modules-home`: `packaging/dist`'s `.dmod` files and the six source-system modules, packed by `tools/modulepack.py`),

@@ -259,9 +259,9 @@ file out and the module is removed. It is on for a single node and off in a clus
 **Development folders.** With `drishti.modules.dev` a developer's own server loads a module's build folder unpacked and reloads it on every
 rebuild; Health marks it *development (unverified)*. It is refused in a cluster and under the production profile.
 
-**Unload and "needs module X".** Switched off, a module's API answers `404 DRS-1025`; removed, `410 DRS-1028` and its pages say it is
-no longer installed. Saved Sutras, reports, dashboards, baskets, searches and alert rules that use it are **kept**, marked
-*needs module X*; reinstalling restores them.
+**"Needs module X".** Switched off or not installed, a module's API answers `404 DRS-1025` and its pages say it is not available. Saved
+Sutras, reports, dashboards, baskets, searches and alert rules that use it are **kept**, marked *needs module X*; the module back,
+they work again.
 
 ## 7. Distributions (white label)
 
@@ -400,8 +400,8 @@ exists and the next ones only narrow it.
 | the full design of the kernel, modules, loading, data needs, placement and the distribution file | [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) |
 | each distribution, what is shared, and how to start it | [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md) |
 | building a module: the SDK, the archetype, the three ways to pack, the genomics sample step by step | [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) |
-| modules on or off, the `modules/` and `lib/` folders, data bindings, white label, Admin → Modules and Deploy | [ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off) to [section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy) |
-| several servers as one, placement and deploying across a cluster | [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement) and [1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module) |
+| modules on or off, the `modules/` and `lib/` folders, data bindings, white label, Admin → Modules | [ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off) to [section 25](docs/guides/ADMIN_GUIDE.md#25-modules) |
+| several servers as one, placement and installing across a cluster | [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement) and [1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster) |
 | lakes, connectors and the bindings file in detail | [DATA_LAKE_GUIDE.md, Data bindings](docs/guides/DATA_LAKE_GUIDE.md#61-data-bindings) |
 | installing, starting and checking each part on Windows, Linux and macOS | [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) |
 | every setting | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |

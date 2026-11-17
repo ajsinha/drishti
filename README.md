@@ -153,13 +153,11 @@ one implementation, reached **three ways**:
   never spread to every node by accident; first-party modules default to every node. **Admin → Cluster → Modules** shows each part on each
   node; a placement is planned by one administrator and applied by another, at once and without a restart
   ([CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement)).
-- **Deploy**, cluster-first: a `.dmod` is uploaded once to the module store (checked, kept by id and version); a **plan** says what happens
-  on each placed node; a **second administrator applies** it in **two phases** (every placed node stages and verifies the package, then
-  all activate; any failure rolls every node back). An **upgrade rolls** node by node while the others serve the old version, with no
-  failed request. **Unload** is hot and leak-checked: the module's API answers `410 DRS-1028`, its pages say it is no longer installed, and
-  saved Sutras, reports, dashboards, baskets, searches and alert rules are kept and marked ***needs module X*** until a reinstall restores
-  them. **Admin → Modules** and **Admin → Deploy**, or `drishti.py module plan|deploy|upgrade|apply|remove|status`
-  ([CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-deploying-a-module), [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules-and-deploy)).
+- **Install**: a module is a **file** (`<id>-<version>.dmod`) in the modules folder beside the server's jar, and a restart. The boot verifies each
+  file, unpacks it once and loads it; a cluster restarts node by node while the others serve. A switched-off or missing module answers `404`, and
+  saved Sutras, reports, dashboards, baskets, searches and alert rules that use it are kept and marked ***needs module X***. **Admin → Modules**
+  shows what each server booted; `drishti.py module install|remove|rollback|list` are file operations
+  ([CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster), [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)).
 
 ## Distributions
 
