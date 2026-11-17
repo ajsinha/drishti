@@ -24,7 +24,7 @@ title: Design change
 description: 'One amino acid change of one design: the position, what it was and what it became. 33,000 changes over 12,000 designs.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per design and position, keyed by DESIGN_MUTATION_ID.
-key:
+key: &id001
 - DESIGN_MUTATION_ID
 dated-by: snapshot
 cadence:
@@ -100,8 +100,7 @@ validation:
   - AA_TO
   - MUTATION
 - rule: unique
-  key:
-  - DESIGN_MUTATION_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: DESIGN_ID

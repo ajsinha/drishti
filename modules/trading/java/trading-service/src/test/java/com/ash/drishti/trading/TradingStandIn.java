@@ -17,8 +17,12 @@ package com.ash.drishti.trading;
 
 import com.ash.drishti.bicompute.rows.InlinePivot;
 import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.KernelCalls;
+import com.ash.drishti.kernel.api.module.PersonCache;
 import com.ash.drishti.kernel.api.pivot.Viewer;
+import com.ash.drishti.module.runtime.InlinePivotFigures;
+import com.ash.drishti.module.runtime.KernelPersonCache;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
@@ -114,6 +118,11 @@ final class TradingStandIn implements KernelCalls {
             throw new IllegalStateException("a caller is the person of a request: there is no request on this thread");
         }
         return new Call(p, null);
+    }
+
+    @Override
+    public <V> PersonCache<V> cache(int size, long ttlMillis) {
+        return new KernelPersonCache<>(size, ttlMillis);                   // the kernel's own, as the server gives it
     }
 
     @Override
@@ -477,6 +486,12 @@ final class TradingStandIn implements KernelCalls {
                 throw new Refused(404, "DRS-4040", "the stand-in has no GET " + path);
             }
             return wire(answer);
+        }
+
+        @Override
+        public InlineFigures.Figures figures(List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
+                String by, String across, Map<String, Object> top) {
+            return InlinePivotFigures.ask(this, fields, rows, values, by, across, top);   // the kernel's asking, over this stand-in's /pivot/inline
         }
 
         @Override

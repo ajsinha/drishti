@@ -122,11 +122,48 @@
   function.FunctionProvider$Provided public java.util.function.Function<java.util.List<java.lang.Object>, java.lang.Object> com.ash.drishti.kernel.api.function.FunctionProvider$Provided.body()
   health.HealthFigures public abstract java.lang.Object com.ash.drishti.kernel.api.health.HealthFigures.value()
   health.HealthFigures public abstract java.lang.String com.ash.drishti.kernel.api.health.HealthFigures.key()
+  module.Answers public static boolean com.ash.drishti.kernel.api.module.Answers.masked(java.lang.Object)
+  module.Answers public static java.lang.Double com.ash.drishti.kernel.api.module.Answers.num(java.lang.Object)
+  module.Answers public static java.lang.Double com.ash.drishti.kernel.api.module.Answers.round(java.lang.Double,int)
+  module.Answers public static java.lang.Long com.ash.drishti.kernel.api.module.Answers.round(java.lang.Double)
+  module.Answers public static java.lang.Object com.ash.drishti.kernel.api.module.Answers.get(java.lang.Object,java.lang.String)
+  module.Answers public static java.lang.String com.ash.drishti.kernel.api.module.Answers.str(java.lang.Object)
+  module.Answers public static java.lang.String com.ash.drishti.kernel.api.module.Answers.str(java.lang.Object,java.lang.String)
+  module.Answers public static java.time.LocalDate com.ash.drishti.kernel.api.module.Answers.day(java.lang.Object)
+  module.Answers public static java.util.List<java.lang.Object> com.ash.drishti.kernel.api.module.Answers.list(java.lang.Object,java.lang.String)
+  module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object)
+  module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object,java.lang.String)
   module.DrishtiModule public abstract java.lang.String com.ash.drishti.kernel.api.module.DrishtiModule.id()
   module.DrishtiModule public abstract void com.ash.drishti.kernel.api.module.DrishtiModule.start(com.ash.drishti.kernel.api.module.ModuleContext)
   module.DrishtiModule public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.DrishtiModule.health()
   module.DrishtiModule public default void com.ash.drishti.kernel.api.module.DrishtiModule.stop()
   module.EngineWide public abstract java.lang.String com.ash.drishti.kernel.api.module.EngineWide.value()
+  module.InlineFigures public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.InlineFigures.measure(java.lang.String,java.lang.String)
+  module.InlineFigures public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.InlineFigures.measure(java.lang.String,java.lang.String,java.lang.String)
+  module.InlineFigures$Field public final boolean com.ash.drishti.kernel.api.module.InlineFigures$Field.equals(java.lang.Object)
+  module.InlineFigures$Field public final int com.ash.drishti.kernel.api.module.InlineFigures$Field.hashCode()
+  module.InlineFigures$Field public final java.lang.String com.ash.drishti.kernel.api.module.InlineFigures$Field.toString()
+  module.InlineFigures$Field public java.lang.String com.ash.drishti.kernel.api.module.InlineFigures$Field.name()
+  module.InlineFigures$Field public java.lang.String com.ash.drishti.kernel.api.module.InlineFigures$Field.type()
+  module.InlineFigures$Figures public abstract boolean com.ash.drishti.kernel.api.module.InlineFigures$Figures.answered()
+  module.InlineFigures$Figures public abstract java.lang.Double com.ash.drishti.kernel.api.module.InlineFigures$Figures.get(java.lang.String,java.lang.Object,java.lang.Object)
+  module.InlineFigures$Figures public abstract java.util.List<java.lang.Object> com.ash.drishti.kernel.api.module.InlineFigures$Figures.members()
+  module.InlineFigures$Figures public default java.lang.Double com.ash.drishti.kernel.api.module.InlineFigures$Figures.get(java.lang.String)
+  module.KernelCalls public abstract <V> com.ash.drishti.kernel.api.module.PersonCache<V> com.ash.drishti.kernel.api.module.KernelCalls.cache(int,long)
+  module.KernelCalls public abstract com.ash.drishti.kernel.api.module.KernelCalls$Caller com.ash.drishti.kernel.api.module.KernelCalls.caller()
+  module.KernelCalls public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls.lens(java.lang.String)
+  module.KernelCalls$Caller public abstract boolean com.ash.drishti.kernel.api.module.KernelCalls$Caller.admin()
+  module.KernelCalls$Caller public abstract com.ash.drishti.kernel.api.module.InlineFigures$Figures com.ash.drishti.kernel.api.module.KernelCalls$Caller.figures(java.util.List<com.ash.drishti.kernel.api.module.InlineFigures$Field>,java.util.List<java.util.List<java.lang.Object>>,java.util.List<java.util.Map<java.lang.String, java.lang.Object>>,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.Object>)
+  module.KernelCalls$Caller public abstract com.ash.drishti.kernel.api.module.KernelCalls$Caller com.ash.drishti.kernel.api.module.KernelCalls$Caller.onDate(java.time.LocalDate)
+  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.display()
+  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.key()
+  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.lens()
+  module.KernelCalls$Caller public abstract java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Caller.user()
+  module.KernelCalls$Caller public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls$Caller.get(java.lang.String,java.util.Map<java.lang.String, ?>)
+  module.KernelCalls$Caller public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.KernelCalls$Caller.post(java.lang.String,java.lang.Object,java.util.Map<java.lang.String, ?>)
+  module.KernelCalls$Refused public int com.ash.drishti.kernel.api.module.KernelCalls$Refused.status()
+  module.KernelCalls$Refused public java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Refused.code()
+  module.KernelCalls$Refused public java.lang.String com.ash.drishti.kernel.api.module.KernelCalls$Refused.say()
   module.ModuleApi public abstract java.lang.String com.ash.drishti.kernel.api.module.ModuleApi.value()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$KindWriter com.ash.drishti.kernel.api.module.ModuleContext.writer()
   module.ModuleContext public abstract com.ash.drishti.kernel.api.module.ModuleContext$Kinds com.ash.drishti.kernel.api.module.ModuleContext.kinds()
@@ -143,6 +180,10 @@
   module.ModuleSettings public abstract <T extends java.lang.Record> T com.ash.drishti.kernel.api.module.ModuleSettings.bind(java.lang.Class<T>)
   module.ModuleSettings public abstract java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.module.ModuleSettings.all()
   module.ModuleSettings public abstract java.util.Optional<java.lang.String> com.ash.drishti.kernel.api.module.ModuleSettings.get(java.lang.String)
+  module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.get(java.lang.String)
+  module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.once(java.lang.String,java.util.function.Supplier<V>)
+  module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.put(java.lang.String,V)
+  module.PersonCache public abstract void com.ash.drishti.kernel.api.module.PersonCache.clear()
   modules.ApiAlias public final boolean com.ash.drishti.kernel.api.modules.ApiAlias.equals(java.lang.Object)
   modules.ApiAlias public final int com.ash.drishti.kernel.api.modules.ApiAlias.hashCode()
   modules.ApiAlias public final java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.toString()
@@ -486,13 +527,21 @@ explain.Explanation
 function.FunctionProvider
 function.FunctionProvider$Provided
 health.HealthFigures
+module.Answers
 module.DrishtiModule
 module.EngineWide
+module.InlineFigures
+module.InlineFigures$Field
+module.InlineFigures$Figures
+module.KernelCalls
+module.KernelCalls$Caller
+module.KernelCalls$Refused
 module.ModuleApi
 module.ModuleContext
 module.ModuleContext$KindWriter
 module.ModuleContext$Kinds
 module.ModuleSettings
+module.PersonCache
 modules.ApiAlias
 official.OfficialResults
 pivot.AggFunction

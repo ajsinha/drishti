@@ -25,7 +25,7 @@ description: 'One amino acid position of a protein: what it is, where it sits in
   its place in space and the mean effect of changing it. Coordinates, burial and the means are written by the generator.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per protein position, keyed by RESIDUE_ID.
-key:
+key: &id001
 - RESIDUE_ID
 dated-by: snapshot
 cadence:
@@ -68,7 +68,7 @@ fields:
   presence: required
   description: The element of the fold it is in.
   example: helix
-  enum:
+  enum: &id002
   - helix
   - strand
   - loop
@@ -77,7 +77,7 @@ fields:
   presence: required
   description: The domain it is in.
   example: N-lobe
-  enum:
+  enum: &id003
   - N-lobe
   - hinge
   - C-lobe
@@ -139,24 +139,17 @@ validation:
   - MEAN_ACTIVITY
   - MEAN_STABILITY
 - rule: unique
-  key:
-  - RESIDUE_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: PROTEIN
   kind: protein
 - rule: enum
   field: SECONDARY
-  values:
-  - helix
-  - strand
-  - loop
+  values: *id002
 - rule: enum
   field: DOMAIN
-  values:
-  - N-lobe
-  - hinge
-  - C-lobe
+  values: *id003
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

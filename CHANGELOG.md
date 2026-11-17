@@ -171,10 +171,34 @@ release tag `v2.9.11.i_6`.
   and market-data modules have a server part now (`modules/trading/java/trading-service`, `modules/market-data/java/market-data-service`,
   packed into their `.dmod`s): `GET /api/v1/trading/landing/{role,me,valuations,blotter,risk,limits,pnl-var,traders}`,
   `POST /api/v1/trading/landing/check` and `GET /api/v1/market-data/landing/{desk,moves,quality}`, each worked out as the person from the
-  kernel's and the other modules' API (the new `KernelCalls` of drishti-kernel-api, served by the kernel's `LoopbackKernelCalls`; with
-  `InlineFigures`, `Answers` and `PersonCache`), every total the pivot engine's. The console only passes the answers on (and draws the
+  kernel's and the other modules' API (the new `KernelCalls` of drishti-kernel-api, served by the kernel's `LoopbackKernelCalls`;
+  `Caller.figures` asks the pivot engine, `KernelCalls.cache` gives a `PersonCache`), every total the pivot engine's. The kernel API keeps
+  only contracts: `InlineFigures`, `PersonCache` and `Answers` are interfaces there, the request and answer reading of the inline figures
+  and the cache are the kernel's (`InlinePivotFigures` in the server, `KernelPersonCache` in the module runtime, which the conformance
+  harness uses too). The console only passes the answers on (and draws the
   blotter's grid); `plugins/banking/trading_landing.py` and `market_landing.py` are deleted with their tests. The console's
   `trading.people` setting moves to the server: `drishti.trading.people`.
+- **The modules with a server part pass the fifteen checks in the build.** The module packages build (`packaging/dist`) runs the
+  conformance checks on market-data and trading as it does on banking (`check-market-data`, `check-trading`); the content-only test keeps
+  capital-markets and economy. The checks found and the release fixes: market-data's kind and surface tables are unmodifiable where they
+  are declared (C12), the trading module's README has its front matter, its guide is its tutorial and names the live results guide
+  instead of linking outside the package (C7). `drishti.py pack new --source-for` packs the required module with its server part's
+  built jar (`java/<part>/target/<name>-<version>.jar`) for the check, and says how to build it when it is missing; the standalone
+  module tool (`drishti-module-tool.jar`) carries what the server hosts a server part on (Spring Boot's auto-configuration and binder,
+  Spring Web), so it loads such a module for C11-C15 as the server does.
+- **`lake build --lake <name>` picks the pack connector's own table when a kind has tables in several domains.** `protein` is both
+  protein-engineering's and the genomics example pack's: the load took no domain and was refused as ambiguous, so `lake demo` (and every
+  test lake built from the test data) failed on protein-engineering/protein. The domain the pack's connector names now picks the entry.
+- **The genomics showcase's campaign climbs every round, and its contracts' rules are the one rule maker's.** The protein campaign's
+  design crowd moves towards the global peak fastest early, so each round's median activity beats the one before (round 4 sat 0.02
+  below round 3 while the false peak held a share); the winner is still three changes and about sixteen times the natural activity
+  (its id and the design rows changed: data, samples, Sutra example and pages regenerated). The showcase generator writes each
+  contract's validation through `tools/contracts.py`'s rule maker (the vector-length and count-range rules it had left out), and the
+  protein-engineering guide links the `study-variant` contract and sample. The demo lake has 103 tables (the documents quoting it
+  say so); the committed test data's budget is 190 MB (the showcase's two packs add about 3 MB).
+- **`lake maintain` runs where no kernel jar is built.** `tools/lake/build.py` asked the Java resolver for the site's packs when it
+  was imported, so the maintenance job (which imports it and never routes a feed) failed without `lib/drishti-server-*-exec.jar`;
+  the packs are now asked for only when a feed is routed by its files.
 - **AI is not in this release: hidden in the console and off on the server (owner, 2026-11-16).** The console has no AI page, menu item
   or button: Admin -> AI, its Test connection and overview, the console's `POST /api/ai/chat` and `/api/ai/module-tools`, *Ask about
   this page* (the About drawer's box and `POST /v/{kind}/{id}/ask`), the BI hooks (*Describe a report*, *Ask the data*, *Explain this

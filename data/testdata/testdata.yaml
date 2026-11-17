@@ -21878,7 +21878,7 @@ datasets:
   documents: 12000
   files:
   - design.2026-11-16.jsonl.gz
-  bytes: 330371
+  bytes: 331075
 - folder: protein-engineering/design-mutation
   pack: protein-engineering
   kind: design-mutation
@@ -21890,7 +21890,7 @@ datasets:
   documents: 33000
   files:
   - design-mutation.2026-11-16.jsonl.gz
-  bytes: 351080
+  bytes: 349681
 - folder: protein-engineering/design-round
   pack: protein-engineering
   kind: design-round
@@ -21902,4 +21902,4 @@ datasets:
   documents: 8
   files:
   - design-round.2026-11-16.jsonl.gz
-  bytes: 752
+  bytes: 749

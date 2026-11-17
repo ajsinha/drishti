@@ -25,6 +25,7 @@ import os
 import re
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -42,7 +43,10 @@ FAKE = {"AWS_REGION": "eu-west-2", "AWS_ACCOUNT_ID": "123456789012", "ORG": "acm
         "LAKE_KMS_KEY_ARN": "arn:aws:kms:eu-west-2:123456789012:key/test", "S3_VPC_ENDPOINT_ID": "vpce-test",
         "EFS_FILE_SYSTEM_ID": "fs-test", "VPC_ID": "vpc-test", "PRIVATE_SUBNETS": "subnet-a,subnet-b",
         "NODE_SECURITY_GROUP": "sg-test", "CONSOLE_TARGET_GROUP_ARN": "arn:aws:elasticloadbalancing:eu-west-2:123456789012:targetgroup/t/1",
-        "ALARM_SNS_TOPIC_ARN": "arn:aws:sns:eu-west-2:123456789012:t"}
+        "ALARM_SNS_TOPIC_ARN": "arn:aws:sns:eu-west-2:123456789012:t",
+        # the image tags: env.example says to run tools/version.py (the one version, .mvn/maven.config), so the test does
+        "DRISHTI_VERSION": subprocess.run([sys.executable, str(ROOT / "tools" / "version.py")], capture_output=True, text=True,
+                                          check=True).stdout.strip()}
 
 
 def fake_env(tmp: Path) -> Path:

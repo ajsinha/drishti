@@ -32,9 +32,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The content modules of the distributions (docs/architecture/DISTRIBUTIONS.md): {@code modules/market-data}, {@code modules/capital-markets}
- * and {@code modules/economy}, each packed by the module tool from its folder and the repository content its {@code content.yaml} names,
- * and each passing the fifteen conformance checks.
+ * The content modules of the distributions (docs/architecture/DISTRIBUTIONS.md): {@code modules/capital-markets} and {@code modules/economy},
+ * each packed by the module tool from its folder and the repository content its {@code content.yaml} names, and each passing the fifteen
+ * conformance checks. {@code modules/market-data} and {@code modules/trading} have a server part (THIN_CONSOLE_DESIGN.md step S8a): they are
+ * packed with their jars and checked where the jars are built (packaging/dist, {@code check-market-data} and {@code check-trading}); here,
+ * a folder of one is not packed without its jar.
  */
 class ContentModulesTest {
 
@@ -44,7 +46,7 @@ class ContentModulesTest {
     Path tmp;
 
     @ParameterizedTest
-    @ValueSource(strings = {"market-data", "capital-markets", "economy"})
+    @ValueSource(strings = {"capital-markets", "economy"})
     void eachContentModuleIsPackedByTheToolAndPassesTheFifteenChecks(String id) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -70,6 +72,18 @@ class ContentModulesTest {
         if ("economy".equals(id)) {
             assertThat(dir.resolve("packs/world-economy/samples")).doesNotExist();               // the IMF figures stay internal
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"market-data", "trading"})
+    void aModuleWithAServerPartIsNotPackedWithoutItsJar(String id) throws Exception {
+        Path folder = MODULES.resolve(id);
+        assertThat(ModuleAssembler.manifest(folder).java()).isNotNull();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream e = new PrintStream(err, true, StandardCharsets.UTF_8);
+        assertThat(ModuleTool.run(new String[] {"pack", folder.toString(), "--out", tmp.toString()}, new PrintStream(new ByteArrayOutputStream(), true,
+                StandardCharsets.UTF_8), e)).isEqualTo(1);
+        assertThat(err.toString()).contains("which is neither in the folder nor given (--jar)");
     }
 
     @Test

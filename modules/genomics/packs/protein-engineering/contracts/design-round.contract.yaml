@@ -24,7 +24,7 @@ title: Design round
 description: 'One round of the campaign: how the designs were made, how many, and how well the round did. Eight rounds.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per protein and round, keyed by ROUND_ID.
-key:
+key: &id001
 - ROUND_ID
 dated-by: snapshot
 cadence:
@@ -121,8 +121,7 @@ validation:
   - TRAPPED
   - NOTE
 - rule: unique
-  key:
-  - ROUND_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: PROTEIN

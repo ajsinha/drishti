@@ -25,7 +25,7 @@ description: 'One variant site of the synthetic genome: its place, the change it
   the key into the protein workbench''s scan) and how many samples carry it.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per variant site, keyed by VARIANT_ID.
-key:
+key: &id001
 - VARIANT_ID
 id-pattern:
 - ^HX-
@@ -84,7 +84,7 @@ fields:
   presence: required
   description: What the change does to the gene's product.
   example: missense_variant
-  enum:
+  enum: &id002
   - missense_variant
   - synonymous_variant
   - stop_gained
@@ -96,7 +96,7 @@ fields:
   presence: required
   description: 'How much the change matters: HIGH, MODERATE, LOW or MODIFIER.'
   example: MODERATE
-  enum:
+  enum: &id003
   - HIGH
   - MODERATE
   - LOW
@@ -139,28 +139,17 @@ validation:
   - IMPACT
   - CARRIERS
 - rule: unique
-  key:
-  - VARIANT_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: GENE
   kind: study-gene
 - rule: enum
   field: CONSEQUENCE
-  values:
-  - missense_variant
-  - synonymous_variant
-  - stop_gained
-  - frameshift_variant
-  - splice_region_variant
-  - intron_variant
+  values: *id002
 - rule: enum
   field: IMPACT
-  values:
-  - HIGH
-  - MODERATE
-  - LOW
-  - MODIFIER
+  values: *id003
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

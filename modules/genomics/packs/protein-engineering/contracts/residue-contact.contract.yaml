@@ -25,7 +25,7 @@ description: 'Two positions of a protein that sit close in space though they are
   pairs at least three positions apart, as many as the generator keeps for the protein.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per contact, keyed by CONTACT_ID.
-key:
+key: &id001
 - CONTACT_ID
 dated-by: snapshot
 cadence:
@@ -80,8 +80,7 @@ validation:
   - POS_B
   - DISTANCE
 - rule: unique
-  key:
-  - CONTACT_ID
+  key: *id001
   per: snapshot
 - rule: link
   field: PROTEIN

@@ -25,7 +25,7 @@ description: 'One invented protein: its sequence, family and active site. Four p
   is the one the cohort screen and the design campaign are about.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per protein, keyed by PROTEIN (the symbol of its gene).
-key:
+key: &id001
 - PROTEIN
 dated-by: snapshot
 cadence:
@@ -100,12 +100,14 @@ validation:
   - ACTIVE_SITE
   - DESIGN_ROUNDS
 - rule: unique
-  key:
-  - PROTEIN
+  key: *id001
   per: snapshot
 - rule: link
   field: GENE
   kind: study-gene
+- rule: vector-length
+  field: ACTIVE_SITE
+  same: every row of one business date
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

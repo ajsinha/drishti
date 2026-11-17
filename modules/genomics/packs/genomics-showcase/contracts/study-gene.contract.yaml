@@ -25,7 +25,7 @@ description: 'One gene of the synthetic genome: where it sits, what it does, how
   a damaging change in it. 24 of the 2,000 genes are the planted drivers, led by HLXK7.'
 source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
 grain: One row per gene, keyed by GENE.
-key:
+key: &id001
 - GENE
 dated-by: snapshot
 cadence:
@@ -72,7 +72,7 @@ fields:
   presence: required
   description: The strand the gene is read from.
   example: +
-  enum:
+  enum: &id002
   - +
   - '-'
 - name: ROLE
@@ -124,14 +124,11 @@ validation:
   - ALTERED_SAMPLES
   - ALTERED_FRACTION
 - rule: unique
-  key:
-  - GENE
+  key: *id001
   per: snapshot
 - rule: enum
   field: STRAND
-  values:
-  - +
-  - '-'
+  values: *id002
 notes:
 - 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
   are invented, and every screen that shows it says so.'

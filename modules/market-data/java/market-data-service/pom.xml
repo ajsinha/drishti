@@ -34,5 +34,7 @@
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
     <!-- the landing tests' stand-in server answers /pivot/inline with the engine's own reading (InlinePivot): never packed into the .dmod -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId><scope>test</scope></dependency>
+    <!-- and the kernel's own Caller.figures (InlinePivotFigures) and person cache, as the server and the conformance harness give them -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><scope>test</scope></dependency>
   </dependencies>
 </project>

@@ -91,9 +91,6 @@ def module_zip(folder: Path) -> bytes:
     return buf.getvalue()
 
 
-MODULES = Path(__file__).resolve().parents[2] / "modules"
-
-
 @lru_cache(maxsize=1)
 def _shipped() -> dict:
     """The product's own content modules shipped as folders with a console part and no code (``modules/<id>/module.yaml`` without a
@@ -101,7 +98,9 @@ def _shipped() -> dict:
     import yaml
 
     out = {}
-    for f in sorted(MODULES.glob("*/module.yaml")):
+    import resolved                                         # the Java resolver says where every module is (tools/resolved.py)
+
+    for f in sorted(m.home / "module.yaml" for m in resolved.repository().modules.values()):
         manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         if manifest.get("java") is not None or not (f.parent / "console" / "plugin.yaml").is_file():
             continue

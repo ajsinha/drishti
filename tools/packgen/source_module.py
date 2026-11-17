@@ -275,8 +275,38 @@ def load(a, n: dict, cli, say=print) -> int:
         return cli.main(args)
 
 
+def module_jars(src: pathlib.Path) -> list[str]:
+    """`--jar`/`--more` for packing the module folder ``src``: a module with a server part (module.yaml's ``java.jars``) is packed with the
+    jars its Maven build made (``java/<part>/target/<name>-<version>.jar``, the version the one version file's), as packaging/dist packs
+    it; a folder module without one needs none. A jar not built is said with the command that builds it."""
+    import yaml
+    jars = ((yaml.safe_load((src / "module.yaml").read_text(encoding="utf-8")) or {}).get("java") or {}).get("jars") or []
+    if not jars:
+        return []
+    import version as V
+    ver = V.current(ROOT / "pom.xml", default="")
+    found = []
+    for name in jars:
+        stem = name.removesuffix(".jar")
+        built = sorted((src / "java").glob(f"*/target/{stem}-{ver}.jar"))
+        if not built:
+            raise SystemExit(f"{src.name}: its server part {name} is not built ({src.relative_to(ROOT)}/java/*/target/{stem}-{ver}.jar); "
+                             f"build it: ./mvnw -q package -DskipTests -pl {built_part(src, stem)} -am")
+        found.append(str(built[-1]))
+    return ["--jar", found[0], *(["--more", ",".join(found[1:])] if found[1:] else [])]
+
+
+def built_part(src: pathlib.Path, stem: str) -> str:
+    """The Maven project under ``src/java`` whose artifactId is ``stem`` (its folder, relative to the checkout), else the module's java folder."""
+    for pom in sorted((src / "java").glob("*/pom.xml")):
+        if f"<artifactId>{stem}</artifactId>" in pom.read_text(encoding="utf-8"):
+            return pom.parent.relative_to(ROOT).as_posix()
+    return (src / "java").relative_to(ROOT).as_posix()
+
+
 def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
-    """`--with` for the check: the module this one requires (the kind's: modules/<pack>), packed beside it, so the runtime checks load both."""
+    """`--with` for the check: the module this one requires (the kind's: modules/<pack>), packed beside it with its server part's jars when
+    it has one, so the runtime checks load both."""
     import module_from_jsonl as MFJ
     src = ROOT / "modules" / n["pack"]
     if not (src / "module.yaml").is_file():
@@ -292,7 +322,7 @@ def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
         return ["--with", str(built[-1])] if built else []
     out = dist / "requires"
     out.mkdir(parents=True, exist_ok=True)
-    if MFJ.module_tool(cli, a, "pack", str(src), "--out", str(out)):
+    if MFJ.module_tool(cli, a, "pack", str(src), *module_jars(src), "--out", str(out)):
         return []
     found = sorted(out.glob(f"{n['pack']}-*.dmod"))
     return ["--with", str(found[-1])] if found else []

@@ -123,6 +123,7 @@ One patient's sample of the 1,500 of cohort ONC-1: the clinical tracks, the resp
 - enum: field TOXICITY; values `severe`, `none`
 - enum: field RELAPSE; values `relapsed`, `free`
 - enum: field CLUSTER; values `C1 luminal-like`, `C2 basal-like`, `C3 immune-hot`, `C4 stromal`, `C5 proliferative`
+- range: field MUTATION_COUNT; min 0
 
 **Notes**
 
@@ -271,9 +272,9 @@ One variant tested against one trait: the p-value, its negative log, the effect 
 
 - required: fields `ASSOC_ID`, `TRAIT`, `VARIANT_ID`, `CHROM`, `POS`, `GENE`, `P`, `NEG_LOG10_P`, `R2_LEAD`
 - unique: key `ASSOC_ID`; per snapshot
+- enum: field TRAIT; values `RESPONSE`, `TOXICITY`, `RELAPSE`
 - link: field VARIANT_ID; kind study-variant
 - link: field GENE; kind study-gene
-- enum: field TRAIT; values `RESPONSE`, `TOXICITY`, `RELAPSE`
 
 **Notes**
 
@@ -320,8 +321,8 @@ One stretch of a sample's genome with a copy number other than two: an amplifica
 - required: fields `SEGMENT_ID`, `SAMPLE_ID`, `CHROM`, `START`, `END`, `COPY_NUMBER`, `CALL`
 - unique: key `SEGMENT_ID`; per snapshot
 - link: field SAMPLE_ID; kind study-sample
-- link: field GENE; kind study-gene
 - enum: field CALL; values `deep deletion`, `loss`, `gain`, `amplification`
+- link: field GENE; kind study-gene
 
 **Notes**
 

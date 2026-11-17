@@ -93,7 +93,10 @@ def test_every_module_range_follows_the_one_version():
     through tools/packgen/elements_range.py; the static module.yaml files and the SDK archetype are held to it here)."""
     major, minor = VERSION.split(".")[:2]
     want = f">={major}.{minor} <{int(major) + 1}"
-    files = sorted((ROOT / "modules").glob("*/module.yaml")) + [ROOT / "drishti-sdk/drishti-module-archetype/src/main/resources/archetype-resources/module.yaml"]
+    import resolved                                         # where every module is, as the Java resolver says (tools/resolved.py)
+
+    files = sorted(m.home / "module.yaml" for m in resolved.repository().modules.values()) \
+        + [ROOT / "drishti-sdk/drishti-module-archetype/src/main/resources/archetype-resources/module.yaml"]
     bad = []
     for f in files:
         m = re.search(r"^elements:\s*['\"]?([^'\"\n#]+?)['\"]?\s*(?:#.*)?$", f.read_text(encoding="utf-8"), re.M)
