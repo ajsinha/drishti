@@ -15,11 +15,15 @@
  */
 package com.ash.drishti.module.runtime;
 
+import com.ash.drishti.api.resolution.ModuleHomes;
+import com.ash.drishti.api.resolution.ModuleHomes.Origin;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -43,12 +47,18 @@ import java.util.concurrent.atomic.AtomicReference;
  *       a {@code .part-<pid>} folder and one atomic move (a lost race uses the winner's folder). Present: checked against its
  *       {@code META-INF/DMOD.MF} (V2); a mismatch is deleted and unpacked again.</li>
  *   <li>{@code sweep} (the server only; the loader process and the command-line tools pass false): every cache folder no present
- *       {@code .dmod} owns is deleted; a folder that cannot be deleted is noted, never fatal.</li>
+ *       {@code .dmod} owns is deleted, unless another node marked it in use ({@link #markInUse}); a folder that cannot be deleted is
+ *       noted, never fatal.</li>
  *   <li>The first-party list is the file {@code <modulesHome>/first-party.yaml}, written by {@code drishti.py build modules}; without it
  *       every module is third-party.</li>
  *   <li>The development switch ({@code devFolders} non-empty): the candidates are those source folders only, each marked
  *       <i>development (unverified)</i>; no {@code .dmod} is read and the cache is not swept.</li>
  * </ol>
+ *
+ * <p>Each accepted module carries two hashes: the SHA-256 of its {@code .dmod} file names its cache folder only; the SHA-256 of its hash
+ * list ({@code META-INF/DMOD.MF}) is its <i>content hash</i>, its identity (the same files give the same hash whatever the zip bytes or
+ * file times). {@link Result#homes()} is the plain value of the result ({@link ModuleHomes}, in drishti-api) that the readers below this
+ * module take; {@link #remember} publishes it. {@link #source} is the boot of a checkout's module folders (source mode).
  *
  * <p>The kernel's API ranges (V3) are checked here too, so a module built for another kernel is refused before anything of it unpacks.
  * The other checks (allowance, licence, data needs, resources) stay with {@link ModuleVerifier} when the module loads.
@@ -62,6 +72,9 @@ public final class ModuleBoot {
     /** The file of the first-party list in the modules folder. */
     public static final String FIRST_PARTY_FILE = "first-party.yaml";
 
+    /** The folder of a checkout that holds the module source folders (source mode). */
+    public static final String SOURCE_MODULES = "modules";
+
     /** The extension of a module package. */
     public static final String EXTENSION = ".dmod";
 
@@ -74,26 +87,17 @@ public final class ModuleBoot {
     /** The words a leftover carries. */
     public static final String SAFE_TO_DELETE = "not read: safe to delete";
 
-    /** Where a module came from. */
-    public enum Origin {
-        /** A {@code .dmod} whose id and hash list are in {@code first-party.yaml}. */
-        FIRST_PARTY("first-party"),
-        /** Any other {@code .dmod}. */
-        THIRD_PARTY("third-party"),
-        /** A source folder read under the development switch: no package, no hash, not verified. */
-        DEVELOPMENT("development (unverified)");
+    /** The infix of an in-use marker beside a cache folder: {@code <version>-<hash16>.in-use-<node>}. */
+    public static final String IN_USE = ".in-use-";
 
-        private final String word;
+    /** An in-use marker younger than this keeps its cache folder from any sweep (another node on the same data folder runs it). */
+    public static final Duration IN_USE_FRESH = Duration.ofMinutes(15);
 
-        Origin(String word) {
-            this.word = word;
-        }
+    /** How often a running server refreshes its in-use markers ({@link #markInUse}); well inside {@link #IN_USE_FRESH}. */
+    public static final Duration IN_USE_REFRESH = Duration.ofMinutes(5);
 
-        /** The word Health and {@code module list} show. */
-        public String word() {
-            return word;
-        }
-    }
+    /** The old store's module registry under {@code <data>/modules}: read once for the upgrade note, never written. */
+    public static final String OLD_REGISTRY = "registry.json";
 
     /**
      * One module the boot accepted.
@@ -103,11 +107,14 @@ public final class ModuleBoot {
      * @param manifest its {@code module.yaml}
      * @param dir      the folder every reader uses: the cache folder, or the source folder under the development switch
      * @param file     the {@code .dmod} it came from; null under the development switch
-     * @param sha256   the SHA-256 of that file, lower-case hex; null under the development switch
+     * @param sha256   the SHA-256 of that file, lower-case hex: it names the cache folder only; null under the development switch
+     * @param contentHash the SHA-256 of the unpacked {@code META-INF/DMOD.MF}, lower-case hex: the module's identity (same files, same
+     *                 hash, whatever the zip bytes or file times); null under the development switch
      * @param origin   first-party, third-party or development
      * @param why      the words behind the origin (Health)
      */
-    public record Module(String id, String version, DmodManifest manifest, Path dir, Path file, String sha256, Origin origin, String why) {
+    public record Module(String id, String version, DmodManifest manifest, Path dir, Path file, String sha256, String contentHash,
+            Origin origin, String why) {
 
         /** The first {@link ModuleBoot#HASH_DIGITS} hex digits of the package's hash (the cache folder's suffix), or null. */
         public String hash16() {
@@ -117,6 +124,11 @@ public final class ModuleBoot {
         /** The candidate the loader and the verifier take. */
         public ModuleCandidate candidate() {
             return new ModuleCandidate(manifest, dir, file);
+        }
+
+        /** Its home: what the readers below this module see ({@link ModuleHomes}). */
+        public ModuleHomes.Home home() {
+            return new ModuleHomes.Home(id, version, dir, contentHash, origin);
         }
     }
 
@@ -146,6 +158,11 @@ public final class ModuleBoot {
             return Optional.ofNullable(modules.get(id));
         }
 
+        /** The plain value of this result (id → folder, version, content hash, origin) for the readers below this module. */
+        public ModuleHomes homes() {
+            return ModuleHomes.of(modules.values().stream().map(Module::home).toList());
+        }
+
         /** The candidates, in id order, for the loader. */
         public List<ModuleCandidate> candidates() {
             return modules.values().stream().map(Module::candidate).toList();
@@ -173,9 +190,13 @@ public final class ModuleBoot {
         return Optional.ofNullable(CURRENT.get());
     }
 
-    /** Keeps the result for this process; the launcher calls it once, right after {@link #boot}. */
+    /**
+     * Keeps the result for this process and publishes its plain value ({@link ModuleHomes#publish}); the launcher calls it once, right
+     * after {@link #boot}.
+     */
     public static Result remember(Result r) {
         CURRENT.set(r);
+        ModuleHomes.publish(r.homes());
         return r;
     }
 
@@ -195,6 +216,7 @@ public final class ModuleBoot {
         FirstParty list = firstParty(modulesHome, notes);
         KernelFacts withList = facts.withBuild(facts.kernelBuild(), list);
         Map<Path, String> leftovers = leftovers(modulesHome, cacheRoot);
+        notes.addAll(oldRegistryNotes(cacheRoot));
         if (devFolders != null && !devFolders.isEmpty()) {
             development(devFolders, withList, modules, refused);
             notes.add("development switch on: modules come from their source folders; no .dmod is read; the cache is not swept");
@@ -239,7 +261,7 @@ public final class ModuleBoot {
                 cache(f, notes);
                 FirstParty.Origin o = list.origin(f.manifest(), f.dir());
                 modules.put(id, new Module(id, f.manifest().version(), f.manifest(), f.dir(), f.file(), f.sha256(),
-                        o.firstParty() ? Origin.FIRST_PARTY : Origin.THIRD_PARTY, o.why()));
+                        FirstParty.listHash(f.dir()), o.firstParty() ? Origin.FIRST_PARTY : Origin.THIRD_PARTY, o.why()));
             } catch (ModuleRefusedException e) {
                 refused.put(id, e.getMessage());
             } catch (UncheckedIOException e) {
@@ -250,6 +272,56 @@ public final class ModuleBoot {
             notes.addAll(ModuleFiles.sweep(cacheRoot, owned));
         }
         return new Result(modules, refused, leftovers, notes, list, withList);
+    }
+
+    /**
+     * Source mode (the i7a decision on {@code --root}): the module folders of a checkout, {@code <checkout>/modules/<id>/} with a
+     * {@code module.yaml}, booted through the development path: every module of the checkout, each read where it lies, origin
+     * development, no content hash; no {@code .dmod} is read, nothing is unpacked, nothing swept. It is what the command-line tools and the
+     * tests mean by "the shipped files" of a checkout; servers under test and the drill boot packages.
+     *
+     * @param checkout the checkout's root folder
+     * @param facts    this kernel's facts (the API versions for V3)
+     */
+    public static Result source(Path checkout, KernelFacts facts) {
+        return boot(null, null, false, facts, sourceFolders(checkout));
+    }
+
+    /** The module folders of a checkout ({@code <checkout>/modules/<id>/} holding a {@code module.yaml}), sorted; the one listing of them. */
+    public static List<Path> sourceFolders(Path checkout) {
+        Path modules = checkout.resolve(SOURCE_MODULES);
+        if (!Files.isDirectory(modules)) {
+            return List.of();
+        }
+        return ModuleFiles.list(modules).stream().filter(p -> Files.isRegularFile(p.resolve(DmodManifest.FILE)))
+                .map(p -> p.toAbsolutePath().normalize()).toList();
+    }
+
+    /**
+     * Writes (or refreshes) this node's in-use marker beside the cache folder of every package of the result,
+     * {@code <cache>/<id>/<version>-<hash16>.in-use-<node>}: while it is younger than {@link #IN_USE_FRESH} no sweep deletes the folder,
+     * so nodes that share one data folder through a rolling upgrade never delete each other's modules. A running server calls it at start
+     * and every {@link #IN_USE_REFRESH}; {@link #releaseInUse} at stop. Returns notes; never fails.
+     */
+    public static List<String> markInUse(Result r, String node) {
+        List<String> notes = new ArrayList<>();
+        r.modules().values().stream().filter(m -> m.file() != null)
+                .forEach(m -> ModuleFiles.touch(inUseMarker(m.dir(), node), "node: " + node + "\npid: "
+                        + ProcessHandle.current().pid() + "\n", notes));
+        return notes;
+    }
+
+    /** Deletes this node's in-use markers of the result (the server's stop). Returns notes; never fails. */
+    public static List<String> releaseInUse(Result r, String node) {
+        List<String> notes = new ArrayList<>();
+        r.modules().values().stream().filter(m -> m.file() != null).forEach(m -> ModuleFiles.delete(inUseMarker(m.dir(), node), notes));
+        return notes;
+    }
+
+    /** The in-use marker of a cache folder for a node (characters a file name cannot hold become {@code _}). */
+    public static Path inUseMarker(Path cacheDir, String node) {
+        String safe = node == null || node.isBlank() ? "node" : node.replaceAll("[^A-Za-z0-9._-]", "_");
+        return cacheDir.resolveSibling(cacheDir.getFileName() + IN_USE + safe);
     }
 
     /**
@@ -339,7 +411,7 @@ public final class ModuleBoot {
                     refused.put(m.id(), range);
                     continue;
                 }
-                byId.computeIfAbsent(m.id(), k -> new ArrayList<>()).add(new Module(m.id(), m.version(), m, folder, null, null,
+                byId.computeIfAbsent(m.id(), k -> new ArrayList<>()).add(new Module(m.id(), m.version(), m, folder, null, null, null,
                         Origin.DEVELOPMENT, ModuleVerifier.DEVELOPMENT));
             } catch (ModuleRefusedException e) {
                 refused.put(where, e.getMessage());
@@ -357,12 +429,42 @@ public final class ModuleBoot {
         });
     }
 
+    /**
+     * The upgrade note of the old store: each module {@code <data>/modules/registry.json} names OFF or REMOVED, told once per boot with
+     * the one switch that remains. The file is not otherwise read and never written.
+     */
+    @SuppressWarnings("unchecked")
+    private static List<String> oldRegistryNotes(Path cacheRoot) {
+        Path data = dataFolder(cacheRoot);
+        Path file = data == null ? null : data.resolve("modules").resolve(OLD_REGISTRY);
+        if (file == null || !Files.isRegularFile(file)) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        try {
+            for (Object o : new ObjectMapper().readValue(file.toFile(), List.class)) {
+                if (o instanceof Map<?, ?> e && e.get("id") != null
+                        && ("OFF".equals(String.valueOf(e.get("state"))) || "REMOVED".equals(String.valueOf(e.get("state"))))) {
+                    String id = String.valueOf(e.get("id"));
+                    out.add(id + ": was off in the old store: set enabled: false in config/modules/" + id + ".yaml");
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            out.add(file.toAbsolutePath().normalize() + " (the old store) does not read: " + e.getMessage());
+        }
+        return out;
+    }
+
+    /** The data folder: the cache root's grandparent ({@code <data>/cache/modules}), or null without a cache root. */
+    private static Path dataFolder(Path cacheRoot) {
+        return cacheRoot == null || cacheRoot.toAbsolutePath().getParent() == null ? null : cacheRoot.toAbsolutePath().getParent().getParent();
+    }
+
     /** The folders of the removed deployment store, under the data folder's {@code modules} and the modules folder itself. */
     private static Map<Path, String> leftovers(Path modulesHome, Path cacheRoot) {
         Map<Path, String> out = new LinkedHashMap<>();
         List<Path> roots = new ArrayList<>();
-        Path data = cacheRoot == null || cacheRoot.toAbsolutePath().getParent() == null ? null
-                : cacheRoot.toAbsolutePath().getParent().getParent();
+        Path data = dataFolder(cacheRoot);
         if (data != null) {
             roots.add(data.resolve("modules"));
         }
@@ -376,6 +478,9 @@ public final class ModuleBoot {
                     out.putIfAbsent(p, SAFE_TO_DELETE);
                 }
             }
+        }
+        if (data != null && Files.isRegularFile(data.resolve("modules").resolve(OLD_REGISTRY))) {
+            out.putIfAbsent(data.resolve("modules").resolve(OLD_REGISTRY).toAbsolutePath().normalize(), SAFE_TO_DELETE);
         }
         if (data != null && Files.isDirectory(data.resolve("overrides").resolve("installed"))) {
             out.putIfAbsent(data.resolve("overrides").resolve("installed").toAbsolutePath().normalize(), SAFE_TO_DELETE);
