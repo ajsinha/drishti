@@ -1992,7 +1992,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   types (a `@typedef` was read as `@type` and dropped). 9 Node tests (`gallery.test.mjs`), the routes' tests and one browser file
   (`test_elements_gallery_browser.py`, 5 tests, about 18 s).
 - **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/ARCHITECTURE.md#302-the-renderer-as-an-elements-library),
-  [ELEMENTS.md section 8.5](docs/architecture/ELEMENTS.md#85-as-built-drishti-renderer-200)). The product owner's rule: no renderer-private
+  [ELEMENTS.md section 8.5](docs/architecture/ELEMENTS.md#85-as-built-drishti-renderer)). The product owner's rule: no renderer-private
   grid, chart, format, live or input code; the console and the renderer draw panels with the same components. Tables, trees, drills, the
   pivot kind and every chart's Data table are **drishti-grid's document table** (the server's table, element for element 1.2.0's markup,
   with sort, filter, paging, trees and drills); the nested pivot in `behaviours: 'console'` is **drishti-grid's grid with tree data** (new:

@@ -106,9 +106,10 @@ export class SelectionChip {
     } else { this.el.appendChild(h(doc, 'span', { cls: 'drishti-selchip-text', text: 'Nothing selected' })); }
     const past = this.history.list();
     if (past.length) {
-      const sel = h(doc, 'select', { cls: 'drishti-selchip-history', attrs: { 'aria-label': 'Earlier selections' }, on: { change: (e) => { if (e.target.value !== '') { this.restore(Number(e.target.value)); e.target.value = ''; } } } },
-        [h(doc, 'option', { text: 'History', attrs: { value: '' } })].concat(past.map((x, i) => h(doc, 'option', { text: x.label, attrs: { value: String(i) } }))));
-      this.el.appendChild(sel);
+      /* the earlier selections as a disclosure of buttons (drishti-core draws no select: that is drishti-inputs', which core does not require) */
+      const list = h(doc, 'ul', { cls: 'drishti-selchip-past', attrs: { 'aria-label': 'Earlier selections' } },
+        past.map((x, i) => h(doc, 'li', {}, [h(doc, 'button', { cls: 'drishti-selchip-pick', text: x.label, attrs: { type: 'button' }, on: { click: () => this.restore(i) } })])));
+      this.el.appendChild(h(doc, 'details', { cls: 'drishti-selchip-history' }, [h(doc, 'summary', { text: 'History' }), list]));
     }
   }
 

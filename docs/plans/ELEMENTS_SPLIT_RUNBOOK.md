@@ -127,7 +127,7 @@ git clone -q --no-local --branch "$I6_TAG" $DRISHTI $SRC && cd $SRC && git switc
 # 1a. The list that moves: one path per line, files only, as they are at the i6 release.
 {
   for l in $LIBS; do git ls-files "$S/elements/drishti-$l/"; done
-  git ls-files "$S/elements/README.md" "$S/elements/drishti_elements.json" "$S/gallery/"
+  git ls-files "$S/elements/drishti_README.md" "$S/elements/drishti_elements.json" "$S/gallery/"
   # the shared sheets and the engines the eight libraries name
   python3 - <<'PY'
 import json, os, re, subprocess

@@ -3557,6 +3557,7 @@
   /* ---- src/drishti_query-builder.js ---- */
   __m["src/drishti_query-builder.js"] = (function () {
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase;
+    var selectElement = __m["src/drishti_select.js"].selectElement;
     var announce = __lib("drishti-core").announce;
     const QUERY_OPS = Object.freeze({ eq: '=', ne: '!=', gt: '>', ge: '>=', lt: '<', le: '<=', in: 'in', contains: 'contains' });
     const BY_TYPE = { text: ['eq', 'ne', 'contains', 'in'], enum: ['eq', 'ne', 'in'], number: ['eq', 'ne', 'gt', 'ge', 'lt', 'le'], date: ['eq', 'gt', 'ge', 'lt', 'le'] };
@@ -3589,8 +3590,9 @@
         this.conds = this.o.value.map((c) => Object.assign({}, c));
         this.chips = this.el('ul', { cls: 'di-query-chips', attrs: { 'aria-label': this.o.label + ': conditions' } });
         const f = this.o.fields;
-        this.field = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Field' }, on: { change: () => this.fieldChanged() } }, f.map((x) => this.el('option', { text: x.label || x.id, attrs: { value: x.id } })));
-        this.op = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Operator' } });
+        this.field = selectElement(this.doc, { label: 'Field', options: f.map((x) => [x.id, x.label || x.id]) });
+        this.field.addEventListener('change', () => this.fieldChanged());
+        this.op = selectElement(this.doc, { label: 'Operator', options: [] });
         this.val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: 'value' }, on: { keydown: (e) => this.valueKey(e) } });
         this.add = this.el('button', { cls: 'di-btn', text: 'Add', attrs: { type: 'button' }, on: { click: () => this.addFromRow() } });
         this.err = this.el('div', { cls: 'di-query-error', attrs: { role: 'alert' } });
@@ -3600,8 +3602,8 @@
       }
       fieldChanged() {
         const f = this.o.fields.find((x) => x.id === this.field.value) || this.o.fields[0];
-        while (this.op.firstChild) { this.op.removeChild(this.op.firstChild); }
-        BY_TYPE[f.type || 'text'].forEach((k) => this.op.appendChild(this.el('option', { text: QUERY_OPS[k], attrs: { value: k } })));
+        const ops = BY_TYPE[f.type || 'text'];
+        this.op.component.setOptions(ops.map((k) => ({ value: k, label: QUERY_OPS[k] })), ops[0]);
         this.val.setAttribute('inputmode', f.type === 'number' ? 'decimal' : 'text');
       }
       valueKey(e) {

@@ -100,8 +100,6 @@ export function holdAntimeridian(g) {
 /** @private every outer ring of a geometry */
 function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
 
-export { bounds };
-
 /** @private a ring's area in square degrees (shoelace, absolute) */
 function ringArea(r) { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); } return Math.abs(a / 2); }
 

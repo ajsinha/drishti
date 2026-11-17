@@ -272,7 +272,7 @@
     sutra: () => null
   }));
 
-  /* ---------------- drishti-chart 0.3.0: tracks, category cells, segments, surface, the rectangle brush, frames, lollipop, 3D trace ----------------
+  /* ---------------- drishti-chart: tracks, category cells, segments, surface, the rectangle brush, frames, lollipop, 3D trace ----------------
      Synthetic and seeded (the same pictures every time); generic data (desks, sessions, a path): a domain library builds its kinds on these. */
   const seeded = (seed) => { let x = seed; return () => { x = (x * 16807) % 2147483647; return (x - 1) / 2147483646; }; };
   const more = (ctx) => ctx.memo('chart-0.3', () => {

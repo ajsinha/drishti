@@ -23,9 +23,10 @@ pytestmark = pytest.mark.static
 
 ELEMENTS = Path(__file__).resolve().parent.parent / "web" / "static" / "elements"
 CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
-# bytes; about 15% over the size when written (2026-11-16); raised the same day for the chart (more kinds, the world regions) and data (worker, feed monitor)
+# bytes; about 15% over the size when written (2026-11-16); raised the same day for the chart (more kinds, the world regions) and data (worker, feed monitor);
+# the chart again at the i6 integration: the showcase's generic kinds joined it (segmented scatter, matrix, lollipop, 3D trace, heatmap tracks)
 BUNDLES = {"drishti-core": 180_000, "drishti-inputs": 290_000, "drishti-grid": 610_000, "drishti-tree": 145_000, "drishti-designer": 170_000,
-           "drishti-data": 56_000, "drishti-chart": 275_000, "drishti-graph": 165_000, "drishti-insight": 82_000, "drishti-risk": 32_000,
+           "drishti-data": 56_000, "drishti-chart": 320_000, "drishti-graph": 165_000, "drishti-insight": 82_000, "drishti-risk": 32_000,
            "drishti-renderer": 165_000}
 SHEETS = {"drishti_states.css": 4_000, "drishti_command-palette.css": 5_000, "drishti_dock.css": 5_000, "drishti_chips.css": 5_000}
 

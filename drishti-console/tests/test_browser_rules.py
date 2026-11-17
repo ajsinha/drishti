@@ -62,7 +62,7 @@ BASELINE: dict[str, tuple[int, int]] = {
     "test_server_watch_browser.py": (2, 0), "test_slider_browser.py": (1, 0), "test_smat_browser.py": (2, 0),
     "test_table_chart_browser.py": (1, 0), "test_topbar_menus_phone_browser.py": (5, 0), "test_topbar_widths_browser.py": (2, 0),
     "test_var_explorer_browser.py": (5, 0), "test_var_lens_browser.py": (2, 0), "test_var_regulatory_browser.py": (2, 0),
-    "test_wave_b_browser.py": (1, 0), "test_wave_d_browser.py": (4, 0),
+    "test_wave_b_browser.py": (1, 0), "test_wave_d_browser.py": (1, 0),
     "test_workbench_about_browser.py": (1, 0), "test_workbench_browser.py": (2, 0), "test_workbench_form_browser.py": (2, 0),
     "test_workbench_ux2_browser.py": (4, 0), "test_workbench_ux2b_browser.py": (3, 0), "test_workbench_ux2c_browser.py": (3, 0),
     "test_workspace_keys_browser.py": (3, 0), "test_zoom_browser.py": (1, 0)

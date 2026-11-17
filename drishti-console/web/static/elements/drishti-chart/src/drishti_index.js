@@ -39,10 +39,10 @@ export { buildLollipop, buildTrace3d, buildSegmented, buildMatrix, canDraw3d, en
 export { trackValues, trackColour, categoryCells, addTracks } from './drishti_chart-tracks.js';
 export { segmentOf, scatterOverlays } from './drishti_chart-overlays.js';
 export { frameValues, frameRows, reducedMotion, FrameBar } from './drishti_chart-frames.js';
-export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
+export { equalEarth, albers, plateCarree, projectGeometry, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
 export { WORLD_REGIONS } from './drishti_world-regions.js';
-export { REGION_START_LEVELS, isRegionLevel, regionOf, regionName, prepareRegionLevel } from './drishti_chart-regions.js';
+export { REGION_START_LEVELS, isRegionLevel, regionOf, regionName, prepareRegionLevel, bounds } from './drishti_chart-regions.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
 export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, rectBrush, idsInBox, svgOf } from './drishti_chart-parts.js';

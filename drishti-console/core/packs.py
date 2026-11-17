@@ -30,6 +30,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import logging
+import shutil
 import time
 from pathlib import Path
 
@@ -92,7 +93,7 @@ class Packs:
         now = time.monotonic()
         hit = self._cache.get(key)
         if hit and now - hit[0] < self.ttl and self.stamps.fresh(key, hit[3]):
-            return hit[1], hit[2]
+            return copy.deepcopy((hit[1], hit[2]))   # each caller its own copy: the cache is never changed by a page
         began = time.time()
         try:
             status, answer = await backend.me_console(ident, hit[4] if hit and self.stamps.fresh(key, hit[3]) else None)
@@ -101,13 +102,13 @@ class Packs:
                 self._older.add(current_server())
                 log.warning("the server %s has no /api/v1/me/console: it is older than this console; upgrade the servers first", current_server())
             if hit and now - hit[0] < self.ttl * AWAY_FACTOR:
-                return hit[1], hit[2]
+                return copy.deepcopy((hit[1], hit[2]))   # each caller its own copy: the cache is never changed by a page
             log.info("the person's packs could not be asked (%s): none shown until the server answers", type(e).__name__)
             return [], []
         self._older.discard(current_server())
         if status == 304 and hit:
             self._cache[key] = (now, hit[1], hit[2], began, hit[4])
-            return hit[1], hit[2]
+            return copy.deepcopy((hit[1], hit[2]))   # each caller its own copy: the cache is never changed by a page
         mods = (answer or {}).get("modules")
         self._decisions[key] = {"engines-opened": [str(x) for x in (answer or {}).get("engines-opened") or []],
                                 "grants": [str(x) for x in (answer or {}).get("grants") or []],
@@ -118,7 +119,7 @@ class Packs:
         packs = [p for p, r in zip(made, rows) if r.get("active", True)]
         switcher = [{**p, "active": bool(r.get("active", True))} for p, r in zip(made, rows) if r.get("assigned", True)]
         self._cache[key] = (now, packs, switcher, began, str((answer or {}).get("stamp") or ""))
-        return packs, switcher
+        return copy.deepcopy((packs, switcher))
 
     async def _pack(self, backend, ident, row: dict) -> dict:
         """One pack as the pages use it: the person's row, and the pack's contributions (asked once per digest, shared by everyone)."""
@@ -159,14 +160,20 @@ class Packs:
         return value
 
     async def _files(self, backend, ident, name: str, listed: list) -> dict[str, Path]:
-        """Each listed file kept in this console's temp folder under its SHA-256 (fetched once per content), by its path in the pack;
-        a file that does not arrive or does not match its digest is left out."""
+        """Each listed file kept in this console's temp folder, by its path in the pack, in one folder per set of files (the digest of every
+        listed path and SHA-256): the files of one pack version sit side by side as in the pack, so a guide's link to a sibling guide
+        (``write-your-first-sutra.md``) resolves; a file that does not arrive or does not match its digest is left out."""
         out: dict[str, Path] = {}
+        ver = hashlib.sha256("\n".join(sorted(f"{(f or {}).get('path')}:{(f or {}).get('sha')}" for f in listed)).encode()).hexdigest()[:16]
         for f in listed:
             rel, sha = str((f or {}).get("path") or ""), str((f or {}).get("sha") or "")
             if not rel or not sha or rel.startswith("/") or ".." in Path(rel).parts:
                 continue
-            target = self._root() / name / sha[:16] / rel
+            target = self._root() / name / ver / rel
+            blob = self._root() / name / "by-content" / sha[:16]
+            if not target.is_file() and blob.is_file():          # the same content in another version of the pack: not fetched again
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(blob, target)
             if not target.is_file():
                 try:
                     data = await backend.pack_console_file(name, rel, ident)
@@ -180,6 +187,8 @@ class Packs:
                 part = target.with_name(target.name + ".part")
                 part.write_bytes(bytes(data))
                 part.replace(target)
+                blob.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(target, blob)
             out[rel] = target
         return out
 

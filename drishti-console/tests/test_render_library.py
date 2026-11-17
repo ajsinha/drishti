@@ -78,7 +78,7 @@ def test_every_file_has_the_licence_and_stays_under_the_cap():
             text = p.read_text(encoding="utf-8")
             assert "PROPRIETARY AND CONFIDENTIAL" in text[:1200], p
             assert p.name == rd.SHEET or len(text.splitlines()) <= CODE_LINE_CAP, p          # the generated sheet is not a source
-            assert rd.LIBRARY not in p.parents or len(text.splitlines()) <= 530, p  # an Elements module stays under 530 lines
+            assert rd.LIBRARY not in p.parents or len(text.splitlines()) <= CODE_LINE_CAP, p  # an Elements module: the one code cap
 
 
 def test_every_kind_of_the_grammar_is_drawn():

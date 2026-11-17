@@ -491,7 +491,7 @@ What the data does not give is left out or labelled, never invented: [ADMIN_GUID
 
 #### 2.2.1 The landings
 
-One template (`home/trading_landing.html`), figures worked out by `trading_landing.py` and served read-only by `trading_routes.py`
+One template (`home/trading_landing.html`), figures worked out on the server by the trading module (`TradingLanding`, `/api/v1/trading/landing/*`) and passed on read-only by `trading_routes.py`
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`; `404 DRS-4023` unless the
 person's lens shows `TRD`), cached two minutes per person, date and scope. **A Trader desk** (the default): P&L today, My VaR, Limit use,
 DV01, Trades today, Check a new trade, Today's blotter, Top positions, Quick commands. **B Desk head**: Desk P&L today, Desk VaR and limit
@@ -697,7 +697,7 @@ The mock-ups follow [the mock-up rules](#mock-ups). The scenario matrix (on in T
 **Code:** [`trading_landing.html`](../../drishti-console/plugins/banking/templates/home/trading_landing.html),
 [`drishti_trading-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_trading-landing.js),
 [`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css),
-[`trading_landing.py`](../../drishti-console/plugins/banking/trading_landing.py),
+[`TradingLanding.java`](../../modules/trading/java/trading-service/src/main/java/com/ash/drishti/trading/TradingLanding.java),
 [`trading_routes.py`](../../drishti-console/plugins/banking/routes/trading_routes.py). Names are the demo's; figures illustrative.
 
 **Interactions.** Every trade id opens `TRD <id>`, every trader `TRDR`, every chip and quick card its command; *Check a new trade*
@@ -813,7 +813,7 @@ licensing shapes what may be shown.
 
 #### 3.2.1 The landings
 
-One template (`home/market_landing.html`); figures worked out by `market_landing.py` from the pack's own answers (search, raw documents,
+One template (`home/market_landing.html`); figures worked out on the server by the market-data module (`MarketLanding`, `/api/v1/market-data/landing/*`) from the pack's own answers (search, raw documents,
 the business date, one field's history through `/api/v1/history/{kind}/{id}/series`), read as the person, cached two minutes, served by
 `/api/home/market/desk`, `/moves` and `/quality` (`404 DRS-4023` unless the lens shows `CRV`).
 
@@ -1089,7 +1089,7 @@ The mock-ups follow [the mock-up rules](#mock-ups); the lens menus mock-up (LX1)
 supports. **Code:** [`market_landing.html`](../../drishti-console/plugins/banking/templates/home/market_landing.html),
 [`drishti_market-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_market-landing.js),
 [`drishti_market-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_market-landing.css),
-[`market_landing.py`](../../drishti-console/plugins/banking/market_landing.py), [`market.yaml`](../../config/lenses/banking/market.yaml).
+[`MarketLanding.java`](../../modules/market-data/java/market-data-service/src/main/java/com/ash/drishti/marketdata/MarketLanding.java), [`market.yaml`](../../config/lenses/banking/market.yaml).
 Curve names and shapes are the demo's; other figures illustrative.
 
 **Interactions.** Every tile, item and exception opens its command; Data exceptions opens C; hovering a move shows its dates and the

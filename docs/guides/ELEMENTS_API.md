@@ -16126,16 +16126,6 @@ A projected copy of a GeoJSON geometry (Polygon, MultiPolygon, Point).
 
 Returns `Object`.
 
-#### `bounds(pts)`
-
-The box of points [[x, y], ...]: [minX, minY, maxX, maxY].
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `pts` | `number[][]` |  |
-
-Returns `number[]`.
-
 #### `coreExtent(features)`
 
 The extent a country's map is fitted to (lon/lat): its rings near the area-weighted centre, so far-away parts (France's overseas regions) do not shrink the mainland; they stay on the map, reachable by panning.
@@ -16277,6 +16267,16 @@ The geography of a region level from the projected world: 'continents' (every co
 | `level` | `string` |  |
 
 Returns `import('./drishti_chart-geo.js').RegionGeo`: with regionKind ('continents'\|'subregions'\|'countries'), title and trail (the levels above, to go back to).
+
+#### `bounds(pts)`
+
+The box of points [[x, y], ...]: [minX, minY, maxX, maxY].
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pts` | `number[][]` |  |
+
+Returns `number[]`.
 
 ### drishti_chart-map.js
 

@@ -62,7 +62,7 @@ def test_the_packages_the_reference_the_catalogue_and_the_webjar_say_it():
     assert re.search(r"<artifactId>drishti-elements</artifactId>\s*<version>([^<]+)</version>", (ROOT / "packaging/drishti-elements/pom.xml").read_text(encoding="utf-8")).group(1) == VERSION
     assert (ROOT / "docs/guides/ELEMENTS_API.md").read_text(encoding="utf-8").count(f"# Drishti Elements {VERSION}: the API reference") == 1
     assert f'"elements":"{VERSION}"' in (STATIC / "gallery" / "drishti_catalogue.js").read_text(encoding="utf-8").replace(" ", "")
-    assert f"**{VERSION}**" in (STATIC / "elements" / "README.md").read_text(encoding="utf-8")
+    assert f"**{VERSION}**" in (STATIC / "elements" / "drishti_README.md").read_text(encoding="utf-8")
 
 
 def _texts():

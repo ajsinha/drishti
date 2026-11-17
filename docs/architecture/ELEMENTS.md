@@ -1529,7 +1529,7 @@ designer, graph, tree and a domain module's library such as drishti-genomics) sh
 `drishti_elements.json`, separate from Drishti's own: no library has a version of its own. Everything reads that one value (the bundles'
 headers, the loader's cache key, the renderer's folder `static/render/<version>/` and its `VERSION`, the npm packages, the WebJar, the
 reference, the catalogue and the gallery); `tests/test_elements_version.py` fails on any other. The rule and the semver policy are in
-[the Elements README](../../drishti-console/web/static/elements/README.md#versioning).
+[the Elements README](../../drishti-console/web/static/elements/drishti_README.md#versioning).
 
 ## 9. The documentation of every library
 
@@ -1808,7 +1808,7 @@ field, File, Ship, the command palette, a dropped field's kinds) are drishti-inp
 is the selected one), and `searchOptions` ranks a label that is the word first.
 
 The roadmap for Drishti Elements as its own project (repository, versioning, npm and a public CDN build, licence, stability, docs site,
-theming contract, CI and what to untangle first) is in [the Elements README](../../drishti-console/web/static/elements/README.md).
+theming contract, CI and what to untangle first) is in [the Elements README](../../drishti-console/web/static/elements/drishti_README.md).
 
 ## 13. Risks
 

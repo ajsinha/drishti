@@ -18,6 +18,7 @@
    whole query is also text that can be typed or pasted (parseQuery, queryText), so the chips are one view of it. The result is data
    ({field, op, value}) the host turns into a server filter; the builder never evaluates anything. */
 import { InputBase } from './drishti_inputs-dom.js';
+import { selectElement } from './drishti_select.js';
 import { announce } from '../../drishti-core/src/drishti_index.js';
 
 /** The operators by field type, with their words. */
@@ -93,8 +94,9 @@ export class QueryBuilder extends InputBase {
     this.conds = this.o.value.map((c) => Object.assign({}, c));
     this.chips = this.el('ul', { cls: 'di-query-chips', attrs: { 'aria-label': this.o.label + ': conditions' } });
     const f = this.o.fields;
-    this.field = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Field' }, on: { change: () => this.fieldChanged() } }, f.map((x) => this.el('option', { text: x.label || x.id, attrs: { value: x.id } })));
-    this.op = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Operator' } });
+    this.field = selectElement(this.doc, { label: 'Field', options: f.map((x) => [x.id, x.label || x.id]) });
+    this.field.addEventListener('change', () => this.fieldChanged());
+    this.op = selectElement(this.doc, { label: 'Operator', options: [] });
     this.val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: 'value' }, on: { keydown: (e) => this.valueKey(e) } });
     this.add = this.el('button', { cls: 'di-btn', text: 'Add', attrs: { type: 'button' }, on: { click: () => this.addFromRow() } });
     this.err = this.el('div', { cls: 'di-query-error', attrs: { role: 'alert' } });
@@ -106,8 +108,8 @@ export class QueryBuilder extends InputBase {
   /** @private the operators of the chosen field */
   fieldChanged() {
     const f = this.o.fields.find((x) => x.id === this.field.value) || this.o.fields[0];
-    while (this.op.firstChild) { this.op.removeChild(this.op.firstChild); }
-    BY_TYPE[f.type || 'text'].forEach((k) => this.op.appendChild(this.el('option', { text: QUERY_OPS[k], attrs: { value: k } })));
+    const ops = BY_TYPE[f.type || 'text'];
+    this.op.component.setOptions(ops.map((k) => ({ value: k, label: QUERY_OPS[k] })), ops[0]);
     this.val.setAttribute('inputmode', f.type === 'number' ? 'decimal' : 'text');
   }
 

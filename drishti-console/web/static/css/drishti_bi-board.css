@@ -45,7 +45,7 @@
    shrinks to the tile's width instead of being cut */
 .bi-board-grid .bi-vis-title { white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .bi-board-grid .bi-card-label { overflow-wrap: anywhere; }
-.bi-board-grid .bi-card-value { font-size: clamp(var(--d-fs-14_4), 11cqi, var(--d-fs-display-6)); }
+.bi-board-grid .bi-card-value { font-size: var(--d-fs-tile-number); }
 .bi-tile-warn { border-color: var(--d-warn); box-shadow: inset 0 0 0 3px var(--d-warn); }
 .bi-tile-crit { border-color: var(--d-bad); box-shadow: inset 0 0 0 3px var(--d-bad); }
 .bi-tile-warn .bi-card-value { color: var(--d-warn); }

@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 17 packs' codes, and the 117 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 19 packs' codes, and the 131 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 84 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 98 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -34,6 +34,7 @@ In numbers: 84 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 
 - [Counterparty credit risk (`counterparty-risk`)](#counterparty-credit-risk-counterparty-risk)
 - [Funds and ETFs (`funds`)](#funds-and-etfs-funds)
 - [GDELT events (`gdelt-events`)](#gdelt-events-gdelt-events)
+- [Genomics showcase (`genomics-showcase`)](#genomics-showcase-genomics-showcase)
 - [GLEIF legal entities (`gleif`)](#gleif-legal-entities-gleif)
 - [Market data (`market-data`)](#market-data-market-data)
 - [Market risk (`market-risk`)](#market-risk-market-risk)
@@ -41,6 +42,7 @@ In numbers: 84 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 
 - [News and markets (`news-and-markets`)](#news-and-markets-news-and-markets)
 - [OECD (`oecd`)](#oecd-oecd)
 - [Official news (`official-news`)](#official-news-official-news)
+- [Protein engineering showcase (`protein-engineering`)](#protein-engineering-showcase-protein-engineering)
 - [Trading (`trading`)](#trading-trading)
 - [US equities (`us-equities`)](#us-equities-us-equities)
 - [World development (`world-development`)](#world-development-world-development)
@@ -85,6 +87,7 @@ A pack's code typed alone opens the pack's overview.
 | `CCR` | `counterparty-risk` | ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM. |
 | `FUNDS` | `funds` | The 200 largest US mutual funds and ETFs by net assets with their holdings, from SEC public data: Form N-PORT holdings, derivatives and counterparties, flows and monthly returns; Form N-CEN census facts; prospectus fees, turnover and calendar-year returns. A holding opens its company (us-equities), a company lists the funds that hold it, an index the funds that track it. |
 | `GDLT` | `gdelt-events` | What the world's news reported about each country yesterday, from the GDELT Project's daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake lake. |
+| `GENOMICS` | `genomics-showcase` | A synthetic cohort of 1,500 patients read against one invented gene, HLXK7: 2,000 genes, 12,000 variant sites, 45,000 variant calls, copy-number segments and pathways, and 36,000 association tests of three traits computed from the calls. The words ASSOC (a variant's test against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY open the records; the showcase's screens are drawn from them. Everything is seeded and invented. |
 | `GLEIF` | `gleif` | Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities companies' ownership groups and of the large banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures, with their parents and children, addresses, registration and renewal, BICs and ISINs. Off by default; with us-equities on, a company and its LEI record link both ways. |
 | `MKT` | `market-data` | Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds. |
 | `MRSK` | `market-risk` | Value at risk, stress testing, FRTB sensitivities and P&L explain. |
@@ -92,6 +95,7 @@ A pack's code typed alone opens the pack's overview.
 | `NWMK` | `news-and-markets` | Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the connectors off) the demo lake serves a captured snapshot of the same quotes and headlines. |
 | `OECDP` | `oecd` | The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake. |
 | `ONEWS` | `official-news` | Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake. |
+| `PROTENG` | `protein-engineering` | Four invented proteins and the campaign that redesigned one of them, Helixase-7 (gene HLXK7, 312 amino acids): every position and every amino acid measured in two assays (47,840 scan scores), the fold with its coordinates, burial and contacts, and eight rounds of 1,500 designs that climb to about fifteen times the natural activity. The words PROT (a protein), DESIGN (a design), RESIDUE, DMS, CONTACT, DMUT and DROUND open the records; the showcase's screens are drawn from them. Everything is seeded and invented. |
 | `TRDS` | `trading` | Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products. |
 | `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
 | `WDEV` | `world-development` | World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. |
@@ -173,6 +177,20 @@ What the world's news reported about each country yesterday, from the GDELT Proj
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `GDELT` | World events by country | What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. | `GDELT GDELT-USA` | fundamental |  |
+
+## Genomics showcase (`genomics-showcase`)
+
+A synthetic cohort of 1,500 patients read against one invented gene, HLXK7: 2,000 genes, 12,000 variant sites, 45,000 variant calls, copy-number segments and pathways, and 36,000 association tests of three traits computed from the calls. The words ASSOC (a variant's test against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY open the records; the showcase's screens are drawn from them. Everything is seeded and invented.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `SGENE` | Gene of the study | One gene of the synthetic genome: where it sits, what it does, how long its protein is and how many samples of the cohort carry a damaging change in it. 24 of the 2,000 genes are the planted drivers, led by HLXK7. | `SGENE HLXK7` | fundamental |  |
+| `SSAMPLE` | Sample of the cohort | One patient's sample of the 1,500 of cohort ONC-1: the clinical tracks, the response to therapy, the cluster it belongs to and its place on the two-dimensional map of samples (precomputed, never projected at view time). | `SSAMPLE S0001` | fundamental |  |
+| `SVARIANT` | Variant site of the study | One variant site of the synthetic genome: its place, the change it makes to the gene's protein (the amino acids before and after, the key into the protein workbench's scan) and how many samples carry it. | `SVARIANT HX-004928` | fundamental |  |
+| `VCALL` | Variant call | One sample carrying one variant: the genotype, the fraction of reads that show it and the read depth. 45,000 calls over 1,500 samples; the association tests are computed from them. | `VCALL CALL-000001` | fundamental |  |
+| `ASSOC` | Association | One variant tested against one trait: the p-value, its negative log, the effect and its error and how strongly the variant is linked to the peak's lead. Three traits over 12,000 sites: 36,000 tests, each computed from the calls and the samples' traits (a Wald test on the log odds ratio), never painted. | `ASSOC GWAS-RESPONSE-HX-004928` | fundamental |  |
+| `CNV` | Copy-number segment | One stretch of a sample's genome with a copy number other than two: an amplification or a deletion over a driver gene, or a broad gain or loss. | `CNV CNV-00421` | fundamental |  |
+| `PATHWAY` | Pathway membership | One gene in one biological pathway and the part it plays there. Twelve invented pathways, 500 memberships. | `PATHWAY PWG-0007` | fundamental |  |
 
 ## GLEIF legal entities (`gleif`)
 
@@ -277,6 +295,20 @@ Press releases and notices from the publishers' own feeds: the Federal Reserve, 
 |---|---|---|---|---|---|
 | `PRESS` | Official press releases | One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms. | `PRESS PRESS-FED` | fundamental |  |
 | `PREL` | Press release | One official press release: its title, publisher, date, summary and the link to the original. | `PREL PREL-FED-0224349908` | fundamental |  |
+
+## Protein engineering showcase (`protein-engineering`)
+
+Four invented proteins and the campaign that redesigned one of them, Helixase-7 (gene HLXK7, 312 amino acids): every position and every amino acid measured in two assays (47,840 scan scores), the fold with its coordinates, burial and contacts, and eight rounds of 1,500 designs that climb to about fifteen times the natural activity. The words PROT (a protein), DESIGN (a design), RESIDUE, DMS, CONTACT, DMUT and DROUND open the records; the showcase's screens are drawn from them. Everything is seeded and invented.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `PROT` | Protein | One invented protein: its sequence, family and active site. Four proteins; Helixase-7, the enzyme of gene HLXK7 (312 amino acids), is the one the cohort screen and the design campaign are about. | `PROT HLXK7` | fundamental |  |
+| `RESIDUE` | Residue | One amino acid position of a protein: what it is, where it sits in the fold, how buried it is, whether it is in the active site, its place in space and the mean effect of changing it. Coordinates, burial and the means are written by the generator. | `RESIDUE HLXK7:177` | fundamental |  |
+| `CONTACT` | Residue contact | Two positions of a protein that sit close in space though they are not neighbours in the chain: the contact map's cells. The nearest pairs at least three positions apart, as many as the generator keeps for the protein. | `CONTACT HLXK7:12-45` | fundamental |  |
+| `DMS` | Scan score | One measurement of the scan: what changing one position of a protein to one amino acid did to one assay. Every position, every one of the 20 amino acids, two assays: 47,840 experiments. | `DMS HLXK7:177:A:activity` | fundamental |  |
+| `DESIGN` | Design | One designed variant of Helixase-7 from one round of the campaign: its parent, how many changes it carries, how active and stable it measured, what the model predicted and where it sits on the map of designs. Eight rounds of 1,500 designs climb to a protein about fifteen times as active as the natural one. | `DESIGN DSG-HLXK7-R8-0897` | fundamental |  |
+| `DMUT` | Design change | One amino acid change of one design: the position, what it was and what it became. 33,000 changes over 12,000 designs. | `DMUT DSG-HLXK7-R8-0412:117` | fundamental |  |
+| `DROUND` | Design round | One round of the campaign: how the designs were made, how many, and how well the round did. Eight rounds. | `DROUND HLXK7-R8` | fundamental |  |
 
 ## Trading (`trading`)
 

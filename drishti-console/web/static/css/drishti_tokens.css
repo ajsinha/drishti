@@ -473,6 +473,7 @@
   --d-fs-display-7: clamp(1.1rem, 16cqi, 1.8rem);
   --d-fs-display-8: clamp(1.3rem, 2.6vw, 1.75rem);
   --d-fs-display-9: clamp(1.2rem, 2.6vw, 1.75rem);
+  --d-fs-tile-number: clamp(var(--d-fs-14_4), 11cqi, var(--d-fs-display-6));   /* a desk-wall tile's big number: shrinks to the tile */
   --d-fs-display-10: clamp(1.15rem, 2vw, 1.4rem);
 
   /* spacing: padding, margin and gap steps up to 2rem (--d-sp-<px>); larger offsets are layout, written where they are used */

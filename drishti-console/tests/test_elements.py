@@ -20,6 +20,7 @@ import json
 import pytest
 
 from conftest import CONSOLE
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
@@ -57,8 +58,9 @@ def test_every_file_of_ours_is_prefixed_and_every_library_is_in_the_manifest():
             assert (CONSOLE / "web" / "static" / css).is_file(), f"{name} needs {css}"
 
 
-#: The size of one Elements module (ELEMENTS.md section 3): a module over it is split by what it does, never trimmed of its comments.
-MODULE_LINES = 530
+#: The size of one Elements module: the one code line cap of every source file (tools/code_cap.py; owner's rule): a module over it is
+#: split by what it does, never trimmed of its comments.
+MODULE_LINES = CODE_LINE_CAP
 
 
 def test_every_elements_module_stays_under_the_line_cap():

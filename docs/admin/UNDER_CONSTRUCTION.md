@@ -17,12 +17,12 @@ computed, or a contract still to come. The registry lists each one with the rele
 
 The data stays where it is; only what is displayed changes. **One mechanism:** the server rewrites a kind's Sutra when it is matched to a
 document (strip items and kv or table columns by their bind, panels by their id), so the console, the phone display, pivots and the client
-renderer read the same answer (the figure's tone is `uc`, drawn as the chip); the console draws the server's answer for its menu items and help
+renderer read the same answer (the figure's tone is `uc`, drawn as the chip); the console reads the same file for its menu items and help
 pages. A new item that depends on unbuilt work is registered in the same change
 ([BUILD_GUIDE.md, Unbuilt work](../guides/BUILD_GUIDE.md#unbuilt-work-the-under-construction-registry)).
 
 Settings: `drishti.under-construction.file` (server, `DRISHTI_UNDER_CONSTRUCTION_FILE`, default `./config/under-construction.yaml`, else the
-file beside the packs folder); the console reads no file: the server sends the registry's items in its installation answer.
+file beside the packs folder) and `under_construction.file` (console, default `../config/under-construction.yaml`).
 
 
 | Item | What | Treatment | Built in | Where it shows |

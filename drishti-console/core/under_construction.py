@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The under-construction registry in the console (docs/admin/UNDER_CONSTRUCTION.md): the server reads ``config/under-construction.yaml``
+"""The under-construction registry in the console (docs/admin/UNDER_CONSTRUCTION.md): the server reads its registry file (``config/under-construction``, UNDER_CONSTRUCTION.md)
 and sends each item in its installation answer (``under-construction``, THIN_CONSOLE_DESIGN.md step S3); the console reads no file. The menu items and help pages that depend on unbuilt work are left out (``hidden``) or shown with the "Under construction" chip
 (``under-construction``). A figure on a page is the server's: it rewrites the Sutra, and the page draws its tone ``uc`` as the same chip
 (``drishti_under-construction.css``). One file, one chip, no per-screen code."""
