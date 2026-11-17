@@ -34,12 +34,24 @@
     <!-- the Drishti install the module is packed and verified with (its tools/ folder and lib/ server jar); the module's folder is two up -->
     <drishti.home>${env.DRISHTI_HOME}</drishti.home>
     <drishti.python>python3</drishti.python>
+    <!-- the SDK folder of that install (python tools/drishti.py build sdk): its Maven file repository holds the kernel API this module compiles against -->
+    <drishti.sdk.repo>${drishti.home}/sdk/repo</drishti.sdk.repo>
+    <drishti.sdk.repo.url>file://${drishti.sdk.repo}</drishti.sdk.repo.url>
     <drishti.dmod.source>${project.basedir}/../..</drishti.dmod.source>
     <drishti.conformance.skip>false</drishti.conformance.skip>
     <spring-framework.version>6.2.19</spring-framework.version>
     <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <assertj.version>3.27.7</assertj.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>drishti-sdk</id>
+      <url>${drishti.sdk.repo.url}</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -63,7 +75,7 @@
     <profile>
       <id>windows</id>
       <activation><os><family>windows</family></os></activation>
-      <properties><drishti.python>python</drishti.python></properties>
+      <properties><drishti.python>python</drishti.python><drishti.sdk.repo.url>file:///${drishti.sdk.repo}</drishti.sdk.repo.url></properties>
     </profile>
   </profiles>
 

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.admin;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 
 /** An action Admin, Artifacts refused because other things depend on the artifact; carries the impact so the answer can list it. */
 public final class ArtifactRefused extends DrishtiException {

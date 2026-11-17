@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.command.CommandParser;
 import com.ash.drishti.engine.command.RecentEntities;

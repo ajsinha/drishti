@@ -16,8 +16,8 @@
 package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.common.BusinessCalendar;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.Resolver;

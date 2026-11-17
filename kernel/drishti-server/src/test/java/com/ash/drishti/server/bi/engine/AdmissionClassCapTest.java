@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

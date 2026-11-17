@@ -17,8 +17,8 @@ package com.ash.drishti.server.edit;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.impact.ImpactService;
 import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.server.security.Entitlements;

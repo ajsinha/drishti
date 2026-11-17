@@ -15,7 +15,6 @@
  */
 package org.helixlab.genomics;
 
-import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
@@ -53,7 +52,7 @@ class VcfTest {
     @Test
     void theShippedSamplesReadIntoVariantsGenesAndTwoCohorts() {
         GenomicsData d = new GenomicsData();
-        GenomicsData.Snapshot s = d.load(List.of(Path.of(TestRoots.module(), "..", "..", "data", "samples").normalize()));
+        GenomicsData.Snapshot s = d.load(List.of(Path.of(moduleRoot(), "..", "..", "data", "samples").normalize()));
         assertThat(s.problems()).isEmpty();
         assertThat(s.variants()).hasSize(120).containsKey("HX-A001");
         assertThat(s.samples()).hasSize(24);
@@ -62,5 +61,10 @@ class VcfTest {
         assertThat(d.cohorts().get("COH-A")).containsEntry("SAMPLES", 12);
         assertThat(GenomicsFunctions.afClass(0.004)).isEqualTo("rare");
         assertThat(GenomicsFunctions.afClass("0.2")).isEqualTo("common");
+    }
+
+    /** The Maven project's folder (surefire sets basedir): the test's files are found from it, never from the working folder. */
+    private static String moduleRoot() {
+        return System.getProperty("basedir", ".");
     }
 }

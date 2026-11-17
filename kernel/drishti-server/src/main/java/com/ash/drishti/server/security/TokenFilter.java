@@ -16,7 +16,7 @@
 package com.ash.drishti.server.security;
 
 import com.ash.drishti.kernel.api.security.Principal;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -106,7 +106,7 @@ public final class TokenFilter extends OncePerRequestFilter {
         String auth = req.getHeader("Authorization");
         try {
             if (auth == null || !auth.startsWith("Bearer ")) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "missing bearer token");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.UNAUTHENTICATED, "missing bearer token");
             }
             String bearer = auth.substring(7).trim();
             com.ash.drishti.server.embed.EmbedTokenService emb = embed;
@@ -117,7 +117,7 @@ public final class TokenFilter extends OncePerRequestFilter {
             if (com.ash.drishti.identity.ApiTokenStore.looksLikeToken(bearer)) {
                 // a personal API token: it acts as its user, and only within the scopes it was given
                 Grant g = apiTokens.apply(bearer).orElseThrow(() -> new DrishtiException(
-                        com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "API token unknown, revoked or expired"));
+                        com.ash.drishti.api.error.ErrorCode.UNAUTHENTICATED, "API token unknown, revoked or expired"));
                 String method = req.getMethod();
                 String path = RequestPaths.routed(req);
                 TokenScopes.Verdict v = scopes.check(g.scopes(), method, path);
@@ -143,7 +143,7 @@ public final class TokenFilter extends OncePerRequestFilter {
             }
             Principal signed = verifier.verify(bearer);
             if (!account.test(signed)) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "the account of this token does not exist or is disabled");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.UNAUTHENTICATED, "the account of this token does not exist or is disabled");
             }
             req.setAttribute(Principal.ATTRIBUTE, signed);
         } catch (DrishtiException e) {

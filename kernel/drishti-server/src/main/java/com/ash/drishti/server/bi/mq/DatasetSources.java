@@ -255,7 +255,7 @@ final class DatasetSources implements StagedTables {
     private Answer fromModel(String table, DatasetDef d) {
         if (!READING.get().add(d.name())) {
             READING.get().clear();
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.MQ_CONTEXT, "a model cannot read its own answer: calculated table '" + d.name() + "' reads itself through a measure");
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.MQ_CONTEXT, "a model cannot read its own answer: calculated table '" + d.name() + "' reads itself through a measure");
         }
         try {
             return readFromModel(table, d);

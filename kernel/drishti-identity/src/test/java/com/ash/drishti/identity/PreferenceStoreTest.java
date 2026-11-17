@@ -18,7 +18,7 @@ package com.ash.drishti.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;

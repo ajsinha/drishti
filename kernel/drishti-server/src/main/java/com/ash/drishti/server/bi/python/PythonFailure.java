@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.python;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 
 /** A Python item's own failure (DRS-9070 to 9073), with the author's own traceback when the run was asked by an author (else null). */
 public final class PythonFailure extends DrishtiException {

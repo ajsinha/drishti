@@ -144,7 +144,7 @@ class ReportParserTest {
         Report r = ReportParser.parse(ok).report();
         Report.Page p = r.page("p");
         assertThatThrownBy(() -> VisualQueries.build(r, p, p.visual("v"), ReportState.NONE, dataset("trades-basic"), BiReportProperties.defaults(), (f, n, by, d, c, a, b) -> List.of()))
-                .isInstanceOf(com.ash.drishti.common.DrishtiException.class).hasMessageContaining("draws no data");
+                .isInstanceOf(com.ash.drishti.api.error.DrishtiException.class).hasMessageContaining("draws no data");
     }
 
     @Test

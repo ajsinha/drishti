@@ -16,8 +16,8 @@
 package com.ash.drishti.engine.command;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.graph.ReferenceCatalog;
 import java.util.Locale;
 import java.util.Optional;

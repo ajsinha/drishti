@@ -100,7 +100,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-lakeload` | `lakeload`, `dataload`, `memlake` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). The data inbox (package `dataload`): files dropped with a `.ready` marker, claimed, routed, loaded by the loader, recorded and moved to the outbox. The in-memory lake (package `memlake`, plain Java with no Spring, [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks; the server keeps only its Spring wiring (`server.memlake`, `server.dataload`). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget`, `dataload.DataInbox`, `memlake.MemoryLake`, `memlake.store.MemoryStores` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the conformance checks C1–C14 ([§1.6](#16-the-module-sdk): `module.conformance`, run by `ModuleCli` in the server jar). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
-| `drishti-sdk/drishti-module-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project and the parent it inherits, whose executions run the Python packager and the server jar's verifier (validate, pack the `.dmod`, the conformance checks C1–C14). | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
+| `drishti-sdk/drishti-module-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project and the parent it inherits, whose executions run the Python packager and the server jar's verifier (validate, pack the `.dmod`, the conformance checks C1–C14). | (none: the parent binds `exec-maven-plugin` to `tools/drishti.py module verify` and `module pack`) |
 | `modules/banking/java/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/java/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
 | `drishti-app` | (none) | The runnable jar, no code and no module: the kernel as `lib/drishti-server-<v>-exec.jar`. The modules are `.dmod` packages beside it in `modules/` (`build modules`, or `build all` for the jar and the modules); with none, Health says *no modules*. | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
@@ -256,37 +256,51 @@ For Maven the SDK is two more artifacts of this repository, `com.ash.drishti:*` 
 | `drishti-module-archetype` | makes a module in the one module layout that builds green on its first `mvn verify`: the `.dmod` content at the folder's top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/`), the code as the Maven project `java/<artifactId>/` with the aggregating `pom.xml` beside `java/`; a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
 | `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the `exec-maven-plugin` executions that run the packager and the verifier (`validate`: `module verify --manifest-only`; `package`: `module pack`; `verify`: `module verify --conformance`) |
 
+**The SDK folder.** A third party builds a module from the SDK alone, with no Drishti source. `python tools/drishti.py build sdk` (Java 21 and
+the install's Maven wrapper; it runs `package`, never `install`, so nothing reaches `~/.m2`) writes `<Drishti folder>/sdk/`:
+
+| In `sdk/` | What it is |
+|---|---|
+| `repo/` | a Maven file repository: `drishti-kernel-api` and what it needs (`drishti-api`, `drishti-common`, `drishti-settingsfile`), the product's parent pom, `drishti-module-parent` and `drishti-module-archetype`, all at the product's version |
+| `settings.xml` | a Maven settings file naming `repo/` by its absolute path: `mvn -s <Drishti folder>/sdk/settings.xml ...` finds the parent and the kernel API in a project that names no path |
+| `drishti-module-parent/pom.xml` | the parent pom, for a project that names it by `relativePath` (the genomics sample does) |
+
+The parent's own `<repositories>` entry reads `${drishti.home}/sdk/repo` (`-Ddrishti.home=<Drishti folder>`, or the environment variable `DRISHTI_HOME`).
+The genomics sample is the proof: `tools/test_sdk_builds_genomics.py` copies it beside the SDK's parent into an empty folder and builds it there, once by
+`relativePath` and once as a partner's project does (the parent by version through `settings.xml`); the tests run, `module pack` makes the `.dmod` and the fourteen checks pass.
+
 **Quickstart with Maven: archetype → build → load.** Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-./mvnw -q install -pl .,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
-mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
-    -DarchetypeVersion=$(python3 tools/version.py) -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
-cd greet && mvn verify          # the test, java/greet/target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C14
-cp java/greet/target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
-curl -s localhost:18480/api/v1/greet/greeting/Asha         # the module's REST API, mounted by the kernel
-rm <data folder>/modules/greet-0.1.0.dmod                  # removed the same way: its paths answer 410, its tombstone is kept
+python3 tools/drishti.py build sdk
+mvn -B -s sdk/settings.xml archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
+    -DarchetypeVersion=$(python3 tools/version.py) -DarchetypeRepository=file://$PWD/sdk/repo \
+    -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
+cd greet && mvn -s ../sdk/settings.xml -Ddrishti.home=.. verify    # the test, java/greet/target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C14
+cp java/greet/target/dmod/greet-0.1.0.dmod ../modules/             # the modules folder beside the jar: a server loads its packages at start
+curl -s localhost:18480/api/v1/greet/greeting/Asha                 # the module's REST API, mounted by the kernel (after a restart)
+rm ../modules/greet-0.1.0.dmod                                     # removed the same way: its paths answer 410 at the next start
 ```
 
 (To keep your `~/.m2` untouched while trying it, add `-Dmaven.repo.local=<folder> -Dmaven.repo.local.tail=$HOME/.m2/repository` to each
-Maven command: installs go to the folder, reads fall back to `~/.m2`.) The `.dmod` dropped into the module folder (`drishti.modules.path`,
-default `<data folder>/modules`) goes through the module deployment as an administrator's would: its hash list, the fourteen checks, then
-installed under `modules/installed/<id>/<version>/` and loaded (a single node needs no `config/placement.yaml` entry: a module the file
-does not name is placed on it, and Health notes *single node: placed here*). Auto-deploy is on for a single node and off in a cluster, where a module is
-deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
+Maven command: writes go to the folder, reads fall back to `~/.m2`.) The `.dmod` sits directly in `<Drishti folder>/modules` (one folder for every tool and the
+server; discovery lists `*.dmod` there and nothing else); at start the server checks its hash list and the fourteen checks, unpacks it under
+`<data folder>/cache/modules/` and loads it (a single node needs no `config/placement.yaml` entry: a module the file does not name is placed on it,
+and Health notes *single node: placed here*). In a cluster a module is deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
+**Production loads only verified `.dmod` packages.**
 
-**Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
-reload it whenever it changes, as Tomcat runs an unpacked web application. The server line runs from the Drishti folder; the `mvn` line runs from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`).
+**Edit → reload, in development mode.** While you work on a module, the kernel can load its source folder without packing a `.dmod` and
+reload it whenever it changes, as Tomcat runs an unpacked web application. The module project's folder (the one with `module.yaml` at its top) sits under
+`<Drishti folder>/modules/`; the commands run from the Drishti folder.
 
 ```bash
-# once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
-DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/java/greet/target/dmod-stage/greet python tools/drishti.py start server
-# the loop: edit, rebuild, and the kernel reloads it within drishti.modules.autodeploy-seconds (unload, leak check, load)
-mvn -q package -DskipTests      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
+# once: a development server (single node, never the prod or production profile): the module folders under modules/ load as they are, unverified
+python3 tools/drishti.py start server --modules-dev
+# the loop: edit, rebuild the module, and the kernel reloads it (unload, leak check, load)
+python3 tools/drishti.py build modules greet      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
 ```
 
-`java/<id>/target/dmod-stage/<id>/` is the folder the packer packs (module.yaml at its root, the jars under `java/`). A folder of
-`<id>/<version>/` folders works too. Development mode loads it **unverified** (no hash list, no checks), and Health and Admin → Modules mark
+Development mode loads the folder **unverified** (no hash list, no checks), and Health and Admin → Modules mark
 the module *development (unverified)*. `drishti.modules.dev` is refused in a cluster and under the `prod` or `production` profile: the
 server logs the refusal and loads only verified packages. Run `mvn verify` (the fourteen checks) before you ship.
 
@@ -1005,7 +1019,7 @@ snippets below leave it out to save space.
 **Goal:** `GET /api/v1/mnemonics` lists the mnemonics the caller may use; `GET /api/v1/mnemonics/{code}` gives one, or `404 DRS-4005`.
 (There is no such endpoint today: on the demo stack `GET /api/v1/mnemonics` answers `404`.)
 
-**1. Add the error code** to `kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java`, in its group (4 = engine and graph),
+**1. Add the error code** to `kernel/drishti-api/src/main/java/com/ash/drishti/api/error/ErrorCode.java`, in its group (4 = engine and graph),
 with the next free number. Never reuse a code.
 
 ```java
@@ -1020,8 +1034,8 @@ entitlements before doing anything:
 ```java
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.server.security.Entitlements;
@@ -1434,8 +1448,8 @@ and inject it where it is used. The `noticeStore` bean takes it as one more para
     }
 ```
 
-and `NoticeStore` keeps the limit and checks it first in `set` (add the imports `com.ash.drishti.common.DrishtiException` and
-`com.ash.drishti.common.ErrorCode`):
+and `NoticeStore` keeps the limit and checks it first in `set` (add the imports `com.ash.drishti.api.error.DrishtiException` and
+`com.ash.drishti.api.error.ErrorCode`):
 
 ```java
     private final int maxLength;
@@ -3702,9 +3716,9 @@ python3 tools/drishti.py module inspect java/freight/build/dmod/freight-0.1.0.dm
 
 | Where | How | What you see |
 |---|---|---|
-| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/java/freight/target/dmod-stage/freight python tools/drishti.py start server`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
+| your own machine, while you edit | a development server on the module folder: `python tools/drishti.py start server --modules-dev` (the project's folder sits under `<Drishti folder>/modules/`); every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
 | your own machine, the package alone | `python3 tools/drishti.py module run java/freight/build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
-| one server | drop the `.dmod` into `<data folder>/modules/` (`drishti.modules.path`); auto-deploy checks, installs and loads it | Admin → Modules: *LOADED* |
+| one server | put the `.dmod` into `<Drishti folder>/modules/` and restart; the server checks, unpacks and loads it | Admin → Modules: *LOADED* |
 | a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
 
 On a single node (no cluster) a module that `config/placement.yaml` does not name is placed on that node: it loads with no placement

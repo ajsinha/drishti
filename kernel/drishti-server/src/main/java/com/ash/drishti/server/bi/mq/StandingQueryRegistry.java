@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.engine.GenerationBus;
 import com.ash.drishti.server.bi.engine.Incremental;
@@ -327,7 +327,7 @@ final class StandingQueryRegistry implements AutoCloseable {
                 schedule(g);
             }
         } catch (RuntimeException e) {
-            if (e instanceof DrishtiException d && d.errorCode() == com.ash.drishti.common.ErrorCode.QUERY_BUSY && g.snapshot != null) {
+            if (e instanceof DrishtiException d && d.errorCode() == com.ash.drishti.api.error.ErrorCode.QUERY_BUSY && g.snapshot != null) {
                 // the engine is busy (slots or the owner's own queries): ask the whole question again a little later, never fail the group for it
                 g.pending.add(new GenerationBus.Notice(g.modelKey, null, "retry", null, 0, null));
                 g.lastEval = clock.instant();
@@ -335,7 +335,7 @@ final class StandingQueryRegistry implements AutoCloseable {
                 return;
             }
             LOG.warn("standing query group {} failed: {}", g.id, e.getMessage());
-            fail(g, e instanceof DrishtiException d ? d : new DrishtiException(com.ash.drishti.common.ErrorCode.QUERY_ENGINE, String.valueOf(e.getMessage())));
+            fail(g, e instanceof DrishtiException d ? d : new DrishtiException(com.ash.drishti.api.error.ErrorCode.QUERY_ENGINE, String.valueOf(e.getMessage())));
         } finally {
             g.lock.unlock();
         }
@@ -395,7 +395,7 @@ final class StandingQueryRegistry implements AutoCloseable {
             evaluations.incrementAndGet();
             wake.run();
         } catch (DrishtiException e) {
-            if (e.errorCode() == com.ash.drishti.common.ErrorCode.QUERY_BUSY && g.snapshot != null) {
+            if (e.errorCode() == com.ash.drishti.api.error.ErrorCode.QUERY_BUSY && g.snapshot != null) {
                 throw e;                                                        // busy: retried by evaluate, the answer kept as it was
             }
             fail(g, e);

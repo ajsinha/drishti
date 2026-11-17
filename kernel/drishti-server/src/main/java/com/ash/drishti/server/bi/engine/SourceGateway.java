@@ -35,7 +35,7 @@ public interface SourceGateway {
     /**
      * The connector for a table: the named one, or whichever running connector serves the kind when the name is blank.
      *
-     * @throws com.ash.drishti.common.DrishtiException DRS-9026 when the named connector is not running
+     * @throws com.ash.drishti.api.error.DrishtiException DRS-9026 when the named connector is not running
      */
     Optional<SourcePlugin> plugin(String connector, String kind);
 

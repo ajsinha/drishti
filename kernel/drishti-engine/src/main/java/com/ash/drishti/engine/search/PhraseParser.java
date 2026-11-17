@@ -147,12 +147,12 @@ public final class PhraseParser {
         for (com.ash.drishti.engine.command.HistoryRange.Bad b
                 : com.ash.drishti.engine.command.HistoryRange.malformed(command + " " + String.join(" ", rest), maxDays)) {
             if (b.command().equalsIgnoreCase(command)) {
-                throw new com.ash.drishti.common.DrishtiException(b.code(), b.message());
+                throw new com.ash.drishti.api.error.DrishtiException(b.code(), b.message());
             }
         }
         String first = rest.get(0).toLowerCase(Locale.ROOT);
         if (rest.size() >= 2 && TIME_WORDS.contains(first) && !isDate(rest.get(1))) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE, "'" + rest.get(1)
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.HISTORY_BAD_RANGE, "'" + rest.get(1)
                     + "' is not a date: write it as yyyy-mm-dd, for example " + typed + " " + first + " 2026-09-01");
         }
     }

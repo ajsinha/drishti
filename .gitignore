@@ -107,3 +107,4 @@ dependency-reduced-pom.xml
 # the built module packages beside the server jar (python tools/drishti.py build modules)
 modules/*.dmod
 modules/first-party.yaml
+/sdk/

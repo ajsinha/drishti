@@ -85,7 +85,7 @@ public final class RequestSizeFilter extends OncePerRequestFilter {
             res.setHeader("Connection", "close");                // HTTP/1.1 only: HTTP/2 forbids the header (a client refuses the answer); it ends the stream instead
         }
         String have = (atLeast ? "at least " : "") + mb(size);
-        res.getWriter().write("{\"title\":\"payload too large\",\"status\":413,\"code\":\"" + com.ash.drishti.common.ErrorCode.PAYLOAD_TOO_LARGE.code()
+        res.getWriter().write("{\"title\":\"payload too large\",\"status\":413,\"code\":\"" + com.ash.drishti.api.error.ErrorCode.PAYLOAD_TOO_LARGE.code()
                 + "\",\"detail\":\"the request body is " + have + ", over the limit of " + mb(limit)
                 + " (drishti.builder.max-total-mb)\",\"limitBytes\":" + limit + ",\"sizeBytes\":" + size + "}");
         res.flushBuffer();

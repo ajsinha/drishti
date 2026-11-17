@@ -34,6 +34,21 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   the golden matrix's every node and system basket (members, VaR, ES, limit, limit use: three dates, two windows, two currencies). `tools/drillkit/affected.py` selects
   `drishti-modules-it` (and the packages' build) for any change under `modules/`.
 
+- **`DrishtiException` and `ErrorCode` are in `drishti-api` (I11, D2).** Package `com.ash.drishti.api.error` (was `com.ash.drishti.common`), so a module
+  names them through the kernel API alone. One mechanical commit: the imports of every file (the three classes of `common` that used them
+  unqualified gained the import), `kernel-api-surface.txt` (two signatures), DEVELOPER_GUIDE and the two tools that name the file. Neither
+  class name is persisted (audit rows keep the code text), so `moved-classes.properties` is unchanged. `drishti-kernel-api` keeps its
+  `drishti-common` dependency: `Vocabularies` still calls `common.Extensions`.
+- **The SDK folder (I11, D1).** `drishti.py build sdk` writes `<home>/sdk/` (git-ignored): `repo/`, a Maven file repository with `drishti-kernel-api`
+  and what it needs (`drishti-api`, `drishti-common`, `drishti-settingsfile`), the product's parent pom, `drishti-module-parent` and the archetype;
+  `settings.xml` naming it by absolute path (`mvn -s`); `drishti-module-parent/pom.xml` for a `relativePath`. Maven runs `package`, never `install`.
+  `drishti-module-parent` declares the repository (`drishti.sdk.repo`, `${drishti.home}/sdk/repo`). The genomics sample no longer depends on
+  `drishti-testroots` (its tests read their files from surefire's `basedir`) and names the parent's `exec` executions in a profile that is on
+  when `-Ddrishti.home` is given: it builds with the SDK only. `tools/test_sdk_builds_genomics.py` (SdkBuildsGenomicsTest) copies it beside the SDK
+  into an empty folder and builds it there, by `relativePath` and as a partner's project does (version only, through `settings.xml`): tests, `.dmod`,
+  C1-C14. DEVELOPER_GUIDE section 1.6 (the quickstart, development mode: `start server --modules-dev` on a folder under `modules/`, no more
+  `target/dmod-stage` or `mvn install`), KERNEL_AND_MODULES 8.1 and 8.8 and CLI_REFERENCE follow. `tools/launch/clusterlakes.py` reads the demo
+  lake's root variable from `lakeconfig.DEMO_ROOT_ENV` (`test_lake_paths.py` green).
 - **`module pack` is the Python packager (I1).** `drishti.py module pack <folder>` runs `tools/modulepack.py`: no Java, no Maven, a reproducible
   `.dmod` (fixed entry times and modes, sorted entries, `META-INF/DMOD.MF` last; no build time in the content). `--jar` is repeatable, `--out`
   defaults to `<module>/target/dmod`, `--kernel-jar FILE` stamps the build of a named server jar. `module check` and `module inspect` stay on the

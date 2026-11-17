@@ -217,7 +217,7 @@ class ShowcaseTest {
         answers.put("explain/residue/", bench.residue("HLXK7", 7).get("explain"));
         ObjectMapper json = new ObjectMapper();
         com.fasterxml.jackson.databind.JsonNode made = json.readTree(json.writeValueAsString(answers));
-        java.nio.file.Path file = java.nio.file.Path.of(com.ash.drishti.testroots.TestRoots.module(), "src", "test", "resources", "showcase", "answers.json");
+        java.nio.file.Path file = java.nio.file.Path.of(System.getProperty("basedir", "."), "src", "test", "resources", "showcase", "answers.json");
         if ("write".equals(System.getProperty("showcase.answers"))) {
             json.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), made);
         }

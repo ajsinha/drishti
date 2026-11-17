@@ -16,8 +16,8 @@
 package com.ash.drishti.server.compute;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.compute.ComputeException;
 import com.ash.drishti.compute.ComputeRequest;
 import com.ash.drishti.compute.ComputeResult;

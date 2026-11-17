@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.kernel.api.explain.ExplainRequest;
 import com.ash.drishti.server.explain.NumberExplainService;
 import com.ash.drishti.kernel.api.security.Principal;

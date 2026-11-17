@@ -202,18 +202,18 @@ class PhraseParserTest {
         // QA1-203: as TRD 1000015 -5 on the command line, never "say what to look for"
         PhraseParser on = market();
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 -5"))
-                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
-                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+                .isInstanceOfSatisfying(com.ash.drishti.api.error.DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.HISTORY_BAD_RANGE);
                     assertThat(e.getMessage()).contains("'-5' is not a range");
                 });
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 since yesterday"))
-                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
-                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+                .isInstanceOfSatisfying(com.ash.drishti.api.error.DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.HISTORY_BAD_RANGE);
                     assertThat(e.getMessage()).contains("'yesterday' is not a date").contains("1000015 since 2026-09-01");
                 });
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 99999"))
-                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class,
-                        e -> assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_RANGE_TOO_LARGE));
+                .isInstanceOfSatisfying(com.ash.drishti.api.error.DrishtiException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.HISTORY_RANGE_TOO_LARGE));
         assertThat(on.parse("9999999 -5").problem()).contains("say what to look for");          // no such entity: as before
     }
 }

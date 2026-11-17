@@ -591,7 +591,7 @@ public final class NetService implements AutoCloseable {
     public Node require() {
         Node n = node;
         if (n == null) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.NET_OFF,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.NET_OFF,
                     Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/guides/OPERATIONS_GUIDE.md)");
         }
         return n;
@@ -623,10 +623,10 @@ public final class NetService implements AutoCloseable {
     /** Removes a dead or left member from the table; an alive or suspect one is refused (gossip would bring it back). */
     public void remove(String id) {
         Node n = require();
-        MemberTable.Known k = n.table.known(id).orElseThrow(() -> new com.ash.drishti.common.DrishtiException(
-                com.ash.drishti.common.ErrorCode.NET_BAD_REQUEST, "no member " + id + " in the table"));
+        MemberTable.Known k = n.table.known(id).orElseThrow(() -> new com.ash.drishti.api.error.DrishtiException(
+                com.ash.drishti.api.error.ErrorCode.NET_BAD_REQUEST, "no member " + id + " in the table"));
         if (!k.member().state().gone()) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.NET_BAD_REQUEST, "member " + id + " is "
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.NET_BAD_REQUEST, "member " + id + " is "
                     + k.member().state().wire() + ": only a dead or left member can be removed (an alive one would come back with the next round)");
         }
         n.table.remove(id);

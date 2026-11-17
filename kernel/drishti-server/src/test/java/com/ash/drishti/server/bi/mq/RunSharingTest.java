@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
@@ -104,7 +104,7 @@ class RunSharingTest {
     MqService.Bound bound(String user) {
         MqHarness.Reader r = people.get(user);
         if (r == null) {
-            throw new DrishtiException(com.ash.drishti.common.ErrorCode.BI_FORBIDDEN, "no access");
+            throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.BI_FORBIDDEN, "no access");
         }
         return h.bind(model, r, "m");
     }

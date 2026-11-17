@@ -431,7 +431,7 @@ final class ChartBinder {
             case "count" -> "sum(v)";                                     // v is 1 for a row whose input is not empty, else 0
             case "sum", "avg", "min", "max", "median", "percentile", "variance", "stddev", "variance_pop", "stddev_pop" ->
                     ("variance_pop".equals(call.name()) ? "var_pop" : call.name()) + "(v" + args + ")";
-            default -> throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.EL_EVAL, "a pivot panel's value is "
+            default -> throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.EL_EVAL, "a pivot panel's value is "
                     + "one aggregate of one number per row (sum, count, avg, min, max, median, percentile, variance, stddev); "
                     + call.name() + " is not (use a table's pivot: for it)");
         };

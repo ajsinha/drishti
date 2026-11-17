@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.layout;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.rachana.SutraLayoutEditor;
 import com.ash.drishti.rachana.model.Area;
 import com.ash.drishti.rachana.model.Panel;

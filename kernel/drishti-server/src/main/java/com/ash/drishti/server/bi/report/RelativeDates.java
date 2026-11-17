@@ -124,7 +124,7 @@ public final class RelativeDates {
                 String name = chosen == null || chosen.isNull() ? (v.format().get("default") == null ? "all" : String.valueOf(v.format().get("default")))
                         : chosen.isTextual() ? chosen.asText() : chosen.path("relative").asText("");
                 if (!valid(name)) {
-                    throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.REPORT_STATE,
+                    throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.REPORT_STATE,
                             "'" + name + "' is not a relative date for the slicer '" + v.id() + "'");
                 }
                 if (asOf == null) {

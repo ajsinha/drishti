@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.switches;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.SwitchLedger;
 import com.ash.drishti.net.member.Member;

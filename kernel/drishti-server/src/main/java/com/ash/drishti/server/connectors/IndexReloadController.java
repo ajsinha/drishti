@@ -17,8 +17,8 @@ package com.ash.drishti.server.connectors;
 
 import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.security.Entitlements;

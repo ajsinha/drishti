@@ -420,7 +420,7 @@
   pivot.PivotView public java.util.Map<java.lang.String, com.ash.drishti.kernel.api.pivot.PivotView$Top> com.ash.drishti.kernel.api.pivot.PivotView.top()
   pivot.PivotView public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.pivot.PivotView.toMap()
   pivot.PivotView public java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.pivot.PivotView.options()
-  pivot.PivotView public static com.ash.drishti.common.DrishtiException com.ash.drishti.kernel.api.pivot.PivotView.bad(java.lang.String)
+  pivot.PivotView public static com.ash.drishti.api.error.DrishtiException com.ash.drishti.kernel.api.pivot.PivotView.bad(java.lang.String)
   pivot.PivotView public static com.ash.drishti.kernel.api.pivot.PivotView com.ash.drishti.kernel.api.pivot.PivotView.parse(java.util.Map<java.lang.String, java.lang.Object>)
   pivot.PivotView public static java.lang.String com.ash.drishti.kernel.api.pivot.PivotView.low(java.lang.String)
   pivot.PivotView$Currency public final boolean com.ash.drishti.kernel.api.pivot.PivotView$Currency.equals(java.lang.Object)

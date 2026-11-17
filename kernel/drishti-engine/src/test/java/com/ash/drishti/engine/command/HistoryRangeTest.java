@@ -18,7 +18,7 @@ package com.ash.drishti.engine.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
@@ -126,11 +126,11 @@ class HistoryRangeTest {
         // QA1-03: each bad range, the command before it, its code and what to type
         assertThat(bad("TRD 1000001 0")).satisfies(b -> {
             assertThat(b.command()).isEqualTo("TRD 1000001");
-            assertThat(b.code()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+            assertThat(b.code()).isEqualTo(com.ash.drishti.api.error.ErrorCode.HISTORY_BAD_RANGE);
             assertThat(b.message()).contains("0 days is empty").contains("TRD 1000001 30");
         });
         assertThat(bad("TRD 1000001 -5").message()).contains("'-5' is not a range").contains("3M");
-        assertThat(bad("TRD 1000001 99999").code()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_RANGE_TOO_LARGE);
+        assertThat(bad("TRD 1000001 99999").code()).isEqualTo(com.ash.drishti.api.error.ErrorCode.HISTORY_RANGE_TOO_LARGE);
         assertThat(bad("TRD 1000001 99999").message()).startsWith("366 business days at most");
         assertThat(bad("TRD 1000001 1.5M").message()).contains("'1.5M' is not a range");
         assertThat(bad("TRD 1000001 3X").command()).isEqualTo("TRD 1000001");

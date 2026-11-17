@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

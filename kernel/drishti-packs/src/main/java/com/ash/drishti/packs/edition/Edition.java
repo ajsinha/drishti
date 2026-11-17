@@ -91,7 +91,7 @@ public record Edition(String name, String title, List<String> packs, boolean all
     /** Refuses a pack the edition does not allow ({@code 403 DRS-1017}): Admin → Packs, Deploy archive and the registry. */
     public void requirePack(String pack) {
         if (!packAllowed(pack)) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.EDITION_PACK_REFUSED, "the edition '" + name
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.EDITION_PACK_REFUSED, "the edition '" + name
                     + "' does not include the pack '" + pack + "': its packs are " + packs + " and allow-only (drishti.edition-spec.packs.allow-only)");
         }
     }

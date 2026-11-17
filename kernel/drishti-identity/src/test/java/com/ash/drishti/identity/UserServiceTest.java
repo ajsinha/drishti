@@ -18,7 +18,7 @@ package com.ash.drishti.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;

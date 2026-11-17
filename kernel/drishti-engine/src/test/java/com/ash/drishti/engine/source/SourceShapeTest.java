@@ -105,7 +105,7 @@ class SourceShapeTest {
         @Override
         public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) {
             if (!refuse.isEmpty()) {
-                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND, refuse);
+                throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND, refuse);
             }
             if (!crash.isEmpty()) {
                 throw new IllegalStateException(crash);
@@ -258,8 +258,8 @@ class SourceShapeTest {
         // reason lost (drill of 2026-11-15: bare POS and PORT answered 502 "failed reading every position")
         SourceRouter refusing = router(Map.of("var-positions", settings("table", "none", "refuse", "no P&L vectors in any connector")));
         assertThatThrownBy(() -> refusing.documents("trade", AsOf.LATEST, d -> { }))
-                .isExactlyInstanceOf(com.ash.drishti.common.DrishtiException.class).hasMessageContaining("no P&L vectors in any connector")
-                .satisfies(e -> assertThat(((com.ash.drishti.common.DrishtiException) e).errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND));
+                .isExactlyInstanceOf(com.ash.drishti.api.error.DrishtiException.class).hasMessageContaining("no P&L vectors in any connector")
+                .satisfies(e -> assertThat(((com.ash.drishti.api.error.DrishtiException) e).errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND));
         SourceRouter crashing = router(Map.of("broken", settings("table", "none", "crash", "a driver's message with a host in it")));
         assertThatThrownBy(() -> crashing.documents("trade", AsOf.LATEST, d -> { }))
                 .isInstanceOf(SourceFailure.class).hasMessageContaining("broken failed reading every trade").hasMessageNotContaining("host");

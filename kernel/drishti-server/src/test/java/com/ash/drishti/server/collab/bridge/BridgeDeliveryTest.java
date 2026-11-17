@@ -22,7 +22,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.server.collab.Notifier;
@@ -451,7 +451,7 @@ class BridgeDeliveryTest {
         assertThat(unknown.getContentAsString()).contains("DRS-7014");
         // a person who is not an administrator is refused before anything is posted
         int before = h.hits.size();
-        org.mockito.Mockito.doThrow(new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "not an administrator")).when(h.entitlements).requireAdmin(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doThrow(new DrishtiException(com.ash.drishti.api.error.ErrorCode.FORBIDDEN, "not an administrator")).when(h.entitlements).requireAdmin(org.mockito.ArgumentMatchers.any());
         var denied = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/collab/bridges/desk/test")
                 .requestAttr(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE, new com.ash.drishti.kernel.api.security.Principal("tia", java.util.List.of("trader"))))
                 .andReturn().getResponse();

@@ -120,7 +120,7 @@ public class PivotFunctionsConfiguration {
             return null;
         }
         if (rows > 1_000_000) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.PIVOT_FUNCTION_LIMIT, "a macro outside a query "
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.PIVOT_FUNCTION_LIMIT, "a macro outside a query "
                     + "runs over at most 1,000,000 rows here (the playground and the harness): the tabular provider computes it in its query");
         }
         StringBuilder values = new StringBuilder();

@@ -17,8 +17,8 @@ package com.ash.drishti.server.engines;
 
 import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import com.ash.drishti.kernel.api.engines.ComputeEngine;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import java.time.Duration;
 import java.time.Instant;

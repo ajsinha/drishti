@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.embed;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.EmbedAppStore;
 import com.ash.drishti.identity.User;
@@ -226,7 +226,7 @@ public final class EmbedTokenService {
         JsonNode claims;
         try {
             claims = refreshed ? idTokens.verifyForExchange(idToken, List.of(oidc.clientId())) : idTokens.verify(idToken, nonce);
-        } catch (com.ash.drishti.common.DrishtiException e) {
+        } catch (com.ash.drishti.api.error.DrishtiException e) {
             audit.record("-", "embed-sign-in-window-refused", app.id(), "origin " + o + ": the ID token was refused");
             throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant",
                     "the single sign-on's ID token was refused (signature, issuer, audience, expiry or nonce)");
@@ -234,7 +234,7 @@ public final class EmbedTokenService {
         String name;
         try {
             name = UserService.federatedName(firstText(claims, oidc.usernameClaim(), "email", "sub"));
-        } catch (com.ash.drishti.common.DrishtiException e) {
+        } catch (com.ash.drishti.api.error.DrishtiException e) {
             throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant", "the ID token names no usable user");
         }
         User u = users.find(name).orElse(null);
@@ -347,13 +347,13 @@ public final class EmbedTokenService {
                 JsonNode claims;
                 try {
                     claims = idTokens.verifyForExchange(r.subjectToken(), audiences);
-                } catch (com.ash.drishti.common.DrishtiException e) {
+                } catch (com.ash.drishti.api.error.DrishtiException e) {
                     throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant", "the user's ID token was refused (signature, issuer, audience or expiry)");
                 }
                 name = firstText(claims, oidc.usernameClaim(), "email", "sub");
                 try {
                     name = UserService.federatedName(name);
-                } catch (com.ash.drishti.common.DrishtiException e) {
+                } catch (com.ash.drishti.api.error.DrishtiException e) {
                     throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 400, "invalid_grant", "the ID token names no usable user");
                 }
             }

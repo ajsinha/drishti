@@ -41,7 +41,7 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/drishti-bicompute-unit.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/main" "$work/test"
 "${java_bin}javac" -J-Xmx768m -nowarn -encoding UTF-8 --release 21 -d "$work/main" -cp "$cp" \
-  "$here/kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java" \
+  "$here/kernel/drishti-api/src/main/java/com/ash/drishti/api/error/ErrorCode.java" \
   $(find "$here/compute/drishti-bicompute/src/main/java" -name '*.java')
 echo "main: compiled"
 "${java_bin}javac" -J-Xmx768m -nowarn -encoding UTF-8 --release 21 -d "$work/test" -cp "$work/main:$cp:$tcp" \

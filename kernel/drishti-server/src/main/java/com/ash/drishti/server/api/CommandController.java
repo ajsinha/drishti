@@ -165,7 +165,7 @@ public class CommandController {
             if (whole.isPresent() && entitlements.mayOpen(principal, whole.get().kind()) && exists(whole.get(), asOf)) {
                 return;
             }
-            throw new com.ash.drishti.common.DrishtiException(bad.code(), bad.message());
+            throw new com.ash.drishti.api.error.DrishtiException(bad.code(), bad.message());
         }
     }
 

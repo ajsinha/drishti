@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.server.design.DesignAboutService;

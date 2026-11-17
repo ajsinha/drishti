@@ -164,7 +164,7 @@ public class PackAdminController {
         } else if (com.ash.drishti.packs.SamplePolicy.MODES.contains(mode)) {
             policy.set(mode);
         } else {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.BAD_REQUEST,
                     "mode is one of " + com.ash.drishti.packs.SamplePolicy.MODES + " or default, not '" + s.mode() + "'");
         }
         audit.record(p.user(), "pack-samples", policy.mode(), "sample packs: " + was + " -> " + policy.mode() + (policy.overridden() ? " (saved)" : " (from configuration)"));

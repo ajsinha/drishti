@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.proxy.SiteProxy;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.ConnectionProbe;
 import com.ash.drishti.engine.source.SettingCatalogue;

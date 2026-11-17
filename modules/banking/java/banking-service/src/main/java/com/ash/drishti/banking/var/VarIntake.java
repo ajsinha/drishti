@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.var.PositionRules;
 import com.ash.drishti.banking.compute.var.ScenarioFx;
 import com.ash.drishti.banking.compute.var.VarBook;
@@ -583,13 +583,13 @@ final class VarIntake {
     void verify() {
         List<String> mixed = inputs.mixed();
         if (!mixed.isEmpty()) {
-            throw new com.ash.drishti.common.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
+            throw new com.ash.drishti.api.error.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
                     + String.join("; ", mixed) + "; one source system sends one form and one grain on one date (VAR_GUIDE.md section 15.13)");
         }
         for (Map.Entry<String, List<String>> e : positionTrades.entrySet()) {
             for (String t : e.getValue()) {
                 if (tradeGrain.contains(t)) {
-                    throw new com.ash.drishti.common.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
+                    throw new com.ash.drishti.api.error.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
                             + "the supplied position " + e.getKey() + " covers the trade " + t + ", which is also sent on its own: it would count twice");
                 }
             }

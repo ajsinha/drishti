@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.mq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import java.time.LocalDate;
 import java.util.List;

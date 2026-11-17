@@ -18,7 +18,7 @@ package com.ash.drishti.server.alerts;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
@@ -80,7 +80,7 @@ public final class FieldValueReader {
             return Reading.error("the source did not answer in " + WAIT.toSeconds() + " s");
         } catch (ExecutionException e) {
             Throwable c = e.getCause() == null ? e : e.getCause();
-            return c instanceof DrishtiException de && de.errorCode() == com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND ? Reading.noData(s.kind() + "/" + s.id() + " is not there")
+            return c instanceof DrishtiException de && de.errorCode() == com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND ? Reading.noData(s.kind() + "/" + s.id() + " is not there")
                     : Reading.error(c.getMessage());
         }
         if (doc.deleted()) {

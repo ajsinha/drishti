@@ -19,7 +19,7 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.collab.Pin;
 import com.github.benmanes.caffeine.cache.Cache;

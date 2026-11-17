@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.ai;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.report.ReportYaml;
 import com.ash.drishti.kernel.api.security.Principal;

@@ -52,7 +52,7 @@ def _expand(cell: str) -> set[str]:
 
 
 def _server_codes() -> set[str]:
-    return set(CODE.findall(_read("kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java")))
+    return set(CODE.findall(_read("kernel/drishti-api/src/main/java/com/ash/drishti/api/error/ErrorCode.java")))
 
 
 def _parser_codes() -> set[str]:

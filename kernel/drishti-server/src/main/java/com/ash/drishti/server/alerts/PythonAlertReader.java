@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.alerts;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.alerts.AlertLogic.Reading;
 import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;

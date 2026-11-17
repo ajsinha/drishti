@@ -18,7 +18,7 @@ package com.ash.drishti.flight;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.compute.arrow.ArrowMemory;
 import com.ash.drishti.compute.arrow.ArrowTable;
 import com.ash.drishti.testkit.TlsFixture;

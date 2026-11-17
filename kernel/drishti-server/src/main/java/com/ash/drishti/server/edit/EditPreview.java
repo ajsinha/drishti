@@ -17,7 +17,7 @@ package com.ash.drishti.server.edit;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.compute.reactive.ReactiveConnector;
 import com.ash.drishti.compute.reactive.ReactiveHub;
 import com.ash.drishti.identity.User;

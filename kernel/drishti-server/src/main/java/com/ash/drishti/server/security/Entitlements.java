@@ -17,8 +17,8 @@ package com.ash.drishti.server.security;
 
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.Suggestion;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;

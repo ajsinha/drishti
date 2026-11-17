@@ -154,8 +154,8 @@ class OfflineModeTest {
                 // what the store does not hold is "not found, the store was asked", not "the connector is disabled"
                 assertThat(router.fetch(new EntityRef("quote", "QUOTE-NONE"))).failsWithin(Duration.ofSeconds(5))
                         .withThrowableOfType(java.util.concurrent.ExecutionException.class).havingCause()
-                        .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
-                            assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND);
+                        .isInstanceOfSatisfying(com.ash.drishti.api.error.DrishtiException.class, e -> {
+                            assertThat(e.errorCode()).isEqualTo(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND);
                             assertThat(e.getMessage()).contains("connector yfinance reaches the internet and is off").contains("served by quote-store");
                         });
             }

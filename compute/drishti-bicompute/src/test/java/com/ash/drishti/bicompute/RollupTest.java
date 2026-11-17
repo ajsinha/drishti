@@ -34,7 +34,7 @@ import com.ash.drishti.bicompute.rollup.TabularRollupSource;
 import com.ash.drishti.bicompute.scale.ScalePolicy;
 import com.ash.drishti.kernel.api.pivot.PivotProvider;
 import com.ash.drishti.kernel.api.pivot.Viewer;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;

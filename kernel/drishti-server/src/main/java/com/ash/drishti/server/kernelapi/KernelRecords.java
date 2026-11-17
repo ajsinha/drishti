@@ -16,7 +16,7 @@
 package com.ash.drishti.server.kernelapi;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.kernel.api.services.Kernel;
 import com.ash.drishti.kernel.api.services.Person;
 import com.ash.drishti.kernel.api.services.RawRecord;

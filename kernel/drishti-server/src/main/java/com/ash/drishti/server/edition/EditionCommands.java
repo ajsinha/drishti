@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.edition;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.packs.edition.Edition;
 

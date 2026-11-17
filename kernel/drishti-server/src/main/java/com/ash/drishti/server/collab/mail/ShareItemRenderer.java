@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.collab.mail;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.Share;

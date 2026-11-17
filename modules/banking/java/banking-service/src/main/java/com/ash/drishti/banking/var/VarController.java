@@ -16,8 +16,8 @@
 package com.ash.drishti.banking.var;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.engine.ArrowAnswers;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
@@ -405,7 +405,7 @@ public class VarController {
             try {
                 d = java.time.LocalDate.parse(date.trim());
             } catch (java.time.format.DateTimeParseException e) {
-                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "date is a business date "
+                throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.BAD_REQUEST, "date is a business date "
                         + "(2026-09-30), not '" + date + "'");
             }
             svc.reload(d);

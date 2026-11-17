@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.banking.compute.var.ScopeExpr;
 import com.ash.drishti.banking.compute.var.ScopeResolver;
 import com.ash.drishti.banking.compute.var.VarBook;

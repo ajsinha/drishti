@@ -40,7 +40,7 @@ public final class PathGuard extends OncePerRequestFilter {
             res.setStatus(400);
             res.setContentType("application/problem+json");
             res.setCharacterEncoding("UTF-8");
-            res.getWriter().write("{\"title\":\"bad request\",\"status\":400,\"code\":\"" + com.ash.drishti.common.ErrorCode.BAD_REQUEST.code()
+            res.getWriter().write("{\"title\":\"bad request\",\"status\":400,\"code\":\"" + com.ash.drishti.api.error.ErrorCode.BAD_REQUEST.code()
                     + "\",\"detail\":\"" + why.get().replace("\\", "\\\\").replace("\"", "'") + "\"}");
             return;
         }

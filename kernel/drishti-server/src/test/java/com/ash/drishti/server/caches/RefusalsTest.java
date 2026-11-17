@@ -17,8 +17,8 @@ package com.ash.drishti.server.caches;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;

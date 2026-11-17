@@ -74,7 +74,7 @@ public class MrCubeController {
             @RequestParam(required = false) String to, @RequestParam(required = false) Double confidence,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p, HttpServletResponse res) {
         if (scope == null || scope.isBlank()) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "explain names the cell's scope "
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.BAD_REQUEST, "explain names the cell's scope "
                     + "(in its provenance): scope=DESK:RATES, (NODE:MGMT~DESK-RATES) & (WHERE:...)");
         }
         Map<String, Object> out = new LinkedHashMap<>(VarExplainController.why(explainer.getObject(), p, scope.strip(), from, to, confidence,

@@ -17,8 +17,8 @@ package com.ash.drishti.server.dist;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.engine.view.PanelData;

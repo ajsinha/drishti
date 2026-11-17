@@ -29,7 +29,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;

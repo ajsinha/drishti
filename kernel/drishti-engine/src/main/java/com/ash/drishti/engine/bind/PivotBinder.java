@@ -97,7 +97,7 @@ public final class PivotBinder {
     /** Every row of the panel (up to the limit) as raw values of the pivot's fields. */
     Records records(Panel p, BindContext c) {
         if (!props.enabled()) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
+            throw new com.ash.drishti.api.error.DrishtiException(com.ash.drishti.api.error.ErrorCode.FORBIDDEN,
                     "Pivot (the pivot screen) is switched off on this server (drishti.pivot.enabled)");
         }
         PivotSpec spec = p.pivot().orElseThrow(() -> new IllegalArgumentException("panel '" + p.id() + "' does not offer a pivot"));

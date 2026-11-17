@@ -84,7 +84,7 @@ class ContentRunsTest {
         Run done = waitFor(b, o.run().id(), RunState.DONE);
         assertThat(b.result(done, "sig-v")).containsEntry("rowCount", 1);
         assertThat(b.records().owned("viewer", null, 10)).extracting(Run::id).containsExactly(o.run().id());
-        assertThatThrownBy(() -> b.result(done, "sig-other")).as("never across signatures").isInstanceOf(com.ash.drishti.common.DrishtiException.class);
+        assertThatThrownBy(() -> b.result(done, "sig-other")).as("never across signatures").isInstanceOf(com.ash.drishti.api.error.DrishtiException.class);
     }
 
     @Test

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.dataload.ReadyCheck;
 import com.ash.drishti.dataload.ReadyRule;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -225,7 +225,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
                     : !v.hasNonNull(id) ? "no " + id + (position ? " (GRAIN POSITION)" : "") : null;
             if (bad != null) {
                 out.add(new VarPvWindow.Msg(null, line, at.toString(), r.partition(), r.offset(), i + 1, at,
-                        com.ash.drishti.common.ErrorCode.VAR_ROW_REJECTED.code() + " " + bad));
+                        com.ash.drishti.api.error.ErrorCode.VAR_ROW_REJECTED.code() + " " + bad));
                 continue;
             }
             String computed = v.hasNonNull("COMPUTED_AT") ? v.get("COMPUTED_AT").asText() : at.toString();

@@ -18,7 +18,7 @@ package com.ash.drishti.banking.exposure;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.view.ViewAugmenter;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -56,11 +56,11 @@ final class ExposureTradeLinks implements ViewAugmenter {
         }
         try {
             if (!svc.running()) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "the exposure engine is off on this server");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.FORBIDDEN, "the exposure engine is off on this server");
             }
             java.util.Optional<ExposureDate> loaded = svc.loadedDate(asOf == null ? null : asOf.businessDate());
             if (loaded.isEmpty()) {
-                throw new DrishtiException(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND, "no exposure run loaded on this server");
+                throw new DrishtiException(com.ash.drishti.api.error.ErrorCode.ENTITY_NOT_FOUND, "no exposure run loaded on this server");
             }
             ExposureDate d = loaded.get();
             int t = d.book().tradeOrdinal(id);

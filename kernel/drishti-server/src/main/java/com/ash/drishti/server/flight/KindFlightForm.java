@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.flight;
 
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.compute.arrow.ArrowTable;
 import com.ash.drishti.flight.FlightBackend;
 import com.ash.drishti.flight.FlightRefusal;
@@ -99,7 +99,7 @@ final class KindFlightForm implements FlightForm {
         try {
             return data.flightSelection(p, q.get("kind").asText(), q.path("date").isTextual() ? q.get("date").asText() : null, texts(paths),
                     texts(q.get("where")));
-        } catch (com.ash.drishti.common.DrishtiException e) {
+        } catch (com.ash.drishti.api.error.DrishtiException e) {
             throw FlightBackends.refusal(e);
         }
     }

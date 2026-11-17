@@ -18,7 +18,7 @@ package com.ash.drishti.memlake;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.api.error.DrishtiException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.api.error.DrishtiException;
+import com.ash.drishti.api.error.ErrorCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
