@@ -26,6 +26,17 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
   unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped
   the moment the transaction ends (`EditLog.afterTx`, committed or rolled back) for every writer: apply, withdrawal, refusal at the source, follower copy. `EditRecordsCacheTest`.
+- **The cluster compares the modules each node booted; Admin → Modules has one answer for its page (I8c, B4 and S5).** Each node's Drishti\*net digest
+  carries `modules` (per module of its boot and per refused package: id, version, the content hash, origin, state, the parts placed there, problems:
+  `stale`, `refused`, `need`, `library`, `resource`, `development`) and `modulesFingerprint` (`ModuleHomes.fingerprint()`), from the new
+  `ModuleNode.identity()`. New `ModuleAgreement` groups the nodes per module by content hash (never the file's bytes) and names the nodes that differ
+  from the majority: the capability table's warnings (Admin → Net) and the cluster's health (`net.modules` of `GET /api/v1/admin/health`) say *nodes
+  disagree on module trading*, naming the nodes. `GET /api/v1/admin/modules` (administrators only) answers contract `admin-modules/1` for mock-up C:
+  the modules × nodes matrix (each cell the content hash a node booted, marked when it differs from the majority), each module's detail, the nodes
+  with their fingerprints and whether they agree, the problems and the install steps; the switch fields stay. The schema is in KERNEL_AND_MODULES
+  §4.2.2; the recorded example is `drishti-console/tests/answers/admin-modules.json` (`AdminModulesRecordTest`). `ModuleNode` and the module
+  host's configuration (`ModuleHostConfiguration`, was `ModuleDeployConfiguration`) leave the `deploy` package for `server.modules`, `ApiMounts`
+  for `server.modules.host`; behaviour unchanged. Tests: `ModuleAgreementTest`, `ModuleDigestClusterTest` (three nodes, c on other trading content).
 - **The kernel's libraries always win (I9, B3).** A module's class loader is plain parent-first: the kernel (the JDK, the kernel API and every
   library the server jar ships), then the site's `lib/ext` jars, then the module's own `java/` and `lib/` jars. A module's copy of a kernel library
   is never used; a library the kernel does not ship comes from the module; kernel internals (`com.ash.drishti.` outside the kernel API) stay

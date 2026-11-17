@@ -75,13 +75,13 @@ public class ModuleConfiguration {
     }
 
     @Bean
-    public Started modulesStarted(AccessRegistry registry, ObjectProvider<com.ash.drishti.server.modules.deploy.ModuleNode> node) {
+    public Started modulesStarted(AccessRegistry registry, ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node) {
         Map<String, Boolean> m = new LinkedHashMap<>();
         for (ModuleState s : registry.modules()) {
             m.put(s.id(), s.on());
         }
         return new Started(m, id -> {
-            com.ash.drishti.server.modules.deploy.ModuleNode n = node.getIfAvailable();
+            com.ash.drishti.server.modules.ModuleNode n = node.getIfAvailable();
             return n != null && n.runtime() != null && n.runtime().loaded(id).isPresent();
         });
     }

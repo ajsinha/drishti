@@ -81,9 +81,56 @@ public class ModuleAdminController {
         this.ledger = ledger;
     }
 
+    /**
+     * Admin → Modules (contract {@value ModuleClusterView#CONTRACT}, KERNEL_AND_MODULES.md section 4.2.2): every module with its switch
+     * (this node's settings) and, across the cluster's nodes, the modules × nodes matrix of content hashes booted, each node's fingerprint
+     * and whether it agrees, the problems (stale, refused, need not met, library copies, nodes that differ) and the install steps.
+     */
     @GetMapping("/api/v1/admin/modules")
     public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        return cluster(switches());
+    }
+
+    /**
+     * The answer's cluster part over this node's switch answer: in a cluster every node as its digest says (this node's own digest
+     * included, so every node shows the same matrix); a single server, or a member before its first digest, read directly.
+     */
+    private Map<String, Object> cluster(Map<String, Object> switches) {
+        ModuleNode node = cluster == null ? null : cluster.node().getIfAvailable();
+        com.ash.drishti.server.net.DigestService digests = cluster == null ? null : cluster.digests().getIfAvailable();
+        String self = node != null ? node.nodeId() : "local";
+        List<ModuleClusterView.NodeModules> nodes = new ArrayList<>();
+        var table = digests == null ? null : digests.table();
+        var me = table == null ? null : table.node(table.self()).orElse(null);
+        if (me != null && me.digest().modulesReported()) {
+            self = me.id();
+            for (var n : table.nodes()) {
+                nodes.add(new ModuleClusterView.NodeModules(n.id(), n.self(), n.routable(), n.digest().modulesFingerprint(),
+                        n.digest().modules()));
+            }
+        } else if (node != null) {
+            nodes.add(new ModuleClusterView.NodeModules(self, true, true, node.modulesFingerprint(), node.identity()));
+        }
+        String kernel = cluster == null ? "dev" : cluster.build().getIfAvailable() == null ? "dev" : cluster.build().getIfAvailable().getVersion();
+        java.nio.file.Path home = cluster == null ? null : com.ash.drishti.module.runtime.ModuleBoot.processHome(cluster.env()::getProperty);
+        return ModuleClusterView.fill(switches, self, kernel, home == null ? null : home.toString(), nodes);
+    }
+
+    /** What the cluster part reads: this node's modules, the peers' digests, the build, the settings. */
+    record Cluster(ObjectProvider<ModuleNode> node, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
+            ObjectProvider<org.springframework.boot.info.BuildProperties> build, org.springframework.core.env.Environment env) {}
+
+    private volatile Cluster cluster;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void cluster(ObjectProvider<ModuleNode> node, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
+            ObjectProvider<org.springframework.boot.info.BuildProperties> build, org.springframework.core.env.Environment env) {
+        this.cluster = new Cluster(node, digests, build, env);
+    }
+
+    /** This node's switch rows, the licence, the lenses, the store and its warnings. */
+    private Map<String, Object> switches() {
         List<Map<String, Object>> modules = new ArrayList<>();
         for (ModuleState s : registry.modules()) {
             Map<String, Object> m = state(s);
@@ -195,6 +242,20 @@ public class ModuleAdminController {
     }
 
     private Map<String, Object> state(ModuleState s) {
+        Map<String, Object> m = switchRow(s, started.loaded(s.id()));
+        com.ash.drishti.server.sources.SourceSystemsWiring w = sources;
+        List<Map<String, Object>> systems = w == null ? List.of() : w.of(s.id());
+        if (!systems.isEmpty()) {
+            // a source module: its switch acts at once (its connectors leave every read order), so no restart is needed for it
+            m.put("sourceSystems", systems);
+            m.put("restartNeeded", false);
+            m.put("says", String.join(", ", systems.stream().map(x -> String.valueOf(x.get("says"))).toList()));
+        }
+        return m;
+    }
+
+    /** A module's switch row: installed, licensed, enabled, on (and why not), where the switch comes from, loaded at this start. */
+    static Map<String, Object> switchRow(ModuleState s, boolean loaded) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", s.id());
         m.put("title", s.title());
@@ -205,16 +266,8 @@ public class ModuleAdminController {
         m.put("on", s.on());
         m.put("reason", s.reason());
         m.put("switchSource", s.switchSource());
-        m.put("loaded", started.loaded(s.id()));
-        m.put("restartNeeded", started.loaded(s.id()) != s.on());
-        com.ash.drishti.server.sources.SourceSystemsWiring w = sources;
-        List<Map<String, Object>> systems = w == null ? List.of() : w.of(s.id());
-        if (!systems.isEmpty()) {
-            // a source module: its switch acts at once (its connectors leave every read order), so no restart is needed for it
-            m.put("sourceSystems", systems);
-            m.put("restartNeeded", false);
-            m.put("says", String.join(", ", systems.stream().map(x -> String.valueOf(x.get("says"))).toList()));
-        }
+        m.put("loaded", loaded);
+        m.put("restartNeeded", loaded != s.on());
         return m;
     }
 

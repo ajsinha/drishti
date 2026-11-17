@@ -46,11 +46,23 @@ import java.util.Optional;
  * @param builtAt when it was built (epoch milliseconds)
  * @param services the state of the cluster services the node runs, by name, each as compact text (2.9.6: {@code var-shards}, the VaR
  *     shards it holds and is ready to serve, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); empty from a node that runs none or an older node
+ * @param modules the modules this node booted (KERNEL_AND_MODULES.md section 4.2.1), in id order, each with its content hash (the SHA-256
+ *     of its {@code DMOD.MF}: the module's identity), origin, switch, the parts placed here and its problems; a package the boot refused is
+ *     listed too (state {@code refused} or {@code stale}); empty before the modules loaded and from an older node
+ * @param modulesFingerprint the fingerprint of the modules this node booted ({@code ModuleHomes.fingerprint()}: equal on two nodes exactly
+ *     when they booted the same modules at the same versions with the same content); empty when not reported
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,
         String calendar, List<String> tags, List<String> redact, Map<String, List<String>> access, List<String> reports, long builtAt,
-        Map<String, String> services) {
+        Map<String, String> services, List<ModuleEntry> modules, String modulesFingerprint) {
+
+    /** A digest without modules (a test, the shape before modules were reported). */
+    public Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,
+            String calendar, List<String> tags, List<String> redact, Map<String, List<String>> access, List<String> reports, long builtAt,
+            Map<String, String> services) {
+        this(nodeId, url, version, protocol, packs, kinds, load, calendar, tags, redact, access, reports, builtAt, services, List.of(), "");
+    }
 
     /** A digest without services (an older node, a test). */
     public Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,
@@ -112,6 +124,47 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
         }
     }
 
+    /**
+     * One module of a node's boot.
+     *
+     * @param id          the module's id (a refused file whose id could not be read: its file name)
+     * @param version     its version (null for a refused file whose manifest could not be read)
+     * @param contentHash the SHA-256 of its {@code DMOD.MF}, lower-case hex: what two nodes compare; null for a development folder or a
+     *                    refused package
+     * @param origin      {@code first-party}, {@code third-party}, {@code development}; null for a refused package
+     * @param state       {@code loaded}, {@code off} (switched off, or a module it requires is off), {@code not-placed} (no part on this
+     *                    node), {@code refused} (a check failed), {@code stale} (built for another kernel)
+     * @param parts       the parts of it placed on this node ({@code api}, {@code console}, {@code compute}, …)
+     * @param problems    what is wrong or worth a look, each with its kind and words
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ModuleEntry(String id, String version, String contentHash, String origin, String state, List<String> parts,
+            List<Problem> problems) {
+        public ModuleEntry {
+            parts = parts == null ? List.of() : List.copyOf(parts);
+            problems = problems == null ? List.of() : List.copyOf(problems);
+        }
+
+        /** What two nodes compare for this module: its content hash, or its state when it has none (refused, stale, development). */
+        @JsonIgnore
+        public String identity() {
+            return contentHash != null && !contentHash.isBlank() ? contentHash
+                    : "development".equals(origin) ? "development " + version : state;
+        }
+    }
+
+    /**
+     * A module's problem on a node.
+     *
+     * @param kind     {@code stale} (built for another kernel), {@code refused} (a check failed), {@code need} (a module it needs is
+     *                 missing, refused or off), {@code library} (it carries its own copy of a library the kernel ships: the kernel's is
+     *                 used), {@code resource} (more memory than the module budget), {@code development} (an unverified source folder)
+     * @param severity {@code problem} (it does not run) or {@code warning} (it runs)
+     * @param text     the words, as Health says them
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Problem(String kind, String severity, String text) {}
+
     /** Requests a second and the average latency over the last full minute. */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Load(double requestsPerSecond, double latencyMs) {
@@ -130,13 +183,26 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
         access = access == null ? Map.of() : Map.copyOf(access);
         reports = reports == null ? List.of() : List.copyOf(reports);
         services = services == null ? Map.of() : Map.copyOf(services);
+        modules = modules == null ? List.of() : List.copyOf(modules);
+        modulesFingerprint = modulesFingerprint == null ? "" : modulesFingerprint;
+    }
+
+    /** True when the node reported its modules (an older node, or one whose modules have not loaded yet, does not). */
+    @JsonIgnore
+    public boolean modulesReported() {
+        return !modulesFingerprint.isBlank();
+    }
+
+    public Optional<ModuleEntry> module(String id) {
+        return modules.stream().filter(e -> e.id().equals(id)).findFirst();
     }
 
     /** The hash gossiped with the member entry: everything but the load and the build time. */
     @JsonIgnore
     public String hash() {
         try {
-            Digest stable = new Digest(nodeId, url, version, protocol, packs, kinds, Load.NONE, calendar, tags, redact, access, reports, 0, services);
+            Digest stable = new Digest(nodeId, url, version, protocol, packs, kinds, Load.NONE, calendar, tags, redact, access, reports, 0, services, modules,
+                    modulesFingerprint);
             byte[] h = MessageDigest.getInstance("SHA-256").digest(CANON.writeValueAsString(stable).getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(h, 0, 8);
         } catch (Exception e) {
