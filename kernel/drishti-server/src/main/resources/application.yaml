@@ -368,6 +368,7 @@ drishti:
     calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO
     zone: America/New_York  # whose clock decides what today is (any Java zone id: Europe/London)
     history: P5Y                            # how far back users may go
+    today: ${DRISHTI_BUSINESS_TODAY:}       # a fixed today (yyyy-MM-dd) for data that ends on a known date (a frozen demo, the test lake); blank: the clock's
   history:
     # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/DATA_ARCHITECTURE.md
     enabled: true                           # off: no history is read; the endpoint answers DRS-1012

@@ -96,3 +96,15 @@ def test_a_shared_lake_server_asks_for_no_less_than_the_var_heap():
                 if mb(h) < mb(VAR_HEAP):
                     bad.append(f"{p.name}:{n}: heap={h}")
     assert not bad, f"a server on the shared lake gets at least var_stack.VAR_HEAP ({VAR_HEAP}):\n  " + "\n  ".join(bad)
+
+
+def test_every_server_over_the_shared_lake_has_the_lake_s_last_date_for_today():
+    """The lake ends on a fixed date; a server over it with the clock's today found nothing in a live read eleven days later (a snapshot read
+    looks back lookback-days, 10: drill of 2026-11-17). var_server starts every server with SHARED_TODAY, and a file that starts its own over
+    the lake's connectors (shared_connectors) passes it too."""
+    text = (HERE / "var_stack.py").read_text(encoding="utf-8")
+    assert 'SHARED_TODAY = {"DRISHTI_BUSINESS_TODAY": SHARED_AS_OF}' in text
+    assert re.search(r"_stack\(tmp_path_factory, \{[^}]*\*\*SHARED_TODAY", text), "var_server starts its server without SHARED_TODAY"
+    bad = [p.name for p in _files() if p.name not in ("var_stack.py", "test_lake_builds_cached.py")
+           and re.search(r"\bshared_connectors\(", p.read_text(encoding="utf-8")) and "SHARED_TODAY" not in p.read_text(encoding="utf-8")]
+    assert not bad, "a server over the shared lake without its today at the lake's last date (var_stack.SHARED_TODAY): " + ", ".join(bad)

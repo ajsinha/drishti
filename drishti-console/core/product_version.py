@@ -27,9 +27,12 @@ _INCREMENT = re.compile(r"\.i(\d+)$")
 
 
 def root(start: Path | None = None) -> Path | None:
-    """The repository (or install) root: the nearest folder above this file that holds the version file; None when there is none."""
+    """The repository (or install) root: the nearest of the three folders above this file that holds the version file; None when there
+    is none. Never further up: the files that ask sit at most two folders below the root (``drishti-console/core/``, ``tools/``), and a
+    console copied into a folder inside another checkout (the detached console, THIN_CONSOLE_DESIGN.md S0) has no version of its own,
+    so it must not read that checkout's."""
     here = (start or Path(__file__)).resolve()
-    for folder in [here, *here.parents]:
+    for folder in here.parents[:3]:
         if (folder / CONFIG).is_file():
             return folder
     return None

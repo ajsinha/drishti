@@ -28,7 +28,7 @@ pytestmark = pytest.mark.browser
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    """The cached VaR demo lake with its P&L history, ending the last weekday (built once per source hash by the Java loader; read-only,
+    """The cached VaR demo lake with its P&L history, ending its fixed date, the server's today (built once per source hash by the Java loader; read-only,
     the server writes its own folders). The VaR files' heap (var_stack's default): the shared lake holds both trade sets, so at 768 MB the
     server's start (P&L vectors, the official capture of the newest date) ran out of heap and the page never loaded (2026-11-16)."""
     import var_stack

@@ -132,4 +132,33 @@ class PlacementResolverTest {
         assertThat(new NodeView("x", List.of("role:Heavy"), true).has("heavy")).isTrue();
         assertThat(new NodeView("x", List.of("heavy"), true).has("role:heavy")).isTrue();
     }
+
+    @Test
+    void aModuleWithARestNamespaceAlwaysHasItsApiPart() {
+        String head = """
+                format: 1
+                id: shop
+                version: 1.0.0
+                title: T
+                about: A
+                domain: d
+                publisher: {name: P, id: p}
+                licence: {feature: shop}
+                kernel: ">=0.1 <1.0"
+                rachana: ">=1.0"
+                contracts: ">=1.0"
+                plugin-api: ">=2.0"
+                elements: ">=2.4 <3"
+                """;
+        String parts = "parts:\n  feeds: {class: feed}\n  console: {class: light}\n";
+        ModuleParts served = ModuleParts.of(read(head + "api: {prefix: shop}\n" + parts));
+        assertThat(served.parts()).containsOnlyKeys("feeds", "console", "api");
+        assertThat(served.partFor("landing/role").orElseThrow().name()).isEqualTo("api");
+        assertThat(ModuleParts.of(read(head + parts)).parts()).containsOnlyKeys("feeds", "console");   // no REST namespace: no api part
+        assertThat(ModuleParts.of(read(head)).parts()).containsOnlyKeys("api");
+    }
+
+    private static com.ash.drishti.module.runtime.DmodManifest read(String yaml) {
+        return com.ash.drishti.module.runtime.DmodManifest.read(new java.io.ByteArrayInputStream(yaml.getBytes(java.nio.charset.StandardCharsets.UTF_8)), "test");
+    }
 }

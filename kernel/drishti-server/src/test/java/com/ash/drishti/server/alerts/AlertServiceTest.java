@@ -206,7 +206,7 @@ class AlertServiceTest {
             }
         };
         return new AlertService(store, reader, checker, people, live, boards, channels, log, props,
-                new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null), clock), clock, false);
+                new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null, null), clock), clock, false);
     }
 
     static JsonNode body(String json) {

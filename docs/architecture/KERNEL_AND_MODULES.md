@@ -644,6 +644,9 @@ parts:
   console:  { class: light,     contains: [console-bundle, help, glossary] }               # placed on console nodes (role console)
 ```
 
+A module with a REST namespace (`api: {prefix: …}`) always has the `api` part: when its `parts:` do not name it, the part is `api`,
+class `light` (a request to a path no other part declares belongs to it); a module that declares no parts has that one part.
+
 | Class | Meaning | Guard |
 |---|---|---|
 | `light` | registry entries, the REST façade, Help, the console bundle | may be placed widely |

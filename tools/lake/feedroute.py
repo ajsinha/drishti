@@ -197,13 +197,14 @@ def _packs(root) -> list[pathlib.Path]:
 
 
 def resolve(table: str, packs_root, pack=None, kind: str | None = None, connector: str | None = None) -> Target:
-    """The pack and kind ``table`` names (module doc). ``pack``: the pack given; ``kind``, ``connector``: given too."""
+    """The pack and kind ``table`` names (module doc). ``pack``: the pack given; ``kind``, ``connector``: given too. ``packs_root``: the
+    site's packs folder, or a function that gives it, called only when no pack is given (asking it may need the kernel jar)."""
     if pack is not None:
         p = pathlib.Path(pack)
         if kind:
             return Target(p, kind, connector)
         return _one(table, [p], connector, given=True)
-    packs = _packs(packs_root)
+    packs = _packs(packs_root() if callable(packs_root) else packs_root)
     try:
         return _one(table, packs, connector)
     except RouteError as e:

@@ -144,7 +144,7 @@ class HistoryPeersTest {
         SourceRouter router = new SourceRouter(new SourceRegistry(List.of(local), props, new JsonCodec()), props,
                 Executors.newVirtualThreadPerTaskExecutor());
         router.fallback(peers);
-        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK);
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
                 Formats.defaults(), new ElCompiler(), HistorySpec::defaults, k -> "TRD");
     }
@@ -203,7 +203,7 @@ class HistoryPeersTest {
         SourceRouter router = new SourceRouter(new SourceRegistry(List.of(local), props, new JsonCodec()), props,
                 Executors.newVirtualThreadPerTaskExecutor());
         router.fallback(timing);
-        HistoryService svc = new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK),
+        HistoryService svc = new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK),
                 HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))), Formats.defaults(),
                 new ElCompiler(), HistorySpec::defaults, k -> "TRD");
         assertThatThrownBy(() -> svc.read(days("T-7", 3), HistoryService.Viewer.NONE)).isInstanceOfSatisfying(DrishtiException.class, e -> {
@@ -259,7 +259,7 @@ class HistoryPeersTest {
                 return asked;
             }
         });
-        return new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK), HistoryProperties.defaults(),
+        return new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK), HistoryProperties.defaults(),
                 new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))), Formats.defaults(), new ElCompiler(), HistorySpec::defaults,
                 k -> "TRD");
     }

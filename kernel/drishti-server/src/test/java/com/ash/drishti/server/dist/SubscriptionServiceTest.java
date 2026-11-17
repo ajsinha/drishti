@@ -153,7 +153,7 @@ class SubscriptionServiceTest {
                 throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no report");
             }
         }, directory, log, new MailRenderer(new MailTemplates(null), "Drishti", "example.org"), transport, "drishti@example.org", "http://console", props,
-                RetryPolicy.defaults(), new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null), clock), clock, false);
+                RetryPolicy.defaults(), new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null, null), clock), clock, false);
     }
 
     static JsonNode body(String json) {

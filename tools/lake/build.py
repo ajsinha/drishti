@@ -293,7 +293,7 @@ def _feed(a) -> str:
     if len(tables) != 1:
         raise BuildError(f"the files name {len(tables)} tables ({', '.join(tables)}): load one table at a time, or give --kind")
     try:
-        t = feedroute.resolve(tables[0], packs_root(), a.pack)
+        t = feedroute.resolve(tables[0], packs_root, a.pack)
     except feedroute.RouteError as e:
         if getattr(a, "new_table", False) and a.domain and "no pack" in str(e):
             a.kind = tables[0]                             # a new table, asked for: the generic layout under --domain
@@ -342,7 +342,7 @@ def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
     for t in tables:
         try:
             pack = _pack_dir(folders[t]) if t in folders else (pathlib.Path(a.pack) if a.pack else None)
-            routes[t] = feedroute.resolve(t, packs_root(), pack, a.kind if a.kind and len(tables) == 1 else None)
+            routes[t] = feedroute.resolve(t, packs_root, pack, a.kind if a.kind and len(tables) == 1 else None)
         except feedroute.RouteError as e:
             problems.append(str(e))
     if problems:

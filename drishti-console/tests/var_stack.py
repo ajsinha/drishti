@@ -59,6 +59,11 @@ def last_weekday() -> str:
 SHARED_AS_OF = "2026-11-06"
 SHARED_EXTRA = ("--exposure", "committed")
 
+#: what every server over the shared lake is started with: its "today" is the lake's last date (drishti.business-date.today), so a live
+#: read is for a date the lake holds on every day the tests run. With the clock's today, a snapshot read looks back at most its
+#: connector's lookback-days (10) for the newest date, and eleven days after SHARED_AS_OF every live read found nothing (drill of 2026-11-17)
+SHARED_TODAY = {"DRISHTI_BUSINESS_TODAY": SHARED_AS_OF}
+
 #: the tests parked to i6 because they write to a lake (owner 2026-11-15): shown as skipped with this reason in every run and drill report
 PARKED_I6_REASON = "parked to i6: writes to a lake (owner 2026-11-15)"
 PARKED_I6 = pytest.mark.skip(reason=PARKED_I6_REASON)
@@ -122,7 +127,8 @@ def own_folders(tmp_path_factory, shared: bool = False) -> dict[str, str]:
 
 
 def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = False, heap: str = VAR_HEAP, **env: str):
-    """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the roots
+    """A real server and console over ``lake`` (the shared lake: its today is the lake's last date, :data:`SHARED_TODAY`), its VaR engine
+    ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the roots
     it publishes the official VaR and exposure results to (``<root>/risk-results``, VAR_GUIDE section 19, EXPOSURE_GUIDE section 20; the
     exposure root defaults to the lake's own) are its own: the lake is read, never written.
 
@@ -141,7 +147,7 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = 
         _start_captures_done(st.server)
 
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        **own, **env}, auth=auth, heap=heap, shared=shared, ready=ready):
+                                        **SHARED_TODAY, **own, **env}, auth=auth, heap=heap, shared=shared, ready=ready):
         yield st
 
 

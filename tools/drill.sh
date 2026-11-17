@@ -442,6 +442,10 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   trap "rm -rf '$copy'; rmdir '$COPY_BASE' 2>/dev/null || true" EXIT
   trap "exit 143" TERM
   git archive HEAD | tar -x -C "$copy"
+  # the tools read where everything is from the kernel jar (tools/resolved.py) and the copy's tests run them (the Python lake path of
+  # PythonPathEqualityTest): the copy's lib/, the one place they look, gets the jar the gate built from this same commit
+  wait_gate_jar || return 1
+  mkdir -p "$copy/lib" && cp "$REPO"/lib/drishti-server-*-exec.jar "$copy/lib/"
   cd "$copy"
   # the copy is not a repository: git must not find one above it (a worktree's copy sits under the main checkout's ignored .claude/,
   # where git would call every copied file ignored and the repository-wide scans would see none)
