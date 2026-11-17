@@ -72,7 +72,10 @@
       "requires": [
         "drishti-core"
       ],
-      "css": []
+      "css": [],
+      "assets": [
+        "vendor/apache-arrow/"
+      ]
     },
     "drishti-chart": {
       "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
@@ -88,7 +91,8 @@
         "vendor/echarts/echarts.min.js"
       ],
       "assets": [
-        "vendor/echarts/maps/"
+        "vendor/echarts/maps/",
+        "vendor/echarts-gl/"
       ]
     },
     "drishti-graph": {

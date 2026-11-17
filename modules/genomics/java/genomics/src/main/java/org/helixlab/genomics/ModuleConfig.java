@@ -45,7 +45,7 @@ public class ModuleConfig {
         return new GenomicsFunctions();
     }
 
-    /** The showcase's tables (the packs genomics and protein, read through the kernel's bindings once the module has started). */
+    /** The showcase's tables (the packs genomics-showcase and protein-engineering, read through the kernel's bindings once the module has started). */
     @Bean
     public ShowcaseData showcaseData() {
         return new ShowcaseData();

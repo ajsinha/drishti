@@ -149,7 +149,7 @@ class ShowcaseTest {
         assertThat(rows.stream().filter(r -> "*".equals(r.get("AA_ALT")))).allSatisfy(r -> assertThat(r.get("EFFECT")).isEqualTo("damaging"));
         Map<String, Object> ex = board.explainVariant((String) rows.get(0).get("VARIANT_ID"), all(), null);
         assertThat((String) ex.get("sentence")).contains("the laboratory scan measures this exact change");
-        assertThat(((Map<String, Object>) ex.get("records")).get("count")).isEqualTo(rows.get(0).get("CARRIERS"));
+        assertThat(((Number) ((Map<String, Object>) ex.get("records")).get("count")).longValue()).isEqualTo(((Number) rows.get(0).get("CARRIERS")).longValue());
     }
 
     @Test
@@ -230,7 +230,7 @@ class ShowcaseTest {
         ShowcaseData empty = new ShowcaseData();
         empty.attach((kind, sink) -> false);
         GenomicsBoard b = new GenomicsBoard(empty);
-        assertThatThrownBy(() -> b.associations(null)).isInstanceOf(NoSuchElementException.class).hasMessageContaining("no rows of variant, association");
+        assertThatThrownBy(() -> b.associations(null)).isInstanceOf(NoSuchElementException.class).hasMessageContaining("no rows of study-variant, association");
         assertThat((List<?>) b.status().get("missing")).hasSize(14);
         assertThat(api.missing(new NoSuchElementException("x")).getStatusCode().value()).isEqualTo(404);
     }

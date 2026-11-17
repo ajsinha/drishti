@@ -77,7 +77,7 @@
 
     initial(d) {
       const v = {};
-      (d.extra || []).forEach((x) => { const vals = this.extraValues(x); v[x.name] = vals.length ? vals[0] : ''; });
+      (d.extra || []).forEach((x) => { const vals = this.extraValues(x) || []; v[x.name] = x.control.kind === 'switch' ? false : vals.length ? vals[0] : ''; });
       return Object.assign(v, d.values || {});
     }
     extraValues(x) { return typeof x.control.values === 'function' ? x.control.values(this.ctx) : x.control.values; }

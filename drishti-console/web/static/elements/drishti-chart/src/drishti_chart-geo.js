@@ -279,7 +279,14 @@ export function findPlace(geo, code) {
 export function createGeoLoader(o) {
   o = o || {};
   const base = (o.base || drishtiUrl('/static/vendor/echarts/maps/')).replace(/\/?$/, '/');
-  const get = o.fetchJson || ((url) => fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
+  const get = o.fetchJson || ((url) => {
+    /* a page opened from the file system cannot read files (the browser refuses fetch for file:): said in words, nothing asked */
+    const here = typeof location !== 'undefined' ? location.href : '';
+    if (/^file:/i.test(here ? new URL(drishtiUrl(url), here).href : String(url))) {
+      return Promise.reject(new Error('map ' + url + ': the shapes cannot be read from the file system; open the page from a web server'));
+    }
+    return fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); });
+  });
   const cache = { world: null, regions: {}, levels: {} }, loads = [];
   const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
   return {

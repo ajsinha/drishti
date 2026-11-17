@@ -2016,8 +2016,9 @@
     function loaded(name) { return registry().libs[name] || null; }
     function addCss(doc, href) {
       if (doc.querySelector('link[data-drishti-elements="' + href + '"]')) { return; }
-      const plain = href.split('?')[0];
-      const present = Array.prototype.some.call(doc.querySelectorAll('link[rel="stylesheet"]'), (l) => (l.getAttribute('href') || '').split('?')[0] === plain);
+      const abs = (u) => { try { return new URL(u, doc.baseURI).href.split('?')[0]; } catch (e) { return String(u).split('?')[0]; } };
+      const plain = abs(href);                          // the page's own <link href="../css/x.css"> is the same sheet as the loader's address
+      const present = Array.prototype.some.call(doc.querySelectorAll('link[rel="stylesheet"]'), (l) => abs(l.getAttribute('href') || '') === plain);
       if (present) { return; }
       const l = doc.createElement('link');
       l.rel = 'stylesheet';
@@ -2026,12 +2027,12 @@
       doc.head.appendChild(l);
     }
     function loadOne(name) {
-      if (loaded(name)) { return Promise.resolve(loaded(name)); }
-      if (state.pending[name]) { return state.pending[name]; }
       const l = MANIFEST.libraries[name], r = root();
       const doc = r.document;
+      if (doc && doc.head && (!loaded(name) || state.base || registry().base)) { l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + MANIFEST.elements)); }
+      if (loaded(name)) { return Promise.resolve(loaded(name)); }
+      if (state.pending[name]) { return state.pending[name]; }
       if (!doc) { return Promise.reject(new Error('load: ' + name + ' is not loaded, and there is no page to load it into (under Node: require its bundle)')); }
-      l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + MANIFEST.elements));
       const engine = (l.scripts || []).reduce((p, src) => p.then(() => loadScript(staticBase() + src)), Promise.resolve());
       state.pending[name] = engine.then(() => new Promise((resolve, reject) => {
         const s = doc.createElement('script');

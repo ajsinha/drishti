@@ -408,8 +408,26 @@ def _console_named(c: dict, names: list[str]) -> bool:
     return not names or CONSOLE in names or c["process"] in names or c.get("name") in names
 
 
+def unknown_names(stack: dict, names: list[str]) -> str:
+    """The words refusing the names that are no node and no console of the cluster file ("" when every name is one): a name that
+    matches nothing would otherwise start or stop nothing in silence (a cluster file given as a name, a typo)."""
+    known = [n["name"] for n in stack.get("nodes") or []]
+    cons = consoles(stack)
+    known += ([CONSOLE] if cons else []) + [c["process"] for c in cons if c["process"] != CONSOLE] + [str(c["name"]) for c in cons if c.get("name")]
+    bad = [n for n in names if n not in known]
+    if not bad:
+        return ""
+    hint = ""
+    if any(n.endswith((".yaml", ".yml")) or Path(n).is_file() for n in bad):
+        hint = " (a cluster file is given with --cluster FILE, not as a name)"
+    return (f"no node or console named {', '.join(bad)} in {at.file}{hint}; the names are: {', '.join(dict.fromkeys(known)) or 'none'}")
+
+
 def start(names: list[str]) -> int:
     stack = load_stack()
+    if (refused := unknown_names(stack, names)):
+        say(refused)
+        return 2
     secrets()
     jar = server_jar()
     ok = True
@@ -426,6 +444,9 @@ def start(names: list[str]) -> int:
 def stop(names: list[str]) -> int:
     """The consoles first, then the nodes, each through ``drishti.py stop console`` or ``stop server`` (by its pid file, never by name)."""
     stack = load_stack()
+    if (refused := unknown_names(stack, names)):
+        say(refused)
+        return 2
     for c in consoles(stack):
         if _console_named(c, names):
             run_command("console", "stop", ["--data-dir", str(at.data)] + (["--name", c["process"][len(CONSOLE) + 1:]] if c["process"] != CONSOLE else []))

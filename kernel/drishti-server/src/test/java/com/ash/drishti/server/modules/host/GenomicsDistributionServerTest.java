@@ -114,7 +114,8 @@ class GenomicsDistributionServerTest {
         assertThat(getJson("/public/about").path("lenses").toString()).contains("research");
         List<String> packs = new ArrayList<>();
         getJson("/api/v1/packs").forEach(p -> packs.add(p.path("name").asText()));
-        assertThat(packs).as("none of the kernel's packs, no module's finance").isEmpty();
+        assertThat(packs).as("none of the kernel's packs, no module's finance: the genomics module's own showcase packs")
+                .containsExactlyInAnyOrder("genomics-showcase", "protein-engineering");
         List<String> suggested = new ArrayList<>();
         getJson("/api/v1/command/suggest?q=C").forEach(s -> suggested.add(s.path("mnemonic").asText()));
         assertThat(suggested).doesNotContain("CPTY", "CCP", "CRV", "CDS");

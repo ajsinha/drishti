@@ -26,7 +26,7 @@
     id: 'states', title: 'States: empty, loading, error, stale', about: 'drishti_states.js', types: ['StateOptions'],
     summary: 'The four states every component shows in place of its content, drawn one way: empty (and why), a loading skeleton, an error with a fix, stale figures with their age. Reduced motion stills the skeleton.',
     extra: [{ name: 'state', control: { kind: 'select', values: ['empty', 'loading', 'error', 'stale'] }, desc: 'The state shown.' },
-      { name: 'compact', control: { kind: 'checkbox' }, desc: 'A row in a list or a cell, not a panel.' }],
+      { name: 'compact', control: { kind: 'switch' }, desc: 'A row in a list or a cell, not a panel.' }],
     values: { state: 'error', compact: false, text: 'The VaR could not be computed.' },
     examples: [{ title: 'Error with a fix', values: {} }, { title: 'Loading skeleton', values: { state: 'loading' } }, { title: 'Stale', values: { state: 'stale', text: 'These figures are old.' } },
       { title: 'Empty', values: { state: 'empty', text: 'No trades match this filter.' } }],

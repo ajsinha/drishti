@@ -17,6 +17,7 @@ console's asset version, a document's example); the release tag must be the vers
 Drishti Elements / Render JS libraries' own versions, are not the product version and are not looked at."""
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -63,6 +64,8 @@ def test_the_tag_is_the_versions():
 
 
 def test_every_pom_takes_the_version_from_the_one_file():
+    """Every pom of the product (group com.ash.drishti) takes ${revision}; the Elements WebJar carries the Elements train's version, and a
+    module of another publisher (org.helixlab's genomics) or a stand-alone example its own."""
     wrong = []
     for f in tracked():
         if not f.endswith("pom.xml") or "archetype-resources" in f:
@@ -70,8 +73,14 @@ def test_every_pom_takes_the_version_from_the_one_file():
         root = ET.parse(ROOT / f).getroot()
         own = root.find(NS + "version")
         parent = root.find(NS + "parent")
-        if own is not None and own.text != "${revision}":
-            wrong.append(f"{f}: version {own.text}")
+        group = root.findtext(NS + "groupId") or (parent.findtext(NS + "groupId") if parent is not None else "")
+        if own is not None and own.text != "${revision}" and group == "com.ash.drishti":
+            if root.findtext(NS + "artifactId") == "drishti-elements":          # the Elements release train's own version, not the product's
+                train = json.loads((ROOT / "drishti-console/web/static/elements/drishti_elements.json").read_text(encoding="utf-8"))["elements"]
+                if own.text != train:
+                    wrong.append(f"{f}: version {own.text}, but the Elements train (drishti_elements.json) is {train}")
+            else:
+                wrong.append(f"{f}: version {own.text}")
         if parent is not None and parent.findtext(NS + "groupId") == "com.ash.drishti" and parent.findtext(NS + "version") != "${revision}":
             wrong.append(f"{f}: parent version {parent.findtext(NS + 'version')}")
     assert not wrong, "a pom carries its own version:\n" + "\n".join(wrong)

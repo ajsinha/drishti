@@ -260,7 +260,7 @@
     p.dataset.tone = 'warn';
     p.setAttribute('role', 'status');
     p.dataset.showcaseMissing = need.join(',');
-    p.textContent = 'This showcase needs the packs genomics and protein; this server has no rows of ' + need.join(', ') + '. Load them (drishti.py lake demo) and open the page again.';
+    p.textContent = 'This showcase needs the packs genomics-showcase and protein-engineering; this server has no rows of ' + need.join(', ') + '. Load them (drishti.py lake demo) and open the page again.';
     root.insertBefore(p, root.children[1] || null);
     root.dataset.state = 'needs-data';
     return true;

@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * The module's entry point: the kernel starts and stops it; everything it needs comes through the kernel API. Started, it gives the
- * showcase its source: the kinds of the packs genomics and protein as rows through the kernel's bindings (never a connection).
+ * showcase its source: the kinds of the packs genomics-showcase and protein-engineering as rows through the kernel's bindings (never a connection).
  */
 public class GenomicsModule implements DrishtiModule {
 

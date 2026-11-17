@@ -76,6 +76,48 @@ tables:
   gleif.lei-mapping:
     promote: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
     id: IDENTIFIER
+  genomics-showcase.study-gene:
+    promote: [GENE, CHROM, START, END, ROLE, PROTEIN_LENGTH, DRIVER, ALTERED_SAMPLES]
+    id: GENE
+  genomics-showcase.study-sample:
+    promote: [SAMPLE_ID, COHORT, TUMOUR_TYPE, STAGE, RESPONSE, TOXICITY, RELAPSE, CLUSTER]
+    id: SAMPLE_ID
+  genomics-showcase.study-variant:
+    promote: [VARIANT_ID, GENE, CHROM, POS, CONSEQUENCE, IMPACT, PROTEIN_POS, CARRIERS]
+    id: VARIANT_ID
+  genomics-showcase.variant-call:
+    promote: [CALL_ID, SAMPLE_ID, VARIANT_ID, GENE, GENOTYPE, VAF]
+    id: CALL_ID
+  genomics-showcase.association:
+    promote: [TRAIT, CHROM, VARIANT_ID, GENE, NEG_LOG10_P, BETA]
+    id: ASSOC_ID
+  genomics-showcase.cnv-segment:
+    promote: [SEGMENT_ID, SAMPLE_ID, CHROM, CALL, GENE]
+    id: SEGMENT_ID
+  genomics-showcase.pathway-gene:
+    promote: [PATHWAY_GENE_ID, PATHWAY, GENE, ROLE_IN_PATHWAY]
+    id: PATHWAY_GENE_ID
+  protein-engineering.protein:
+    promote: [PROTEIN, GENE, NAME, LENGTH, FAMILY, DESIGN_ROUNDS]
+    id: PROTEIN
+  protein-engineering.residue:
+    promote: [RESIDUE_ID, PROTEIN, POS, SECONDARY, ACTIVE_SITE]
+    id: RESIDUE_ID
+  protein-engineering.residue-contact:
+    promote: [CONTACT_ID, PROTEIN, POS_A, POS_B]
+    id: CONTACT_ID
+  protein-engineering.dms-score:
+    promote: [SCORE_ID, PROTEIN, POS, AA, ASSAY, SCORE]
+    id: SCORE_ID
+  protein-engineering.design:
+    promote: [DESIGN_ID, PROTEIN, ROUND, ACTIVITY, STATUS]
+    id: DESIGN_ID
+  protein-engineering.design-mutation:
+    promote: [DESIGN_MUTATION_ID, DESIGN_ID, PROTEIN, ROUND, POS]
+    id: DESIGN_MUTATION_ID
+  protein-engineering.design-round:
+    promote: [ROUND_ID, PROTEIN, ROUND, METHOD]
+    id: ROUND_ID
   market.ir-curve: {id: CURVE_ID}
   market.repo-curve: {id: CURVE_ID}
   market.fx-spot: {id: PAIR}

@@ -12,7 +12,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ash.drishti.tools</groupId>
   <artifactId>drishti-cpd</artifactId>
-  <version>1</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   <properties><pmd.version>7.29.0</pmd.version></properties>
   <dependencies>

@@ -158,7 +158,7 @@ public final class GenomicsBoard {
         List<String> missing = data.now().missing(List.of(kinds));
         if (!missing.isEmpty()) {
             throw new NoSuchElementException("the showcase's data is not loaded here: no rows of " + String.join(", ", missing)
-                    + " (load the packs genomics and protein: drishti.py lake demo)");
+                    + " (load the packs genomics-showcase and protein-engineering: drishti.py lake demo)");
         }
     }
 

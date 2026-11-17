@@ -444,3 +444,18 @@ def test_on_windows_the_pid_file_is_this_users_alone(tmp_path):
             mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run:
         procs.write_pid(tmp_path / "server.pid", 1, stop="k")
     assert run.call_args[0][0] == ["icacls", str(tmp_path / "server.pid"), "/inheritance:r", "/grant:r", "me:F"]
+
+
+def test_a_cluster_name_that_is_no_node_or_console_is_refused_in_words(tmp_path, capsys):
+    """`start cluster deploy/stack/stack.yaml` (the file given as a name) once started nothing and said nothing (rc 0): a name that is no
+    node and no console is refused with the names there are, before anything starts or stops."""
+    clusterctl, at = _cluster_at(tmp_path, tmp_path / "home")
+    at.file.write_text("nodes:\n  - {name: a, port: 18480}\n  - {name: b, port: 18481}\nconsole: {port: 17480}\n", encoding="utf-8")
+    with mock.patch.object(clusterctl, "at", at), mock.patch.object(clusterctl, "start_node") as node, \
+            mock.patch.object(clusterctl, "start_console") as console, mock.patch.object(clusterctl, "run_command") as run:
+        assert clusterctl.start(["deploy/stack/stack.yaml"]) == 2
+        out = capsys.readouterr().out
+        assert "no node or console named deploy/stack/stack.yaml" in out and "--cluster FILE" in out and "a, b, console" in out
+        assert clusterctl.stop(["c"]) == 2 and "the names are: a, b, console" in capsys.readouterr().out
+        node.assert_not_called(), console.assert_not_called(), run.assert_not_called()
+        assert clusterctl.unknown_names(clusterctl.load_stack(), ["a", "console"]) == ""

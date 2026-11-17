@@ -212,7 +212,8 @@ class DistributionsTest {
     @Test
     void genomicsBootsOnTheKernelAlone() {
         Distribution g = read("genomics");
-        assertThat(g.packs()).as("none of the kernel's packs: no counterparty, book or desk").isEmpty();
+        assertThat(g.packs()).as("none of the kernel's packs (no counterparty, book or desk): only the module's own showcase packs")
+                .containsExactlyInAnyOrder("genomics-showcase", "protein-engineering");
         assertThat(g.wordsOff()).contains("VAR", "EXP");
         assertThat(g.modules()).containsExactly("genomics");                            // its manifest: modules/genomics (the SDK's layout)
         assertThat(g.domains()).containsEntry("genomics", "genomics");
@@ -220,6 +221,6 @@ class DistributionsTest {
         StandardEnvironment env = boot("drishti.distribution", "genomics");
         assertThat(Editions.of(env).commandShown("CRV")).isFalse();
         assertThat(Editions.of(env).commandShown("CPTY")).isFalse();
-        assertThat(env.getProperty("drishti.packs.enabled")).as("a distribution of no packs loads none").isEmpty();
+        assertThat(env.getProperty("drishti.packs.enabled")).as("only the module's own packs").isEqualTo("genomics-showcase,protein-engineering");
     }
 }
