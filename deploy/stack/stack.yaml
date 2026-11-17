@@ -36,7 +36,7 @@ settings:                          # every server and the console (not secret)
   DRISHTI_GRAPH_LINKBUDGET: 3s
   DRISHTI_NEWS_ENABLED: "true"
   DRISHTI_UI_DESIGNER: "true"           # the Sutra designer (Customize, Describe, Outline, Grid; docs/guides/RACHANA_REFERENCE.md 31)
-  DRISHTI_LENSES: risk,world,market,trading   # four lenses: "Open Drishti Risk", "Open Drishti World", "Open Drishti Market" and "Open Drishti Trading" for each person (docs/guides/ADMIN_GUIDE.md section 3); the instance stays full Drishti
+  DRISHTI_LENSES: risk,world,market,trading,research   # five lenses: "Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading" and "Open Drishti Research" (genomics) for each person (docs/guides/ADMIN_GUIDE.md section 3); the instance stays full Drishti
   DRISHTI_VAR_SCENARIO_WINDOW: "250"   # historical VaR on the newest 250 scenarios (one year, the Basel minimum) of each date's set; the product default is all (docs/admin/CONFIGURATION.md)
   DRISHTI_BUSINESS_TODAY: "2026-11-06"   # the demo lake ends on 2026-11-06: every server treats that day as today (docs/admin/CONFIGURATION.md)
 
