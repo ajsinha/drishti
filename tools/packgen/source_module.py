@@ -314,10 +314,11 @@ def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
     import yaml
     if (yaml.safe_load((src / "module.yaml").read_text(encoding="utf-8")) or {}).get("java") is not None:
         # a module with code (its manifest's java: block) is not packed from its folder: its jar is the build's, and the build packs it
-        # (packaging/dist: <pack>-<version>.dmod beside the product's other modules)
-        built = sorted((ROOT / "packaging" / "dist" / "target" / "classes" / "drishti" / "modules").glob(f"{n['pack']}-*.dmod"))
+        # (<pack>-<version>.dmod in modules/, beside the product's other modules)
+        # (the modules folder the build left, else packaging/dist's own output)
+        built = sorted(f for d in (ROOT / "modules", ROOT / "packaging" / "dist" / "target" / "dmod") for f in d.glob(f"{n['pack']}-[0-9]*.dmod"))
         if not built:
-            print(f"the module {n['pack']} this one requires has code and is not built: run python tools/drishti.py build jar first; "
+            print(f"the module {n['pack']} this one requires has code and is not built: run python tools/drishti.py build all first; "
                   "its runtime checks are left without it", file=sys.stderr)
         return [str(built[-1])] if built else []
     out = dist / "requires"
