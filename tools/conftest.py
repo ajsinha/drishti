@@ -23,6 +23,9 @@ import tempfile
 if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
     _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
     os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
+    # the module boot of every Java command the tests start unpacks the packages into <data>/cache/modules: that data folder is this
+    # run's own too, never the repository's data/, which the drill checks is left unchanged
+    os.environ.setdefault("DRISHTI_DATA_DIR", os.path.join(_RESOLVED, "data"))
     atexit.register(shutil.rmtree, _RESOLVED, True)
 
 

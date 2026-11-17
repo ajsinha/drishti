@@ -55,7 +55,7 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   no modules). `--modules-dev` is the development switch (`drishti.modules.dev`, its rule now in `LaunchRoots`: refused in a cluster and under
   `prod`). `start cluster` pins `<data>/stack/modules/` beside the jar copy (name, size, SHA-256) and gives it to every node. `setup` no longer
   makes `<data>/modules`, lists the old module store as safe to delete and next steps `build all`. The images copy `modules/*.dmod` and
-  `first-party.yaml` (`.dockerignore` drops the module folders), `container_smoke` asks for them; the IDE run configurations gain **Drishti
+  `first-party.yaml` (`.dockerignore` drops the module folders: `modules/**` then the two exceptions), `container_smoke` asks for them; the IDE run configurations gain **Drishti
   build modules** (the debug server's before-launch step) and **Drishti server (dev switch)**; `module run` starts the kernel alone from the
   jar in `lib/`. `drill.sh`: the gate builds the modules, the Java copies get them and `-Ddrishti.test.requires-python=true`, `STALE_STATE`
   holds `modules`. Guards: G1 (`ServerJarHoldsNoModuleTest`, the exec jar of the reactor), G5 and G7 (`test_modules_beside_jar.py`: one jar,

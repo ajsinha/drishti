@@ -69,6 +69,9 @@ if not os.environ.get("DRISHTI_RESOLVED_CACHE"):
 
     _RESOLVED = tempfile.mkdtemp(prefix="drishti-resolved-")
     os.environ["DRISHTI_RESOLVED_CACHE"] = _RESOLVED
+    # the module boot of every Java command the tests start (the resolver, sutra, the loaders) unpacks the packages into <data>/cache/modules:
+    # that data folder is this run's own too, never the repository's data/, which the drill checks is left unchanged
+    os.environ.setdefault("DRISHTI_DATA_DIR", str(Path(_RESOLVED) / "data"))
     atexit.register(shutil.rmtree, _RESOLVED, True)
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)

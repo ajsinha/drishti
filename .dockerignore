@@ -25,4 +25,6 @@ data
 !kernel/drishti-server/target/drishti-server-*-exec.jar
 # a module is a package beside the jar (python tools/drishti.py build modules): the images take modules/*.dmod and modules/first-party.yaml,
 # never the module folders (their sources, poms and data are in the packages)
-modules/*/
+modules/**
+!modules/*.dmod
+!modules/first-party.yaml
