@@ -36,7 +36,19 @@ class RegionEconomicsSampleTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Path SAMPLES = Path.of(TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples");          // region-economy.jsonl
-    private static final Path SHAPES = Path.of(TestRoots.repo(), "drishti-console", "web", "static", "vendor", "echarts", "maps", "regions");
+    private static final Path SHAPES = elements().resolve(Path.of("vendor", "echarts", "maps", "regions"));
+
+    /** The one vendored Drishti Elements release tree (drishti-console/core/elements_pin.py: exactly one version folder). */
+    private static Path elements() {
+        Path vendor = Path.of(TestRoots.repo(), "drishti-console", "web", "static", "vendor", "drishti-elements");
+        try (var folders = Files.list(vendor)) {
+            List<Path> one = folders.filter(Files::isDirectory).toList();
+            assertThat(one).as("exactly one Drishti Elements folder under " + vendor).hasSize(1);
+            return one.get(0);
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 
     private static Dataset dataset() throws IOException {
         DatasetParser.Result r = Layered.dataset(Files.readString(ReportParserTest.DATASETS.resolve("region-economics.dataset.yaml")));
