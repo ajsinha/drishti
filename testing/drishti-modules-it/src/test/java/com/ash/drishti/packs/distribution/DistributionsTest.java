@@ -148,9 +148,9 @@ class DistributionsTest {
         assertThat(d.modules()).containsExactly("freight");
         assertThat(d.commands()).contains("SHIP");
         assertThat(d.domains()).containsEntry("freight", "logistics");
-        StandardEnvironment gone = boot("drishti.distribution", file.toString(), com.ash.drishti.api.resolution.ModuleHomes.PROPERTY,
-                com.ash.drishti.api.resolution.ModuleHomes.none().toProperty(), "drishti.data.dir", tmp.resolve("data").toString());
-        assertThatThrownBy(() -> Distributions.of(gone)).hasMessageContaining("is not among the modules this server booted");
+        assertThatThrownBy(() -> boot("drishti.distribution", file.toString(), com.ash.drishti.api.resolution.ModuleHomes.PROPERTY,
+                com.ash.drishti.api.resolution.ModuleHomes.none().toProperty(), "drishti.data.dir", tmp.resolve("data").toString()))
+                .hasMessageContaining("is not among the modules this server booted");
     }
 
     @Test

@@ -55,7 +55,8 @@ class VarInstalledModuleRestartTest {
     @Test
     void varAnswersFromTheInstalledModuleAfterEachRestart() throws Exception {
         Path repo = TestDataBook.root();
-        Path modules = install(repo.resolve("modules/banking"), work);
+        install(repo.resolve("modules/market-data"), work, "drishti-market-data.jar");              // banking requires it
+        Path modules = install(repo.resolve("modules/banking"), work, "drishti-banking.jar", "drishti-compute-banking.jar");
         assertThat(modules.resolve("banking-1.0.0.dmod")).isRegularFile();
         Path data = Files.createDirectories(work.resolve("data"));
         VarLakeFixture.write(data.resolve("delta/demo"));                  // the demo lake's folder, as config/lakes/demo.yaml names it
@@ -66,7 +67,7 @@ class VarInstalledModuleRestartTest {
         props.put("drishti.lakes.dir", repo.resolve("config/lakes").toString());
         props.put("drishti.modules.home", modules.toString());             // where the installer put the package; the runtime finds no class in its stand-in jars: banking's are here
         props.put("drishti.modules.sources", "false");
-        props.put("drishti.packs.enabled", "default");
+        props.put("drishti.packs.enabled", "market-data,market-risk");
         props.put("drishti.sources.plugins.demo.enabled", "false");      // the demo off, as the owner's stack runs
         props.put("drishti.sources.connectors-dir", Files.createDirectories(work.resolve("connectors")).toString());
         props.put("drishti.rachana.hot-reload", "false");
@@ -102,11 +103,13 @@ class VarInstalledModuleRestartTest {
      * The module packed by the one packer (tools/modulepack.py) and dropped into a modules folder: {@code <modules>/banking-1.0.0.dmod}. Its
      * jars are stand-ins: the test's server has banking's classes already.
      */
-    static Path install(Path source, Path work) throws Exception {
+    static Path install(Path source, Path work, String... jarNames) throws Exception {
         Path jars = Files.createDirectories(work.resolve("jars"));
-        Path first = jar(jars.resolve("drishti-banking.jar"));
-        Path dmod = ModuleFixtures.pack(source, List.of(first, jar(jars.resolve("drishti-compute-banking.jar"))), work.resolve("dist"),
-                "test-kernel-build");
+        List<Path> stand = new java.util.ArrayList<>();
+        for (String name : jarNames) {
+            stand.add(jar(jars.resolve(name)));
+        }
+        Path dmod = ModuleFixtures.pack(source, stand, work.resolve("dist"), "test-kernel-build");
         Path modules = Files.createDirectories(work.resolve("modules"));
         Files.copy(dmod, modules.resolve(dmod.getFileName()));
         return modules;

@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * REST route and a page, used from the kernel as its own. Nothing is deployed or removed while the server runs: a module is a file and a
  * restart (the unload and its leak check are the module runtime's own tests and the conformance check C14).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading"})
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=core"})
 @AutoConfigureMockMvc
 class ModuleHostServerTest {
 
