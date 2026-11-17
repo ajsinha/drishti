@@ -95,14 +95,14 @@ class KernelLibrariesWinTest {
         try (URLClassLoader kernel = new URLClassLoader("g10-kernel", new URL[] {tmp.resolve("kernel-res").toUri().toURL()},
                 ModuleRuntime.class.getClassLoader());
                 URLClassLoader lib = new URLClassLoader("g10-lib", new URL[] {site.toUri().toURL()}, kernel)) {
-            ModuleRuntime rt = new ModuleRuntime(facts, null, kernel, null, tmp.resolve("tombstones")).libraries(lib);
-            assertThat(rt.start(List.of(tmp.resolve("modules")), Map.of(), id -> true)).extracting(ModuleHealth::state)
+            ModuleRuntime rt = new ModuleRuntime(facts, null, kernel, null).libraries(lib);
+            assertThat(rt.start(List.of(dir), id -> true)).extracting(ModuleHealth::state)
                     .containsExactly(ModuleHealth.State.LOADED);
             // the load log and the Health row name it
             assertThat(logged.list).anyMatch(e -> e.getLevel() == ch.qos.logback.classic.Level.WARN && e.getFormattedMessage().contains(sentence));
             assertThat(rt.health("gten").orElseThrow().notes()).contains(ModuleVerifier.LIBRARY_WARNING + sentence);
             look(rt, kernel, lib);
-            assertThat(rt.unload("gten", ModuleRuntime.Leave.DISABLE, true).leakFree()).isTrue();
+            assertThat(rt.unload("gten", true).leakFree()).isTrue();
             rt.close();
         } finally {
             log.detachAppender(logged);
