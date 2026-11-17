@@ -12,6 +12,8 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
+
 package org.helixlab.genomics;
 
 import static org.helixlab.genomics.ShowcaseData.integer;
@@ -87,7 +89,7 @@ public final class ProteinBench {
 
     /** The scan of one assay: every measured change (POS, AA, SCORE), the residues' tracks, the assays. */
     public Map<String, Object> dms(String id, String assay) {
-        needs("protein", "residue", "dms_score");
+        needs("protein", "residue", "dms-score");
         Map<String, Object> p = protein(id);
         String name = str(p.get("PROTEIN"));
         List<String> assays = board.assays(name);
@@ -98,7 +100,7 @@ public final class ProteinBench {
         return data.cached("dms|" + name + "|" + as, () -> {
             List<Map<String, Object>> rows = new ArrayList<>();
             Set<String> present = new HashSet<>();
-            data.now().of("dms_score").forEach(d -> {
+            data.now().of("dms-score").forEach(d -> {
                 if (str(d.get("PROTEIN")).equals(name) && str(d.get("ASSAY")).equalsIgnoreCase(as)) {
                     Map<String, Object> r = new LinkedHashMap<>();
                     r.put("ID", integer(d.get("POS"), 0) + ":" + str(d.get("AA")));
@@ -123,7 +125,7 @@ public final class ProteinBench {
             out.put("rows", rows);
             out.put("residues", res);
             out.put("explain", new Explained("The scan of " + name + " (" + as + ")", rows.size() + " measurements").scope(name)
-                    .step("Every position and change measured for " + as, "dms_score", rows.size()).step("The residues' fold, burial and active site", "residue", res.size())
+                    .step("Every position and change measured for " + as, "dms-score", rows.size()).step("The residues' fold, burial and active site", "residue", res.size())
                     .sentence(String.format(Locale.ROOT, "%d of %d changes hurt the protein badly; %d help it. 0 is the natural protein.", hurts, rows.size(), helps)).build());
             return out;
         });
@@ -150,11 +152,11 @@ public final class ProteinBench {
 
     /** A residue: its twenty changes in each assay and the designs that carry a change there. */
     public Map<String, Object> residue(String id, int pos) {
-        needs("protein", "residue", "dms_score");
+        needs("protein", "residue", "dms-score");
         String name = str(protein(id).get("PROTEIN"));
         Map<String, Object> res = residues(name).stream().filter(r -> integer(r.get("POS"), -1) == pos).findFirst()
                 .orElseThrow(() -> new NoSuchElementException("no position " + pos + " in " + name));
-        List<Map<String, Object>> options = data.now().of("dms_score").stream().filter(d -> str(d.get("PROTEIN")).equals(name) && integer(d.get("POS"), -1) == pos)
+        List<Map<String, Object>> options = data.now().of("dms-score").stream().filter(d -> str(d.get("PROTEIN")).equals(name) && integer(d.get("POS"), -1) == pos)
                 .map(d -> Explained.pick(d, List.of("ASSAY", "AA", "SCORE", "SE", "REPLICATES"))).toList();
         Set<String> designs = designsWith(name, pos, null);
         Map<String, Object> out = new LinkedHashMap<>(Explained.pick(res, List.of("POS", "AA", "SECONDARY", "DOMAIN", "BURIAL", "ACTIVE_SITE", "MEAN_ACTIVITY", "MEAN_STABILITY")));
@@ -162,7 +164,7 @@ public final class ProteinBench {
         out.put("options", options);
         out.put("designs", designs.size());
         out.put("explain", new Explained("Position " + pos + " of " + name + " (" + str(res.get("AA")) + ")", options.size() + " measurements").scope(name)
-                .step("The residue", "residue", 1).step("Every change measured there", "dms_score", options.size()).step("Designs with a change there", "design_mutation", designs.size())
+                .step("The residue", "residue", 1).step("Every change measured there", "dms-score", options.size()).step("Designs with a change there", "design-mutation", designs.size())
                 .sentence(String.format(Locale.ROOT, "Position %d is %s%s; %d designs change it.", pos, str(res.get("SECONDARY")).isEmpty() ? "a residue" : "in a " + str(res.get("SECONDARY")),
                         yes(res.get("ACTIVE_SITE")) ? " in the active site" : "", designs.size()))
                 .records(List.of("ASSAY", "AA", "SCORE", "SE", "REPLICATES"), options).build());
@@ -173,7 +175,7 @@ public final class ProteinBench {
     Set<String> designsWith(String protein, int pos, String aa) {
         Set<String> ids = data.now().of("design").stream().filter(d -> str(d.get("PROTEIN")).equals(protein)).map(d -> str(d.get("DESIGN_ID"))).collect(Collectors.toSet());
         Set<String> out = new HashSet<>();
-        data.now().of("design_mutation").forEach(m -> {
+        data.now().of("design-mutation").forEach(m -> {
             if (integer(m.get("POS"), -1) == pos && (aa == null || aa.isBlank() || str(m.get("AA_TO")).equals(aa)) && ids.contains(str(m.get("DESIGN_ID")))) {
                 out.add(str(m.get("DESIGN_ID")));
             }
@@ -289,7 +291,7 @@ public final class ProteinBench {
             }
         });
         Map<Integer, Map<String, Object>> method = new HashMap<>();
-        data.now().of("design_round").stream().filter(r -> str(r.get("PROTEIN")).equals(name)).forEach(r -> method.put(integer(r.get("ROUND"), 0), r));
+        data.now().of("design-round").stream().filter(r -> str(r.get("PROTEIN")).equals(name)).forEach(r -> method.put(integer(r.get("ROUND"), 0), r));
         List<Map<String, Object>> rows = new ArrayList<>();
         by.forEach((r, xs) -> {
             double[] v = xs.stream().mapToDouble(Double::doubleValue).sorted().toArray();
@@ -334,7 +336,7 @@ public final class ProteinBench {
                 .map(d -> Explained.pick(d, List.of("DESIGN_ID", "ROUND", "ACTIVITY", "DELTA_TM", "N_CHANGES", "MODEL_SCORE", "STATUS", "PARENT"))).toList();
         Set<String> ids = top.stream().map(d -> str(d.get("DESIGN_ID"))).collect(Collectors.toSet());
         Map<String, List<String>> changes = new HashMap<>();
-        data.now().of("design_mutation").forEach(m -> {
+        data.now().of("design-mutation").forEach(m -> {
             if (ids.contains(str(m.get("DESIGN_ID")))) {
                 changes.computeIfAbsent(str(m.get("DESIGN_ID")), k -> new ArrayList<>()).add(mutation(m));
             }
@@ -362,13 +364,13 @@ public final class ProteinBench {
 
     /** A design: its changes (each with the scan's score), its measurements and its parent. */
     public Map<String, Object> design(String id, String designId) {
-        needs("protein", "design", "design_mutation");
+        needs("protein", "design", "design-mutation");
         String name = str(protein(id).get("PROTEIN"));
         Map<String, Object> d = designs(name).stream().filter(x -> str(x.get("DESIGN_ID")).equals(designId)).findFirst()
                 .orElseThrow(() -> new NoSuchElementException("no design " + designId + " of " + name));
         String assay = board.assays(name).stream().findFirst().orElse("");
         Map<String, Map<String, Object>> scan = board.scanIndex();
-        List<Map<String, Object>> muts = data.now().of("design_mutation").stream().filter(m -> str(m.get("DESIGN_ID")).equals(designId))
+        List<Map<String, Object>> muts = data.now().of("design-mutation").stream().filter(m -> str(m.get("DESIGN_ID")).equals(designId))
                 .sorted(Comparator.comparingDouble(m -> num(m.get("POS")))).map(m -> {
                     Map<String, Object> r = Explained.pick(m, List.of("POS", "AA_FROM", "AA_TO"));
                     r.put("MUTATION", mutation(m));
@@ -381,7 +383,7 @@ public final class ProteinBench {
         out.put("positions", muts.stream().map(m -> m.get("POS")).toList());
         out.put("cells", muts.stream().map(m -> integer(m.get("POS"), 0) + ":" + str(m.get("AA_TO"))).toList());
         out.put("explain", new Explained("Design " + designId, round(num(d.get("ACTIVITY")), 2) + "× activity").scope(name + ", round " + str(d.get("ROUND")))
-                .step("The design", "design", 1).step("Its changes", "design_mutation", muts.size()).step("Each change's score in the scan (" + assay + ")", "dms_score", muts.stream().filter(m -> m.get("SCAN_SCORE") != null).count())
+                .step("The design", "design", 1).step("Its changes", "design-mutation", muts.size()).step("Each change's score in the scan (" + assay + ")", "dms-score", muts.stream().filter(m -> m.get("SCAN_SCORE") != null).count())
                 .sentence(String.format(Locale.ROOT, "%s carries %d changes (%s): %s times the natural protein's activity, %s degrees more stable; its parent is %s.", designId, muts.size(),
                         muts.stream().map(m -> str(m.get("MUTATION"))).collect(Collectors.joining(", ")), round(num(d.get("ACTIVITY")), 1), round(num(d.get("DELTA_TM")), 1), str(d.get("PARENT"))))
                 .records(List.of("POS", "AA_FROM", "AA_TO", "MUTATION", "SCAN_SCORE"), muts).build());
@@ -390,16 +392,16 @@ public final class ProteinBench {
 
     /** A cell of the scan: the measurement in every assay, with its error and replicates. */
     public Map<String, Object> explainCell(String id, int pos, String aa) {
-        needs("protein", "dms_score");
+        needs("protein", "dms-score");
         String name = str(protein(id).get("PROTEIN"));
-        List<Map<String, Object>> rows = data.now().of("dms_score").stream().filter(d -> str(d.get("PROTEIN")).equals(name) && integer(d.get("POS"), -1) == pos && str(d.get("AA")).equals(aa))
+        List<Map<String, Object>> rows = data.now().of("dms-score").stream().filter(d -> str(d.get("PROTEIN")).equals(name) && integer(d.get("POS"), -1) == pos && str(d.get("AA")).equals(aa))
                 .map(d -> Explained.pick(d, List.of("ASSAY", "SCORE", "SE", "REPLICATES"))).toList();
         Set<String> designs = designsWith(name, pos, aa);
         Map<String, Object> res = residues(name).stream().filter(r -> integer(r.get("POS"), -1) == pos).findFirst().orElse(Map.of());
         String change = str(res.get("AA")) + pos + aa;
         Double first = rows.isEmpty() ? null : num(rows.get(0).get("SCORE"));
         return new Explained(name + " " + change, first == null ? "not measured" : String.valueOf(round(first, 2))).scope(name)
-                .step("The change measured in each assay", "dms_score", rows.size()).step("Designs that carry it", "design_mutation", designs.size())
+                .step("The change measured in each assay", "dms-score", rows.size()).step("Designs that carry it", "design-mutation", designs.size())
                 .sentence(first == null ? change + " was not measured." : String.format(Locale.ROOT, "%s %s the protein (%s in %s, %s); %d designs carry it.", change,
                         first > 0.3 ? "helps" : first <= GenomicsBoard.DAMAGING ? "breaks" : first <= GenomicsBoard.INTERMEDIATE ? "weakens" : "barely changes",
                         round(first, 2), str(rows.get(0).get("ASSAY")), Arrays.toString(new Object[] {rows.get(0).get("REPLICATES")}).replaceAll("[\\[\\]]", "") + " replicates", designs.size()))

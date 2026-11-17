@@ -1,0 +1,2 @@
+{"SAMPLE_ID":"S0001","COHORT":"ONC-1","TUMOUR_TYPE":"Breast","STAGE":"III","AGE_BAND":"60-69","RESPONSE":"non-responder","TOXICITY":"severe","RELAPSE":"relapsed","CLUSTER":"C2 basal-like","EMB_X":0.6187,"EMB_Y":0.038,"MUTATION_COUNT":18}
+{"SAMPLE_ID":"S0002","COHORT":"ONC-1","TUMOUR_TYPE":"Ovarian","STAGE":"II","AGE_BAND":"70-79","RESPONSE":"non-responder","TOXICITY":"none","RELAPSE":"free","CLUSTER":"C4 stromal","EMB_X":0.2185,"EMB_Y":0.7907,"MUTATION_COUNT":26}

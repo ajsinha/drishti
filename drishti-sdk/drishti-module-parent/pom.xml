@@ -30,7 +30,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <drishti.sdk.version>${project.version}</drishti.sdk.version>
+    <drishti.sdk.version>${revision}</drishti.sdk.version>
     <spring-framework.version>6.2.19</spring-framework.version>
     <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <assertj.version>3.27.7</assertj.version>

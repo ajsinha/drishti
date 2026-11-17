@@ -12,6 +12,8 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
+
 package org.helixlab.genomics;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,7 +80,7 @@ class ShowcaseTest {
     void everyKindIsReadAndNoneMissing() {
         Map<String, Object> s = api.status(false);
         assertThat(s.get("missing")).isEqualTo(List.of());
-        assertThat((Map<String, Object>) s.get("rows")).containsEntry("sample", 60).containsEntry("dms_score", 1680).containsEntry("design", 60);
+        assertThat((Map<String, Object>) s.get("rows")).containsEntry("study-sample", 60).containsEntry("dms-score", 1680).containsEntry("design", 60);
     }
 
     @Test

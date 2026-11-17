@@ -41,7 +41,7 @@ import java.util.stream.Stream;
  * </ol>
  * The same name twice in one layer is an error naming both places, and neither is read. A module that is not active brings no pack (its
  * packs are listed in {@link Result#off()}). Pure: the files are only read, never written; YAML comes through the caller's reader (this
- * module has no dependencies). The Python twin is {@code drishti-console/core/resolution.py}; both pass the shared fixture
+ * module has no dependencies). The tools read its answer ({@code resolve --json}, {@code tools/resolved.py}); it passes the fixture
  * {@code kernel/drishti-api/src/test/resources/pack-resolution/cases.yaml}. Every reader of packs asks this, never a folder.
  */
 public final class PackResolver {

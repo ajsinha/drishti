@@ -1,0 +1,81 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: association
+version: 1
+description: 'Association of a variant with a trait: One variant tested against one trait: the p-value, its negative log, the effect and its error
+  and how strongly the variant is linked to the peak''s lead.'
+doc:
+  summary: One association of a variant with a trait, as a record.
+  description: 'One variant tested against one trait: the p-value, its negative log, the effect and its error and how strongly the variant is
+    linked to the peak''s lead. Three traits over 12,000 sites: 36,000 tests, each computed from the calls and the samples'' traits (a Wald test
+    on the log odds ratio), never painted. The page is the plain record view: the strip gives the headline fields and the table every field, a
+    linked field opens its kind; the showcase''s own screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/association/GWAS-RESPONSE-HX-004928
+  - ASSOC GWAS-RESPONSE-HX-004928
+  since: 2.9.11
+match:
+  kind: association
+  priority: 10
+title:
+  pill: Genomics · Association of a variant with a trait
+  id: $.ASSOC_ID
+strip:
+- label: Assoc id
+  bind: $.ASSOC_ID
+- label: Trait
+  bind: $.TRAIT
+- label: Gene
+  bind: link($.GENE, 'study-gene')
+- label: Neg log10 p
+  bind: $.NEG_LOG10_P
+- label: Beta
+  bind: $.BETA
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Association of a variant with a trait
+  columns:
+  - label: Assoc id
+    bind: $.ASSOC_ID
+  - label: Trait
+    bind: $.TRAIT
+  - label: Variant id
+    bind: link($.VARIANT_ID, 'study-variant')
+  - label: Chrom
+    bind: $.CHROM
+  - label: Pos
+    bind: $.POS
+    fmt: amount0
+  - label: Gene
+    bind: link($.GENE, 'study-gene')
+  - label: P
+    bind: $.P
+  - label: Neg log10 p
+    bind: $.NEG_LOG10_P
+  - label: Beta
+    bind: $.BETA
+  - label: Se
+    bind: $.SE
+  - label: R2 lead
+    bind: $.R2_LEAD
+keys:
+  F9: raw

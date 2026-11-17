@@ -23,6 +23,7 @@ from bi_backend import BiBackend
 from conftest import CONSOLE
 from core.app import CSP, create_app
 from core.config import load_settings
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 STATIC = CONSOLE / "web" / "static"
 TEMPLATES = CONSOLE / "web" / "templates" / "bi"
@@ -84,7 +85,7 @@ def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
         text = (STATIC / "js" / name).read_text(encoding="utf-8")
         assert "http://" not in text and "https://" not in text and "innerHTML" not in text and "insertAdjacentHTML" not in text and "eval(" not in text, name
         assert not re.search(r"\bon[a-z]+\s*=\s*['\"]", text), name
-        assert len(text.splitlines()) < 2000, name
+        assert len(text.splitlines()) <= CODE_LINE_CAP, name
         assert text.startswith("/*\n * Project Drishti"), name
     assert not (TEMPLATES / "_studio.html").exists()                                  # the hand-made Explorer, tabs and dock: deleted
     for tmpl in ("design.html", "designer.html", "design_theme.html", "report.html"):

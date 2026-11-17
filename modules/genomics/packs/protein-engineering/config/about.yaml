@@ -1,0 +1,270 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the protein-engineering pack's kinds and fields mean (the README, the contracts and the About card read it).
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py.
+about: 1
+vocabulary: {}
+kinds:
+  protein:
+    title: Protein
+    about: '${$.NAME} (${$.PROTEIN}): ${$.LENGTH} amino acids, ${$.FAMILY}.'
+    guide: protein-engineering
+    glossary:
+      PROTEIN:
+        term: Protein
+        means: 'The protein''s id: the symbol of its gene.'
+      GENE:
+        term: Gene
+        means: The gene that codes for it; opens SGENE.
+      NAME:
+        term: Name
+        means: The protein's name.
+      LENGTH:
+        term: Length
+        means: The amino acids in it.
+        unit: amino acids
+      FAMILY:
+        term: Family
+        means: The family it belongs to.
+      SEQUENCE:
+        term: Sequence
+        means: The amino acid sequence, one letter each.
+      ACTIVE_SITE:
+        term: Active site
+        means: The positions of the active site's residues.
+      DESIGN_ROUNDS:
+        term: Design rounds
+        means: How many rounds of design the campaign ran on it; 0 for a protein never designed.
+        unit: rounds
+  residue:
+    title: Residue
+    about: Position ${$.POS} of ${$.PROTEIN} is ${$.AA}, in a ${$.SECONDARY} of the ${$.DOMAIN}, burial ${$.BURIAL}.
+    guide: protein-engineering
+    glossary:
+      RESIDUE_ID:
+        term: Residue id
+        means: The protein, a colon and the position.
+      PROTEIN:
+        term: Protein
+        means: The protein; opens PROT.
+      POS:
+        term: Pos
+        means: The position, counted from 1.
+      AA:
+        term: Aa
+        means: The amino acid there (one letter).
+      SECONDARY:
+        term: Secondary
+        means: The element of the fold it is in.
+      DOMAIN:
+        term: Domain
+        means: The domain it is in.
+      BURIAL:
+        term: Burial
+        means: 'How buried it is, 0 (on the surface) to 1 (deep inside): the rank of its neighbours within 11 angstroms.'
+      ACTIVE_SITE:
+        term: Active site
+        means: True for the residues of the active site.
+      X:
+        term: X
+        means: Its place along x.
+        unit: angstrom
+      Y:
+        term: Y
+        means: Its place along y.
+        unit: angstrom
+      Z:
+        term: Z
+        means: Its place along z.
+        unit: angstrom
+      MEAN_ACTIVITY:
+        term: Mean activity
+        means: The mean activity score of the 19 changes of the position (negative hurts, positive helps).
+      MEAN_STABILITY:
+        term: Mean stability
+        means: The mean stability score of the 19 changes of the position.
+  residue-contact:
+    title: Residue contact
+    about: Positions ${$.POS_A} and ${$.POS_B} of ${$.PROTEIN} are ${$.DISTANCE} angstroms apart.
+    guide: protein-engineering
+    glossary:
+      CONTACT_ID:
+        term: Contact id
+        means: The protein, a colon, the two positions joined by a dash.
+      PROTEIN:
+        term: Protein
+        means: The protein; opens PROT.
+      POS_A:
+        term: Pos a
+        means: The lower position.
+      POS_B:
+        term: Pos b
+        means: The higher position.
+      DISTANCE:
+        term: Distance
+        means: How far apart the two residues are.
+        unit: angstrom
+  dms-score:
+    title: Deep mutational scan score
+    about: ${$.MUTATION} of ${$.PROTEIN} scores ${$.SCORE} for ${$.ASSAY}.
+    guide: protein-engineering
+    glossary:
+      SCORE_ID:
+        term: Score id
+        means: The protein, position, amino acid and assay, joined by colons.
+      PROTEIN:
+        term: Protein
+        means: The protein; opens PROT.
+      POS:
+        term: Pos
+        means: The position changed.
+      AA_REF:
+        term: Aa ref
+        means: The amino acid the protein has there (one letter).
+      AA:
+        term: Aa
+        means: The amino acid it was changed to; the same as AA_REF measures the unchanged protein.
+      MUTATION:
+        term: Mutation
+        means: The change written as AA_REF, POS and AA.
+      ASSAY:
+        term: Assay
+        means: What was measured.
+      SCORE:
+        term: Score
+        means: 'The effect against the natural protein: negative hurts, positive helps, 0 no effect.'
+      SE:
+        term: Se
+        means: The standard error over the replicates.
+      REPLICATES:
+        term: Replicates
+        means: How many replicate measurements went into it.
+        unit: replicates
+  design:
+    title: Protein design
+    about: '${$.DESIGN_ID}: ${$.N_CHANGES} changes, ${$.ACTIVITY} times the natural activity.'
+    guide: protein-engineering
+    glossary:
+      DESIGN_ID:
+        term: Design id
+        means: DSG-, the protein, the round and the design's number in it.
+      PROTEIN:
+        term: Protein
+        means: The protein designed; opens PROT.
+      ROUND:
+        term: Round
+        means: The round, 1 to 8.
+      PARENT:
+        term: Parent
+        means: The design of the round before that is nearest to it on the map; NATURAL in round 1.
+      N_CHANGES:
+        term: N changes
+        means: How many amino acid changes it carries against the natural protein.
+        unit: changes
+      CHANGES:
+        term: Changes
+        means: The changes written out, in position order; the rows are in design-mutation.
+      ACTIVITY:
+        term: Activity
+        means: The measured activity as a multiple of the natural protein's (1.0).
+        unit: x natural
+      DELTA_TM:
+        term: Delta tm
+        means: 'The melting temperature against the natural protein: positive is more stable.'
+        unit: degrees C
+      MODEL_SCORE:
+        term: Model score
+        means: The activity the design model predicted.
+        unit: x natural
+      STATUS:
+        term: Status
+        means: lead for the best design of the campaign, selected for the best 5% of its round, tested for the rest.
+      EMB_X:
+        term: Emb x
+        means: Its place on the map of designs, left to right (0 to 1). Written by the generator.
+      EMB_Y:
+        term: Emb y
+        means: Its place on the map of designs, top to bottom (0 to 1). Written by the generator.
+  design-mutation:
+    title: Design change
+    about: ${$.MUTATION} in design ${$.DESIGN_ID}.
+    guide: protein-engineering
+    glossary:
+      DESIGN_MUTATION_ID:
+        term: Design mutation id
+        means: The design's id, a colon and the position.
+      DESIGN_ID:
+        term: Design id
+        means: The design; opens DESIGN.
+      PROTEIN:
+        term: Protein
+        means: The protein; opens PROT.
+      ROUND:
+        term: Round
+        means: The design's round.
+      POS:
+        term: Pos
+        means: The position changed.
+      AA_FROM:
+        term: Aa from
+        means: The natural amino acid (one letter).
+      AA_TO:
+        term: Aa to
+        means: The amino acid it was changed to.
+      MUTATION:
+        term: Mutation
+        means: The change written as AA_FROM, POS and AA_TO.
+  design-round:
+    title: Design round
+    about: 'Round ${$.ROUND} of the campaign on ${$.PROTEIN}: best activity ${$.BEST_ACTIVITY}, median ${$.MEDIAN_ACTIVITY}.'
+    guide: protein-engineering
+    glossary:
+      ROUND_ID:
+        term: Round id
+        means: The protein, a dash, R and the round.
+      PROTEIN:
+        term: Protein
+        means: The protein; opens PROT.
+      ROUND:
+        term: Round
+        means: The round, 1 to 8.
+      METHOD:
+        term: Method
+        means: How the round's designs were chosen.
+      STARTED:
+        term: Started
+        means: The day the round started.
+      DESIGNS:
+        term: Designs
+        means: How many designs the round tested.
+        unit: designs
+      BEST_DESIGN:
+        term: Best design
+        means: The round's best design; opens DESIGN.
+      BEST_ACTIVITY:
+        term: Best activity
+        means: Its activity.
+        unit: x natural
+      MEDIAN_ACTIVITY:
+        term: Median activity
+        means: The median activity of the round's designs.
+        unit: x natural
+      TRAPPED:
+        term: Trapped
+        means: How many designs were caught on the false peak.
+        unit: designs
+      NOTE:
+        term: Note
+        means: What happened in the round.

@@ -1,0 +1,266 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the genomics-showcase pack's kinds and fields mean (the README, the contracts and the About card read it).
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py.
+about: 1
+vocabulary: {}
+kinds:
+  study-gene:
+    title: Study gene
+    about: '${$.GENE} on chromosome ${$.CHROM} (${$.ROLE}): ${$.ALTERED_SAMPLES} of the cohort''s 1,500 samples carry a damaging change in it.'
+    guide: genomics-showcase
+    glossary:
+      GENE:
+        term: Gene
+        means: The gene's invented symbol (HLX followed by letters and digits).
+      CHROM:
+        term: Chrom
+        means: 'The chromosome: 1 to 22 or X.'
+      START:
+        term: Start
+        means: The first base of the gene on its chromosome.
+        unit: bp
+      END:
+        term: End
+        means: The last base of the gene on its chromosome.
+        unit: bp
+      STRAND:
+        term: Strand
+        means: The strand the gene is read from.
+      ROLE:
+        term: Role
+        means: What the gene's product does.
+      PROTEIN_LENGTH:
+        term: Protein length
+        means: 'The amino acids of its protein: the axis of the variant lollipop.'
+        unit: amino acids
+      DRIVER:
+        term: Driver
+        means: True for the 24 driver genes whose alterations the generator plants in the cohort.
+      VARIANTS:
+        term: Variants
+        means: 'How many variant sites the gene has. Source: counted from study-variant.'
+        unit: sites
+      ALTERED_SAMPLES:
+        term: Altered samples
+        means: 'How many samples carry a damaging change (high or moderate impact) in the gene. Source: counted from variant-call.'
+        unit: samples
+      ALTERED_FRACTION:
+        term: Altered fraction
+        means: ALTERED_SAMPLES over the cohort's 1,500 samples.
+        unit: fraction
+  study-sample:
+    title: Study sample
+    about: 'Sample ${$.SAMPLE_ID}: ${$.TUMOUR_TYPE}, stage ${$.STAGE}, ${$.RESPONSE}, in cluster ${$.CLUSTER}.'
+    guide: genomics-showcase
+    glossary:
+      SAMPLE_ID:
+        term: Sample id
+        means: 'The sample''s id: S and four digits.'
+      COHORT:
+        term: Cohort
+        means: The cohort the sample belongs to.
+      TUMOUR_TYPE:
+        term: Tumour type
+        means: The tumour type.
+      STAGE:
+        term: Stage
+        means: The stage at sampling.
+      AGE_BAND:
+        term: Age band
+        means: The patient's age in ten-year bands.
+      RESPONSE:
+        term: Response
+        means: The response to therapy.
+      TOXICITY:
+        term: Toxicity
+        means: Whether the patient had a severe adverse reaction.
+      RELAPSE:
+        term: Relapse
+        means: Whether the disease returned within twelve months.
+      CLUSTER:
+        term: Cluster
+        means: The group of similar samples the map shows.
+      EMB_X:
+        term: Emb x
+        means: The sample's place on the map, left to right (0 to 1). Written by the generator.
+      EMB_Y:
+        term: Emb y
+        means: The sample's place on the map, top to bottom (0 to 1). Written by the generator.
+      MUTATION_COUNT:
+        term: Mutation count
+        means: 'How many variant calls the sample has. Source: counted from variant-call.'
+        unit: calls
+  study-variant:
+    title: Study variant
+    about: '${$.VARIANT_ID} in ${$.GENE}: ${$.CONSEQUENCE}, ${$.IMPACT} impact, carried by ${$.CARRIERS} samples.'
+    guide: genomics-showcase
+    glossary:
+      VARIANT_ID:
+        term: Variant id
+        means: HX- and six digits, in genome order.
+      CHROM:
+        term: Chrom
+        means: The chromosome.
+      POS:
+        term: Pos
+        means: The base the variant is at.
+        unit: bp
+      REF:
+        term: Ref
+        means: The base the reference has there.
+      ALT:
+        term: Alt
+        means: The base the variant has there.
+      GENE:
+        term: Gene
+        means: The gene the variant lies in; opens SGENE.
+      CONSEQUENCE:
+        term: Consequence
+        means: What the change does to the gene's product.
+      IMPACT:
+        term: Impact
+        means: 'How much the change matters: HIGH, MODERATE, LOW or MODIFIER.'
+      PROTEIN_POS:
+        term: Protein pos
+        means: The amino acid position in the protein; empty for a change outside the coding sequence.
+      AA_REF:
+        term: Aa ref
+        means: The amino acid before the change (one letter); empty outside the coding sequence.
+      AA_ALT:
+        term: Aa alt
+        means: The amino acid after the change (one letter, * for a stop, - for a frameshift); empty outside the coding sequence. With the gene
+          and PROTEIN_POS it is the key into dms-score (PROTEIN, POS, AA).
+      CARRIERS:
+        term: Carriers
+        means: 'How many samples carry the variant. Source: counted from variant-call.'
+        unit: samples
+  variant-call:
+    title: Variant call
+    about: Sample ${$.SAMPLE_ID} carries ${$.VARIANT_ID} (${$.GENE}) with ${$.GENOTYPE} at an allele fraction of ${$.VAF}.
+    guide: genomics-showcase
+    glossary:
+      CALL_ID:
+        term: Call id
+        means: CALL- and six digits, in sample and variant order.
+      SAMPLE_ID:
+        term: Sample id
+        means: The sample; opens SSAMPLE.
+      VARIANT_ID:
+        term: Variant id
+        means: The variant; opens SVARIANT.
+      GENE:
+        term: Gene
+        means: The gene the variant lies in; opens SGENE.
+      GENOTYPE:
+        term: Genotype
+        means: 0/1 heterozygous, 1/1 homozygous for the variant.
+      VAF:
+        term: Vaf
+        means: 'The variant allele fraction: the share of reads that show the variant.'
+        unit: fraction
+      DEPTH:
+        term: Depth
+        means: How many reads cover the site.
+        unit: reads
+  association:
+    title: Association of a variant with a trait
+    about: '${$.VARIANT_ID} in ${$.GENE} against ${$.TRAIT}: minus log10 p ${$.NEG_LOG10_P}, effect ${$.BETA}.'
+    guide: genomics-showcase
+    glossary:
+      ASSOC_ID:
+        term: Assoc id
+        means: GWAS-, the trait, - and the variant's id.
+      TRAIT:
+        term: Trait
+        means: 'The trait tested: RESPONSE (responder), TOXICITY (severe) or RELAPSE (relapsed).'
+      VARIANT_ID:
+        term: Variant id
+        means: The variant tested; opens SVARIANT.
+      CHROM:
+        term: Chrom
+        means: The variant's chromosome.
+      POS:
+        term: Pos
+        means: The variant's base on it.
+        unit: bp
+      GENE:
+        term: Gene
+        means: The gene the variant lies in; opens SGENE.
+      P:
+        term: P
+        means: The two-sided p-value of the test; 1 where no sample carries the variant.
+      NEG_LOG10_P:
+        term: Neg log10 p
+        means: 'Minus the base-10 logarithm of P: the height on the association plot.'
+      BETA:
+        term: Beta
+        means: The log odds ratio of the trait for a carrier against a non-carrier (0.5 added to each cell); empty without carriers.
+      SE:
+        term: Se
+        means: The standard error of BETA; empty without carriers.
+      R2_LEAD:
+        term: R2 lead
+        means: The squared correlation of the variant's carriers with the carriers of the lead variant of the peak it lies in (within 2 Mb); 0
+          outside a peak.
+  cnv-segment:
+    title: Copy-number segment
+    about: 'Sample ${$.SAMPLE_ID}: ${$.CALL} on chromosome ${$.CHROM} (${$.COPY_NUMBER} copies).'
+    guide: genomics-showcase
+    glossary:
+      SEGMENT_ID:
+        term: Segment id
+        means: CNV- and five digits.
+      SAMPLE_ID:
+        term: Sample id
+        means: The sample; opens SSAMPLE.
+      CHROM:
+        term: Chrom
+        means: The chromosome.
+      START:
+        term: Start
+        means: The first base of the segment.
+        unit: bp
+      END:
+        term: End
+        means: The last base of the segment.
+        unit: bp
+      COPY_NUMBER:
+        term: Copy number
+        means: How many copies of the stretch the sample has (2 is normal).
+        unit: copies
+      CALL:
+        term: Call
+        means: 'The call: deep deletion, loss, gain or amplification.'
+      GENE:
+        term: Gene
+        means: The driver gene the segment was placed over; empty for a broad segment.
+  pathway-gene:
+    title: Pathway membership
+    about: ${$.GENE} is ${$.ROLE_IN_PATHWAY} in ${$.PATHWAY}.
+    guide: genomics-showcase
+    glossary:
+      PATHWAY_GENE_ID:
+        term: Pathway gene id
+        means: PWG- and four digits.
+      PATHWAY:
+        term: Pathway
+        means: The pathway's name.
+      GENE:
+        term: Gene
+        means: The member gene; opens SGENE.
+      ROLE_IN_PATHWAY:
+        term: Role in pathway
+        means: The part the gene plays in the pathway.

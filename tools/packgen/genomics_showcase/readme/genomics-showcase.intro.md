@@ -32,7 +32,7 @@ gene, patient and number is invented; nothing is real.
 
 ## Screens and commands
 
-`GWAS` opens one association test; `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV` and `PATHWAY` open the other kinds. Each is a plain record
+`ASSOC` opens one association test; `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV` and `PATHWAY` open the other kinds. Each is a plain record
 page; linked fields (a variant's gene, a call's sample) open their kinds. The showcase's screens (association plot, cohort matrix, map of
 samples, variant lollipop) are drawn from these kinds.
 

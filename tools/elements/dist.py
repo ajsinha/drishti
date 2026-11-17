@@ -80,8 +80,12 @@ def bundle_name(lib: str) -> str:
 
 
 def product_version() -> str:
-    m = re.search(r"<artifactId>drishti-parent</artifactId>\s*<version>([^<]+)</version>", (ROOT / "pom.xml").read_text(encoding="utf-8"))
-    return m.group(1) if m else "unknown"
+    """The product version from its one home, tools/version.py (.mvn/maven.config)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_tools_version", ROOT / "tools" / "version.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.current(ROOT / "pom.xml", default="unknown")
 
 
 # -- the train and the libraries a request names ----------------------------------------------------------------------------------------

@@ -24,7 +24,7 @@ import java.util.Map;
  * The connector templates the modules that are on bring to a pack (docs/architecture/KERNEL_AND_MODULES.md section 18.5): those whose
  * first kind the pack defines, from the process's {@link ConfigResolution} (the server's, or the loader's own built from the switch files).
  * A template is a file directly in a module's {@code connectors/} folder, named by its {@code name:} key; {@code connectors/examples/} holds
- * examples to copy. Never a folder of its own, never a walk up the tree: the Python twin is {@code drishti-console/core/resolution.py}.
+ * examples to copy. Never a folder of its own, never a walk up the tree: the tools read the resolver's answer ({@code resolve --json}, {@code tools/resolved.py}).
  */
 public final class ModuleConnectors {
 

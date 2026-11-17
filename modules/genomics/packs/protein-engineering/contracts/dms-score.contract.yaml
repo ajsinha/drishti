@@ -1,0 +1,133 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the dms-score kind (command DMS): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: dms-score
+mnemonic: DMS
+pack: protein-engineering
+version: '1.0'
+class: fundamental
+status: active
+title: Deep mutational scan score
+description: 'One measurement of the scan: what changing one position of a protein to one amino acid did to one assay. Every position, every one
+  of the 20 amino acids, two assays: 47,840 experiments.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per position, amino acid and assay, keyed by SCORE_ID.
+key:
+- SCORE_ID
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: protein-engineering.dms-score
+  columns:
+  - SCORE_ID
+  - PROTEIN
+  - POS
+  - AA
+  - ASSAY
+  - SCORE
+  test-data:
+  - data/testdata/protein-engineering/dms-score
+fields:
+- name: SCORE_ID
+  type: id
+  presence: required
+  description: The protein, position, amino acid and assay, joined by colons.
+  example: HLXK7:117:P:activity
+- name: PROTEIN
+  type: id
+  presence: required
+  description: The protein; opens PROT.
+  example: HLXK7
+  link: protein
+- name: POS
+  type: integer
+  presence: required
+  description: The position changed.
+  example: 117
+- name: AA_REF
+  type: text
+  presence: required
+  description: The amino acid the protein has there (one letter).
+  example: L
+- name: AA
+  type: text
+  presence: required
+  description: The amino acid it was changed to; the same as AA_REF measures the unchanged protein.
+  example: P
+- name: MUTATION
+  type: text
+  presence: required
+  description: The change written as AA_REF, POS and AA.
+  example: L117P
+- name: ASSAY
+  type: text
+  presence: required
+  description: What was measured.
+  example: activity
+  enum:
+  - activity
+  - stability
+- name: SCORE
+  type: amount
+  presence: required
+  description: 'The effect against the natural protein: negative hurts, positive helps, 0 no effect.'
+  example: -2.31
+- name: SE
+  type: amount
+  presence: required
+  description: The standard error over the replicates.
+  example: 0.12
+- name: REPLICATES
+  type: integer
+  presence: required
+  unit: replicates
+  description: How many replicate measurements went into it.
+  example: 3
+links:
+- field: PROTEIN
+  kind: protein
+validation:
+- rule: required
+  fields:
+  - SCORE_ID
+  - PROTEIN
+  - POS
+  - AA_REF
+  - AA
+  - MUTATION
+  - ASSAY
+  - SCORE
+  - SE
+  - REPLICATES
+- rule: unique
+  key:
+  - SCORE_ID
+  per: snapshot
+- rule: link
+  field: PROTEIN
+  kind: protein
+- rule: enum
+  field: ASSAY
+  values:
+  - activity
+  - stability
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

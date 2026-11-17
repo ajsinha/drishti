@@ -1,0 +1,71 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: residue-contact
+version: 1
+description: 'Residue contact: Two positions of a protein that sit close in space though they are not neighbours in the chain: the contact map''s
+  cells.'
+doc:
+  summary: One residue contact, as a record.
+  description: 'Two positions of a protein that sit close in space though they are not neighbours in the chain: the contact map''s cells. The
+    nearest pairs at least three positions apart, as many as the generator keeps for the protein. The page is the plain record view: the strip
+    gives the headline fields and the table every field, a linked field opens its kind; the showcase''s own screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/residue-contact/HLXK7:68-71
+  - CONTACT HLXK7:68-71
+  since: 2.9.11
+match:
+  kind: residue-contact
+  priority: 10
+title:
+  pill: Protein engineering · Residue contact
+  id: $.CONTACT_ID
+strip:
+- label: Contact id
+  bind: $.CONTACT_ID
+- label: Protein
+  bind: link($.PROTEIN, 'protein')
+- label: Pos a
+  bind: $.POS_A
+  fmt: amount0
+- label: Pos b
+  bind: $.POS_B
+  fmt: amount0
+- label: Distance
+  bind: $.DISTANCE
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Residue contact
+  columns:
+  - label: Contact id
+    bind: $.CONTACT_ID
+  - label: Protein
+    bind: link($.PROTEIN, 'protein')
+  - label: Pos a
+    bind: $.POS_A
+    fmt: amount0
+  - label: Pos b
+    bind: $.POS_B
+    fmt: amount0
+  - label: Distance
+    bind: $.DISTANCE
+keys:
+  F9: raw

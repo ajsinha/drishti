@@ -236,11 +236,28 @@ def _inputs(args: tuple) -> list[Path]:
         if b.is_dir():
             out += sorted(b.glob("*"))
             out += sorted(b.glob("*/module.yaml")) + sorted(b.glob("*/*/module.yaml"))
+    if not args:                                              # this process's own resolution: the site's overrides of module files
+        for d in _override_dirs(home):
+            out.append(d)
+            if d.is_dir():
+                out += sorted(p for p in d.rglob("*"))
     try:
         out.append(javacmd.server_jar(home=home))
     except javacmd.JarError:
         pass
     return out
+
+
+def _override_setting() -> str:
+    """The site's override folders of module files (``DRISHTI_OVERRIDES_DIR``, else ``drishti.overrides.dir`` of the settings file),
+    comma-separated as the server reads them (KERNEL_AND_MODULES.md section 18.10)."""
+    return (os.environ.get("DRISHTI_OVERRIDES_DIR") or javacmd.settings()[1].get("drishti.overrides.dir") or "").strip()
+
+
+def _override_dirs(home: Path) -> list[Path]:
+    """The override folders, each absolute or under the install folder: inputs of the answer (a file changed there changes it)."""
+    return [(Path(x.strip()) if Path(x.strip()).is_absolute() else home / x.strip()).resolve()
+            for x in _override_setting().split(",") if x.strip()]
 
 
 def _cache_dir() -> Path:
@@ -253,7 +270,7 @@ def _ask(args: tuple) -> dict:
     except javacmd.JarError as e:
         raise Unbuilt(f"the tools read where everything is from the kernel jar, and there is none: {e}") from e
     stamp = _stamp(_inputs(args))
-    env_key = sorted((k, v) for k, v in os.environ.items() if k.startswith("DRISHTI_")) if not args else []
+    env_key = (sorted((k, v) for k, v in os.environ.items() if k.startswith("DRISHTI_")) + [("overrides", _override_setting())]) if not args else []
     key = hashlib.sha256(json.dumps([list(args), list(stamp), env_key, str(jar)], default=str).encode()).hexdigest()[:32]
     cached = _cache_dir() / f"{key}.json"
     try:
@@ -261,7 +278,10 @@ def _ask(args: tuple) -> dict:
     except (OSError, ValueError):
         pass
     java = javacmd.find_java()
-    run = subprocess.run([str(java), "-jar", str(jar), "resolve", "--json", *args], capture_output=True, text=True, timeout=300)
+    named = _override_setting() if not args else ""            # the overrides apply to this process's resolution (ResolveCli)
+    flags = [f"-Ddrishti.overrides.dir={named}"] if named and not os.environ.get("DRISHTI_OVERRIDES_DIR") else []
+    cmd = javacmd.java_cmd(java, [*flags, "-jar", str(jar), "resolve", "--json", *args], cwd=javacmd.find_home()[0])   # the launch roots named
+    run = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if run.returncode != 0:
         raise Unbuilt(f"the resolver refused ({run.returncode}): {(run.stderr or run.stdout).strip()[:400]}")
     text = run.stdout[run.stdout.find("\n{") + 1:] if not run.stdout.startswith("{") else run.stdout   # anything printed before the document

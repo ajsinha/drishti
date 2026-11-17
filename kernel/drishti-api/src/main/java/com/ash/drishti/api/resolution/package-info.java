@@ -17,7 +17,7 @@
 /**
  * Configuration resolution (docs/architecture/KERNEL_AND_MODULES.md section 18): where every pack, connector, binding and inbox rule
  * comes from, in three layers (the site, the modules that are on, the kernel). The one resolver every reader asks; the server, the lake
- * loader and the command line share it, and the console's and the tools' Python twin ({@code drishti-console/core/resolution.py}) passes
- * the same fixtures. It only reads files, never writes them.
+ * loader and the command line share it, and the tools read its answer ({@code resolve --json}, {@code tools/resolved.py}); no
+ * Python twin exists. It only reads files, never writes them.
  */
 package com.ash.drishti.api.resolution;

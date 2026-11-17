@@ -100,9 +100,10 @@ invented (no real gene, patient, organism or structure), written by `python3 too
 gives byte-identical files in `data/testdata/genomics-showcase/` and `data/testdata/protein-engineering/`, which
 `drishti.py lake demo --only genomics-showcase,protein-engineering` builds into the demo lake and the packs' own Delta connectors
 (`genomics-showcase-store`, `protein-engineering-store`) serve. Like every pack they are data and contracts; the words are
-`GWAS` (a variant tested against a trait), `PROTEIN` (a protein) and `DESIGNS` (a design of the campaign), with `SGENE`, `SSAMPLE`,
+`ASSOC` (a variant tested against a trait), `PROT` (a protein) and `DESIGN` (a design of the campaign), with `SGENE`, `SSAMPLE`,
 `SVARIANT`, `VCALL`, `CNV`, `PATHWAY`, `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` for the other kinds. Each word opens a plain
-record page, so it works on its own; the showcase's screens are drawn from the same kinds.
+record page, so it works on its own; the showcase's screens are drawn from the same kinds and opened by the module's own words `GWAS`,
+`PROTEIN` and `DESIGNS`.
 
 What is computed and what is written. The association tests (a Wald test of the log odds ratio of the generated calls against the
 generated traits) are computed by the generator from the calls, so the peak on the association plot, the figures and the records

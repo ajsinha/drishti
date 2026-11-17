@@ -1314,7 +1314,7 @@ content names (in `java/`, only jars already there are kept) and names anything 
 an older checkout keeps); the module's own jar goes into the package's `java/` by the name its manifest gives. The overrides view
 (section 18.10) copies the same content names. A folder under `modules/` without a `module.yaml` is not a module: the resolvers skip it
 with a one-line note, and `drishti.py setup` lists such leftovers (it never deletes them). The resolver and every reader (the kernel's
-`PackResolver` and `ModuleManifests`, the console's `core/resolution.py` and `module_parts.py`, the tools) find a module by
+`PackResolver` and `ModuleManifests`, the tools through `resolve --json` and `tools/resolved.py`) find a module by
 `<modules>/<dir>/module.yaml` and nothing else. `tools/test_module_layout.py` keeps every `modules/<module>` to this layout, on what git tracks: only the
 names of the list at the top, `java/` and `pom.xml` together or neither, the `pom.xml` listing exactly `java/*`, no `dmod/` folder.
 

@@ -20,6 +20,7 @@ from pathlib import Path
 
 from bi_backend import REPORT_ID
 from test_bi import go, make
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 
@@ -111,7 +112,7 @@ def test_the_new_scripts_and_stylesheets_exist_and_carry_no_cdn_or_inline_code()
         text = (WEB / "static" / rel).read_text(encoding="utf-8")
         assert "http://" not in text.replace("http://www.w3.org/2000/svg", "") and "https://" not in text, rel
         assert "innerHTML" not in text and "document.write" not in text and "eval(" not in text, rel
-        assert len(text.splitlines()) < 2000, rel
+        assert len(text.splitlines()) <= CODE_LINE_CAP, rel
     for rel in ("report.html", "design.html", "designer.html"):
         html = (WEB / "templates" / "bi" / rel).read_text(encoding="utf-8")
         assert " onclick=" not in html and "<style" not in html and " style=" not in html, rel

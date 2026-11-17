@@ -20,6 +20,7 @@ import json
 import re
 
 from core import render_dist as rd
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 SRC = rd.FOLDER
 FORBIDDEN = re.compile(r"\.innerHTML\b|\.outerHTML\b|insertAdjacentHTML|document\.write|\beval\s*\(|new\s+Function\b|setTimeout\(\s*['\"]|createContextualFragment")
@@ -76,7 +77,7 @@ def test_every_file_has_the_licence_and_stays_under_the_cap():
         if p.is_file() and p.suffix in (".js", ".css", ".ts", ".html"):
             text = p.read_text(encoding="utf-8")
             assert "PROPRIETARY AND CONFIDENTIAL" in text[:1200], p
-            assert p.name == rd.SHEET or len(text.splitlines()) <= 2000, p          # the generated sheet is not a source
+            assert p.name == rd.SHEET or len(text.splitlines()) <= CODE_LINE_CAP, p          # the generated sheet is not a source
             assert rd.LIBRARY not in p.parents or len(text.splitlines()) <= 530, p  # an Elements module stays under 530 lines
 
 

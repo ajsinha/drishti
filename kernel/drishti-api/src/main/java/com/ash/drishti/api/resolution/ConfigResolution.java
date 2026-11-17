@@ -70,7 +70,7 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
 
     /**
      * A checkout's resolution with every module on (the {@code all} distribution): what a test or a tool of the shipped files means. The
-     * Python twin is {@code core.resolution.repository()}. Not installed as the process's current one.
+     * tools read it through {@code resolve --json --root} ({@code tools/resolved.py repository()}). Not installed as the process's current one.
      *
      * @param root the repository's root (holds {@code config/packs} and {@code modules})
      */

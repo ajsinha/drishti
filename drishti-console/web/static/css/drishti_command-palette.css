@@ -12,6 +12,7 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
 /* The command palette (drishti-core drishti_command-palette.js): a modal sheet near the top, a search box, a list. Tokens only (dark and
    light by theme). On a phone it takes the width and the rows are 44 px. */
 

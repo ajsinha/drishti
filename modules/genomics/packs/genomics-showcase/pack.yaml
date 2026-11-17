@@ -1,0 +1,334 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Genomics showcase · a pack of the genomics module. Synthetic and seeded: the genes,
+# proteins, patients and designs are invented. Its data is the committed snapshot data/testdata/genomics-showcase/<kind>/
+# (tools/packgen/genomics_showcase/make.py writes it), built into the demo lake by `drishti.py lake demo` and served by the Delta
+# connector genomics-showcase-store. Written by the generator from tools/packgen/genomics_showcase/spec.py: edit that, not this file.
+pack: genomics-showcase
+domain: genomics
+version: 1.0.0
+code: GENOMICS
+title: Genomics showcase
+description: 'A synthetic cohort of 1,500 patients read against one invented gene, HLXK7: 2,000 genes, 12,000 variant sites, 45,000 variant calls,
+  copy-number segments and pathways, and 36,000 association tests of three traits computed from the calls. The words ASSOC (a variant''s test
+  against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY open the records; the showcase''s screens are drawn from them. Everything
+  is seeded and invented.'
+kinds:
+- study-gene
+- study-sample
+- study-variant
+- variant-call
+- association
+- cnv-segment
+- pathway-gene
+sutras: sutras
+mnemonics:
+  SGENE:
+    kind: study-gene
+    label: Gene of the study
+  SSAMPLE:
+    kind: study-sample
+    label: Sample of the cohort
+  SVARIANT:
+    kind: study-variant
+    label: Variant site of the study
+  VCALL:
+    kind: variant-call
+    label: Variant call
+  ASSOC:
+    kind: association
+    label: Association
+  CNV:
+    kind: cnv-segment
+    label: Copy-number segment
+  PATHWAY:
+    kind: pathway-gene
+    label: Pathway membership
+graph:
+  id-patterns:
+  - pattern: ^S
+    kind: study-sample
+  - pattern: ^HX-
+    kind: study-variant
+  - pattern: ^CALL-
+    kind: variant-call
+  - pattern: ^GWAS-
+    kind: association
+  - pattern: ^CNV-
+    kind: cnv-segment
+  - pattern: ^PWG-
+    kind: pathway-gene
+  fields:
+    GENE:
+      kind: study-gene
+      label: Study gene
+    SAMPLE_ID:
+      kind: study-sample
+      label: Study sample
+    VARIANT_ID:
+      kind: study-variant
+      label: Study variant
+form:
+  study-gene:
+  - path: GENE
+    type: id
+    group: Identity
+  - path: CHROM
+    type: text
+    group: Filters
+  - path: ROLE
+    type: text
+    group: Filters
+  - path: DRIVER
+    type: text
+    group: Filters
+  study-sample:
+  - path: SAMPLE_ID
+    type: id
+    group: Identity
+  - path: TUMOUR_TYPE
+    type: enum
+    group: Filters
+  - path: STAGE
+    type: enum
+    group: Filters
+  - path: RESPONSE
+    type: enum
+    group: Filters
+  - path: CLUSTER
+    type: enum
+    group: Filters
+  study-variant:
+  - path: VARIANT_ID
+    type: id
+    group: Identity
+  - path: GENE
+    type: text
+    group: Filters
+  - path: CHROM
+    type: text
+    group: Filters
+  - path: CONSEQUENCE
+    type: enum
+    group: Filters
+  - path: IMPACT
+    type: enum
+    group: Filters
+  variant-call:
+  - path: SAMPLE_ID
+    type: text
+    group: Filters
+  - path: VARIANT_ID
+    type: text
+    group: Filters
+  - path: GENE
+    type: text
+    group: Filters
+  - path: GENOTYPE
+    type: enum
+    group: Filters
+  association:
+  - path: TRAIT
+    type: enum
+    group: Filters
+  - path: GENE
+    type: text
+    group: Filters
+  - path: CHROM
+    type: text
+    group: Filters
+  - path: NEG_LOG10_P
+    type: number
+    group: Filters
+  cnv-segment:
+  - path: SAMPLE_ID
+    type: text
+    group: Filters
+  - path: CHROM
+    type: text
+    group: Filters
+  - path: CALL
+    type: enum
+    group: Filters
+  - path: GENE
+    type: text
+    group: Filters
+  pathway-gene:
+  - path: PATHWAY
+    type: text
+    group: Filters
+  - path: GENE
+    type: text
+    group: Filters
+  - path: ROLE_IN_PATHWAY
+    type: enum
+    group: Filters
+console:
+  examples:
+  - - ASSOC GWAS-RESPONSE-HX-004928
+    - 'The lead variant of the response peak: its p-value, effect and link to the peak''s lead'
+  - - SGENE HLXK7
+    - 'The gene: chromosome, role, protein length and how many samples carry a damaging change'
+  - - SVARIANT HX-004928
+    - The variant at the first hotspot of HLXK7, with its amino acid change and carriers
+  - - SSAMPLE S0001
+    - 'One patient: the clinical tracks, the response and the cluster'
+  - - VCALL CALL-000001
+    - 'One call: sample, variant, genotype, allele fraction and depth'
+  help: config/help.yaml
+columns:
+  study-gene:
+  - GENE
+  - CHROM
+  - ROLE
+  - PROTEIN_LENGTH
+  - DRIVER
+  - ALTERED_SAMPLES
+  study-sample:
+  - SAMPLE_ID
+  - TUMOUR_TYPE
+  - STAGE
+  - AGE_BAND
+  - RESPONSE
+  - CLUSTER
+  study-variant:
+  - VARIANT_ID
+  - GENE
+  - CONSEQUENCE
+  - IMPACT
+  - PROTEIN_POS
+  - AA_REF
+  - AA_ALT
+  - CARRIERS
+  variant-call:
+  - CALL_ID
+  - SAMPLE_ID
+  - VARIANT_ID
+  - GENE
+  - GENOTYPE
+  - VAF
+  - DEPTH
+  association:
+  - ASSOC_ID
+  - TRAIT
+  - VARIANT_ID
+  - GENE
+  - NEG_LOG10_P
+  - BETA
+  - R2_LEAD
+  cnv-segment:
+  - SEGMENT_ID
+  - SAMPLE_ID
+  - CHROM
+  - START
+  - END
+  - COPY_NUMBER
+  - CALL
+  pathway-gene:
+  - PATHWAY_GENE_ID
+  - PATHWAY
+  - GENE
+  - ROLE_IN_PATHWAY
+connectors:
+  genomics-showcase-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - study-gene
+    - study-sample
+    - study-variant
+    - variant-call
+    - association
+    - cnv-segment
+    - pathway-gene
+    settings:
+      lake: demo
+      lake-tables: genomics-showcase.study-gene,genomics-showcase.study-sample,genomics-showcase.study-variant,genomics-showcase.variant-call,genomics-showcase.association,genomics-showcase.cnv-segment,genomics-showcase.pathway-gene
+routes:
+  study-gene: genomics-showcase-store
+  study-sample: genomics-showcase-store
+  study-variant: genomics-showcase-store
+  variant-call: genomics-showcase-store
+  association: genomics-showcase-store
+  cnv-segment: genomics-showcase-store
+  pathway-gene: genomics-showcase-store
+lake:
+  tables:
+    genomics-showcase.study-gene:
+      id: GENE
+      promote:
+      - GENE
+      - CHROM
+      - START
+      - END
+      - ROLE
+      - PROTEIN_LENGTH
+      - DRIVER
+      - ALTERED_SAMPLES
+    genomics-showcase.study-sample:
+      id: SAMPLE_ID
+      promote:
+      - SAMPLE_ID
+      - COHORT
+      - TUMOUR_TYPE
+      - STAGE
+      - RESPONSE
+      - TOXICITY
+      - RELAPSE
+      - CLUSTER
+    genomics-showcase.study-variant:
+      id: VARIANT_ID
+      promote:
+      - VARIANT_ID
+      - GENE
+      - CHROM
+      - POS
+      - CONSEQUENCE
+      - IMPACT
+      - PROTEIN_POS
+      - CARRIERS
+    genomics-showcase.variant-call:
+      id: CALL_ID
+      promote:
+      - CALL_ID
+      - SAMPLE_ID
+      - VARIANT_ID
+      - GENE
+      - GENOTYPE
+      - VAF
+    genomics-showcase.association:
+      id: ASSOC_ID
+      promote:
+      - TRAIT
+      - CHROM
+      - VARIANT_ID
+      - GENE
+      - NEG_LOG10_P
+      - BETA
+    genomics-showcase.cnv-segment:
+      id: SEGMENT_ID
+      promote:
+      - SEGMENT_ID
+      - SAMPLE_ID
+      - CHROM
+      - CALL
+      - GENE
+    genomics-showcase.pathway-gene:
+      id: PATHWAY_GENE_ID
+      promote:
+      - PATHWAY_GENE_ID
+      - PATHWAY
+      - GENE
+      - ROLE_IN_PATHWAY

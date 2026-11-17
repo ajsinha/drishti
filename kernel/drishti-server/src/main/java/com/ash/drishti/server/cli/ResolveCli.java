@@ -98,7 +98,13 @@ public final class ResolveCli {
                 }
             }
         }
-        ConfigResolution r = root != null ? ConfigResolution.repository(root) : site != null ? siteOnly(site) : ConfigResolution.ofProcess();
+        ConfigResolution r;
+        try {
+            r = root != null ? ConfigResolution.repository(root) : site != null ? siteOnly(site) : withOverrides();
+        } catch (RuntimeException e) {
+            err.println("resolve: " + e.getMessage());
+            return 1;
+        }
         if (connectors == null) {
             String given = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", ""));
             connectors = !given.isBlank() ? com.ash.drishti.api.Roots.anchored(given)
@@ -112,6 +118,35 @@ public final class ResolveCli {
             err.println("resolve: " + e.getMessage());
             return 1;
         }
+    }
+
+    /**
+     * This process's resolution with the site's overrides of module files applied by the one rule the server applies at its start
+     * (KERNEL_AND_MODULES.md section 18.10, {@code ModuleOverrides}; {@code drishti.overrides.dir} or {@code DRISHTI_OVERRIDES_DIR}): the
+     * modules folder read is the view of the modules folder with the overrides laid over it, kept apart from a running server's view
+     * ({@code <data>/tmp/resolve/overrides/modules}), and modules installed from their {@code .dmod} take the same rule. The modules
+     * folder itself is never written.
+     */
+    static ConfigResolution withOverrides() {
+        java.util.function.Function<String, String> process = k -> {
+            String v = System.getProperty(k);
+            return v != null ? v : System.getenv(k.toUpperCase(java.util.Locale.ROOT).replace('.', '_').replace('-', '_'));
+        };
+        String setting = process.apply(com.ash.drishti.api.resolution.ModuleOverrides.SETTING);
+        if (setting == null || setting.isBlank()) {
+            return ConfigResolution.ofProcess();
+        }
+        com.ash.drishti.api.resolution.ResolutionSettings s = com.ash.drishti.api.resolution.ResolutionSettings.of(process);
+        String dataSetting = process.apply("drishti.data.dir");
+        Path data = Path.of(dataSetting == null || dataSetting.isBlank() ? com.ash.drishti.api.Roots.data() : dataSetting.strip()).toAbsolutePath().normalize();
+        java.util.List<Path> dirs = com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, com.ash.drishti.api.Roots.home());
+        com.ash.drishti.api.resolution.ModuleOverrides.activate(dirs, data);
+        var applied = com.ash.drishti.api.resolution.ModuleOverrides.apply(s.modulesHome(), dirs, data.resolve("tmp").resolve("resolve").resolve("overrides").resolve("modules"));
+        if (applied.view() == null) {
+            return ConfigResolution.ofProcess();
+        }
+        String view = applied.view().toString();
+        return ConfigResolution.offline(k -> "drishti.modules.home".equals(k) || "drishti.module-manifests-dir".equals(k) ? view : process.apply(k));
     }
 
     /** A folder of packs read as a site of its own (its packs and group folders, its {@code core} as the kernel's), with no modules. */
@@ -184,7 +219,7 @@ public final class ResolveCli {
                 String fileText = files.names().contains(n) ? files.text(n) : null;
                 ConnectorLayers.Effective e;
                 if (fileText == null) {
-                    ConnectorFiles.Definition d = files.parse(n, ConnectorFiles.templateText(files, n, t.definition(), ""));
+                    ConnectorFiles.Definition d = files.parse(n, ConnectorLayers.templateText(files, n, t.definition(), ""));
                     Map<String, String> origins = new LinkedHashMap<>();
                     d.settings().keySet().forEach(k -> origins.put(k, ConnectorLayers.TEMPLATE));
                     e = new ConnectorLayers.Effective(d, ConnectorLayers.TEMPLATE, origins, false);

@@ -1,0 +1,133 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the cnv-segment kind (command CNV): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: cnv-segment
+mnemonic: CNV
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Copy-number segment
+description: 'One stretch of a sample''s genome with a copy number other than two: an amplification or a deletion over a driver gene, or a broad
+  gain or loss.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per sample segment, keyed by SEGMENT_ID.
+key:
+- SEGMENT_ID
+id-pattern:
+- ^CNV-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.cnv-segment
+  columns:
+  - SEGMENT_ID
+  - SAMPLE_ID
+  - CHROM
+  - CALL
+  - GENE
+  test-data:
+  - data/testdata/genomics-showcase/cnv-segment
+fields:
+- name: SEGMENT_ID
+  type: id
+  presence: required
+  description: CNV- and five digits.
+  example: CNV-00421
+- name: SAMPLE_ID
+  type: id
+  presence: required
+  description: The sample; opens SSAMPLE.
+  example: S0042
+  link: study-sample
+- name: CHROM
+  type: text
+  presence: required
+  description: The chromosome.
+  example: '7'
+- name: START
+  type: integer
+  presence: required
+  unit: bp
+  description: The first base of the segment.
+  example: 61300000
+- name: END
+  type: integer
+  presence: required
+  unit: bp
+  description: The last base of the segment.
+  example: 62400000
+- name: COPY_NUMBER
+  type: integer
+  presence: required
+  unit: copies
+  description: How many copies of the stretch the sample has (2 is normal).
+  example: 6
+- name: CALL
+  type: text
+  presence: required
+  description: 'The call: deep deletion, loss, gain or amplification.'
+  example: amplification
+  enum:
+  - deep deletion
+  - loss
+  - gain
+  - amplification
+- name: GENE
+  type: id
+  presence: optional
+  description: The driver gene the segment was placed over; empty for a broad segment.
+  example: HLXK7
+  link: study-gene
+links:
+- field: SAMPLE_ID
+  kind: study-sample
+- field: GENE
+  kind: study-gene
+validation:
+- rule: required
+  fields:
+  - SEGMENT_ID
+  - SAMPLE_ID
+  - CHROM
+  - START
+  - END
+  - COPY_NUMBER
+  - CALL
+- rule: unique
+  key:
+  - SEGMENT_ID
+  per: snapshot
+- rule: link
+  field: SAMPLE_ID
+  kind: study-sample
+- rule: link
+  field: GENE
+  kind: study-gene
+- rule: enum
+  field: CALL
+  values:
+  - deep deletion
+  - loss
+  - gain
+  - amplification
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

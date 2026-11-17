@@ -51,9 +51,12 @@ MB = "BytesPerMB"
 
 
 def _version() -> str:
-    pom = (ROOT / "kernel/drishti-server" / "pom.xml").read_text()
-    m = re.search(r"<artifactId>drishti-server</artifactId>\s*<version>([^<]+)</version>", pom) or re.search(r"<parent>.*?<version>([^<]+)</version>", pom, re.S)
-    return m.group(1) if m else "VERSION"
+    """The product version from its one home, tools/version.py (.mvn/maven.config)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_tools_version", ROOT / "tools" / "version.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.current(ROOT / "pom.xml", default="VERSION")
 
 
 def _branding() -> dict:

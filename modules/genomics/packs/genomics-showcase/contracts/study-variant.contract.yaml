@@ -1,0 +1,168 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the study-variant kind (command SVARIANT): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: study-variant
+mnemonic: SVARIANT
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Study variant
+description: 'One variant site of the synthetic genome: its place, the change it makes to the gene''s protein (the amino acids before and after,
+  the key into the protein workbench''s scan) and how many samples carry it.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per variant site, keyed by VARIANT_ID.
+key:
+- VARIANT_ID
+id-pattern:
+- ^HX-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.study-variant
+  columns:
+  - VARIANT_ID
+  - GENE
+  - CHROM
+  - POS
+  - CONSEQUENCE
+  - IMPACT
+  - PROTEIN_POS
+  - CARRIERS
+  test-data:
+  - data/testdata/genomics-showcase/study-variant
+fields:
+- name: VARIANT_ID
+  type: id
+  presence: required
+  description: HX- and six digits, in genome order.
+  example: HX-004711
+- name: CHROM
+  type: text
+  presence: required
+  description: The chromosome.
+  example: '7'
+- name: POS
+  type: integer
+  presence: required
+  unit: bp
+  description: The base the variant is at.
+  example: 61887913
+- name: REF
+  type: text
+  presence: required
+  description: The base the reference has there.
+  example: G
+- name: ALT
+  type: text
+  presence: required
+  description: The base the variant has there.
+  example: A
+- name: GENE
+  type: id
+  presence: required
+  description: The gene the variant lies in; opens SGENE.
+  example: HLXK7
+  link: study-gene
+- name: CONSEQUENCE
+  type: text
+  presence: required
+  description: What the change does to the gene's product.
+  example: missense_variant
+  enum:
+  - missense_variant
+  - synonymous_variant
+  - stop_gained
+  - frameshift_variant
+  - splice_region_variant
+  - intron_variant
+- name: IMPACT
+  type: text
+  presence: required
+  description: 'How much the change matters: HIGH, MODERATE, LOW or MODIFIER.'
+  example: MODERATE
+  enum:
+  - HIGH
+  - MODERATE
+  - LOW
+  - MODIFIER
+- name: PROTEIN_POS
+  type: integer
+  presence: optional
+  description: The amino acid position in the protein; empty for a change outside the coding sequence.
+  example: 117
+- name: AA_REF
+  type: text
+  presence: optional
+  description: The amino acid before the change (one letter); empty outside the coding sequence.
+  example: L
+- name: AA_ALT
+  type: text
+  presence: optional
+  description: The amino acid after the change (one letter, * for a stop, - for a frameshift); empty outside the coding sequence. With the gene
+    and PROTEIN_POS it is the key into dms-score (PROTEIN, POS, AA).
+  example: P
+- name: CARRIERS
+  type: integer
+  presence: required
+  unit: samples
+  description: 'How many samples carry the variant. Source: counted from variant-call.'
+  example: 372
+links:
+- field: GENE
+  kind: study-gene
+validation:
+- rule: required
+  fields:
+  - VARIANT_ID
+  - CHROM
+  - POS
+  - REF
+  - ALT
+  - GENE
+  - CONSEQUENCE
+  - IMPACT
+  - CARRIERS
+- rule: unique
+  key:
+  - VARIANT_ID
+  per: snapshot
+- rule: link
+  field: GENE
+  kind: study-gene
+- rule: enum
+  field: CONSEQUENCE
+  values:
+  - missense_variant
+  - synonymous_variant
+  - stop_gained
+  - frameshift_variant
+  - splice_region_variant
+  - intron_variant
+- rule: enum
+  field: IMPACT
+  values:
+  - HIGH
+  - MODERATE
+  - LOW
+  - MODIFIER
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

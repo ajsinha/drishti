@@ -12,6 +12,7 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
 /* Field history: click a number in a view (a strip value, a field, a table cell) to see it over the last business
    days: a line chart and the values, read from the dated sources for each day. Alt+click (or the strip's number while
    a link is under it) still follows the link. */

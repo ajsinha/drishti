@@ -1,0 +1,299 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Protein engineering showcase · a pack of the genomics module. Synthetic and seeded: the genes,
+# proteins, patients and designs are invented. Its data is the committed snapshot data/testdata/protein-engineering/<kind>/
+# (tools/packgen/genomics_showcase/make.py writes it), built into the demo lake by `drishti.py lake demo` and served by the Delta
+# connector protein-engineering-store. Written by the generator from tools/packgen/genomics_showcase/spec.py: edit that, not this file.
+pack: protein-engineering
+domain: genomics
+version: 1.0.0
+code: PROTENG
+title: Protein engineering showcase
+description: 'Four invented proteins and the campaign that redesigned one of them, Helixase-7 (gene HLXK7, 312 amino acids): every position and
+  every amino acid measured in two assays (47,840 scan scores), the fold with its coordinates, burial and contacts, and eight rounds of 1,500
+  designs that climb to about fifteen times the natural activity. The words PROT (a protein), DESIGN (a design), RESIDUE, DMS, CONTACT, DMUT and
+  DROUND open the records; the showcase''s screens are drawn from them. Everything is seeded and invented.'
+kinds:
+- protein
+- residue
+- residue-contact
+- dms-score
+- design
+- design-mutation
+- design-round
+sutras: sutras
+mnemonics:
+  PROT:
+    kind: protein
+    label: Protein
+  RESIDUE:
+    kind: residue
+    label: Residue
+  CONTACT:
+    kind: residue-contact
+    label: Residue contact
+  DMS:
+    kind: dms-score
+    label: Scan score
+  DESIGN:
+    kind: design
+    label: Design
+  DMUT:
+    kind: design-mutation
+    label: Design change
+  DROUND:
+    kind: design-round
+    label: Design round
+graph:
+  id-patterns:
+  - pattern: ^DSG-
+    kind: design
+  fields:
+    GENE:
+      kind: study-gene
+      label: Study gene
+    PROTEIN:
+      kind: protein
+      label: Protein
+    DESIGN_ID:
+      kind: design
+      label: Protein design
+    BEST_DESIGN:
+      kind: design
+      label: Protein design
+form:
+  protein:
+  - path: PROTEIN
+    type: id
+    group: Identity
+  - path: NAME
+    type: text
+    group: Filters
+  - path: FAMILY
+    type: text
+    group: Filters
+  residue:
+  - path: PROTEIN
+    type: text
+    group: Filters
+  - path: SECONDARY
+    type: enum
+    group: Filters
+  - path: DOMAIN
+    type: enum
+    group: Filters
+  - path: ACTIVE_SITE
+    type: text
+    group: Filters
+  residue-contact:
+  - path: PROTEIN
+    type: text
+    group: Filters
+  - path: POS_A
+    type: number
+    group: Filters
+  - path: POS_B
+    type: number
+    group: Filters
+  dms-score:
+  - path: PROTEIN
+    type: text
+    group: Filters
+  - path: POS
+    type: number
+    group: Filters
+  - path: AA
+    type: text
+    group: Filters
+  - path: ASSAY
+    type: enum
+    group: Filters
+  design:
+  - path: PROTEIN
+    type: text
+    group: Filters
+  - path: ROUND
+    type: number
+    group: Filters
+  - path: STATUS
+    type: enum
+    group: Filters
+  - path: ACTIVITY
+    type: number
+    group: Filters
+  design-mutation:
+  - path: DESIGN_ID
+    type: text
+    group: Filters
+  - path: ROUND
+    type: number
+    group: Filters
+  - path: POS
+    type: number
+    group: Filters
+  - path: AA_TO
+    type: text
+    group: Filters
+  design-round:
+  - path: PROTEIN
+    type: text
+    group: Filters
+  - path: ROUND
+    type: number
+    group: Filters
+console:
+  examples:
+  - - PROT HLXK7
+    - 'Helixase-7: length, family, sequence and the positions of its active site'
+  - - DESIGN DSG-HLXK7-R8-0897
+    - 'The lead design of the campaign: its changes, activity and stability'
+  - - DMS HLXK7:177:A:activity
+    - 'One scan score: what changing one position to one amino acid did to the activity'
+  - - RESIDUE HLXK7:177
+    - 'The active site''s centre: fold, burial, coordinates and mean effects'
+  - - DROUND HLXK7-R8
+    - 'The round of the lead design: method, best and median activity'
+  help: config/help.yaml
+columns:
+  protein:
+  - PROTEIN
+  - NAME
+  - LENGTH
+  - FAMILY
+  - DESIGN_ROUNDS
+  residue:
+  - RESIDUE_ID
+  - POS
+  - AA
+  - SECONDARY
+  - DOMAIN
+  - BURIAL
+  - ACTIVE_SITE
+  - MEAN_ACTIVITY
+  residue-contact:
+  - CONTACT_ID
+  - POS_A
+  - POS_B
+  - DISTANCE
+  dms-score:
+  - SCORE_ID
+  - PROTEIN
+  - POS
+  - MUTATION
+  - ASSAY
+  - SCORE
+  - SE
+  design:
+  - DESIGN_ID
+  - ROUND
+  - N_CHANGES
+  - CHANGES
+  - ACTIVITY
+  - DELTA_TM
+  - STATUS
+  design-mutation:
+  - DESIGN_MUTATION_ID
+  - DESIGN_ID
+  - ROUND
+  - MUTATION
+  design-round:
+  - ROUND_ID
+  - ROUND
+  - METHOD
+  - DESIGNS
+  - BEST_ACTIVITY
+  - MEDIAN_ACTIVITY
+  - TRAPPED
+connectors:
+  protein-engineering-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - protein
+    - residue
+    - residue-contact
+    - dms-score
+    - design
+    - design-mutation
+    - design-round
+    settings:
+      lake: demo
+      lake-tables: protein-engineering.protein,protein-engineering.residue,protein-engineering.residue-contact,protein-engineering.dms-score,protein-engineering.design,protein-engineering.design-mutation,protein-engineering.design-round
+routes:
+  protein: protein-engineering-store
+  residue: protein-engineering-store
+  residue-contact: protein-engineering-store
+  dms-score: protein-engineering-store
+  design: protein-engineering-store
+  design-mutation: protein-engineering-store
+  design-round: protein-engineering-store
+lake:
+  tables:
+    protein-engineering.protein:
+      id: PROTEIN
+      promote:
+      - PROTEIN
+      - GENE
+      - NAME
+      - LENGTH
+      - FAMILY
+      - DESIGN_ROUNDS
+    protein-engineering.residue:
+      id: RESIDUE_ID
+      promote:
+      - RESIDUE_ID
+      - PROTEIN
+      - POS
+      - SECONDARY
+      - ACTIVE_SITE
+    protein-engineering.residue-contact:
+      id: CONTACT_ID
+      promote:
+      - CONTACT_ID
+      - PROTEIN
+      - POS_A
+      - POS_B
+    protein-engineering.dms-score:
+      id: SCORE_ID
+      promote:
+      - SCORE_ID
+      - PROTEIN
+      - POS
+      - AA
+      - ASSAY
+      - SCORE
+    protein-engineering.design:
+      id: DESIGN_ID
+      promote:
+      - DESIGN_ID
+      - PROTEIN
+      - ROUND
+      - ACTIVITY
+      - STATUS
+    protein-engineering.design-mutation:
+      id: DESIGN_MUTATION_ID
+      promote:
+      - DESIGN_MUTATION_ID
+      - DESIGN_ID
+      - PROTEIN
+      - ROUND
+      - POS
+    protein-engineering.design-round:
+      id: ROUND_ID
+      promote:
+      - ROUND_ID
+      - PROTEIN
+      - ROUND
+      - METHOD

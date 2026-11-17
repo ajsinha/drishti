@@ -1,0 +1,149 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the association kind (command ASSOC): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: association
+mnemonic: ASSOC
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Association of a variant with a trait
+description: 'One variant tested against one trait: the p-value, its negative log, the effect and its error and how strongly the variant is linked
+  to the peak''s lead. Three traits over 12,000 sites: 36,000 tests, each computed from the calls and the samples'' traits (a Wald test on the
+  log odds ratio), never painted.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per trait and variant, keyed by ASSOC_ID.
+key:
+- ASSOC_ID
+id-pattern:
+- ^GWAS-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.association
+  columns:
+  - TRAIT
+  - CHROM
+  - VARIANT_ID
+  - GENE
+  - NEG_LOG10_P
+  - BETA
+  test-data:
+  - data/testdata/genomics-showcase/association
+fields:
+- name: ASSOC_ID
+  type: id
+  presence: required
+  description: GWAS-, the trait, - and the variant's id.
+  example: GWAS-RESPONSE-HX-004711
+- name: TRAIT
+  type: text
+  presence: required
+  description: 'The trait tested: RESPONSE (responder), TOXICITY (severe) or RELAPSE (relapsed).'
+  example: RESPONSE
+  enum:
+  - RESPONSE
+  - TOXICITY
+  - RELAPSE
+- name: VARIANT_ID
+  type: id
+  presence: required
+  description: The variant tested; opens SVARIANT.
+  example: HX-004711
+  link: study-variant
+- name: CHROM
+  type: text
+  presence: required
+  description: The variant's chromosome.
+  example: '7'
+- name: POS
+  type: integer
+  presence: required
+  unit: bp
+  description: The variant's base on it.
+  example: 61887913
+- name: GENE
+  type: id
+  presence: required
+  description: The gene the variant lies in; opens SGENE.
+  example: HLXK7
+  link: study-gene
+- name: P
+  type: amount
+  presence: required
+  description: The two-sided p-value of the test; 1 where no sample carries the variant.
+  example: 1.2e-23
+- name: NEG_LOG10_P
+  type: amount
+  presence: required
+  description: 'Minus the base-10 logarithm of P: the height on the association plot.'
+  example: 22.92
+- name: BETA
+  type: amount
+  presence: optional
+  description: The log odds ratio of the trait for a carrier against a non-carrier (0.5 added to each cell); empty without carriers.
+  example: -1.84
+- name: SE
+  type: amount
+  presence: optional
+  description: The standard error of BETA; empty without carriers.
+  example: 0.19
+- name: R2_LEAD
+  type: amount
+  presence: required
+  description: The squared correlation of the variant's carriers with the carriers of the lead variant of the peak it lies in (within 2 Mb); 0
+    outside a peak.
+  example: 0.82
+links:
+- field: VARIANT_ID
+  kind: study-variant
+- field: GENE
+  kind: study-gene
+validation:
+- rule: required
+  fields:
+  - ASSOC_ID
+  - TRAIT
+  - VARIANT_ID
+  - CHROM
+  - POS
+  - GENE
+  - P
+  - NEG_LOG10_P
+  - R2_LEAD
+- rule: unique
+  key:
+  - ASSOC_ID
+  per: snapshot
+- rule: link
+  field: VARIANT_ID
+  kind: study-variant
+- rule: link
+  field: GENE
+  kind: study-gene
+- rule: enum
+  field: TRAIT
+  values:
+  - RESPONSE
+  - TOXICITY
+  - RELAPSE
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

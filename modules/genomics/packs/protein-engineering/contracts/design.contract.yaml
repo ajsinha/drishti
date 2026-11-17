@@ -1,0 +1,152 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the design kind (command DESIGN): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: design
+mnemonic: DESIGN
+pack: protein-engineering
+version: '1.0'
+class: fundamental
+status: active
+title: Protein design
+description: 'One designed variant of Helixase-7 from one round of the campaign: its parent, how many changes it carries, how active and stable
+  it measured, what the model predicted and where it sits on the map of designs. Eight rounds of 1,500 designs climb to a protein about fifteen
+  times as active as the natural one.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per design, keyed by DESIGN_ID.
+key:
+- DESIGN_ID
+id-pattern:
+- ^DSG-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: protein-engineering.design
+  columns:
+  - DESIGN_ID
+  - PROTEIN
+  - ROUND
+  - ACTIVITY
+  - STATUS
+  test-data:
+  - data/testdata/protein-engineering/design
+fields:
+- name: DESIGN_ID
+  type: id
+  presence: required
+  description: DSG-, the protein, the round and the design's number in it.
+  example: DSG-HLXK7-R8-0412
+- name: PROTEIN
+  type: id
+  presence: required
+  description: The protein designed; opens PROT.
+  example: HLXK7
+  link: protein
+- name: ROUND
+  type: integer
+  presence: required
+  description: The round, 1 to 8.
+  example: 8
+- name: PARENT
+  type: text
+  presence: required
+  description: The design of the round before that is nearest to it on the map; NATURAL in round 1.
+  example: DSG-HLXK7-R7-0988
+- name: N_CHANGES
+  type: integer
+  presence: required
+  unit: changes
+  description: How many amino acid changes it carries against the natural protein.
+  example: 3
+- name: CHANGES
+  type: text
+  presence: required
+  description: The changes written out, in position order; the rows are in design-mutation.
+  example: A117G L203F
+- name: ACTIVITY
+  type: amount
+  presence: required
+  unit: x natural
+  description: The measured activity as a multiple of the natural protein's (1.0).
+  example: 15.2
+- name: DELTA_TM
+  type: amount
+  presence: required
+  unit: degrees C
+  description: 'The melting temperature against the natural protein: positive is more stable.'
+  example: 5.1
+- name: MODEL_SCORE
+  type: amount
+  presence: required
+  unit: x natural
+  description: The activity the design model predicted.
+  example: 14.1
+- name: STATUS
+  type: text
+  presence: required
+  description: lead for the best design of the campaign, selected for the best 5% of its round, tested for the rest.
+  example: lead
+  enum:
+  - lead
+  - selected
+  - tested
+- name: EMB_X
+  type: amount
+  presence: required
+  description: Its place on the map of designs, left to right (0 to 1). Written by the generator.
+  example: 0.7412
+- name: EMB_Y
+  type: amount
+  presence: required
+  description: Its place on the map of designs, top to bottom (0 to 1). Written by the generator.
+  example: 0.3196
+links:
+- field: PROTEIN
+  kind: protein
+validation:
+- rule: required
+  fields:
+  - DESIGN_ID
+  - PROTEIN
+  - ROUND
+  - PARENT
+  - N_CHANGES
+  - CHANGES
+  - ACTIVITY
+  - DELTA_TM
+  - MODEL_SCORE
+  - STATUS
+  - EMB_X
+  - EMB_Y
+- rule: unique
+  key:
+  - DESIGN_ID
+  per: snapshot
+- rule: link
+  field: PROTEIN
+  kind: protein
+- rule: enum
+  field: STATUS
+  values:
+  - lead
+  - selected
+  - tested
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

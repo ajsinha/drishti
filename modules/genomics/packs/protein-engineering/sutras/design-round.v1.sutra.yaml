@@ -1,0 +1,83 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: design-round
+version: 1
+description: 'Design round: One round of the campaign: how the designs were made, how many, and how well the round did.'
+doc:
+  summary: One design round, as a record.
+  description: 'One round of the campaign: how the designs were made, how many, and how well the round did. Eight rounds. The page is the plain
+    record view: the strip gives the headline fields and the table every field, a linked field opens its kind; the showcase''s own screens are
+    drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/design-round/HLXK7-R8
+  - DROUND HLXK7-R8
+  since: 2.9.11
+match:
+  kind: design-round
+  priority: 10
+title:
+  pill: Protein engineering · Design round
+  id: $.ROUND_ID
+strip:
+- label: Round id
+  bind: $.ROUND_ID
+- label: Round
+  bind: $.ROUND
+  fmt: amount0
+- label: Method
+  bind: $.METHOD
+- label: Best activity
+  bind: $.BEST_ACTIVITY
+- label: Median activity
+  bind: $.MEDIAN_ACTIVITY
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Design round
+  columns:
+  - label: Round id
+    bind: $.ROUND_ID
+  - label: Protein
+    bind: link($.PROTEIN, 'protein')
+  - label: Round
+    bind: $.ROUND
+    fmt: amount0
+  - label: Method
+    bind: $.METHOD
+  - label: Started
+    bind: $.STARTED
+    fmt: date
+  - label: Designs
+    bind: $.DESIGNS
+    fmt: amount0
+  - label: Best design
+    bind: link($.BEST_DESIGN, 'design')
+  - label: Best activity
+    bind: $.BEST_ACTIVITY
+  - label: Median activity
+    bind: $.MEDIAN_ACTIVITY
+  - label: Trapped
+    bind: $.TRAPPED
+    fmt: amount0
+  - label: Note
+    bind: $.NOTE
+keys:
+  F9: raw

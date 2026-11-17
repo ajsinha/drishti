@@ -1,0 +1,71 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: variant-call
+version: 1
+description: 'Variant call: One sample carrying one variant: the genotype, the fraction of reads that show it and the read depth.'
+doc:
+  summary: One variant call, as a record.
+  description: 'One sample carrying one variant: the genotype, the fraction of reads that show it and the read depth. 45,000 calls over 1,500
+    samples; the association tests are computed from them. The page is the plain record view: the strip gives the headline fields and the table
+    every field, a linked field opens its kind; the showcase''s own screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/variant-call/CALL-000001
+  - VCALL CALL-000001
+  since: 2.9.11
+match:
+  kind: variant-call
+  priority: 10
+title:
+  pill: Genomics · Variant call
+  id: $.CALL_ID
+strip:
+- label: Call id
+  bind: $.CALL_ID
+- label: Sample id
+  bind: link($.SAMPLE_ID, 'study-sample')
+- label: Variant id
+  bind: link($.VARIANT_ID, 'study-variant')
+- label: Genotype
+  bind: $.GENOTYPE
+- label: Vaf
+  bind: $.VAF
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Variant call
+  columns:
+  - label: Call id
+    bind: $.CALL_ID
+  - label: Sample id
+    bind: link($.SAMPLE_ID, 'study-sample')
+  - label: Variant id
+    bind: link($.VARIANT_ID, 'study-variant')
+  - label: Gene
+    bind: link($.GENE, 'study-gene')
+  - label: Genotype
+    bind: $.GENOTYPE
+  - label: Vaf
+    bind: $.VAF
+  - label: Depth
+    bind: $.DEPTH
+    fmt: amount0
+keys:
+  F9: raw

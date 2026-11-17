@@ -13,8 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The shared fixture of the connector layers (docs/architecture/KERNEL_AND_MODULES.md section 18.5): the Java resolver (ConnectorLayers,
-# ConnectorLayersFixtureTest) and its Python twin (drishti-console/core/resolution.py, drishti-console/tests/test_resolution.py) read
-# these cases and must give the same effective connector. Each case: a template (or null: a site-only connector), the site file's text,
+# ConnectorLayersFixtureTest) reads these cases and must give each effective connector (the tools read it through resolve --json). Each case: a template (or null: a site-only connector), the site file's text,
 # and what comes out: the layer (template, override, site), whether the file is superseded, the plugin, enabled, and every setting
 # flattened to its dotted key as text (or error: the file cannot be used). A template is named from the templates: section (null: none).
 templates:

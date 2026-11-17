@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from test_embed import HOST, make_client
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
@@ -113,7 +114,7 @@ def test_the_new_scripts_carry_no_cdn_url_inline_code_or_markup_strings():
     for rel in ("js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-dataset.js", "js/drishti_bi-design-panes.js"):
         text = (STATIC / rel).read_text(encoding="utf-8")
         assert "https://" not in text and "innerHTML" not in text and "eval(" not in text, rel
-        assert len(text.splitlines()) < 2000, rel
+        assert len(text.splitlines()) <= CODE_LINE_CAP, rel
 
 
 def test_the_new_visuals_stay_inside_the_phone_rules():

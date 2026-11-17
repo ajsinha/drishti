@@ -252,7 +252,7 @@
 
   /* the data first: with a kind missing the page says which, in words, and asks nothing else (the packs are not loaded here) */
   function missing(st) {
-    const need = (st.missing || []).filter((k) => (mode === 'bench' ? ['protein', 'residue', 'dms_score', 'design', 'design_mutation', 'design_round'] : ['gene', 'sample', 'variant', 'variant_call', 'association']).indexOf(k) >= 0);
+    const need = (st.missing || []).filter((k) => (mode === 'bench' ? ['protein', 'residue', 'dms-score', 'design', 'design-mutation', 'design-round'] : ['study-gene', 'study-sample', 'study-variant', 'variant-call', 'association']).indexOf(k) >= 0);
     if (!need.length) { return false; }
     root.querySelectorAll('.drishti-showcase-grid, .drishti-showcase-figures, .drishti-showcase-guide, .drishti-showcase-bar').forEach((el) => { el.hidden = true; });
     const p = document.createElement('p');

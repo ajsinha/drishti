@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The shared fixture of pack resolution (docs/architecture/KERNEL_AND_MODULES.md, "Configuration resolution"): the Java resolver
-# (com.ash.drishti.api.PackResolver, PackResolverFixtureTest) and its Python twin (drishti-console/core/resolution.py,
-# drishti-console/tests/test_resolution.py) read every case and must give the same answer.
+# (com.ash.drishti.api.PackResolver, PackResolverFixtureTest) reads every case and must give its answer (the tools read the resolver's
+# answer through resolve --json, tools/resolved.py; there is no Python twin).
 #
 # A case: `tree` (files under a scratch root: a pack is `<folder>/<name>/pack.yaml`, a module `modules/<dir>/module.yaml` (the one
 # module layout), an installed .dmod `store/installed/<id>/<version>/module.yaml` named by `store/installed/active.yaml`),

@@ -12,6 +12,8 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
+
 package org.helixlab.genomics;
 
 import static org.helixlab.genomics.ShowcaseData.integer;
@@ -79,12 +81,12 @@ public final class GenomicsBoard {
         return data.cached("genomics.index", () -> {
             ShowcaseData.Tables t = data.now();
             Map<String, Map<String, Object>> samples = new LinkedHashMap<>(), variants = new HashMap<>(), genes = new LinkedHashMap<>();
-            t.of("sample").forEach(r -> samples.put(str(r.get("SAMPLE_ID")), r));
-            t.of("variant").forEach(r -> variants.put(str(r.get("VARIANT_ID")), r));
-            t.of("gene").forEach(r -> genes.put(str(r.get("GENE")), r));
+            t.of("study-sample").forEach(r -> samples.put(str(r.get("SAMPLE_ID")), r));
+            t.of("study-variant").forEach(r -> variants.put(str(r.get("VARIANT_ID")), r));
+            t.of("study-gene").forEach(r -> genes.put(str(r.get("GENE")), r));
             Map<String, List<Map<String, Object>>> byVariant = new HashMap<>();
             Map<String, Map<String, String>> cells = new HashMap<>();          // sample -> gene -> the alteration shown (the worst)
-            for (Map<String, Object> c : t.of("variant_call")) {
+            for (Map<String, Object> c : t.of("variant-call")) {
                 String vid = str(c.get("VARIANT_ID")), sid = str(c.get("SAMPLE_ID"));
                 byVariant.computeIfAbsent(vid, k -> new ArrayList<>()).add(c);
                 Map<String, Object> v = variants.get(vid);
@@ -95,7 +97,7 @@ public final class GenomicsBoard {
             }
             Map<String, List<Map<String, Object>>> genesByChrom = new HashMap<>();
             genes.values().forEach(g -> genesByChrom.computeIfAbsent(str(g.get("CHROM")), k -> new ArrayList<>()).add(g));
-            for (Map<String, Object> s : t.of("cnv_segment")) {
+            for (Map<String, Object> s : t.of("cnv-segment")) {
                 String call = copyCall(s);
                 if (call == null) {
                     continue;
@@ -149,7 +151,7 @@ public final class GenomicsBoard {
     }
 
     private Set<String> members(Selection sel) {
-        return sel.members(data.now().of("sample"));
+        return sel.members(data.now().of("study-sample"));
     }
 
     private void needs(String... kinds) {
@@ -164,10 +166,10 @@ public final class GenomicsBoard {
 
     /** The figures of a selection: samples, response rate, and with a gene the response if altered and if not. */
     public Map<String, Object> summary(Selection sel, String gene) {
-        needs("sample", "variant", "variant_call");
+        needs("study-sample", "study-variant", "variant-call");
         Index ix = index();
         Set<String> m = members(sel);
-        Set<String> all = sel.narrowed() ? new Selection(sel.cohort(), Set.of(), null, Set.of()).members(data.now().of("sample")) : m;
+        Set<String> all = sel.narrowed() ? new Selection(sel.cohort(), Set.of(), null, Set.of()).members(data.now().of("study-sample")) : m;
         long resp = m.stream().filter(s -> Selection.responded(ix.samples().get(s).get("RESPONSE"))).count();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("cohort", sel.cohort());
@@ -177,7 +179,7 @@ public final class GenomicsBoard {
         out.put("responders", resp);
         out.put("responseRate", m.isEmpty() ? null : round(resp / (double) m.size(), 4));
         Explained ex = new Explained("The figures of " + sel.words(), m.size() + " samples").scope(sel.words())
-                .step("The samples of the selection", "sample", m.size()).step("Responders among them", "sample", resp);
+                .step("The samples of the selection", "study-sample", m.size()).step("Responders among them", "study-sample", resp);
         if (gene != null && !gene.isBlank()) {
             Set<String> alt = ix.altered().getOrDefault(gene, Set.of());
             List<String> yes = m.stream().filter(alt::contains).toList(), no = m.stream().filter(s -> !alt.contains(s)).toList();
@@ -188,7 +190,7 @@ public final class GenomicsBoard {
             out.put("alteredRate", m.isEmpty() ? null : round(yes.size() / (double) m.size(), 4));
             out.put("responseIfAltered", yes.isEmpty() ? null : round(ry / (double) yes.size(), 4));
             out.put("responseIfNot", no.isEmpty() ? null : round(rn / (double) no.size(), 4));
-            ex.step("Samples with " + gene + " altered (variant_call joined to variant, and cnv_segment over the gene)", "variant_call", yes.size())
+            ex.step("Samples with " + gene + " altered (variant-call joined to study-variant, and cnv-segment over the gene)", "variant-call", yes.size())
                     .sentence(yes.isEmpty() ? "No sample of " + sel.words() + " has " + gene + " altered."
                             : String.format(Locale.ROOT, "%d of %d samples carry a change in %s; %d%% of them respond, against %d%% of the others.", yes.size(), m.size(), gene,
                                     Math.round(100.0 * ry / yes.size()), no.isEmpty() ? 0 : Math.round(100.0 * rn / no.size())));
@@ -204,8 +206,8 @@ public final class GenomicsBoard {
     /** The chromosomes in genome order (1 to 22, X, Y, then the rest), each with its offset on one axis. */
     List<Map<String, Object>> chromosomes() {
         Map<String, Double> len = new HashMap<>();
-        data.now().of("gene").forEach(g -> len.merge(str(g.get("CHROM")), num(g.get("END")), Math::max));
-        data.now().of("variant").forEach(v -> len.merge(str(v.get("CHROM")), num(v.get("POS")), Math::max));
+        data.now().of("study-gene").forEach(g -> len.merge(str(g.get("CHROM")), num(g.get("END")), Math::max));
+        data.now().of("study-variant").forEach(v -> len.merge(str(v.get("CHROM")), num(v.get("POS")), Math::max));
         List<String> names = new ArrayList<>(len.keySet());
         names.sort(Comparator.comparingInt(GenomicsBoard::chromRank).thenComparing(c -> c));
         List<Map<String, Object>> out = new ArrayList<>();
@@ -248,7 +250,7 @@ public final class GenomicsBoard {
 
     /** The association plot of a trait: every site below p 1e-4 and an even sample of the rest; the peaks; the chromosomes. */
     public Map<String, Object> associations(String trait) {
-        needs("variant", "association");
+        needs("study-variant", "association");
         List<String> traits = traits();
         String tr = trait == null || trait.isBlank() ? traits.get(0) : trait;
         if (traits.stream().noneMatch(x -> x.equalsIgnoreCase(tr))) {
@@ -319,7 +321,7 @@ public final class GenomicsBoard {
 
     /** The cohort matrix: the most altered genes (and the one asked for), the selection's samples in the mutual-exclusivity order, the tracks. */
     public Map<String, Object> oncoprint(Selection sel, int genesWanted, String gene) {
-        needs("sample", "variant", "variant_call");
+        needs("study-sample", "study-variant", "variant-call");
         Index ix = index();
         Set<String> m = members(sel);
         int n = Math.max(1, Math.min(60, genesWanted));
@@ -372,10 +374,10 @@ public final class GenomicsBoard {
         out.put("altered", altered);
         out.put("tracks", tracks);
         out.put("explain", new Explained("Who carries what: " + sel.words(), samples.size() + " samples × " + genes.size() + " genes").scope(sel.words())
-                .step("The samples of the selection", "sample", samples.size())
-                .step("Their calls joined to the variants (a coding change shows)", "variant_call", data.now().of("variant_call").stream().filter(c -> m.contains(str(c.get("SAMPLE_ID")))).count())
-                .step("Copy-number segments over the genes", "cnv_segment", data.now().of("cnv_segment").stream().filter(c -> m.contains(str(c.get("SAMPLE_ID")))).count())
-                .step("The genes most often altered, the samples sorted so each gene's carriers sit together", "variant", genes.size())
+                .step("The samples of the selection", "study-sample", samples.size())
+                .step("Their calls joined to the variants (a coding change shows)", "variant-call", data.now().of("variant-call").stream().filter(c -> m.contains(str(c.get("SAMPLE_ID")))).count())
+                .step("Copy-number segments over the genes", "cnv-segment", data.now().of("cnv-segment").stream().filter(c -> m.contains(str(c.get("SAMPLE_ID")))).count())
+                .step("The genes most often altered, the samples sorted so each gene's carriers sit together", "study-variant", genes.size())
                 .sentence(cells.size() + " alterations in " + genes.size() + " genes over " + samples.size() + " samples.").build());
         return out;
     }
@@ -390,11 +392,11 @@ public final class GenomicsBoard {
 
     /** The map of samples: every sample of the cohort with its precomputed position, which are selected, and each cluster's figures. */
     public Map<String, Object> sampleMap(Selection sel) {
-        needs("sample");
+        needs("study-sample");
         Selection whole = new Selection(sel.cohort(), Set.of(), null, Set.of());
         List<Map<String, Object>> rows = new ArrayList<>();
         Map<String, double[]> clusters = new TreeMap<>();             // n, responders, sum x, sum y
-        for (Map<String, Object> s : data.now().of("sample")) {
+        for (Map<String, Object> s : data.now().of("study-sample")) {
             if (!whole.has(s)) {
                 continue;
             }
@@ -421,8 +423,8 @@ public final class GenomicsBoard {
         out.put("clusters", cl);
         out.put("selected", sel.narrowed() ? List.copyOf(m) : List.of());
         out.put("selection", sel.words());
-        out.put("explain", new Explained("The map of samples", rows.size() + " samples").scope(sel.words()).step("The samples of the cohort with their precomputed positions", "sample", rows.size())
-                .step("Selected", "sample", m.size()).sentence("Each point is a sample, placed by its expression; the clusters were found before the data was loaded.").build());
+        out.put("explain", new Explained("The map of samples", rows.size() + " samples").scope(sel.words()).step("The samples of the cohort with their precomputed positions", "study-sample", rows.size())
+                .step("Selected", "study-sample", m.size()).sentence("Each point is a sample, placed by its expression; the clusters were found before the data was loaded.").build());
         return out;
     }
 
@@ -436,7 +438,7 @@ public final class GenomicsBoard {
     /** The scan's assays of a protein (ACTIVITY first when there is one). */
     List<String> assays(String protein) {
         Set<String> a = new java.util.TreeSet<>();
-        data.now().of("dms_score").stream().filter(d -> str(d.get("PROTEIN")).equals(protein)).forEach(d -> a.add(str(d.get("ASSAY"))));
+        data.now().of("dms-score").stream().filter(d -> str(d.get("PROTEIN")).equals(protein)).forEach(d -> a.add(str(d.get("ASSAY"))));
         List<String> out = new ArrayList<>(a);
         out.sort(Comparator.comparing((String s) -> !s.equalsIgnoreCase("ACTIVITY")));
         return out;
@@ -446,7 +448,7 @@ public final class GenomicsBoard {
     Map<String, Map<String, Object>> scanIndex() {
         return data.cached("genomics.scan", () -> {
             Map<String, Map<String, Object>> m = new HashMap<>();
-            data.now().of("dms_score").forEach(d -> m.put(str(d.get("PROTEIN")) + "|" + str(d.get("ASSAY")) + "|" + integer(d.get("POS"), -1) + "|" + str(d.get("AA")), d));
+            data.now().of("dms-score").forEach(d -> m.put(str(d.get("PROTEIN")) + "|" + str(d.get("ASSAY")) + "|" + integer(d.get("POS"), -1) + "|" + str(d.get("AA")), d));
             return m;
         });
     }
@@ -461,7 +463,7 @@ public final class GenomicsBoard {
 
     /** A gene's variants along its protein: carriers in the selection, the scan's score of each exact change, the domains. */
     public Map<String, Object> lollipop(String gene, Selection sel, String assay) {
-        needs("variant", "variant_call", "sample");
+        needs("study-variant", "variant-call", "study-sample");
         Index ix = index();
         Map<String, Object> g = ix.genes().get(gene);
         Map<String, Object> p = proteinOf(gene);
@@ -503,8 +505,8 @@ public final class GenomicsBoard {
         out.put("selection", sel.words());
         long damaging = rows.stream().filter(r -> "damaging".equals(r.get("EFFECT"))).count();
         out.put("explain", new Explained("The variants of " + gene + " along its protein", rows.size() + " variants").scope(sel.words())
-                .step("The variants of " + gene + " with a protein position", "variant", rows.size()).step("Their carriers in the selection", "variant_call", calls)
-                .step("Each exact change joined to the scan (" + (as == null ? "no scan" : as) + ")", "dms_score", rows.stream().filter(r -> r.get("SCORE") != null).count())
+                .step("The variants of " + gene + " with a protein position", "study-variant", rows.size()).step("Their carriers in the selection", "variant-call", calls)
+                .step("Each exact change joined to the scan (" + (as == null ? "no scan" : as) + ")", "dms-score", rows.stream().filter(r -> r.get("SCORE") != null).count())
                 .sentence(rows.isEmpty() ? "No variant of " + gene + " is carried in " + sel.words() + "."
                         : damaging + " of the " + rows.size() + " changes carried here break the protein in the laboratory scan.")
                 .link("Open " + gene + " in the protein workbench", "/proteins/" + gene).build());
@@ -540,7 +542,7 @@ public final class GenomicsBoard {
 
     /** A variant: its carriers in the selection with their figures, joined to the scan's score of that exact change. */
     public Map<String, Object> explainVariant(String id, Selection sel, String assay) {
-        needs("variant", "variant_call", "sample");
+        needs("study-variant", "variant-call", "study-sample");
         Index ix = index();
         Map<String, Object> v = ix.variants().get(id);
         if (v == null) {
@@ -566,8 +568,8 @@ public final class GenomicsBoard {
         String change = str(v.get("AA_REF")) + integer(v.get("PROTEIN_POS"), 0) + str(v.get("AA_ALT"));
         long resp = carriers.stream().filter(r -> Selection.responded(r.get("RESPONSE"))).count();
         Explained ex = new Explained(id + " · " + str(v.get("GENE")) + " p." + change, carriers.size() + " carriers").scope(sel.words())
-                .step("The variant", "variant", 1).step("Its carriers in the selection", "variant_call", carriers.size())
-                .step("Joined to the samples", "sample", carriers.size()).step("The scan's score of " + change + (as == null ? "" : " (" + as + ")"), "dms_score", d == null ? 0 : 1)
+                .step("The variant", "study-variant", 1).step("Its carriers in the selection", "variant-call", carriers.size())
+                .step("Joined to the samples", "study-sample", carriers.size()).step("The scan's score of " + change + (as == null ? "" : " (" + as + ")"), "dms-score", d == null ? 0 : 1)
                 .sentence(String.format(Locale.ROOT, "%s (%s p.%s) is carried by %d samples of %s, %d of whom respond; %s", id, str(v.get("GENE")), change, carriers.size(), sel.words(), resp,
                         score == null || score.isNaN() ? "the scan did not measure this change." : "the laboratory scan measures this exact change at " + round(score, 2) + " (" + effect(score) + ")."))
                 .records(List.of("SAMPLE_ID", "GENOTYPE", "VAF", "DEPTH", "CLUSTER", "TUMOUR_TYPE", "STAGE", "RESPONSE"), carriers);
@@ -579,7 +581,7 @@ public final class GenomicsBoard {
 
     /** A site of the association plot: its test against every trait. */
     public Map<String, Object> explainSite(String id) {
-        needs("variant", "association");
+        needs("study-variant", "association");
         Map<String, Object> v = index().variants().get(id);
         if (v == null) {
             throw new NoSuchElementException("no variant " + id);
@@ -587,20 +589,20 @@ public final class GenomicsBoard {
         List<Map<String, Object>> tests = data.now().of("association").stream().filter(a -> str(a.get("VARIANT_ID")).equals(id))
                 .map(a -> Explained.pick(a, List.of("TRAIT", "P", "NEG_LOG10_P", "BETA", "SE", "R2_LEAD"))).toList();
         return new Explained(id + " on " + str(v.get("GENE")), tests.size() + " tests").scope("chromosome " + str(v.get("CHROM")) + " at " + str(v.get("POS")))
-                .step("The site", "variant", 1).step("Its tests against each trait", "association", tests.size())
+                .step("The site", "study-variant", 1).step("Its tests against each trait", "association", tests.size())
                 .sentence("The association was computed from the calls and the response of every sample (a test per site); these are its figures.")
                 .records(List.of("TRAIT", "P", "NEG_LOG10_P", "BETA", "SE", "R2_LEAD"), tests).build();
     }
 
     /** A cluster of the map of samples: its samples and response. */
     public Map<String, Object> explainCluster(String cluster, String cohort) {
-        needs("sample");
+        needs("study-sample");
         Selection sel = new Selection(cohort == null ? "" : cohort, Set.of(cluster), null, Set.of());
-        List<Map<String, Object>> rows = data.now().of("sample").stream().filter(sel::has)
+        List<Map<String, Object>> rows = data.now().of("study-sample").stream().filter(sel::has)
                 .map(s -> Explained.pick(s, List.of("SAMPLE_ID", "TUMOUR_TYPE", "STAGE", "AGE_BAND", "RESPONSE"))).toList();
         long resp = rows.stream().filter(r -> Selection.responded(r.get("RESPONSE"))).count();
-        return new Explained("Cluster " + cluster, rows.size() + " samples").scope(sel.words()).step("The samples of the cluster", "sample", rows.size())
-                .step("Responders", "sample", resp).sentence(String.format(Locale.ROOT, "%d samples; %d%% respond.", rows.size(), rows.isEmpty() ? 0 : Math.round(100.0 * resp / rows.size())))
+        return new Explained("Cluster " + cluster, rows.size() + " samples").scope(sel.words()).step("The samples of the cluster", "study-sample", rows.size())
+                .step("Responders", "study-sample", resp).sentence(String.format(Locale.ROOT, "%d samples; %d%% respond.", rows.size(), rows.isEmpty() ? 0 : Math.round(100.0 * resp / rows.size())))
                 .records(List.of("SAMPLE_ID", "TUMOUR_TYPE", "STAGE", "AGE_BAND", "RESPONSE"), rows).build();
     }
 }

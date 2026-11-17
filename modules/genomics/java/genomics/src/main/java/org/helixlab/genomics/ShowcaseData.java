@@ -12,6 +12,8 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
+
 package org.helixlab.genomics;
 
 import java.util.ArrayList;
@@ -38,8 +40,8 @@ public final class ShowcaseData {
     }
 
     /** The kinds, by pack: the names the data packs declare (the design's section 6). */
-    public static final List<String> GENOMICS_KINDS = List.of("gene", "sample", "variant", "variant_call", "association", "cnv_segment", "pathway_gene");
-    public static final List<String> PROTEIN_KINDS = List.of("protein", "residue", "residue_contact", "dms_score", "design", "design_mutation", "design_round");
+    public static final List<String> GENOMICS_KINDS = List.of("study-gene", "study-sample", "study-variant", "variant-call", "association", "cnv-segment", "pathway-gene");
+    public static final List<String> PROTEIN_KINDS = List.of("protein", "residue", "residue-contact", "dms-score", "design", "design-mutation", "design-round");
 
     /** One read of every kind: the rows of each, in the order read. */
     public record Tables(Map<String, List<Map<String, Object>>> rows, long version, long readAt) {

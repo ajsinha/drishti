@@ -210,10 +210,9 @@ public class ModuleDeployController {
     }
 
     /**
-     * The product's own modules shipped as folders (a content module's {@code modules/<id>/module.yaml}, a module project's
-     * {@code src/dmod/}) that have a console part and are loaded on this server: the console hosts them from this server's answer like a
-     * deployed module's, and reads no modules folder itself (THIN_CONSOLE_DESIGN.md, step S2). A module with code's {@code dmod/} comes
-     * from the registry.
+     * The product's own content modules shipped as folders ({@code modules/<id>/module.yaml}, the one module layout) that have a console
+     * part and are loaded on this server: the console hosts them from this server's answer like a deployed module's, and reads no modules
+     * folder itself (THIN_CONSOLE_DESIGN.md, step S2). A module with code (a {@code java:} block in its manifest) comes from the registry.
      */
     private Map<String, Shipped> shipped() {
         Map<String, Shipped> out = new java.util.TreeMap<>();
@@ -230,16 +229,17 @@ public class ModuleDeployController {
             if (home == null || !Boolean.TRUE.equals(loaded.get(id)) || !java.nio.file.Files.isRegularFile(home.resolve("console").resolve("plugin.yaml"))) {
                 return;
             }
-            if (home.getFileName().toString().equals("dmod") && (home.getParent() == null || !home.getParent().getFileName().toString().equals("src"))) {
+            Map<String, Object> manifest;
+            try {
+                manifest = com.ash.drishti.api.resolution.ResolutionSettings.yaml(e.source());
+            } catch (RuntimeException ex) {
+                manifest = Map.of();                                // a manifest that does not read: version 0, no code block
+            }
+            if (manifest.get("java") != null) {                     // a module with code (its manifest's java: block) comes from the registry
                 return;
             }
-            String version = "0";
-            try {
-                Object v = com.ash.drishti.api.resolution.ResolutionSettings.yaml(e.source()).get("version");
-                version = v == null ? "0" : String.valueOf(v);
-            } catch (RuntimeException ex) {
-                // a manifest that does not read keeps version 0
-            }
+            Object v = manifest.get("version");
+            String version = v == null ? "0" : String.valueOf(v);
             out.put(id, new Shipped(home, version, e.title().isBlank() ? id : e.title()));
         });
         return out;

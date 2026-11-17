@@ -1,0 +1,73 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: design-mutation
+version: 1
+description: 'Design change: One amino acid change of one design: the position, what it was and what it became.'
+doc:
+  summary: One design change, as a record.
+  description: 'One amino acid change of one design: the position, what it was and what it became. 33,000 changes over 12,000 designs. The page
+    is the plain record view: the strip gives the headline fields and the table every field, a linked field opens its kind; the showcase''s own
+    screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/design-mutation/DSG-HLXK7-R1-0001:164
+  - DMUT DSG-HLXK7-R1-0001:164
+  since: 2.9.11
+match:
+  kind: design-mutation
+  priority: 10
+title:
+  pill: Protein engineering · Design change
+  id: $.DESIGN_MUTATION_ID
+strip:
+- label: Design mutation id
+  bind: $.DESIGN_MUTATION_ID
+- label: Design id
+  bind: link($.DESIGN_ID, 'design')
+- label: Mutation
+  bind: $.MUTATION
+- label: Round
+  bind: $.ROUND
+  fmt: amount0
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Design change
+  columns:
+  - label: Design mutation id
+    bind: $.DESIGN_MUTATION_ID
+  - label: Design id
+    bind: link($.DESIGN_ID, 'design')
+  - label: Protein
+    bind: link($.PROTEIN, 'protein')
+  - label: Round
+    bind: $.ROUND
+    fmt: amount0
+  - label: Pos
+    bind: $.POS
+    fmt: amount0
+  - label: Aa from
+    bind: $.AA_FROM
+  - label: Aa to
+    bind: $.AA_TO
+  - label: Mutation
+    bind: $.MUTATION
+keys:
+  F9: raw

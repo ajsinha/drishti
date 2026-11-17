@@ -59,9 +59,9 @@ PACKS = {
         "code": "GENOMICS", "title": "Genomics showcase", "intro": "tools/packgen/genomics_showcase/readme/genomics-showcase.intro.md",
         "description": ("A synthetic cohort of 1,500 patients read against one invented gene, HLXK7: 2,000 genes, 12,000 variant sites, 45,000 "
                         "variant calls, copy-number segments and pathways, and 36,000 association tests of three traits computed from "
-                        "the calls. The words GWAS (a variant's test against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY "
+                        "the calls. The words ASSOC (a variant's test against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY "
                         "open the records; the showcase's screens are drawn from them. Everything is seeded and invented."),
-        "examples": [("GWAS {lead_assoc}", "The lead variant of the response peak: its p-value, effect and link to the peak's lead"),
+        "examples": [("ASSOC {lead_assoc}", "The lead variant of the response peak: its p-value, effect and link to the peak's lead"),
                      ("SGENE HLXK7", "The gene: chromosome, role, protein length and how many samples carry a damaging change"),
                      ("SVARIANT {lead_variant}", "The variant at the first hotspot of HLXK7, with its amino acid change and carriers"),
                      ("SSAMPLE S0001", "One patient: the clinical tracks, the response and the cluster"),
@@ -72,10 +72,10 @@ PACKS = {
         "description": ("Four invented proteins and the campaign that redesigned one of them, Helixase-7 (gene HLXK7, 312 amino acids): every "
                         "position and every amino acid measured in two assays (47,840 scan scores), the fold with its coordinates, burial "
                         "and contacts, and eight rounds of 1,500 designs that climb to about fifteen times the natural activity. The words "
-                        "PROTEIN (a protein), DESIGNS (a design), RESIDUE, DMS, CONTACT, DMUT and DROUND open the records; the showcase's "
+                        "PROT (a protein), DESIGN (a design), RESIDUE, DMS, CONTACT, DMUT and DROUND open the records; the showcase's "
                         "screens are drawn from them. Everything is seeded and invented."),
-        "examples": [("PROTEIN HLXK7", "Helixase-7: length, family, sequence and the positions of its active site"),
-                     ("DESIGNS {lead_design}", "The lead design of the campaign: its changes, activity and stability"),
+        "examples": [("PROT HLXK7", "Helixase-7: length, family, sequence and the positions of its active site"),
+                     ("DESIGN {lead_design}", "The lead design of the campaign: its changes, activity and stability"),
                      ("DMS {lead_score}", "One scan score: what changing one position to one amino acid did to the activity"),
                      ("RESIDUE {lead_residue}", "The active site's centre: fold, burial, coordinates and mean effects"),
                      ("DROUND {lead_round}", "The round of the lead design: method, best and median activity")],
@@ -312,10 +312,10 @@ driver each moves toxicity and relapse), and the neighbours of each peak gene ca
 
 ## The words
 
-`GWAS GWAS-RESPONSE-<variant>` opens one test; `SGENE HLXK7`, `SSAMPLE S0001`, `SVARIANT <id>`, `VCALL <id>`, `CNV <id>` and
+`ASSOC GWAS-RESPONSE-<variant>` opens one test; `SGENE HLXK7`, `SSAMPLE S0001`, `SVARIANT <id>`, `VCALL <id>`, `CNV <id>` and
 `PATHWAY <id>` open the other records. Each is a plain record page (the strip and a table of every field, linked fields opening their
 kinds). The showcase's own screens (the association plot, the cohort matrix, the map of samples, the variant lollipop) are drawn from
-the same kinds by the genomics module.
+the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and DESIGNS.
 
 ## The join to proteins
 
@@ -354,9 +354,9 @@ follows a fitness field with a summit, a false peak and a ridge; its stability f
 
 ## The words
 
-`PROTEIN HLXK7` opens a protein; `DESIGNS <id>` a design; `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` the other records. Each is
+`PROT HLXK7` opens a protein; `DESIGN <id>` a design; `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` the other records. Each is
 a plain record page, linked fields opening their kinds. The workbench's own screens (the scan heatmap, the structure, the design
-campaign with its rounds, the leaderboard) are drawn from the same kinds by the genomics module.
+campaign with its rounds, the leaderboard) are drawn from the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and DESIGNS.
 
 ## The join to genomics
 

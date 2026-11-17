@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 
 import pytest
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
@@ -52,7 +53,7 @@ def test_no_inline_script_or_handlers():
 
 
 def test_python_files_under_limit():
-    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > 2000]
+    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > CODE_LINE_CAP]
     assert over == []
 
 

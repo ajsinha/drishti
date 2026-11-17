@@ -1,0 +1,116 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the design-mutation kind (command DMUT): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: design-mutation
+mnemonic: DMUT
+pack: protein-engineering
+version: '1.0'
+class: fundamental
+status: active
+title: Design change
+description: 'One amino acid change of one design: the position, what it was and what it became. 33,000 changes over 12,000 designs.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per design and position, keyed by DESIGN_MUTATION_ID.
+key:
+- DESIGN_MUTATION_ID
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: protein-engineering.design-mutation
+  columns:
+  - DESIGN_MUTATION_ID
+  - DESIGN_ID
+  - PROTEIN
+  - ROUND
+  - POS
+  test-data:
+  - data/testdata/protein-engineering/design-mutation
+fields:
+- name: DESIGN_MUTATION_ID
+  type: id
+  presence: required
+  description: The design's id, a colon and the position.
+  example: DSG-HLXK7-R8-0412:117
+- name: DESIGN_ID
+  type: id
+  presence: required
+  description: The design; opens DESIGN.
+  example: DSG-HLXK7-R8-0412
+  link: design
+- name: PROTEIN
+  type: id
+  presence: required
+  description: The protein; opens PROT.
+  example: HLXK7
+  link: protein
+- name: ROUND
+  type: integer
+  presence: required
+  description: The design's round.
+  example: 8
+- name: POS
+  type: integer
+  presence: required
+  description: The position changed.
+  example: 117
+- name: AA_FROM
+  type: text
+  presence: required
+  description: The natural amino acid (one letter).
+  example: L
+- name: AA_TO
+  type: text
+  presence: required
+  description: The amino acid it was changed to.
+  example: G
+- name: MUTATION
+  type: text
+  presence: required
+  description: The change written as AA_FROM, POS and AA_TO.
+  example: L117G
+links:
+- field: DESIGN_ID
+  kind: design
+- field: PROTEIN
+  kind: protein
+validation:
+- rule: required
+  fields:
+  - DESIGN_MUTATION_ID
+  - DESIGN_ID
+  - PROTEIN
+  - ROUND
+  - POS
+  - AA_FROM
+  - AA_TO
+  - MUTATION
+- rule: unique
+  key:
+  - DESIGN_MUTATION_ID
+  per: snapshot
+- rule: link
+  field: DESIGN_ID
+  kind: design
+- rule: link
+  field: PROTEIN
+  kind: protein
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

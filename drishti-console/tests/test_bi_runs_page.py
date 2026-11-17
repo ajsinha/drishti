@@ -25,6 +25,7 @@ from bi_runs_backend import REPORT_ID, RunsBackend
 from conftest import CONSOLE
 from core.app import create_app
 from core.config import load_settings
+from code_cap import CODE_LINE_CAP  # noqa: E402  (tools/code_cap.py: the one line cap of a code file)
 
 
 def make(powers=("bi", "bi-author", "bi-admin")):
@@ -191,7 +192,7 @@ def test_every_runs_script_has_the_licence_and_no_markup_strings():
         text = (CONSOLE / "web/static/js" / name).read_text(encoding="utf-8")
         assert "PROPRIETARY AND CONFIDENTIAL" in text[:600], name
         assert "innerHTML" not in text and "insertAdjacentHTML" not in text, name            # text only, never markup (the strict policy)
-        assert len(text.splitlines()) < 2000, name
+        assert len(text.splitlines()) <= CODE_LINE_CAP, name
 
 
 def test_share_answers_each_mode_a_role_expanded_and_a_refusal_and_the_recipient_sees_it(bi):

@@ -1,0 +1,164 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the residue kind (command RESIDUE): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: residue
+mnemonic: RESIDUE
+pack: protein-engineering
+version: '1.0'
+class: fundamental
+status: active
+title: Residue
+description: 'One amino acid position of a protein: what it is, where it sits in the fold, how buried it is, whether it is in the active site,
+  its place in space and the mean effect of changing it. Coordinates, burial and the means are written by the generator.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per protein position, keyed by RESIDUE_ID.
+key:
+- RESIDUE_ID
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: protein-engineering.residue
+  columns:
+  - RESIDUE_ID
+  - PROTEIN
+  - POS
+  - SECONDARY
+  - ACTIVE_SITE
+  test-data:
+  - data/testdata/protein-engineering/residue
+fields:
+- name: RESIDUE_ID
+  type: id
+  presence: required
+  description: The protein, a colon and the position.
+  example: HLXK7:117
+- name: PROTEIN
+  type: id
+  presence: required
+  description: The protein; opens PROT.
+  example: HLXK7
+  link: protein
+- name: POS
+  type: integer
+  presence: required
+  description: The position, counted from 1.
+  example: 117
+- name: AA
+  type: text
+  presence: required
+  description: The amino acid there (one letter).
+  example: D
+- name: SECONDARY
+  type: text
+  presence: required
+  description: The element of the fold it is in.
+  example: helix
+  enum:
+  - helix
+  - strand
+  - loop
+- name: DOMAIN
+  type: text
+  presence: required
+  description: The domain it is in.
+  example: N-lobe
+  enum:
+  - N-lobe
+  - hinge
+  - C-lobe
+- name: BURIAL
+  type: rate
+  presence: required
+  description: 'How buried it is, 0 (on the surface) to 1 (deep inside): the rank of its neighbours within 11 angstroms.'
+  example: 0.83
+- name: ACTIVE_SITE
+  type: boolean
+  presence: required
+  description: True for the residues of the active site.
+  example: true
+- name: X
+  type: amount
+  presence: required
+  unit: angstrom
+  description: Its place along x.
+  example: 4.2
+- name: Y
+  type: amount
+  presence: required
+  unit: angstrom
+  description: Its place along y.
+  example: -11.8
+- name: Z
+  type: amount
+  presence: required
+  unit: angstrom
+  description: Its place along z.
+  example: 7.5
+- name: MEAN_ACTIVITY
+  type: amount
+  presence: required
+  description: The mean activity score of the 19 changes of the position (negative hurts, positive helps).
+  example: -1.42
+- name: MEAN_STABILITY
+  type: amount
+  presence: required
+  description: The mean stability score of the 19 changes of the position.
+  example: -0.96
+links:
+- field: PROTEIN
+  kind: protein
+validation:
+- rule: required
+  fields:
+  - RESIDUE_ID
+  - PROTEIN
+  - POS
+  - AA
+  - SECONDARY
+  - DOMAIN
+  - BURIAL
+  - ACTIVE_SITE
+  - X
+  - Y
+  - Z
+  - MEAN_ACTIVITY
+  - MEAN_STABILITY
+- rule: unique
+  key:
+  - RESIDUE_ID
+  per: snapshot
+- rule: link
+  field: PROTEIN
+  kind: protein
+- rule: enum
+  field: SECONDARY
+  values:
+  - helix
+  - strand
+  - loop
+- rule: enum
+  field: DOMAIN
+  values:
+  - N-lobe
+  - hinge
+  - C-lobe
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

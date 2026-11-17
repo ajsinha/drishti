@@ -1,0 +1,14 @@
+{"kind":"protein","id":"HLXK7","title":"PROT HLXK7","subtitle":"Protein"}
+{"kind":"protein","id":"HLXT17","title":"PROT HLXT17","subtitle":"Protein"}
+{"kind":"residue","id":"HLXK7:177","title":"RESIDUE HLXK7:177","subtitle":"Residue"}
+{"kind":"residue","id":"HLXK7:1","title":"RESIDUE HLXK7:1","subtitle":"Residue"}
+{"kind":"residue-contact","id":"HLXK7:68-71","title":"CONTACT HLXK7:68-71","subtitle":"Residue contact"}
+{"kind":"residue-contact","id":"HLXK7:118-121","title":"CONTACT HLXK7:118-121","subtitle":"Residue contact"}
+{"kind":"dms-score","id":"HLXK7:177:A:activity","title":"DMS HLXK7:177:A:activity","subtitle":"Deep mutational scan score"}
+{"kind":"dms-score","id":"HLXK7:1:A:activity","title":"DMS HLXK7:1:A:activity","subtitle":"Deep mutational scan score"}
+{"kind":"design","id":"DSG-HLXK7-R8-0897","title":"DESIGN DSG-HLXK7-R8-0897","subtitle":"Protein design"}
+{"kind":"design","id":"DSG-HLXK7-R1-0001","title":"DESIGN DSG-HLXK7-R1-0001","subtitle":"Protein design"}
+{"kind":"design-mutation","id":"DSG-HLXK7-R1-0001:164","title":"DMUT DSG-HLXK7-R1-0001:164","subtitle":"Design change"}
+{"kind":"design-mutation","id":"DSG-HLXK7-R1-0001:302","title":"DMUT DSG-HLXK7-R1-0001:302","subtitle":"Design change"}
+{"kind":"design-round","id":"HLXK7-R8","title":"DROUND HLXK7-R8","subtitle":"Design round"}
+{"kind":"design-round","id":"HLXK7-R1","title":"DROUND HLXK7-R1","subtitle":"Design round"}

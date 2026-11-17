@@ -1,0 +1,86 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: design
+version: 1
+description: 'Protein design: One designed variant of Helixase-7 from one round of the campaign: its parent, how many changes it carries, how
+  active and stable it measured, what the model predicted and where it sits on the map of designs.'
+doc:
+  summary: One protein design, as a record.
+  description: 'One designed variant of Helixase-7 from one round of the campaign: its parent, how many changes it carries, how active and stable
+    it measured, what the model predicted and where it sits on the map of designs. Eight rounds of 1,500 designs climb to a protein about fifteen
+    times as active as the natural one. The page is the plain record view: the strip gives the headline fields and the table every field, a linked
+    field opens its kind; the showcase''s own screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/design/DSG-HLXK7-R8-0897
+  - DESIGN DSG-HLXK7-R8-0897
+  since: 2.9.11
+match:
+  kind: design
+  priority: 10
+title:
+  pill: Protein engineering · Protein design
+  id: $.DESIGN_ID
+strip:
+- label: Design id
+  bind: $.DESIGN_ID
+- label: Round
+  bind: $.ROUND
+  fmt: amount0
+- label: N changes
+  bind: $.N_CHANGES
+  fmt: amount0
+- label: Activity
+  bind: $.ACTIVITY
+- label: Status
+  bind: $.STATUS
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Protein design
+  columns:
+  - label: Design id
+    bind: $.DESIGN_ID
+  - label: Protein
+    bind: link($.PROTEIN, 'protein')
+  - label: Round
+    bind: $.ROUND
+    fmt: amount0
+  - label: Parent
+    bind: $.PARENT
+  - label: N changes
+    bind: $.N_CHANGES
+    fmt: amount0
+  - label: Changes
+    bind: $.CHANGES
+  - label: Activity
+    bind: $.ACTIVITY
+  - label: Delta tm
+    bind: $.DELTA_TM
+  - label: Model score
+    bind: $.MODEL_SCORE
+  - label: Status
+    bind: $.STATUS
+  - label: Emb x
+    bind: $.EMB_X
+  - label: Emb y
+    bind: $.EMB_Y
+keys:
+  F9: raw

@@ -63,15 +63,14 @@ def version_tuple(v: str) -> tuple:
 
 
 def server_version(root: pathlib.Path) -> str | None:
-    """The version of the repository's root pom, the server this tool set was built with."""
-    pom = root / "pom.xml"
-    if not pom.is_file():
+    """The product version of the checkout or install at ``root``, from its one home through tools/version.py (.mvn/maven.config)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_tools_version", pathlib.Path(__file__).resolve().parent / "version.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if not (root / ".mvn" / "maven.config").is_file():
         return None
-    text = pom.read_text(encoding="utf-8")
-    m = re.search(r"<artifactId>drishti-parent</artifactId>\s*<version>([^<]+)</version>", text)
-    if not m:
-        m = re.search(r"</parent>.*?<version>([^<]+)</version>", text, re.S)
-    return m.group(1).strip() if m else None
+    return mod.current(root / "pom.xml", default="") or None
 
 
 def read_pack_yaml(pack: pathlib.Path) -> dict:

@@ -99,6 +99,10 @@
     grid-template-columns: minmax(0, 1fr);
 }
 /* hidden means hidden, whatever the layout above says (a step of the guided mode, a page that waits for its data) */
-.drishti-showcase [hidden] {
-    display: none !important;
+.drishti-showcase [hidden],
+.drishti-showcase .drishti-showcase-grid[hidden],
+.drishti-showcase .drishti-showcase-figures[hidden],
+.drishti-showcase .drishti-showcase-guide[hidden],
+.drishti-showcase .drishti-showcase-bar[hidden] {
+    display: none;
 }

@@ -25,10 +25,27 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** No non-UX source file may exceed 2000 lines. UX templates, styles and scripts are exempt, and so is the generated test data. */
+/**
+ * No non-UX source file may exceed the one code line cap ({@code tools/code_cap.py} CODE_LINE_CAP, which the Python guards import too).
+ * UX templates, styles and scripts are exempt here (the console's guards count them), and so is the generated test data.
+ */
 class SourceFileSizeTest {
 
-    static final int MAX_LINES = 2000;
+    static final int MAX_LINES = cap();
+
+    /** The one cap, read from tools/code_cap.py ({@code CODE_LINE_CAP = <n>}). */
+    static int cap() {
+        try {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^CODE_LINE_CAP = (\\d+)$")
+                    .matcher(Files.readString(RepositoryFiles.root().resolve("tools").resolve("code_cap.py")));
+            if (!m.find()) {
+                throw new IllegalStateException("tools/code_cap.py has no CODE_LINE_CAP = <n> line");
+            }
+            return Integer.parseInt(m.group(1));
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 
     @Test
     void sourceFilesStayUnderTheLimit() throws IOException {

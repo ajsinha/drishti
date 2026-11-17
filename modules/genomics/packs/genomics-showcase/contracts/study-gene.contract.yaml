@@ -1,0 +1,139 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the study-gene kind (command SGENE): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: study-gene
+mnemonic: SGENE
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Study gene
+description: 'One gene of the synthetic genome: where it sits, what it does, how long its protein is and how many samples of the cohort carry
+  a damaging change in it. 24 of the 2,000 genes are the planted drivers, led by HLXK7.'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per gene, keyed by GENE.
+key:
+- GENE
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.study-gene
+  columns:
+  - GENE
+  - CHROM
+  - START
+  - END
+  - ROLE
+  - PROTEIN_LENGTH
+  - DRIVER
+  - ALTERED_SAMPLES
+  test-data:
+  - data/testdata/genomics-showcase/study-gene
+fields:
+- name: GENE
+  type: id
+  presence: required
+  description: The gene's invented symbol (HLX followed by letters and digits).
+  example: HLXK7
+- name: CHROM
+  type: text
+  presence: required
+  description: 'The chromosome: 1 to 22 or X.'
+  example: '7'
+- name: START
+  type: integer
+  presence: required
+  unit: bp
+  description: The first base of the gene on its chromosome.
+  example: 61864222
+- name: END
+  type: integer
+  presence: required
+  unit: bp
+  description: The last base of the gene on its chromosome.
+  example: 61917398
+- name: STRAND
+  type: text
+  presence: required
+  description: The strand the gene is read from.
+  example: +
+  enum:
+  - +
+  - '-'
+- name: ROLE
+  type: text
+  presence: required
+  description: What the gene's product does.
+  example: kinase (drug target)
+- name: PROTEIN_LENGTH
+  type: integer
+  presence: required
+  unit: amino acids
+  description: 'The amino acids of its protein: the axis of the variant lollipop.'
+  example: 312
+- name: DRIVER
+  type: boolean
+  presence: required
+  description: True for the 24 driver genes whose alterations the generator plants in the cohort.
+  example: true
+- name: VARIANTS
+  type: integer
+  presence: required
+  unit: sites
+  description: 'How many variant sites the gene has. Source: counted from study-variant.'
+  example: 220
+- name: ALTERED_SAMPLES
+  type: integer
+  presence: required
+  unit: samples
+  description: 'How many samples carry a damaging change (high or moderate impact) in the gene. Source: counted from variant-call.'
+  example: 598
+- name: ALTERED_FRACTION
+  type: rate
+  presence: required
+  unit: fraction
+  description: ALTERED_SAMPLES over the cohort's 1,500 samples.
+  example: 0.3987
+validation:
+- rule: required
+  fields:
+  - GENE
+  - CHROM
+  - START
+  - END
+  - STRAND
+  - ROLE
+  - PROTEIN_LENGTH
+  - DRIVER
+  - VARIANTS
+  - ALTERED_SAMPLES
+  - ALTERED_FRACTION
+- rule: unique
+  key:
+  - GENE
+  per: snapshot
+- rule: enum
+  field: STRAND
+  values:
+  - +
+  - '-'
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

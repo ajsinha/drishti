@@ -1,0 +1,72 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
+rachana: 1
+sutra: protein
+version: 1
+description: 'Protein: One invented protein: its sequence, family and active site.'
+doc:
+  summary: One protein, as a record.
+  description: 'One invented protein: its sequence, family and active site. Four proteins; Helixase-7, the enzyme of gene HLXK7 (312 amino acids),
+    is the one the cohort screen and the design campaign are about. The page is the plain record view: the strip gives the headline fields and
+    the table every field, a linked field opens its kind; the showcase''s own screens are drawn from the same data.'
+  params: {}
+  emits: []
+  expects: []
+  examples:
+  - /v/protein/HLXK7
+  - PROT HLXK7
+  since: 2.9.11
+match:
+  kind: protein
+  priority: 10
+title:
+  pill: Protein engineering · Protein
+  id: $.PROTEIN
+strip:
+- label: Protein
+  bind: $.PROTEIN
+- label: Name
+  bind: $.NAME
+- label: Length
+  bind: $.LENGTH
+- label: Family
+  bind: $.FAMILY
+- label: Design rounds
+  bind: $.DESIGN_ROUNDS
+  fmt: amount0
+  emphasis: true
+panels:
+- id: record
+  kind: kv
+  title: Protein
+  columns:
+  - label: Protein
+    bind: $.PROTEIN
+  - label: Gene
+    bind: link($.GENE, 'study-gene')
+  - label: Name
+    bind: $.NAME
+  - label: Length
+    bind: $.LENGTH
+  - label: Family
+    bind: $.FAMILY
+  - label: Sequence
+    bind: $.SEQUENCE
+  - label: Design rounds
+    bind: $.DESIGN_ROUNDS
+    fmt: amount0
+keys:
+  F9: raw

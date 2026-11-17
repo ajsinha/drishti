@@ -1,0 +1,14 @@
+{"kind":"study-gene","id":"HLXK7","title":"SGENE HLXK7","subtitle":"Study gene"}
+{"kind":"study-gene","id":"HLXHF75","title":"SGENE HLXHF75","subtitle":"Study gene"}
+{"kind":"study-sample","id":"S0001","title":"SSAMPLE S0001","subtitle":"Study sample"}
+{"kind":"study-sample","id":"S0002","title":"SSAMPLE S0002","subtitle":"Study sample"}
+{"kind":"study-variant","id":"HX-004928","title":"SVARIANT HX-004928","subtitle":"Study variant"}
+{"kind":"study-variant","id":"HX-000001","title":"SVARIANT HX-000001","subtitle":"Study variant"}
+{"kind":"variant-call","id":"CALL-000001","title":"VCALL CALL-000001","subtitle":"Variant call"}
+{"kind":"variant-call","id":"CALL-000002","title":"VCALL CALL-000002","subtitle":"Variant call"}
+{"kind":"association","id":"GWAS-RESPONSE-HX-004928","title":"ASSOC GWAS-RESPONSE-HX-004928","subtitle":"Association of a variant with a trait"}
+{"kind":"association","id":"GWAS-RESPONSE-HX-000001","title":"ASSOC GWAS-RESPONSE-HX-000001","subtitle":"Association of a variant with a trait"}
+{"kind":"cnv-segment","id":"CNV-00001","title":"CNV CNV-00001","subtitle":"Copy-number segment"}
+{"kind":"cnv-segment","id":"CNV-00002","title":"CNV CNV-00002","subtitle":"Copy-number segment"}
+{"kind":"pathway-gene","id":"PWG-0001","title":"PATHWAY PWG-0001","subtitle":"Pathway membership"}
+{"kind":"pathway-gene","id":"PWG-0002","title":"PATHWAY PWG-0002","subtitle":"Pathway membership"}

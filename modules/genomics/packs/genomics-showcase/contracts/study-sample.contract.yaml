@@ -1,0 +1,196 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the study-sample kind (command SSAMPLE): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: study-sample
+mnemonic: SSAMPLE
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Study sample
+description: 'One patient''s sample of the 1,500 of cohort ONC-1: the clinical tracks, the response to therapy, the cluster it belongs to and
+  its place on the two-dimensional map of samples (precomputed, never projected at view time).'
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per sample, keyed by SAMPLE_ID.
+key:
+- SAMPLE_ID
+id-pattern:
+- ^S
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.study-sample
+  columns:
+  - SAMPLE_ID
+  - COHORT
+  - TUMOUR_TYPE
+  - STAGE
+  - RESPONSE
+  - TOXICITY
+  - RELAPSE
+  - CLUSTER
+  test-data:
+  - data/testdata/genomics-showcase/study-sample
+fields:
+- name: SAMPLE_ID
+  type: id
+  presence: required
+  description: 'The sample''s id: S and four digits.'
+  example: S0042
+- name: COHORT
+  type: text
+  presence: required
+  description: The cohort the sample belongs to.
+  example: ONC-1
+- name: TUMOUR_TYPE
+  type: text
+  presence: required
+  description: The tumour type.
+  example: Colorectal
+  enum:
+  - Breast
+  - Lung
+  - Colorectal
+  - Ovarian
+- name: STAGE
+  type: text
+  presence: required
+  description: The stage at sampling.
+  example: II
+  enum:
+  - I
+  - II
+  - III
+  - IV
+- name: AGE_BAND
+  type: text
+  presence: required
+  description: The patient's age in ten-year bands.
+  example: 60-69
+- name: RESPONSE
+  type: text
+  presence: required
+  description: The response to therapy.
+  example: responder
+  enum:
+  - responder
+  - non-responder
+- name: TOXICITY
+  type: text
+  presence: required
+  description: Whether the patient had a severe adverse reaction.
+  example: none
+  enum:
+  - severe
+  - none
+- name: RELAPSE
+  type: text
+  presence: required
+  description: Whether the disease returned within twelve months.
+  example: free
+  enum:
+  - relapsed
+  - free
+- name: CLUSTER
+  type: text
+  presence: required
+  description: The group of similar samples the map shows.
+  example: C3 immune-hot
+  enum:
+  - C1 luminal-like
+  - C2 basal-like
+  - C3 immune-hot
+  - C4 stromal
+  - C5 proliferative
+- name: EMB_X
+  type: amount
+  presence: required
+  description: The sample's place on the map, left to right (0 to 1). Written by the generator.
+  example: 0.4871
+- name: EMB_Y
+  type: amount
+  presence: required
+  description: The sample's place on the map, top to bottom (0 to 1). Written by the generator.
+  example: 0.6032
+- name: MUTATION_COUNT
+  type: integer
+  presence: required
+  unit: calls
+  description: 'How many variant calls the sample has. Source: counted from variant-call.'
+  example: 31
+validation:
+- rule: required
+  fields:
+  - SAMPLE_ID
+  - COHORT
+  - TUMOUR_TYPE
+  - STAGE
+  - AGE_BAND
+  - RESPONSE
+  - TOXICITY
+  - RELAPSE
+  - CLUSTER
+  - EMB_X
+  - EMB_Y
+  - MUTATION_COUNT
+- rule: unique
+  key:
+  - SAMPLE_ID
+  per: snapshot
+- rule: enum
+  field: TUMOUR_TYPE
+  values:
+  - Breast
+  - Lung
+  - Colorectal
+  - Ovarian
+- rule: enum
+  field: STAGE
+  values:
+  - I
+  - II
+  - III
+  - IV
+- rule: enum
+  field: RESPONSE
+  values:
+  - responder
+  - non-responder
+- rule: enum
+  field: TOXICITY
+  values:
+  - severe
+  - none
+- rule: enum
+  field: RELAPSE
+  values:
+  - relapsed
+  - free
+- rule: enum
+  field: CLUSTER
+  values:
+  - C1 luminal-like
+  - C2 basal-like
+  - C3 immune-hot
+  - C4 stromal
+  - C5 proliferative
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

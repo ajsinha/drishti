@@ -32,7 +32,7 @@ amino acid. Every protein, number and design is invented; nothing is real.
 
 ## Screens and commands
 
-`PROTEIN` opens a protein and `DESIGNS` a design; `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` open the other kinds. Each is a plain
+`PROT` opens a protein and `DESIGN` a design; `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` open the other kinds. Each is a plain
 record page; linked fields open their kinds. The workbench's screens (scan heatmap, structure, design campaign, leaderboard) are drawn
 from these kinds.
 

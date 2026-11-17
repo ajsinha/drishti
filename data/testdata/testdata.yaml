@@ -21735,3 +21735,171 @@ datasets:
   files:
   - index-funds.2026-10-26.jsonl.gz
   bytes: 1096
+- folder: genomics-showcase/study-gene
+  pack: genomics-showcase
+  kind: study-gene
+  connector: genomics-showcase-store
+  key: GENE
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 2000
+  files:
+  - study-gene.2026-11-16.jsonl.gz
+  bytes: 47648
+- folder: genomics-showcase/study-sample
+  pack: genomics-showcase
+  kind: study-sample
+  connector: genomics-showcase-store
+  key: SAMPLE_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 1500
+  files:
+  - study-sample.2026-11-16.jsonl.gz
+  bytes: 23426
+- folder: genomics-showcase/study-variant
+  pack: genomics-showcase
+  kind: study-variant
+  connector: genomics-showcase-store
+  key: VARIANT_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 12000
+  files:
+  - study-variant.2026-11-16.jsonl.gz
+  bytes: 215467
+- folder: genomics-showcase/variant-call
+  pack: genomics-showcase
+  kind: variant-call
+  connector: genomics-showcase-store
+  key: CALL_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 45000
+  files:
+  - variant-call.2026-11-16.jsonl.gz
+  bytes: 658262
+- folder: genomics-showcase/association
+  pack: genomics-showcase
+  kind: association
+  connector: genomics-showcase-store
+  key: ASSOC_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 36000
+  files:
+  - association.2026-11-16.jsonl.gz
+  bytes: 566331
+- folder: genomics-showcase/cnv-segment
+  pack: genomics-showcase
+  kind: cnv-segment
+  connector: genomics-showcase-store
+  key: SEGMENT_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 3000
+  files:
+  - cnv-segment.2026-11-16.jsonl.gz
+  bytes: 58123
+- folder: genomics-showcase/pathway-gene
+  pack: genomics-showcase
+  kind: pathway-gene
+  connector: genomics-showcase-store
+  key: PATHWAY_GENE_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 500
+  files:
+  - pathway-gene.2026-11-16.jsonl.gz
+  bytes: 4215
+- folder: protein-engineering/protein
+  pack: protein-engineering
+  kind: protein
+  connector: protein-engineering-store
+  key: PROTEIN
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 4
+  files:
+  - protein.2026-11-16.jsonl.gz
+  bytes: 1034
+- folder: protein-engineering/residue
+  pack: protein-engineering
+  kind: residue
+  connector: protein-engineering-store
+  key: RESIDUE_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 1196
+  files:
+  - residue.2026-11-16.jsonl.gz
+  bytes: 29624
+- folder: protein-engineering/residue-contact
+  pack: protein-engineering
+  kind: residue-contact
+  connector: protein-engineering-store
+  key: CONTACT_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 5952
+  files:
+  - residue-contact.2026-11-16.jsonl.gz
+  bytes: 57582
+- folder: protein-engineering/dms-score
+  pack: protein-engineering
+  kind: dms-score
+  connector: protein-engineering-store
+  key: SCORE_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 47840
+  files:
+  - dms-score.2026-11-16.jsonl.gz
+  bytes: 660953
+- folder: protein-engineering/design
+  pack: protein-engineering
+  kind: design
+  connector: protein-engineering-store
+  key: DESIGN_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 12000
+  files:
+  - design.2026-11-16.jsonl.gz
+  bytes: 330371
+- folder: protein-engineering/design-mutation
+  pack: protein-engineering
+  kind: design-mutation
+  connector: protein-engineering-store
+  key: DESIGN_MUTATION_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 33000
+  files:
+  - design-mutation.2026-11-16.jsonl.gz
+  bytes: 351080
+- folder: protein-engineering/design-round
+  pack: protein-engineering
+  kind: design-round
+  connector: protein-engineering-store
+  key: ROUND_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)
+  documents: 8
+  files:
+  - design-round.2026-11-16.jsonl.gz
+  bytes: 752

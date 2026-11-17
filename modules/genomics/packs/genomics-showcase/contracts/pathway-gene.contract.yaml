@@ -1,0 +1,101 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the pathway-gene kind (command PATHWAY): docs/contracts/README.md section 16.
+# Written by tools/packgen/genomics_showcase/make.py from tools/packgen/genomics_showcase/spec.py: edit those, not this file.
+kind: pathway-gene
+mnemonic: PATHWAY
+pack: genomics-showcase
+version: '1.0'
+class: fundamental
+status: active
+title: Pathway membership
+description: One gene in one biological pathway and the part it plays there. Twelve invented pathways, 500 memberships.
+source: 'synthetic: the seeded generator tools/packgen/genomics_showcase/make.py (nothing real: the genes, patients, protein and designs are invented)'
+grain: One row per pathway and gene, keyed by PATHWAY_GENE_ID.
+key:
+- PATHWAY_GENE_ID
+id-pattern:
+- ^PWG-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: regenerated only when the generator or its seed changes; the same documents on every business day
+binding-hint:
+  lake-table: genomics-showcase.pathway-gene
+  columns:
+  - PATHWAY_GENE_ID
+  - PATHWAY
+  - GENE
+  - ROLE_IN_PATHWAY
+  test-data:
+  - data/testdata/genomics-showcase/pathway-gene
+fields:
+- name: PATHWAY_GENE_ID
+  type: id
+  presence: required
+  description: PWG- and four digits.
+  example: PWG-0007
+- name: PATHWAY
+  type: text
+  presence: required
+  description: The pathway's name.
+  example: Growth signalling
+- name: GENE
+  type: id
+  presence: required
+  description: The member gene; opens SGENE.
+  example: HLXK7
+  link: study-gene
+- name: ROLE_IN_PATHWAY
+  type: text
+  presence: required
+  description: The part the gene plays in the pathway.
+  example: activator
+  enum:
+  - activator
+  - inhibitor
+  - scaffold
+  - effector
+  - regulator
+links:
+- field: GENE
+  kind: study-gene
+validation:
+- rule: required
+  fields:
+  - PATHWAY_GENE_ID
+  - PATHWAY
+  - GENE
+  - ROLE_IN_PATHWAY
+- rule: unique
+  key:
+  - PATHWAY_GENE_ID
+  per: snapshot
+- rule: link
+  field: GENE
+  kind: study-gene
+- rule: enum
+  field: ROLE_IN_PATHWAY
+  values:
+  - activator
+  - inhibitor
+  - scaffold
+  - effector
+  - regulator
+notes:
+- 'Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs
+  are invented, and every screen that shows it says so.'
+- 'A snapshot: the same documents on every business day of the demo lake.'
+review: []

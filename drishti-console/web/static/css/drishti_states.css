@@ -12,6 +12,7 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
 /* The state kit (drishti-core drishti_states.js): empty, loading skeleton, error with a fix, stale. Tokens only, so every theme works in
    dark and light. The shimmer (--drishti-skeleton-bg, drishti-shimmer) is shared by every skeleton, a grid cell's too. */
 

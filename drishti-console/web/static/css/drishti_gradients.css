@@ -12,6 +12,7 @@
  * written permission of the copyright holder.
  *
  * See the LICENSE file in the root of this repository for the full terms.
+ */
 /*
  * Gradients: every theme gets depth from its own two gradient colours (--d-grad-from, --d-grad-to), mixed lightly
  * into its chrome. Only chrome is graded (the page, the top bar, headers, buttons, titles); panel bodies, tables and
