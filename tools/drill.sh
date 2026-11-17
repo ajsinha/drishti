@@ -268,6 +268,13 @@ gate_checks() {
   mapfile -t console < <(python3 "$PLAN" static --kind console)
   mapfile -t tools < <(python3 "$PLAN" static --kind tools)
   (( ${#console[@]} > 10 && ${#tools[@]} > 3 )) || { echo "drill: only ${#console[@]} console and ${#tools[@]} tools files of quick checks found" >&2; return 1; }
+  # some checks run the server jar (resolve --json): they wait for THIS checkout's jar, never use a stale one left in lib/ by an earlier release
+  if [[ "$MODE" != docs ]]; then
+    until [[ -e "$LOGS/gate-jar.ready" ]]; do
+      [[ -e "$LOGS/gate-java.secs" ]] && { echo "drill: the gate's build ended without a server jar: the checks cannot run" >&2; return 1; }
+      sleep 2
+    done
+  fi
   console_files checks 4 2 -m static "${console[@]}" || rc=1
   for f in "${tools[@]}"; do
     out="$LOGS/checks-$(basename "$f" .py).txt"
@@ -305,7 +312,11 @@ gate_java() {
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # <home>/lib is the one place every tool finds the server jar: the newest exec jar is copied there
-  mkdir -p lib && cp -f "$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
+  # and it REPLACES any other server jar there (lib/ holds exactly one; lib/ext is the site's and never touched)
+  local built; built=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)
+  mkdir -p lib && find lib -maxdepth 1 -name 'drishti-server-*-exec.jar' ! -name "$(basename "$built")" -delete \
+    && cp -f "$built" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
+  : > "$LOGS/gate-jar.ready"   # the gate's checks that run the jar wait for this
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
@@ -613,6 +624,7 @@ if [[ "$MODE" != docs ]]; then
 fi
 
 t=$SECONDS
+rm -f "$LOGS/gate-jar.ready" "$LOGS/gate-java.secs"
 start_job gate-static gate_static
 start_job gate-docs console_files gate 4 2 "${GATE_CONSOLE[@]}"
 start_job gate-checks gate_checks

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -244,7 +245,21 @@ def server_jar(explicit=None, home=None) -> Path:
     if len(jars) > 1:
         raise JarError(f"{lib} holds {len(jars)} server jars ({', '.join(j.name for j in jars)}): an upgrade replaces the old one; remove "
                        "all but the version to run (your own jars belong in lib/ext and are never touched)")
+    version = _version_of(home)
+    if version and jars[0].name != f"drishti-server-{version}-exec.jar":
+        raise JarError(f"lib/ holds {jars[0].name} but this checkout is {version}: run  python tools/drishti.py build jar  "
+                       "(it replaces the old jar; your own jars in lib/ext are never touched)")
     return jars[0]
+
+
+def _version_of(home=None) -> str:
+    """The version in the one version file (.mvn/maven.config) of the install, or "" when it carries none (a bare lib folder)."""
+    base = Path(home) if home else find_home()[0]
+    try:
+        found = re.search(r"-Drevision=(\S+)", (base / ".mvn" / "maven.config").read_text(encoding="utf-8"))
+    except OSError:
+        return ""
+    return found.group(1) if found else ""
 
 
 def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:

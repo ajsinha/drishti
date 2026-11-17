@@ -23,6 +23,7 @@
 The thin console, Drishti Elements 2.4.0 and the genomics showcase. The version shown everywhere is `2.9.11.i6` (`.mvn/maven.config`), the
 release tag `v2.9.11.i_6`.
 
+- **One server jar in `lib/`, of this version.** The tools refuse a jar in `<home>/lib` whose version differs from `.mvn/maven.config` ("lib/ holds ...-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run python tools/drishti.py build jar"; two jars stay refused); `build jar` and the drill's gate replace an older Drishti server jar there (never `lib/ext`), and the gate's Python checks that run the jar wait for the jar the gate just built.
 - **Drishti Elements is its own project; Drishti vendors it.** The eight libraries (core, inputs, grid, chart, data, tree, graph,
   designer), their gallery, docs and tests live in [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements)
   (tag `v2.4.0`, the same owner and proprietary licence). Drishti holds its release tree, unchanged, at
