@@ -71,6 +71,8 @@ class ConsoleAnswersRecordTest {
                 doc.put("modules", modules);
                 doc.put("engines", engines());
                 doc.put("under-construction", underConstruction());
+                doc.put("limits", ConsoleAnswers.limits(com.ash.drishti.engine.shape.BuilderProperties.defaults()));
+                doc.put("commands", commands(d.packs()));
                 String text = json.writeValueAsString(doc).replace("\r\n", "\n") + "\n";
                 assertThat(text).as("no folder of the repository").doesNotContain(REPO.toString());
                 Path out = OUT.resolve("bootstrap-" + d.shortName() + ".json");
@@ -103,6 +105,36 @@ class ConsoleAnswersRecordTest {
         com.ash.drishti.server.engines.EngineCatalogue.load().all().forEach(e -> all.putIfAbsent(e.id(), e));
         all.values().forEach(e -> out.add(com.ash.drishti.server.engines.EngineCluster.consoleRow(e, true, true)));
         return out;
+    }
+
+    /** The Admin pages an administrator's answer lists (GET /api/v1/me/console {@code admin-pages}), for the console's stand-in server. */
+    @Test
+    void theRecordedAdminPagesAreTheServers() throws Exception {
+        ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        String text = json.writeValueAsString(Map.of("admin-pages", ConsoleController.ADMIN_PAGES)).replace("\r\n", "\n") + "\n";
+        Path out = OUT.resolve("admin-pages.json");
+        if (Boolean.getBoolean("drishti.record") || !Files.isRegularFile(out)) {
+            Files.createDirectories(OUT);
+            Files.writeString(out, text, StandardCharsets.UTF_8);
+        }
+        assertThat(Files.readString(out, StandardCharsets.UTF_8)).as("recorded admin pages older than the server's: run this test with -Ddrishti.record=true")
+                .isEqualTo(text);
+    }
+
+    /**
+     * Every command word of the repository's installation as a server running the distribution answers it: every module on, loaded the
+     * packs the distribution names, else the default list ({@link ConsoleAnswers#commands(com.ash.drishti.api.resolution.ConfigResolution, Map)}).
+     */
+    static Map<String, Object> commands(List<String> named) {
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.repository(REPO);
+        Map<String, Map<String, Object>> loaded = new LinkedHashMap<>();
+        for (String name : named.isEmpty() ? com.ash.drishti.packs.edition.Editions.defaultPacks() : named) {
+            com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
+            if (at != null) {
+                loaded.put(name, ConsoleAnswers.read(at.dir().resolve("pack.yaml")));
+            }
+        }
+        return ConsoleAnswers.commands(r, loaded);
     }
 
     /** The shipped under-construction registry as the console draws it. */

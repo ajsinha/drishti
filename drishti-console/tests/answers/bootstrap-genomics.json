@@ -1,4 +1,756 @@
 {
+  "commands" : {
+    "AGR" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "ASSOC" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "BND" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "BOOK" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CAL" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CBANK" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "central-banks"
+    },
+    "CBNK" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "central-banks"
+    },
+    "CBSER" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "central-banks"
+    },
+    "CCP" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CCR" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "CDS" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CLR" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CMD" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CMDC" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CMDV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CMPD" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "compute-demo"
+    },
+    "CNV" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "CO" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "news-and-markets"
+    },
+    "COLL" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "CONTACT" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "CORE" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CORR" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CORRC" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CPMTM" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "CPTY" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "CPV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CRV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "CSA" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "CTRD" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "CVA" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "DESIGN" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "DESK" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "DIV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "DMS" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "DMUT" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "DPNL" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "DROUND" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "ECG" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "ECON" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "EDGAR" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "ELEC" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "EQ" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "EQB" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "EQV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "EQX" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "EXP" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "FACT" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "FCST" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "FILING" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "FISC" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "FIX" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "FRTB" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "FUND" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "funds"
+    },
+    "FUNDS" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "funds"
+    },
+    "FX" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "FXF" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "FXS" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "FXV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "GDELT" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "gdelt-events"
+    },
+    "GDLT" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "gdelt-events"
+    },
+    "GENOMICS" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "GLEIF" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "GRP" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "HELD" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "funds"
+    },
+    "IDX" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "INF" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "INFC" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "IRV" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "ISS" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "ITRD" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "JUR" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "LABR" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "LE" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "LEI" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "LEIC" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "LEIG" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "LEIM" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "LEIR" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "gleif"
+    },
+    "LIM" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "LTRD" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "MACRO" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "MC" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "MKT" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "MRSK" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "NEWS" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "news-and-markets"
+    },
+    "NSET" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "NSMTM" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "NSTAT" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "national-statistics"
+    },
+    "NWMK" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "news-and-markets"
+    },
+    "OECD" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "oecd"
+    },
+    "OECDP" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "oecd"
+    },
+    "OECDS" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "oecd"
+    },
+    "OFFC" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "ONEWS" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "official-news"
+    },
+    "PARTY" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "PATHWAY" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "PBOOK" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "compute-demo"
+    },
+    "PNL" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "PNLH" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "PNLV" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "PORT" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "POS" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "PREL" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "official-news"
+    },
+    "PRESS" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "official-news"
+    },
+    "PROT" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "PROTENG" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "PSTRIP" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "compute-demo"
+    },
+    "PSUM" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "compute-demo"
+    },
+    "PSUMJ" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "compute-demo"
+    },
+    "PTRD" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "PXH" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "QUOTE" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "news-and-markets"
+    },
+    "REGE" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "REGN" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "REPO" : {
+      "loaded" : false,
+      "module" : "market-data",
+      "pack" : "market-data"
+    },
+    "RESIDUE" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "protein-engineering"
+    },
+    "RFAC" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SACCR" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "SCN" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SENS" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SGENE" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "SIC" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "SIMM" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "SOCI" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "SPV" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SSAMPLE" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "SSET" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SSPNL" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "STCAN" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "national-statistics"
+    },
+    "STR" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "SVARIANT" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "TOPIC" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "news-and-markets"
+    },
+    "TRACK" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "funds"
+    },
+    "TRD" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "TRDR" : {
+      "loaded" : false,
+      "module" : null,
+      "pack" : "core"
+    },
+    "TRDS" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "trading"
+    },
+    "TVAL" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "USEQ" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "USEQS" : {
+      "loaded" : false,
+      "module" : "capitalmarkets",
+      "pack" : "us-equities"
+    },
+    "VCALL" : {
+      "loaded" : true,
+      "module" : "genomics",
+      "pack" : "genomics-showcase"
+    },
+    "VLIM" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "VOFF" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "VRES" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "market-risk"
+    },
+    "WDEV" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-development"
+    },
+    "WDI" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-development"
+    },
+    "WDIS" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-development"
+    },
+    "WRLD" : {
+      "loaded" : false,
+      "module" : "economy",
+      "pack" : "world-economy"
+    },
+    "XOFC" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "XPATH" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    },
+    "XRUN" : {
+      "loaded" : false,
+      "module" : "banking",
+      "pack" : "counterparty-risk"
+    }
+  },
   "distribution" : {
     "all" : false,
     "brand" : {
@@ -415,6 +1167,7 @@
     "title" : "Drishti Genomics"
   },
   "engines" : [ {
+    "api" : [ "/api/v1/risk/var" ],
     "cluster" : true,
     "console" : [ "/var", "/api/var/", "/smat", "/api/smat/", "=/play", "/api/play/", "/admin/scopes" ],
     "help" : [ "docs-guides-var-guide", "docs-tutorials-02-var-from-the-bank-to-a-trade", "docs-guides-regulatory-var-reporting" ],
@@ -429,6 +1182,7 @@
     "title" : "VaR",
     "words" : [ "VAR", "VAR EXPLAIN", "PVAR", "SMAT", "PLAY VAR", "SWIN" ]
   }, {
+    "api" : [ "/api/v1/risk/exposure" ],
     "cluster" : true,
     "console" : [ "/exposure", "/api/exposure/", "/predeal" ],
     "help" : [ "docs-guides-exposure-guide" ],
@@ -443,6 +1197,7 @@
     "title" : "Exposure",
     "words" : [ "EXP", "PLAY EXP", "PREDEAL" ]
   }, {
+    "api" : [ "/api/v1/risk/sensitivities", "/api/v1/risk/risk-factors" ],
     "cluster" : true,
     "console" : [ "/api/frtb/sensitivities", "/api/frtb/risk-factors" ],
     "help" : [ ],
@@ -457,6 +1212,7 @@
     "title" : "Sensitivities",
     "words" : [ ]
   }, {
+    "api" : [ "/api/v1/risk/frtb" ],
     "cluster" : true,
     "console" : [ "/frtb", "/play/frtb", "/api/frtb/" ],
     "help" : [ "docs-guides-frtb-sa-guide", "docs-tutorials-04-frtb-sa" ],
@@ -471,6 +1227,7 @@
     "title" : "FRTB-SA",
     "words" : [ "FRSA", "PLAY FRTB" ]
   }, {
+    "api" : [ "/api/v1/risk/simm" ],
     "cluster" : true,
     "console" : [ "/simm", "/play/simm", "/api/simm" ],
     "help" : [ "docs-guides-simm-guide", "docs-tutorials-05-simm" ],
@@ -485,6 +1242,7 @@
     "title" : "SIMM",
     "words" : [ "SIMM", "PLAY SIMM" ]
   }, {
+    "api" : [ "/api/v1/risk/mr" ],
     "cluster" : true,
     "console" : [ "/mcube", "/api/pivot/mr/" ],
     "help" : [ ],
@@ -499,6 +1257,7 @@
     "title" : "MR cube",
     "words" : [ "MCUBE" ]
   }, {
+    "api" : [ "/api/v1/admin/lakes/memory" ],
     "cluster" : true,
     "console" : [ "/admin/api/lakes/memory" ],
     "help" : [ ],
@@ -513,6 +1272,7 @@
     "title" : "In-memory lake",
     "words" : [ ]
   }, {
+    "api" : [ "/api/v1/admin/dataload" ],
     "cluster" : true,
     "console" : [ "/admin/loads/inbox", "/admin/loads/upload", "/admin/api/dataload/" ],
     "help" : [ ],
@@ -527,6 +1287,7 @@
     "title" : "Data inbox",
     "words" : [ ]
   }, {
+    "api" : [ "/api/v1/pivot" ],
     "cluster" : true,
     "console" : [ "/pivot", "/api/pivot/" ],
     "help" : [ "bi-guide" ],
@@ -541,6 +1302,7 @@
     "title" : "Pivot",
     "words" : [ "PIVOT" ]
   }, {
+    "api" : [ "/api/v1/admin/data-out" ],
     "cluster" : true,
     "console" : [ "/admin/data-out", "/admin/api/data-out" ],
     "help" : [ "flight-guide" ],
@@ -555,6 +1317,7 @@
     "title" : "Arrow Flight",
     "words" : [ ]
   }, {
+    "api" : [ ],
     "cluster" : true,
     "console" : [ ],
     "help" : [ ],
@@ -569,6 +1332,21 @@
     "title" : "Linear algebra: OpenBLAS",
     "words" : [ ]
   } ],
+  "limits" : {
+    "builder" : {
+      "maxFileMb" : 5,
+      "maxSamples" : 50,
+      "maxTotalMb" : 25
+    },
+    "controls" : {
+      "maxControls" : 32,
+      "maxKey" : 40,
+      "maxValue" : 2000
+    },
+    "form" : {
+      "maxRows" : 1000
+    }
+  },
   "modules" : [ {
     "console-menus" : [ {
       "columns" : [ {

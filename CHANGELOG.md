@@ -23,6 +23,20 @@
 The thin console, Drishti Elements 2.4.0 and the genomics showcase. The version shown everywhere is `2.9.11.i6` (`.mvn/maven.config`), the
 release tag `v2.9.11.i_6`.
 
+- **Home's facts can ask a compute engine again, and a retired renderer path says its deprecation.** The installation answer's engine
+  catalogue carries each engine's API roots (`api`; a fact's step names an engine and asks a path under its API, so every shipped
+  facts file was refused with "unknown key(s) var"). An Elements 2.3 or renderer 2.0.0 path redirects (308) with its `Deprecation`,
+  `Drishti-Deprecated` and successor `Link` headers (the embed API's lifecycle headers replaced them). A command typed with an
+  argument whose module is off is refused by its word (`USEQ is not available to you`, not `USEQ AAPL is ...`). The frozen Elements
+  1.x embed (`web/embed/`) and renderer 1.2.0 are byte for byte their released files again (a documentation repoint had changed
+  comments in them).
+- **The console's tests follow the server's answers.** The recorded installation answers (`tests/answers`, written by
+  ConsoleAnswersRecordTest) carry what the server sends: `limits` and `commands` (each word's pack, module and whether it loads) beside
+  the distribution, modules, engines and under-construction, and the Admin pages an administrator's person answer lists; the tests
+  name their distribution, brand and workspace through the server's answer (`server_answers.follow`, `branded`, `installed`, `serve`)
+  and the trading and market landings through a stand-in of the modules' APIs (`landing_server.py`), never through files the
+  console no longer reads.
+
 - **The console's pages draw with the vendored Drishti Elements again.** drishti-grid requires drishti-chart (its bullet cells,
   `drishti-elements.json`), so `base.html` loads drishti-chart once, before drishti-grid, on every page (the grid threw on load and every
   table, record, pivot and workbench page after it failed); the pivot-grid loader and the embed's allowed bundles follow the same order.

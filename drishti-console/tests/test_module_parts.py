@@ -118,7 +118,7 @@ def test_the_economy_world_page_is_served_from_the_module(client, tmp_path, monk
     parts = _fresh(client, tmp_path, monkeypatch)
     client.get("/t")
     p = parts.part("economy")
-    assert p is not None and p.source == "shipped" and (p.folder / "console" / "templates" / "world_landing.html").is_file()
+    assert p is not None and p.source == "server" and (p.folder / "console" / "templates" / "world_landing.html").is_file()
     js = client.get(f"/m/economy/static/{p.version}/js/drishti_world-landing.js")
     assert js.status_code == 200 and "Drishti.elements.grid" in js.text
     html = (p.folder / "console" / "templates" / "world_landing.html").read_text(encoding="utf-8")

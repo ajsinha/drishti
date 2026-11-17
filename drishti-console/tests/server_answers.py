@@ -34,6 +34,16 @@ def _recorded(name: str) -> str:
     return (ANSWERS / f"bootstrap-{name}.json").read_text(encoding="utf-8")
 
 
+@lru_cache(maxsize=1)
+def _admin_pages() -> tuple:
+    return tuple(json.loads((ANSWERS / "admin-pages.json").read_text(encoding="utf-8"))["admin-pages"])
+
+
+def admin_pages() -> list[str]:
+    """The Admin pages the server's person answer lists for an administrator (``admin-pages``; recorded by ConsoleAnswersRecordTest)."""
+    return list(_admin_pages())
+
+
 def bootstrap(name: str = "all", lenses=None) -> dict:
     """The installation's answer of distribution ``name`` (``all``, ``risk``, ``finance``, ``genomics``). ``lenses``: the lenses the server
     offers (its ``drishti.lenses``), else the distribution's own; each with the arrangement the server read from its file."""
@@ -59,9 +69,11 @@ def follow(app, about: dict) -> bool:
 
 
 def with_modules(doc: dict, keep) -> dict:
-    """The answer with only the modules ``keep(id)`` holds (a module not installed on the server is not in its answer)."""
+    """The answer with only the modules ``keep(id)`` holds (a module not installed on the server is not in its answer, nor are its packs'
+    command words)."""
     out = copy.deepcopy(doc)
     out["modules"] = [m for m in out["modules"] if keep(m["id"])]
+    out["commands"] = {w: c for w, c in (out.get("commands") or {}).items() if not c.get("module") or keep(c["module"])}
     out["digest"] = hashlib.sha256(json.dumps(out, sort_keys=True).encode()).hexdigest()[:16]
     return out
 
@@ -141,3 +153,17 @@ def installed(name: str = "all"):
     doc = bootstrap(name)
     return SimpleNamespace(server_modules={str(m["id"]): m for m in doc.get("modules") or [] if isinstance(m, dict) and m.get("id")},
                            _digest=doc["digest"])
+
+
+def serve(app, doc: dict) -> None:
+    """The console takes ``doc`` from its own server as it does in production (core/server_facts.py): the server's about answer names
+    the installation's stamp, the console asks its bootstrap, keeps it for drawing (the commands each menu item needs) and its editions
+    follow it."""
+    import asyncio
+
+    facts = app.state.server_facts
+
+    async def get(url, headers):
+        return 200, doc
+    facts.get = get
+    asyncio.run(facts.follow(app.state.servers.default, {"stamps": {"installation": doc["digest"]}}, "http://stand-in", {}))

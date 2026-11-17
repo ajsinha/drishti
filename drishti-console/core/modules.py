@@ -338,9 +338,18 @@ def typed_refusal(text: str) -> str | None:
     parts = str(text or "").replace("<GO>", "").replace("<go>", "").upper().split()
     if not parts:
         return None
-    if len(parts) > 1 and (why := word_refusal(" ".join(parts[:2]))) is not None and module_of_word(" ".join(parts[:2])) is not None:
+    two = " ".join(parts[:2])
+    if len(parts) > 1 and _two_word_command(two) and (why := word_refusal(two)) is not None:
         return why
     return word_refusal(parts[0])
+
+
+def _two_word_command(two: str) -> bool:
+    """Whether ``two`` (``PLAY VAR``) is a command of two words itself, by the server's answer, not a word and its argument (``USEQ AAPL``)."""
+    hosted = state().parts
+    if hosted is not None and hosted.gone_word(two) is not None:
+        return True
+    return any(two in o["words"] or two in _engine_words(mid) for mid, o in state().owns.items())
 
 
 def _under(path: str, prefix: str) -> bool:

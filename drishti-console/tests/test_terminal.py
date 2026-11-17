@@ -511,8 +511,10 @@ def test_packs_survive_a_server_restart(client, backend):
     async def down(ident=None):
         raise BE(503, "DRS-5003", "backend unreachable")
     backend.packs = down
-    packs._cache = {k: (0, v[1], v[2]) for k, v in packs._cache.items()}   # expired: a fetch is due
-    assert asyncio.run(packs.assigned(backend, None)) == first             # the server is away: keep what was known
+    import time
+    past = time.monotonic() - packs.ttl - 1
+    packs._cache = {k: (past, *v[1:]) for k, v in packs._cache.items()}     # expired: a fetch is due
+    assert first and asyncio.run(packs.assigned(backend, None)) == first   # the server is away: keep what was known for a while
     packs.forget_all()
     asyncio.run(packs.assigned(backend, None))                              # no knowledge: the fallback, not cached
     assert packs._cache == {}

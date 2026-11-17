@@ -18,6 +18,7 @@ it arranges (Home and its landings, the menus it names first, the placeholder) a
 is everyone's starting workspace. Without a distribution the console is exactly the full product."""
 from __future__ import annotations
 
+import engine_fakes
 import server_answers
 import html
 import re
@@ -368,19 +369,25 @@ def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(m
 
 
 def test_the_market_figures_are_read_inside_a_workspace(market, monkeypatch):
+    """The market-data module works the figures out on the server (S8a); the console asks for them as the person, inside a workspace that
+    shows the curves, and gives the answer back as it came."""
     app = _app(market, monkeypatch)
+    srv = _landings(app, market, monkeypatch)
     server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
     c = _client(app)
     for part in ("desk", "moves", "quality"):                                          # no lens: not a landing's
         r = c.get(f"/api/home/market/{part}")
         assert r.status_code == 404 and r.json()["code"] == "DRS-4023", part
+    assert not srv.sent                                                                # refused before the server is asked
     c.post("/lens/market")
-    q = c.get("/api/home/market/quality").json()
-    assert len(q["critical"]) == 3 and len(q["warnings"]) == 4 and q["cleanPct"] == pytest.approx(57.1)
+    q = c.get("/api/home/market/quality")
+    assert q.json() == {"critical": [{"id": "CRV-EUR-OIS", "check": "forwards"}], "warnings": [{"id": "CRV-GBP-OIS", "check": "stale"}],
+                        "cleanPct": 57.1} and q.headers["cache-control"] == "no-store"
     d = c.get("/api/home/market/desk").json()
     assert {t["id"] for t in d["tiles"]} == {"ois10y", "slope", "fxvol", "cds"}
     assert c.get("/api/home/market/moves").json()["mode"] == "sigma"
     assert c.get("/api/home/market/nope").status_code == 404
+    assert [x[2] for x in srv.sent] == ["/quality", "/desk", "/moves"] and {x[3] for x in srv.sent} == {"alice"}   # each the person's own
     assert c.get("/api/home/search", params={"q": "CRV limit 1"}).json()["matched"] == 28
 
 
@@ -390,7 +397,6 @@ def test_the_stale_threshold_comes_from_the_edition_file(market, monkeypatch):
     app.state.editions.lenses["market"].spec["quality"] = {"stale-days": 5}
     page = _client(app).post("/home/landing/quality").text
     assert 'data-stale-days="5"' in page and "no update in 5 business days" in page
-    assert not [e for e in _client(app).get("/api/home/market/quality").json()["warnings"] if e["check"] == "stale"]
 
 
 def test_three_lenses_each_person_opens_any_and_switches_between_them(market, monkeypatch):
@@ -459,6 +465,18 @@ def trading():
     yield TradingBackend()
 
 
+def _landings(app, backend, monkeypatch):
+    """The stand-in server's trading and market-data landings (landing_server.py), reading each person's settings where the console keeps
+    them (their View as choice)."""
+    from landing_server import LandingServer
+    srv = LandingServer(app.state.store)
+    monkeypatch.setattr(backend, "trading", srv.trading, raising=False)
+    monkeypatch.setattr(backend, "market", srv.market, raising=False)
+    if getattr(type(backend), "engine", None) is not engine_fakes.method:                # a stand-in without the engines' routing
+        engine_fakes.patch(monkeypatch, backend, trading=srv.trading, market=srv.market)
+    return srv
+
+
 def _people(app, monkeypatch, roles: dict):
     """Each person's access roles (a viewer unless named): the stand-in server masks TRADER_ID for a role without raw."""
     async def current(cookie, _backend):
@@ -471,6 +489,7 @@ def _people(app, monkeypatch, roles: dict):
 
 def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(trading, monkeypatch):
     app = _app(trading, monkeypatch)
+    _landings(app, trading, monkeypatch)
     _workspace(app, "trading")
     c = _client(app)
     home = c.get("/").text
@@ -493,28 +512,32 @@ def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(t
 
 
 def test_the_first_landing_follows_the_trading_role_and_the_persons_own_choice_wins(trading, monkeypatch):
+    """The server answers the person's trading role (/api/v1/trading/landing/role); the lens's trading.landing-by-role picks the first
+    landing for it, below the person's own choice; the access-role hook (home.landing-by-role), when set, still wins."""
     app = _app(trading, monkeypatch)
+    srv = _landings(app, trading, monkeypatch)
     _workspace(app, "trading", "t.brennan", "drishti-dev-admin")
-    app.state.editions.lenses["trading"].spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
     _people(app, monkeypatch, {})
     head = _client(app, "t.brennan")
     assert 'data-trading-landing="desk"' in head.get("/").text                         # a desk head opens on B
     assert 'data-trading-landing="trader"' in _client(app, "drishti-dev-admin").get("/").text   # a trader on A
+    assert ("trading", "GET", "/role", "t.brennan", ("viewer",), {}) in srv.sent             # asked as the person
     head.post("/home/landing/trader")
     assert 'data-trading-landing="trader"' in head.get("/").text                       # their own choice wins
     app.state.editions.lenses["trading"].spec["home"]["landing-by-role"] = {"viewer": "explorer"}   # the RBAC hook, when set, still wins
     assert 'data-trading-landing="explorer"' in head.get("/").text
 
 
-def test_my_scope_mapped_from_a_record_or_chosen_and_view_as_is_remembered(trading, monkeypatch):
+def test_my_scope_is_the_servers_and_view_as_is_kept_in_the_persons_settings(trading, monkeypatch):
+    """Who "my" is comes from the server (its drishti.trading.people, a trader record, or the person's View as choice); the console keeps
+    the choice in the person's settings only when the server says they may pick, and checks its form."""
     app = _app(trading, monkeypatch)
-    _workspace(app, "trading", "drishti-dev-admin", "kim", "zed", "root")
-    _people(app, monkeypatch, {"root": ("admin",)})
+    _landings(app, trading, monkeypatch)
+    _workspace(app, "trading", "drishti-dev-admin", "zed")
+    _people(app, monkeypatch, {})
     mapped = _client(app, "drishti-dev-admin").get("/api/home/trading/me").json()
     assert mapped["scope"]["id"] == "TRDR-ASHAH" and mapped["scope"]["source"] == "config" and "options" not in mapped
-    assert mapped["scope"]["books"] == ["BOOK-RATES-1", "BOOK-RATES-2"] and mapped["check"]
-    kim = _client(app, "kim").get("/api/home/trading/me").json()                         # no mapping: the trader record by name
-    assert kim["scope"]["id"] == "TRDR-KMOREAU" and kim["scope"]["source"] == "record"
+    assert mapped["check"]                                                              # VAR and EXP are words of this workspace
     zed = _client(app, "zed")
     me = zed.get("/api/home/trading/me").json()
     assert me["scope"]["kind"] == "" and me["scope"]["canPick"] and {o["id"] for o in me["options"]["desks"]} == {"DESK-RATES", "DESK-COMM"}
@@ -525,31 +548,17 @@ def test_my_scope_mapped_from_a_record_or_chosen_and_view_as_is_remembered(tradi
     assert me["scope"]["kind"] == "desk" and me["scope"]["source"] == "choice" and me["scope"]["head"] == "T. Brennan"
     assert 'data-trading-landing="desk"' in zed.get("/").text                          # a desk chosen: the Desk head first
     assert zed.get("/home/trading/view-as", params={"as": "nobody"}, follow_redirects=False).headers["location"].startswith("/t?error=")
-    # a mapped person may not repoint themselves; an administrator always may
-    dev = _client(app, "drishti-dev-admin")
+    zed.get("/home/trading/view-as", params={"as": ""})                                # forgotten
+    assert "tradingView" not in app.state.store["zed"] and zed.get("/api/home/trading/me").json()["scope"]["kind"] == ""
+    dev = _client(app, "drishti-dev-admin")                                             # the server says a mapped person may not pick
     r = dev.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"}, follow_redirects=False)
     assert "DRS-4023" in r.headers["location"] and "tradingView" not in app.state.store.get("drishti-dev-admin", {})
-    root = _client(app, "root")
-    app.state.editions.lenses["trading"].spec["trading"]["people"]["root"] = {"trader": "TRDR-ASHAH"}
-    root.get("/home/trading/view-as", params={"as": "trader:TRDR-KMOREAU"})
-    me = root.get("/api/home/trading/me").json()
-    assert me["scope"]["id"] == "TRDR-KMOREAU" and me["scope"]["canPick"] and me["options"]["traders"]
-    root.get("/home/trading/view-as", params={"as": ""})                               # forgotten: back to the mapping
-    assert root.get("/api/home/trading/me").json()["scope"]["id"] == "TRDR-ASHAH"
 
 
 def test_scoping_never_widens_access_every_read_is_the_persons_own(trading, monkeypatch):
     app = _app(trading, monkeypatch)
+    srv = _landings(app, trading, monkeypatch)
     _workspace(app, "trading", "zed")
-    seen = []
-    for name in ("search", "raw", "var", "exposure"):
-        real = getattr(trading, name)
-
-        def spy(*a, _real=real, **k):
-            ident = k.get("ident") or next((x for x in a if isinstance(x, Identity)), None)
-            seen.append((ident.user if ident else None, ident.roles if ident else None))
-            return _real(*a, **k)
-        monkeypatch.setattr(trading, name, spy)
     _people(app, monkeypatch, {})
     zed = _client(app, "zed")
     zed.get("/home/trading/view-as", params={"as": "desk:DESK-RATES"})
@@ -557,23 +566,27 @@ def test_scoping_never_widens_access_every_read_is_the_persons_own(trading, monk
     assert t["traderMasked"] and all(r["pnl"] is None and r["var"] is None for r in t["rows"])   # TRADER_ID stays masked for a viewer
     for part in ("valuations", "risk", "blotter", "limits", "pnl-var"):
         assert zed.get(f"/api/home/trading/{part}").status_code == 200, part
-    assert seen and {u for u, _r in seen} == {"zed"} and {r for _u, r in seen} == {("viewer",)}   # read as zed, with zed's roles only
-    assert "__rows" not in zed.get("/api/home/trading/valuations").json()               # what the panels keep is never sent
+    assert srv.sent and {x[3] for x in srv.sent} == {"zed"} and {x[4] for x in srv.sent} == {("viewer",)}   # read as zed, with zed's roles only
+    assert zed.get("/api/home/trading/valuations", params={"for": "desk"}).status_code == 200 and srv.sent[-1][5] == {"for": "desk"}
+    blotter = zed.get("/api/home/trading/blotter").json()
+    assert "page" not in blotter and "EVENT" in [c["field"] for c in blotter["spec"]["columns"]]   # the grid from the live set
 
 
 def test_the_check_answers_once_from_both_engines(trading, monkeypatch):
     app = _app(trading, monkeypatch)
+    srv = _landings(app, trading, monkeypatch)
     _workspace(app, "trading", "drishti-dev-admin")
     c = _client(app, "drishti-dev-admin")
     a = c.post("/api/home/trading/check", json={"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}).json()
     assert a["ok"] and a["var"]["state"] == "near" and a["exposure"]["state"] == "near" and a["template"]["trade"] == "MX-20000010"
-    assert a["var"]["before"] == 6_120_000 and a["var"]["after"] == 6_300_000 and a["exposure"]["after"] == 409_200_000
-    assert c.post("/api/home/trading/check", json=["x"]).status_code == 400
+    assert srv.sent[-1][1:4] == ("POST", "/check", "drishti-dev-admin")                  # one call: the server asks both engines
+    assert c.post("/api/home/trading/check", json=["x"]).status_code == 400                  # not a check: said before the server is asked
     assert not c.post("/api/home/trading/check", json={"product": "IR_SWAP"}).json()["ok"]
 
 
 def test_the_trading_routes_answer_inside_a_workspace(trading, monkeypatch):
     app = _app(trading, monkeypatch)
+    _landings(app, trading, monkeypatch)
     server_answers.follow(app, FULL_ABOUT)
     c = _client(app, "drishti-dev-admin")
     body = {"product": "IR_SWAP", "notional": "1m", "counterparty": "CP-ALDERSHOT"}
@@ -591,6 +604,7 @@ def test_the_trading_routes_answer_inside_a_workspace(trading, monkeypatch):
 
 def test_four_lenses_each_person_opens_any_and_switches_between_them(trading, monkeypatch):
     app = _app(trading, monkeypatch)
+    _landings(app, trading, monkeypatch)
     server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     alice = _client(app, "alice")
     page = alice.get("/t").text

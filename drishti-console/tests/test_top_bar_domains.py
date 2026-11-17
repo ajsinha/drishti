@@ -38,12 +38,15 @@ def _titles(html: str, label: str) -> list[str]:
     return re.findall(r'<div class="mega-title">([^<]+)<', _panel(html, label))
 
 
-def _bar(backend, monkeypatch, *argv):
-    return _client(_app(backend, monkeypatch, *argv)).get("/t").text
+def _bar(backend, monkeypatch, *argv, served: dict | None = None):
+    app = _app(backend, monkeypatch, *argv)
+    if served is not None:                         # the console takes the installation's answer from its server (the commands it draws by)
+        server_answers.serve(app, served)
+    return _client(app).get("/t").text
 
 
 def test_all_has_domains_and_create_and_every_domains_column_is_from_a_manifest(backend, monkeypatch):
-    page = _bar(backend, monkeypatch)
+    page = _bar(backend, monkeypatch, served=server_answers.bootstrap("all"))
     assert _menus(page) == ["Views", "Domains", "Create", "Admin", "Help"]
     cols = _titles(page, "Domains")
     for c in ("Blotter", "Positions", "Counterparties", "Economies", "Markets · Rates", "Risk · VaR"):
@@ -53,9 +56,11 @@ def test_all_has_domains_and_create_and_every_domains_column_is_from_a_manifest(
 
 
 def test_companies_appear_in_domains_when_their_packs_are_enabled(backend, monkeypatch):
-    monkeypatch.setenv("DRISHTI_PACKS", "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,"
-                                        "us-equities,funds,gleif")
-    cols = _titles(_bar(backend, monkeypatch), "Domains")
+    doc = server_answers.bootstrap("all")                       # a server that enables the US equities, funds and GLEIF packs
+    for need in doc["commands"].values():
+        if need["pack"] in ("us-equities", "funds", "gleif"):
+            need["loaded"] = True
+    cols = _titles(_bar(backend, monkeypatch, served=doc), "Domains")
     assert "Companies" in cols, cols
 
 

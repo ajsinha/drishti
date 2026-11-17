@@ -20,7 +20,8 @@ from __future__ import annotations
 
 #: (the module's prefix after /api/v1, the fake's name, what the fake's path starts with)
 ROUTES = (("/risk/var", "var", ""), ("/risk/exposure", "exposure", ""), ("/risk/mr", "pivot", "/mr"), ("/risk/simm", "simm", "/simm"),
-          ("/risk/frtb", "frtb", "/frtb"), ("/risk/sensitivities", "frtb", "/sensitivities"), ("/risk/risk-factors", "frtb", "/risk-factors"))
+          ("/risk/frtb", "frtb", "/frtb"), ("/risk/sensitivities", "frtb", "/sensitivities"), ("/risk/risk-factors", "frtb", "/risk-factors"),
+          ("/trading/landing", "trading", ""), ("/market-data/landing", "market", ""))   # the trading and market-data modules' landings (S8a)
 
 
 def _route(path: str):
@@ -46,7 +47,8 @@ async def _call(fns: dict, method_: str, path: str, ident, body=None, raw=False,
 
 
 def patch(monkeypatch, backend, **fns) -> None:
-    """``backend.engine`` handing each module path to the fake of its engine (``var=``, ``exposure=``, ``frtb=``, ``simm=``, ``pivot=``)."""
+    """``backend.engine`` handing each module path to the fake of its engine (``var=``, ``exposure=``, ``frtb=``, ``simm=``, ``pivot=``) or
+    module landing (``trading=``, ``market=``)."""
     async def engine(method_, path, ident, /, body=None, raw=False, accept="", timeout=None, **params):
         return await _call(fns, method_, path, ident, body, raw, accept, timeout, **params)
     monkeypatch.setattr(backend, "engine", engine, raising=False)
@@ -54,5 +56,5 @@ def patch(monkeypatch, backend, **fns) -> None:
 
 async def method(self, method_, path, ident, /, body=None, raw=False, accept="", timeout=None, **params):
     """The engine call of a fake backend class: each module path to the class's own ``var``, ``exposure``, ``frtb``, ``simm`` or ``pivot``."""
-    fns = {n: getattr(self, n) for n in ("var", "exposure", "frtb", "simm", "pivot") if hasattr(self, n)}
+    fns = {n: getattr(self, n) for n in ("var", "exposure", "frtb", "simm", "pivot", "trading", "market") if hasattr(self, n)}
     return await _call(fns, method_, path, ident, body, raw, accept, timeout, **params)

@@ -166,13 +166,13 @@ def test_a_jar_of_another_version_than_the_checkout_is_refused(tmp_path):
     home = tmp_path / "home"
     (home / "lib").mkdir(parents=True)
     (home / ".mvn").mkdir()
-    (home / ".mvn" / "maven.config").write_text("-Drevision=2.9.11.i6\n", encoding="utf-8")
+    (home / ".mvn" / "maven.config").write_text("-Drevision=2.9.11.z9\n", encoding="utf-8")
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").write_bytes(b"x")
-    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.i6: run  python tools/drishti.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9: run  python tools/drishti.py build jar"):
         javacmd.server_jar(None, home)
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").unlink()
-    (home / "lib" / "drishti-server-2.9.11.i6-exec.jar").write_bytes(b"x")
-    assert javacmd.server_jar(None, home).name == "drishti-server-2.9.11.i6-exec.jar"
+    (home / "lib" / "drishti-server-2.9.11.z9-exec.jar").write_bytes(b"x")
+    assert javacmd.server_jar(None, home).name == "drishti-server-2.9.11.z9-exec.jar"
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").write_bytes(b"x")          # two jars stay refused
     with pytest.raises(javacmd.JarError, match="holds 2 server jars"):
         javacmd.server_jar(None, home)

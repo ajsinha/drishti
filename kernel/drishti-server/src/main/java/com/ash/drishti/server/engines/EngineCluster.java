@@ -148,9 +148,12 @@ public final class EngineCluster implements EngineGateFilter.Peers {
         return out;
     }
 
-    /** What a console draws of each engine (THIN_CONSOLE_DESIGN.md 3.2, step S3): {@link #about()} and its screen lists. */
+    /**
+     * What a console draws of each engine (THIN_CONSOLE_DESIGN.md 3.2, step S3): {@link #about()} and its screen lists, and its API roots
+     * ({@code api}: a Home fact's step names an engine by its id and asks a path under its API, core/facts.py).
+     */
     public static final List<String> CONSOLE_LISTS = List.of("words", "menus", "help", "landings", "tiles", "lenses", "playgrounds", "console",
-            "opens");
+            "opens", "api");
 
     /**
      * The engines for the console's installation answer: each with {@code id, title, here, cluster} as {@link #about()} and the catalogue's

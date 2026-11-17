@@ -211,7 +211,7 @@ modules:                                             # every module the registry
      words: [VAR, "PLAY VAR", ...], paths: ["/var", ...], statics: ["js/drishti_var-*"], menus: [...],
      console-part: {version: "2.9.11", digest: "…"}}  # the bundle to host (GET /public/modules/console/{id}/{version})
 engines:                                             # the catalogue and what runs, together
-  - {id: var, title, module: banking, here: true, cluster: true, words: [...], paths: [...], menus: [...], help: [...], tiles: [...],
+  - {id: var, title, module: banking, here: true, cluster: true, words: [...], paths: [...], api: [...], menus: [...], help: [...], tiles: [...],
      refusal: "VaR runs on no server of this cluster (DRS-1020)"}
 commands:                                            # every command word of the installation and what it needs
   USEQ: {pack: us-equities, module: market-data, loaded: false}

@@ -249,13 +249,18 @@ public class ConsoleAnswers {
      * ({@code FormCompiler.MAX_ROWS}). The console keeps no copy of the numbers.
      */
     private Map<String, Object> limits() {
-        Map<String, Object> out = new LinkedHashMap<>();
         com.ash.drishti.engine.shape.ShapeService s = shapes.getIfAvailable();
-        if (s != null) {
+        return limits(s == null ? null : s.limits());
+    }
+
+    /** The limits of the installation's answer for these builder settings ({@code null}: no shape service, no builder limits). */
+    static Map<String, Object> limits(com.ash.drishti.engine.shape.BuilderProperties builder) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        if (builder != null) {
             Map<String, Object> b = new LinkedHashMap<>();
-            b.put("maxSamples", s.limits().maxSamples());
-            b.put("maxFileMb", s.limits().maxFileMb());
-            b.put("maxTotalMb", s.limits().maxTotalMb());
+            b.put("maxSamples", builder.maxSamples());
+            b.put("maxFileMb", builder.maxFileMb());
+            b.put("maxTotalMb", builder.maxTotalMb());
             out.put("builder", b);
         }
         Map<String, Object> ctl = new LinkedHashMap<>();                     // the ctl.<id>=value parameters a request carries (ControlValues)
@@ -385,23 +390,32 @@ public class ConsoleAnswers {
      * but not enabled takes its USEQ entry out of the menus, as the server then answers "cannot read command").
      */
     Map<String, Object> commands() {
-        Map<String, Map<String, Object>> out = new TreeMap<>();
-        ConfigResolution r = packs.resolution();
-        Set<String> loaded = new LinkedHashSet<>();
+        Map<String, Map<String, Object>> loaded = new LinkedHashMap<>();
         for (Pack p : packs.packs()) {
-            loaded.add(p.name());
-            PackResolver.Located at = r == null ? null : r.packs().packs().get(p.name());
-            words(out, p.name(), at == null ? null : at.module(), true, p.manifest());
+            loaded.put(p.name(), p.manifest());
         }
+        return commands(packs.resolution(), loaded);
+    }
+
+    /**
+     * The command words of a resolution whose loaded packs are {@code loaded} (name to its manifest), as {@link #commands()} answers them:
+     * the server's loaded registry, or a resolution's enabled packs read from their folders (the recorded answers of the console's tests).
+     */
+    static Map<String, Object> commands(ConfigResolution r, Map<String, Map<String, Object>> loaded) {
+        Map<String, Map<String, Object>> out = new TreeMap<>();
+        loaded.forEach((name, manifest) -> {
+            PackResolver.Located at = r == null ? null : r.packs().packs().get(name);
+            words(out, name, at == null ? null : at.module(), true, manifest);
+        });
         if (r != null) {
             r.packs().packs().forEach((name, at) -> {
-                if (!loaded.contains(name)) {
+                if (!loaded.containsKey(name)) {
                     words(out, name, at.module(), false, read(at.dir().resolve("pack.yaml")));
                 }
             });
             r.packs().off().forEach((name, module) -> {
                 PackResolver.Module m = r.packs().modules().get(module);
-                if (!loaded.contains(name) && m != null && m.folder() != null) {
+                if (!loaded.containsKey(name) && m != null && m.folder() != null) {
                     words(out, name, module, false, read(m.folder().resolve(name).resolve("pack.yaml")));
                 }
             });
@@ -432,7 +446,7 @@ public class ConsoleAnswers {
         }
     }
 
-    private static Map<String, Object> read(Path file) {
+    static Map<String, Object> read(Path file) {
         try {
             return Files.isRegularFile(file) ? ResolutionSettings.yaml(file) : Map.of();
         } catch (RuntimeException e) {                              // a broken pack.yaml: the resolution names it among its problems
