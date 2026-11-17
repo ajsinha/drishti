@@ -462,7 +462,7 @@ MODULE_ACTIONS = [("install", "Install (or upgrade, when another version runs)")
 
 
 def module_upload(**_) -> Markup:
-    """Admin › Modules › Deploy, the package: a .dmod uploaded once to the module store (the server runs the fifteen checks)."""
+    """Admin › Modules › Deploy, the package: a .dmod uploaded once to the module store (the server runs the fourteen checks)."""
     props = {"file": K.file("The module package (.dmod)", None, accept=".dmod", hook={"data-module-file": ""})}
     return K.host(K.schema(props), {}, attrs={"data-module-upload-fields": ""}, label="The package", **ALONE)
 

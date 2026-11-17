@@ -8,4 +8,4 @@ configuration `ModuleConfig` declares.
 `packs/${artifactId}-pack/contracts/`. It says what the data looks like, never where it lives: the site binds it.
 
 **How it is built.** `mvn verify` compiles the code, runs its tests, packs `java/${artifactId}/target/dmod/${artifactId}-${version}.dmod` and runs
-the conformance checks C1 to C15. See the [tutorial](tutorial.md).
+the conformance checks C1 to C14. See the [tutorial](tutorial.md).

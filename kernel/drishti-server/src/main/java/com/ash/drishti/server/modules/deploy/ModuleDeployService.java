@@ -26,7 +26,7 @@ import com.ash.drishti.module.runtime.RouteTable;
 import com.ash.drishti.module.runtime.placement.ModuleParts;
 import com.ash.drishti.module.runtime.placement.NodeView;
 import com.ash.drishti.module.runtime.placement.PlacementResolver;
-import com.ash.drishti.module.tool.ModuleConformance;
+import com.ash.drishti.module.conformance.ModuleConformance;
 import com.ash.drishti.server.placement.PlacementService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Module deployment, cluster-first (KERNEL_AND_MODULES.md sections 4.11.4, 4.11.8, 7.6 and 12): one module store per cluster (a {@code .dmod}
- * uploaded once, checked with the fifteen conformance checks and kept by its id and version, never rebuilt), plans that say per node what
+ * uploaded once, checked with the fourteen conformance checks and kept by its id and version, never rebuilt), plans that say per node what
  * happens (following the placement: a node where no part is placed receives nothing), four eyes, then the apply this node coordinates:
  * <ul>
  *   <li>install and enable: phase 1 stages the package on every placed node (each checks the SHA-256 and runs V1–V9 itself), phase 2
@@ -107,11 +107,10 @@ public final class ModuleDeployService {
     private final NodeCalls calls;
     private final AuditLog audit;
     private final Clock clock;
-    private final int cycles;
     private final ReentrantLock lock = new ReentrantLock();
     private final ReentrantLock applying = new ReentrantLock();
 
-    public ModuleDeployService(Path root, ModuleNode node, PlacementService placement, NodeCalls calls, AuditLog audit, Clock clock, int cycles) {
+    public ModuleDeployService(Path root, ModuleNode node, PlacementService placement, NodeCalls calls, AuditLog audit, Clock clock) {
         this.store = root.resolve("store");
         this.deploymentsFile = root.resolve("deployments.json");
         this.node = node;
@@ -119,14 +118,13 @@ public final class ModuleDeployService {
         this.calls = calls;
         this.audit = audit;
         this.clock = clock;
-        this.cycles = cycles;
     }
 
     // ---- the store -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Stores a package once: unpacked, its hash list checked and the fifteen conformance checks run (C15 with {@code cycles} load/unload
-     * cycles); refused with every failed check in words. The same version again is accepted only with the same bytes.
+     * Stores a package once: unpacked, its hash list checked and the fourteen conformance checks run;
+     * refused with every failed check in words. The same version again is accepted only with the same bytes.
      */
     /**
      * The distribution's own modules (KERNEL_AND_MODULES.md section 3.3): each verified first-party package is put in the store as the
@@ -157,7 +155,7 @@ public final class ModuleDeployService {
                 Path meta = at.resolve("stored.json");
                 boolean same = Files.isRegularFile(meta) && JSON.readValue(meta.toFile(), Stored.class).sha().equalsIgnoreCase(sha);
                 if (!same) {
-                    keep(dmod, dir, m, sha, Files.size(dmod), List.of("the fifteen conformance checks ran in the product's build (first-party, "
+                    keep(dmod, dir, m, sha, Files.size(dmod), List.of("the fourteen conformance checks ran in the product's build (first-party, "
                             + origin.why() + ")"), by, "the distribution's");
                 }
                 verified.add(dmod);
@@ -212,7 +210,7 @@ public final class ModuleDeployService {
                 }
                 return s;
             }
-            List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, null, work.resolve("checks"), cycles);
+            List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, null, work.resolve("checks"));
             List<String> lines = checks.stream().map(ModuleConformance.Check::line).toList();
             if (!ModuleConformance.passed(checks)) {
                 audit.record(by, "module-store-refused", "module/" + m.id(), m.version() + " | " + failed(checks));

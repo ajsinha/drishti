@@ -96,7 +96,7 @@ is useful with no finance at all. Not for the owner's demos.
 **As built (wave 3).** `modules/genomics` (publisher Helix Lab, a sample third party) is made from the archetype and finished by hand
 ([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
 inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
-`GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C15. The file
+`GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C14. The file
 takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
 (`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
 kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
@@ -119,8 +119,8 @@ kernel with the package dropped into the modules folder; `test_genomics_walk_bro
 - **the developer and QA distribution**: the drill, the page walk and the tutorials run on it, so one run covers every module;
 - **the demo switcher**: one stack where the lens picker moves between Risk, Markets and World.
 
-It is not a product to sell (too broad for any one user community), so customer installs pick Risk or Finance. Genomics stays out of
-All by default (a sample), available with `--modules +genomics`.
+It is not a product to sell (too broad for any one user community), so customer installs pick Risk or Finance. Genomics is packed and installed with the others (its server part answers the showcase pages); the
+distribution files decide who sees it: Genomics shows it, Risk and Finance do not.
 
 ## 7. Starting a particular distribution
 
@@ -152,7 +152,7 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 | Wave | Item |
 |---|---|
-| 2 | `banking` as a `.dmod` (built: `modules/banking`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
+| 2 | `banking` as a `.dmod` (built: `modules/banking`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fourteen checks) |
 | 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
 | 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
 
@@ -182,8 +182,8 @@ joins or leaves its distribution. A file may name the kernel's packs it takes
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
 function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the
-repository content the module tool brings in when it packs (the packs without their connector templates, the lens, the tutorial), so
-every file keeps one home. `java -jar drishti-module-tool.jar pack modules/<id>` writes `<id>-1.0.0.dmod`; `check` passes C1 to C15.
+repository content the packer brings in when it packs (the packs without their connector templates, the lens, the tutorial), so
+every file keeps one home. `python3 tools/drishti.py module pack modules/<id>` writes `<id>-1.0.0.dmod`; `module verify --conformance` passes C1 to C14.
 
 | Module | Packs | Lens | In |
 |---|---|---|---|
@@ -254,7 +254,7 @@ Deployment and QA guide has the step-by-step for each on Linux, macOS and Window
 
 **Banking as a module.** The full jar (drishti-app) is the thin kernel plus `drishti-modules`: the four first-party packages
 (`drishti/modules/banking-1.0.0.dmod`, `market-data-`, `capital-markets-`, `economy-1.0.0.dmod`) and `first-party.yaml`, built by
-`packaging/dist` in the normal build (banking is put through the fifteen checks there, with market-data beside it). At start the server
+`packaging/dist` in the normal build (banking is put through the fourteen checks there, with market-data beside it). At start the server
 installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
 off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
 module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the

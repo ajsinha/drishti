@@ -85,7 +85,7 @@ async def deploy_page(request: Request, module: str = "", version: str = "", act
 
 @router.post("/admin/modules/api/upload")
 async def upload(request: Request):
-    """A .dmod's bytes to the module store: the server checks it once (the fifteen checks) and keeps it by id and version."""
+    """A .dmod's bytes to the module store: the server checks it once (the fourteen checks) and keeps it by id and version."""
     me = _admin(request)
     if me is None:
         return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)

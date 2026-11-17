@@ -21,12 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.dataload.Routes;
 import com.ash.drishti.lakeconfig.ModuleDirs;
 import com.ash.drishti.module.runtime.Dmod;
-import com.ash.drishti.module.tool.ModuleTool;
+import com.ash.drishti.testkit.ModuleFixtures;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A source module as a real package: {@code source-swapone} packed with the module tool, installed under {@code modules/installed/<id>/<version>/}
+ * A source module as a real package: {@code source-swapone} packed by the one packer (tools/modulepack.py), installed under {@code modules/installed/<id>/<version>/}
  * (what a deployment stages), seen through {@link ModuleDirs} (its inbox rules and its connector templates), then uninstalled and gone.
  */
 class SourceModuleInstallTest {
@@ -92,11 +89,8 @@ class SourceModuleInstallTest {
         Path folder = tmp.resolve("source-swapone");
         copy(repo().resolve("modules/source-swapone"), folder);
         Path out = tmp.resolve("dmod");
-        ByteArrayOutputStream said = new ByteArrayOutputStream();
-        int code = ModuleTool.run(new String[] {"pack", folder.toString(), "--out", out.toString()}, new PrintStream(said, true, StandardCharsets.UTF_8),
-                new PrintStream(said, true, StandardCharsets.UTF_8));
-        assertThat(code).as(said.toString(StandardCharsets.UTF_8)).isZero();
-        Path dmod = out.resolve(Dmod.fileName("source-swapone", "1.0.0"));
+        Path dmod = ModuleFixtures.pack(folder, List.of(), out);
+        assertThat(dmod.getFileName().toString()).isEqualTo(Dmod.fileName("source-swapone", "1.0.0"));
         assertThat(dmod).isRegularFile();
 
         Path modules = tmp.resolve("modules");

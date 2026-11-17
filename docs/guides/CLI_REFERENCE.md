@@ -948,7 +948,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name
 - **`--load`** writes the documents under `--files-root` as `<name>/<business date>/<kind>.jsonl` (the date comes from the file name,
   `deal.2026-11-03.jsonl.gz`), and the generated file connector names that root as an absolute path. **`--deploy`** drops the checked
   `.dmod` into `--modules-dir` (one node; with `--server` and `--reason` it is uploaded and planned on a cluster). The running server's
-  auto-deploy runs the fifteen conformance checks again, installs the module and loads its packs; no restart.
+  auto-deploy runs the fourteen conformance checks again, installs the module and loads its packs; no restart.
 - Measured on one machine: 60 files, 300,000 rows, 26 Sutras (one of them for a combination of a single row): about 35 s for the
   generation and the 15 checks of the `.dmod`; 6 files, 20,000 rows, one rare row: 33 s in all (generation, load, checks, deploy), and
   the server showed the module and opened the rare row's screen (`GET /api/v1/views/<kind>/<id>`, HTTP 200) after its auto-deploy.
@@ -1280,7 +1280,7 @@ registry:   (not configured)
 (Here the scratch server has no registry configured; with one, each row shows the version, whether the publisher is trusted, and
 the installed and loaded versions.)
 
-### `module pack`, `module check`, `module inspect`: a module package without Maven
+### `module pack`, `module verify`, `module check`, `module inspect`, `module visual`: a module package without Maven
 
 `pack` turns a module folder (`module.yaml` at its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod` and
 its `.sha256`. It is the Python packager (`tools/modulepack.py`): no Java and no Maven are needed, and the package is reproducible, the same
@@ -1290,13 +1290,18 @@ list `META-INF/DMOD.MF` last). `--jar` may be given more than once (a jar is pla
 `kernel-internals:` allowance is stamped with one kernel build: `--kernel-build BUILD`, or `--kernel-jar FILE` (the server jar whose
 `build-info.properties` says it), by default the server jar in `<Drishti folder>/lib`.
 
-`check` runs the conformance checks C1–C15 on a `.dmod` or a folder; `inspect` says what a package is and whether its files match its hash
-list. They run `kernel/drishti-module-runtime/target/drishti-module-tool.jar` (or `--tool`, `DRISHTI_MODULE_TOOL`) with Java only.
+`verify` is the one Java verifier, `ModuleCli` inside the server jar (`<Drishti folder>/lib`, made by `build jar`; `--jar` names another): it
+checks a `.dmod` against the package rules and this kernel's API ranges (the hash list, no executables, the licence, the data needs, the origin
+and the kernel-internals allowance), and with `--conformance` runs the checks C1–C14 (`--project DIR` gives C10 the Java sources, `--with FILE`
+the modules it requires, `--first-party FILE` and `--kernel-build ID` the list and build to check against; `--json` prints the verdict). On a
+folder `verify --manifest-only [--id ID] [--version V]` reads the manifest only. `check` is `verify --conformance`; `inspect` says what a
+package is and whether its files match its hash list; `visual FOLDER --id ID --name NAME` adds a visual kind to a module folder. Exit 0 verified,
+1 refused or a check failed, 2 usage. Packing stays Python's: `verify` never packs a folder.
 
 ```bash
 python3 tools/drishti.py module pack modules/trading --jar build/drishti-trading.jar
 python3 tools/drishti.py module pack build/greet --jar build/libs/greet.jar --out dist
-python3 tools/drishti.py module check dist/greet-0.1.0.dmod --project .
+python3 tools/drishti.py module verify dist/greet-0.1.0.dmod --conformance --project .
 python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
 ```
 
@@ -1319,7 +1324,7 @@ python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's t
 ```
 
 `module remove`, `module disable` and `module enable` plan that action for a module; `module reject` (another administrator) and
-`module withdraw` (its proposer) close a waiting plan. The commands live in `tools/modulecli.py`. `deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fifteen conformance checks; the same version
+`module withdraw` (its proposer) close a waiting plan. The commands live in `tools/modulecli.py`. `deploy` and `upgrade` upload the `.dmod` to the module store (checked once there with the fourteen conformance checks; the same version
 with other bytes is refused) and print the plan per node: the placed nodes stage and activate, the others receive nothing. `apply` exits
 **0** applied, **1** failed (rolled back on every node), **2** a stale plan (`DRS-1031`: plan again), **3** waiting for a second
 administrator (`DRS-2007`). `run` lays out a run folder (the module installed and active, every part placed on this node; `--dir` keeps

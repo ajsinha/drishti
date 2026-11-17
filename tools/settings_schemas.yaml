@@ -476,7 +476,6 @@ schemas:
 # by: server, console, packs, profile, tools.
 env:
   - { name: DRISHTI_KERNEL_JAR, by: tools, default: "packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The jar `drishti.py module run` starts with one module only (CLI_REFERENCE.md, module run)" }
-  - { name: DRISHTI_MODULE_TOOL, by: tools, default: "kernel/drishti-module-runtime/target/drishti-module-tool.jar", sets: "the module tool's jar", meaning: "The jar `drishti.py module pack|check|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER_GUIDE.md section 1.6)" }
   - { name: DRISHTI_KERNEL_JAR, by: tools, default: "packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The kernel jar `drishti.py module run` starts (tools/modulecli.py)" }
   - { name: DRISHTI_HOME, by: tools, default: "the folder holding tools/drishti.py", sets: "the install folder (drishti.home)", meaning: "THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in <home>/lib): --home, else DRISHTI_HOME, else drishti.home of --settings, else the tools' own folder; a value that is not the folder the tools come from is refused (tools/javacmd.py find_home)" }
   - { name: DRISHTI_JAVA_HOME, by: tools, default: "(none)", sets: "the JDK every tool runs", meaning: "The JDK folder every Drishti tool and launcher runs Java from, before JAVA_HOME and the PATH (--java/--java-home first); older than 21 is refused (tools/javacmd.py find_java)" }

@@ -186,7 +186,7 @@ Each item is **built** unless it says otherwise; the design is [KERNEL_AND_MODUL
 | Idea | From | How it could apply |
 |---|---|---|
 | Signature tiers shown to the user (first-party, partner, community, private) | Grafana [G1] | Admin → Modules and Health show the tier beside each module, not only first or third party |
-| Automated vetting tool run before publish and before load, with a cloud tag | Splunk AppInspect [SP1] | the SDK's conformance checks (C1-C15) as a standalone report a site's security team reads |
+| Automated vetting tool run before publish and before load, with a cloud tag | Splunk AppInspect [SP1] | the SDK's conformance checks (C1–C14) as a standalone report a site's security team reads |
 | Privileges granted by the installing site, listed at install time | Snowflake Native Apps [S1] | the bindings screen asks for each declared need at install, as a consent page |
 | Versions and patches with gradual rollout | Snowflake Native Apps [S1] | patch releases of a module on a subset of nodes before all |
 | Namespaces and dependency rules fixed before third parties arrive | Salesforce [SF1][SF2] | reserve module id prefixes; refuse a dependency from a signed module to an unsigned one |

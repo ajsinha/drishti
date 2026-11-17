@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Module deployment on a three-node cluster (real addresses, the net fixtures): the test module placed on a and b, nothing on c. Upload once
- * (the fifteen checks), plan (per node, c receives nothing), four eyes, a failure in phase 2 rolled back on every node, the apply, c
+ * (the fourteen checks), plan (per node, c receives nothing), four eyes, a failure in phase 2 rolled back on every node, the apply, c
  * forwarding, switch-off (404) and a stale plan refused, a rolling upgrade under load with no failed request, removal (410 everywhere,
  * saved work marked, the class loader collected) and the reinstall that restores it all.
  */
@@ -64,7 +64,7 @@ class ModuleDeployClusterTest {
         cluster = new NetNodes(root);
         for (int i = 0; i < 3; i++) {
             cluster.start(String.valueOf((char) ('a' + i)), P[i], "--drishti.placement.refresh-seconds=1",
-                    "--drishti.module-deploy.conformance-cycles=1", "--drishti.module-deploy.drain-seconds=2");
+                    "--drishti.module-deploy.drain-seconds=2");
         }
         assertThat(NetNodes.await(30_000, () -> List.of("a", "b", "c").stream().allMatch(n -> alive(n) == 2))).as("three members").isTrue();
     }
@@ -152,11 +152,11 @@ class ModuleDeployClusterTest {
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b", "c").stream()
                 .allMatch(n -> cluster.node(n).bean(PlacementService.class).current().version() >= 1))).isTrue();
 
-        // upload once: the fifteen checks, stored by id and version; the same bytes again are the same entry
+        // upload once: the fourteen checks, stored by id and version; the same bytes again are the same entry
         JsonNode stored = upload("a", v1);
         assertThat(stored.path("version").asText()).isEqualTo("1.0.0");
         assertThat(stored.path("checks")).hasSize(15);
-        assertThat(stored.path("checks").toString()).contains("C15 Class loader unloads: passed");
+        assertThat(stored.path("checks").toString()).contains("C14 Absent everywhere: passed");
         assertThat(upload("a", v1).path("sha").asText()).isEqualTo(stored.path("sha").asText());
 
         // the plan: a and b stage and activate; c receives nothing

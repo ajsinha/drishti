@@ -24,8 +24,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.module.runtime.ModuleHealth;
-import com.ash.drishti.module.tool.ModuleAssembler;
-import com.ash.drishti.module.tool.ModuleConformance;
+import com.ash.drishti.module.conformance.ModuleConformance;
 import com.ash.drishti.server.modules.deploy.ModuleNode;
 import com.ash.drishti.testkit.ModuleFixtures;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,7 +48,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4) boots from its file alone: the thin kernel (drishti-server, no banking)
  * with the genomics module, built here from its sources (modules/genomics, the SDK's layout) and installed as an administrator would. Its
  * brand, the Research lens, none of the kernel's packs (no counterparty, book or desk) and no risk word; the module loaded, its VCF reader
- * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fifteen checks.
+ * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fourteen checks.
  */
 @SpringBootTest(properties = {"drishti.distribution=genomics", "drishti.distributions-dir=../../config/distributions",
         "drishti.module-manifests-dir=../../modules", "drishti.packs.dir=../../config/packs",
@@ -69,7 +68,7 @@ class GenomicsDistributionServerTest {
     final ObjectMapper json = new ObjectMapper();
     private static volatile boolean deployed;
 
-    /** The dropped package deployed once (auto-deploy's look at the folder: the hash list, the fifteen checks, installed, loaded). */
+    /** The dropped package deployed once (auto-deploy's look at the folder: the hash list, the fourteen checks, installed, loaded). */
     @org.junit.jupiter.api.BeforeEach
     void deployOnce() {
         if (!deployed) {
@@ -97,7 +96,7 @@ class GenomicsDistributionServerTest {
     static Path genomics(Path work) {
         Path project = Path.of(TestRoots.repo(), "modules", "genomics").toAbsolutePath().normalize();
         Path jar = ModuleFixtures.jarOf(project.resolve("java/genomics/src/main/java"), null, work.resolve("build"), work.resolve("build/genomics.jar"));
-        return ModuleAssembler.assemble(project, jar, work.resolve("stage"), work.resolve("dist"));
+        return ModuleFixtures.pack(project, List.of(jar), work.resolve("dist"));
     }
 
     JsonNode getJson(String path) throws Exception {
@@ -189,10 +188,10 @@ class GenomicsDistributionServerTest {
     }
 
     @Test
-    void itsPackagePassesTheFifteenChecks() {
+    void itsPackagePassesTheFourteenChecks() {
         List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, Path.of(TestRoots.repo(), "modules", "genomics").toAbsolutePath().normalize(),
-                work.resolve("conformance"), 3);
-        assertThat(checks).hasSize(15);
+                work.resolve("conformance"));
+        assertThat(checks).hasSize(14);
         assertThat(checks).allSatisfy(c -> assertThat(c.status()).as(c.line()).isEqualTo(ModuleConformance.Status.PASS));
     }
 }

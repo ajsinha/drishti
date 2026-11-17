@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Auto-deploy, as Tomcat's {@code webapps/} (docs/guides/ADMIN_GUIDE.md, Admin → Modules): a {@code .dmod} dropped into a module folder
- * ({@code drishti.modules.path}, default {@code <data folder>/modules}) is stored (its hash list, the fifteen conformance checks and the
+ * ({@code drishti.modules.path}, default {@code <data folder>/modules}) is stored (its hash list, the fourteen conformance checks and the
  * origin rules) in the module store, then installed on this node by the deployment's single-node path ({@link ModuleNode#install});
  * when its file is removed, the module is removed the same way ({@link ModuleNode#remove}: 410, its tombstone kept), as {@code autodeploy}. On by default for a single node; off by
  * default in a cluster, where plan → apply by two administrators is the way ({@code drishti.modules.autodeploy}).
@@ -68,7 +68,7 @@ public final class ModuleAutoDeploy {
                     if (d != null && d.sha().equals(sha) || sha.equals(refused.get(p))) {
                         continue;
                     }
-                    ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), BY);   // the store: hash list, the fifteen checks
+                    ModuleDeployService.Stored s = deploy.upload(Files.readAllBytes(p), BY);   // the store: hash list, the fourteen checks
                     Map<String, String> active = deploy.activeHere();
                     if (!s.version().equals(active.get(s.id()))) {
                         node.install(p, BY);                         // this node alone: stage, activate, record

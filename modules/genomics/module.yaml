@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (drishti:validate).
+# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (drishti.py module verify --manifest-only).
 # The genomics sample (docs/architecture/DISTRIBUTIONS.md section 4): a third party's module built from the Module SDK alone; it uses
 # drishti-kernel-api and the plugin API (com.ash.drishti.api) and nothing else of the kernel (conformance C1).
 format: 1
@@ -24,6 +24,9 @@ about: Variants, genes, samples and cohorts read from VCF files by the module's 
 domain: genomics
 publisher: {name: Helix Lab (a sample publisher), id: org.helixlab}
 licence: {feature: genomics}
+# shipped with the product (packaging/dist packs it beside the others): its hash list is in first-party.yaml, so it installs by default, and
+# the distribution files decide who sees it. It still reaches no kernel internals: no allowance, and C1 is the same.
+origin: first-party
 kernel: ">=0.2 <1.0"
 rachana: ">=1.0"
 contracts: ">=1.0"

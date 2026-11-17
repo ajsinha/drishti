@@ -76,7 +76,7 @@ fails the build otherwise.
 **A `.dmod`** is a documented zip anyone can produce: `module.yaml` (the manifest: id, version, publisher, the kernel API it needs, its
 parts, functions, lenses, data needs, API prefix) first, then the module's folders (`java/`, `console/`, `data/`, `packs/`, `docs/` …) and
 `META-INF/DMOD.MF`, the SHA-256 of every file ([KERNEL_AND_MODULES.md section 3](docs/architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
-Before it loads, the kernel verifies the hash list and the manifest and runs the **fifteen conformance checks (C1–C15)**: no kernel
+Before it loads, the kernel verifies the hash list and the manifest and runs the **fourteen conformance checks (C1–C14)**: no kernel
 internals, declared jars only, contracts for its kinds, no leaked state after unload and the rest. A refused module is absent, never half
 loaded.
 
@@ -96,7 +96,7 @@ loaded.
   (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help); its API answers `409 DRS-1035` with
   the need and the command line says the same words.
 
-**The modules that ship**: first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
+**The modules that ship**: first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C14:
 
 | Module | Folder | Brings | Lenses |
 |---|---|---|---|
@@ -122,9 +122,9 @@ one implementation, reached **three ways**:
 
 | Way | For | Commands |
 |---|---|---|
-| **Maven** | a project from the archetype | `mvn verify`: `drishti:validate`, `drishti:assemble` (`target/dmod/<id>-<version>.dmod`), `drishti:conformance` |
-| **The standalone tool** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar drishti-module-tool.jar pack <folder> [--jar <jar>]`, then `check <.dmod>` and `inspect <.dmod>` |
-| **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module check`, `module inspect` |
+| **Maven** | a project from the archetype | `mvn verify`: the parent's executions run `module verify --manifest-only`, `module pack` (`target/dmod/<id>-<version>.dmod`) and `module verify --conformance` |
+| **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `python3 tools/drishti.py module pack <folder> [--jar <jar>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
+| **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module verify`, `module inspect` |
 
 - **What a module can contribute** while it is loaded, withdrawn when it unloads: kind providers, Rachana functions, compute engines,
   approval sources, explainers, pivot sources, Health figures, official results, AI tools, `@ModuleApi` REST controllers (mounted under
@@ -132,7 +132,7 @@ one implementation, reached **three ways**:
   words, Home cards and Help ([DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute)).
 - **The custom-visual SDK.** A module that needs a chart Drishti does not have ships it as a kind of drishti-chart's registry in its own
   Elements library, built from drishti-chart's primitives, so it gets the theme, tooltips, Explain on a mark, export and the keyboard
-  like every chart; `mvn drishti:visual -Dname=<name>` is the template, and the Elements gallery shows it while the module is loaded
+  like every chart; `python3 tools/drishti.py module visual <folder> --id <module> --name <name>` is the template, and the Elements gallery shows it while the module is loaded
   ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk)).
 - **The genomics sample**, step by step: a third party's module made from the archetype on the kernel API and the plugin API only,
   with a VCF connector inside it and its own lollipop visual ([DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)).

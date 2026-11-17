@@ -26,7 +26,7 @@
   <name>drishti-module-archetype</name>
   <description>The Module SDK's Maven archetype (docs/architecture/KERNEL_AND_MODULES.md section 8.3): a module project that builds green on
     its first `mvn verify`: module.yaml, a function (a Spring bean and its route), its page, a kind with its data contract, data needs,
-    the README, Help, a guide and a tutorial, and a test. It inherits drishti-module-parent, which runs drishti-module-maven-plugin.
+    the README, Help, a guide and a tutorial, and a test. It inherits drishti-module-parent, which binds exec-maven-plugin to the Python packager and the server jar's verifier (tools/drishti.py module pack and verify).
     Its templates are Velocity files (archetype-resources), so they are neither compiled nor formatted here.</description>
   <properties>
     <spotless.check.skip>true</spotless.check.skip>

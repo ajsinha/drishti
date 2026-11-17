@@ -45,7 +45,7 @@
           <dt>Checks</dt><dd>{{ (stored.checks or [])|length }} of 15 passed (stored by {{ stored.storedBy }})</dd>
         </dl>
         {% else %}<p class="text-muted-d">Choose a <span class="mono">.dmod</span>: it is uploaded once to the module store and checked there
-          (the fifteen conformance checks); a version is never rebuilt.</p>{% endif %}
+          (the fourteen conformance checks); a version is never rebuilt.</p>{% endif %}
         <div data-module-upload>{{ admin_form('module_upload') }}
           <p><button type="button" class="btn-pill ib-btn" data-module-upload-go>Upload and check</button></p></div>
       </section>

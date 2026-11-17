@@ -34,7 +34,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 /**
- * The runtime tests' small module (drishti-module-runtime's TestModule), grown to pass the fifteen conformance checks so the module store
+ * The runtime tests' small module (drishti-module-runtime's TestModule), grown to pass the fourteen conformance checks so the module store
  * takes it: a README, Help, a guide and a tutorial, a contract per kind, a page per route, and an {@code @ModuleApi} controller that answers
  * {@code GET /api/v1/<id>/hello/{name}} with its version.
  */

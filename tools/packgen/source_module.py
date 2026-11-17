@@ -27,7 +27,7 @@ designer's second mode): a source module, not a new pack.
    turns it on; --write-back: its writes: block), mappings/<sys>-<kind>.yaml, the inbox rule (dataload:), the section the module adds to
    the kind's page (sutras/<kind>-<sys>.v1.fragment.yaml: the native fields with no canonical one, shown when SOURCE_SYSTEM is the
    system's), data/needs.yaml and docs/ (README with front matter, a guide, help.yaml).
-3. Packs it into dist/source-<sys>-<version>.dmod with the module tool and runs its checks.
+3. Packs it into dist/source-<sys>-<version>.dmod with the one packager and runs its checks.
 4. --load: the native records into the table, SOURCE_SYSTEM stamped (drishti.py data ingest --store delta); --deploy: as pack new.
 """
 from __future__ import annotations
@@ -276,7 +276,7 @@ def load(a, n: dict, cli, say=print) -> int:
 
 
 def module_jars(src: pathlib.Path) -> list[str]:
-    """`--jar`/`--more` for packing the module folder ``src``: a module with a server part (module.yaml's ``java.jars``) is packed with the
+    """The jars for packing the module folder ``src``: a module with a server part (module.yaml's ``java.jars``) is packed with the
     jars its Maven build made (``java/<part>/target/<name>-<version>.jar``, the version the one version file's), as packaging/dist packs
     it; a folder module without one needs none. A jar not built is said with the command that builds it."""
     import yaml
@@ -293,7 +293,7 @@ def module_jars(src: pathlib.Path) -> list[str]:
             raise SystemExit(f"{src.name}: its server part {name} is not built ({src.relative_to(ROOT)}/java/*/target/{stem}-{ver}.jar); "
                              f"build it: ./mvnw -q package -DskipTests -pl {built_part(src, stem)} -am")
         found.append(str(built[-1]))
-    return ["--jar", found[0], *(["--more", ",".join(found[1:])] if found[1:] else [])]
+    return found
 
 
 def built_part(src: pathlib.Path, stem: str) -> str:
@@ -305,7 +305,7 @@ def built_part(src: pathlib.Path, stem: str) -> str:
 
 
 def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
-    """`--with` for the check: the module this one requires (the kind's: modules/<pack>), packed beside it with its server part's jars when
+    """The modules for `--with` of the check: the one this one requires (the kind's: modules/<pack>), packed beside it with its server part's jars when
     it has one, so the runtime checks load both."""
     import module_from_jsonl as MFJ
     src = ROOT / "modules" / n["pack"]
@@ -319,13 +319,13 @@ def required(a, cli, n: dict, dist: pathlib.Path) -> list[str]:
         if not built:
             print(f"the module {n['pack']} this one requires has code and is not built: run python tools/drishti.py build jar first; "
                   "its runtime checks are left without it", file=sys.stderr)
-        return ["--with", str(built[-1])] if built else []
+        return [str(built[-1])] if built else []
     out = dist / "requires"
     out.mkdir(parents=True, exist_ok=True)
-    if MFJ.module_tool(cli, a, "pack", str(src), *module_jars(src), "--out", str(out)):
+    if MFJ.module_pack(cli, a, src, out, module_jars(src)):
         return []
     found = sorted(out.glob(f"{n['pack']}-*.dmod"))
-    return ["--with", str(found[-1])] if found else []
+    return [str(found[-1])] if found else []
 
 
 def run(a, cli, say=print) -> int:
@@ -357,11 +357,11 @@ def run(a, cli, say=print) -> int:
         return 1
     dist = (a.dist or ROOT / "dist").resolve()
     say("\n== module pack")
-    if MFJ.module_tool(cli, a, "pack", str(mod), "--out", str(dist)):
+    if MFJ.module_pack(cli, a, mod, dist):
         return 1
     dmod = dist / f"{n['name']}-{a.version}.dmod"
     say("\n== module check")
-    chk = MFJ.module_tool(cli, a, "check", str(dmod), "--cycles", str(a.cycles), *required(a, cli, n, dist))
+    chk = MFJ.module_check(cli, a, dmod, *required(a, cli, n, dist))
     say(f"\n{'checked' if not chk else 'CHECKS FAILED'}: {dmod} ({time.monotonic() - t0:.1f} s in all)")
     if chk:
         return 1
