@@ -38,7 +38,8 @@ class AllShippedPacksTest {
     static com.ash.drishti.api.resolution.ConfigResolution repo(Path deployed) {
         Path modules = Path.of(TestRoots.repo(), "modules").toAbsolutePath().normalize();
         return com.ash.drishti.api.resolution.ConfigResolution.build(new com.ash.drishti.api.resolution.ResolutionSettings(SHIPPED,
-                deployed == null ? SHIPPED.resolve("no-deployed-packs") : deployed, SHIPPED.resolve("core"), modules, modules.resolve("no-store")), id -> true);
+                deployed == null ? SHIPPED.resolve("no-deployed-packs") : deployed, SHIPPED.resolve("core"), modules, java.util.List.of(),
+                com.ash.drishti.api.resolution.ModuleHomes.source(Path.of(TestRoots.repo()))), id -> true);
     }
 
     static final com.ash.drishti.api.resolution.ConfigResolution REPO = repo(null);
