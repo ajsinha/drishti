@@ -25,27 +25,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
- * Guard G2 (i7a): the kernel does not know a module. No {@code pom.xml} outside {@code modules/} and {@code testing/drishti-modules-it}
+ * Guard G2 (i7a): the kernel does not know a module. No {@code pom.xml} outside {@code modules/}, {@code testing/drishti-modules-it} and
+ * {@code packaging/dist} (the modules' own packaging: it builds their jars and packs them)
  * names an artefact a module's poms define, and no test of the kernel ({@code kernel/**}{@code /src/test}) opens {@code modules/}: it
  * runs on fixtures, and what needs the real modules lives in the modules' own test project.
  */
 class KernelNamesNoModuleTest {
 
     private static final Pattern ARTIFACT = Pattern.compile("<artifactId>([^<]+)</artifactId>");
-    /** A test that reads a module's folder: the folder name as a path piece. */
-    private static final Pattern OPENS_MODULES = Pattern.compile("\"modules\"|\"modules/|[\"'/]modules/[a-z]");
+    /**
+     * A test that reads the REPOSITORY's module folders: the repository root (TestRoots.repo(), REPO, ROOT) joined to {@code modules}, or a
+     * relative {@code ../modules}.
+     * A fixture the test builds under its own folder ({@code tmp.resolve("modules/banking")}) is the kernel's own business and is not matched.
+     */
+    private static final Pattern OPENS_MODULES = Pattern.compile("(repo\\(\\)|\\b(REPO|ROOT|repo)\\b)[^;\\n]*(?<!\"config\", )\"modules[\"/]|\\.\\./modules");
 
-    @Disabled("i7a: enabled in I7 (E1: testing/drishti-modules-it, kernel tests on fixtures)")
     @Test
     void noPomOutsideTheModulesNamesAModuleArtefact() throws IOException {
         assertThat(poms()).isEmpty();
     }
 
-    @Disabled("i7a: enabled in I7 (E1: testing/drishti-modules-it, kernel tests on fixtures)")
     @Test
     void noKernelTestOpensTheModulesFolder() throws IOException {
         assertThat(testsOpeningModules(RepositoryFiles.root())).isEmpty();
@@ -66,7 +68,8 @@ class KernelNamesNoModuleTest {
         List<String> out = new ArrayList<>();
         for (Path p : all) {
             String rel = relative(root, p);
-            if (rel.startsWith("modules/") || rel.startsWith("testing/drishti-modules-it/") || rel.startsWith("drishti-sdk/")) {
+            if (rel.startsWith("modules/") || rel.startsWith("testing/drishti-modules-it/") || rel.startsWith("drishti-sdk/")
+                    || rel.startsWith("packaging/dist/") || rel.startsWith("docs/")) {
                 continue;
             }
             Matcher m = ARTIFACT.matcher(Files.readString(p));
@@ -104,9 +107,12 @@ class KernelNamesNoModuleTest {
 
     @Test
     void theNamesAreFoundWhereTheyAre() {
-        assertThat(OPENS_MODULES.matcher("Path.of(\"modules\")").find()).isTrue();
-        assertThat(OPENS_MODULES.matcher("root.resolve(\"modules/banking\")").find()).isTrue();
-        assertThat(OPENS_MODULES.matcher("a/modules/banking/x").find()).isTrue();
+        assertThat(OPENS_MODULES.matcher("Path.of(TestRoots.repo(), \"modules\")").find()).isTrue();
+        assertThat(OPENS_MODULES.matcher("REPO.resolve(\"modules/economy/packs\")").find()).isTrue();
+        assertThat(OPENS_MODULES.matcher("\"drishti.modules.home=../../modules\"").find()).isTrue();
+        assertThat(OPENS_MODULES.matcher("tmp.resolve(\"modules\")").find()).isFalse();
+        assertThat(OPENS_MODULES.matcher("Path.of(TestRoots.repo(), \"config\", \"modules\", \"banking.yaml\")").find()).isFalse();
+        assertThat(OPENS_MODULES.matcher("root.resolve(\"modules/banking\")").find()).isFalse();           // a fixture's own root
         assertThat(OPENS_MODULES.matcher("drishti.modules.home").find()).isFalse();
         assertThat(ownArtifact("<parent><artifactId>p</artifactId></parent><artifactId>drishti-x</artifactId><dependency><artifactId>d</artifactId>"))
                 .isEqualTo("drishti-x");

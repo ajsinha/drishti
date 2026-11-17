@@ -76,14 +76,14 @@ class CliLauncherScratchTest {
 
         // the server's own class path: the shipped application.yaml, not the tests' configuration
         String classPath = Stream.of(System.getProperty("java.class.path").split(java.io.File.pathSeparator))
-                .filter(e -> !e.endsWith("test-classes") && !e.endsWith("test-classes/")).collect(java.util.stream.Collectors.joining(java.io.File.pathSeparator));
+                .filter(e -> !e.endsWith("test-classes") && !e.endsWith("test-classes/") && !e.endsWith("-tests.jar")).collect(java.util.stream.Collectors.joining(java.io.File.pathSeparator));
         List<String> cmd = new ArrayList<>(List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(), "-Xmx768m",
                 "-Djava.io.tmpdir=" + jvmTmp, "-cp", classPath, "com.ash.drishti.server.DrishtiApplication",
                 "sutra", "lint", sutra.toString()));
         ProcessBuilder pb = new ProcessBuilder(cmd).directory(work.toFile()).redirectErrorStream(true);
         pb.environment().keySet().removeIf(k -> k.startsWith("DRISHTI_"));
-        pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_MODULES_HOME", REPO.resolve("modules").toString(),
-                "DRISHTI_PACKS", "trading",     // the shipped modules where the repository keeps them (KERNEL_AND_MODULES.md 18.2)
+        pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_MODULES_HOME", System.getProperty("drishti.modules.home"),
+                "DRISHTI_PACKS", "trading",     // the shipped modules as packages (KERNEL_AND_MODULES.md 18.2)
                 "DRISHTI_HOME", REPO.toString()));   // the install folder, as every launcher names it (never the working folder)
         Path log = jvmTmp.resolve("run.log");
         pb.redirectOutput(log.toFile());

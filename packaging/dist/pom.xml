@@ -50,10 +50,10 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-app</artifactId><version>${project.version}</version><type>pom</type><scope>provided</scope>
       <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions></dependency>
     <!-- banking's jars go into its package, never on the kernel's class path -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><scope>provided</scope></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><scope>provided</scope></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><scope>provided</scope></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><version>${project.version}</version><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><version>${project.version}</version><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><version>${project.version}</version><scope>provided</scope></dependency>
     <!-- the genomics sample ships with the product too (its server part: the showcase API its pages call) -->
     <dependency><groupId>org.helixlab</groupId><artifactId>genomics</artifactId><version>0.1.0</version><scope>provided</scope></dependency>
   </dependencies>
