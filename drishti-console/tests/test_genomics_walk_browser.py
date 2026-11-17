@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Genomics walked in a browser (DISTRIBUTIONS.md section 4): the thin kernel (drishti-kernel-app's jar, no banking) started with
-``--distribution genomics`` and the genomics module's ``.dmod`` dropped into its modules folder (auto-deploy), a console in front of it.
+"""Drishti Genomics walked in a browser (DISTRIBUTIONS.md section 4): the one server jar started with ``--distribution genomics`` over a
+modules folder that holds the genomics module's package (modules/genomics-0.1.0.dmod, which ``build modules`` makes) and nothing else, no
+banking, a console in front of it.
 Its Home, every top-bar link, the Research lens, the module's pages (the gene's lollipop drawn) and Help open clean (the page walk's
 rules: no 4xx/5xx, no console error, nothing empty, within the budget); no finance is linked anywhere; the Elements gallery shows the
-module's visual. Skipped without the thin jar (./mvnw -o package -pl :drishti-kernel-app -am -DskipTests) or the module's package
-(./mvnw -o package -pl modules/genomics/java/genomics -am)."""
+module's visual. Skipped without the server jar or the module's package (python tools/drishti.py build all)."""
 from __future__ import annotations
 
 import json
@@ -34,45 +34,35 @@ from wb_live import ROOT
 FINANCE = ("/var", "/exposure", "/predeal", "/frtb", "/simm", "/mcube", "/play", "CPTY", "VRES", "TRD", "ECON", "USEQ")
 
 
-def _thin_jar():
-    found = sorted((ROOT / "packaging/drishti-kernel-app" / "target").glob("drishti-kernel-*-exec.jar"), key=lambda p: p.stat().st_mtime)
-    return found[-1] if found else None
-
-
 @pytest.fixture(scope="module")
 def genomics(tmp_path_factory):
     import wb_live
 
-    jar, dmod = _thin_jar(), ROOT / "modules" / "genomics" / "java" / "genomics" / "target" / "dmod" / "genomics-0.1.0.dmod"
-    if jar is None or not dmod.is_file():
-        pytest.skip("needs the thin kernel jar and the genomics package (see the module docstring)")
+    dmod = ROOT / "modules" / "genomics-0.1.0.dmod"
+    if wb_live.jar() is None or not dmod.is_file():
+        pytest.skip("needs the server jar and the genomics package (python tools/drishti.py build all)")
     work = tmp_path_factory.mktemp("genomics-server")
-    modules = work / "drop"
+    modules = work / "genomics-modules"
     modules.mkdir()
     (modules / dmod.name).write_bytes(dmod.read_bytes())
+    (modules / "first-party.yaml").write_bytes((ROOT / "modules" / "first-party.yaml").read_bytes())    # the genomics package is the product's own
     placement = work / "placement.yaml"
     placement.write_text("modules:\n  genomics:\n    parts:\n      api: { nodes: [local] }\n", encoding="utf-8")
-    env = {"DRISHTI_DISTRIBUTION": "genomics", "DRISHTI_MODULES_PATH": str(modules), "DRISHTI_PLACEMENT_FILE": str(placement),
-           "DRISHTI_MODULE_MANIFESTS_DIR": str(ROOT / "modules"), "DRISHTI_MODULES_AUTODEPLOY_SECONDS": "1", "DRISHTI_DEMO_ENABLED": "false",
-           "DRISHTI_OFFLINE": "true"}
-    before = wb_live.jar
-    wb_live.jar = _thin_jar
-    try:
-        for st in wb_live._stack(tmp_path_factory, env, work=work):
-            deadline = time.monotonic() + 120
-            while time.monotonic() < deadline:          # auto-deploy picks the dropped package up within a few seconds
-                try:
-                    with urllib.request.urlopen(st.server + "/api/v1/genomics/cohorts", timeout=3) as r:
-                        if json.loads(r.read()).get("count") == 2:
-                            break
-                except OSError:
-                    pass
-                time.sleep(0.5)   # wait-ok: polling the module's deployment
-            else:
-                pytest.fail("the genomics module did not deploy: " + (work / "server.log").read_text()[-600:])
-            yield st
-    finally:
-        wb_live.jar = before
+    env = {"DRISHTI_DISTRIBUTION": "genomics", "DRISHTI_MODULES_HOME": str(modules), "DRISHTI_PLACEMENT_FILE": str(placement),
+           "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}
+    for st in wb_live._stack(tmp_path_factory, env, work=work):
+        deadline = time.monotonic() + 120
+        while time.monotonic() < deadline:
+            try:
+                with urllib.request.urlopen(st.server + "/api/v1/genomics/cohorts", timeout=3) as r:
+                    if json.loads(r.read()).get("count") == 2:
+                        break
+            except OSError:
+                pass
+            time.sleep(0.5)   # wait-ok: polling the module's deployment
+        else:
+            pytest.fail("the genomics module did not deploy: " + (work / "server.log").read_text()[-600:])
+        yield st
 
 
 def test_drishti_genomics_walks_clean_with_no_finance_anywhere(genomics, browser):

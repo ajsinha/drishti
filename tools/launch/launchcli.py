@@ -277,6 +277,9 @@ def register(groups, add) -> None:
         bm.add_argument("--offline", action="store_true", help="Maven offline (-o)")
         bm.add_argument("--no-copy", action="store_true", help=("leave the jar in kernel/drishti-server/target only" if verb == "all" else argparse.SUPPRESS))
         bm.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
+        if verb == "modules":
+            bm.add_argument("--no-maven", action="store_true", help="take the Java modules' packages from packaging/dist/target/dmod, which a Maven run just before "
+                                                                    "(the drill's gate: build all's reactor) left there; refused when they are not stamped for the jar in <home>/lib")
         bm.set_defaults(func=cmd_build)
 
     for verb, fn in (("start", cmd_start), ("stop", cmd_stop)):

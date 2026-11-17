@@ -37,7 +37,7 @@ def test_a_file_it_cannot_place_selects_everything():
 
 def test_java_reaches_its_users_and_the_mapped_console_tests():
     plan = affected.classify(["modules/banking/java/banking-compute/src/main/java/com/ash/X.java"])
-    assert {"modules/banking/java/banking-compute", "modules/banking/java/banking-service", "packaging/drishti-app"} <= plan.modules
+    assert {"modules/banking/java/banking-compute", "modules/banking/java/banking-service", "packaging/dist"} <= plan.modules
     assert "compute/drishti-rachana" not in plan.modules
     assert any("test_var_lens" in c for c in plan.console) and not any("test_funds" in c for c in plan.console)
     assert not plan.all_console and not plan.everything

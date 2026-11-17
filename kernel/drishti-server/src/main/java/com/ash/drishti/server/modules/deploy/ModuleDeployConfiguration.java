@@ -127,7 +127,36 @@ public class ModuleDeployConfiguration {
 
     static Path root(Environment env) {
         String dir = env.getProperty("drishti.module-deploy.dir", "");
-        return (dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "modules") : Path.of(dir)).toAbsolutePath().normalize();
+        if (!dir.isBlank()) {
+            return Path.of(dir).toAbsolutePath().normalize();
+        }
+        String data = env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data());
+        return (packaged(env) ? Path.of(data, "cache", "module-host") : Path.of(data, "modules")).toAbsolutePath().normalize();
+    }
+
+    /** Whether the modules folder ({@code drishti.modules.home}) holds packages ({@code *.dmod}): then the folder is the truth about which modules run. */
+    static boolean packaged(Environment env) {
+        String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
+        return !home.isEmpty() && !"none".equals(home)
+                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(Path.of(home).toAbsolutePath().normalize());
+    }
+
+    /**
+     * With packages beside the jar the module host's own folder is a cache of them ({@code <data>/cache/module-host}: what was
+     * installed, what an administrator switched): made again from the packages at every start, so a package replaced, upgraded or taken
+     * away between two starts is what runs, never an older copy kept in a store (until the host's store is deleted, i7a I8).
+     */
+    private static void freshHost(Path root) {
+        if (!java.nio.file.Files.exists(root)) {
+            return;
+        }
+        try (java.util.stream.Stream<Path> all = java.nio.file.Files.walk(root)) {
+            for (Path p : (Iterable<Path>) all.sorted(java.util.Comparator.reverseOrder())::iterator) {
+                java.nio.file.Files.deleteIfExists(p);
+            }
+        } catch (java.io.IOException ex) {
+            LoggerFactory.getLogger(ModuleNode.class).warn("the module host's folder {} was not cleared: {}", root, ex.toString());
+        }
     }
 
     /**
@@ -164,6 +193,9 @@ public class ModuleDeployConfiguration {
             return out;
         });
         long drain = env.getProperty("drishti.module-deploy.drain-seconds", Long.class, 30L) * 1000;
+        if (packaged(env)) {
+            freshHost(root(env));
+        }
         List<Path> folders = development(env, net);
         com.ash.drishti.server.modules.host.ModuleWiring wiring = new com.ash.drishti.server.modules.host.ModuleWiring(
                 () -> ctx.getBeanProvider(com.ash.drishti.engine.source.SourceRegistry.class).getIfAvailable(),

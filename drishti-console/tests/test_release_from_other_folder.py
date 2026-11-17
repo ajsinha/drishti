@@ -108,6 +108,14 @@ def install(tmp_path_factory) -> Path:
     target = dest / "lib"
     target.mkdir(parents=True, exist_ok=True)
     shutil.copy2(jar, target / jar.name)
+    # a module is a package beside the jar, and git holds none: the ones the build made (python tools/drishti.py build all, the drill's
+    # gate) go in beside the unpacked sources; the install's start refuses them when its sources differ (the stale rule), so a working
+    # tree edited since the commit fails here in words, never passes on old content
+    built = sorted((ROOT / "modules").glob("*.dmod"))
+    if not built or not (ROOT / "modules" / "first-party.yaml").is_file():
+        pytest.fail("no module packages in modules/ (python tools/drishti.py build modules; the drill's gate builds them)")
+    for f in [*built, ROOT / "modules" / "first-party.yaml"]:
+        shutil.copy2(f, dest / "modules" / f.name)
     return dest
 
 

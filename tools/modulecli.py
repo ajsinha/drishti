@@ -243,10 +243,10 @@ def prepare_run(path: pathlib.Path, run_dir: pathlib.Path) -> dict:
 def find_kernel_jar(cli, explicit: str | None) -> str:
     jar = explicit or os.environ.get("DRISHTI_KERNEL_JAR")
     if not jar:
-        found = sorted(cli.ROOT.glob("packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar"))
+        found = sorted((cli.ROOT / "lib").glob("drishti-server-*-exec.jar"))
         jar = str(found[-1]) if found else ""
     if not jar or not os.path.isfile(jar):
-        raise cli.CliError("the kernel's thin jar is not built: ./mvnw -q package -DskipTests -pl :drishti-kernel-app -am (or pass --jar)", 2)
+        raise cli.CliError("no server jar in lib/: python tools/drishti.py build jar (or pass --jar)", 2)
     return jar
 
 
@@ -260,7 +260,8 @@ def cmd_run(cli, a, extra) -> int:
         jar = find_kernel_jar(cli, a.jar)
         java = cli.find_java(getattr(a, "java", None))
         (run_dir / "tmp").mkdir(exist_ok=True)
-        args = cli.java_cmd(java, ["-jar", jar, f"--server.port={port}", f"--drishti.data.dir={run_dir / 'data'}",
+        (run_dir / "no-modules").mkdir(exist_ok=True)       # the install's packages are not this run's: the kernel alone, the one module dropped in
+        args = cli.java_cmd(java, ["-jar", jar, f"--server.port={port}", f"--drishti.modules.home={run_dir / 'no-modules'}", f"--drishti.data.dir={run_dir / 'data'}",
                 f"--drishti.module-deploy.dir={run_dir / 'modules'}", f"--drishti.placement.file={run_dir / 'placement.yaml'}", *extra], tmp=run_dir / "tmp")
         print(f"module run: {m['id']} {m['version']} alone on the kernel at http://localhost:{port}  (data under {run_dir}; Ctrl-C stops"
               + (" and removes it)" if not keep else ")"))
@@ -327,6 +328,6 @@ def register(cli, sub, add, srv, js) -> None:
     p.add_argument("file", help="the .dmod")
     p.add_argument("--port", type=int, help="the port (default: a free one, never 18480)")
     p.add_argument("--dir", help="keep the run's data here (default: a temporary folder removed on exit)")
-    p.add_argument("--jar", help="the kernel's thin jar (default: DRISHTI_KERNEL_JAR, then packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar)")
+    p.add_argument("--jar", help="the server jar (default: DRISHTI_KERNEL_JAR, then the one in <home>/lib)")
     p.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("--dry-run", action="store_true", help="lay out the run folder and print the command, without starting")

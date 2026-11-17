@@ -328,6 +328,9 @@ gate_java() {
   local built; built=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)
   mkdir -p lib && find lib -maxdepth 1 -name 'drishti-server-*-exec.jar' ! -name "$(basename "$built")" -delete \
     && cp -f "$built" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
+  # the modules are packages beside the jar: the build just made the Java ones (packaging/dist/target/dmod, stamped for this very exec jar);
+  # the packer packs the others; all go into modules/ with first-party.yaml (refused when not stamped for the jar now in lib/)
+  python3 tools/drishti.py build modules --no-maven || { echo "drill: the gate's build left the modules unbuilt: no packages in modules/" >&2; return 1; }
   : > "$LOGS/gate-jar.ready"   # the gate's checks that run the jar wait for this
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
@@ -446,6 +449,8 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   # PythonPathEqualityTest): the copy's lib/, the one place they look, gets the jar the gate built from this same commit
   wait_gate_jar || return 1
   mkdir -p "$copy/lib" && cp "$REPO"/lib/drishti-server-*-exec.jar "$copy/lib/"
+  # the modules beside the jar (the gate built them): the copy's tests that start a server over packages find them where the install does
+  cp "$REPO"/modules/*.dmod "$REPO"/modules/first-party.yaml "$copy/modules/" || return 1
   cd "$copy"
   # the copy is not a repository: git must not find one above it (a worktree's copy sits under the main checkout's ignored .claude/,
   # where git would call every copied file ignored and the repository-wide scans would see none)
@@ -460,7 +465,7 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
     JAVA_HOME="$jdk" ./mvnw -q -o clean package -DskipTests ${DRILL_MVN_ARGS:-} || return $?
     after 7200 "$COPY_THEN_WAIT"; echo "drill: $name tests start at $(date +%T)"; goals=(verify)
   fi
-  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 -Ddrishti.test.requires-python=true "$@" ${DRILL_MVN_ARGS:-} || rc=$?
   local flaky
   flaky=$(grep -l -E '<flaky(Failure|Error)' $(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null) /dev/null 2>/dev/null \
           | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u || true)
@@ -604,7 +609,7 @@ SERVERS_HERE=$(servers_here | tr '\n' ' ')
 # a server's state left in the data folder by an earlier run (a test or tool that wrote here, a stopped server) changes what the
 # tests see (installed modules, identities, cluster membership): with no server running from this folder, it is moved aside to
 # data/tmp/stale-<stamp>/ (nothing deleted) and listed, so every drill starts from the same data folder
-STALE_STATE=(modules/installed identity net compute fstore cache)
+STALE_STATE=(modules identity net compute fstore cache)
 stale_state_aside() {
   [[ -d "$DATA" && -z "${SERVERS_HERE// /}" ]] || return 0
   local d found=() to

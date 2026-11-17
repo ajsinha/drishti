@@ -36,7 +36,7 @@ import javacmd  # noqa: E402 - tools/ is on the path through procs
 import modulepack  # noqa: E402
 
 #: where Maven's packaging/dist leaves the packages and their first-party list
-DIST = Path("packaging") / "dist" / "target" / "dmod"
+DIST = ("packaging", "dist", "target", "dmod")
 PACKAGE = ".dmod"
 
 
@@ -166,8 +166,13 @@ def build_modules(a, env: dict | None = None, with_jar: bool = False) -> int:
         if java_ids and jar is None and not a.dry_run:
             raise LaunchError(f"no server jar in <home>/lib to stamp {', '.join(java_ids)} for: run  python tools/drishti.py build all  (or build jar first)")
     kernel_jar = None
-    built_dir = home / DIST
-    if java_ids or with_jar:
+    built_dir = home.joinpath(*DIST)
+    no_maven = getattr(a, "no_maven", False)
+    if no_maven:
+        if not jar:
+            raise LaunchError("--no-maven: no server jar in <home>/lib to take the packages' stamp from: python tools/drishti.py build all")
+        kernel_jar = jar
+    elif java_ids or with_jar:
         cmd = [*envsetup_maven(home), "-q", *(["-o"] if a.offline else []), "clean", "package", "-DskipTests"]
         if with_jar:
             cmd += ["-pl", ":drishti-app,:drishti-modules", "-am"]
@@ -209,6 +214,9 @@ def build_modules(a, env: dict | None = None, with_jar: bool = False) -> int:
         _put(dmod, modules)
         done.append(name)
     modulepack.first_party(modules)
+    wrong = [w for w in fresh_report(modules, kernel_jar) if "was built for the kernel" in w]
+    if wrong:
+        raise LaunchError("the packages are not stamped for the server jar:\n  " + "\n  ".join(wrong))
     say(f"{len(done)} package(s) in {modules}: {', '.join(done)}; first-party.yaml written")
     return 0
 
