@@ -140,9 +140,25 @@ def test_the_allowlist_names_files_that_exist():
 def test_no_python_resolver_comes_back():
     """Step S5: the Python twin of the resolver is deleted; nothing imports it and no file of its name is made again."""
     assert not (ROOT / "drishti-console" / "core" / "resolution.py").exists()
-    found = []
-    for f in _files():
-        text = f.read_text(encoding="utf-8", errors="replace")
-        if "from core.resolution import" in text or "from core import resolution" in text or "import core.resolution" in text:
-            found.append(f.relative_to(ROOT).as_posix())
-    assert not [x for x in found if x != "tools/test_config_readers_guard.py"], found
+    found = [f"{f.relative_to(ROOT).as_posix()}: {line}" for f in _files() for line in _resolver_imports(f)]
+    assert not found, found
+
+
+def _resolver_imports(f: Path) -> list[int]:
+    """The lines of ``f`` that import the Python resolver: an import statement of ``core.resolution`` (or ``resolution`` from ``core``), or
+    ``importlib.import_module``/``__import__`` of it. Read from the code, so a guard naming the pattern in a regex or a docstring is no import."""
+    try:
+        tree = ast.parse(f.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError):
+        return []
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import) and any(a.name == "core.resolution" or a.name.startswith("core.resolution.") for a in node.names):
+            out.append(node.lineno)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (
+                (node.module or "").startswith("core.resolution") or (node.module == "core" and any(a.name == "resolution" for a in node.names))):
+            out.append(node.lineno)
+        elif isinstance(node, ast.Call) and getattr(node.func, "attr", getattr(node.func, "id", None)) in ("import_module", "__import__") \
+                and node.args and isinstance(node.args[0], ast.Constant) and str(node.args[0].value).startswith("core.resolution"):
+            out.append(node.lineno)
+    return out

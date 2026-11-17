@@ -13,7 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 """SOAK-05: every server launcher Drishti ships sets the native memory settings CLUSTER_GUIDE.md (*Resident memory*) recommends:
 MALLOC_ARENA_MAX=2 (glibc only, so not on Windows), -XX:MaxDirectMemorySize=256m, -XX:TrimNativeHeapInterval=60000,
--Djdk.nio.maxCachedBufferSize=262144 (the 2.9.6 direct-memory exhaustion) and -XX:NativeMemoryTracking=summary; the production
+-Djdk.nio.maxCachedBufferSize=262144 (the 2.9.6 direct-memory exhaustion) and -XX:NativeMemoryTracking=summary. The started launchers
+give the 256m base and add what tools/lake/memory_caps.py sizes after it; an IntelliJ run configuration has no step that sizes, so it gives
+the sum once, the base plus Arrow's exchange budget (768m), with that budget as -Ddrishti.arrow.max-bytes. The production
 launchers also dump the heap on OutOfMemoryError and keep a rotated GC log; every lake loader caps the cached buffers too; and the JVM
 accepts the flags.
 
@@ -21,6 +23,7 @@ accepts the flags.
 """
 from __future__ import annotations
 
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -28,7 +31,10 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FLAGS = ("-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
+_SPEC = importlib.util.spec_from_file_location("drishti_memory_caps", ROOT / "tools" / "lake" / "memory_caps.py")
+CAPS = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(CAPS)
+FLAGS = (f"-XX:MaxDirectMemorySize={CAPS.BASE_MB}m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
 DIAGNOSTICS = ("HeapDumpOnOutOfMemoryError", "HeapDumpPath=", "-Xlog:gc*:file=", "filecount=5,filesize=20m")
 PRODUCTION = ("tools/launch/serverstart.py", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile")
 LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too (drishti.py start server sets it everywhere: Windows ignores it)
@@ -47,7 +53,9 @@ class LauncherMemory(unittest.TestCase):
         for rel, arenas in LAUNCHERS.items():
             text = (ROOT / rel).read_text(encoding="utf-8")
             with self.subTest(rel):
-                for flag in FLAGS:
+                if rel.startswith("run-configs/"):
+                    self.assertEqual(text.count("MaxDirectMemorySize="), 1, "given once: the JVM takes the last, a second one hides the first")
+                for flag in self.flags(rel):
                     self.assertIn(flag.split("=")[0].replace("-XX:", ""), text)
                     self.assertTrue(flag in text or f'"{flag}"' in text or f"'{flag}'" in text, flag)
                 if arenas:
@@ -57,6 +65,15 @@ class LauncherMemory(unittest.TestCase):
                     self.assertNotIn("MALLOC_ARENA_MAX", code, "glibc only: not set on Windows")
         self.assertIn("MALLOC_ARENA_MAX", (ROOT / "deploy/docker/compose.yaml").read_text(encoding="utf-8"))
         self.assertIn("MALLOC_ARENA_MAX=2", (ROOT / "deploy/docker/ecs/server.Dockerfile").read_text(encoding="utf-8"))
+
+    @staticmethod
+    def flags(rel: str) -> tuple:
+        """The flags ``rel`` must give: an IntelliJ run configuration the direct memory sized once (the base plus Arrow's exchange budget,
+        and that budget for Arrow); a started launcher the base, which it raises by what memory_caps.py sizes."""
+        if not rel.startswith("run-configs/"):
+            return FLAGS
+        return (f"-XX:MaxDirectMemorySize={CAPS.BASE_MB + CAPS.ARROW_EXCHANGE_MB}m", f"-Ddrishti.arrow.max-bytes={CAPS.ARROW_EXCHANGE_MB * 1048576}",
+                *FLAGS[1:])
 
     def test_production_launchers_dump_the_heap_and_log_gc(self):
         for rel in PRODUCTION:
