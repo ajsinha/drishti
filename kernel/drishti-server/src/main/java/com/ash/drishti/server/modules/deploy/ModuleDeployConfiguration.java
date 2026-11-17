@@ -134,12 +134,12 @@ public class ModuleDeployConfiguration {
         return (packaged(env) ? Path.of(data, "cache", "module-host") : Path.of(data, "modules")).toAbsolutePath().normalize();
     }
 
-    /** Whether the modules folder ({@code drishti.modules.home}) holds packages ({@code *.dmod}): then the folder is the truth about which modules run. */
+    /** Whether the process's modules folder holds packages ({@code *.dmod}): then the folder is the truth about which modules run. */
     static boolean packaged(Environment env) {
-        String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
-        return !home.isEmpty() && !"none".equals(home)
+        Path home = com.ash.drishti.module.runtime.ModuleBoot.processHome(env::getProperty);
+        return home != null
                 && com.ash.drishti.module.runtime.ModuleBoot.usePackages(env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.PACKAGES_SETTING))
-                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(Path.of(home).toAbsolutePath().normalize());
+                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(home);
     }
 
     /**
@@ -258,15 +258,14 @@ public class ModuleDeployConfiguration {
 
     /**
      * The first-party modules the distribution carries: the packages ({@code *.dmod}) beside the server's jar, in the modules folder
-     * ({@code drishti.modules.home}, written by {@code drishti.py build modules}), copied out to {@code folder} so they install like any
+     * of this process, written by {@code drishti.py build modules}), copied out to {@code folder} so they install like any
      * package. The server's jar holds none; with no modules folder (or {@code none}) the list is empty.
      */
     static List<Path> shipped(Path folder, Environment env) {
-        String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
-        if (home.isEmpty() || "none".equals(home) || !packaged(env)) {
+        if (!packaged(env)) {
             return List.of();
         }
-        List<Path> found = com.ash.drishti.module.runtime.ModuleBoot.packages(Path.of(home).toAbsolutePath().normalize());
+        List<Path> found = com.ash.drishti.module.runtime.ModuleBoot.packages(com.ash.drishti.module.runtime.ModuleBoot.processHome(env::getProperty));
         List<Path> out = new ArrayList<>();
         try {
             if (found.isEmpty()) {

@@ -85,6 +85,16 @@ public final class ModuleBoot {
      */
     public static final String PACKAGES_SETTING = "drishti.modules.packages";
 
+    /**
+     * The modules folder of this process as its settings name it (the one reader of that setting, for the module host and the first-party
+     * list), or null when it names none (unset, blank or {@code none}). Not the launch roots' answer: those are resolved, absolute and
+     * published; this takes a property function so a caller with a Spring environment or the system properties asks the same way.
+     */
+    public static Path processHome(java.util.function.Function<String, String> property) {
+        String home = property.apply(HOME_SETTING);
+        return home == null || home.isBlank() || "none".equals(home.strip()) ? null : Path.of(home.strip()).toAbsolutePath().normalize();
+    }
+
     /** Whether packages in the modules folder are used: {@code drishti.modules.packages} is not {@code false}. */
     public static boolean usePackages(String setting) {
         return !"false".equalsIgnoreCase(setting == null ? "" : setting.strip());

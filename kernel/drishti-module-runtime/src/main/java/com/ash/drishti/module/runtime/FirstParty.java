@@ -79,14 +79,14 @@ public final class FirstParty {
     }
 
     /**
-     * The list the product ships: the file {@code first-party.yaml} beside the packages in the modules folder
-     * ({@code drishti.modules.home}, written by {@code drishti.py build modules}), else {@link #RESOURCE} on the loader's class path (a
+     * The list the product ships: the file {@code first-party.yaml} beside the packages in the process's modules folder
+     * (written by {@code drishti.py build modules}), else {@link #RESOURCE} on the loader's class path (a
      * test's), else none. The server's jar holds no list: modules are packages beside it.
      */
     public static FirstParty shipped(ClassLoader loader) {
-        String home = System.getProperty(ModuleBoot.HOME_SETTING, "").strip();
-        if (!home.isEmpty() && !"none".equals(home) && ModuleBoot.usePackages(System.getProperty(ModuleBoot.PACKAGES_SETTING))) {
-            Path file = Path.of(home).resolve(ModuleBoot.FIRST_PARTY_FILE);
+        Path home = ModuleBoot.processHome(System::getProperty);
+        if (home != null && ModuleBoot.usePackages(System.getProperty(ModuleBoot.PACKAGES_SETTING))) {
+            Path file = home.resolve(ModuleBoot.FIRST_PARTY_FILE);
             if (Files.isRegularFile(file)) {
                 return read(file);
             }
