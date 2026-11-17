@@ -48,12 +48,13 @@ def tracked() -> list[str]:
 
 def version() -> str:
     found = product_version.current(ROOT / "drishti-console" / "core" / "x.py", default="")
-    assert re.fullmatch(r"\d+\.\d+\.\d+(\.[a-z]\d*)?", found), f"the version file does not hold a version: {found!r}"
+    assert re.fullmatch(r"\d+\.\d+\.\d+(\.[a-z]\d*[a-z]?)?", found), f"the version file does not hold a version: {found!r}"
     return found
 
 
 def test_the_tag_is_the_versions():
     assert product_version.tag_of("2.9.11.i5") == "v2.9.11.i_5"
+    assert product_version.tag_of("2.9.11.i7a") == "v2.9.11.i_7a"
     assert product_version.tag_of("2.9.11.g") == "v2.9.11.g"
     assert product_version.tag_of("3.0.0") == "v3.0.0"
     tool = ROOT / "tools" / "version.py"

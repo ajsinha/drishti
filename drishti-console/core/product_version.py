@@ -23,7 +23,7 @@ from pathlib import Path
 
 CONFIG = Path(".mvn") / "maven.config"
 _REVISION = re.compile(r"-Drevision=(\S+)")
-_INCREMENT = re.compile(r"\.i(\d+)$")
+_INCREMENT = re.compile(r"\.i(\d+[a-z]?)$")
 
 
 def root(start: Path | None = None) -> Path | None:
@@ -48,5 +48,5 @@ def current(start: Path | None = None, default: str = "dev") -> str:
 
 
 def tag_of(version: str) -> str:
-    """The release tag of a version: ``v`` plus the version, the increment letter's number set off by an underscore (2.9.11.i5 -> v2.9.11.i_5)."""
+    """The release tag of a version: ``v`` plus the version, the increment letter's number set off by an underscore (2.9.11.i5 -> v2.9.11.i_5, 2.9.11.i7a -> v2.9.11.i_7a)."""
     return "v" + _INCREMENT.sub(lambda m: ".i_" + m.group(1), version)
