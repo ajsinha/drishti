@@ -1,4 +1,4 @@
-# Drishti server image. Build from the repository root after ./mvnw -q package -DskipTests:
+# Drishti server image. Build from the repository root after python tools/drishti.py build all (the jar and the module packages):
 #   docker build -f deploy/docker/server.Dockerfile -t drishti-server:$(python3 tools/version.py) .
 # Production runs Java 21 (the default); Java 25 is also supported: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
 ARG BASE_IMAGE=eclipse-temurin:21-jre

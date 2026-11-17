@@ -73,14 +73,12 @@ IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 ## 2. Build the server
 
 ```bash
-python tools/drishti.py build jar        # Windows: py tools\drishti.py build jar
-ls lib/*-exec.jar
+python tools/drishti.py build all        # Windows: py tools\drishti.py build all
+ls lib/*-exec.jar modules/*.dmod
 ```
 
-**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar`: `build jar` runs `mvnw clean package` for the server and
-copies the exec jar into `lib/`, where every start finds it (`--offline` builds without the network). The first build downloads
-its libraries (several minutes); later ones take about a minute. `-pl :drishti-app -am` builds the jar that runs (the core server with
-the banking module and the plugins) and only what it needs; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
+**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs `mvnw clean package` for the server and the modules, copies the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network). The first build downloads
+its libraries (several minutes); later ones take about a minute. `-pl :drishti-app,:drishti-modules -am` builds the jar that runs (the kernel and the plugins) and the module packages, and only what they need; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands).
 
 ## 3. Run the server and the console on the demo lake

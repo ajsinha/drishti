@@ -341,8 +341,8 @@ Run these from the Drishti folder (the repository root, or the install folder of
 # 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
 python tools/drishti.py setup
 
-# 2. Build the runnable server (the kernel, with the first-party modules it installs at the first start); the jar goes to ./lib
-python tools/drishti.py build jar
+# 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
+python tools/drishti.py build all
 
 # 3. The demo lake, from the committed test data in data/testdata
 python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java

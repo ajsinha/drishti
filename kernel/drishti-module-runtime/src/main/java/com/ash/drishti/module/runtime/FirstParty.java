@@ -85,7 +85,7 @@ public final class FirstParty {
      */
     public static FirstParty shipped(ClassLoader loader) {
         String home = System.getProperty(ModuleBoot.HOME_SETTING, "").strip();
-        if (!home.isEmpty() && !"none".equals(home)) {
+        if (!home.isEmpty() && !"none".equals(home) && ModuleBoot.usePackages(System.getProperty(ModuleBoot.PACKAGES_SETTING))) {
             Path file = Path.of(home).resolve(ModuleBoot.FIRST_PARTY_FILE);
             if (Files.isRegularFile(file)) {
                 return read(file);

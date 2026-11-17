@@ -263,7 +263,8 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             com.ash.drishti.api.resolution.ModuleHomes.publish(none);
             return new Booted(none, false, null, "Modules: none (" + MODULES + "=" + NONE + ")", null);
         }
-        if (com.ash.drishti.module.runtime.ModuleBoot.hasPackages(modulesHome)) {
+        if (com.ash.drishti.module.runtime.ModuleBoot.usePackages(property.apply(com.ash.drishti.module.runtime.ModuleBoot.PACKAGES_SETTING))
+                && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(modulesHome)) {
             var r = com.ash.drishti.module.runtime.ModuleBoot.remember(com.ash.drishti.module.runtime.ModuleBoot.boot(modulesHome,
                     com.ash.drishti.module.runtime.ModuleBoot.cacheRoot(data), sweep, com.ash.drishti.module.runtime.KernelFacts.ofKernel(), List.of()));
             List<com.ash.drishti.api.resolution.ModuleHomes.Home> viewed = new ArrayList<>();

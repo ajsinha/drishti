@@ -27,7 +27,7 @@ Starting, stopping and checking Drishti is one Python command, `tools/drishti.py
 | Command | What it does |
 |---|---|
 | `setup [--check]` | makes the console's virtual environment and the data and environment folders; `--check` only reports |
-| `build jar` | builds the server's executable jar and copies it into `<DRISHTI_HOME>/lib` |
+| `build jar`, `build modules`, `build all` | the server's executable jar into `<DRISHTI_HOME>/lib`; the module packages (`.dmod`) and `first-party.yaml` into `<DRISHTI_HOME>/modules` (the jar holds no module); both in one Maven run |
 | `start server\|console\|all\|cluster` | Java 21+, the newest jar in `<DRISHTI_HOME>/lib`, temp folder, memory settings and logs under the data folder; waits for health; prints the LAN address. `--node` starts a cluster node; `all` is one server and one console on this machine; `cluster --cluster FILE` starts a cluster from a file (default `deploy/stack/stack.yaml`) |
 | `stop server\|console\|all\|cluster` | stops by the pid file only (never by name): graceful first, forced after `--timeout`; `--node`, `--all-nodes` |
 | `status` | pid, state, port, health answer, distribution and LAN address of every process started from here; with `--cluster FILE` also the members each node sees and the console's servers |
@@ -36,7 +36,7 @@ Run them from the Drishti folder (the repository root, or the install folder of 
 
 ```bash
 python tools/drishti.py setup
-python tools/drishti.py build jar
+python tools/drishti.py build all
 python tools/drishti.py start all --demo                  # the demo, with development secrets (not for production)
 python tools/drishti.py start all --demo --distribution finance   # risk, genomics, finance, all: docs/architecture/DISTRIBUTIONS.md
 python tools/drishti.py start server --env-file /etc/drishti/drishti.env --background

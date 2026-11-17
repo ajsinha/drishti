@@ -31,6 +31,7 @@ Environment=MALLOC_ARENA_MAX=2
 # the others sit under them unless /etc/drishti/drishti.env names them
 Environment=DRISHTI_HOME=/opt/drishti
 Environment=DRISHTI_DATA_DIR=/opt/drishti/data
+# the packages (*.dmod) and first-party.yaml: modules are packages beside the server jar in /opt/drishti/lib
 Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps

@@ -88,6 +88,8 @@
             <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
             <drishti.packs.dir>${project.basedir}/../../../../config/packs</drishti.packs.dir>
             <drishti.modules.home>${project.basedir}/../../../../modules</drishti.modules.home>
+            <!-- the tests serve the module SOURCES of this folder, whether or not a build left packages there (E1) -->
+            <drishti.modules.packages>false</drishti.modules.packages>
             <drishti.ui-kit.dir>${project.basedir}/../../../../config/ui-kit</drishti.ui-kit.dir>
             <drishti.ui-kit.site-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/ui-kit</drishti.ui-kit.site-dir>
             <!-- the retired example packs stay loadable for the tests that use them as fixtures (finance, logistics…);

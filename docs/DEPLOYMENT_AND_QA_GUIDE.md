@@ -136,9 +136,11 @@ Every jar lives under the install folder, in two places that never mix:
 | | `<drishti>/lib` | `<drishti>/lib/ext` |
 |---|---|---|
 | Holds | **Drishti's own** jar: the one `drishti-server-<version>-exec.jar` (every Java library is inside it) | **your site's** jars: JDBC drivers, connector plugins |
-| Put there by | the release, or `python tools/drishti.py build jar` (it builds and copies the jar there, removing an older one) | you |
+| Put there by | the release, or `python tools/drishti.py build jar` (it builds and copies the jar there, removing an older one; `build all` does the jar and the modules) | you |
 | On an upgrade | replaced with the release | kept: copy it into the new install |
 | Found by | every tool: `start`, `lake demo --engine java`, `doctor` (exactly one server jar: `start` refuses two) | the server at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`) |
+
+**Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run) makes them: Maven builds and packs the modules with Java, the one packer (`tools/modulepack.py`) packs the others, and each package goes in through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core). For a developer's own server, `start server --modules-dev` (`drishti.modules.dev`) loads the module folders as they are, unverified; it is refused in a cluster and under the `prod` profile.
 
 A jar found in the data folder's old `lib/` is moved into `lib/ext` once, at the first start that finds it, listed in the moved list, and
 **Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)).
@@ -221,8 +223,8 @@ Drishti setup on linux
   [  ok] python                 /usr/bin/python3 3.13.1
   [  ok] java                   /usr/lib/jvm/java-21-openjdk-amd64/bin/java  Java 21  (from JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64)
   [  ok] home (DRISHTI_HOME)    /home/you/drishti  (the folder holding tools/drishti.py; the install, read only)
-  [made] data (DRISHTI_DATA_DIR) /home/you/drishti/data  (<home>/data): made run, logs, tmp, dumps, modules, delta
-  [  ok] modules                /home/you/drishti/modules  (<home>/modules)
+  [made] data (DRISHTI_DATA_DIR) /home/you/drishti/data  (<home>/data): made run, logs, tmp, dumps, delta
+  [todo] modules (packages)     /home/you/drishti/modules  (<home>/modules): 0 .dmod file(s); python tools/drishti.py build modules
   [todo] server jar (<home>/lib) none in <home>/lib yet: python tools/drishti.py build jar
   [  ok] your jars (lib/ext)    /home/you/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
   [made] settings file          /home/you/drishti-envs/dev.ini  (from config/settings.examples/dev.ini, its paths filled in)
@@ -237,7 +239,7 @@ Environment variables seen:
   DRISHTI_TOKEN_SECRET     -
 
 Next steps:
-  1. python tools/drishti.py build jar
+  1. python tools/drishti.py build all   (the server jar into lib/ and the modules into modules/)
   2. python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java   (the demo lake)
   3. python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo   (server and console; drishti.py status, drishti.py stop all)
 ```
@@ -256,7 +258,7 @@ repository carries Maven as `mvnw`):
 
 ```bash
 git clone https://github.com/ajsinha/drishti.git /home/you/drishti && cd /home/you/drishti
-python3 tools/drishti.py build jar
+python3 tools/drishti.py build all
 ```
 
 ```powershell
@@ -381,14 +383,14 @@ environment (step 6), start again.
 
 ```bash
 cd /home/you/drishti
-python3 tools/drishti.py build jar           # Maven clean package, then the jar copied into lib/
-ls lib/                                      # drishti-server-<version>-exec.jar  ext/
+python3 tools/drishti.py build all           # one Maven clean package: the jar copied into lib/, the module packages into modules/
+ls lib/ modules/                             # drishti-server-<version>-exec.jar  ext/ ; banking-1.0.0.dmod ... first-party.yaml
 ```
 
 ```powershell
 cd C:\Users\you\IdeaProjects\drishti
-py tools\drishti.py build jar
-dir lib
+py tools\drishti.py build all
+dir lib modules
 ```
 
 It always builds with `clean` (an older jar never stays beside the new one), with the Java of the one lookup ([1.5](#15-environment-variables)),
@@ -606,7 +608,7 @@ The demo lake is sixty business days of production-shaped test data (5,000 trade
 everything the packs read around them), ending on today's business date. It is written by **Drishti's Java loader** (`--engine java`:
 the server jar's parallel loader, bounded memory, no Python data library), so it needs the server jar in `<drishti>/lib` first.
 
-**1 · The jar.** `python3 tools/drishti.py build jar` (Windows `py tools\drishti.py build jar`) on a clone ([section 4](#4-get-the-release));
+**1 · The jar and the modules.** `python3 tools/drishti.py build all` (Windows `py tools\drishti.py build all`) on a clone ([section 4](#4-get-the-release));
 a release already carries it.
 
 **2 · The lake.** Stop the server first, then, with the settings file of [5.1](#51-the-settings-file):
@@ -704,7 +706,7 @@ environment. This section is the one place for the full list of options; `--help
 | `start all` | one server and one console on this machine, in the background (the server, then the console) |
 | `stop all` | the console, then the server (`--all-nodes`: every node too) |
 | `start cluster`, `stop cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): every node, then the console, or only those named |
-| `setup`, `build jar` | prepare the machine ([1.6](#16-the-settings-file-and-drishtipy-setup)); build the server jar into `<drishti>/lib` ([section 4](#4-get-the-release)) |
+| `setup`, `build jar`, `build modules`, `build all` | prepare the machine ([1.6](#16-the-settings-file-and-drishtipy-setup)); build the server jar into `<drishti>/lib`, the module packages into `<drishti>/modules`, or both ([section 4](#4-get-the-release)) |
 
 `--settings FILES` goes **before** the command (`python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo`):
 absolute paths, comma-separated, the right-most winning; the server is given them as `-Ddrishti.settings.file`, the console reads only
@@ -929,6 +931,7 @@ machine and on three machines, are in [section 11.6](#116-start-order-and-joinin
 | `port 18480 is in use by another process` (exit 3) | another copy runs: `drishti.py status` (is it ours?), then `drishti.py stop server`; something else on the port: pick another with `--port` |
 | `no Java found` or `Drishti runs on Java 21 or newer; the java from … is Java …` | install Temurin JDK 21 and set `DRISHTI_JAVA_HOME` (it comes before `JAVA_HOME` and the `PATH`), or pass `--java-home`; on macOS `/usr/libexec/java_home -V` lists the JDKs |
 | `no server jar in <drishti>/lib` | `python3 tools/drishti.py build jar` (it builds the jar and copies it there), or pass `--jar` |
+| `the modules beside the jar are not current` (a module named, with the command) | `python3 tools/drishti.py build modules <id>` (or `build all` after a new jar): a package is older than its module folder, missing, or stamped for another jar |
 | `DRISHTI_HOME is …, but these tools come from …` | `DRISHTI_HOME` (or `drishti.home` in the settings file) names another install: run that install's own `tools/drishti.py`, or unset it |
 | `already running (pid …)` (exit 3) | it is: `status` shows it; stop it first to restart |
 | `stale … removed (pid … is not running)` | nothing to do: the process had ended (a reboot, a crash); see its log for why |
@@ -1041,7 +1044,7 @@ stops the start with *names …dev.ini, which is not a file*.
 
 Then open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123` (section 9.3).
 
-**Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
+**Drishti build modules** (`run-configs/`) runs `tools/drishti.py --settings … build modules` and is the before-launch step of **Drishti server (debug-friendly)**; **Drishti server (dev switch)** sets `DRISHTI_MODULES_DEV=true` (module folders loaded as they are, nothing built). **Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
 of PyCharm: Maven's `clean package` of `drishti-app`, then the jar into `lib/`, so `lib/` never holds a stale jar (`lake demo --engine
 java`, `start` and every tool read it there). The other configurations: **Drishti server** (the packs' samples, demo on), **Drishti
 server (QA profile)** and **(debug-friendly)** (port 18580 and their own data folder `data/qa/data`, given as `-D`, so they never touch
@@ -1056,7 +1059,7 @@ Configuration** (the copy stays in the git-ignored `.idea/`). Debugging, the tes
 
 ```bash
 cd /home/you/drishti
-python3 tools/drishti.py build jar
+python3 tools/drishti.py build all
 drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo
 python3 tools/drishti.py status
@@ -1064,7 +1067,7 @@ python3 tools/drishti.py status
 
 ```powershell
 cd C:\Users\you\IdeaProjects\drishti
-py tools\drishti.py build jar
+py tools\drishti.py build all
 drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start all --demo
 py tools\drishti.py status

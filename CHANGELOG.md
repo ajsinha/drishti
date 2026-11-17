@@ -39,6 +39,31 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   `TypedCallParityTest`: every call the landings make, typed and over the loopback, for an administrator, a masked, a row-ruled and a
   closed role, a lens, an earlier date box, another language, a read-only and a scoped API token, several people at once, and with the
   business today fixed.
+- **Modules beside the jar (I6, A3 build and C1 launch).** The server jar holds no module: `drishti-app` no longer carries
+  `drishti-modules`, `packaging/drishti-kernel-app` (the thin jar, the same thing now) is deleted, and `packaging/dist` (a pom project, built
+  after `drishti-app`) packs `packaging/dist/target/dmod` with the one Python packer, each Java module stamped for the exec jar of the same run
+  (`drishti.kernel.jar`). `python tools/drishti.py build modules [id ...]` and `build all` (new `tools/launch/modulesbuild.py`): Maven for the
+  modules with Java, the packer for the others (no Maven when only those are named), each package into `<home>/modules` through a `.part` file
+  and one replace with an older file of the same module removed, `first-party.yaml` last; `build all` is one Maven run of the jar and the
+  modules; `build modules --no-maven` takes the packages a run just left (the drill's gate). `build jar` alone says which modules are missing
+  or stamped for another jar. `modulepack` reads the build of an exec jar from its nested server jar. The module host takes the packages
+  and `first-party.yaml` from the modules folder (`ModuleDeployConfiguration.shipped`, `FirstParty.shipped`), and with packages there its own
+  folder is `<data>/cache/module-host`, made again from them at every start, so a package replaced, upgraded or taken away between two
+  starts is what runs. **R2, the stale refusal:** `start server`, `start cluster` and a test session (`tools/conftest.py`, the console's
+  `conftest.py`) refuse a package older than its module folder (`modulepack.stale`) or stamped for another jar, naming the module and the
+  command. `start server` prints the packages it runs, refuses sources with no `.dmod` and starts with none from an empty folder (Health:
+  no modules). `--modules-dev` is the development switch (`drishti.modules.dev`, its rule now in `LaunchRoots`: refused in a cluster and under
+  `prod`). `start cluster` pins `<data>/stack/modules/` beside the jar copy (name, size, SHA-256) and gives it to every node. `setup` no longer
+  makes `<data>/modules`, lists the old module store as safe to delete and next steps `build all`. The images copy `modules/*.dmod` and
+  `first-party.yaml` (`.dockerignore` drops the module folders), `container_smoke` asks for them; the IDE run configurations gain **Drishti
+  build modules** (the debug server's before-launch step) and **Drishti server (dev switch)**; `module run` starts the kernel alone from the
+  jar in `lib/`. `drill.sh`: the gate builds the modules, the Java copies get them and `-Ddrishti.test.requires-python=true`, `STALE_STATE`
+  holds `modules`. Guards: G1 (`ServerJarHoldsNoModuleTest`, the exec jar of the reactor), G5 and G7 (`test_modules_beside_jar.py`: one jar,
+  genomics 0.1.0 then 0.1.1 then removed across restarts; an empty folder starts healthy with no module), `tools/test_build_modules.py`.
+  The anywhere, genomics walk and connector designer tests take the one jar and a modules folder; `clusterlakes` and `test_content_modules`
+  read modules and packs through the resolver (the config readers guard is whole again). `drishti.modules.packages=false` (the pom of
+  `drishti-server` and of banking's service sets it) makes a process ignore the packages of its modules folder and take the module
+  sources, as before, for the kernel's own tests until E1 moves them to fixtures; it goes with the old path in I8.
 - **Every reader of module folders asks the boot result (I5, B2, dual source).** `LaunchRoots` runs the module boot once at start
   (`bootModules`): when `<home>/modules` holds packages (`*.dmod`), `ModuleBoot` reads, verifies and unpacks them and its result
   (`ModuleHomes`) is published for the process and as settings first in the environment, `drishti.module.homes` and

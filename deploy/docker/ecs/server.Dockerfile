@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Drishti server image for Amazon ECS with EFS (docs/architecture/AWS_DEPLOYMENT.md section 5). Build from the repository
-# root after ./mvnw -q package -DskipTests:
+# root after python tools/drishti.py build all (the jar and the module packages):
 #   docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:$(python3 tools/version.py) .
 # Java 21 by default; Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
 ARG BASE_IMAGE=eclipse-temurin:21-jre

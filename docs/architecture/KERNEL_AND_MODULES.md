@@ -448,9 +448,9 @@ one build and release train builds banking with each kernel, so the two always s
 
 **As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the verifier (`ModuleCli`) and the kernel.
 The build (`packaging/dist`) packs the product's modules with the Python packager (`tools/modulepack.py`), verifies the ones with a server part with `ModuleCli verify` and writes
-`META-INF/drishti/first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files; both server jars carry it. A manifest
+`first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files, in `packaging/dist/target/dmod`; `drishti.py build modules` copies the packages and the list into the modules folder beside the server jar, which holds neither. A package is stale (R2) when `modulepack.stale` finds its module folder changed or its stamp is another jar's; `start server`, `start cluster` and a test session refuse it, naming the module and the command. A manifest
 whose `kernel-internals:` names a file (banking's `java/kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
-`kernel-build:` with the kernel on its class path (`<version>+<build time>` from the server's `build-info.properties`, or `--kernel-build`).
+`kernel-build:` with the build of the server jar the build runs for (`<version>+<build time>` from the server's `build-info.properties`, read from the jar or from its nested server jar in an exec jar, or `--kernel-build`).
 Verification adds `origin: first-party (verified ...)` or `origin: third-party (why)` as the first Health note; an allowance on a module
 that does not verify is refused (C1), one built for another kernel is refused (V3, the words above); the module's class loader asks the
 kernel for exactly the allowed packages (not their sub-packages). The allowance file lists, besides the packages banking's sources reach,

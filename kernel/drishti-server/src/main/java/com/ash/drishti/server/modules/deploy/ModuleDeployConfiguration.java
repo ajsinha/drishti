@@ -138,6 +138,7 @@ public class ModuleDeployConfiguration {
     static boolean packaged(Environment env) {
         String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
         return !home.isEmpty() && !"none".equals(home)
+                && com.ash.drishti.module.runtime.ModuleBoot.usePackages(env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.PACKAGES_SETTING))
                 && com.ash.drishti.module.runtime.ModuleBoot.hasPackages(Path.of(home).toAbsolutePath().normalize());
     }
 
@@ -262,7 +263,7 @@ public class ModuleDeployConfiguration {
      */
     static List<Path> shipped(Path folder, Environment env) {
         String home = env.getProperty(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING, "").strip();
-        if (home.isEmpty() || "none".equals(home)) {
+        if (home.isEmpty() || "none".equals(home) || !packaged(env)) {
             return List.of();
         }
         List<Path> found = com.ash.drishti.module.runtime.ModuleBoot.packages(Path.of(home).toAbsolutePath().normalize());

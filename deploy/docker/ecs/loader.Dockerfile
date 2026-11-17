@@ -17,7 +17,7 @@
 # deltalake, pyarrow and pyyaml (`lake publish`, `lake maintain`), the AWS CLI v2, the tools and the shipped modules' packs (layouts,
 # ingest keys). The install layout of every Drishti image and install (docs/DEPLOYMENT_AND_QA_GUIDE.md section 1.4): the install folder
 # /opt/drishti (DRISHTI_HOME, read only), its tools/, modules/ and lib/ with the one server jar, where every tool finds it.
-# Build from the repository root after ./mvnw -q package -DskipTests:
+# Build from the repository root after python tools/drishti.py build all (the jar and the module packages):
 #   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:$(python3 tools/version.py) .
 # The task mounts one EFS access point at /opt/drishti/data (scratch lakes, locks, temp, home); the root file system is read-only.
 ARG BASE_IMAGE=eclipse-temurin:21-jre

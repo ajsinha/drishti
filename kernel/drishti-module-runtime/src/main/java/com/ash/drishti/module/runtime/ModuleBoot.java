@@ -78,6 +78,18 @@ public final class ModuleBoot {
     /** The setting of the modules folder ({@code <DRISHTI_HOME>/modules}), the folder the boot reads its packages from. */
     public static final String HOME_SETTING = "drishti.modules.home";
 
+    /**
+     * {@code drishti.modules.packages} (default true): false makes the process ignore the {@code .dmod} files of the modules folder and take
+     * its modules from the folders and the old store, as before i7a. For the kernel's own tests that serve the module sources in a checkout
+     * where packages were built (until E1 puts them on fixtures); deleted with the old path in i7a's I8.
+     */
+    public static final String PACKAGES_SETTING = "drishti.modules.packages";
+
+    /** Whether packages in the modules folder are used: {@code drishti.modules.packages} is not {@code false}. */
+    public static boolean usePackages(String setting) {
+        return !"false".equalsIgnoreCase(setting == null ? "" : setting.strip());
+    }
+
     /** The extension of a module package. */
     public static final String EXTENSION = ".dmod";
 

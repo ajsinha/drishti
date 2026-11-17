@@ -2695,7 +2695,9 @@ filled in (an existing file is never overwritten), makes `drishti-console/.venv`
 
 **`build jar`** runs Maven (`clean package`, never `install`) with the install's Maven wrapper and copies the server's exec jar into
 `<home>/lib`, where every start finds it (the newest jar there). Options: `--java-home DIR`, `--offline` (Maven `-o`), `--no-copy` (leave
-the jar in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing).
+the jar in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing). It says which modules are missing or stale for the new jar.
+
+**`build modules [ID ...]`** and **`build all`**: the server jar holds no module; each is a package `<id>-<version>.dmod` in `<home>/modules` with `first-party.yaml` beside them. `build modules` runs Maven (`clean package -DskipTests -pl :drishti-modules -am`) for the modules with Java, stamped for the jar in `<home>/lib`, packs the others with the one packer (`tools/modulepack.py`, no Maven; naming only such modules builds without Maven), puts every package in through a `.part` file and one replace (an older file of the same module is removed), and writes `first-party.yaml`. `build all` is one Maven run of the jar and the modules (`-pl :drishti-app,:drishti-modules -am`), everything stamped for the jar it builds, then the jar into `lib/` and the packages into `modules/`. Options: `--java-home DIR`, `--offline`, `--dry-run`; `build modules --no-maven` takes the Java modules' packages from `packaging/dist/target/dmod` (the drill's gate); `build all --no-copy`. A package whose module folder changed, or that is stamped for another jar, is *stale*: `start server`, `start cluster` and a test session refuse it, naming the module and the command.
 
 **`start server|console|all|cluster`** and **`stop server|console|all|cluster`**:
 
@@ -2719,6 +2721,7 @@ Options of `start server`, `start console` and `start all`:
 | `--port PORT` | the server's port (default `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else 17480). `start all` has `--server-port` and `--console-port` |
 | `--heap SIZE` | the server's `-Xmx` (default 2g; 4g with `--demo`) |
 | `--jar FILE` | a server jar for one run (default the newest in `<home>/lib`) |
+| `--modules-dev` | `start server`: the development switch (`drishti.modules.dev`): module folders load as they are, unverified, no `.dmod` needed; refused in a cluster and under `prod` |
 | `--packs LIST`, `--engine ENGINE`, `--lake-root DIR` | the packs to load (`DRISHTI_PACKS`), the Delta engine `native`, `hadoop` or `auto`, the Delta root |
 | `--iceberg`, `--iceberg-root DIR` | serve the stores from Iceberg tables: copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` |
 | `--java-opt FLAG`, `--server-arg ARG`, `--workdir DIR` | one more JVM flag, one more server argument (both repeatable); the server's working folder |
@@ -2738,7 +2741,7 @@ answering.
 
 ```
 python tools/drishti.py setup                                                        # once per machine
-python tools/drishti.py build jar                                                    # the server jar into <home>/lib
+python tools/drishti.py build all                                                    # the server jar into <home>/lib, the module packages into <home>/modules
 python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo           # server, then console
 python tools/drishti.py status
 python tools/drishti.py stop all

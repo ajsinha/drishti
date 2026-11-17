@@ -99,7 +99,7 @@ inside the module (it serves only the module's kinds and must go with it, so not
 `GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C14. The file
 takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
 (`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
-kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
+kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the one server jar over a modules folder that holds the genomics package only.
 
 ## 5. What is shared, and what is not
 
@@ -252,10 +252,10 @@ console per entry, each `console-<name>` with its own pid file, log and temp fol
 IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
-**Banking as a module.** The full jar (drishti-app) is the thin kernel plus `drishti-modules`: the four first-party packages
-(`drishti/modules/banking-1.0.0.dmod`, `market-data-`, `capital-markets-`, `economy-1.0.0.dmod`) and `first-party.yaml`, built by
-`packaging/dist` in the normal build (banking is put through the fourteen checks there, with market-data beside it). At start the server
-installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
+**Banking as a module.** The server jar (drishti-app) is the kernel and holds no module. The first-party packages (`modules/banking-1.0.0.dmod`,
+`market-data-`, `trading-`, `capital-markets-`, `economy-`, `genomics-`, the source-system modules) and `first-party.yaml` sit beside it in the
+modules folder, made by `python tools/drishti.py build modules` (Maven's `packaging/dist` packs those with Java; banking is put through the
+fourteen checks there, with market-data beside it). At start the server installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
 off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
 module. The access registry reads these manifests (installed unless the module store says removed), so their packs and functions are the
 modules'. Banking's code is no longer on the kernel's class path; its in-process wiring survives only as its own tests' harness.
