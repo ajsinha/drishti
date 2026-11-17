@@ -47,7 +47,8 @@ public class OperationController {
         this.operations = operations;
     }
 
-    @PostMapping(value = KernelOperations.PATH + "{module}/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    /** {@link KernelOperations#PATH}, written out so the API guide's check reads it. */
+    @PostMapping(value = "/api/v1/net/modules/operation/{module}/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> run(@PathVariable String module, @PathVariable String name, @RequestBody(required = false) JsonNode body,
             HttpServletRequest req) {
         if (req.getAttribute(NetCallFilter.PEER) == null || !(req.getAttribute(Principal.ATTRIBUTE) instanceof Principal p)) {
