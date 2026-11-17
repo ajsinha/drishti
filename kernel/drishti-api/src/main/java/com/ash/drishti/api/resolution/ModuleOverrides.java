@@ -404,7 +404,7 @@ public final class ModuleOverrides {
                             break;
                         }
                     }
-                    Files.delete(up);                                  // an empty <id>/ and installed/ go with the last view
+                    Files.delete(up);                                  // an empty <id>/ and its parent go with the last view
                 }
                 return home;
             }
