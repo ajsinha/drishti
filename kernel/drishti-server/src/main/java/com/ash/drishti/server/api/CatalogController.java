@@ -16,14 +16,9 @@
 package com.ash.drishti.server.api;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Sutra;
@@ -32,7 +27,6 @@ import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
