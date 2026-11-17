@@ -47,6 +47,17 @@ def test_java_the_map_does_not_narrow_selects_every_console_test():
     assert affected.classify(["net/drishti-net/src/main/java/X.java"]).all_console
 
 
+def test_a_module_file_without_maven_runs_the_modules_tests_on_the_packages():
+    plan = affected.classify(["modules/economy/packs/world-economy/pack.yaml"])
+    assert {"testing/drishti-modules-it", "packaging/dist"} <= plan.modules and not plan.everything
+    assert plan.all_console and plan.all_tools
+
+
+def test_banking_java_reaches_the_modules_tests():
+    plan = affected.classify(["modules/banking/java/banking-service/src/main/java/com/ash/X.java"])
+    assert "testing/drishti-modules-it" in plan.modules
+
+
 def test_a_java_test_stays_in_its_module():
     plan = affected.classify(["modules/banking/java/banking-service/src/test/java/com/ash/XTest.java"])
     assert plan.modules == {"modules/banking/java/banking-service"} and not plan.console and not plan.all_console

@@ -230,6 +230,11 @@ def classify(files: list[str], root: Path = ROOT) -> Plan:
             plan.console |= mapped_tests(hit[1], console)
             plan.modules |= downstream(set(hit[2]), mods)
             plan.why(f, "data or configuration: as the map says")
+        elif f.startswith("modules/"):                             # a module's packs, console part, Python or docs: no Maven project of its own (E1)
+            plan.modules |= downstream({"testing/drishti-modules-it"}, mods) | {"testing/drishti-modules-it", "packaging/dist"}
+            plan.all_console = True
+            plan.all_tools = True
+            plan.why(f, "a module's files: the modules are packed again and drishti-modules-it runs on the packages; every console and tools test")
         elif f.startswith(("config/", "data/testdata/")):
             words = [p for p in f.split("/")[1:3] if p not in WEAK]
             named = tests_naming(words, console_paths, root)

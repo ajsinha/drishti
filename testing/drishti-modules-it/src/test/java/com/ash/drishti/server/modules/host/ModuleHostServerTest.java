@@ -61,6 +61,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * jar and a third-party jar under {@code lib/}). Each contributes a kind, a Rachana function, a REST route and a page, used from the
  * kernel as its own; unloaded, every one is gone (the route answers 410); put back, they return, and the class loader is collected each time.
  */
+@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading", "drishti.modules.dev=true",
         "drishti.modules.autodeploy-seconds=3600"})
 @AutoConfigureMockMvc

@@ -30,7 +30,6 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId></dependency>
     <!-- build order only (G1 reads the exec jar drishti-app writes); nothing of it is on this project's class path -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-app</artifactId><version>${project.version}</version><type>pom</type><scope>test</scope>

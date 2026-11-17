@@ -4568,7 +4568,7 @@ placeholder), `landing.html` (the statistic and the tooltip that lists the kinds
 
 | Test | File | What it proves |
 |---|---|---|
-| server: the figure, change, unit and caption; the optional parts; empty; masked; no access; the grammar | `kernel/drishti-server/src/test/java/com/ash/drishti/server/MetricPanelTest.java` | binding through the real pipeline with a Sutra and a document the test supplies (`pipeline.preview(Optional.of(sutra), doc)`; the 4-argument overload takes a redactor and a `mayOpen` predicate for masks and no access) |
+| server: the figure, change, unit and caption; the optional parts; empty; masked; no access; the grammar | `testing/drishti-modules-it/src/test/java/com/ash/drishti/server/MetricPanelTest.java` | binding through the real pipeline with a Sutra and a document the test supplies (`pipeline.preview(Optional.of(sutra), doc)`; the 4-argument overload takes a redactor and a `mayOpen` predicate for masks and no access) |
 | console: macro, live, CSV, CSS | `drishti-console/tests/test_metric.py` | structure, accessible name, tones, `data-path`, no inline style, a live frame, the CSV, theme-only colours and the phone rule |
 | browser: palette, add, seeding, inspector, rendering | `drishti-console/tests/test_workbench_metric_browser.py` | the kind can be added from the palette and edited in the inspector, and the tile draws |
 | docs: anchors, images, YAML | `drishti-console/tests/test_panel_kinds.py`, `test_guide_images.py` | the catalogue |

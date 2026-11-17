@@ -29,7 +29,8 @@ import org.junit.jupiter.api.Test;
  * Guard G-flat (i7a, S6 of the impact analysis): banking's Spring tests and the VaR goldens run banking on the flat test class path
  * ({@code BankingTestHarness}: one context, no module loader, no bean-name prefix), so they cannot catch a breakage of the module path.
  * This lists exactly which tests do ({@code flat-harness-tests.txt}) and fails when a test starts using the flat harness without being
- * added to the list, or is gone and still listed. G14 ({@code PackagedVarGoldenTest}, I7) is the module-path counterpart.
+ * added to the list, or is gone and still listed. G14 ({@code PackagedVarGoldenTest} in {@code testing/drishti-modules-it}) is the module-path counterpart:
+ * the same golden matrix, asked of a server started on the exec jar and the built {@code .dmod} packages.
  */
 class FlatHarnessInventoryTest {
 

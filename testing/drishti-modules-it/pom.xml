@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-modules-it</artifactId>
+  <name>drishti-modules-it</name>
+  <description>The tests that need the real modules (E1): the server over the built packages, the VaR golden through a packaged server (G14)</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <!-- build order only: the packages (packaging/dist/target/dmod) and the exec jar (drishti-app) this project's tests run on; nothing of them is on the class path -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version><type>pom</type><scope>test</scope>
+      <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-app</artifactId><version>${project.version}</version><type>pom</type><scope>test</scope>
+      <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka-test</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <properties>
+    <drishti.repo>${project.basedir}/../..</drishti.repo>
+    <drishti.python>python3</drishti.python>
+    <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
+    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
+  </properties>
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <activation><os><family>windows</family></os></activation>
+      <properties><drishti.python>python</drishti.python></properties>
+    </profile>
+  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <!-- the modules as an install holds them: the packages of packaging/dist (first-party.yaml with them), no source folder, never the repository's modules/ -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>modules-home</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>copy-resources</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/modules-home</outputDirectory>
+              <resources><resource><directory>${project.basedir}/../../packaging/dist/target/dmod</directory></resource></resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- the modules without Java (the six source-system modules), packed by the one packer into the same folder; first-party.yaml again for all of them -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration><executable>${drishti.python}</executable></configuration>
+        <executions>
+          <execution>
+            <id>pack-source-calypso</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-calypso</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-endur</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-endur</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-ici</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-ici</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-murex</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-murex</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-swapone</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-swapone</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-wss</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-wss</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>first-party</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.modules.home}</argument>
+                <argument>--out</argument><argument>${drishti.modules.home}/first-party.yaml</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- a JVM per test class: a module's functions are registered once per JVM (Rachana's function table is the process's), so two servers on the
+               same packages in one JVM refuse the second ("provided twice") -->
+          <reuseForks>false</reuseForks>
+          <systemPropertyVariables>
+            <drishti.sdk.archetype>${project.basedir}/../../drishti-sdk/drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
+            <!-- the one folder a test fork writes into (TestRun in the tests): every path below and in the tests' properties is
+                 under it, and the fork removes it when it ends, so a run leaves nothing in target/ but the build's own output -->
+            <drishti.test.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}</drishti.test.dir>
+            <drishti.data.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/data</drishti.data.dir>
+            <drishti.identity.users-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/users.json</drishti.identity.users-file>
+            <drishti.identity.audit-file>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/audit.jsonl</drishti.identity.audit-file>
+            <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <!-- the tests' scratch may sit on a RAM disk beside other suites: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10% -->
+            <drishti.disk.min-free-gb>1</drishti.disk.min-free-gb>
+            <drishti.disk.min-free-percent>1</drishti.disk.min-free-percent>
+            <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
+            <drishti.packs.dir>${project.basedir}/../../config/packs</drishti.packs.dir>
+            <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
+            <drishti.ui-kit.dir>${project.basedir}/../../config/ui-kit</drishti.ui-kit.dir>
+            <drishti.ui-kit.site-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/ui-kit</drishti.ui-kit.site-dir>
+            <!-- the retired example packs stay loadable for the tests that use them as fixtures (finance, logistics…);
+                 tests that name no packs keep finance, the fixture most of them were written against -->
+            <drishti.packs.extra-dirs>${project.basedir}/../../examples/packs</drishti.packs.extra-dirs>
+            <drishti.packs.enabled>finance</drishti.packs.enabled>
+            <drishti.rachana.dirs>${project.build.directory}/test-run/fork${surefire.forkNumber}/no-site-sutras</drishti.rachana.dirs>
+            <drishti.identity.preferences-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/identity/preferences</drishti.identity.preferences-dir>
+            <drishti.governance.dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/governance</drishti.governance.dir>
+            <DRISHTI_CACHE_ROOT>${project.build.directory}/test-run/fork${surefire.forkNumber}/cache</DRISHTI_CACHE_ROOT>
+            <drishti.sources.connectors-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/connectors</drishti.sources.connectors-dir>
+            <drishti.bi.governance.imports-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/bi-imports</drishti.bi.governance.imports-dir>
+          <!-- G14: the server jar of this reactor and the packages it is started on -->
+            <!-- the helpers of drishti-server's test jar find their resources (sutra-next-data, bi/samples-2.1) under the module root: drishti-server's -->
+            <drishti.module.root>${project.basedir}/../../kernel/drishti-server</drishti.module.root>
+            <drishti.g14.dir>${project.build.directory}/g14</drishti.g14.dir>
+            <drishti.module.jars>${project.basedir}/../../packaging/dist/target/module-jars</drishti.module.jars>
+            <drishti.exec.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</drishti.exec.jar>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

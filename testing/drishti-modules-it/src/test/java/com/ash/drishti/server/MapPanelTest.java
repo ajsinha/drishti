@@ -46,6 +46,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * binder (which country is highlighted, which countries have a page, the figures that shade the map) and what the caller's
  * masks and rights do to them. Read through the real pipeline over the world-economy pack's real documents.
  */
+@org.junit.jupiter.api.extension.ExtendWith(com.ash.drishti.it.ModuleSources.class)
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=world-economy"})
 class MapPanelTest {
