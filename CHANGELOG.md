@@ -65,6 +65,12 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   its packs' connectors, its own connector files; `tools/launch/clusterlakes.py`), and a synthetic lake ends on the cluster's business
   today (`DRISHTI_BUSINESS_TODAY`): one that ends on another day is built again beside it and swapped in (the lakes ended on 2026-10-16, so
   with today fixed at 2026-11-06 the grouped page `counterparty-trades` of a b/c counterparty was "not held"). `test_clusterlakes.py`.
+- **An id with a `/` from the tools (backlog).** `server smoke`, `view get|explain` and `change history` put the id percent-encoded into
+  the path (`risk-factor/CM%2FPRICE%2FBRENT`, `var-limit/VL-LEGAL~LE-FRA%2FDESK-SFT`): the servlet container refuses `%2F` with a bare 400
+  (10 of the 13 smoke failures on the owner's stack). The tools now name an entity one way, `tools/entitypath.py`: such an id goes in the
+  query with `~` in its place, as every `{kind}/{id}` endpoint accepts and the console and the script client already do; `history` uses it
+  too. `test_entitypath.py` (with a guard that no tool quotes an id into an entity path) and a smoke case in `test_cli_extras.py`. The other
+  3 (counterparty-trades of drishti-b/c counterparties on 2026-11-06) were missing data: the cluster lakes ended on 2026-10-16 (above).
 
 ## 2.9.11.i6 (2026-11-16)
 

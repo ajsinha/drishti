@@ -127,6 +127,15 @@ class Smoke(ServerCase):
         rows = {v["date"]: v["status"] for v in json.loads(out)["views"]}
         self.assertEqual((1, "fail", "skip"), (code, rows["2026-10-05"], rows["2026-10-02"]))
 
+    def test_an_id_with_a_slash_is_opened_with_the_id_in_the_query(self):
+        """A risk factor CM/PRICE/BRENT or a VaR scope VL-LEGAL~LE-FRA/DESK-SFT: a %2F in a path is a bare 400 of the servlet container, so
+        the id goes in the query with ~ in its place (tools/entitypath.py), as every {kind}/{id} endpoint accepts."""
+        Fake.routes["/api/v1/search"] = {"rows": [{"ref": {"kind": "trade", "id": "CM/PRICE/BRENT"}}]}
+        Fake.routes["/api/v1/views/trade/~"] = lambda path: (200, VIEW) if "id=CM%2FPRICE%2FBRENT" in path else (400, {"detail": "no id"})
+        code, out, _ = run("server", "smoke", "--server", self.url, "--pack", "p1", "--ids", "1", "--dates", "1", "--json")
+        self.assertEqual(0, code, out)
+        self.assertIn("/api/v1/views/trade/~?asOf=2026-10-05&id=CM%2FPRICE%2FBRENT", Fake.seen)
+
     def test_server_down_is_exit_1(self):
         self.srv.shutdown()
         self.assertEqual(1, run("server", "smoke", "--server", self.url, "--timeout", "2")[0])

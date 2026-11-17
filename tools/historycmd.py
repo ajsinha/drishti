@@ -25,7 +25,8 @@ import csv
 import json
 import io
 import sys
-import urllib.parse
+
+import entitypath
 
 EPILOG = ("examples:\n  drishti.py history trade 1000015 --days 30\n  drishti.py history equity EQ-CSCA --range 3M --fields PRICE,CHANGE_1D\n"
           "  drishti.py history trade 1000015 --from 2026-09-01 --to 2026-09-30 --diff\n  drishti.py history trade 1000015 --days 30 --changes-only --json\n"
@@ -34,7 +35,6 @@ EPILOG = ("examples:\n  drishti.py history trade 1000015 --days 30\n  drishti.py
 
 def path_for(kind: str, id_: str, a) -> str:
     """The server's path and query for the arguments; an id a path cannot carry goes in the query (``~``)."""
-    q = lambda s: urllib.parse.quote(s, safe="")   # noqa: E731
     params = []
     for key, value in (("days", a.days), ("range", a.range), ("from", a.from_), ("to", a.to), ("fields", a.fields), ("knownAt", a.known_at)):
         if value not in (None, ""):
@@ -43,11 +43,7 @@ def path_for(kind: str, id_: str, a) -> str:
         params.append(("diff", "true"))
     if not any(k in ("days", "range", "from") for k, _ in params):
         params.insert(0, ("days", "30"))
-    where = f"{q(kind)}/{q(id_)}"
-    if "/" in id_ or "\\" in id_ or id_ in (".", "..", "~"):
-        where = f"{q(kind)}/~"
-        params.append(("id", id_))
-    return f"/api/v1/history/{where}?" + urllib.parse.urlencode(params)
+    return entitypath.url("/api/v1/history", kind, id_, params=params)
 
 
 def rows_of(res: dict, changes_only: bool) -> tuple[list[str], list[list[str]]]:
