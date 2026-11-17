@@ -1227,7 +1227,7 @@ command at every step.
 | `drishti.py module …` | the command line of section 7.1 plus `new` and `run` (8.3, 8.4), for teams without Maven expertise |
 | a sample | the `genomics` sample module (examples in `examples/genomics/`), used by the SDK's own tests and by `drishti.genomics` |
 
-All of it is published to the site's (or Drishti's partner) Maven repository; nothing needs the kernel's sources.
+**As built (i7a): the SDK folder.** `python tools/drishti.py build sdk` writes `<home>/sdk/`: `repo/` (a Maven file repository with `drishti-kernel-api` and what it needs, the product's parent pom, `drishti-module-parent` and the archetype), `settings.xml` (that repository by absolute path, for `mvn -s`) and `drishti-module-parent/pom.xml` (for a `relativePath`). Maven runs `package`, never `install`. Nothing needs the kernel's sources: `tools/test_sdk_builds_genomics.py` builds the genomics sample from the SDK folder alone and packs and verifies it. The testkit, the typings and the schemas above are not in it yet.
 
 ### 8.2 The module as a Maven project
 
@@ -1347,7 +1347,7 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 
 | Step | Who | Command | Result |
 |---|---|---|---|
-| 1 Get the SDK | developer | add the module repository to `~/.m2/settings.xml` (or unpack the SDK zip) | `drishti-module-parent`, the API, the testkit, the archetype |
+| 1 Get the SDK | developer | `python tools/drishti.py build sdk`, then `mvn -s <home>/sdk/settings.xml ...` (the repository by absolute path) | `drishti-module-parent`, the API, the testkit, the archetype |
 | 2 Create | developer | `drishti.py module new genomics --template full` (or `mvn archetype:generate …`) | a project that builds green |
 | 3 Model the data | developer | edit `<id>-packs`: contracts, `needs.yaml`, samples | kinds the kernel can bind (section 5) |
 | 4 Show it | developer | Sutras first; composed pages in `<id>-console` (section 9) | pages, words, menus, Home cards |

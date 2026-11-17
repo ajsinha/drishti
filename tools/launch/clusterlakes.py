@@ -37,13 +37,17 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Callable, Iterable
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-ROOT_ENV = "DRISHTI_DELTA_ROOT"
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import lakeconfig  # noqa: E402 - the one name of the demo lake's root variable
+
+ROOT_ENV = lakeconfig.DEMO_ROOT_ENV
 TODAY_ENV = "DRISHTI_BUSINESS_TODAY"
 PART = re.compile(r"business_date=(\d{4}-\d{2}-\d{2})$")
 
