@@ -703,6 +703,19 @@ public final class ModuleConformance {
         return new ModuleRuntime(facts, null, ModuleConformance.class.getClassLoader(), HARNESS, run.resolve("tombstones"));
     }
 
+    /** The harness's {@code KernelCalls}: there is no person of a request here, and no lens file. */
+    private static final com.ash.drishti.kernel.api.module.KernelCalls NO_CALLS = new com.ash.drishti.kernel.api.module.KernelCalls() {
+        @Override
+        public Caller caller() {
+            throw new IllegalStateException("the conformance harness serves no request: there is no person to call as");
+        }
+
+        @Override
+        public Map<String, Object> lens(String name) {
+            return Map.of();
+        }
+    };
+
     /**
      * The harness's host: it has no kernel beans, so a module with a kernel-internals allowance (whose beans take the kernel's) is made
      * with every bean lazy: its configuration is read, its routes and contributions go through the runtime, and its loader must unload.
@@ -710,6 +723,8 @@ public final class ModuleConformance {
     private static final ModuleHost HARNESS = new ModuleHost() {
         @Override
         public void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
+            // the kernel's API as the person (THIN_CONSOLE_DESIGN.md step S8a): no request is ever in hand here, so every call is refused
+            context.registerBean(com.ash.drishti.kernel.api.module.KernelCalls.class, () -> NO_CALLS);
             if (!candidate.manifest().kernelInternals().isEmpty()) {
                 context.addBeanFactoryPostProcessor(bf -> {
                     for (String n : bf.getBeanDefinitionNames()) {
