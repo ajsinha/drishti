@@ -14,7 +14,8 @@
 """Pictures of the source system tutorial, add a source system (docs/guides/BUILD_GUIDE.md), written to docs/tutorials/img/swapone/, in the light
 theme. The pictures follow the tutorial's steps, which this module runs itself, in order, on the scratch stack of tutorial 16's pictures
 (t45's server and console, started here: its own copy of config/, no demo lake, sign-in off, the data inbox on) with the shipped
-sample module source-swapone left out (DRISHTI_MODULES_SHIPPED=false), so the reader's own module is the only one. Nothing is written to the
+sample module source-swapone left out (DRISHTI_MODULES_SHIPPED=false), so the reader's own module is the only one (the designer's Install step is the .dmod download; the script puts
+the file in the scratch server's modules folder and restarts it). Nothing is written to the
 repository's config/ or data/:
 
     DRISHTI_SHOTS_WORK=<an empty folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
@@ -150,9 +151,15 @@ def made(c: Ctx):
     c.page.wait_for_timeout(1000)
     save(c, "04-made.jpg")
     c.page.click("[data-go=deploy]")
-    c.page.click("[data-install]")
-    c.page.locator("[data-open]:not([hidden])").wait_for(timeout=240_000)
-    time.sleep(8)                                                    # auto-deploy loads the module within seconds
+    # A module is a file and a restart: the designer's Install step is the .dmod download; the reader copies it into the server's modules
+    # folder and restarts the server (here: the scratch server's <work>/modules, then t45's restart).
+    with c.page.expect_download(timeout=240_000) as got:
+        c.page.click("[data-download-install]")
+    modules = work() / "modules"
+    modules.mkdir(parents=True, exist_ok=True)
+    got.value.save_as(modules / got.value.suggested_filename)
+    t45.restart()
+    time.sleep(3)                                                    # the module is loaded at the start
 
 
 @shot("05-module.jpg")
