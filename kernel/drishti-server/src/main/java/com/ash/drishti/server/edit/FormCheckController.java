@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
  * shows what comes back; it carries no rule. {@code POST /api/v1/forms/check} is read-only and writes nothing, a token reads it as it reads
  * {@code /changes/preview}.
  *
- * <p>Body: {@code {sutra, panel, values, checked:[field...], carried:{field:{...}}, step}}, and optionally {@code auto:[field...]}, the
+ * <p>Body: {@code {sutra, panel, values, checked:[field...], carried:{field:{...}}, step}}, and optionally {@code design} (the person's own Design, as drafts read it) and {@code auto:[field...]}, the
  * fields whose value is a default the person has not typed over (the server works them out again). The form is found from the Sutra on the
  * server; the client sends no rule. Answer: {@code {issues:[{field, message, severity}], computed:{field:value}, hints:[{label, step, value,
  * of, percent, over, text}], typed:{field:value}}}: {@code issues} are {@link Form#check}; {@code computed} is every {@code =expression}
@@ -77,6 +77,14 @@ public class FormCheckController {
         this.today = today;
     }
 
+    /** The Designs, for a page drawn with the person's own Design (absent in a test that makes the controller itself). */
+    private com.ash.drishti.identity.design.DesignService designs;
+
+    @Autowired(required = false)
+    void designs(com.ash.drishti.identity.design.DesignService d) {
+        this.designs = d;
+    }
+
     @PostMapping("/forms/check")
     public Map<String, Object> check(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         String name = body.path("sutra").asText("");
@@ -84,7 +92,17 @@ public class FormCheckController {
         if (name.isBlank() || panelId.isBlank() || !body.path("values").isObject()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a form check is { sutra, panel, values, checked, carried, step }");
         }
-        Sutra sutra = sutras.latest(name).orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no Sutra " + name));
+        String design = body.path("design").asText("");
+        Sutra sutra;
+        if (!design.isBlank() && designs != null) {                    // a page drawn with the person's own Design: its Sutra, as a draft save reads it
+            var d = designs.get(p.user(), design);
+            if (d.sutra == null || d.sutra.isBlank()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the design '" + design + "' has no Sutra yet");
+            }
+            sutra = sutras.check(d.sutra);
+        } else {
+            sutra = sutras.latest(name).orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no Sutra " + name));
+        }
         Panel panel = sutra.panels().stream().filter(x -> x.id().equals(panelId)).findFirst()
                 .orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, name + " has no panel " + panelId));
         Form form = panel.form().orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, name + " # " + panelId + " has no form"));

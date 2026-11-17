@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -77,6 +76,8 @@ public class DraftsController {
     private final SutraRegistry sutras;
     private final Entitlements entitlements;
     private final AuditLog audit;
+    /** The one "today": the business date (honours drishti.business-date.today), as the form check and the edit handler read it. */
+    private final com.ash.drishti.engine.time.BusinessDates dates;
     private final ObjectMapper json = new ObjectMapper();
 
     /** The Designs, for a page drawn with the person's own Design (absent in a test that makes the controller itself). */
@@ -95,7 +96,9 @@ public class DraftsController {
         this.lookups = l;
     }
 
-    public DraftsController(PreferenceStore store, SutraRegistry sutras, Entitlements entitlements, AuditLog audit) {
+    public DraftsController(PreferenceStore store, SutraRegistry sutras, Entitlements entitlements, AuditLog audit,
+            com.ash.drishti.engine.time.BusinessDates dates) {
+        this.dates = dates;
         this.store = store;
         this.sutras = sutras;
         this.entitlements = entitlements;
@@ -172,7 +175,7 @@ public class DraftsController {
         if (!records.isArray() || records.isEmpty() || records.size() > MAX_RECORDS || !mode.equals("cells") && records.size() != 1) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a draft has one record (" + MAX_RECORDS + " for edited cells)");
         }
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = dates.current();
         List<String> roles = entitlements.formRoles(p);
         List<Map<String, Object>> problems = new ArrayList<>();
         List<Map<String, Object>> warnings = new ArrayList<>();

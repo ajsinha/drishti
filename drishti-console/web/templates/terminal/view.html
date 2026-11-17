@@ -164,7 +164,7 @@
 <script src="{{ BASE }}/static/js/drishti_sutra-wire.js?v={{ ASSET_V }}"></script>
 <script src="{{ BASE }}/static/js/drishti_refresh.js?v={{ ASSET_V }}"></script>
 <script src="{{ BASE }}/static/js/drishti_compute.js?v={{ ASSET_V }}"></script>
-{% if not embed and vm.panels | selectattr('form') | list %}<script src="{{ BASE }}/static/js/drishti_form-expr.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_write-back.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if not embed and vm.panels | selectattr('form') | list %}<script src="{{ BASE }}/static/js/drishti_write-back.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if designer and designer.on and not embed %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_designer.css?v={{ ASSET_V }}">{% include "_designer_kit.html" %}<script src="{{ BASE }}/static/js/drishti_designer-forms.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_designer-settings.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_designer.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.controls %}<script src="{{ BASE }}/static/js/drishti_controls.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if calc and calc.offered and calc.allowed %}<script src="{{ BASE }}/static/js/drishti_calc.js?v={{ ASSET_V }}"></script>{% endif %}

@@ -34,8 +34,7 @@
 (function () {
   'use strict';
   var view = document.querySelector('[data-view]');
-  var X = window.Drishti.formExpr;
-  if (!view || !X) { return; }
+  if (!view) { return; }
   var page = { kind: view.dataset.kind, id: view.dataset.id, sutra: view.dataset.chosenSutra || view.dataset.viewSutra || '', design: view.dataset.design || '' };
   var forms = {};                                    // panel id -> state
   var drafts = [];                                   // this page's drafts (the server's)
@@ -44,6 +43,43 @@
   view.appendChild(live);
 
   // ---- small helpers ------------------------------------------------------------------------------------------------------
+  /* The form's rules are the server's: a draft is sent to POST /api/forms/check (the console's proxy of /api/v1/forms/check) as people type
+     and the answer is shown. These three only read what was typed for display (an amount as 1.5m, 250k, 1,000,000) and keep an empty value empty. */
+  var X = {
+    empty: function (v) { return v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length); },
+    num: function (v) {
+      if (typeof v === 'number') { return isFinite(v) ? v : null; }
+      return typeof v === 'string' && v.trim() !== '' ? window.Drishti.elements.core.parseNumberText(v.replace(/mm$/i, 'm')) : null;
+    },
+    typed: function (f, v) {
+      if (X.empty(v)) { return null; }
+      if (f.type === 'number' || f.type === 'money') { var n = X.num(v); return n === null ? NaN : n; }
+      if (f.type === 'bool') { return v === true || String(v).toLowerCase() === 'true'; }
+      return String(v);
+    }
+  };
+  var WAIT = 250;                                    // ms of quiet before a check goes to the server
+  /* One checker per form on screen: build() gives the request, onAnswer(answer or null) draws. A check goes out WAIT ms after the last keystroke
+     (ask), or at once (now: Next, Save); the newest answer wins; the last answer stays on screen while one is in flight, so typing is never
+     blocked. data-checked-seq on host counts the answers that arrived (a test waits on it). Server away: away is true, the fields stay editable
+     and Save still sends (the server checks every save). */
+  function checker(host, build, onAnswer) {
+    var c = { last: null, away: false, sent: 0, seen: 0, timer: null };
+    function send() {
+      clearTimeout(c.timer); c.timer = null;
+      var my = ++c.sent, req = build();
+      req.sutra = page.sutra; req.design = page.design;
+      return fetch(drishti_url('/api/forms/check'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(req) })
+        .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+        .then(function (a) { if (my < c.sent) { return c.last; } a.step = req.step || ''; c.last = a; c.away = false; return c.last; },
+          function () { if (my === c.sent) { c.away = true; } return c.last; })
+        .then(function (a) { if (my === c.sent) { host.setAttribute('data-checked-seq', String(++c.seen)); onAnswer(a); } return a; });
+    }
+    c.ask = function () { clearTimeout(c.timer); c.timer = setTimeout(send, WAIT); };
+    c.now = send;
+    c.issues = function () { return c.last ? c.last.issues || [] : []; };
+    return c;
+  }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text !== undefined) { n.textContent = text; } return n; }
   function btn(cls, text, on) { var b = el('button', cls, text); b.type = 'button'; if (on) { b.addEventListener('click', on); } return b; }
   function say(t) { live.textContent = t; }
@@ -202,7 +238,7 @@
   /* The fields of the form beside the table or of a step of the drawer: drishti-inputs' Form (live), each record field as a field of its
      schema: text, a number and money (shown grouped, the currency beside it: fixed or what another field holds), a date, a date and a
      time (its zone beside it), a choice or a look-up, yes or no, long text, and an entity (the combobox above); a masked field says
-     Hidden for you, a locked or read-only one shows its value and why. The rules and hints are the form expressions' (drishti_form-expr.js),
+     Hidden for you, a locked or read-only one shows its value and why. The rules and hints are the server's (POST /api/forms/check),
      so a message here is the server's own: errors stop a save, warnings are notes. Each control carries data-field. */
   function schemaOf(st, f, isNew, masked) {
     var label = f.label + (f.required && !masked && editable(f, isNew) ? ' *' : '');
@@ -409,6 +445,9 @@
     aside.appendChild(body); aside.appendChild(general);
     var foot = el('footer', 'fm-foot');
     function saveDraft() {
+      return chk.now().then(function () { return saveChecked(); });
+    }
+    function saveChecked() {
       var issues = issuesOf();
       if (issues.some(function (i) { return i.severity !== 'warn'; })) { ff.show(issues, general); ff.focusBad(); say('Fix the marked fields first'); return null; }
       var changed = {};
@@ -427,20 +466,22 @@
     foot.appendChild(sendNote(st, false));
     aside.appendChild(foot);
     st.sec.querySelector('.pnl-b').appendChild(aside);
-    function typed(f, v) { var t = X.typed(f, v); return f.type === 'number' && !isNaN(t) ? t : t; }
-    function issuesOf() {
-      var checked = {};
-      st.form.fields.forEach(function (f) { if (editable(f, false) && !same(f, values[f.id], was[f.id])) { checked[f.id] = true; } });
-      return X.check(st.form, values, checked, carries(st, values));
-    }
+    function typed(f, v) { return X.typed(f, v); }
+    var chk = checker(aside, function () {
+      var checked = [];
+      st.form.fields.forEach(function (f) { if (editable(f, false) && !same(f, values[f.id], was[f.id])) { checked.push(f.id); } });
+      return { panel: st.id, values: values, checked: checked, carried: carries(st, values) };
+    }, function () { show(); paint(); });
+    function issuesOf() { return chk.issues(); }
+    function show() { ff.show(chk.issues(), general); if (chk.away) { general.appendChild(el('p', 'fm-msg fm-warn', 'Not checked: the server did not answer')); } }
     function paint(extra) {
       bdg.textContent = '';
       if (s.dirty) { bdg.appendChild(badge('Draft · not saved')); } else if (s.saved) { bdg.appendChild(badge('Draft saved' + (s.at ? ' ' + s.at : ''), 'saved')); }
-      if (extra && extra.length) { ff.show(issuesOf(), general); }
+      if (extra && extra.length) { show(); }
     }
-    function refresh() { ff.show(issuesOf(), general); paint(); }
+    function refresh() { show(); paint(); chk.ask(); }
     s.paint = paint;
-    refresh();
+    show(); paint(); chk.now();
     var first = aside.querySelector('.fm-fields input:not([type=hidden]), .fm-fields select, .fm-fields textarea');
     if (first) { first.focus(); }
   }
@@ -454,7 +495,7 @@
 
   // ---- B: editing in the cells -----------------------------------------------------------------------------------------------------
   function cellsSetup(st) {
-    var c = st.cells = { changes: {}, saved: false };
+    var c = st.cells = { changes: {}, saved: false, answers: {}, seen: 0, away: false, timer: null };
     var tb = el('div', 'fm-toolbar'); tb.setAttribute('data-fm-toolbar', '');
     c.count = el('span', 'fm-badges');
     tb.appendChild(c.count);
@@ -537,11 +578,39 @@
     if (dp && f.type === 'date') { dp.on('change', function () { setTimeout(function () { if (!open()) { finish(true, 0); } }, 0); }); }
   }
 
-  function cellIssues(st, i) {
-    var r = st.form.rows[i] || { values: {} }, ch = st.cells.changes[i] || {}, values = {}, checked = {};
+  /* The issues of a row of edited cells are the server's last answer for that row's request; the request is sent (debounced) when a cell
+     changes, and the cells are drawn again when the answer arrives. */
+  function cellRequest(st, i) {
+    var r = st.form.rows[i] || { values: {} }, ch = st.cells.changes[i] || {}, values = {}, checked = [];
     Object.keys(r.values || {}).forEach(function (k) { values[k] = r.values[k]; });
-    Object.keys(ch).forEach(function (k) { values[k] = ch[k]; checked[k] = true; });
-    return X.check(st.form, values, checked, {});
+    Object.keys(ch).forEach(function (k) { values[k] = ch[k]; checked.push(k); });
+    return { panel: st.id, values: values, checked: checked, carried: {} };
+  }
+  function cellIssues(st, i) {
+    var a = st.cells.answers[i];
+    return a ? a.issues : [];
+  }
+  function askCells(st, at) {                            // at: true = now (review), else after WAIT ms of quiet
+    var c = st.cells;
+    function go() {
+      c.timer = null;
+      var jobs = [];
+      Object.keys(c.changes).forEach(function (i) {
+        if (!Object.keys(c.changes[i]).length) { delete c.answers[i]; return; }
+        var req = cellRequest(st, i), sig = JSON.stringify(req), have = c.answers[i];
+        if (have && have.sig === sig) { return; }
+        req.sutra = page.sutra; req.design = page.design;
+        jobs.push(fetch(drishti_url('/api/forms/check'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(req) })
+          .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+          .then(function (a) { if (JSON.stringify(cellRequest(st, i)) === sig) { c.answers[i] = { sig: sig, issues: a.issues || [] }; } c.away = false; }, function () { c.away = true; }));
+      });
+      if (!jobs.length) { return Promise.resolve(); }
+      return Promise.all(jobs).then(function () { st.sec.setAttribute('data-checked-seq', String(++c.seen)); paintCells(st); });
+    }
+    clearTimeout(c.timer);
+    if (at) { return go(); }
+    c.timer = setTimeout(go, WAIT);
+    return Promise.resolve();
   }
 
   function paintCells(st) {
@@ -580,9 +649,13 @@
     c.review.textContent = n ? 'Review ' + n + ' change' + (n === 1 ? '' : 's') : 'Review changes';
     c.review.disabled = !n; c.undo.disabled = !n;
     sync(st);
+    askCells(st);                                        // the server's answer for the changed rows; drawn again when it arrives
   }
 
   function review(st) {
+    return askCells(st, true).then(function () { reviewNow(st); });
+  }
+  function reviewNow(st) {
     var c = st.cells, dlg = el('div', 'fm-review'), box = el('div', 'fm-review-box');
     dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', 'Review your changes');
     box.appendChild(el('h4', '', 'Review ' + c.n + ' change' + (c.n === 1 ? '' : 's')));
@@ -661,7 +734,11 @@
     function tryClose() { if (!d.dirty || confirmLeave()) { d.dirty = false; closeDrawer(st); } }
     function stepFields(i) { return fields.filter(function (f) { return stepOf(f) === steps[i].id; }); }
     function checkedUpTo(i) { var c = {}; for (var j = 0; j <= i; j++) { stepFields(j).forEach(function (f) { c[f.id] = true; }); } return c; }
-    function issues(i) { return X.check(st.form, values, checkedUpTo(i), carries(st, values)); }
+    var stepNow = function () { return steps[d.at].id === '_all' ? '' : steps[d.at].id; };
+    var chk = checker(box, function () {
+      return { panel: st.id, values: values, checked: Object.keys(checkedUpTo(d.at)), carried: carries(st, values), auto: Object.keys(auto), step: stepNow() };
+    }, function () { paintAnswer(); });
+    function issues() { return chk.issues(); }
     function lastStep() { return d.at === steps.length - 1; }
     function render() {
       nav.textContent = '';
@@ -691,13 +768,16 @@
       if (d.at > 0) { foot.appendChild(btn('fm-btn fm-back', 'Back', function () { d.at--; render(); })); }
       if (!lastStep()) {
         foot.appendChild(btn('fm-btn fm-primary fm-next', 'Next: ' + (steps[d.at + 1].label || steps[d.at + 1].id).toLowerCase(), function () {
-          var is = issues(d.at);
-          if (is.some(function (x) { return x.severity !== 'warn'; })) { d.ff.show(is, d.general); d.ff.focusBad(); say('Fix the marked fields first'); return; }
-          d.done[d.at] = true; d.at++; render();
+          chk.now().then(function () {
+            var is = issues();
+            if (is.some(function (x) { return x.severity !== 'warn'; })) { d.ff.show(is, d.general); d.ff.focusBad(); say('Fix the marked fields first'); return; }
+            d.done[d.at] = true; d.at++; render();
+          });
         }));
       }
-      function saveNew() {
-        var is = issues(d.at);
+      function saveNew() { return chk.now().then(saveChecked); }
+      function saveChecked() {
+        var is = issues();
         if (is.some(function (x) { return x.severity !== 'warn'; })) { d.ff.show(is, d.general); d.ff.focusBad(); say('Fix the marked fields first'); return null; }
         var vals = {};
         fields.forEach(function (f) { if (!X.empty(values[f.id])) { vals[f.id] = X.typed(f, values[f.id]); } });
@@ -709,17 +789,16 @@
       foot.appendChild(btn('fm-btn' + (lastStep() ? ' fm-primary' : '') + ' fm-save', 'Save as draft', function () { saveNew(); }));
       if (lastStep()) { submitButton(st, true, saveNew, foot, function () { closeDrawer(st); }); }
       foot.appendChild(sendNote(st, true));
-      live();
+      paintAnswer(); chk.now();
       var first = body.querySelector('.fm-fields input:not([type=hidden]), .fm-fields select, .fm-fields textarea');
       if (first) { first.focus(); }
     }
-    function defaults() {
-      var tv = {};
-      fields.forEach(function (f) { tv[f.id] = X.typed(f, values[f.id]); });
+    function defaults() {                                          // a default worked out is the server's (computed), until people type over it
+      var ans = chk.last;
       Object.keys(auto).forEach(function (fid) {
-        var f = fieldOf(st, fid), r = X.evaluate(auto[fid], tv);
-        values[fid] = r === null || r === undefined || (typeof r === 'number' && !isFinite(r)) ? '' : typeof r === 'number' ? Math.round(r * 1e6) / 1e6 : r;
-        tv[fid] = X.typed(f, values[fid]);
+        var f = fieldOf(st, fid), r = ans && ans.computed ? ans.computed[fid] : undefined;
+        if (!ans) { return; }
+        values[fid] = r === undefined || r === null ? '' : typeof r === 'number' ? Math.round(r * 1e6) / 1e6 : r;
         if (d.ff && d.ff.form.parts.has(fid)) { d.ff.set(fid, X.empty(values[fid]) ? undefined : numeric(f) ? X.typed(f, values[fid]) : values[fid]); }
       });
       if (!d.ff) { return; }
@@ -729,35 +808,28 @@
         else if (!auto[fid] && note) { note.remove(); }
       });
     }
-    function live() {
+    function live() { paintAnswer(); chk.ask(); }                  // draw the last answer now, ask again after the typing stops
+    function paintAnswer() {
       defaults();
-      var is = issues(d.at).filter(function (x) { return x.severity === 'warn' || touched(x.field); });
+      var is = issues().filter(function (x) { return x.severity === 'warn' || touched(x.field); });
       d.ff.show(is, d.general);
       var h = body.querySelector('[data-fm-hints]');
       h.textContent = '';
-      var vals = {};
-      fields.forEach(function (f) { vals[f.id] = X.typed(f, values[f.id]); });
-      vals.__carry = carries(st, values);
-      (st.form.hints || []).forEach(function (hn) {
-        var on = hn.step ? hn.step === steps[d.at].id : lastStep();
-        if (!on) { return; }
-        var v = X.evaluate(hn.value, vals), of = hn.of ? X.evaluate(hn.of, vals) : null;
-        var p = el('p', 'fm-hint'); p.setAttribute('data-fm-hint', '');
-        p.appendChild(el('i', 'bi bi-lightbulb'));
-        var masked = function (x) { return x === '•••'; };
-        var txt = v === null || v === undefined ? ' ' + hn.label + ': fill in the fields above to see it'
-          : masked(v) || masked(of) ? ' ' + hn.label + ': Hidden for you'
-          : ' ' + hn.label + ': ' + nf(v) + (of !== null && of !== undefined ? ' of ' + nf(of) + (X.num(of) ? ' (' + Math.round(100 * X.num(v) / X.num(of)) + '%)' : '') : '');
-        p.appendChild(document.createTextNode(txt));
-        if (of !== null && X.num(v) !== null && X.num(of) !== null && X.num(v) > X.num(of)) { p.classList.add('fm-hint-over'); }
-        h.appendChild(p);
-      });
+      if (chk.away) { h.appendChild(el('p', 'fm-hint fm-hint-away', 'Not checked: the server did not answer')); }
+      if (chk.last && chk.last.step === stepNow()) {
+        (chk.last.hints || []).forEach(function (hn) {
+          var p = el('p', 'fm-hint'); p.setAttribute('data-fm-hint', '');
+          p.appendChild(el('i', 'bi bi-lightbulb'));
+          p.appendChild(document.createTextNode(' ' + hn.text));
+          if (hn.over) { p.classList.add('fm-hint-over'); }
+          h.appendChild(p);
+        });
+      }
       bdg.textContent = '';
       if (d.dirty) { bdg.appendChild(badge('Draft · not saved')); } else if (st.draftIds['new']) { bdg.appendChild(badge('Draft saved' + (d.at2 ? ' ' + d.at2 : ''), 'saved')); }
       sync(st);
     }
     function touched(fid) { return fid && !X.empty(values[fid]); }
-    function nf(v) { var n = X.num(v); return n === null ? String(v) : window.Drishti.elements.core.formatNumber(n, { minus: '-' }); }
     render();
   }
   function closeDrawer(st) {

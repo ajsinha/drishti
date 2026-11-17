@@ -34,6 +34,16 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   tests that run banking on the flat test class path (they cannot catch a module-path breakage; G14 is their counterpart), and
   `ModuleBootTest` holds the flat-folder rule (packages are read only directly in the modules folder). `DmodPythonPackTest` is in `module.runtime` and fails,
   not skips, with `-Ddrishti.test.requires-python=true`.
+- **The server checks a form draft; the browser carries no rule (I4).** `drishti_form-expr.js` is deleted, with its script tag, its
+  `asset_prefix_map.yaml` rows and `window.Drishti.formExpr`. The record forms (beside, cells, the drawer) send the draft to the console's
+  `POST /api/forms/check` (the proxy of `POST /api/v1/forms/check`) 250 ms after the last keystroke, show the last answer while the next is in
+  flight (typing is never blocked, the newest answer wins) and draw its issues, defaults worked out (`computed`) and hints. Next and Save ask at once.
+  Server away: fields stay editable, the page says *not checked: the server did not answer*, Save still sends. `data-checked-seq` on the form
+  counts the answers that arrived (the browser tests wait on it). `FormCheckController` also reads a person's own Design (`design`), as drafts do.
+  `test_no_form_expr_copy.py` guards that no console file holds the expression language.
+- **One "today".** `FormCheckController`, `EditHandler` (the rules over a change) and `DraftsController` (the check at draft save) take the
+  business date from `BusinessDates` (honours `drishti.business-date.today`), not the UTC clock; a rule on `today` that passes while typing
+  passes at Save.
 
 ## 2.9.11.i6 (2026-11-16)
 

@@ -5195,10 +5195,13 @@ panels:
   from a `source:` of a kind with `where` or `search`, as the viewer may see it; `carry:` names the values hints read as
   `counterparty.LIMIT`). Each field: `label`, `bind` (the record field; the id when absent), `required`, `min`/`max` (a number, a date or
   `today`), `pattern`, `max-length`, `editable-by` roles, `readonly` with a `reason`, `step`, `placeholder`, `fmt`, `new: false`.
-- **Rules** (`rules:`) are expressions in a small language the browser and the server share (`FormExpr`; fields by id, `+ - * /`,
+- **Rules** (`rules:`) are expressions in a small language the server evaluates (`FormExpr`; fields by id, `+ - * /`,
   comparisons, `and or not`, `empty len abs min max`, `today`): `severity: error` (the default) refuses the draft, `warn` is said and kept.
-  The browser checks as people type; the server checks every draft again as the authority. A rule reading a lookup's carried value is
-  checked in the browser only until the write (phase 6) re-reads the record.
+  The server checks as people type: the page sends the draft to `POST /api/v1/forms/check` (the console's `/api/forms/check`) 250 ms after the
+  last keystroke and shows the answer (messages, defaults worked out, hints); it keeps the last answer on screen while the next one is in
+  flight and holds no rule itself. If the server does not answer, the fields stay editable, the page says *not checked: the server did not
+  answer* and Save still sends, because the server checks every draft again at save with the same business date. A rule reading a lookup's
+  carried value is checked with the value the page carried until the write (phase 6) re-reads the record.
 - **Modes**: `edit: beside` (a click on a row opens a form beside the table), `edit: cells` (a field edits the column whose `bind` names
   its record field), `new: drawer` (steps, Next checks the step, the hints of the step, Save as draft from any step, checked up to it).
 - **Masks and roles decide editability.** The view model carries the form as the viewer may use it: a masked field is marked, left out of

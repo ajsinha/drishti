@@ -117,7 +117,7 @@ public final class EditHandler implements Lanes.Applier {
             end(row, node, epoch, EditLog.CONFLICTED, conflictWords(moved), 0);
             return;
         }
-        String invalid = invalid(c, rules, now);
+        String invalid = invalid(c, rules, now, today.get());
         if (invalid != null) {
             end(row, node, epoch, EditLog.REFUSED, invalid, 0);
             return;
@@ -328,8 +328,8 @@ public final class EditHandler implements Lanes.Applier {
         return b.toString();
     }
 
-    /** The form's rules over the record as it is now with the change applied; null when they hold. */
-    static String invalid(Change c, List<EditableFields.Rule> rules, DataNode now) {
+    /** The form's rules over the record as it is now with the change applied, {@code today} the business date; null when they hold. */
+    static String invalid(Change c, List<EditableFields.Rule> rules, DataNode now, LocalDate today) {
         if (rules.isEmpty()) {
             return null;
         }
@@ -349,7 +349,7 @@ public final class EditHandler implements Lanes.Applier {
                 checked.add(r.field().id());
             }
         }
-        for (Form.Issue is : form.check(values, checked, LocalDate.now(java.time.ZoneOffset.UTC))) {
+        for (Form.Issue is : form.check(values, checked, today)) {
             if (is.error()) {
                 return is.message();
             }
