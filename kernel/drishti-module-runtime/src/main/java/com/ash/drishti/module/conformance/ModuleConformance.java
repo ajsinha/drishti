@@ -689,7 +689,11 @@ public final class ModuleConformance {
     private static <T> T refusing(Class<T> type, boolean services) {
         return (T) java.lang.reflect.Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, (proxy, method, args) -> {
             if (method.getDeclaringClass() == Object.class) {
-                return "the harness's " + type.getSimpleName();
+                return switch (method.getName()) {
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> "the harness's " + type.getSimpleName();
+                };
             }
             if (services && "cache".equals(method.getName())) {
                 return new com.ash.drishti.module.runtime.KernelPersonCache<>((Integer) args[0], (Long) args[1]);
