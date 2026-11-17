@@ -44,11 +44,11 @@ class ConfigReadersGuardTest {
             Pattern.compile("PackFolders\\.moduleRoots"),                            // module packs found by the position of a folder
             Pattern.compile("installedModulePacks"),
             Pattern.compile("resolve\\(\"modules\"\\)\\)\\s*&&.*resolve\\(\"config\"\\)"),   // the walk up to a checkout
-            Pattern.compile("ModuleDirs\\.of\\("),                                   // every module folder, on or off
+            Pattern.compile("ModuleDirs\\.of\\("),                                   // every module folder, on or off (the boot's ModuleHomes is the one list)
             Pattern.compile("resolve\\(\"connectors\"\\)\\.resolve\\(\"(delta|kafka|iceberg)\\.yaml\"\\)"));
 
-    /** The resolver itself, and the deprecated helpers kept for a test's or a tool's own folder. */
-    static final List<String> ALLOWED = List.of("/api/resolution/", "/api/PackFolders.java", "/packs/PackLoader.java", "/lakeconfig/ModuleDirs.java");
+    /** The resolver itself and the readers that take a folder they were given. */
+    static final List<String> ALLOWED = List.of("/api/resolution/", "/api/PackFolders.java", "/packs/PackLoader.java");
 
     @Test
     void noMainCodeFindsPacksOrTemplatesByItself() throws IOException {

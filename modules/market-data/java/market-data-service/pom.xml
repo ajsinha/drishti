@@ -26,8 +26,7 @@
   </parent>
   <artifactId>drishti-market-data</artifactId>
   <name>drishti-market-data</name>
-  <description>The market-data module's server part (THIN_CONSOLE_DESIGN.md step S8a): the Market landings' figures under /api/v1/market-data/landing. It reads the kernel and the other modules only through their API, as the person (KernelCalls of
-    drishti-kernel-api): no kernel internals.</description>
+  <description>The market-data module's server part (THIN_CONSOLE_DESIGN.md step S8a): the Market landings' figures under /api/v1/market-data/landing. It reads the kernel and the other modules only through their API, as the person (drishti-kernel-api): no kernel internals.</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>

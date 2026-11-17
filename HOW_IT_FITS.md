@@ -336,7 +336,7 @@ Who writes it, when it is read, what it decides and where an administrator sees 
 
 ### 8.2 How they point at each other
 
-- A **distribution** lists **module ids** → each id resolves to an installed **`.dmod`**, and **`active.yaml`** picks its version.
+- A **distribution** lists **module ids** → each id resolves to an installed **`.dmod`**, and the modules folder holds one version of it.
 - **`first-party.yaml`** verifies the module's origin against its **`DMOD.MF`**, which hashes every file; only then may the
   **`module.yaml`** allowance be used.
 - **`module.yaml`** names its **packs** (whose **contracts** define the kinds), its **`data/needs.yaml`** and its **`console/plugin.yaml`**.
@@ -355,7 +355,7 @@ Every file the request touches, from start to answer:
 |---|---|---|
 | 1 | `deploy/stack/stack.yaml` or `tools/drishti.py start all --distribution risk` | starts the server and a console with the distribution `risk` |
 | 2 | `config/distributions/drishti.risk.yaml` (+ `kernel.yaml`) | brand *Drishti Risk*, modules `banking` and `market-data`, the Risk lens, the Home card `VAR BANK` |
-| 3 | `<data folder>/modules/installed/active.yaml` | banking `1.0.0` is the active version (the full server jar installs the shipped `.dmod` at the first start) |
+| 3 | `<home>/modules/banking-1.0.0.dmod` | banking `1.0.0` is the package the modules folder holds; the server makes its module host from the packages at every start |
 | 4 | `META-INF/DMOD.MF` + `first-party.yaml` | the package is intact and is the product's own, so banking's allowance is honoured on this exact kernel build |
 | 5 | `config/modules/banking.yaml` | `enabled: true` |
 | 6 | banking's `module.yaml` | requires `market-data`; function `VAR` at `/api/v1/risk/var`; engine `var`; packs `market-risk` and the others |

@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * The modules a distribution may list, read from their own manifests (docs/architecture/DISTRIBUTIONS.md section 10): a content module's
  * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest), a module with code's {@code META-INF/drishti/module.yaml} in its
  * sources ({@code modules/<id>/java/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
- * ({@link com.ash.drishti.registry.ModulePackages}: the shipped first-party {@code .dmod} packages and those installed in the module store),
+ * (the module boot's {@code ModuleHomes}: the {@code .dmod} packages of the modules folder),
  * whose manifest wins over a folder's copy. The console reads none of them: it draws from the server's
  * installation answer (THIN_CONSOLE_DESIGN.md 3.2). Each comes to its packs, its function words, the engines it owns, its top menus, the Help
  * domains it owns and the modules it requires; the list is in requirement order (a required module before the modules that need it).

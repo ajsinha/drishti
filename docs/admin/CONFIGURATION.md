@@ -6615,7 +6615,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_PASSWORD` | `drishti.sources.plugins.jdbc.settings.password` | empty | server | its database password (from the environment) |
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
-| `DRISHTI_KERNEL_JAR` | the kernel's thin jar, the kernel's thin jar | `packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar` | tools | The jar `drishti.py module run` starts with one module only (CLI\_REFERENCE.md, module run) |
+| `DRISHTI_KERNEL_JAR` | the server jar `module run` starts | `lib/drishti-server-*-exec.jar` | tools | The server jar `drishti.py module run` starts, before the one in &lt;home&gt;/lib (tools/modulecli.py) |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |

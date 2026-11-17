@@ -66,9 +66,8 @@ The glue: one module runtime (`drishti-module-runtime`: reads and verifies a `.d
 unloading) used by the kernel and the console alike; the **distribution file** (which modules, brand, theme, lenses, Home and Help); the
 **Module SDK**; and **placement** (which nodes run which part of a module).
 
-Two server jars come out of one build: the **full jar** (`drishti-server-*-exec.jar`, the default) is the kernel with the first-party
-modules installed at the first start (`drishti.modules.shipped`), and the **thin jar** (`packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar`)
-is the kernel alone. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
+One server jar comes out of the build (`drishti-server-*-exec.jar`): the kernel alone. The first-party modules are `.dmod` packages in the
+modules folder beside it (`python tools/drishti.py build all` makes both), and the server makes its module host from them at every start. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
 fails the build otherwise.
 
 ## Modules
