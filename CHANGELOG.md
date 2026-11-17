@@ -39,6 +39,24 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
   `TypedCallParityTest`: every call the landings make, typed and over the loopback, for an administrator, a masked, a row-ruled and a
   closed role, a lens, an earlier date box, another language, a read-only and a scoped API token, several people at once, and with the
   business today fixed.
+- **The Java verifier is a command; the module tool is gone (I3, A2).** `java -jar drishti-server-...-exec.jar module verify|inspect|visual`
+  (`ModuleCli`, no Spring, no web server) is the one Java verifier: `verify FILE.dmod` runs the package rules and API ranges (V1, V2, V3, V5,
+  V7, V8, the origin and the kernel-internals allowance), `--conformance` adds the checks C1-C14, `--with FILE` installs a required module
+  beside it for C11, C13 and C14, `--project DIR` gives C10 the sources, `--first-party FILE` and `--kernel-build ID` name the list and
+  build to check against, `--json` prints the verdict; `verify FOLDER --manifest-only [--id] [--version]` reads a manifest. `drishti.py module
+  verify|check|inspect|visual` call it through the server jar in `lib/`. Deleted: the standalone module tool jar and its shade execution,
+  `ModuleTool`, `ModuleAssembler` (packing is `tools/modulepack.py` only), check C15 (load and unload cycles) and `--cycles`,
+  `DmodPackParityTest`, `ModuleToolTest`, `ContentModulesTest` (now `ModuleCliTest` and `tools/test_content_modules.py`), `DRISHTI_MODULE_TOOL`,
+  `--tool`, `drishti.module-deploy.conformance-cycles`, and the SDK's `drishti-module-maven-plugin` (its goals could not outlive
+  `ModuleAssembler`): the parent pom's `exec-maven-plugin` executions run `module verify --manifest-only`, `module pack` and `module verify
+  --conformance`. `LeakCheck` stays: the runtime's unload sequence (development reload, C13, C14) is the one that uses it. `ModuleConformance`,
+  `ClassFiles` and `VisualTemplate` moved to `module.conformance`; `ModuleFolder` reads a folder's manifest. `packaging/dist` packs with the Python
+  packager and verifies banking, market-data, trading and genomics with `ModuleCli`. Tests pack with `ModuleFixtures.pack` (Python).
+- **The genomics module is shipped.** `packaging/dist` packed banking, market-data, trading, capital-markets and economy but not genomics, so on
+  a real install its Java (`/api/v1/genomics/showcase/...`) never loaded and the GWAS RESPONSE, PROTEIN and DESIGNS pages stayed on "loading".
+  It is packed with its built jar, listed in `first-party.yaml` (its manifest says `origin: first-party`), verified by `check-genomics` and installs
+  by default; the distribution files decide who sees it. `tools/test_content_modules.py` fails when a module under `modules/` with a `java:` block is
+  neither packed by `packaging/dist` nor listed as not shipped with a reason.
 - **The kernel's typed services, finished for the merge.** `Kernel.cache(size, ttlMillis)` (the per-person cache) and
   `Pivots.figures(person, fields, rows, values, by, across, top)` (the engine's figures of rows a module holds, read as
   `InlineFigures.Figures`) are on the typed `Kernel`, as the two loopback calls they replace. `InlineRequest` holds fields only: the

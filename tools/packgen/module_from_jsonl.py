@@ -28,7 +28,7 @@
    child kinds, else the files store, filled with --load), or by the connector --connector names. The module itself carries no connector.
    Child kinds (an array of objects as a kind of its own, --child, tools/packgen/childkinds.py) also get BI tables and a model relating
    them to their parent, in the site's tables/<domain>/.
-4. Packs modules/<name>/ into dist/<name>-<version>.dmod with the module tool and runs its fifteen checks.
+4. Packs modules/<name>/ into dist/<name>-<version>.dmod with the one packager and runs its fourteen checks.
 5. --source-for KIND --system SYS: the files are a new booking system's source of an existing kind, not a new kind: a source module
    (tools/packgen/source_module.py: the field map proposed from every record, connectors, the map file, the inbox rule, docs).
 6. --deploy: one node, the package is dropped into the modules folder (--modules-dir, auto-deploy loads it); a cluster (--server),
@@ -83,8 +83,6 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     g.add_argument("--deploy", action="store_true", help="install the .dmod: into --modules-dir (one node), or with --server upload and plan it (a cluster)")
     g.add_argument("--modules-dir", type=pathlib.Path, help="the server's modules folder (drishti.modules.path; default $DRISHTI_MODULES_PATH, else <data folder>/modules)")
     g.add_argument("--reason", help="--deploy on a cluster: why (kept in the audit log)")
-    g.add_argument("--tool", help="the module tool jar (default kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
-    g.add_argument("--cycles", type=int, default=2, help="load/unload cycles of check C15 (default 2)")
     g.add_argument("--workers", type=int, default=max(1, min(8, (os.cpu_count() or 2) // 3)),
                    help="processes reading the files, a file each (default: a third of the cores, at most 8); every record is read either way")
     import source_module as SMOD
@@ -303,11 +301,15 @@ def write_bi(a, an, site: pathlib.Path, say=print) -> None:
         say(f"wrote {f}")
 
 
-def module_tool(cli, a, *args: str) -> int:
+def module_pack(cli, a, folder, out, jars=()) -> int:
+    """Packs a module folder with the one packager (`drishti.py module pack`, Python); the jars of a module with a server part by --jar."""
+    return cli.main(["module", "pack", str(folder), "--out", str(out), *sum((["--jar", str(j)] for j in jars), [])])
+
+
+def module_check(cli, a, dmod, *with_modules) -> int:
+    """The conformance checks C1-C14 on a package: `module verify --conformance` of the server jar's verifier; the modules it requires by --with."""
     sys.stdout.flush()
-    java = cli.find_java(getattr(a, "java", None))
-    with cli.cli_tmp() as tmp:
-        return subprocess.run(cli.java_cmd(java, ["-jar", cli.find_module_tool(a.tool), *args], tmp=tmp), cwd=ROOT).returncode
+    return cli.run_module_cli(a, ["verify", str(dmod), "--conformance", *sum((["--with", str(w)] for w in with_modules), [])]).returncode
 
 
 def modules_dir(a) -> pathlib.Path:
@@ -369,11 +371,11 @@ def run(a, cli, say=print) -> int:
             return 1
     dist = (a.dist or ROOT / "dist").resolve()
     say("\n== module pack")
-    if module_tool(cli, a, "pack", str(mod), "--out", str(dist)):
+    if module_pack(cli, a, mod, dist):
         return 1
     dmod = dist / f"{a.name}-{a.version}.dmod"
     say("\n== module check")
-    chk = module_tool(cli, a, "check", str(dmod), "--cycles", str(a.cycles))
+    chk = module_check(cli, a, dmod)
     say(f"\n{'checked' if not chk else 'CHECKS FAILED'}: {dmod} ({time.monotonic() - t0:.1f} s in all; sutra lint/test {'passed' if not rc else 'FAILED'})")
     if rc or chk:
         return 1

@@ -14,7 +14,7 @@
 """`drishti.py module deploy|plan|apply|list|remove|disable|enable|upgrade|reject|withdraw|status|run`: module deployment from the
 terminal, the same server API as Admin -> Modules -> Deploy (docs/architecture/KERNEL_AND_MODULES.md section 7.6).
 
-    deploy FILE --reason R          uploads the .dmod to the module store (checked once: the fifteen conformance checks) and plans its
+    deploy FILE --reason R          uploads the .dmod to the module store (checked once: the fourteen conformance checks) and plans its
                                     install (or upgrade, when another version is active); prints the plan per node; --out writes it
     upgrade FILE --reason R         the same, for a newer version of an active module (rolling, node by node)
     plan ACTION MODULE --reason R   install | upgrade | remove | disable | enable a module already in the store (--version V)

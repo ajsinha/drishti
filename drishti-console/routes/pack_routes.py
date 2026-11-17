@@ -215,7 +215,7 @@ async def analysis(request: Request, wid: str):
 
 @router.post("/api/ws/{wid}/finalize")
 async def finalize(request: Request, wid: str):
-    """Writes the module with the edited Sutras, binds it, packs the .dmod and runs the fifteen checks: ({..choices, edits: {sutra name: YAML}})."""
+    """Writes the module with the edited Sutras, binds it, packs the .dmod and runs the fourteen checks: ({..choices, edits: {sutra name: YAML}})."""
     if not await _may_author(request):
         return _problem(403, "making a module needs a role with the author power", "DRS-5002")
     ws = _ws(request)

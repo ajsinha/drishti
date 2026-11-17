@@ -1462,7 +1462,7 @@ folder, every piece of data under the data folder):
 | `<home>/lib/` | none | Drishti's own server jar, shipped with a release | replaced on an upgrade |
 
 **Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
-deployment, exactly as an administrator's upload would be: its hash list verified, the fifteen conformance checks, installed under
+deployment, exactly as an administrator's upload would be: its hash list verified, the fourteen conformance checks, installed under
 `installed/<id>/<version>/` and loaded; a new version is installed beside the old one and `active.yaml` switches to it when it is ready.
 A module is placed like any other (`config/placement.yaml`; on a single node, its parts on `local`). Taking the file out removes the module the same way (its API answers `410 DRS-1028`, its tombstone is kept for saved work). Every step is
 in the audit log as `autodeploy`; a package that fails a check is logged and tried again only when its bytes change. `drishti.modules.autodeploy`:
@@ -1612,7 +1612,7 @@ with *Review*; the chosen module's detail shows its API prefix, the names it own
 *Switch off*, *Remove*, *Switch on*, *Reinstall*), each a plan; every deployment is listed below with who proposed and applied it and the
 outcome.
 
-**Admin → Modules → Deploy** (mock-up C, placement | plan): upload the `.dmod` (checked once with the fifteen conformance checks and kept
+**Admin → Modules → Deploy** (mock-up C, placement | plan): upload the `.dmod` (checked once with the fourteen conformance checks and kept
 in the store; a version is never rebuilt), see where it is placed (change that in Admin → Cluster → Modules, section 23.1), choose the
 action and say why, and *Plan*: the plan lists every node, what it does now and after, and that unplaced nodes receive nothing. A second
 administrator opens it (from *Review*) and *Applies*: staged on every placed node, then activated together (an upgrade: node by node, the

@@ -33,7 +33,6 @@ import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.ModuleHealth;
 import com.ash.drishti.module.runtime.ModuleRuntime;
 import com.ash.drishti.server.modules.deploy.ModuleNode;
-import com.ash.drishti.module.tool.ModuleAssembler;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.el.EvalContext;
@@ -213,7 +212,7 @@ class ModuleHostServerTest {
     private static Path archetypeModule(Path work, String id) {
         Path project = ModuleFixtures.generate(Path.of(System.getProperty("drishti.sdk.archetype")), id, work.resolve(id));
         Path jar = ModuleFixtures.jarOf(project.resolve("java/" + id + "/src/main/java"), null, work.resolve(id + "-build"), work.resolve(id + "-build/" + id + "-0.1.0.jar"));
-        return ModuleAssembler.assemble(project, jar, work.resolve("stage"), work.resolve("dist-" + id));
+        return ModuleFixtures.pack(project, List.of(jar), work.resolve("dist-" + id));
     }
 
     /** The shared lib folder: one jar with a class modules use, a JDBC driver, and a kernel class's name it must never replace. */
@@ -365,7 +364,7 @@ class ModuleHostServerTest {
                   - {id: old, path: /old, moved: widgets}
                 """);
         ModuleFixtures.write(src.resolve("console/pages/widget.html"), "<section data-drishti-module=\"demo\">a widget</section>\n");
-        return ModuleAssembler.assemble(src, svc, List.of(compute, lib), work.resolve("stage"), work.resolve("dist"));
+        return ModuleFixtures.pack(src, List.of(svc, compute, lib), work.resolve("dist"));
     }
 
     /** Installs a package as an administrator would: unpacked under {@code <modules>/<id>/<version>/}, the package beside it. */

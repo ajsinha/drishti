@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The one module layout (docs/architecture/KERNEL_AND_MODULES.md sections 3.2 and 8.10): the names a module folder's top may hold.
-# The ONE list: the packer (ModuleAssembler), the overrides view (ModuleOverrides), tools/test_module_layout.py and
+# The ONE list: the packer (tools/modulepack.py), the overrides view (ModuleOverrides), tools/test_module_layout.py and
 # `drishti.py setup` all read this file. Anything else at a module's top is not part of the module: the packer leaves it out and says so.
 
 # the .dmod content, packed as it is (java/: only the jars directly in it)

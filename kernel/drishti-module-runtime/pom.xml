@@ -24,7 +24,7 @@
   </parent>
   <artifactId>drishti-module-runtime</artifactId>
   <name>drishti-module-runtime</name>
-  <description>The module runtime (docs/architecture/KERNEL_AND_MODULES.md sections 3, 4, 9.8, 10.4 and 12): the .dmod reader and its hash list, the manifest, verification V1-V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. One implementation, used by the kernel and later by the console host.</description>
+  <description>The module runtime (docs/architecture/KERNEL_AND_MODULES.md sections 3, 4, 9.8, 10.4 and 12): the .dmod reader and its hash list, the manifest, verification V1-V8, the conformance checks C1-C14, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. One implementation, used by the kernel and later by the console host.</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <!-- the boot fills drishti-api's plain value of its result (api.resolution.ModuleHomes) for the readers below this module -->
@@ -33,55 +33,13 @@
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
     <!-- a module's server part is a Spring Boot auto-configuration (java.spring of its manifest, e.g. trading's @AutoConfiguration with
-         TypeExcludeFilter): the module host, the conformance harness of the standalone tool included, has what the server gives it -->
+         TypeExcludeFilter): the module host, the conformance harness (ModuleCli verify with the conformance option) included, has what the server gives it -->
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
     <!-- what the server hosts a module's server part on (its java.spring configuration: Spring Boot's @AutoConfiguration, its Binder, the
-         web annotations of its controllers), so the standalone tool loads such a module for C11-C15 as the server does -->
+         web annotations of its controllers), so the conformance harness loads such a module for C11, C13 and C14 as the server does -->
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId><scope>runtime</scope></dependency>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId><scope>runtime</scope></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <!-- the standalone module tool: java -jar target/drishti-module-tool.jar pack|check|inspect (no Maven needed); the module's own jar
-           stays a plain library -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.6.0</version>
-        <executions>
-          <execution>
-            <id>module-tool</id>
-            <phase>package</phase>
-            <goals><goal>shade</goal></goals>
-            <configuration>
-              <outputFile>${project.build.directory}/drishti-module-tool.jar</outputFile>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
-              <filters><filter><artifact>*:*</artifact><excludes><exclude>META-INF/*.SF</exclude><exclude>META-INF/*.DSA</exclude><exclude>META-INF/*.RSA</exclude><exclude>META-INF/MANIFEST.MF</exclude><exclude>module-info.class</exclude><exclude>META-INF/versions/*/module-info.class</exclude></excludes></filter></filters>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"><mainClass>com.ash.drishti.module.tool.ModuleTool</mainClass></transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/spring.handlers</resource></transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/spring.schemas</resource></transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/spring.factories</resource></transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- ModuleToolTest generates a module from the archetype's templates (files only: no build dependency on the archetype) -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <drishti.sdk.archetype>${project.basedir}/../../drishti-sdk/drishti-module-archetype/src/main/resources</drishti.sdk.archetype>
-            <drishti.sdk.version>${project.version}</drishti.sdk.version>
-          </systemPropertyVariables>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

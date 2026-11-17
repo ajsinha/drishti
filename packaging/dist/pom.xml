@@ -27,13 +27,17 @@
   <artifactId>drishti-modules</artifactId>
   <name>drishti-modules</name>
   <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): banking
-    (with its code and its kernel-internals allowance, stamped with the kernel build of this build), market-data, capital-markets and
-    economy, each packed by the module tool into drishti/modules/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
-    Banking, market-data and trading (the modules with a server part) go through the fifteen conformance checks as part of the build. The full distribution (drishti-app) installs these modules
+    (with its code and its kernel-internals allowance, stamped with the kernel build of this build), market-data, trading, capital-markets and
+    economy and genomics, each packed by the Python packager (tools/modulepack.py) into drishti/modules/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
+    Banking, market-data, trading and genomics (the modules with a server part) go through the fourteen conformance checks (ModuleCli verify) as part of the build. The full distribution (drishti-app) installs these modules
     by default; the thin jar (drishti-kernel-app) carries first-party.yaml only.</description>
   <properties>
     <drishti.dmods>${project.build.outputDirectory}/drishti/modules</drishti.dmods>
     <drishti.jars>${project.build.directory}/module-jars</drishti.jars>
+    <drishti.repo>${project.basedir}/../..</drishti.repo>
+    <!-- the build of this kernel, stamped into a module with a kernel-internals allowance (never a default: the jar of this reactor) -->
+    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}.jar</drishti.kernel.jar>
+    <drishti.python>python3</drishti.python>
     <skipTests>false</skipTests>
   </properties>
   <dependencies>
@@ -45,7 +49,16 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><scope>provided</scope></dependency>
+    <!-- the genomics sample ships with the product too (its server part: the showcase API its pages call) -->
+    <dependency><groupId>org.helixlab</groupId><artifactId>genomics</artifactId><version>0.1.0</version><scope>provided</scope></dependency>
   </dependencies>
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <activation><os><family>windows</family></os></activation>
+      <properties><drishti.python>python</drishti.python></properties>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -64,103 +77,118 @@
                 <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></artifactItem>
                 <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><version>${project.version}</version></artifactItem>
                 <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><version>${project.version}</version></artifactItem>
+                <artifactItem><groupId>org.helixlab</groupId><artifactId>genomics</artifactId><version>0.1.0</version></artifactItem>
               </artifactItems>
             </configuration>
           </execution>
         </executions>
       </plugin>
       <plugin>
+        <!-- the packager is Python (tools/modulepack.py: the one packer), the verifier is Java (ModuleCli, in the server jar on this class path) -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.6.3</version>
-        <configuration>
-          <mainClass>com.ash.drishti.module.tool.ModuleTool</mainClass>
-          <blockSystemExit>true</blockSystemExit>
-          <cleanupDaemonThreads>false</cleanupDaemonThreads>
-        </configuration>
         <executions>
           <execution>
             <id>pack-banking</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
               <arguments>
-                <argument>pack</argument><argument>${project.basedir}/../../modules/banking</argument>
-                <argument>--jar</argument><argument>${drishti.jars}/drishti-banking.jar</argument>
-                <argument>--more</argument><argument>${drishti.jars}/drishti-compute-banking.jar</argument>
-                <argument>--out</argument><argument>${drishti.dmods}</argument>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/banking</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-banking.jar</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-compute-banking.jar</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
             <id>pack-market-data</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
-              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/market-data</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-market-data.jar</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/market-data</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-market-data.jar</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
             </configuration>
           </execution>
           <execution>
             <id>pack-trading</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
-              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/trading</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-trading.jar</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/trading</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-trading.jar</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-genomics</id>
+            <phase>process-classes</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/genomics</argument><argument>--jar</argument><argument>${drishti.jars}/genomics.jar</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
             </configuration>
           </execution>
           <execution>
             <id>pack-capital-markets</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
-              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/capital-markets</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/capital-markets</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
             </configuration>
           </execution>
           <execution>
             <id>pack-economy</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
-              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/economy</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+              <arguments>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/economy</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
             </configuration>
           </execution>
           <execution>
             <id>first-party</id>
             <phase>process-classes</phase>
-            <goals><goal>java</goal></goals>
+            <goals><goal>exec</goal></goals>
             <configuration>
               <arguments>
-                <argument>first-party</argument><argument>${drishti.dmods}</argument>
+                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.dmods}</argument>
                 <argument>--out</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
-            <!-- the fifteen conformance checks on banking, against this build's kernel and first-party list -->
+            <!-- the fourteen conformance checks, against this build's kernel (the class path) and first-party list (the one just written) -->
             <id>check-banking</id>
             <phase>test</phase>
             <goals><goal>java</goal></goals>
             <configuration>
               <skip>${skipTests}</skip>
               <arguments>
-                <argument>check</argument><argument>${drishti.dmods}/banking-1.0.0.dmod</argument>
+                <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/banking-1.0.0.dmod</argument><argument>--conformance</argument>
                 <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
                 <argument>--with</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
-                <argument>--cycles</argument><argument>2</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
-            <!-- the fifteen conformance checks on the modules with a server part (THIN_CONSOLE_DESIGN.md step S8a), packed above with their jars -->
             <id>check-market-data</id>
             <phase>test</phase>
             <goals><goal>java</goal></goals>
             <configuration>
               <skip>${skipTests}</skip>
               <arguments>
-                <argument>check</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
+                <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument><argument>--conformance</argument>
                 <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
-                <argument>--cycles</argument><argument>2</argument>
               </arguments>
             </configuration>
           </execution>
@@ -171,13 +199,30 @@
             <configuration>
               <skip>${skipTests}</skip>
               <arguments>
-                <argument>check</argument><argument>${drishti.dmods}/trading-1.0.0.dmod</argument>
+                <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/trading-1.0.0.dmod</argument><argument>--conformance</argument>
                 <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
-                <argument>--cycles</argument><argument>2</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>check-genomics</id>
+            <phase>test</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <arguments>
+                <argument>module</argument><argument>verify</argument><argument>${drishti.dmods}/genomics-0.1.0.dmod</argument><argument>--conformance</argument>
+                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
               </arguments>
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <executable>${drishti.python}</executable>
+          <mainClass>com.ash.drishti.server.cli.ModuleCli</mainClass>
+          <blockSystemExit>true</blockSystemExit>
+          <cleanupDaemonThreads>false</cleanupDaemonThreads>
+        </configuration>
       </plugin>
     </plugins>
   </build>

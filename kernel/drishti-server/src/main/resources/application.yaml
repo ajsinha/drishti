@@ -351,7 +351,6 @@ drishti:
     # Module deployment (docs/guides/CLUSTER_GUIDE.md "Deploying a module", KERNEL_AND_MODULES.md section 7.6): the module store (each
     # .dmod kept once, by id and version), the installed modules and active.yaml, staging and the registry, all under this folder.
     dir: ${DRISHTI_MODULE_DEPLOY_DIR:}       # empty: modules/ under drishti.data.dir
-    conformance-cycles: 5                    # load/unload cycles of check C15 when a .dmod is uploaded (the SDK's own check runs 50)
     drain-seconds: 30                        # an unload lets requests already inside the module finish, at most this long
     swap-wait-seconds: 30                    # a request to a module switching versions on this node waits at most this long, then 503
     node-call-seconds: 120                   # how long the coordinator waits for one node's stage, activate or unload

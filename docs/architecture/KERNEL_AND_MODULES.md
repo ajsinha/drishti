@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/java/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1–C14), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/java/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -446,8 +446,8 @@ vermagic) and loads only on that build; on any other the kernel refuses it with 
 module". First-party modules without an allowance, and every third-party module, keep the ordinary `kernel-api` version range. The product's
 one build and release train builds banking with each kernel, so the two always ship together.
 
-**As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the module tool and the kernel.
-The build (`packaging/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
+**As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the verifier (`ModuleCli`) and the kernel.
+The build (`packaging/dist`) packs the product's modules with the Python packager (`tools/modulepack.py`), verifies the ones with a server part with `ModuleCli verify` and writes
 `META-INF/drishti/first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files; both server jars carry it. A manifest
 whose `kernel-internals:` names a file (banking's `java/kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
 `kernel-build:` with the kernel on its class path (`<version>+<build time>` from the server's `build-info.properties`, or `--kernel-build`).
@@ -1204,7 +1204,7 @@ command at every step.
 | `drishti-kernel-api-<v>.jar` | the SPIs and service interfaces of section 2.3, Javadoc; Maven `com.ash.drishti.sdk:drishti-kernel-api`, always scope **`provided`** (the kernel supplies it at run time; never inside a `.dmod`) |
 | `drishti-kernel-testkit-<v>.jar` | the harness (8.5), `ModuleConformanceSuite` (8.6) and `AbsenceSuite` (12.11); scope `test` |
 | `drishti-module-parent` (pom) | the parent every module project inherits: Java 21, the versions of the shared libraries (section 4.4), the plugin's defaults, the licence-header check |
-| `drishti-module-maven-plugin` | the goals `validate`, `conformance`, `assemble`, `sign`, `publish` (8.2) |
+| `drishti-module-parent` executions | `exec-maven-plugin` runs `drishti.py module verify --manifest-only` (validate), `module pack` (package) and `module verify --conformance` (verify); signing and publishing are release j (8.2) |
 | `drishti-module-archetype` | the Maven archetype `module new` wraps (8.3) |
 | `@drishti/elements-*` `.d.ts` | the Elements core typings (from ELEMENTS.md's distribution channels), the plugin.yaml format 2 schema, the kernel templates' macro reference |
 | `drishti-console-api-<v>.jar` (from i5) | the Drishti Console's half: the context-builder interface (`PageContext.Builder`), the page context and the `ModuleApi` client types; scope `provided` (section 10.4) |
@@ -1224,7 +1224,7 @@ sub-module per part, is kept for the parts not built yet (Python, the harness su
 `-docs`) are the top-level folders of section 8.10.
 
 The design: one **multi-module Maven project** per module. The parent pom inherits `drishti-module-parent`, depends on `drishti-kernel-api` with scope
-`provided`, lists the sub-modules and runs the `drishti-module-maven-plugin` once, after them. Each sub-module maps to one part of the
+`provided`, lists the sub-modules and runs the parent's `exec-maven-plugin` executions (the Python packager and the server jar's verifier) once, after them. Each sub-module maps to one part of the
 `.dmod` (section 3.2):
 
 | Sub-module | Holds | Into the `.dmod` | Needed when |
@@ -1316,7 +1316,6 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 | C12 | **Two people at once** | the session-isolation test: two people, different row rules, concurrent requests, no crossed data in any page, API or cache |
 | C13 | **Off means gone** | the module switched off: every surface refused (the existing guarantee, ACCESS_MODEL section 6) |
 | C14 | **Absent everywhere** | the absence suite of section 12.11: install, record every surface, remove, assert each one gone and nothing left in the registry |
-| C15 | **Class loader unloads** | 50 load/unload cycles in the harness; the loader is collected (section 4.4) |
 
 ### 8.7 The release path
 
@@ -1341,7 +1340,7 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 | 5 Compute | developer | Java in `<id>-compute`/`-service`, Python in `<id>-python` | engines, `KindProvider`s, APIs |
 | 6 Run | developer | `drishti.py module run` | the kernel + this module, hot reload |
 | 7 Document | developer | `<id>-docs`: guide, tutorial, Help, glossary; `module run --shots` | the docs gates pass |
-| 8 Test | developer, CI | `mvn verify` | unit, harness, conformance (C1–C15), absence |
+| 8 Test | developer, CI | `mvn verify` | unit, harness, conformance (C1–C14), absence |
 | 9 Package | CI | `mvn package` | `target/dmod/genomics-0.1.0.dmod` (development-signed) |
 | 10 Sign and publish | publisher's CI | `mvn -Prelease deploy` | signed `.dmod` + `.sha256` in the module repository |
 | 11 Install | customer administrators | `drishti.py module install genomics-0.1.0.dmod` + approval | verify report, four eyes, LOADED |
@@ -1382,12 +1381,12 @@ modules/<module>/
 | Module | Its code |
 |---|---|
 | `banking` | `java/banking-compute` (the maths: VaR, exposure, FRTB-SA, SIMM, sensitivities), `java/banking-service` (services, storage, Spring wiring, API); `java/kernel-internals.txt`, the kernel packages it still reaches (`BankingReachTest`) |
-| `genomics` | `java/genomics`, the SDK's sample project (its parent is `drishti-module-parent`; its `drishti:assemble` packs the module folder, two up) |
+| `genomics` | `java/genomics`, the SDK's sample project (its parent is `drishti-module-parent`; its parent's `module pack` execution packs the module folder, two up) |
 | the content and source-system modules | none: no `java/`, no `pom.xml` |
 
 The names a module's top may hold are ONE list, `module-layout.yaml` (`ModuleLayout` in the kernel's API; `tools/module_layout.py` reads
 the same file): `content`, the `.dmod` content of section 3.2, and `build`, what only builds the module (`content.yaml`, `pom.xml`,
-`target/`, `tools/`). The packer (`ModuleAssembler`, one for the Maven plugin, the module tool and `packaging/dist`) stages only the
+`target/`, `tools/`). The packer (`tools/modulepack.py`, one for Maven, the command line and `packaging/dist`) stages only the
 content names (in `java/`, only jars already there are kept) and names anything else at the top in words, left out (an old build folder
 an older checkout keeps); the module's own jar goes into the package's `java/` by the name its manifest gives. The overrides view
 (section 18.10) copies the same content names. A folder under `modules/` without a `module.yaml` is not a module: the resolvers skip it
@@ -1519,7 +1518,7 @@ routes, read the raw request, set cookies or keep state (no mutable fields: an a
 - Served at **`/m/<id>/static/<version>/<path>`** from the module's `console/static/` (and `elements/<lib>/` at
   `/m/<id>/elements/<lib>/<version>/`), read-only, `Cache-Control: public, max-age=31536000, immutable`: the version in the path **busts the
   cache** on upgrade; rollback serves the older version's path again.
-- **SRI**: `drishti:assemble` writes the SHA-384 of every static file into `console/assets.lock`; `asset()` emits `integrity=` from it; the
+- **SRI**: the packer writes the SHA-384 of every static file into `console/assets.lock`; `asset()` emits `integrity=` from it; the
   console refuses to serve a file whose hash differs (tamper check at run time, besides V2 at load).
 - **CSP**: `script-src 'self'` and `style-src 'self'`; no inline, no remote origins; the module cannot change the policy.
 - **`drishti_` prefix** on every file (C4); vendor libraries are the kernel's only.
@@ -2455,13 +2454,13 @@ present but not placed). Clicking a cell opens the drawer with the version, the 
 any change of placement goes to Deploy (e), so this screen only reads and repairs. B (node cards) becomes its *By node* tab and the phone
 layout; C is what `drishti.py cluster modules --matrix` prints. The light theme: [admin-cluster-A-light.png](kernel-and-modules/mockups/admin-cluster-A-light.png).
 
-**(h) Module SDK, `drishti.py module run`, option A** (the genomics module: the fast conformance set C1–C15, the kernel API range, data
+**(h) Module SDK, `drishti.py module run`, option A** (the genomics module: the fast conformance set C1–C14, the kernel API range, data
 bindings resolved against `samples/`, pages and routes with their URLs, hot-reload lines; beside it the module's page with the developer bar):
 
 ![Module run, option A](kernel-and-modules/mockups/module-run-A.png)
 
 Recommendation: **A**. The terminal stays the one source of truth for checks, bindings, routes and reloads, and the browser shows the module
-exactly as people will see it, plus one thin developer bar (module id and version, kernel API, the C1–C15 tally, errors, last reload,
+exactly as people will see it, plus one thin developer bar (module id and version, kernel API, the C1–C14 tally, errors, last reload,
 *Reload*). The kernel injects the bar from the development key only under `module run`, never from the module, so the page itself stays
 conformant and screenshots taken with `--shots` leave it out. B repeats the terminal in a drawer that covers the page being designed;
 C hides errors in a corner and is kept only for `--shots` runs.

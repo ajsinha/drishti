@@ -18,14 +18,13 @@
     python3 -m pytest tools/test_pack_new_source.py -q
 
 A synthetic SwapOne-style file (tools/packgen/swapone_synth.py: invented names, its own field names and enums) -> the proposal gets the
-hand-written map's fields right; the edits, the map file and its reading; the source module's files and its fifteen checks (when the
-module tool is built); --load writes the rows into a lake table with SOURCE_SYSTEM stamped, read back through the map as canonical trades."""
+hand-written map's fields right; the edits, the map file and its reading; the source module's files and its fourteen checks (when the
+server jar is built); --load writes the rows into a lake table with SOURCE_SYSTEM stamped, read back through the map as canonical trades."""
 from __future__ import annotations
 
 import json
 import os
 import pathlib
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -39,7 +38,17 @@ import sourcemap as SM  # noqa: E402
 import swapone_synth as SS  # noqa: E402
 import module_from_jsonl as MJ  # noqa: E402
 
-TOOL = ROOT / "kernel/drishti-module-runtime/target/drishti-module-tool.jar"
+
+
+def verifier_built() -> bool:
+    """The server jar (ModuleCli, the one verifier) is in <home>/lib and a JDK is there."""
+    import drishti as cli
+    try:
+        cli.find_jar(None)
+        cli.find_java(None)
+        return True
+    except Exception:  # CliError: no jar or no java in this checkout
+        return False
 
 
 class Fixture(unittest.TestCase):
@@ -155,14 +164,14 @@ class TheModule(Fixture):
         own = SMOD.names(self.opts())
         self.assertEqual((own["table"], own["shared"]), ("trading.trade_swapone", False))
 
-    @unittest.skipUnless(TOOL.is_file() and shutil.which("java"), "needs the module tool (./mvnw -q package -DskipTests -pl :drishti-module-runtime -am)")
-    def test_the_module_passes_the_fifteen_checks(self):
+    @unittest.skipUnless(verifier_built(), "needs the server jar in lib/ (python tools/drishti.py build jar) and a JDK")
+    def test_the_module_passes_the_fourteen_checks(self):
         out = subprocess.run([sys.executable, str(HERE / "drishti.py"), "pack", "new", str(self.file), "--source-for", "trade", "--system", "SWAPONE",
                               "--shared-table", "trading.trades_shared", "--live", "--write-back", "--out", str(self.dir / "chk" / "source-swapone"),
-                              "--dist", str(self.dir / "chk-dist"), "--force", "--cycles", "1"], capture_output=True, text=True, cwd=ROOT,
+                              "--dist", str(self.dir / "chk-dist"), "--force"], capture_output=True, text=True, cwd=ROOT,
                              env={**os.environ, "TMPDIR": str(self.dir)})
         self.assertEqual(out.returncode, 0, out.stdout[-3000:] + out.stderr[-2000:])
-        self.assertIn("all 15 conformance checks passed", out.stdout)
+        self.assertIn("all 14 conformance checks passed", out.stdout)
 
 
 class TheLoad(Fixture):

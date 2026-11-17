@@ -1,6 +1,6 @@
 # ${artifactId}: the tutorial
 
-**1. Build.** In the project folder run `mvn verify`. The last lines say that all fifteen conformance checks passed and name
+**1. Build.** In the project folder run `mvn verify`. The last lines say that all fourteen conformance checks passed and name
 `java/${artifactId}/target/dmod/${artifactId}-${version}.dmod`.
 
 **2. Change the greeting.** Edit `Greeting.java`, run `mvn verify` again: the test `GreetingTest` checks the new words.

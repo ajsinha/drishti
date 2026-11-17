@@ -16,7 +16,7 @@
 -->
 <!-- The genomics module (the SDK's sample, DISTRIBUTIONS.md section 4) in the one module layout: its .dmod content at this folder's top
      (module.yaml, packs/, console/, data/, docs/, elements/) and its code as the Maven project java/genomics, which this pom only
-     aggregates. java/genomics's `mvn verify` builds the jar, packs this folder into target/dmod/genomics-0.1.0.dmod and runs C1-C15. -->
+     aggregates. java/genomics builds the jar; packaging/dist packs this folder with it into genomics-0.1.0.dmod and runs C1-C14. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <!-- the SDK's parent for its pluginManagement only (nothing runs on a pom): the kernel's build runs spotless:check on every project

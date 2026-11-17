@@ -16,8 +16,8 @@
 -->
 <!-- The parent every module project inherits (docs/architecture/KERNEL_AND_MODULES.md section 8.1). It stands alone (it does not
      inherit the kernel's build): Java 21, the kernel API and Spring as `provided` (the kernel supplies them at run time; never inside a
-     .dmod), JUnit for the module's tests, and the module plugin bound to the lifecycle: validate (manifest), package (assemble the .dmod),
-     verify (the conformance checks C1-C15). Its version is the kernel's: a module built against this kernel version runs on kernel API 0.2. -->
+     .dmod), JUnit for the module's tests, and exec-maven-plugin bound to the lifecycle: validate (manifest), package (the Python packager packs the .dmod),
+     verify (the conformance checks C1-C14 of the server jar's own verifier). Its version is the kernel's: a module built against this kernel version runs on kernel API 0.2. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ash.drishti</groupId>
@@ -31,6 +31,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <drishti.sdk.version>${revision}</drishti.sdk.version>
+    <!-- the Drishti install the module is packed and verified with (its tools/ folder and lib/ server jar); the module's folder is two up -->
+    <drishti.home>${env.DRISHTI_HOME}</drishti.home>
+    <drishti.python>python3</drishti.python>
+    <drishti.dmod.source>${project.basedir}/../..</drishti.dmod.source>
+    <drishti.conformance.skip>false</drishti.conformance.skip>
     <spring-framework.version>6.2.19</spring-framework.version>
     <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <assertj.version>3.27.7</assertj.version>
@@ -53,6 +58,14 @@
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId></dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>windows</id>
+      <activation><os><family>windows</family></os></activation>
+      <properties><drishti.python>python</drishti.python></properties>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>
@@ -80,16 +93,55 @@
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
         <!-- the kernel's build runs spotless:check on every module of its reactor (this pom included); a module project may use it too -->
         <plugin><groupId>com.diffplug.spotless</groupId><artifactId>spotless-maven-plugin</artifactId><version>3.10.2</version></plugin>
-        <!-- a module project names the plugin in its <build><plugins> (the archetype does): these executions then apply -->
+        <!-- a module project names exec-maven-plugin in its <build><plugins> (the archetype does): these executions then apply. The packager
+             and the verifier are the Drishti install's: tools/drishti.py module pack (Python) and module verify (the server jar's own
+             verifier); drishti.home is the folder of that install (its tools/ and lib/) -->
         <plugin>
-        <groupId>com.ash.drishti</groupId>
-        <artifactId>drishti-module-maven-plugin</artifactId>
-        <version>${drishti.sdk.version}</version>
-        <executions>
-          <execution><id>drishti-validate</id><goals><goal>validate</goal></goals></execution>
-          <execution><id>drishti-assemble</id><goals><goal>assemble</goal></goals></execution>
-          <execution><id>drishti-conformance</id><goals><goal>conformance</goal></goals></execution>
-        </executions>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.6.3</version>
+          <configuration>
+            <executable>${drishti.python}</executable>
+          </configuration>
+          <executions>
+            <execution>
+              <id>drishti-validate</id>
+              <phase>validate</phase>
+              <goals><goal>exec</goal></goals>
+              <configuration>
+                <arguments>
+                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>verify</argument>
+                  <argument>${drishti.dmod.source}</argument><argument>--manifest-only</argument>
+                  <argument>--id</argument><argument>${project.artifactId}</argument><argument>--version</argument><argument>${project.version}</argument>
+                </arguments>
+              </configuration>
+            </execution>
+            <execution>
+              <id>drishti-assemble</id>
+              <phase>package</phase>
+              <goals><goal>exec</goal></goals>
+              <configuration>
+                <arguments>
+                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>pack</argument>
+                  <argument>${drishti.dmod.source}</argument><argument>--jar</argument><argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                  <argument>--out</argument><argument>${project.build.directory}/dmod</argument>
+                </arguments>
+              </configuration>
+            </execution>
+            <execution>
+              <id>drishti-conformance</id>
+              <phase>verify</phase>
+              <goals><goal>exec</goal></goals>
+              <configuration>
+                <skip>${drishti.conformance.skip}</skip>
+                <arguments>
+                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>verify</argument>
+                  <argument>${project.build.directory}/dmod/${project.artifactId}-${project.version}.dmod</argument><argument>--conformance</argument>
+                  <argument>--project</argument><argument>${project.basedir}</argument>
+                </arguments>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

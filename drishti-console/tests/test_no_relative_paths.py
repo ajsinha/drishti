@@ -64,9 +64,6 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
     # benchmarks and the test kit run under Maven in their own module folder: their scratch is target/ there by design
     "testing/": [("Path.of(\"target\"", "a benchmark's or the test kit's scratch under its module's target/"),
                  ("Path.of(\"examples/packs", "a benchmark's fixture, run from the repository")],
-    # the standalone module tool (drishti-module-tool.jar, no install folder): its output defaults to the developer's current folder, as
-    # documented ("--out <dir>", DEVELOPER_GUIDE.md); a typed command in the developer's shell, not a path of the server
-    "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/tool/ModuleTool.java": [('getOrDefault("--out", ".")', "the standalone tool's documented default")],
     # a module's own files named relative to the module folder (module.yaml keys, packs' config) are resolved against that folder, not the
     # working folder: they are not install folders
     "modules/": [(": mappings/", "relative to the module folder"), (": console/", "relative to the module folder"),
@@ -77,7 +74,7 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
                  ("${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}", "a connector setting, resolved by the connector layers"),
                  ("${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "a copy-me connector example, resolved by the connector layers")],
     # an ES module import in the conformance check of module JavaScript, not a path of the server
-    "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/tool/ModuleConformance.java": [("startsWith(\"./\")", "an ES import specifier")],
+    "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/conformance/ModuleConformance.java": [("startsWith(\"./\")", "an ES import specifier")],
 }
 
 JAVA_LITERAL_PATH = re.compile(r"""\b(?:Path\.of|Paths\.get|new\s+File)\(\s*"(?!/)(?![A-Za-z]:)([^"$]*)\"""")

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.module.tool;
+package com.ash.drishti.module.conformance;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

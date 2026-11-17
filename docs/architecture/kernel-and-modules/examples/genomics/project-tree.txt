@@ -1,7 +1,7 @@
 The genomics sample module's source tree as built (docs/architecture/KERNEL_AND_MODULES.md sections 8.9 and 8.10): the one module layout.
 The .dmod content sits at the folder's top, as inside the package; the code is one Maven project under java/, aggregated by pom.xml.
 `./mvnw package -pl modules/genomics/java/genomics -am` (or `mvn verify` in the module folder) builds the jar, packs the folder into
-java/genomics/target/dmod/genomics-0.1.0.dmod and runs C1-C15.
+java/genomics/target/dmod/genomics-0.1.0.dmod and runs C1–C14.
 
 modules/genomics/
 ├── module.yaml                                 the manifest                                                  → module.yaml

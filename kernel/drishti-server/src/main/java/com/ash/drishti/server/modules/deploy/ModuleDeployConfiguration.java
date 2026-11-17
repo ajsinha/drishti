@@ -187,8 +187,7 @@ public class ModuleDeployConfiguration {
     public ModuleDeployService moduleDeployService(ModuleNode node, PlacementService placement, PeerCalls peers, AuditLog audit, Environment env) {
         NodeCalls calls = new NodeCalls(node, placement::self, peers,
                 Duration.ofSeconds(env.getProperty("drishti.module-deploy.node-call-seconds", Long.class, 120L)));
-        return new ModuleDeployService(root(env), node, placement, calls, audit, Clock.systemUTC(),
-                env.getProperty("drishti.module-deploy.conformance-cycles", Integer.class, 5));
+        return new ModuleDeployService(root(env), node, placement, calls, audit, Clock.systemUTC());
     }
 
     /**

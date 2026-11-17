@@ -106,7 +106,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
     # module -----------------------------------------------------------------------------------------------
-    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), run the conformance checks C1-C15 on a package, inspect one (the module tool); deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
+    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), verify a package and run the conformance checks C1-C14 (the server jar's own verifier), inspect one; deploy, plan, apply, list, remove, disable, enable, upgrade on a cluster; run one module alone")
     mp = add(mg, "pack", h.cmd_module, "module pack: a module folder (module.yaml at its root) -> <out>/<id>-<version>.dmod, the same bytes on every run, plus its .sha256; "
              "no Java needed", [],
              "examples:\n  drishti.py module pack modules/trading\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
@@ -118,19 +118,37 @@ def build_parser(h) -> argparse.ArgumentParser:
     mp.add_argument("--out", type=pathlib.Path, help="the folder the .dmod is written to (default: <module>/target/dmod)")
     mp.add_argument("--kernel-build", help="the kernel build to stamp in a first-party module (default: the server jar in <Drishti folder>/lib)")
     mp.add_argument("--kernel-jar", type=pathlib.Path, help="the server jar whose build is stamped (instead of --kernel-build)")
-    for name, what in (("check", "the conformance checks C1-C15 on a .dmod or a folder (packed first); exit 1 when one fails"),
-                       ("inspect", "what a .dmod or a module folder is and holds; the hash list's verdict")):
+    for name, what in (("verify", "the package rules and API ranges of a .dmod (or --manifest-only for a folder); --conformance adds the checks C1-C14; exit 1 when one fails"),
+                       ("check", "module verify --conformance: the conformance checks C1-C14 on a .dmod"),
+                       ("inspect", "what a .dmod or a module folder is and holds; the hash list's verdict"),
+                       ("visual", "add a visual kind (an Elements extension) to a module folder")):
         mp = add(mg, name, h.cmd_module, f"module {name}: {what}", [],
-                 "examples:\n  drishti.py module check dist/greet-0.1.0.dmod --project .\n  drishti.py module inspect dist/greet-0.1.0.dmod\n"
+                 "examples:\n  drishti.py module verify dist/greet-0.1.0.dmod --conformance --project .\n  drishti.py module inspect dist/greet-0.1.0.dmod\n"
+                 "Runs the verifier inside the server jar in <Drishti folder>/lib (python tools/drishti.py build jar makes it).\n"
                  "exit: 0 done, 1 a check failed or the module was refused, 2 usage")
         mp.set_defaults(module_cmd=name)
         mp.add_argument("path", help="a module folder (module.yaml at its root) or a .dmod")
-        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
+        mp.add_argument("--jar", help="the server's exec jar (default: the newest in <Drishti folder>/lib)")
         mp.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
-        if name == "check":
-            mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
+        if name in ("verify", "check"):
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
-            mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
+            mp.add_argument("--with", dest="with_modules", action="append", default=[], metavar="DMOD",
+                            help="a module this one requires (repeatable): installed beside it for the runtime checks")
+            mp.add_argument("--first-party", help="the first-party list to verify against (default: the server jar's own)")
+            mp.add_argument("--kernel-build", help="the kernel build to check against (default: the server jar's own)")
+        if name == "verify":
+            mp.add_argument("--conformance", action="store_true", help="also run the conformance checks C1-C14")
+            mp.add_argument("--manifest-only", action="store_true", help="a folder: only its manifest, against --id and --version")
+            mp.add_argument("--id", dest="module_id", help="with --manifest-only: the project's module id")
+            mp.add_argument("--version", dest="module_version", help="with --manifest-only: the project's version")
+            mp.add_argument("--json", action="store_true", help="the verdict as JSON")
+        if name == "inspect":
+            mp.add_argument("--first-party", help="the first-party list to verify against")
+            mp.add_argument("--kernel-build", help="the kernel build to check against")
+        if name == "visual":
+            mp.add_argument("--id", dest="module_id", required=True, help="the module's id")
+            mp.add_argument("--name", required=True, help="the kind's name (lower-case, digits, -)")
+            mp.add_argument("--title", help="the visual's title")
     load_module("modulecli", "modulecli.py").register(h, mg, add, srv, js)   # deploy, plan, apply, list, remove, disable, enable, upgrade, run
 
     # pack -------------------------------------------------------------------------------------------------

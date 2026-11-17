@@ -83,6 +83,9 @@ public class DrishtiApplication {
             // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
+        if (com.ash.drishti.server.cli.ModuleCli.isCli(args)) {            // `module verify|inspect|visual PATH` (tools/drishti.py module): no Spring, no web server
+            System.exit(com.ash.drishti.server.cli.ModuleCli.run(args, System.out, System.err));
+        }
         if (com.ash.drishti.server.cli.ResolveCli.isCli(args)) {         // `resolve --json [--root DIR]` (tools/resolved.py): no Spring, no web server
             System.exit(com.ash.drishti.server.cli.ResolveCli.run(args, System.out, System.err));
         }

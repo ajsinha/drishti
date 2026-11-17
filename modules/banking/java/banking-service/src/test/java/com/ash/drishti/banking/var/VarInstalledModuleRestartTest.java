@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.banking.BankingTestServer;
 import com.ash.drishti.module.runtime.Dmod;
-import com.ash.drishti.module.tool.ModuleAssembler;
+import com.ash.drishti.testkit.ModuleFixtures;
 import com.ash.drishti.packs.PackRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,14 +105,14 @@ class VarInstalledModuleRestartTest {
     }
 
     /**
-     * The module packed by the one packer and installed as the deploy service leaves it: unpacked under {@code installed/<id>/<version>} and
+     * The module packed by the one packer (tools/modulepack.py) and installed as the deploy service leaves it: unpacked under {@code installed/<id>/<version>} and
      * named in {@code installed/active.yaml}. Its jars are stand-ins: the test's server has banking's classes already.
      */
     static Path install(Path source, Path work) throws Exception {
         Path jars = Files.createDirectories(work.resolve("jars"));
         Path first = jar(jars.resolve("drishti-banking.jar"));
-        Path dmod = ModuleAssembler.assemble(source, first, List.of(jar(jars.resolve("drishti-compute-banking.jar"))), work.resolve("stage"),
-                work.resolve("dist"), "test-kernel-build");
+        Path dmod = ModuleFixtures.pack(source, List.of(first, jar(jars.resolve("drishti-compute-banking.jar"))), work.resolve("dist"),
+                "test-kernel-build");
         Path store = work.resolve("store");
         Dmod.unpack(dmod, store.resolve("installed/banking/1.0.0"));
         Files.writeString(store.resolve("installed/active.yaml"), "modules:\n  banking: \"1.0.0\"\n", StandardCharsets.UTF_8);

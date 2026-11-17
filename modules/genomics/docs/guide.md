@@ -91,7 +91,7 @@ Every call that applies takes the selection (`cluster=`, `box=`, `samples=`). A 
 in `showcase/status`, and asks nothing else.
 
 **How it is built.** `mvn verify` compiles the code, runs its tests, packs `target/dmod/genomics-0.1.0.dmod` and runs the conformance
-checks C1 to C15. See the [tutorial](tutorial.md).
+checks C1 to C14. See the [tutorial](tutorial.md).
 
 **The showcase: two packs of invented data.** Besides the VCF reader the module carries two packs, `genomics-showcase` and
 `protein-engineering`, that show Drishti outside finance: a cohort of 1,500 patients read against one invented gene (`HLXK7`), and the

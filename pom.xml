@@ -41,7 +41,6 @@
     <module>kernel/drishti-kernel-api</module>
     <module>kernel/drishti-module-runtime</module>
     <module>drishti-sdk/drishti-module-parent</module>
-    <module>drishti-sdk/drishti-module-maven-plugin</module>
     <module>drishti-sdk/drishti-module-archetype</module>
     <module>modules/genomics</module>
     <module>compute/drishti-rachana</module>

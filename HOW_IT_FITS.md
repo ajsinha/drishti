@@ -117,7 +117,7 @@ the bank's own systems loaded into a lake.
 
 **What a `.dmod` never holds:** a connector, a host name, a URL of a data source, a user name or a password. The packer refuses them.
 
-**Checked before anything runs.** The kernel verifies the hash list and the manifest and runs fifteen conformance checks (C1–C15: no kernel
+**Checked before anything runs.** The kernel verifies the hash list and the manifest and runs fourteen conformance checks (C1–C14: no kernel
 internals, declared jars only, contracts for its kinds, nothing leaked after unloading, and the rest). A refused module is absent, never half
 loaded.
 
@@ -233,14 +233,14 @@ notes *single node: placed here*.
 
 ## 6. A module's life
 
-![A module's life: built with Maven, the standalone module tool or drishti.py module pack into a checked .dmod; deployed by uploading it once, planning, approval by a second administrator, then staging on every placed node before all activate together; a failure rolls every node back and an upgrade rolls node by node; on one node a .dmod dropped into the modules folder auto-deploys; a development folder loads unverified on a developer's own server; unloading keeps saved work](docs/how-it-fits/lifecycle.svg)
+![A module's life: built with Maven or drishti.py module pack into a checked .dmod; deployed by uploading it once, planning, approval by a second administrator, then staging on every placed node before all activate together; a failure rolls every node back and an upgrade rolls node by node; on one node a .dmod dropped into the modules folder auto-deploys; a development folder loads unverified on a developer's own server; unloading keeps saved work](docs/how-it-fits/lifecycle.svg)
 
-**Build, three ways, one packer.** The same packer and the same fifteen checks, reached from:
+**Build, three ways, one packer.** The same packer and the same fourteen checks, reached from:
 
 | Way | For | Command |
 |---|---|---|
 | Maven | a project made from the archetype `drishti-module-archetype` | `mvn verify` → `target/dmod/<id>-<version>.dmod` |
-| The module tool | Gradle, Bazel, a script, a plain folder | `java -jar drishti-module-tool.jar pack <folder>`, then `check` and `inspect` |
+| The command line, any build | Gradle, Bazel, a script, a plain folder | `python3 tools/drishti.py module pack <folder>`, then `module verify --conformance` and `module inspect` |
 | The command line | Linux, macOS and Windows with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module check`, `module inspect` |
 
 **Deploy, cluster-first.**

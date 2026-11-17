@@ -13,11 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.module.tool;
+package com.ash.drishti.module.conformance;
 
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.FirstParty;
 import com.ash.drishti.module.runtime.ModuleCandidate;
+import com.ash.drishti.module.runtime.ModuleFolder;
 import com.ash.drishti.module.runtime.ModuleHost;
 import com.ash.drishti.module.runtime.ModuleRefusedException;
 import com.ash.drishti.module.runtime.DmodManifest;
@@ -48,8 +49,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * The conformance suite of section 8.6: fifteen checks, C1 to C15, run on a packed {@code .dmod} (and, for C10, the project's sources).
- * C1-C10 and C12 read the files; C11 and C13-C15 load the module into the module runtime (load, route, unload). Every failure is a sentence
+ * The conformance suite of section 8.6: fourteen checks, C1 to C14, run on a packed {@code .dmod} (and, for C10, the project's sources).
+ * C1-C10 and C12 read the files; C11, C13 and C14 load the module into the module runtime (load, route, unload). Every failure is a sentence
  * that names the file and says what to do. Signing (and the publisher key's refusal of a module that has not passed) comes in release j.
  */
 public final class ModuleConformance {
@@ -57,7 +58,7 @@ public final class ModuleConformance {
     /** A check's outcome. */
     public enum Status { PASS, FAIL }
 
-    /** One check: its id (C1-C15), its title, its outcome and the problems in plain words. */
+    /** One check: its id (C1-C14), its title, its outcome and the problems in plain words. */
     public record Check(String id, String title, Status status, List<String> problems) {
 
         /** One line for the build log. */
@@ -92,31 +93,30 @@ public final class ModuleConformance {
     }
 
     /**
-     * Runs C1-C15 on a package. {@code project} is the module project's folder (C10 reads its Java sources; null: only the package's
-     * scripts and styles are read); {@code work} an empty folder for the runtime's checks; {@code cycles} the load/unload cycles of C15
-     * (50 in the design).
+     * Runs C1-C14 on a package. {@code project} is the module project's folder (C10 reads its Java sources; null: only the package's
+     * scripts and styles are read); {@code work} an empty folder for the runtime's checks.
      */
-    public static List<Check> run(Path dmod, Path project, Path work, int cycles) {
-        return run(dmod, project, work, cycles, KernelFacts.ofKernel());
+    public static List<Check> run(Path dmod, Path project, Path work) {
+        return run(dmod, project, work, KernelFacts.ofKernel());
     }
 
     /**
-     * Runs C1-C15 for a kernel: its build and first-party list decide whether a kernel-internals allowance is honoured (C1) and the
+     * Runs C1-C14 for a kernel: its build and first-party list decide whether a kernel-internals allowance is honoured (C1) and the
      * runtime checks load the module as that kernel would.
      */
-    public static List<Check> run(Path dmod, Path project, Path work, int cycles, KernelFacts facts) {
-        return run(dmod, project, work, cycles, facts, List.of());
+    public static List<Check> run(Path dmod, Path project, Path work, KernelFacts facts) {
+        return run(dmod, project, work, facts, List.of());
     }
 
     /** As above, with the packages of the modules it requires installed beside it for the runtime checks ({@code --with}). */
-    public static List<Check> run(Path dmod, Path project, Path work, int cycles, KernelFacts facts, List<Path> with) {
+    public static List<Check> run(Path dmod, Path project, Path work, KernelFacts facts, List<Path> with) {
         Path dir;
         DmodManifest m;
         try {
             dir = work.resolve("unpacked");
-            ModuleAssembler.delete(dir);
+            ModuleFolder.delete(dir);
             Dmod.unpack(dmod, dir);
-            m = ModuleAssembler.manifest(dir);
+            m = ModuleFolder.manifest(dir);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -132,7 +132,7 @@ public final class ModuleConformance {
         out.add(check("C8", "Data contracts present", contractsPresent(dir, m, files)));
         out.add(check("C9", "No secrets, no connectors, pure Python", noSecrets(dir, files, m)));
         out.add(check("C10", "Licence headers", licenceHeaders(dir, files, project)));
-        out.addAll(runtimeChecks(dmod, m, work, cycles, facts, with));
+        out.addAll(runtimeChecks(dmod, m, work, facts, with));
         out.add(11, check("C12", "Two people at once", twoPeople(dir, m)));
         return out;
     }
@@ -596,13 +596,12 @@ public final class ModuleConformance {
         return out;
     }
 
-    // ---- C11, C13, C14, C15: the module in the runtime ------------------------------------------------------------------------------
+    // ---- C11, C13, C14: the module in the runtime ------------------------------------------------------------------------------
 
-    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, int cycles, KernelFacts facts, List<Path> with) {
+    private static List<Check> runtimeChecks(Path dmod, DmodManifest m, Path work, KernelFacts facts, List<Path> with) {
         List<String> answer = new ArrayList<>();
         List<String> off = new ArrayList<>();
         List<String> absent = new ArrayList<>();
-        List<String> unloads = new ArrayList<>();
         try {
             // C11 and C13: load, every word answers through a route; switched off, every route answers 404
             Path modules = install(dmod, m, work.resolve("run-off"), with);
@@ -655,22 +654,6 @@ public final class ModuleConformance {
                     }
                 }
             }
-            // C15: the class loader goes, cycle after cycle
-            for (int i = 1; i <= cycles && unloads.isEmpty(); i++) {
-                Path run = work.resolve("run-cycle");
-                ModuleAssembler.delete(run);
-                modules = install(dmod, m, run, with);
-                try (ModuleRuntime rt = runtime(run, facts)) {
-                    if (!load(rt, modules, m, unloads)) {
-                        break;
-                    }
-                    ModuleRuntime.UnloadReport rep = rt.unload(m.id(), ModuleRuntime.Leave.DISABLE, true);
-                    if (!Boolean.TRUE.equals(rep.leakFree()) && m.java() != null) {
-                        unloads.add("cycle " + i + " of " + cycles + ": the module's class loader was not collected after unload; something "
-                                + "outside the module (a thread, a static registry, a ThreadLocal) still holds one of its classes");
-                    }
-                }
-            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -678,18 +661,17 @@ public final class ModuleConformance {
         out.add(check("C11", "Functions answer", answer));
         out.add(check("C13", "Off means gone", off));
         out.add(check("C14", "Absent everywhere", absent));
-        out.add(check("C15", "Class loader unloads", unloads));
         return out;
     }
 
     private static Path install(Path dmod, DmodManifest m, Path run, List<Path> with) throws IOException {
-        ModuleAssembler.delete(run);
+        ModuleFolder.delete(run);
         Path modules = run.resolve("modules");
         for (Path w : with) {
             Path peek = run.resolve("peek");
             Dmod.unpack(w, peek);
-            DmodManifest wm = ModuleAssembler.manifest(peek);
-            ModuleAssembler.delete(peek);
+            DmodManifest wm = ModuleFolder.manifest(peek);
+            ModuleFolder.delete(peek);
             Dmod.unpack(w, modules.resolve(wm.id()).resolve(wm.version()));
             Files.copy(w, modules.resolve(wm.id()).resolve(w.getFileName()));
         }

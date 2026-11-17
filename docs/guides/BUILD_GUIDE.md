@@ -1905,7 +1905,7 @@ screen (Sutra) per kind or per combination of discriminator columns, its data bi
         ▼
 Design: a Sutra's YAML beside its live screen on real rows, drawn again as you edit
         ▼
-Finalize: the module written, its pack linted and tested, packed as a .dmod, the fifteen checks
+Finalize: the module written, its pack linted and tested, packed as a .dmod, the fourteen checks
         ▼
 Deploy: the one module deploy (a single node installs; a cluster plans, then applies)
 ```
@@ -1942,7 +1942,7 @@ of the combination's **real rows** (choose the row). Edit the YAML and the scree
 Sutra marked *edited*; a YAML the server refuses shows its problems in place of the screen. Edits are kept for the module.
 
 **5. Finalize.** **Make the module** runs `pack new`'s write: the pack (kinds, contracts, your Sutras, samples, tests, About text), the module around it
-(`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module check`: the **fifteen conformance
+(`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module verify --conformance`: the **fourteen conformance
 checks** are listed as they pass. The `.dmod` can be downloaded.
 
 **6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder named by `builder.pack_designer_modules_dir` (an absolute path; with none set it is refused and **Plan for the cluster** is the way), where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
@@ -5289,7 +5289,7 @@ You should see every required field of the kind mapped or given a constant, the 
 ### Step 3 · The module the designer writes
 
 **In the UI.** **Layout**: keep **Its own table**, `trading.trade_swapone` (one table a trading system, as Endur, Calypso, Murex, WSS and
-ICI). The page shows the connector it will write. **Finalize** makes the module `source-swapone` and runs the fifteen checks;
+ICI). The page shows the connector it will write. **Finalize** makes the module `source-swapone` and runs the fourteen checks;
 **Deploy** installs it.
 
 **On the command line.** One command writes, checks and installs it (on one node, into the server's `modules` folder; on a cluster add `--server`):
@@ -5332,7 +5332,7 @@ dataload:
       date-from: name
 ```
 
-Auto-deploy loads the module within seconds. You should see `source-swapone` listed as running on **Admin → Modules**, with all fifteen checks passed.
+Auto-deploy loads the module within seconds. You should see `source-swapone` listed as running on **Admin → Modules**, with all fourteen checks passed.
 
 ### Step 4 · Drop the file in the inbox
 

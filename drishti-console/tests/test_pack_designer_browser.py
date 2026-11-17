@@ -14,7 +14,7 @@
 """Build -> New pack, the Pack designer, in a browser against a REAL scratch server (the repackaged jar on a free port, sign-in on): a small
 multi-file JSON Lines set (tests/pdui_data.py: three files, one gzipped, six PRODUCT_TYPE x SOURCE_SYSTEM combinations, one rare) is dropped, every
 record is read on the server, the combinations are seen with their counts (the rare one marked), a Sutra's YAML is edited and its live screen
-changes, the module is finalized (the fifteen checks) and deployed to the server, and the screen of a trade opens. Also the layout at desktop and
+changes, the module is finalized (the fourteen checks) and deployed to the server, and the screen of a trade opens. Also the layout at desktop and
 phone width, and the old URL's redirect. Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py)."""
 import os
 import pathlib
@@ -31,7 +31,7 @@ import pdui_data  # noqa: E402
 
 pytestmark = pytest.mark.spread
 ROOT = CONSOLE.parent
-LONG = max(BROWSER_WAIT_MS, 240_000)                    # the read, the draft and the fifteen checks are real work
+LONG = max(BROWSER_WAIT_MS, 240_000)                    # the read, the draft and the fourteen checks are real work
 
 
 MODULES_DIR = "DRISHTI_CONSOLE__BUILDER__PACK_DESIGNER_MODULES_DIR"   # the console's builder.pack_designer_modules_dir (it works out no server folder)
@@ -123,7 +123,7 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
         page.wait_for_function("() => document.querySelector('[data-live-screen]').innerText.includes('Edited by the designer')", timeout=LONG)
         page.wait_for_function("() => document.querySelector('[data-sutras-grid]').innerText.includes('edited')", timeout=LONG)
 
-        # 5 Finalize: the module and its fifteen checks
+        # 5 Finalize: the module and its fourteen checks
         page.click("[data-go=finalize]")
         page.click("[data-finalize]")
         page.locator("[data-download]:not([hidden])").wait_for(timeout=LONG * 2)

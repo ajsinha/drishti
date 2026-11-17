@@ -419,7 +419,7 @@ A module (`.dmod`) is deployed once for the whole cluster, from Admin → Module
 
 - **Built once, stored once.** The upload goes to the module store of the node you talk to (`modules/store/<id>/<version>/` under
   `drishti.module-deploy.dir`, by default `<data>/modules`; on AWS with EFS every node reads the same folder). It is checked there with the
-  fifteen conformance checks (C15 with `drishti.module-deploy.conformance-cycles` cycles); a version is never rebuilt: the same version with
+  fourteen conformance checks; a version is never rebuilt: the same version with
   other bytes is refused. Plans and applies are made on that node (the coordinator).
 - **The plan follows the placement.** Place the module's parts first (section 1.9). The plan lists every node: a placed node stages and
   activates it; a node where no part is placed receives nothing (it forwards the module's requests) and only records the module in its

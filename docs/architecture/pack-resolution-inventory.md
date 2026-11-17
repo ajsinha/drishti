@@ -64,7 +64,7 @@ at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`,
 | `lake/drishti-lakeio/.../lakeconfig/PackEntry.java:59-100` | `pack.yaml` + source-module connector templates; modules folder = system property `drishti.modules.dir` (**the same name as the server's setting for the switches folder `config/modules`**: one name, two meanings) else "walk up to a folder holding `modules` and `config`" | direct | **A** (the walk-up fails for a pack under `modules/installed/...` or any pack whose ancestors have no `config`; the property means two things) | reads `ModuleContributions` from the resolution; no walk-up, no property |
 | `lake/drishti-lakeio/.../lakeconfig/ModuleDirs.java:38-74` | module folders: `<modules>/<id>` then `installed/<id>/<version>` | — | C (the right list, but ignores on/off and misses `<id>/dmod`) | becomes the module half of the resolver (`ModuleFolders`), in drishti-api |
 | `lake/drishti-lakeload/.../dataload/Routes.java:571`, `lakeload/ChildKinds.java:55`, `PackEntry.java:111,135,252` | a given pack folder's `pack.yaml` | PR / given | C | none |
-| `kernel/drishti-module-runtime/.../module/tool/ModuleAssembler.java:230,261` | the packs inside a module being packed | given folder | C | none |
+| `tools/modulepack.py` (`_bring_content`, `_collect`) | the packs inside a module being packed | given folder | C | none |
 | `kernel/drishti-server/.../server/deploy/PackArchive.java:313-318`, `PackDiffer.java:76` | an uploaded archive's `pack.yaml` | given folder | C | none |
 
 Everything else in the server (FORMS, DATAMAP, WHAT, EXPORT, Help's pack pages, the designer's kinds, the contracts API, the glossary,
