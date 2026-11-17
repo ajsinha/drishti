@@ -113,7 +113,7 @@ def test_a_jar_module_yaml_does_not_name_is_refused_and_a_named_one_must_be_ther
     own, other = tmp_path / "own.jar", tmp_path / "other.jar"
     own.write_bytes(b"1")
     other.write_bytes(b"2")
-    with pytest.raises(modulepack.PackError, match="neither in java.jars nor java.lib"):
+    with pytest.raises(modulepack.PackError, match="in neither java.jars nor java.lib"):
         modulepack.pack(m, jars=[own, other], out=tmp_path / "o")
     with pytest.raises(modulepack.PackError, match="neither in the folder nor given"):
         modulepack.pack(m, out=tmp_path / "o")
