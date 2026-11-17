@@ -53,7 +53,9 @@ class BankingReachTest {
                         Matcher m = REF.matcher(line);
                         while (m.find()) {
                             String pkg = "com.ash.drishti." + m.group(1);
-                            if (!pkg.startsWith("com.ash.drishti.kernel.api") && !pkg.startsWith("com.ash.drishti.banking")) {
+                            // the kernel API (drishti-kernel-api and drishti-api: ModuleClassLoader.KERNEL_API) is every module's to use
+                            if (!pkg.startsWith("com.ash.drishti.kernel.api") && !pkg.equals("com.ash.drishti.api") && !pkg.startsWith("com.ash.drishti.api.")
+                                    && !pkg.startsWith("com.ash.drishti.banking")) {
                                 reached.add(pkg);
                             }
                         }
@@ -63,7 +65,9 @@ class BankingReachTest {
         }
         Set<String> recorded = new TreeSet<>();
         for (String line : Files.readAllLines(BANKING.resolve("kernel-internals.txt"))) {
-            // a "# bytecode" or "# library" line is for the package's allowance (what the compiled classes reach), not the sources
+            assertThat(line).as("the kernel's libraries reach every module through its class loader: no \"# library\" line in "
+                    + "kernel-internals.txt").doesNotContain("# library");
+            // a "# bytecode" line is for the package's allowance (what the compiled classes reach), not the sources
             if (!line.isBlank() && !line.startsWith("#") && !line.contains("#")) {
                 recorded.add(line.trim());
             }

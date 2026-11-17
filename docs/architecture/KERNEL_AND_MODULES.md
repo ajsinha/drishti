@@ -578,38 +578,56 @@ every module that requires it (*refused: requires banking, which is refused*).
 ```
             bootstrap / platform
                     │
-        kernel application class loader  (drishti-server and every kernel jar)
+        kernel class loader  (drishti-server and every jar of its BOOT-INF/lib: the kernel's libraries)
                     │
-          kernel API class loader   ◀── exports ONLY: com.ash.drishti.kernel.api.**, plus the shared libraries below
+        site lib loader  (lib/ext, drishti.lib.path)
            ┌────────┴─────────┐
-   module "banking" loader   module "economy" loader      (child-first for everything in the module's java/)
+   module "banking" loader   module "genomics" loader     (parent-first: kernel → lib/ext → the module's own java/ and lib/)
 ```
 
-- **Shared (parent-first)**: `com.ash.drishti.kernel.api..`, the Java platform, Spring Framework and Boot, Jackson, SLF4J, Apache Arrow,
-  Micrometer, Jakarta Servlet and Validation. The list is part of the kernel API (a MINOR may add, only a MAJOR removes).
-- **Private (child-first)**: every other class in the module's `java/` jars, including its own copies of libraries (a module may ship
-  commons-math 3.6 while the kernel uses another version).
-- **Hidden**: every kernel class outside the API (`com.ash.drishti.server..` etc.) is not visible to a module (`ClassNotFoundException`); an
-  architecture test in the SDK fails the build earlier.
-- **Spring**: each module gets a **child `ApplicationContext`** with the module's class loader; its parent exposes only the kernel API
-  beans (the `ModuleContext` services). Its `@ConditionalOnModule` stays as a guard. SPI implementations are beans or `ServiceLoader`
-  entries in that context; the kernel collects them through the registry of contributions (`ModuleContributions`), never by scanning a
-  module's packages.
-- **No module sees another module's classes**; modules talk through kinds, functions and events.
+**The rule: the kernel's libraries always win.** A module's class loader asks the kernel first for every class and every resource, then
+the site's lib jars, and only then the module's own jars (`java/`, then `lib/`):
 
-**Where every library comes from** (product owner, 2026-11-10):
+- **The kernel's libraries**: every jar the server jar ships (Spring, Jackson, SLF4J, Arrow, Kafka clients, Caffeine, SnakeYAML, Delta,
+  Hipparchus, OpenBLAS ...) is the one a module gets. A module never replaces one; its own copy is **never used**.
+- **A module's private libraries**: a library the kernel does not ship comes from the module's own jars (its `lib/`); two modules may carry
+  different versions of one such library.
+- **Site jars** (`lib/ext`, `drishti.lib.path`) sit on the kernel side: a site jar wins over a module's copy.
+- **Kernel internals stay hidden**: a class of `com.ash.drishti.` outside the kernel API (`com.ash.drishti.kernel.api.`,
+  `com.ash.drishti.api.`) is never the kernel's (`ClassNotFoundException` unless the module's own jars define it), except a verified
+  first-party module's declared `kernel-internals:` allowance (section 3.3). The allowance lists kernel packages only: no library needs a
+  line in it. The conformance check C1 fails a module class that imports anything else of `com.ash.drishti.`.
+- **No module sees another module's classes**; modules talk through kinds, functions and events.
+- **Resources** follow the same order: `getResources` lists the kernel's, then the site's, then the module's; a kernel `META-INF/services`
+  file is listed only when every provider it names is a class the module may take from the kernel (a `ServiceLoader` with a module's loader
+  also finds the providers of the kernel's libraries; the kernel's own collection of a module's providers takes only those of the module's loader).
+- **The thread context class loader** is the module's loader on every call the runtime makes into the module (its configuration classes,
+  its context's start, the unload steps) and is restored after.
+- **Spring**: each module gets a **child `ApplicationContext`** with the module's class loader; its parent exposes only the kernel API
+  beans (the `ModuleContext` services). SPI implementations are beans or `ServiceLoader` entries in that context; the kernel collects them
+  through the registry of contributions, never by scanning a module's packages.
+
+**The library warning.** The build writes `META-INF/drishti/kernel-libraries.txt` into the server jar (`packaging/drishti-app`): one line
+per jar of `BOOT-INF/lib`, `group:artifact:version`, the jar's name and its package prefixes, checked against `BOOT-INF/lib` after the
+repackaging. `KernelLibraries` compares each jar of a module's `java/` and `lib/` with it: by its Maven coordinates
+(`META-INF/maven/.../pom.properties`), else by its file name, else by the packages of its classes. Every overlap gives one sentence:
+
+> genomics 0.1.0 carries jackson-databind 2.17.1 (jackson-databind-2.17.1.jar); the kernel's jackson-databind 2.21.4 is used instead.
+> Remove the jar from the module and compile against the kernel's (scope provided).
+
+It is a **warning, never a refusal**: logged (WARN) when the module loads, in the module's Health notes, and in `module verify`, which
+prints `N library warnings (M kernel libraries compared)` (`--json`: `libraryWarnings`). The first-party modules carry none.
+
+**Where every library comes from** (product owner, 2026-11-17):
 
 | Library | Lives in | Loaded by | Seen by |
 |---|---|---|---|
-| The JDK, the kernel API and the shared libraries above (Spring, Jackson, SLF4J, Arrow, Micrometer, Jakarta) | the kernel jar | the kernel | everyone, **parent-first: never replaced**; a module that bundles them fails a conformance check |
-| The kernel's own dependencies | **built into the kernel jar** by Maven, versioned and tested with it | the kernel application loader | the kernel only (hidden from modules) |
-| A module's own jars and third-party libraries | the `.dmod`'s **`lib/`** (and `java/`) | that module's loader, **child-first** | that module only; two modules may carry different versions of one library |
-| Site additions: JDBC drivers, connector plugins, a company's shared library | the server's **`lib/` folder** (`drishti.lib.path`) | one shared *lib* loader under the kernel | the kernel's connectors and every module; listed in Health and Admin → Modules with SHA-256 and marked *lib* |
+| The JDK, the kernel API and every library the kernel ships | the server jar (`BOOT-INF/lib`) | the kernel | every module, **first: never replaced**; a module's copy is warned of and unused |
+| Site additions: JDBC drivers, connector plugins, a company's shared library | the server's **`lib/ext` folder** (`drishti.lib.path`) | one shared *lib* loader under the kernel | the kernel's connectors and every module, after the kernel, before a module's own; listed in Health with SHA-256 and marked *lib* |
+| A module's own jars and its private libraries | the `.dmod`'s `java/` and **`lib/`** | that module's loader, after the kernel and the site | that module only |
 
-**A module's lookup order:** (1) the JDK and the kernel's shared libraries, always first; (2) the module's own `lib/`; (3) the server's
-`lib/`; every other kernel class is hidden, except a verified first-party module's declared `kernel-internals:` allowance (section 3.3).
 - **Stop**: `DrishtiModule.stop()`, then the child context closes, the contributions are withdrawn, the class loader is dropped (P5 hot
-  unload depends on this being leak-free; a leak test loads and unloads 50 times in the SDK harness).
+  unload depends on this being leak-free; the runtime's tests load and unload a module many times and check that its loader is collected).
 
 ### 4.5 REST
 
@@ -1217,7 +1235,7 @@ command at every step.
 |---|---|
 | `drishti-kernel-api-<v>.jar` | the SPIs and service interfaces of section 2.3, Javadoc; Maven `com.ash.drishti.sdk:drishti-kernel-api`, always scope **`provided`** (the kernel supplies it at run time; never inside a `.dmod`) |
 | `drishti-kernel-testkit-<v>.jar` | the harness (8.5), `ModuleConformanceSuite` (8.6) and `AbsenceSuite` (12.11); scope `test` |
-| `drishti-module-parent` (pom) | the parent every module project inherits: Java 21, the versions of the shared libraries (section 4.4), the plugin's defaults, the licence-header check |
+| `drishti-module-parent` (pom) | the parent every module project inherits: Java 21, the versions of the kernel's libraries (section 4.4), the plugin's defaults, the licence-header check |
 | `drishti-module-parent` executions | `exec-maven-plugin` runs `drishti.py module verify --manifest-only` (validate), `module pack` (package) and `module verify --conformance` (verify); signing and publishing are release j (8.2) |
 | `drishti-module-archetype` | the Maven archetype `module new` wraps (8.3) |
 | `@drishti/elements-*` `.d.ts` | the Elements core typings (from ELEMENTS.md's distribution channels), the plugin.yaml format 2 schema, the kernel templates' macro reference |

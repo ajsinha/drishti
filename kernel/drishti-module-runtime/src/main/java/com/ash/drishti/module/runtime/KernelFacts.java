@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -37,20 +36,14 @@ import java.util.function.Predicate;
  * @param budgetMb        the node's module memory budget, 0 for no budget (V8)
  * @param strictResources true when an over-budget module is refused rather than warned (V8)
  * @param allowNative     false on a site that forbids native code bundled in jars
- * @param shared          the class-name prefixes every module loader asks the kernel for (parent-first): the kernel API and the shared
- *                        libraries (section 4.4)
+ * @param libraries       the libraries the kernel ships ({@link KernelLibraries}): a module carrying one is warned of it (section 4.4)
  * @param kernelBuild     this kernel's exact build ({@code <version>+<build time>}), the one a module with a kernel-internals allowance must
  *                        have been built for (section 3.3); null when unknown
  * @param firstParty      the product's list of its own modules ({@link FirstParty}), never null
  */
 public record KernelFacts(Map<String, String> versions, Set<String> reservedPaths, Set<String> reservedWords, Set<String> knownKinds,
-        Predicate<String> licensed, long budgetMb, boolean strictResources, boolean allowNative, List<String> shared, String kernelBuild,
+        Predicate<String> licensed, long budgetMb, boolean strictResources, boolean allowNative, KernelLibraries libraries, String kernelBuild,
         FirstParty firstParty) {
-
-    /** The shared libraries of section 4.4, parent-first in every module loader; part of the kernel API (a MAJOR removes, a MINOR adds). */
-    public static final List<String> SHARED = List.of("com.ash.drishti.kernel.api.", "com.ash.drishti.api.", "org.springframework.", "com.fasterxml.jackson.",
-            "org.slf4j.", "org.apache.arrow.", "io.micrometer.", "jakarta.servlet.", "jakarta.validation.", "jakarta.annotation.",
-            "jakarta.inject.", "org.aopalliance.");
 
     /** The kernel's reserved paths (section 9.9). */
     public static final Set<String> RESERVED_PATHS = Set.of("/t", "/pivot", "/bi", "/build", "/admin", "/help", "/data", "/static", "/m",
@@ -65,13 +58,14 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
         reservedWords = Set.copyOf(reservedWords);
         knownKinds = knownKinds == null ? null : Set.copyOf(knownKinds);
         licensed = licensed == null ? f -> true : licensed;
-        shared = List.copyOf(shared);
+        libraries = libraries == null ? KernelLibraries.none() : libraries;
         firstParty = firstParty == null ? FirstParty.none() : firstParty;
     }
 
     /** The facts of this kernel: its API version (from {@code drishti-kernel-api}), the reserved names, every feature licensed, no budget. */
     public static KernelFacts ofKernel() {
-        return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true, SHARED, thisBuild(),
+        return new KernelFacts(Map.of("kernel", kernelApiVersion()), RESERVED_PATHS, RESERVED_WORDS, null, f -> true, 0, false, true,
+                KernelLibraries.of(KernelFacts.class.getClassLoader()), thisBuild(),
                 FirstParty.shipped(KernelFacts.class.getClassLoader()));
     }
 
@@ -79,27 +73,33 @@ public record KernelFacts(Map<String, String> versions, Set<String> reservedPath
     public KernelFacts withVersions(Map<String, String> more) {
         Map<String, String> v = new LinkedHashMap<>(versions);
         v.putAll(more);
-        return new KernelFacts(v, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
+        return new KernelFacts(v, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, libraries, kernelBuild, firstParty);
     }
 
     /** A copy with a licence check (V5). */
     public KernelFacts withLicence(Predicate<String> check) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, check, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, check, budgetMb, strictResources, allowNative, libraries, kernelBuild, firstParty);
     }
 
     /** A copy with a memory budget (V8). */
     public KernelFacts withBudget(long mb, boolean strict) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, mb, strict, allowNative, shared, kernelBuild, firstParty);
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, mb, strict, allowNative, libraries, kernelBuild, firstParty);
     }
 
     /** A copy with the kinds the kernel knows (V7). */
     public KernelFacts withKnownKinds(Set<String> kinds) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, kinds, licensed, budgetMb, strictResources, allowNative, shared, kernelBuild, firstParty);
+        return new KernelFacts(versions, reservedPaths, reservedWords, kinds, licensed, budgetMb, strictResources, allowNative, libraries, kernelBuild, firstParty);
+    }
+
+    /** A copy with another list of kernel libraries (tests; {@code module verify} of another kernel). */
+    public KernelFacts withLibraries(KernelLibraries list) {
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, list, kernelBuild,
+                firstParty);
     }
 
     /** A copy with another build and first-party list (the module tool's --kernel-build and --first-party, and tests). */
     public KernelFacts withBuild(String build, FirstParty list) {
-        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, shared, build,
+        return new KernelFacts(versions, reservedPaths, reservedWords, knownKinds, licensed, budgetMb, strictResources, allowNative, libraries, build,
                 list);
     }
 

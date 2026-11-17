@@ -22,6 +22,7 @@ import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.DmodManifest;
 import com.ash.drishti.module.runtime.FirstParty;
 import com.ash.drishti.module.runtime.KernelFacts;
+import com.ash.drishti.module.runtime.KernelLibraries;
 import com.ash.drishti.module.runtime.ModuleCandidate;
 import com.ash.drishti.module.runtime.ModuleFolder;
 import com.ash.drishti.module.runtime.ModuleRefusedException;
@@ -203,18 +204,25 @@ public final class ModuleCli {
                 checks = ModuleConformance.run(path, project, work.resolve("checks"), facts, with(opts));
             }
             long failed = checks.stream().filter(c -> c.status() == ModuleConformance.Status.FAIL).count();
+            // the libraries the module carries that the kernel ships (section 4.4): never used, so named
+            List<String> libraryWarnings = notes.stream().filter(n -> n.startsWith(ModuleVerifier.LIBRARY_WARNING))
+                    .map(n -> n.substring(ModuleVerifier.LIBRARY_WARNING.length())).toList();
+            String librariesLine = facts.libraries().known() ? libraryWarnings.size() + " library warnings (" + facts.libraries().all().size()
+                    + " kernel libraries compared)" : "library warnings: not checked (this kernel has no " + KernelLibraries.RESOURCE + ")";
             if (json) {
                 Map<String, Object> doc = new LinkedHashMap<>();
                 doc.put("module", m.id());
                 doc.put("version", m.version());
                 doc.put("verified", failed == 0);
                 doc.put("notes", notes);
+                doc.put("libraryWarnings", facts.libraries().known() ? libraryWarnings : null);
                 doc.put("checks", checks.stream().map(c -> Map.of("id", c.id(), "title", c.title(), "passed", c.status() == ModuleConformance.Status.PASS,
                         "problems", c.problems())).toList());
                 out.println(toJson(doc));
             } else {
                 out.println("verified " + m.label() + " (the package rules and API ranges)");
                 notes.forEach(n -> out.println("  " + n));
+                out.println("  " + librariesLine);
                 checks.forEach(c -> out.println(c.line()));
                 if (opts.containsKey("--conformance")) {
                     out.println(failed == 0 ? "all " + checks.size() + " conformance checks passed" : failed + " of " + checks.size() + " checks failed");
