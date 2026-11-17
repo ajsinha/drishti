@@ -252,7 +252,8 @@ all_of() {   # runs each argument (a command line) at once and waits for all; fa
   for i in "${!pids[@]}"; do wait "${pids[$i]}" || { echo "drill: FAILED: ${cmds[$i]}" >&2; bad=1; }; done
   return $bad
 }
-gate_static() {
+gate_static() {   # most of these run the server jar (resolve --json): they wait for the one the gate builds
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
   local checks=(
     "python3 tools/license_headers.py"
     "python3 tools/settings_catalogue.py --check"      # CONFIGURATION.md's every setting: each key has a meaning, every variable indexed, current
@@ -261,10 +262,9 @@ gate_static() {
     "python3 tools/testdata/sample_docs.py --check"    # the data samples' pages are current
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
-  local gen wait
+  local gen
   for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py modules/*/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do
-    wait=""; [[ "$MODE" == docs ]] || wait="until [ -e '$LOGS/gate-jar.ready' ]; do [ -e '$LOGS/gate-java.secs' ] && exit 1; sleep 2; done; "
-    checks+=("${wait}python3 $gen --check")   # they run the server jar: they wait for the gate's build
+    checks+=("python3 $gen --check")   # generated pack content is current
   done   # generated pack content is current
   all_of "${checks[@]}"
 }
