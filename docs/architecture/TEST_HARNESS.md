@@ -307,7 +307,7 @@ hierarchy and all 28 system baskets, against `var/golden-matrix.json.gz`. VaR, E
 scenarios exactly. A change that means to move the numbers records the file
 again (the class's comment gives the command) and says why in the commit.
 
-That test runs banking on the flat test class path (one context, no module loader). **`PackagedVarGoldenTest`** (`testing/drishti-modules-it`, guard G14) asks the same golden
+That test runs banking on the flat test class path (a test convenience, not a product mode: the product always loads a module into its own child context with its own class loader). **`PackagedVarGoldenTest`** (`testing/drishti-modules-it`, guard G14) asks the same golden
 file of a **server on the module path**: the exec jar, the built `.dmod` packages beside it, a lake of the same committed test data built by the one loader. For every case of
 the matrix (three dates, the 509 and 250 windows, USD and EUR) it reads, over HTTP, the headline of every node of the three hierarchies and of the 28 system baskets and compares
 members, VaR, ES (the API rounds to whole currency units: the golden's figure rounded the same way, within one unit because the server sums in its own order), limit and limit use. It catches what the flat test cannot: loader order,
@@ -315,6 +315,14 @@ a second copy of a maths library, a missing `ServiceLoader` provider. Worst scen
 demo lake still runs for releases only (3.21).
 
 ### 3.30 The module tests (`testing/drishti-modules-it`)
+
+**The child-context guards.** A module's Spring context is a child of the kernel's, one per module, and there is no other way to run one.
+Three tests hold that: guard G11 (`ModuleControllerPathsGuardTest` in `testing/drishti-it`) fails a module controller whose path is outside
+`/api/v1/<prefix>` (or the `api.paths` the module declares) or whose `@ModuleApi` names another prefix; guard G12 holds the context's
+life: `ModuleBridgeTest` (`kernel/drishti-server`: a module's objects of a kernel extension type reach the kernel's lists only through the
+bridge, once each, never the kernel's own beans) and `ModuleChildContextGuardTest` (`kernel/drishti-module-runtime`: two modules with the
+same bean name stay apart, no module bean reaches the kernel's context, an unload closes the child context and frees it and its class
+loader, checked with `LeakCheck`).
 
 The kernel's projects test the kernel, on fixtures: their surefire runs set `drishti.modules.home=none`, and guard G2 (`KernelNamesNoModuleTest`) fails when a pom outside `modules/`,
 `packaging/dist`, `docs/` and this project names a module's artefact, or a test under `kernel/` opens the repository's `modules/` folder. What needs the real modules lives in

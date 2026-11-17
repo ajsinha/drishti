@@ -17,7 +17,6 @@ package com.ash.drishti.api.resolution;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -106,37 +105,6 @@ public final class ModuleOverrides {
     }
 
     /**
-     * The modules of a modules folder by id: {@code module.yaml}'s {@code id:} (its folder's name when it has none) to the folder's name
-     * ({@code capitalmarkets -> capital-markets}).
-     */
-    public static Map<String, String> modules(Path modulesHome) {
-        Map<String, String> out = new TreeMap<>();
-        if (modulesHome == null || !Files.isDirectory(modulesHome)) {
-            return out;
-        }
-        try (Stream<Path> ms = Files.list(modulesHome)) {
-            for (Path m : ms.filter(d -> Files.isRegularFile(d.resolve("module.yaml"))).sorted().toList()) {
-                out.putIfAbsent(idOf(m), m.getFileName().toString());
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return out;
-    }
-
-    private static String idOf(Path module) {
-        try (java.io.InputStream in = Files.newInputStream(module.resolve("module.yaml"))) {
-            Object m = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readValue(in, Map.class);
-            if (m instanceof Map<?, ?> y && y.get("id") != null && !String.valueOf(y.get("id")).isBlank()) {
-                return String.valueOf(y.get("id")).strip();
-            }
-        } catch (IOException | RuntimeException e) {
-            // a module.yaml that does not read: the folder's name, as the resolver reports the file itself
-        }
-        return module.getFileName().toString();
-    }
-
-    /**
      * One overridden (or added) file: its path keyed by the module's id ({@code capitalmarkets/packs/x/pack.yaml}), the override file used,
      * whether it replaced a shipped file, and where it is applied: the file in the view it was copied to.
      */
@@ -182,43 +150,6 @@ public final class ModuleOverrides {
         return out;
     }
 
-    /** The files the override folders give, keyed by the module's id (the right-most folder wins), the refused ones and the waiting ones. */
-    public static Result find(Path modulesHome, List<Path> dirs) {
-        Map<String, String> ids = modules(modulesHome);
-        Map<String, String> idOfFolder = new TreeMap<>();
-        ids.forEach((id, folder) -> idOfFolder.put(folder, id));
-        Map<String, File> files = new TreeMap<>();
-        List<String> refused = new ArrayList<>();
-        java.util.Set<String> waiting = new java.util.TreeSet<>();
-        for (Path dir : dirs) {
-            if (!Files.isDirectory(dir)) {
-                refused.add(dir + " (" + SETTING + ") is not a folder: nothing in it is used");
-                continue;
-            }
-            for (Entry e : entries(dir, refused)) {
-                String[] parts = e.rel().split("/", 2);
-                if (parts.length < 2) {
-                    refused.add(e.file() + ": an override sits under a module's id (<module id>/<path inside the module>), the same relative path as the module's file");
-                    continue;
-                }
-                String why = refusalInside(parts[1]);
-                if (why != null) {
-                    refused.add(e.file() + ": " + why);
-                } else if (ids.containsKey(parts[0])) {
-                    Path shipped = modulesHome.resolve(ids.get(parts[0])).resolve(parts[1]);
-                    files.put(e.rel(), new File(e.rel(), e.file(), Files.isRegularFile(shipped), null));
-                } else if (idOfFolder.containsKey(parts[0])) {
-                    refused.add(e.file() + ": '" + parts[0] + "' is the folder of the module '" + idOfFolder.get(parts[0])
-                            + "': an override names a module by its id (" + idOfFolder.get(parts[0]) + "/" + parts[1] + ")");
-                } else {
-                    waiting.add(parts[0] + "/" + parts[1] + " <- " + e.file() + ": no module '" + parts[0] + "' in " + modulesHome
-                            + "; applied when a module of that id is installed from its .dmod");
-                }
-            }
-        }
-        return new Result(null, modulesHome, List.copyOf(dirs), List.copyOf(files.values()), List.copyOf(refused), List.copyOf(waiting));
-    }
-
     /** A file of an override folder: its path under the folder ({@code /}-separated) and the file. */
     private record Entry(String rel, Path file) {
     }
@@ -244,48 +175,6 @@ public final class ModuleOverrides {
             refused.add(dir + " cannot be read: " + e.getMessage());
         }
         return out;
-    }
-
-    /**
-     * Applies the rule: when any file overrides, brings the view {@code <view>} up to date (the modules folder copied, only the files whose
-     * size or time changed, the files gone removed, then the overrides laid over) and returns it in the result; else the result's view is
-     * null and the view folder, if any, is removed.
-     */
-    public static Result apply(Path modulesHome, List<Path> dirs, Path view) {
-        Result found = find(modulesHome, dirs);
-        try {
-            if (found.files().isEmpty()) {
-                delete(view);
-                return found;
-            }
-            Files.createDirectories(view);
-            Files.deleteIfExists(view.resolve(LIST));
-            Map<String, String> ids = modules(modulesHome);
-            Set<Path> keep = new HashSet<>();
-            try (Stream<Path> ms = Files.list(modulesHome)) {
-                for (Path m : ms.filter(d -> Files.isRegularFile(d.resolve("module.yaml"))).sorted().toList()) {
-                    sync(m, view.resolve(m.getFileName().toString()), keep);
-                }
-            }
-            List<File> applied = new ArrayList<>();
-            for (File f : found.files()) {
-                String[] parts = f.path().split("/", 2);
-                Path t = view.resolve(ids.get(parts[0])).resolve(parts[1]);       // the view mirrors the modules folder: the module's own folder
-                Files.createDirectories(t.getParent());
-                Files.copy(f.source(), t, StandardCopyOption.REPLACE_EXISTING);
-                keep.add(t);
-                applied.add(new File(f.path(), f.source(), f.replaces(), t));
-            }
-            prune(view, keep);
-            StringBuilder list = new StringBuilder("# The files the site's override folders replace or add (KERNEL_AND_MODULES.md section 18.10); "
-                    + "written by the server at each start.\nmodules-home: '" + modulesHome + "'\nfiles:\n");
-            applied.forEach(f -> list.append("- {path: '").append(f.path()).append("', source: '").append(f.source()).append("', replaces: ")
-                    .append(f.replaces()).append(", applied: '").append(f.applied()).append("'}\n"));
-            Files.writeString(view.resolve(LIST), list.toString(), StandardCharsets.UTF_8);
-            return new Result(view, modulesHome, found.dirs(), List.copyOf(applied), found.refused(), found.waiting());
-        } catch (IOException e) {
-            throw new UncheckedIOException("the module overrides' view " + view + " cannot be made: " + e.getMessage(), e);
-        }
     }
 
     /** The override folders and the data folder of this server's start (LaunchRoots): the rule for each module's view. */

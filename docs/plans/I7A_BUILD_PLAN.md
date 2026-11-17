@@ -22,9 +22,16 @@ here. Where the code on the day differs from what a step says, the step says **S
 
 | # | Item | Source |
 |---|---|---|
-| I | Every module is a `.dmod` file in `<DRISHTI_HOME>/modules`; the server jar holds no module; one Spring context | `MODULE_JARS_I5_DESIGN.md` (branch `origin/wip/i5-module-jars-design`), steps M1–M7, with the owner's later decisions (section 1) |
+| I | Every module is a `.dmod` file in `<DRISHTI_HOME>/modules`; the server jar holds no module; **per-module child Spring contexts (one Spring context DROPPED, 2026-11-17)** | `MODULE_JARS_I5_DESIGN.md` (branch `origin/wip/i5-module-jars-design`), steps M1–M7, with the owner's later decisions (section 1) |
 | II | A typed kernel API for modules; the loopback path deleted | owner, this release |
 | III | `drishti_form-expr.js` deleted; the server checks a form draft as people type | owner, this release |
+
+**Owner decisions, 2026-11-17 (they override the steps below where they differ).**
+1. **One Spring context is dropped, permanently.** Per-module **child** contexts (the kernel's context as parent) are the one design:
+   **F1 and I12 (F1a/F1b/F1c) are dropped**, and the guards G11 and G12 hold the child-context design instead
+   (`ModuleControllerPathsGuardTest`, `ModuleBridgeTest`, `ModuleChildContextGuardTest`; TEST_HARNESS.md).
+2. **K5 and I15** (banking's kernel-internals 43 to 39) **move to the next release**.
+3. **There is no separate Drill A**: the one full drill is the release drill (Drill B).
 
 **Model grades.** deep = Opus · standard = Sonnet · routine = Haiku. Set on every Agent call. At most two builders at once.
 
@@ -315,9 +322,9 @@ Days are builder-days. **Par** = may run beside; **After** = must follow.
   opens `modules/`). `tools/drillkit/affected-map.txt` rows for the new project.
 - Docs: `TEST_HARNESS.md` (the project, G1–G12).
 
-### Stream F: one Spring context
+### Stream F: one Spring context (DROPPED, 2026-11-17: the child contexts stay; kept below as history until the release)
 
-**F1 · Module beans in the kernel's context** · deep · 4 d · After: Gate 1 green (A–E merged) · sequential, alone
+**F1 · Module beans in the kernel's context** — **DROPPED** · deep · 4 d · After: Gate 1 green (A–E merged) · sequential, alone
 - Scan: `ModuleRuntime.java:150-330`, `ModuleNode.java:147-205`, `host/ModuleBridge.java`, `host/ModuleWiring.java:100-150`,
   `deploy/ApiMounts.java`, `DrishtiApplication.java`, `ModuleSettingsEnvironmentPostProcessor.java`,
   `banking/…/BankingAutoConfiguration.java`, `ModuleConformance.java:700-760`.
@@ -446,7 +453,7 @@ Days are builder-days. **Par** = may run beside; **After** = must follow.
   (`NoLoopbackTest`: no main class under `kernel/` or `modules/` builds a URL on `127.0.0.1`/`localhost` with `local.server.port`).
 - Docs: `THIN_CONSOLE_DESIGN.md` S8a wording, the trading and market-data module READMEs.
 
-**K5 · Banking: five packages off the allowance** · standard · 2 d · After: K2, D2 · Par: K3
+**K5 · Banking: five packages off the allowance** — **MOVED to the next release (2026-11-17)** · standard · 2 d · After: K2, D2 · Par: K3
 - Changes (imports re-pointed, behaviour equal): `server.security.Entitlements` (15) → `Access` + `Person`; `engine.source.SourceRouter`
   (10) → `ModuleContext.kinds()` (**STOP** on a call `Kinds` cannot express: list it, leave that file on `SourceRouter`, keep the package);
   `identity.AuditLog` (7) → `ModuleContext.audit`; `server.engines.BasicEngine` (1) → `kernel.api.engines`; `common.*` (D2).
@@ -572,7 +579,7 @@ Rules of `drill-lessons-2911`: pre-merge gate per branch; a pre-drill check befo
 | When | What |
 |---|---|
 | Before Gate 1, once, on a non-release run | `tools/drill.sh`: build = `drishti.py build all` semantics in the one Maven run (profile `modules`), servers started with `DRISHTI_MODULES_HOME=<repo>/modules`, `STALE_STATE` loses `modules/installed` and gains `cache/modules`, the container smoke copies `modules/*.dmod`. Validated with `--affected` on `wip/i7a` |
-| **Drill A** (after F1) | Proves item I complete (M1–M7) with K1, K2 and item III. Content: full drill + guards G1–G12 + VaR exact + the launch matrix (Linux; Windows checklist run by the owner's QA machine: `build all`, start, `module list`, install/rollback genomics) + cluster lane (three nodes, same modules, one node with a different genomics hash shown on Admin → Cluster). Fixes with `--fix` runs |
+| **Drill A** (after F1) — **DROPPED: no separate Drill A (2026-11-17); the release drill is the one** | Proves item I complete (M1–M7) with K1, K2 and item III. Content: full drill + guards G1–G12 + VaR exact + the launch matrix (Linux; Windows checklist run by the owner's QA machine: `build all`, start, `module list`, install/rollback genomics) + cluster lane (three nodes, same modules, one node with a different genomics hash shown on Admin → Cluster). Fixes with `--fix` runs |
 | Between | K3, K4, K5, Z1, each through the pre-merge gate; the loopback and `KernelCalls` deleted; nothing else merged |
 | **Drill B** (release) | Full drill on the frozen commit: + G13, `TypedCallParityTest`, `OperationsClusterTest`, landing browser tests, page walk and layout checks. Green → tag, develop → main per the drill-it workflow, with the owner |
 
@@ -587,8 +594,8 @@ If Drill A needs more than two fix runs, K3–K5 do not start until it is green.
 | C launch | C1 1.5 · C2 1 | 2.5 | routine, standard |
 | D SDK | D1 1.5 · D2 0.5 | 2 | standard, routine |
 | E tests | E1 3 | 3 | standard |
-| F one context | F1 4 | 4 | deep |
-| K typed API | K1 1.5 · K2 3 · K3 2.5 · K4 3 · K5 2 | 12 | deep 7, standard 5 |
+| F one context | ~~F1 4~~ DROPPED | 0 | – |
+| K typed API | K1 1.5 · K2 3 · K3 2.5 · K4 3 · ~~K5 2~~ (moved) | 10 | deep 7, standard 5 |
 | X form check | X1 1.5 · X2 2 | 3.5 | standard |
 | Close | V0 0.5 · Z1 1.5 · drill preparation and fixes 3 | 5 | mixed |
 | **Total** | | **46 builder-days** | deep 15.5 · standard 26 · routine 4.5 |

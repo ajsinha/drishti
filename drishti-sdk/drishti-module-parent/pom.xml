@@ -60,6 +60,8 @@
       <dependency><groupId>org.springframework</groupId><artifactId>spring-web</artifactId><version>${spring-framework.version}</version><scope>provided</scope></dependency>
       <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit-jupiter.version}</version><scope>test</scope></dependency>
       <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><version>${assertj.version}</version><scope>test</scope></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${drishti.sdk.version}</version><scope>test</scope></dependency>
+      <!-- drishti-kernel-libraries -->
     </dependencies>
   </dependencyManagement>
 

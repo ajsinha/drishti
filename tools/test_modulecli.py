@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """`drishti.py module deploy|plan|apply|list|...|run` against a fake server: the same calls as Admin -> Modules -> Deploy, the exit codes,
-and `module run`'s one-module layout (the end-to-end run on three nodes is drishti-server's ModuleDeployClusterTest)."""
+and `module run`'s one-module layout."""
 import json
 import pathlib
 import sys
