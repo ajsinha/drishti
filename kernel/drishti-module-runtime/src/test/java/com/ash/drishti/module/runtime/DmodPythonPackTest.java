@@ -41,7 +41,7 @@ class DmodPythonPackTest {
     @Test
     void aPackageThePythonPackagerMakesIsAcceptedByDmodVerify() throws Exception {
         Path packager = findPackager();
-        needs(packager != null, "tools/modulepack.py is not above the working folder");
+        needs(packager != null, "tools/modulepack.py is not under drishti.repo.root");
         String python = python();
         needs(python != null, "no python with PyYAML on the path");
 
@@ -89,14 +89,11 @@ class DmodPythonPackTest {
         assumeTrue(there, why);
     }
 
+    /** {@code tools/modulepack.py} of the repository the build runs in ({@code drishti.repo.root}, set for every fork), or null. */
     private static Path findPackager() {
-        for (Path d = Path.of("").toAbsolutePath(); d != null; d = d.getParent()) {
-            Path f = d.resolve("tools/modulepack.py");
-            if (Files.isRegularFile(f)) {
-                return f;
-            }
-        }
-        return null;
+        String root = System.getProperty("drishti.repo.root");
+        Path f = root == null ? null : Path.of(root).resolve("tools/modulepack.py");
+        return f != null && Files.isRegularFile(f) ? f : null;
     }
 
     private static String python() {
