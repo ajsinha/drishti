@@ -115,6 +115,20 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
         sink.record(new AccessLog.Event(Instant.now(), who.user(), action, kind, id, detail, date == null || date.isBlank() ? null : date));
     }
 
+    /**
+     * Records a read a typed kernel call made for a person (KERNEL_AND_MODULES.md section 2.3): the row its REST path would have written
+     * ({@code raw}, {@code history}, {@code search}), so a module's reads are in the access log as a client's are.
+     */
+    public void record(Principal who, String action, String kind, String id, String detail, String date) {
+        AccessLog sink = log.getIfAvailable();
+        if (!enabled || who == null || who.roles().contains("service") || sink == null) {
+            return;
+        }
+        String said = who.embedApp() != null ? "embed:" + who.embedApp() : detail;
+        String k = kind == null && said != null ? said.trim().split("\\s+", 2)[0] : kind;
+        sink.record(new AccessLog.Event(Instant.now(), who.user(), action, k, id, said, date == null || date.isBlank() ? null : date));
+    }
+
     /** The series' path, or a history's range as asked ({@code days=30}, {@code range=3M}, {@code from=..&to=..}). */
     private static String historyDetail(HttpServletRequest request) {
         if (request.getParameter("path") != null) {

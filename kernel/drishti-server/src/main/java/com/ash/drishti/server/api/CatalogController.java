@@ -67,7 +67,8 @@ public class CatalogController {
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
             com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding,
-            com.ash.drishti.rachana.about.AboutCatalog about) {
+            com.ash.drishti.rachana.about.AboutCatalog about, RecordReads reads) {
+        this.reads = reads;
         this.about = about;
         this.branding = branding;
         this.packAccess = packAccess;
@@ -80,16 +81,12 @@ public class CatalogController {
         this.sutras = sutras;
     }
 
+    private final RecordReads reads;
+
     @GetMapping("/entities/{kind}/{id}/raw")
     public ApiDtos.RawEntity raw(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        entitlements.requireOpen(principal, kind);
-        try {
-            EntityDocument d = router.fetch(EntityRef.of(kind, id), asOf).join();
-            return new ApiDtos.RawEntity(new ViewModel.Ref(kind, id), d.provenance(), entitlements.redact(principal, d.data()));
-        } catch (CompletionException e) {
-            throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, e.getMessage());
-        }
+        return reads.raw(kind, id, asOf, principal);
     }
 
     /** Version, build and what is loaded: the About page. */
