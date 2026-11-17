@@ -66,7 +66,7 @@ final class PackagedServer implements AutoCloseable {
 
     /** The packages of this reactor's build (packaging/dist), the folder the pom copied to target/modules-home. */
     static Path packages() {
-        Path home = Path.of(System.getProperty("drishti.modules.home", "target/modules-home"));
+        Path home = Path.of(System.getProperty("drishti.modules.home"));
         try (Stream<Path> s = Files.list(home)) {
             if (s.noneMatch(p -> p.getFileName().toString().endsWith(".dmod"))) {
                 throw new IllegalStateException(home + " holds no .dmod package: packaging/dist builds them");

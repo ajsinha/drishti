@@ -53,7 +53,7 @@ class PackagedVarGoldenTest {
     /** The tables the VaR engine reads (the browser files' lake: VaR tables, limits, the desk, book and entity masters, and both trade sets). */
     static final String ONLY = "market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit,core/desk,core/book,core/legal-entity,"
             + "trades/murex,trades/endur";
-    static final Path FOLDER = Path.of("target", "g14").toAbsolutePath();
+    static final Path FOLDER = Path.of(System.getProperty("drishti.g14.dir")).toAbsolutePath();
 
     static PackagedServer server;
     static JsonNode golden;

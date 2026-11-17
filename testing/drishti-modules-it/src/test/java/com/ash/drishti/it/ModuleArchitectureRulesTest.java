@@ -51,7 +51,7 @@ class ModuleArchitectureRulesTest {
     }
 
     static List<Path> jars() {
-        Path dir = Path.of(System.getProperty("drishti.module.jars", "packaging/dist/target/module-jars"));
+        Path dir = Path.of(System.getProperty("drishti.module.jars"));
         try (Stream<Path> s = Files.list(dir)) {
             return s.filter(p -> p.toString().endsWith(".jar")).sorted().toList();
         } catch (IOException e) {
