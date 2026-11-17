@@ -49,6 +49,7 @@ ALLOWED: list[tuple[str, str]] = [
     ("drishti-renderer/src/drishti_screen.js", "views(r, '/about'"),             # the same, in the screen
     # the host's endpoints for Drishti Elements: its endpoint(name) puts each under the console's base itself (drishti-core's url())
     ("js/drishti_elements-host.js", "endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' }"),
+    ("elements/drishti-renderer/src/drishti_kinds.js", "configure({ endpoints: { pivotPage: '/pivot' } })"),   # as the host script: drishti-core's endpoint() puts the base path in front
     ("js/drishti_bi-design-model.js", "path.slice('/reports/'.length)"),        # a length, not a URL
 ]
 
