@@ -83,13 +83,14 @@ def shipped_requirements(mid: str, tmp: Path) -> list[str]:
     """The packages of the modules this one requires (packed beside it): a module with code is built by packaging/dist, so its package is that build's."""
     out = []
     for req in required(mid):
-        built = sorted((ROOT / "packaging/dist/target/classes/drishti/modules").glob(f"{req}-*.dmod"))
+        stems = {req, req.replace("-", "")}                  # a package is named by its id, hyphens left out (capitalmarkets-1.0.0.dmod)
+        built = sorted(f for d in (ROOT / "modules", ROOT / "packaging/dist/target/dmod") for st in stems for f in d.glob(f"{st}-[0-9]*.dmod"))
         if (MODULES / req / "module.yaml").is_file() and manifest(req).get("java") is None:
             out.append(str(modulepack.pack(MODULES / req, out=tmp / "requires")[0]))
         elif built:
             out.append(str(built[-1]))
     if not out:
-        pytest.skip(f"{mid} requires modules with code, built by packaging/dist (mvnw package -pl packaging/dist -am)")
+        pytest.skip(f"{mid} requires modules with code, built by the gate (python tools/drishti.py build modules)")
     return out
 
 
