@@ -22,12 +22,12 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
 import com.ash.drishti.engine.source.DocumentLayer;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +43,14 @@ public final class EditLayer implements DocumentLayer {
     private static final Logger LOG = LoggerFactory.getLogger(EditLayer.class);
 
     private final EditRecords records;
+    private final Supplier<LocalDate> today;
     private final Map<EntityRef, List<Runnable>> watchers = new ConcurrentHashMap<>();
     private volatile boolean active;
 
-    public EditLayer(EditRecords records, boolean active) {
+    /** @param today the business today (BusinessDates::current): the date of a read that names none, so a fixed today holds here too */
+    public EditLayer(EditRecords records, boolean active, Supplier<LocalDate> today) {
         this.records = records;
+        this.today = today;
         this.active = active;
     }
 
@@ -67,7 +70,7 @@ public final class EditLayer implements DocumentLayer {
         }
         EntityRef ref = doc.ref();
         LocalDate date = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
-                : asOf != null && asOf.businessDate() != null ? asOf.businessDate() : LocalDate.now(ZoneOffset.UTC);
+                : asOf != null && asOf.businessDate() != null ? asOf.businessDate() : today.get();
         Map<String, EditRecords.Overlay> over;
         List<EditRecords.Owned> owned;
         try {
@@ -95,7 +98,7 @@ public final class EditLayer implements DocumentLayer {
         if (!records.any()) {
             return null;
         }
-        Map<String, EditRecords.Overlay> over = records.on(ref.kind(), ref.id(), date == null ? LocalDate.now(ZoneOffset.UTC) : date);
+        Map<String, EditRecords.Overlay> over = records.on(ref.kind(), ref.id(), date == null ? today.get() : date);
         if (over.isEmpty()) {
             return null;
         }
