@@ -240,6 +240,12 @@ GATE_CONSOLE=(drishti-console/tests/test_docs_*.py drishti-console/tests/test_he
               drishti-console/tests/test_help_configuration.py drishti-console/tests/test_help_developer.py
               drishti-console/tests/test_tools_guide.py)
 
+wait_gate_jar() {   # returns once the gate's build has put its jar in lib/; fails when that build ended without one
+  until [[ -e "$LOGS/gate-jar.ready" ]]; do
+    [[ -e "$LOGS/gate-java.secs" ]] && { echo "drill: the gate's build ended without a server jar: the checks cannot run" >&2; return 1; }
+    sleep 2
+  done
+}
 all_of() {   # runs each argument (a command line) at once and waits for all; fails naming each that failed
   local cmd pids=() cmds=() i bad=0
   for cmd in "$@"; do bash -c "$cmd" & pids+=($!); cmds+=("$cmd"); done
@@ -255,8 +261,11 @@ gate_static() {
     "python3 tools/testdata/sample_docs.py --check"    # the data samples' pages are current
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
-  local gen
-  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py modules/*/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
+  local gen wait
+  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py modules/*/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do
+    wait=""; [[ "$MODE" == docs ]] || wait="until [ -e '$LOGS/gate-jar.ready' ]; do [ -e '$LOGS/gate-java.secs' ] && exit 1; sleep 2; done; "
+    checks+=("${wait}python3 $gen --check")   # they run the server jar: they wait for the gate's build
+  done   # generated pack content is current
   all_of "${checks[@]}"
 }
 
@@ -269,12 +278,7 @@ gate_checks() {
   mapfile -t tools < <(python3 "$PLAN" static --kind tools)
   (( ${#console[@]} > 10 && ${#tools[@]} > 3 )) || { echo "drill: only ${#console[@]} console and ${#tools[@]} tools files of quick checks found" >&2; return 1; }
   # some checks run the server jar (resolve --json): they wait for THIS checkout's jar, never use a stale one left in lib/ by an earlier release
-  if [[ "$MODE" != docs ]]; then
-    until [[ -e "$LOGS/gate-jar.ready" ]]; do
-      [[ -e "$LOGS/gate-java.secs" ]] && { echo "drill: the gate's build ended without a server jar: the checks cannot run" >&2; return 1; }
-      sleep 2
-    done
-  fi
+  [[ "$MODE" == docs ]] || wait_gate_jar || return 1
   console_files checks 4 2 -m static "${console[@]}" || rc=1
   for f in "${tools[@]}"; do
     out="$LOGS/checks-$(basename "$f" .py).txt"
