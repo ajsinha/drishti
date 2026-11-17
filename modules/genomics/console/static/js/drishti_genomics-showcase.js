@@ -27,12 +27,48 @@
   const $ = (sel) => root.querySelector(sel);
   const qs = (o) => Object.keys(o).filter((k) => o[k] !== undefined && o[k] !== null && o[k] !== '').map((k) => k + '=' + enc(o[k])).join('&');
 
+  /* a failed call carries what was asked (call), the HTTP status (0: no answer) and the server's words, whatever the body was */
+  function failure(path, status, words) { const e = new Error(words); e.call = path; e.status = status; return e; }
   function get(path, params) {
     const q = params ? qs(params) : '';
     return fetch(drishti_url(api + path + (q ? (path.indexOf('?') < 0 ? '?' : '&') + q : '')), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
-      .then((r) => r.json().then((b) => { if (!r.ok) { throw new Error(b.detail || ('HTTP ' + r.status)); } return b; }));
+      .then((r) => r.text().then((t) => {
+        let b = null;
+        try { b = t ? JSON.parse(t) : null; } catch (x) { b = null; }
+        if (!r.ok) { throw failure(path, r.status, (b && (b.detail || b.message)) || ('HTTP ' + r.status + ' ' + (r.statusText || ''))); }
+        if (b === null) { throw failure(path, r.status, 'the answer was not JSON'); }
+        return b;
+      }), (x) => { throw failure(path, 0, 'no answer (' + x.message + ')'); });
   }
-  function said(e) { E.core.toast({ text: e.message, timeout: 9000 }); root.dataset.state = 'failed'; }
+  /** what to do about a failed call, by its status */
+  function advice(e) {
+    if (e.status === 404 || e.status === 410 || e.status === 503) {
+      return 'The server this console uses does not serve the genomics module\'s API. Check Admin → Modules on that server: the genomics module installed and on (its packs genomics-showcase and protein-engineering loaded), then open this page again.';
+    }
+    if (e.status === 401 || e.status === 403) { return 'Your account may not read the genomics module: ask an administrator for its role, then open this page again.'; }
+    if (!e.status) { return 'The console could not reach it: check that the server is running and reachable, then open this page again.'; }
+    return 'The server failed while answering: its log (data/logs) names the call; open this page again once it is fixed.';
+  }
+  /** a failure said on the page, in place of what was loading: which call, what the server said, what to do (the toast alone left "Loading…" for ever) */
+  function said(e) {
+    root.dataset.state = 'failed';
+    const chip = $('[data-showcase-selection]');
+    if (chip) { chip.textContent = 'Not loaded'; }
+    root.querySelectorAll('[data-figure]').forEach((el) => { if (el.textContent === '…') { el.textContent = '—'; } });
+    let p = root.querySelector('[data-showcase-failed]');
+    if (!p) {
+      p = document.createElement('p');
+      p.className = 'drishti-notice';
+      p.dataset.elements = 'notice';
+      p.dataset.tone = 'error';
+      p.setAttribute('role', 'alert');
+      root.insertBefore(p, root.children[1] || null);
+    }
+    p.dataset.showcaseFailed = (e && e.call) || 'page';
+    p.dataset.status = String((e && e.status) || 0);
+    p.textContent = (e && e.call ? 'This page could not read ' + api + e.call + ': ' : 'This page failed: ') + ((e && e.message) || String(e))
+      + (e && e.status ? ' (HTTP ' + e.status + ')' : '') + '. ' + (e && e.call ? advice(e) : 'Open the page again; if it fails again, the browser console names the error.');
+  }
   function tell(channel, ids) { E.core.bus.emit(E.core.SELECTION_EVENT, { channel: channel, ids: ids, source: root }); }
   const pct = (v) => (v === null || v === undefined ? '—' : E.core.formatPercent(v, { decimals: 0 }));
   const count = (v) => (v === null || v === undefined ? '—' : E.core.formatNumber(v, { decimals: 0 }));

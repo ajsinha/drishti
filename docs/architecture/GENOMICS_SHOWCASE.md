@@ -201,6 +201,11 @@ No screen code draws anything: every card is an Elements component, and what is 
 (`modules/genomics/elements/drishti-genomics/`), built from drishti-chart's primitives; anything another domain would use goes to the
 generic library.
 
+**When the data or the API is not there, the screens say so.** The page first asks the module's server `showcase/status`. With a kind of
+the showcase packs missing it names the kinds and how to load them; when a call fails (the API not served: `404`, `410` or `503`; not
+allowed; no answer; a server error) it shows, in place of the cards, which call failed, the server's words with the HTTP status and what
+to do (for a missing API: turn the genomics module on in Admin → Modules on that server). It never stays on "Loading…".
+
 | Card | Built from | State |
 |---|---|---|
 | Figures, command bar, tabs, selection chip | drishti-core, drishti-inputs | exist |
