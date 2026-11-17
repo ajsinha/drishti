@@ -15,8 +15,11 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.kernel.api.module.InlineFigures;
 import com.ash.drishti.kernel.api.module.KernelCalls;
+import com.ash.drishti.kernel.api.module.PersonCache;
 import com.ash.drishti.kernel.api.security.Principal;
+import com.ash.drishti.module.runtime.KernelPersonCache;
 import com.ash.drishti.server.edition.EditionContext;
 import com.ash.drishti.server.security.Entitlements;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,6 +100,11 @@ public class LoopbackKernelCalls implements KernelCalls {
         return spec == null ? Map.of() : spec;
     }
 
+    @Override
+    public <V> PersonCache<V> cache(int size, long ttlMillis) {
+        return new KernelPersonCache<>(size, ttlMillis);
+    }
+
     /** This server's own address on the loopback interface ({@code local.server.port}, its context path; https when it serves TLS). */
     private String base() {
         String port = env.getProperty("local.server.port", env.getProperty("server.port", "8480"));
@@ -167,6 +175,12 @@ public class LoopbackKernelCalls implements KernelCalls {
             } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
                 throw new IllegalArgumentException("the body does not write as JSON: " + e.getOriginalMessage(), e);
             }
+        }
+
+        @Override
+        public InlineFigures.Figures figures(List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values,
+                String by, String across, Map<String, Object> top) {
+            return InlinePivotFigures.ask(this, fields, rows, values, by, across, top);
         }
 
         private URI uri(String path, Map<String, ?> params) {

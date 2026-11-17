@@ -22,12 +22,10 @@ import java.util.Map;
 
 /**
  * Reading the fields of a JSON answer ({@link KernelCalls.Caller#get}) without casts at every step: a missing or mistyped field is
- * {@code null}, an empty map or an empty list, never an exception. Pure.
+ * {@code null}, an empty map or an empty list, never an exception. The reading rules of the answers' JSON shape, part of the contract that
+ * gives them: pure static functions, no state and nothing to implement (an interface, as the kernel API holds no implementation class).
  */
-public final class Answers {
-
-    private Answers() {
-    }
+public interface Answers {
 
     /** The field as an object ({} when absent or not one). */
     @SuppressWarnings("unchecked")

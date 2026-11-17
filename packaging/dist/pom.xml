@@ -29,7 +29,7 @@
   <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): banking
     (with its code and its kernel-internals allowance, stamped with the kernel build of this build), market-data, capital-markets and
     economy, each packed by the module tool into drishti/modules/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
-    Banking goes through the fifteen conformance checks as part of the build. The full distribution (drishti-app) installs these modules
+    Banking, market-data and trading (the modules with a server part) go through the fifteen conformance checks as part of the build. The full distribution (drishti-app) installs these modules
     by default; the thin jar (drishti-kernel-app) carries first-party.yaml only.</description>
   <properties>
     <drishti.dmods>${project.build.outputDirectory}/drishti/modules</drishti.dmods>
@@ -146,6 +146,33 @@
                 <argument>check</argument><argument>${drishti.dmods}/banking-1.0.0.dmod</argument>
                 <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
                 <argument>--with</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
+                <argument>--cycles</argument><argument>2</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- the fifteen conformance checks on the modules with a server part (THIN_CONSOLE_DESIGN.md step S8a), packed above with their jars -->
+            <id>check-market-data</id>
+            <phase>test</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <arguments>
+                <argument>check</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
+                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
+                <argument>--cycles</argument><argument>2</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>check-trading</id>
+            <phase>test</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <arguments>
+                <argument>check</argument><argument>${drishti.dmods}/trading-1.0.0.dmod</argument>
+                <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
                 <argument>--cycles</argument><argument>2</argument>
               </arguments>
             </configuration>

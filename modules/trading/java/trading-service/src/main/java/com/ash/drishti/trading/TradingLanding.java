@@ -94,12 +94,13 @@ public class TradingLanding {
     private final KernelCalls kernel;
     private final Environment env;
     /** What was read, per person (the caller's key: user, roles, lens, date box), two minutes each, the 64 most recent. */
-    private final PersonCache<Object> cache = new PersonCache<>(64, TTL_MILLIS);
+    private final PersonCache<Object> cache;
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
     public TradingLanding(KernelCalls kernel, Environment env) {
         this.kernel = kernel;
         this.env = env;
+        this.cache = kernel.cache(64, TTL_MILLIS);
     }
 
     /** The person of the request in hand. */
@@ -662,8 +663,8 @@ public class TradingLanding {
     Object[] engineFigures(Caller c, Read now, Read was, List<String> live) {
         List<List<Object>> rows = figureRows(now, was, live);
         try {
-            CompletableFuture<Figures> totals = async(() -> InlineFigures.ask(c, FIG_FIELDS, rows, FIG_TOTALS, "BOOK", "TRADER", null));
-            CompletableFuture<Figures> cps = async(() -> InlineFigures.ask(c, FIG_FIELDS, rows, FIG_COUNTERPARTY, "CP", null,
+            CompletableFuture<Figures> totals = async(() -> c.figures(FIG_FIELDS, rows, FIG_TOTALS, "BOOK", "TRADER", null));
+            CompletableFuture<Figures> cps = async(() -> c.figures(FIG_FIELDS, rows, FIG_COUNTERPARTY, "CP", null,
                     Map.of("CP", Map.of("n", 1, "by", "positive"))));
             return new Object[] {join(totals), join(cps), null};
         } catch (Refused e) {

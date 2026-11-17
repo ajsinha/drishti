@@ -205,6 +205,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
         name, c = delta[0]
         st = c.get("settings") or {}
         out["connector"], out["domain"] = name, st.get("domain") or out["pack"]
+        out["lake_domain"] = st.get("domain")      # the connector's own domain (a lake-form template's lake-tables: name it): it picks the table
         out["set"] = site_set(name, st)
         if kind:
             lay = (st.get("layout") or {}).get(kind) if isinstance(st.get("layout"), dict) else None
@@ -380,6 +381,7 @@ def plan(a) -> dict:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
         p["set"] = d.get("set") or {}
+        p["lake_domain"] = d.get("lake_domain")
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
     lake_layout(a, p)
     p["key"] = p["key"] or "id"
@@ -419,7 +421,9 @@ def lake_layout(a, p: dict) -> None:
     if not lakeconfig.is_lake_name(name):
         return
     try:
-        t = lakeconfig.table(name, p["kind"] or a.kind, getattr(a, "domain", None), p.get("table"))
+        # the domain given, else the pack's connector's: a kind with tables in several domains (protein: protein-engineering's, the
+        # genomics example pack's) is the connector's own, never refused as ambiguous
+        t = lakeconfig.table(name, p["kind"] or a.kind, getattr(a, "domain", None) or p.get("lake_domain"), p.get("table"))
         lakeconfig.disagree("--partition-by", split(a.partition_by), t["partition-by"], t)
         lakeconfig.disagree("--promote", split(a.promote), t["promote"], t)
         lakeconfig.disagree("--vector", split(getattr(a, "vector", None)), t["vectors"], t)

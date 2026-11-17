@@ -58,5 +58,7 @@ docs:
   help: docs/help.yaml
   guides:
   - docs/guide.md
+  tutorials:
+  - docs/guide.md                      # one document: the guide's section 1 is the tutorial (switch it on, open it, edit)
 resources:
   memory-mb: 64

@@ -72,14 +72,15 @@ import org.springframework.stereotype.Service;
 public class MarketLanding {
 
     /** The market-data pack's kinds and their commands (packs/market-data/pack.yaml). */
-    static final Map<String, String> COMMANDS = ordered("ir-curve", "CRV", "repo-curve", "REPO", "fx-spot", "FX", "fx-forward-curve", "FXF",
+    static final Map<String, String> COMMANDS = Collections.unmodifiableMap(ordered("ir-curve", "CRV", "repo-curve", "REPO", "fx-spot", "FX",
+            "fx-forward-curve", "FXF",
             "fx-vol-surface", "FXV", "ir-vol-cube", "IRV", "cap-vol-surface", "CPV", "equity", "EQ", "equity-index", "EQX", "dividend-curve", "DIV",
             "equity-vol-surface", "EQV", "credit-curve", "CDS", "inflation-index", "INF", "inflation-curve", "INFC", "commodity", "CMD",
-            "commodity-curve", "CMDC", "commodity-vol-surface", "CMDV", "rate-fixing", "FIX", "bond", "BND", "correlation-matrix", "CORR");
+            "commodity-curve", "CMDC", "commodity-vol-surface", "CMDV", "rate-fixing", "FIX", "bond", "BND", "correlation-matrix", "CORR"));
     /** Kinds read whole for the checks; the others are checked by their latest load. */
     static final List<String> CURVES = List.of("ir-curve", "repo-curve", "credit-curve", "fx-forward-curve", "inflation-curve");
-    static final Map<String, String> SURFACES = ordered("fx-vol-surface", "ATM", "equity-vol-surface", "M_100", "commodity-vol-surface", null,
-            "cap-vol-surface", null, "ir-vol-cube", null);
+    static final Map<String, String> SURFACES = Collections.unmodifiableMap(ordered("fx-vol-surface", "ATM", "equity-vol-surface", "M_100",
+            "commodity-vol-surface", null, "cap-vol-surface", null, "ir-vol-cube", null));
     /** The biggest moves: each kind's headline field, and its unit (bp of a rate held as a fraction, a spread in bp, or percent). */
     static final List<String[]> MOVERS = List.of(new String[] {"ir-curve", "TEN_Y", "bp"}, new String[] {"credit-curve", "SPREAD_5Y", "spread"},
             new String[] {"fx-spot", "MID", "pct"}, new String[] {"commodity", "FRONT", "pct"}, new String[] {"equity-index", "LEVEL", "pct"});
@@ -87,17 +88,19 @@ public class MarketLanding {
     static final Pattern TENOR = Pattern.compile("^(\\d+(?:\\.\\d+)?)\\s*([DWMY])$", Pattern.CASE_INSENSITIVE);
 
     private final KernelCalls kernel;
-    private final PersonCache<Map<String, Object>> cache = new PersonCache<>(200, 120_000);
+    private final PersonCache<Map<String, Object>> cache;
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
     public MarketLanding(KernelCalls kernel) {
         this.kernel = kernel;
+        this.cache = kernel.cache(200, 120_000);
     }
 
     public Caller caller() {
         return kernel.caller();
     }
 
+    /** Pairs in their order (a value may be null), for a constant to wrap unmodifiable where it is declared (the C12 check reads it there). */
     static <V> Map<String, V> ordered(Object... kv) {
         Map<String, V> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < kv.length; i += 2) {
@@ -105,7 +108,7 @@ public class MarketLanding {
             V v = (V) kv[i + 1];
             out.put((String) kv[i], v);
         }
-        return Collections.unmodifiableMap(out);
+        return out;
     }
 
     static Map<String, Object> m(Object... kv) {
@@ -430,7 +433,7 @@ public class MarketLanding {
     /** The engine's figures of rows read; a refusal is null and noted with the other problems. */
     static Figures figures(Reader r, String what, List<Field> fields, List<List<Object>> rows, List<Map<String, Object>> values, String by) {
         try {
-            return InlineFigures.ask(r.c, fields, rows, values, by, null, null);
+            return r.c.figures(fields, rows, values, by, null, null);
         } catch (Refused e) {
             if (r.problems.size() < 20) {
                 r.problems.add(what + ": " + e.say());

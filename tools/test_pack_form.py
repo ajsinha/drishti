@@ -101,7 +101,8 @@ class WriteTest(unittest.TestCase):
             self.assertTrue(m.get("form"), f"{yml.parent.name} has no form: section")
             self.assertEqual(set(m["form"]) - set(m["kinds"]), set(), yml.parent.name)
             found += 1
-        self.assertEqual(found, 16)                   # the seven shipped packs, us-equities, gleif, funds and the six public-sector packs (retired ones: examples/packs)
+        self.assertEqual(found, 18)                   # the seven shipped packs, us-equities, gleif, funds, the six public-sector packs and genomics' two
+                                                      # (genomics-showcase, protein-engineering); retired ones: examples/packs
 
 
 if __name__ == "__main__":
