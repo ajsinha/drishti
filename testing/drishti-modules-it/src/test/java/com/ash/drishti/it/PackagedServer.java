@@ -91,6 +91,27 @@ final class PackagedServer implements AutoCloseable {
                 "--lake", folder.resolve("delta").toString(), "--data-dir", folder.resolve("data").toString(), "--connectors-dir", folder.resolve("connectors").toString(),
                 "--as-of", "data", "--only", only, "--jar", execJar().toString(), "--no-signal", "-q"));
         Path log = folder.resolve("lake.log");
+        // the tools read where everything is from the server jar in <home>/lib: put the reactor's there when none is (and take it away after)
+        Path lib = Files.createDirectories(REPO.resolve("lib"));
+        Path placed = lib.resolve(execJar().getFileName());
+        boolean put = false;
+        try (Stream<Path> jars = Files.list(lib)) {
+            if (jars.noneMatch(j -> j.getFileName().toString().startsWith("drishti-server-") && j.toString().endsWith("-exec.jar"))) {
+                Files.copy(execJar(), placed);
+                put = true;
+            }
+        }
+        try {
+            runLake(cmd, log);
+        } finally {
+            if (put) {
+                Files.deleteIfExists(placed);
+            }
+        }
+        Files.writeString(stamp, "built\n");
+    }
+
+    private static void runLake(List<String> cmd, Path log) throws IOException, InterruptedException {
         Process p = new ProcessBuilder(cmd).directory(REPO.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
         if (!p.waitFor(40, java.util.concurrent.TimeUnit.MINUTES)) {
             p.destroyForcibly().waitFor();
@@ -99,7 +120,6 @@ final class PackagedServer implements AutoCloseable {
         if (p.exitValue() != 0) {
             throw new IllegalStateException("the lake build failed (" + p.exitValue() + "): " + tail(log));
         }
-        Files.writeString(stamp, "built\n");
     }
 
     /** Starts the server over {@code lake} (a folder buildLake made) in {@code work}; returns when its readiness is UP and its VaR engine answers. */
@@ -142,6 +162,7 @@ final class PackagedServer implements AutoCloseable {
         env.put("DRISHTI_OFFLINE", "true");
         env.put("DRISHTI_VAR_SYSTEM_BASKETS_SEED", "true");
         env.put("DRISHTI_BUSINESS_TODAY", today);
+        env.put("DRISHTI_VAR_SCENARIO_WINDOW", "all");                                  // the whole scenario set (509 in the test data), not the 250-day default
         env.put("DRISHTI_VAR_HOT_DIR", work.resolve("var-hot").toString());
         env.put("DRISHTI_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());
         env.put("DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT", work.resolve("ccr-official").toString());

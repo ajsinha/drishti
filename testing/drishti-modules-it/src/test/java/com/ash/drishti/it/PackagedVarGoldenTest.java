@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
  * system baskets.
  *
  * <p>What the API answers is compared with the golden exactly where the API carries the same figure: the node's members, its VaR and ES (the API
- * rounds to whole currency units: the golden's figure rounded the same way, equal), its limit, and its limit use (to 1e-6, as the golden test
+ * rounds to whole currency units: the golden's figure rounded the same way, within one unit: the server sums in its own order), its limit, and its limit use (to 1e-6, as the golden test
  * compares it). The tree (parents and children) is compared as the golden holds it. Worst scenarios and component VaR are not in a headline:
  * the flat tests keep them.
  */
@@ -104,11 +104,11 @@ class PackagedVarGoldenTest {
     private static void compare(List<String> wrong, String c, String prefix, String id, JsonNode w, String date, String window, String ccy) throws Exception {
         String scope = prefix + id;
         JsonNode got = server.get("/api/v1/risk/var/scope?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) + "&asOf=" + date + "&ccy=" + ccy
-                + (window.equals("509") ? "" : "&window=" + window));
+                + "&window=" + window);
         String what = c + " " + scope;
         same(wrong, what + " members", w.get("members").asLong(), got.path("trades").asLong());
-        same(wrong, what + " VaR", Math.round(w.get("var").asDouble()), got.path("var").asLong());
-        same(wrong, what + " ES", Math.round(w.get("es").asDouble()), got.path("es").asLong());
+        withinOne(wrong, what + " VaR", Math.round(w.get("var").asDouble()), got.path("var").asLong());
+        withinOne(wrong, what + " ES", Math.round(w.get("es").asDouble()), got.path("es").asLong());
         if (ccy.equals("USD") && window.equals("509")) {                      // limits are in USD, and a limit is the 509-day VaR's
             JsonNode limit = w.get("limit");
             same(wrong, what + " limit", limit == null || limit.isNull() ? null : Math.round(limit.asDouble()), got.path("limit").isNull() ? null : got.path("limit").asLong());
@@ -118,6 +118,13 @@ class PackagedVarGoldenTest {
                     wrong.add(what + " limit use: golden " + use.asDouble() + ", server " + got.path("limitUse"));
                 }
             }
+        }
+    }
+
+    /** The server sums the scenario vectors in its own order (the golden test says so of its aggregate digest): the last bit of a figure of tens of millions can move a whole unit. */
+    private static void withinOne(List<String> wrong, String what, long want, long got) {
+        if (Math.abs(want - got) > 1) {
+            wrong.add(what + ": golden " + want + ", server " + got);
         }
     }
 
