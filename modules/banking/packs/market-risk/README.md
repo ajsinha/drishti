@@ -306,7 +306,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string), `TRADE_CURRENCY` (string) |
+| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string): LONG for a buy, SHORT for a sell: the sign of the trade's quantity., `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string), `TRADE_CURRENCY` (string) |
 
 Links: `POSITION_ID` → `position`, `TRADE_IDS` → `trade`.
 
@@ -412,11 +412,11 @@ Fields, from 2 sample documents:
 |---|---|---|---|
 | `VALUE_TYPE` | string | `PV` | — |
 | `GRAIN` | string | `POSITION` | — |
-| `POSITION_ID` | string | `POS-BOOK-COMM-1~1000054` | link to `position` (in 50%) |
+| `POSITION_ID` | string | `POS-BOOK-COMM-1~1000054` | The position these scenario PVs belong to, at position grain.; link to `position` (in 50%) |
 | `CURRENCY` | string | `EUR` | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
 | `SOURCE_SYSTEM` | string | `ENDUR` | — |
 | `SCENARIO_PV_ID` | string | `SPV-POS-BOOK-COMM-1~1000054-HS-509` | link to `scenario-pv` |
-| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | The close of business the scenario PVs belong to. |
 | `TRADE_STATUS` | string | `VALIDATED` | — |
 | `LEGAL_ENTITY` | string | `LE-NY` | — |
 | `DIVISION` | string | `DIV-MARKETS` | — |
@@ -427,7 +427,7 @@ Fields, from 2 sample documents:
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Commodity` | — |
 | `PRODUCT_TYPE` | string | `ComSwap` | — |
-| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | The scenario set whose days order SCENARIO_PV: index i is its day i. |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | — |
 | `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
 | `MATURITY_DATE` | date | `2026-09-30` | — |
@@ -465,13 +465,13 @@ Fields, from 1 sample document:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `FX_SCENARIO_ID` | string | `FXS-EUR-HS-509` | — |
-| `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | The close of business the rates belong to: the date of the scenario PVs they convert. |
+| `SCENARIO_SET_ID` | string | `HS-509` | The scenario set whose days order RATES: index i of RATES is its day i. |
 | `CURRENCY` | string | `EUR` | The currency the rates are for (ISO code). |
-| `QUOTE` | string | `USD per 1 EUR` | — |
+| `QUOTE` | string | `USD per 1 EUR` | How the rates are quoted, in words: always USD per one unit of the currency. |
 | `RATE` | number | `1.174` | USD per one unit of the currency on the business date. (USD per unit) |
 | `RATES` | list of numbers |  | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. (USD per unit) |
-| `SOURCE` | string | `demo-factor-model` | — |
+| `SOURCE` | string | `demo-factor-model` | The system or model that produced the rates. |
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 
 ### `scenario-set`
@@ -487,15 +487,15 @@ Fields, from 1 sample document:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | The close of business whose vectors the set orders. |
 | `SCENARIO_DATES` | list of dates |  | The scenario days, oldest first: index i of every vector is day i |
-| `SCENARIO_COUNT` | integer | `509` | — |
+| `SCENARIO_COUNT` | integer | `509` | N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date. |
 | `WINDOW_START` | date | `2024-09-17` | The oldest scenario day. |
 | `WINDOW_END` | date | `2026-09-29` | The newest scenario day: the business day before the business date. |
-| `HORIZON_DAYS` | integer | `1` | — |
+| `HORIZON_DAYS` | integer | `1` | The holding period of the scenario moves, in business days. |
 | `REVALUATION` | string | `full` | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. |
 | `WEIGHTS` | null |  | — |
-| `SOURCE_BATCH` | string | `B-2026-09-30-01` | — |
+| `SOURCE_BATCH` | string | `B-2026-09-30-01` | The risk batch that produced the set and its vectors. |
 | `DESCRIPTION` | string | `Historical simulation, 509 business days…` | — |
 
 ### `var-limit`
@@ -665,8 +665,11 @@ Screens (Sutras):
 | Sutra | Kind | What it shows |
 |---|---|---|
 | `frtb-sensitivity` | `frtb-sensitivity` | Delta, vega and curvature by risk class and bucket (SBM). |
+| `fx-scenario` | `fx-scenario` | A currency's USD rate today and under each scenario day of the date's scenario set. |
 | `pnl-explain` | `pnl-explain` | Daily P&L attributed to risk factors, new trades and residual. |
 | `position` | `position` | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. |
+| `scenario-pv` | `scenario-pv` | A position's or trade's present value under each scenario day and its base PV, in its own currency. |
+| `scenario-set` | `scenario-set` | A scenario set: the historical days of a business date, oldest first; position i of every vector of the date is day i. |
 | `stress-result` | `stress-result` | P&L of a desk under a scenario, by book. |
 | `stress-scenario` | `stress-scenario` | A named historical or hypothetical shock set. |
 | `system-basket` | `system-basket` | A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. |
