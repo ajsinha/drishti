@@ -198,37 +198,31 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 
 An IntelliJ IDEA Ultimate with the Python plugin may open `drishti-console/` as a second project in the same way; it is optional.
 
-### 2.4 The demo lakes (PyCharm): the Java concurrent loader
+### 2.4 The demo lakes and your own data with the Java loader (PyCharm)
 
-**Build demo lakes** runs `tools/drishti.py --settings … lake demo --engine java`, the demo lake of
-[section 6 of the Deployment guide](../DEPLOYMENT_AND_QA_GUIDE.md#6-build-the-demo-lake): sixty business days of production-shaped data
-ending today's business date, written into `<data>/delta/demo` (what the packs read).
+The lakes are built by Python commands that hand the writing to **Drishti's concurrent Java loader**, the one inside the server jar in
+`lib/` (several datasets at once, each in a Java process of its own, bounded memory). Python plans; Java writes. There is one
+implementation of each, so the launchers live in PyCharm, and IntelliJ only has to build the jar first.
 
-**How it loads.** Python only plans the work (which datasets, which dates, the connector files); the Delta tables are written by
-**Drishti's concurrent Java loader** inside the server jar in `lib/`. Several datasets load at the same time, each in its own Java
-process. So:
+**The demo lakes**
 
-1. **Build first**: **Drishti build all** (section 1.3); the loader is the jar in `lib/` (`--jar FILE` names another).
-2. **Stop the server** that reads the demo lake (it holds the tables open), or point the lake elsewhere with `--lake`.
-3. In PyCharm run **Build demo lakes**. **You should see** the datasets reported as they load, then `Demo lake ready: …`. On a laptop
-   this takes a few minutes.
+1. IntelliJ: **Drishti build all** (section 1.3), so `lib/` holds the jar the loader runs from.
+2. Stop the server that reads the demo lake.
+3. PyCharm: **Build demo lakes**. It runs `tools/drishti.py --settings … lake demo --engine java`; `--engine java` is what selects the
+   Java loader. **You should see** `lake writer: java (asked for); N datasets at a time`, the tables as they are written, then
+   `Demo lake ready: …`.
 
-**Tuning it** (PyCharm: **Edit Configurations → Build demo lakes → Parameters**, on a copy: **Copy Configuration**):
+How many datasets at a time (`--jobs`, `--memory-mb`), which Java (`--java`), the expected output and the time it takes:
+[DEPLOYMENT_AND_QA_GUIDE.md › Build the demo lake](../DEPLOYMENT_AND_QA_GUIDE.md#6-build-the-demo-lake). Change them on a copy of the
+launcher (**Copy Configuration**, then *Parameters*), so a pull never overwrites your change.
 
-| Option | What it does | Default |
-|---|---|---|
-| `--engine java` | the concurrent Java loader. `auto` uses it when the jar is found and loads a table it fails on again with Drishti's single-process writer | `java` in the launcher |
-| `--jobs N` | datasets loaded at the same time (Java processes) | a quarter of the cores, at most 6 |
-| `--memory-mb MB` | the loaders' heaps together, shared by the jobs | 4 GB a job |
-| `--java PATH` | the `java` to run (Java 21) | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, then the PATH |
-| `--only PREFIX[,PREFIX]` | only some datasets: a folder prefix (`trades/`, `core/counterparty`) or a pack name | everything |
-| `--as-of today\|data\|YYYY-MM-DD` | the lake's last business date | today's business date |
-| `--no-signal` | tell no running server about the new data | tells `http://localhost:18480` |
-| `--dry-run` | print the plan, write nothing | |
+**Your own files**
 
-On a 16 GB laptop use `--jobs 2 --memory-mb 6000`; on a large machine `--jobs 6` (memory follows). From a terminal the same is
-`python tools/drishti.py lake demo --engine java --jobs 2` (Windows `py tools\drishti.py …`). The loader itself, its formats and its
-switches for big files: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md).
+Any `lake build` launcher (**Load ENDUR file into the lake**, **QA lake build (big JSON to Delta)**) uses the Java loader when its
+*Parameters* include **`--engine java`**; without it the Python writer is used. Use the Java loader for big files (it uses every core
+within a fixed memory budget). Its options (`--loader-set memory.budget-mb=…`, the heap, S3):
+[CLI_REFERENCE.md › The parallel lake loader](CLI_REFERENCE.md#713-the-parallel-lake-loader); a worked example with your own trade
+files: [DEPLOYMENT_AND_QA_GUIDE.md › Put the data in place](../DEPLOYMENT_AND_QA_GUIDE.md#122-put-the-data-in-place).
 
 ### 2.5 Your own data and the QA folder (PyCharm)
 

@@ -644,7 +644,9 @@ drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-e
 **Which Java.** The one order of every command: `--java FILE` (the `java` executable), `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the
 `PATH`; older than 21 is refused in words. The jar: the newest `drishti-server-*-exec.jar` in `<drishti>/lib` (`--jar FILE` for another).
 
-In IntelliJ or PyCharm: the run configuration **Build demo lakes** (it runs `lake demo --engine java` with the same settings file). The
+In PyCharm: the run configuration **Build demo lakes** (it runs `lake demo --engine java` with the same settings file; build the jar first
+with IntelliJ's **Drishti build all**; [IDE_GUIDE.md › 2.4](guides/IDE_GUIDE.md#24-the-demo-lakes-and-your-own-data-with-the-java-loader-pycharm)). Your own files go
+through the same Java loader with `lake build … --engine java` ([12.2](#122-put-the-data-in-place)). The
 lake goes to `<data>/delta/demo`, the data folder being the settings file's `drishti.data.dir`. **You should see** the writer named, one
 line per table as it is written, then:
 
