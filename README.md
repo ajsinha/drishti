@@ -12,6 +12,8 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
+**Version 2.9.11.i7a: a module is a file.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar.
+
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
 one or many kernels, and **modules**, signed `.dmod` packages that bring an industry: banking brings a bank's risk, capital markets
@@ -67,7 +69,7 @@ unloading) used by the kernel and the console alike; the **distribution file** (
 **Module SDK**; and **placement** (which nodes run which part of a module).
 
 One server jar comes out of the build (`drishti-server-*-exec.jar`): the kernel alone. The first-party modules are `.dmod` packages in the
-modules folder beside it (`python tools/drishti.py build all` makes both), and the server makes its module host from them at every start. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
+modules folder beside it (`python tools/drishti.py build all` makes both; `build jar` alone says which modules are missing or stale, and a server refuses to start on a package older than its module's source, naming the command that fixes it), and the server makes its module host from them at every start. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
 fails the build otherwise.
 
 ## Modules
@@ -114,7 +116,7 @@ approvals, alerts, Explain, Admin and Help, GLEIF's legal entities as reference 
 
 A module is built against the kernel API, apart from the kernel ([DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
 [KERNEL_AND_MODULES.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)). **The Module SDK**
-is the kernel API jar, the archetype `drishti-module-archetype` (a project that builds green on its first `mvn verify`: a function with its
+is the kernel API jar (and, with `python tools/drishti.py build sdk`, **an SDK folder** `<home>/sdk`: a Maven file repository with the kernel API, the parent and the archetype, so a partner builds, tests, packs and verifies a module without Drishti's source), the archetype `drishti-module-archetype` (a project that builds green on its first `mvn verify`: a function with its
 route and page, a kind with its contract and data needs, a REST API, a Rachana function, a menu entry, a Home card, an AI tool, Help, a
 guide, a tutorial and a test), the parent `drishti-module-parent`, the Maven plugin and the conformance suite. The packer and the checks are
 one implementation, reached **three ways**:
@@ -142,7 +144,7 @@ one implementation, reached **three ways**:
   `modules/` (`drishti.modules.home`) takes `.dmod` packages, each verified, unpacked once and loaded at the next start (a module is a file
   and a restart; taking the file out removes the module); `lib/ext/` (`drishti.lib.path`) takes jars every
   connector and module may use (JDBC drivers, connector plugins, a company's libraries), read once at start into one class loader under the
-  kernel's and listed with their SHA-256 in Health. **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
+  kernel's and listed with their SHA-256 in Health. **Kernel libraries always win**: a module's own copy of a library the kernel ships is ignored and named in a warning (module verify, the log, Health). **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
   unverified; it is refused in a cluster and under the production profile, which loads only verified packages.
 - **Data bindings.** A module names the kinds it needs; the site decides which connector or lake table serves each one, in
   `config/bindings.yaml`. **Admin → Data bindings** shows every kind with its state (`BOUND`, `AUTO`, `DEMO`, `STALE`, `MISMATCH`,
@@ -155,7 +157,7 @@ one implementation, reached **three ways**:
 - **Install**: a module is a **file** (`<id>-<version>.dmod`) in the modules folder beside the server's jar, and a restart. The boot verifies each
   file, unpacks it once and loads it; a cluster restarts node by node while the others serve. A switched-off or missing module answers `404`, and
   saved Sutras, reports, dashboards, baskets, searches and alert rules that use it are kept and marked ***needs module X***. **Admin → Modules**
-  shows what each server booted
+  shows every module and, in a cluster, a nodes × modules matrix of the content each node booted, with a warning when nodes disagree and the commands to install or upgrade
   ([CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster), [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)).
 
 ## Distributions
@@ -273,7 +275,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
   | Lake | Holds |
   |---|---|
-  | `demo` | the demo data, built from the committed test data (`drishti.py lake demo`); demo and real data never mix |
+  | `demo` | the demo data, 103 tables, built from the committed test data (`drishti.py lake demo`); demo and real data never mix |
   | `risklake` | a bank's own risk data (shipped empty) |
   | `capitalmarket` | prices, curves, volatilities, US equities and funds |
   | `worldlake` | the World Bank, the IMF, the OECD, central banks' and national statistics' series |
@@ -322,7 +324,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **Configuration**: every setting in three tiers with its value in effect and where it came from; a change is a proposal a second
   administrator approves ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Clusters** (Drishti\*net, off as shipped): servers join by gossip on a port of their own, any member answers any request, and VaR
-  shards across members; modules are placed on chosen nodes and deployed by plan → apply; sizing and tuning ([CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
+  shards across members; modules are placed on chosen nodes, installed by copying the file to each; sizing and tuning ([CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
 - **Engines and native maths**: each compute engine on or off per node; OpenBLAS bundled for Linux and Windows x86-64, off as shipped
   ([ADMIN_GUIDE.md section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off),
   [OPERATIONS_GUIDE.md section 14.9](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
@@ -340,6 +342,8 @@ python tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
 python tools/drishti.py build all
+# (optional) the Module SDK folder for module builders: <home>/sdk
+python tools/drishti.py build sdk
 
 # 3. The demo lake, from the committed test data in data/testdata
 python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
@@ -357,7 +361,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
 ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
 
 - **Install folder and jars**: the install root is `--home`, else `DRISHTI_HOME`, else the folder the tools are in; the server jar is in `<home>/lib`,
-  the site's jars in `<home>/lib/ext`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
+  the site's jars in `<home>/lib/ext`, the modules' `.dmod` files in `<home>/modules`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
   earlier releases are gone.
 
 - **Starting and stopping**: `tools/drishti.py start`, `stop` and `status` ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)),
@@ -436,39 +440,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-16 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-17 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 471k | 2,332 |
-| Java, tests | 183k | 1,152 |
-| Python, product (console, tools, loaders, feeds) | 148k | 746 |
-| Python, tests | 112k | 664 |
+| Java, product | 474k | 2,373 |
+| Java, tests | 189k | 1,186 |
+| Python, product (console, tools, loaders, feeds) | 150k | 754 |
+| Python, tests | 113k | 678 |
 | JavaScript, product (console and its own Elements libraries) | 67k | 313 |
 | JavaScript, tests | 1.1k | 8 |
 | CSS | 17k | 106 |
-| HTML (templates and pages) | 42k | 377 |
+| HTML (templates and pages) | 43k | 380 |
 | YAML: configuration, Sutras, data contracts | 121k | 1,568 |
-| Markdown: guides, tutorials, design | 218k | 348 |
+| Markdown: guides, tutorials, design | 220k | 353 |
 
-About **746k lines of product code** and **296k lines of tests** (40% of the product code), with **218k lines of documentation**.
+About **750k lines of product code** and **303k lines of tests** (40% of the product code), with **220k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 51 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Maven modules | 50 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 672 |
-| Server REST handlers | 851 |
+| Console routes | 670 |
+| Server REST handlers | 837 |
 | Drishti's own Elements libraries (Drishti Elements itself: vendored) | 3 libraries, 35 ES modules |
-| Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
-| Sutras in the shipped packs | 262 |
+| Domain packs | 16: banking 3, capital-markets 2, economy 8, genomics 2, market-data 1 |
+| Sutras in the shipped packs | 242 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,663: Java 1058, console 277, browser 182, tools 138, JavaScript 8 |
-| Documents under docs/ | 192 (24 guides, 11 tutorials) |
+| Test files | 1,706: Java 1088, console 280, browser 184, tools 146, JavaScript 8 |
+| Documents under docs/ | 197 (24 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 
