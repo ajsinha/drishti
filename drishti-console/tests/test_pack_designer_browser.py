@@ -18,6 +18,7 @@ changes, the module is finalized (the fourteen checks) and downloaded, with the 
 phone width, and the old URL's redirect. Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py)."""
 import os
 import pathlib
+from urllib.parse import urljoin
 
 import pytest
 
@@ -123,14 +124,14 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_down
         page.click("[data-go=finalize]")
         page.click("[data-finalize]")
         page.locator("[data-download]:not([hidden])").wait_for(timeout=LONG * 2)
-        assert "15 of 15 checks passed" in page.locator("[data-sum=finalize]").inner_text()
+        assert "14 of 14 checks passed" in page.locator("[data-sum=finalize]").inner_text()
 
         # 6 Install: a module is a file and a restart: the page offers the download and says how to install it
         page.click("[data-go=deploy]")
         page.locator("[data-download-install]:not([hidden])").wait_for(timeout=LONG)
         assert "modules folder" in page.locator("[data-pane=deploy]").inner_text() and "restart" in page.locator("[data-pane=deploy]").inner_text()
         href = page.locator("[data-download-install]").get_attribute("href")
-        r = page.request.get(base + href)
+        r = page.request.get(urljoin(base + "/", href))       # the page gives the link absolute (drishti_url) or rooted
         assert r.status == 200 and r.body()[:2] == b"PK", (href, r.status)       # the .dmod itself
         ctx.close()
     finally:

@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Build -> New pack: the Pack designer, part two: Design (the Sutras, one's YAML beside its live screen on real rows, re-rendered as it is
- * edited), Finalize (the module and its fifteen checks) and Install (the download, and how to install it). Drishti Elements only: Grid, CodeEditor, Select. */
+ * edited), Finalize (the module and its fourteen checks) and Install (the download, and how to install it). Drishti Elements only: Grid, CodeEditor, Select. */
 (function () {
   'use strict';
   var D = window.Drishti.PackDesigner;
@@ -124,6 +124,7 @@
 
   // ---- step 5: finalize ------------------------------------------------------------------------------------------------------------
   var checksGrid = null;
+  var lastTotal = 0;
   function drawChecks(lines) {
     var rows = [];
     lines.forEach(function (l) {
@@ -132,9 +133,10 @@
     });
     var host = $('[data-checks-grid]');
     host.hidden = !rows.length;
+    lastTotal = rows.length;
     if (!rows.length) { return 0; }
     if (checksGrid) { checksGrid.setRows(rows); } else {
-      checksGrid = new G.Grid(host, { rows: rows, getRowId: function (r) { return r.id; }, layout: 'wells', density: 'compact', chrome: false, rowSelection: 'none', label: 'The fifteen module checks',
+      checksGrid = new G.Grid(host, { rows: rows, getRowId: function (r) { return r.id; }, layout: 'wells', density: 'compact', chrome: false, rowSelection: 'none', label: 'The module checks',
         columns: [{ field: 'id', header: '#', width: 60 }, { field: 'check', header: 'Check', width: 320 }, { field: 'result', header: 'Result', width: 160 }] });
       host.style.height = (rows.length * 34 + 56) + 'px';
     }
@@ -168,7 +170,7 @@
       $('[data-log]').hidden = false;
       $('[data-log]').textContent = log.slice(-60).join('\n');
       var n = drawChecks(log);
-      $('[data-fin-said]').textContent = r.body.seconds + ' s' + (n ? ' · ' + n + ' of 15 checks passed so far' : '');
+      $('[data-fin-said]').textContent = r.body.seconds + ' s' + (n ? ' · ' + n + ' of ' + lastTotal + ' checks passed so far' : '');
       if (S.busy) { window.setTimeout(tick, 900); }
     });
   }
@@ -187,14 +189,14 @@
       a.href = drishti_url(D.ws() + '/dmod');
       a.hidden = false;
       a.textContent = 'Download ' + S.result.dmod + ' (' + D.bytes(S.result.bytes) + ')';
-      D.sumOf('finalize', n + ' of 15 checks passed');
+      D.sumOf('finalize', n + ' of ' + lastTotal + ' checks passed');
       D.sumOf('deploy', 'ready: ' + S.result.name + ' ' + S.result.version);
       var d2 = $('[data-download-install]');
       d2.href = a.href;
       d2.hidden = false;
       d2.textContent = 'Download ' + S.result.dmod;
       $('[data-bind]').disabled = !S.isAdmin;
-      D.say('The module ' + S.result.name + ' ' + S.result.version + ' is made: ' + n + ' of 15 checks passed.');
+      D.say('The module ' + S.result.name + ' ' + S.result.version + ' is made: ' + n + ' of ' + lastTotal + ' checks passed.');
     });
   });
 

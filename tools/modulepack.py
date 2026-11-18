@@ -396,7 +396,9 @@ def first_party(folder: Path, out: Path | None = None) -> Path:
                 raise PackError(f"{d.name}: {HASHES} (the hash list) is missing")
             m = yaml.safe_load(z.read(MANIFEST).decode("utf-8"))
             rows[m["id"]] = f"  - {{id: {m['id']}, version: {m['version']}, sha256: {sha256_bytes(z.read(HASHES))}}}\n"
-    text = ("# The product's own modules (KERNEL_AND_MODULES.md section 3.3): a .dmod is first-party only when its id and\n"
+    head = Path(__file__).resolve().parent.parent / "config" / "license-header.txt"      # the repository's licence header, as every .yaml carries it
+    legal = "".join(f"# {l}".rstrip() + "\n" for l in head.read_text(encoding="utf-8").strip().splitlines()) + "\n" if head.is_file() else ""
+    text = (legal + "# The product's own modules (KERNEL_AND_MODULES.md section 3.3): a .dmod is first-party only when its id and\n"
             "# the SHA-256 of its META-INF/DMOD.MF are listed here. Written by the build, never by hand.\nmodules:\n"
             + "".join(rows[k] for k in sorted(rows)))
     target = Path(out) if out else Path(folder) / FIRST_PARTY

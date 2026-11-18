@@ -3727,7 +3727,7 @@ python3 tools/drishti.py module pack . --jar java/freight/build/libs/freight.jar
 
 **5. Check it.** `module verify --conformance` (or `mvn verify`, which runs it) runs the fourteen checks of
 [section 1.7](#17-what-a-module-can-contribute), each line `C<n> <title>: passed` or `FAILED` followed by its problems in words, then
-`all 14 conformance checks passed` or `<n> of 15 checks failed`. Exit 0 passed, 1 a check failed or the module was refused, 2 usage.
+`all 14 conformance checks passed` or `<n> of 14 checks failed`. Exit 0 passed, 1 a check failed or the module was refused, 2 usage.
 
 ```bash
 python3 tools/drishti.py module verify java/freight/build/dmod/freight-0.1.0.dmod --conformance --project .     # --project: the sources C10 reads
