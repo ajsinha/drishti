@@ -153,7 +153,10 @@ drishti.data.dir=C:/Users/asinh09/IdeaProjects/drishti-orig/data
 drishti.modules.home=C:/Users/asinh09/IdeaProjects/drishti-orig/modules
 ```
 
-Leave the rest of the file as it is: the other keys are optional and commented. A second clone on the same machine needs its own
+Leave the rest of the file as it is: the other keys are optional and **commented out on purpose**, each with its default already in
+force. For example `[lake.demo] root=…`: the demo lake is `<drishti.data.dir>/delta/demo` unless you uncomment it to put the lake
+somewhere else (another disk, a shared folder); `[server] server.port=…` moves every launcher's port at once. Uncomment a section (its
+`[name]` line and its keys) only when you want to change that default. A second clone on the same machine needs its own
 settings file (for example `~/drishti-envs/dev-orig.ini`, named in that clone's run configurations), because `drishti.home` names one clone.
 
 What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
