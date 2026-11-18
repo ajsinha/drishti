@@ -1015,7 +1015,7 @@ label: every distribution side by side, the running one first.
 
 ### 7.8 From IntelliJ IDEA or PyCharm
 
-The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`.
+The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`. IntelliJ's server launchers run the jar the build put in `lib/` (as `start server` does), never IntelliJ's compiled classes, which the modules are not stamped for; a fresh start with a check after every step: [IDE_GUIDE.md › A fresh start](guides/IDE_GUIDE.md#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
 
 The same four steps from a terminal:
 

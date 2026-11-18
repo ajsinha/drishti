@@ -14,12 +14,14 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti server (Finance)" type="Application" factoryName="Application" folderName="Drishti">
-    <option name="MAIN_CLASS_NAME" value="com.ash.drishti.server.DrishtiApplication" />
-    <module name="drishti-app" />
-    <shortenClasspath name="ARGS_FILE" />
+  <!-- the server jar Drishti build all installed (lib/drishti-server-exec.jar is lib/drishti-server-<version>-exec.jar under a name
+       that does not change with the version): the same jar the modules in modules/ are stamped for. Nothing is built before launch. -->
+  <configuration default="false" name="Drishti server (Finance)" type="JarApplication" folderName="Drishti">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
     <option name="VM_PARAMETERS" value="-Ddrishti.home=$PROJECT_DIR$ -Djava.io.tmpdir=$PROJECT_DIR$/data/tmp/server -Xmx2g -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini" />
+    <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="ALTERNATIVE_JRE_PATH" />
     <envs>
       <env name="MALLOC_ARENA_MAX" value="2" />
       <env name="DRISHTI_STUDIO_SAVE" value="true" />
@@ -31,8 +33,6 @@
       <env name="DRISHTI_PORT" value="18480" />
       <env name="DRISHTI_DISTRIBUTION" value="finance" />
     </envs>
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

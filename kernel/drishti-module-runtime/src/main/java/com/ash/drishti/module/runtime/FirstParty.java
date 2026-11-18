@@ -155,10 +155,17 @@ public final class FirstParty {
         return new Origin(true, "verified: its id and hash list are in " + source);
     }
 
-    /** The words of a module built for another kernel build. */
+    /**
+     * The words of a module built for another kernel build. A server with no build of its own ({@code META-INF/build-info.properties}
+     * absent: started from compiled classes, an IDE's class path, not from the jar) can never match a stamp: the words say to start the jar.
+     */
     public static String otherBuild(String label, String built, String here) {
-        return label + ": built for kernel " + built + ", this is " + (here == null || here.isBlank() ? "an unknown build" : here)
-                + ": install the matching module";
+        if (here == null || here.isBlank()) {
+            return label + ": built for kernel " + built + ", this is an unknown build (a server started from compiled classes, not from the "
+                    + "server jar): start the server from the jar that built the modules, lib/drishti-server-<version>-exec.jar (python "
+                    + "tools/drishti.py start server, or an IntelliJ launcher Drishti server after Drishti build all)";
+        }
+        return label + ": built for kernel " + built + ", this is " + here + ": install the matching module";
     }
 
     /**

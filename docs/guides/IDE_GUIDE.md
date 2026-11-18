@@ -16,15 +16,16 @@
 # IntelliJ IDEA and PyCharm: build and run Drishti
 
 For developers and testers who build and run Drishti from the two IDEs. **IntelliJ IDEA builds Drishti and runs the server with Java
-only**: Maven builds the server jar and the modules and installs them, and the server launchers are Java applications; IntelliJ needs no
-Python and no Python plugin. **PyCharm, separately, runs the console and the command-line tools**, and prepares the data (the demo
+only**: Maven builds the server jar and the modules and installs them, and the server launchers run that jar (IntelliJ **JAR
+Application** configurations on `lib/`); IntelliJ needs no Python and no Python plugin. **PyCharm, separately, runs the console and the command-line tools**, and prepares the data (the demo
 lakes). The repository carries the run configurations of both as files (`run-configs/` for IntelliJ, `drishti-console/run-configs/` for
 PyCharm), so nothing is installed and no `.exe` is added. Every configuration uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so the
 same files work on Linux and Windows.
 
 **In one minute.** IntelliJ: open the root `pom.xml`, run **Drishti build all**. Once: make `~/drishti-envs/dev.ini` (section 2.1) and,
 in PyCharm (opened on `drishti-console/`), run **Build demo lakes**. Then IntelliJ: **Drishti server (demo lakes)**; PyCharm: **Drishti
-console**. Open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
+console**. Open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123`. Starting from scratch, or something
+does not work: [8. A fresh start, step by step](#8-a-fresh-start-step-by-step-and-how-to-check-each-step) checks every step.
 
 The three parts follow that order: [1. Build](#1-build-intellij-idea-java-only), [2. Prepare the environment](#2-prepare-the-environment),
 [3. Run](#3-run). Sections 4 to 7 (every launcher, a running stack, troubleshooting, the command-line tools) serve all three.
@@ -56,12 +57,13 @@ Open the **Drishti build all** configuration and press **Run** (Shift+F10).
 
 | Run configuration | What it runs (Maven, from the repository root) | Use it when |
 |---|---|---|
-| **Drishti build all** | `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar, installed into `lib/` (`lib/drishti-server-<version>-exec.jar`), and the twelve module packages, packed, checked and installed into `modules/` (`<id>-<version>.dmod` and `modules/first-party.yaml`), stamped for that jar | the first build on a clone, and after every pull: **this is the one to click** |
+| **Drishti build all** | `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar, installed into `lib/` (`lib/drishti-server-<version>-exec.jar`, and the same file as `lib/drishti-server-exec.jar` for the server launchers), and the twelve module packages, packed, checked and installed into `modules/` (`<id>-<version>.dmod` and `modules/first-party.yaml`), stamped for that jar | the first build on a clone, and after every pull: **this is the one to click** |
 | **Drishti build server jar** | `clean package -DskipTests -pl :drishti-app -am`: the server jar into `lib/` | you changed only the kernel and the modules are current |
 | **Drishti build modules** | `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only`: only the module packages into `modules/`, stamped for the jar already in `lib/` | you changed only module code. It is also the before-launch step of **Drishti server (debug-friendly)**. |
 
 **You should see** Maven's progress and `BUILD SUCCESS`; the build itself installs what it made: the exec jar into `lib/` (any other
-server jar there is replaced; `lib/ext`, your own jars, is never touched) and each package into `modules/` through a `.part` file and one
+server jar there is replaced; `lib/ext`, your own jars, is never touched; `lib/drishti-server-exec.jar` is the same jar under a name that
+does not change with the version: a hard link, or a copy on a file system without them, renewed by every build) and each package into `modules/` through a `.part` file and one
 rename, an older version of the same module removed, then `modules/first-party.yaml`. The packer and the conformance checks are the
 server's own Java (`module pack`, `module verify`): no Python runs. The jar holds no module, so **`build server jar` alone leaves
 `modules/` empty or stale and the server will not start** (section 6). The first build downloads Maven dependencies and takes minutes;
@@ -240,10 +242,13 @@ The order matters: the lakes are written by the Java loader of the jar, the serv
 
 ### 3.1 Start the server (IntelliJ)
 
-**Drishti server (demo lakes)**. It is `DrishtiApplication` on the class path of module `drishti-app`, port **18480**,
+**Drishti server (demo lakes)**. It is a **JAR Application** on `lib/drishti-server-exec.jar`, the jar **Drishti build all** made and the
+modules in `modules/` are stamped for (section 4), port **18480**,
 `-Ddrishti.home=$PROJECT_DIR$`, `-Xmx4g`, offline, sign-in on, the ten demo packs, the development administrator, `DRISHTI_DEMO_ENABLED=false`
 (it reads the lakes of 2.4 and generates nothing). **You should see** in the Run window `Started DrishtiApplication in … seconds` and a `resolved paths:`
-block that names `dev.ini` as the origin of the data folder. Check: `curl -s localhost:18480/actuator/health` answers `UP`.
+block that names `dev.ini` as the origin of the data folder. Check: `curl -s localhost:18480/actuator/health` answers `UP`. Nothing is
+compiled before the launch: after a change to Java code run **Drishti build all** (with the server stopped: Windows keeps a running jar
+locked) and start again.
 
 If you have not built the lakes, use **Drishti server** instead: the same on 18480 with the packs' small samples (demo on), `-Xmx2g`.
 
@@ -270,9 +275,14 @@ of one host. **Drishti console (All)** is the console for the **All** distributi
 
 ### 3.5 Debug the server (IntelliJ)
 
-1. Run **Drishti build all** (or at least **Drishti build modules**).
-2. Choose **Drishti server (debug-friendly)** and press **Debug** (Shift+F9). Its before-launch step is the Maven **Drishti build modules**; it listens on **18580**, sign-in is off, and the
-   log is at DEBUG.
+1. Run **Drishti build all** after your last change to kernel code: the debugger runs the jar in `lib/`, so a breakpoint matches the source
+   only when the jar was built from it.
+2. Choose **Drishti server (debug-friendly)** and press **Debug** (Shift+F9). Its before-launch step is the Maven **Drishti build modules**
+   (the packages for the jar already in `lib/`, quick); it listens on **18580**, sign-in is off, and the log is at DEBUG. Every server
+   launcher debugs the same way: a JAR Application starts the jar with the debugger attached, and IntelliJ finds the source of each class
+   in the project (**Edit Configurations → Search sources using module's classpath**: leave it at *&lt;whole project&gt;*, so the kernel and
+   the modules' sources, `modules/*/java`, are both found). No *attach sources* is needed; a class from a library shows IntelliJ's
+   decompiled view, or the library's sources after **Download Sources** in the Maven tool window.
 3. The console to pair with it (PyCharm): copy **Drishti console (QA profile)** (Ctrl+D) and set `DRISHTI_AUTH_ENABLED` to `false` in the copy; the console (17580) then needs no sign-in.
 4. Good breakpoints: `com.ash.drishti.engine.ViewPipeline` (a view being built), `com.ash.drishti.rachana.SutraRegistry` (which Sutra was chosen),
    a plugin's `SourcePlugin.fetch(…)`, and the controllers under `com.ash.drishti.server`.
@@ -287,10 +297,16 @@ reload with the browser page; Python code needs a restart (Ctrl+F5).
 
 ### 3.7 Work on a module (IntelliJ)
 
-Run **Drishti server (dev switch)** (port 18580). `DRISHTI_MODULES_DEV=true` loads the module folders under `modules/` as they are; the log says
-*modules from the boot: …* and Health marks the module *development (unverified)*. Nothing is built. After a code change rebuild with **Drishti build modules**
-and restart. The switch is refused in a cluster and under the `prod` or `production` profile, and never belongs on a shared server. The terminal equivalent is
-`python3 tools/drishti.py start server --modules-dev`.
+**A shipped module** (banking, trading, the source systems …): change its code, run **Drishti build modules** (the packages, stamped for
+the jar in `lib/`) and restart the server; **Drishti server (debug-friendly)** does both in one press.
+
+**A module of your own:** **Drishti server (dev switch)** (port 18580) runs the same jar as the other launchers with
+`DRISHTI_MODULES_DEV=true`: every folder of the modules folder loads as it is, unpacked and unverified; the log says *modules from the
+boot: …* and Health marks each *development (unverified)*. Nothing is built. It suits a modules folder that holds your own module (name
+it with `DRISHTI_MODULES_HOME` on a copy of the configuration): the shipped modules do not load as folders (banking's kernel-internals
+allowance needs its verified package, and the others need the files their build adds to the package), so on the clone's own `modules/`
+they are refused and VaR is absent. The switch is refused in a cluster and under the `prod` or `production` profile, and never belongs
+on a shared server. The terminal equivalent is `python3 tools/drishti.py start server --modules-dev`.
 
 ### 3.8 Run the tests from the IDEs
 
@@ -328,8 +344,10 @@ stopping both and deleting `data/qa/`.
 
 ## 4. Every launcher
 
-All run from the repository root. Server configurations are IntelliJ **Application** configurations (`com.ash.drishti.server.DrishtiApplication`,
-class path of module `drishti-app`, **Shorten command line: @argfile**); the builds are IntelliJ **Maven** configurations; everything in
+All run from the repository root. Server configurations are IntelliJ **JAR Application** configurations on
+`$PROJECT_DIR$/lib/drishti-server-exec.jar`, the jar **Drishti build all** installed (the same file as `lib/drishti-server-<version>-exec.jar`),
+so the server is exactly the build the module packages in `modules/` are stamped for; nothing is compiled before they start. They never
+run IntelliJ's compiled classes: those carry no build stamp, and the server would refuse banking (section 6.1). The builds are IntelliJ **Maven** configurations; everything in
 PyCharm is a Python configuration of the project interpreter. `dev.ini` is passed by every launcher but the Maven builds. **Ports**: 18480
 default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Finance console.
 
@@ -344,7 +362,7 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | **Drishti server (Finance)** | `DRISHTI_DISTRIBUTION=finance` | 18480, `dev.ini` | with **Drishti console (Finance)** |
 | **Drishti server (QA profile)** | the seven packs, sign-in on, `-Xmx2g`, its own folder given as `-D` (`-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580`; a `-D` beats the settings file) | 18580, `data/qa/data` | QA or a second server beside the first; never touches your data |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g`; **before launch: the Maven Drishti build modules** | 18580, `data/qa/data` | stepping through code (section 3.5) |
-| **Drishti server (dev switch)** | the QA profile with sign-in off, DEBUG, and `DRISHTI_MODULES_DEV=true`: module folders load as they are, nothing built | 18580, `data/qa/data` | editing a module and restarting without packing it (section 3.7) |
+| **Drishti server (dev switch)** | the QA profile with sign-in off, DEBUG, and `DRISHTI_MODULES_DEV=true`: module folders load as they are, nothing built | 18580, `data/qa/data` | a module of your own, restarted without packing it (section 3.7; not the shipped modules) |
 
 ### 4.2 Consoles (PyCharm)
 
@@ -389,9 +407,10 @@ The QA end to end, step by step: [3.9](#39-the-qa-profile-end-to-end-no-terminal
 Every command's options: [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 **Your own configuration.** Never edit a shipped file for yourself: **Copy Configuration** (Ctrl+D) and change the copy. The copy lives in the git-ignored `.idea/`.
-By hand: **Run → Edit Configurations → + → Application**, main class `com.ash.drishti.server.DrishtiApplication`, class path of module **`drishti-app`**
-(`drishti-server` alone carries no domain module, so every banking function would answer *not installed*), **Shorten command line** *@argfile*, JRE 21,
-VM options `-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`, working directory `$PROJECT_DIR$`.
+By hand: **Run → Edit Configurations → + → JAR Application**, *Path to JAR* `$PROJECT_DIR$/lib/drishti-server-exec.jar` (or the versioned
+`lib/drishti-server-<version>-exec.jar`), JRE 21, VM options copied from **Drishti server** (at least
+`-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`), working directory `$PROJECT_DIR$`, the
+environment variables copied too, and no *Build* before launch (section 6.1, recipe A).
 
 ## 5. When a stack is already running
 
@@ -410,23 +429,83 @@ Two servers must never share a data folder.
 
 | What you see | Cause and fix |
 |---|---|
-| `drishti.settings.file names …/dev.ini, which is not a file` (a server) or the same from the console | the settings file is missing: section 2.1. |
+| `drishti.settings.file names …/dev.ini, which is not a file` (a server) or the same from the console, or `drishti.home … names another clone` | the settings file is missing or names another folder: recipe F (section 2.1). |
 | `the modules beside the jar are not current:` followed by a list, and the server stops | `modules/` is missing a package or holds one older than its module folder or built for another jar, typically after **Drishti build server jar** alone or a pull. Run **Drishti build all**. Or use **Drishti server (dev switch)**. |
-| Health says *no modules*, and `VAR` or a banking function answers *not installed* | the class path was not module `drishti-app`, or `modules/` is empty. Run **Drishti build all**, and start from a shipped configuration or copy one. |
+| Admin → Modules shows banking *stale*: *built for kernel 2.9.11.…+2026-…Z, this is an unknown build: install the matching module* (the words of servers before this change; now *…this is an unknown build (a server started from compiled classes, not from the server jar): start the server from the jar that built the modules…*), the kernel shows as *dev*, and every `VAR` call answers 404 | the server ran IntelliJ's compiled classes (an **Application** configuration, a copy made before this change, or the ▶ in the margin), which carry no build stamp, while banking is stamped for the exact jar **Drishti build all** made. Start the server from that jar: **recipe A** of section 6.1. |
+| Health says *no modules*, banking is missing from Admin → Modules, or `VAR` answers *not installed* | `modules/` is empty or holds no `banking-*.dmod`: run **Drishti build all** (recipe B). |
+| `GET /api/v1/risk/var/…` (or VAR BANK in the console) answers **404** | banking is not loaded: Admin → Modules says why (stale: recipe A; missing: recipe B). |
 | Maven fails with *invalid target release* or *release version 21 not supported* | the wrong JDK: set the Project SDK (section 1.2 step 2) and **Maven → Runner → JRE** to *Use Project JDK*; the shell's `JAVA_HOME` does not count in the IDE. |
-| Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: on Windows add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to Maven's Runner and Importer VM options (section 1.4; or the mirror, or the root certificate in the JDK) |
+| Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: on Windows add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to Maven's Runner and Importer VM options (recipe C; section 1.4: or the mirror, or the root certificate in the JDK) |
+| IntelliJ shows *Unknown configuration type* for a launcher, asks for the Python plugin, or a PyCharm launcher is missing in IntelliJ | the consoles and the Python tools are PyCharm's (`drishti-console/run-configs/`); IntelliJ's `run-configs/` holds no Python: recipe D. |
 | Maven: *module pack … refused:* followed by a reason | the packer refused a module folder (a jar `module.yaml` names is missing, a `content.yaml` that leaves out what a pack serves, a file outside the layout): the line names the module and the file; fix it and build again |
 | A Python configuration says *Python interpreter is not configured* | PyCharm: choose the interpreter (section 2.3, step 2). |
 | `lake demo` says the jar is missing | run **Drishti build all** first; `lake demo --engine java` reads the jar in `lib/`. |
-| Started with the **▶ in the margin of `DrishtiApplication.java`** and nothing works | never use it: it sets none of the settings above (no `dev.ini`, no packs, no sign-in, no home). Use a shipped configuration. |
+| Started with the **▶ in the margin of `DrishtiApplication.java`** and nothing works | never use it: it sets none of the settings above (no `dev.ini`, no packs, no sign-in, no home) and runs compiled classes, an unknown build that refuses banking. Use a shipped configuration. |
 | A change to a configuration does not stay | a shipped `.run.xml` is overwritten by a pull. Copy the configuration (Ctrl+D); the copy lives in `.idea/`, which git ignores. Never copy a configuration into the repository. |
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 1.1). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
-| A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | Add one line to your `dev.ini` (the file the launcher passes with `--settings`): `drishti.java.home=C:/jdk-21` (the JDK 21 folder; forward slashes). The tools find Java in this order: `--java FILE`, `--java-home DIR`, **`drishti.java.home`** of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the PATH, so `JAVA_HOME` can stay Java 8 for other programs. (Alternatives: `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm, or **Edit Configurations → Environment variables** for one launcher.) The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
+| A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | Recipe E. Add one line to your `dev.ini` (the file the launcher passes with `--settings`): `drishti.java.home=C:/jdk-21` (the JDK 21 folder; forward slashes). The tools find Java in this order: `--java FILE`, `--java-home DIR`, **`drishti.java.home`** of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the PATH, so `JAVA_HOME` can stay Java 8 for other programs. (Alternatives: `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm, or **Edit Configurations → Environment variables** for one launcher.) The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
 | A run configuration is missing or shows `<no module>` | IntelliJ: the project is not the root `pom.xml`; open the root and let the Maven import finish. The consoles and the tools are PyCharm's (`drishti-console/`). |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 
+### 6.1 Step by step: the fixes
+
+**Recipe A: banking is *stale*, "built for kernel …, this is an unknown build".** The kernel knows its own build from
+`META-INF/build-info.properties`, which only Maven writes (the `build-info` goal of `kernel/drishti-server/pom.xml`) and only the jar is
+sure to carry; banking, the one module allowed to reach kernel internals, is stamped at **Drishti build all** with the exact build
+(`<version>+<build time>`) of the jar built in the same run and loads on that build only. IntelliJ's own compile (**Build**, the *Make*
+before an **Application** configuration) never runs that goal and clears `target/classes` whenever it rebuilds a module (as on the
+first compile after Maven's `clean`), so a server started from compiled classes is an *unknown build*, and even when an old file
+survives it names a build no package is stamped for: Admin → Modules shows the kernel as *dev* and banking *stale*, and every VaR API answers 404. The fix is to start the jar:
+
+1. Stop the server.
+2. IntelliJ: **Drishti build all**, ending `BUILD SUCCESS` (`lib/` holds `drishti-server-<version>-exec.jar` and `drishti-server-exec.jar`;
+   `modules/` the `.dmod` packages and `first-party.yaml`).
+3. Start one of the shipped server launchers (**Drishti server**, **Drishti server (demo lakes)** …): each is a JAR Application on that jar.
+   A copy you made of an older **Application** configuration keeps the old shape: delete it and copy a shipped one again.
+4. **By hand**, if you need your own: **Run → Edit Configurations → + → JAR Application**; *Path to JAR*
+   `C:\Users\you\IdeaProjects\drishti\lib\drishti-server-exec.jar` (or `…\lib\drishti-server-<version>-exec.jar`); *VM options* copied
+   from **Drishti server** (open it, select the whole field, copy); *Working directory* the clone (`C:\Users\you\IdeaProjects\drishti`);
+   *Environment variables* copied from **Drishti server**; *JRE* 21; under *Before launch* remove **Build** if it is there; **OK**, **Run**.
+5. Check: the start-up log names the modules it loaded; **Admin → Modules** shows banking *ok* and the kernel with its build (the
+   version, not *dev*); in the console `VAR BANK <GO>` computes.
+
+The terminal does the same: `python3 tools/drishti.py start server` always runs the jar in `lib/`.
+
+**Recipe B: banking (or every module) is missing.** `modules/` holds no packages. Run **Drishti build all** (not **Drishti build server
+jar** alone: the jar holds no module), check that `modules/` lists twelve `.dmod` files and `first-party.yaml`, and restart the server.
+
+**Recipe C: Maven stops with `PKIX path building failed` (Windows, company network).**
+
+1. IntelliJ: **File → Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options**:
+   `-Djavax.net.ssl.trustStoreType=Windows-ROOT`.
+2. **Maven → Importing → VM options for importer**: the same option.
+3. **Apply**; run **Drishti build all** again. A terminal: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, then a new
+   terminal. Details and the other ways: section 1.4.
+
+**Recipe D: *Unknown configuration type*, or IntelliJ asks for the Python plugin.** IntelliJ's launchers (`run-configs/`) are the three
+Maven builds and the server JAR Applications only; every Python launcher (the consoles, **Build demo lakes**, the tools) is PyCharm's.
+
+1. In IntelliJ, delete any Python configuration you copied there (**Edit Configurations**, select, **−**); no plugin is needed.
+2. Open `drishti-console/` in PyCharm (section 2.3), never the same folder as IntelliJ; choose the interpreter (section 2.3, step 2).
+3. The PyCharm drop-down then lists the consoles and the tools under **Drishti**.
+
+**Recipe E: a PyCharm launcher finds Java 1.8 (from `JAVA_HOME`).**
+
+1. Find a JDK 21: IntelliJ's **Project Structure → SDKs** shows its folder (a downloaded one is under `C:\Users\you\.jdks\`).
+2. Add to `C:\Users\you\drishti-envs\dev.ini`: `drishti.java.home=C:/Users/you/.jdks/temurin-21` (forward slashes).
+3. Run the launcher again: it now names that JDK. (Or `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm.) `JAVA_HOME` can stay 1.8.
+
+**Recipe F: `dev.ini` is missing, or names the wrong folders.**
+
+1. `py tools\drishti.py setup --check` lists what is missing; `py tools\drishti.py setup` makes `C:\Users\you\drishti-envs\dev.ini`.
+   Without Python: copy `config\settings.examples\dev.ini` there by hand.
+2. Open it and check the three folders (section 2.1): `drishti.home` the clone, `drishti.data.dir` `<clone>/data`,
+   `drishti.modules.home` `<clone>/modules`; forward slashes, no quotes, no trailing slash; and `drishti.java.home` (recipe E).
+3. Start the server again: the `resolved paths:` block of its log names `dev.ini` as the origin of each folder.
+
+Starting again from scratch, checking each step: [section 8](#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
 More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troubleshooting). The terminal equivalent of every step above:
 [DEPLOYMENT_AND_QA_GUIDE.md › Start the server and the console](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
@@ -480,10 +559,37 @@ token and no home-directory path in it (`tools/test_run_configs.py` guards the s
 `sutra lint|test|preview|shape|design` is the server's own jar started with `sutra` as its first argument, so IntelliJ can run it and debug the engine while it lints.
 **Run → Edit Configurations → + → Application**: main class `com.ash.drishti.server.DrishtiApplication`, *Use classpath of module* `drishti-server`, JRE 21, **Program arguments**
 `sutra lint config/packs/my-bank --strict`, **Working directory** the repository root (paths in the arguments are relative to it here, unlike in `drishti.py`, which makes them absolute).
-Or **JAR Application** with the exec jar as *Path to JAR*. It prints what the command line prints and ends with the exit code; breakpoints in `drishti-rachana` or
+Or **JAR Application** with `$PROJECT_DIR$/lib/drishti-server-exec.jar` as *Path to JAR*. It prints what the command line prints and ends with the exit code; breakpoints in `drishti-rachana` or
 `kernel/drishti-server/.../cli/SutraCli.java` stop as usual.
 
 ### 7.5 The tools' own tests
 
 **Run → Edit Configurations → + → Python tests → Unittest**: *Target* `Script path`, the file `tools/test_packmake.py` (or `test_drishti_cli.py`, `test_sutragen.py`,
 `test_ingest_jsonl.py`, `test_pack_bundle.py`), working directory the repository root. The tests that run `sutra lint` are skipped until **Drishti build all** has put the jar in `lib/`.
+
+## 8. A fresh start, step by step (and how to check each step)
+
+The one place to start from scratch on Windows (Linux and macOS: the same steps, `/` paths and `python3`), and to find which step went
+wrong. Each step says what you should see; if you do not, the row of section 6 it names says why and what to do.
+
+1. **Get the code.** `git pull` in the clone (for example `C:\Users\you\IdeaProjects\drishti`). For a clean start also delete `lib\` and
+   `modules\*.dmod` (and `modules\first-party.yaml`): the next build makes them again. Keep the module folders (`modules\banking\` …).
+2. **IntelliJ: Drishti build all** (section 1.3). *You should see* `BUILD SUCCESS`; `lib\` holds `drishti-server-<version>-exec.jar`
+   and `drishti-server-exec.jar` (the same jar); `modules\` holds twelve `.dmod` packages and `first-party.yaml`. *If not:*
+   `PKIX path building failed`: recipe C; *invalid target release*: the JDK (section 6); *module pack … refused*: the line names the file.
+3. **Check `C:\Users\you\drishti-envs\dev.ini`** (section 2.1). *You should see* `drishti.home` naming this clone, `drishti.data.dir`
+   `<clone>/data`, `drishti.modules.home` `<clone>/modules`, and `drishti.java.home` a JDK 21 folder; forward slashes. *If not:* recipe F;
+   for the Java line, recipe E.
+4. **PyCharm: Build demo lakes** (section 2.4), with no server running. *You should see* `lake writer: java (asked for)`, the tables,
+   then `Demo lake ready: …`. *If not:* Java 1.8 named: recipe E; *the jar is missing*: step 2; a launcher missing or *Unknown
+   configuration type*: recipe D.
+5. **IntelliJ: Drishti server (demo lakes)** (section 3.1). *You should see* `Started DrishtiApplication`, and in the start-up log the
+   modules line *Modules: banking, capitalmarkets, economy, …* with no *module refused* after it. *If not:* *module refused: banking …
+   this is an unknown build*: the server did not run the jar, recipe A; *the modules beside the jar are not current*: step 2 again;
+   *dev.ini … not a file*: recipe F; *Port 18480 was already in use*: section 5.
+6. **PyCharm: Drishti console** (section 3.2). *You should see* `Uvicorn running on http://0.0.0.0:17480`. *If not:* *Python
+   interpreter is not configured*: section 2.3 step 2; *Unknown configuration type*: recipe D.
+7. **Sign in and check.** `http://localhost:17480`, `drishti-dev-admin` / `drishti-dev-admin123`; **Admin → Modules**: *You should
+   see* all twelve modules *ok* (thirteen rows with core), none *stale*, and the kernel with its version (not *dev*). Then `VAR BANK <GO>`
+   computes. *If not:* banking *stale*: recipe A; banking missing: recipe B; VaR (or `GET /api/v1/risk/var/…`) answers 404: banking
+   is not loaded, Admin → Modules says why (recipe A or B).

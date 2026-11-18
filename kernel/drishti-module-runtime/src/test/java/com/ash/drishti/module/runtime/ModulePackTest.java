@@ -431,6 +431,27 @@ class ModulePackTest {
         assertThat(lib.resolve("driver.jar")).hasContent("site");
         assertThat(ModulePack.installJar(in, lib.getParent())).isEqualTo(in);           // the jar already in lib: nothing to do
         assertThat(lib.getParent()).isDirectoryNotContaining("glob:**.part");
+        // the version-free name IntelliJ's JAR Application launchers run: the same file as the installed jar, renewed with every install
+        Path ide = lib.getParent().resolve(ModulePack.IDE_JAR);
+        assertThat(Files.isSameFile(ide, in) || Files.readString(ide).equals("new")).isTrue();
+        Path next = Files.writeString(tmp.resolve("target").resolve("drishti-server-1.1-exec.jar"), "newer");
+        Path in2 = ModulePack.installJar(next, lib.getParent());
+        assertThat(in).doesNotExist();
+        assertThat(ide).hasContent("newer");
+        assertThat(lib.getParent()).isDirectoryNotContaining("glob:**.part");
+        try (var names = Files.list(lib.getParent())) {     // the tools' pattern (drishti-server-*-exec.jar) still finds exactly one jar
+            assertThat(names.map(f -> f.getFileName().toString()).filter(n -> n.matches("drishti-server-.+-exec\\.jar")))
+                    .containsExactly(in2.getFileName().toString());
+        }
+    }
+
+    @Test
+    void aStampedModuleOnAServerWithNoBuildSaysToStartTheJar() {
+        // a server started from compiled classes (no build-info.properties) can never match a stamp: the words say what to start
+        assertThat(FirstParty.otherBuild("banking 1.0.0", "9.9+t", null)).startsWith("banking 1.0.0: built for kernel 9.9+t, this is an unknown build")
+                .contains("start the server from the jar").contains("drishti.py start server").doesNotContain("install the matching module");
+        assertThat(FirstParty.otherBuild("banking 1.0.0", "9.9+t", "9.9+u"))
+                .isEqualTo("banking 1.0.0: built for kernel 9.9+t, this is 9.9+u: install the matching module");
     }
 
     private void install(Path folder, Path modules) throws IOException {

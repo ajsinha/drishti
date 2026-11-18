@@ -843,28 +843,52 @@ public final class ModulePack {
     }
 
     /**
+     * The version-free name of the installed server jar, {@code <lib>/drishti-server-exec.jar}: the same file as the versioned one (a hard
+     * link, else a copy), for IntelliJ's JAR Application launchers, whose path cannot follow the version. The tools never read it: they find
+     * the versioned {@code drishti-server-<version>-exec.jar}, which the {@code drishti-server-*-exec.jar} pattern matches and this name does not.
+     */
+    public static final String IDE_JAR = "drishti-server-exec.jar";
+
+    /**
      * The server's executable jar into an install's lib folder: through a .part file and one replace; any other drishti-server-*-exec.jar
-     * there removed (one server jar in lib; lib/ext, the site's jars, is never touched). Nothing to do when the jar already is the one in lib.
+     * there removed (one server jar in lib; lib/ext, the site's jars, is never touched); then {@link #IDE_JAR}, the same jar under the
+     * version-free name. Nothing to copy when the jar already is the one in lib.
      */
     public static Path installJar(Path jar, Path lib) {
         try {
             Files.createDirectories(lib);
             Path target = lib.resolve(name(jar));
-            if (Files.exists(target) && Files.isSameFile(jar, target)) {
-                return target;
-            }
-            for (Path old : sortedChildren(lib)) {
-                String n = name(old);
-                if (n.startsWith("drishti-server-") && n.endsWith("-exec.jar") && !n.equals(name(jar)) && !isDir(old)) {
-                    Files.delete(old);
+            if (!(Files.exists(target) && Files.isSameFile(jar, target))) {
+                for (Path old : sortedChildren(lib)) {
+                    String n = name(old);
+                    if (n.startsWith("drishti-server-") && n.endsWith("-exec.jar") && !n.equals(name(jar)) && !isDir(old)) {
+                        Files.delete(old);
+                    }
                 }
+                Path part = lib.resolve(name(jar) + ".part");
+                Files.copy(jar, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                Files.move(part, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             }
-            Path part = lib.resolve(name(jar) + ".part");
-            Files.copy(jar, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-            Files.move(part, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            ideJar(target);
             return target;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    /** {@link #IDE_JAR} beside the installed jar, as the same file: a hard link (no second copy), or a copy where the file system has none. */
+    private static void ideJar(Path installed) throws IOException {
+        Path alias = installed.resolveSibling(IDE_JAR);
+        if (installed.equals(alias) || Files.exists(alias) && Files.isSameFile(installed, alias)) {
+            return;
+        }
+        Files.deleteIfExists(alias);
+        try {
+            Files.createLink(alias, installed);
+        } catch (UnsupportedOperationException | IOException noLink) {
+            Path part = installed.resolveSibling(IDE_JAR + ".part");
+            Files.copy(installed, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+            Files.move(part, alias, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         }
     }
 

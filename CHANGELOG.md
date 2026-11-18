@@ -18,6 +18,20 @@
 
 ## Unreleased
 
+- **IntelliJ's server launchers run the jar the modules are stamped for.** A server started from IntelliJ's compiled classes (the
+  **Application** launchers, with *Make* before launch) had no `META-INF/build-info.properties` (Maven's `build-info` goal; IntelliJ's
+  compile never runs it and clears `target/classes` when it rebuilds a module), so its kernel build was unknown (*dev* in Admin → Modules)
+  and banking, stamped for the exact build of the jar **Drishti build all** made, was refused as *stale*: every VaR API answered 404.
+  Every server launcher in `run-configs/` (**Drishti server**, **(demo lakes)**, **(QA profile)**, **(debug-friendly)**, **(dev switch)**,
+  **(All)**, **(Finance)**, **(Risk)**) is now a **JAR Application** on `lib/drishti-server-exec.jar`, with the same VM options,
+  environment and working directory and nothing compiled before launch (debug-friendly keeps its Maven **Drishti build modules**); the
+  debugger finds the sources in the project. The jar install (`ModulePack.installJar`, Maven's `install-jar`) writes that version-free
+  name beside `lib/drishti-server-<version>-exec.jar` as the same file (a hard link, else a copy); the tools' `drishti-server-*-exec.jar`
+  pattern never matches it. A stamped module refused on a server with no build now says what to do: *…this is an unknown build (a server
+  started from compiled classes, not from the server jar): start the server from the jar that built the modules…* instead of *install
+  the matching module*. `tools/test_run_configs.py` guards the shape (JAR Applications on that path, no Application configuration, no
+  Make). `IDE_GUIDE.md`: the launchers, debugging, the dev switch's scope (a module of your own), step-by-step fixes (section 6.1) and
+  *A fresh start, step by step* (section 8); `lib/README.md`.
 - **The JDK of the Python tools comes from the settings file.** `drishti.java.home` in the file `--settings` names (a PyCharm launcher's
   `dev.ini`) is the JDK the tools run Java from, after `--java` and `--java-home` and before `DRISHTI_JAVA_HOME`, `JAVA_HOME` and the PATH
   (`javacmd.locate_java`, the one lookup; a named folder without `bin/java` is refused in words). `drishti.py setup` writes it into a new

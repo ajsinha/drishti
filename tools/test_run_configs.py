@@ -17,7 +17,8 @@
 Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ opens the repository root and reads the Java ones in
 run-configs/ (the Maven builds and the server launchers: no Python configuration at all, so IntelliJ needs neither Python nor its Python
 plugin); PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/ (the consoles, the distributions'
-consoles Drishti console (Risk), (Finance), (All) included, and the tools). A Python run configuration uses
+consoles Drishti console (Risk), (Finance), (All) included, and the tools). The server launchers are JAR Applications on lib/drishti-server-exec.jar, the jar Drishti build all
+installed (the one the modules are stamped for). A Python run configuration uses
 the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
 drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
 from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/architecture/TEST_HARNESS.md and
@@ -49,7 +50,7 @@ class RunConfigs(unittest.TestCase):
         """IntelliJ builds and runs the server with Java only: run-configs/ holds Maven builds and Java launchers, never a Python one."""
         for f in JAVA:
             conf = ET.parse(f).getroot().find("configuration")
-            self.assertIn(conf.get("type"), ("Application", "MavenRunConfiguration"), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
+            self.assertIn(conf.get("type"), ("JarApplication", "MavenRunConfiguration"), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
             text = ET.tostring(conf, encoding="unicode")                 # what IntelliJ runs (a comment may name a PyCharm step)
             self.assertNotIn("PythonConfigurationType", text, f"{f.name}: a before-launch step on a Python configuration")
             self.assertNotIn("drishti.py", text, f.name)
@@ -95,16 +96,16 @@ class RunConfigs(unittest.TestCase):
     def test_application_configurations_run_from_the_repository_root(self):
         for f in CONFIGS:
             conf = ET.parse(f).getroot().find("configuration")
-            if conf.get("type") in ("Application", "MavenRunConfiguration"):
+            if conf.get("type") in ("Application", "JarApplication", "MavenRunConfiguration"):
                 self.assertIn(f, JAVA, f"{f.name}: a Java configuration belongs in run-configs/ (IntelliJ's project)")
-            if conf.get("type") == "Application":
+            if conf.get("type") == "JarApplication":
                 self.assertEqual(options(conf).get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
 
     def test_the_server_configurations_keep_native_libraries_out_of_the_system_temp_folder(self):
         """-Djava.io.tmpdir=<data dir>/tmp/server, the server's own temp base: DuckDB, RocksDB and CatBoost unpack there, not in /tmp."""
         for f in CONFIGS:
             conf = ET.parse(f).getroot().find("configuration")
-            if conf.get("type") != "Application":
+            if conf.get("type") != "JarApplication":
                 continue
             envs = {e.get("name"): e.get("value") for e in conf.iter("env")}
             data = envs.get("DRISHTI_DATA_DIR", "$PROJECT_DIR$/data")
@@ -120,7 +121,7 @@ class RunConfigs(unittest.TestCase):
         for f in CONFIGS:
             conf = ET.parse(f).getroot().find("configuration")
             o = options(conf)
-            if conf.get("type") == "Application":
+            if conf.get("type") == "JarApplication":
                 self.assertIn("-Ddrishti.settings.file=" + ini, o.get("VM_PARAMETERS", ""), f.name)
             elif conf.get("type") == "PythonConfigurationType":
                 self.assertTrue(o.get("PARAMETERS", "").startswith("--settings " + ini + " "), f"{f.name}: --settings {ini} first")
@@ -135,13 +136,32 @@ if __name__ == "__main__":
     unittest.main()
 
 
-def test_the_server_run_configurations_carry_the_domain_modules():
-    """drishti-server alone has no banking on its class path: VAR would say 'not installed'. drishti-app is the core with the modules."""
-    folder = pathlib.Path(__file__).resolve().parents[1] / "run-configs"
+IDE_JAR = "$PROJECT_DIR$/lib/drishti-server-exec.jar"
+
+
+def test_every_server_launcher_runs_the_jar_the_modules_are_stamped_for():
+    """A server launcher is a JAR Application on the jar Drishti build all installed into lib/ (the version-free name ModulePack.IDE_JAR,
+    the same file as lib/drishti-server-<version>-exec.jar), never IntelliJ's compiled classes: those carry no build-info.properties, so
+    the kernel's build is unknown and banking, stamped for the jar's build, is refused ("built for kernel ..., this is an unknown build").
+    Nothing is compiled before launch (no Make): the build is the explicit Maven Drishti build all."""
+    folder = ROOT / "run-configs"
     servers = sorted(folder.glob("Drishti server*.run.xml"))
-    assert servers
+    assert len(servers) >= 8
     for f in servers:
-        assert '<module name="drishti-app" />' in f.read_text(encoding="utf-8"), f.name
+        conf = ET.parse(f).getroot().find("configuration")
+        assert conf.get("type") == "JarApplication", f"{f.name}: a JAR Application on {IDE_JAR}, not {conf.get('type')}"
+        o = options(conf)
+        assert o.get("JAR_PATH") == IDE_JAR, f.name
+        assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
+        text = ET.tostring(conf, encoding="unicode")
+        assert "MAIN_CLASS_NAME" not in text and 'name="Make"' not in text, f"{f.name}: no class path, no Make before launch"
+    for f in JAVA:   # no class-path launcher at all: every Java configuration of IntelliJ is a Maven build or a JAR Application
+        assert ET.parse(f).getroot().find("configuration").get("type") in ("JarApplication", "MavenRunConfiguration"), f.name
+    # the name is the one Maven installs (ModulePack.IDE_JAR), and the tools' pattern for the versioned jar never matches it
+    pack = (ROOT / "kernel" / "drishti-module-runtime" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "module" / "runtime" / "ModulePack.java")
+    assert 'IDE_JAR = "drishti-server-exec.jar"' in pack.read_text(encoding="utf-8")
+    import fnmatch
+    assert not fnmatch.fnmatch("drishti-server-exec.jar", "drishti-server-*-exec.jar")
     build = (folder / "Drishti build server jar.run.xml").read_text(encoding="utf-8")
     # one way to build: Maven clean package of drishti-app, which installs the jar into <home>/lib, so lib/ never goes stale
     assert "MavenRunConfiguration" in build and "drishti.py" not in build
