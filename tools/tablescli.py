@@ -64,14 +64,14 @@ def register(groups, ctx: dict) -> None:
             try:
                 return subprocess.run(cmd).returncode   # runs where the user is: a typed relative argument means what it means in their shell
             except FileNotFoundError as e:
-                raise ctx["CliError"](f"cannot run {cmd[0]}: {e.strerror}; pass --java or set DRISHTI_JAVA_HOME") from None
+                raise ctx["CliError"](f"cannot run {cmd[0]}: {e.strerror}; pass --java or set drishti.java.home in the settings file") from None
 
     def add(name, help_, epilog):
         p = sub.add_parser(name, help=help_, description=help_, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
         p.set_defaults(func=run)
         p.add_argument("--root", help="the catalogue's folder (default config/tables: a folder per domain)")
         p.add_argument("--json", action="store_true", help="JSON instead of words")
-        p.add_argument("--java", help="the java to run (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+        p.add_argument("--java", help="the java to run (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
         p.add_argument("--jar", help="the server's exec jar (default: the newest in <home>/lib)")
         return p
 

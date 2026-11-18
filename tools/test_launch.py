@@ -76,6 +76,25 @@ def test_the_one_order_java_home_option_then_drishti_java_home_then_java_home_th
 
 
 @pytest.mark.skipif(os.name == "nt", reason="the fake JDKs are shell scripts")
+def test_the_settings_key_drishti_java_home_comes_after_the_option_and_before_the_variables(tmp_path):
+    a, b, c, d = (fake_jdk(tmp_path / n, 21) for n in "abcd")
+    env = env_of(DRISHTI_JAVA_HOME=b, JAVA_HOME=c, PATH=str(d / "bin"))
+    javacmd.set_settings(str(tmp_path / "dev.ini"), {"drishti.java.home": str(d)})
+    try:
+        assert javacmd.find_java(None, None, env) == str(d / "bin" / "java")        # the key beats DRISHTI_JAVA_HOME and JAVA_HOME
+        assert javacmd.locate_java(None, None, env)[1].startswith("drishti.java.home (settings file)")
+        assert javacmd.find_java(None, a, env) == str(a / "bin" / "java")           # --java-home beats the key
+        assert javacmd.find_java(str(c / "bin" / "java"), None, env) == str(c / "bin" / "java")   # --java beats it too
+        (tmp_path / "empty").mkdir()
+        javacmd.set_settings(str(tmp_path / "dev.ini"), {"drishti.java.home": str(tmp_path / "empty")})
+        with pytest.raises(javacmd.JavaError, match=r"drishti\.java\.home \(settings file\) is .*empty.*JDK 21 folder"):
+            javacmd.find_java(None, None, env)
+    finally:
+        javacmd.set_settings(None)
+    assert javacmd.find_java(None, None, env) == str(b / "bin" / "java")           # no key: the variables as before
+
+
+@pytest.mark.skipif(os.name == "nt", reason="the fake JDKs are shell scripts")
 def test_an_old_java_is_refused_in_words_and_a_named_empty_home_is_never_skipped(tmp_path):
     old = fake_jdk(tmp_path / "jdk17", 17)
     with pytest.raises(javacmd.JavaError, match=r"Java 21 or newer.*DRISHTI_JAVA_HOME=.*is Java 17"):
@@ -476,3 +495,15 @@ def test_a_cluster_name_that_is_no_node_or_console_is_refused_in_words(tmp_path,
         assert clusterctl.stop(["c"]) == 2 and "the names are: a, b, console" in capsys.readouterr().out
         node.assert_not_called(), console.assert_not_called(), run.assert_not_called()
         assert clusterctl.unknown_names(clusterctl.load_stack(), ["a", "console"]) == ""
+
+
+def test_the_dev_ini_gets_a_live_java_home_line_only_when_setup_found_a_jdk(tmp_path):
+    import envsetup
+    home = tmp_path / "home"
+    (home / "config" / "settings.examples").mkdir(parents=True)
+    (home / "config" / "settings.examples" / "dev.ini").write_text(
+        (Path(__file__).resolve().parent.parent / "config" / "settings.examples" / "dev.ini").read_text(encoding="utf-8"), encoding="utf-8")
+    with_jdk = envsetup.dev_ini_text(home, home / "data", home / "modules", tmp_path / "jdk-21")
+    assert f"\ndrishti.java.home={(tmp_path / 'jdk-21').as_posix()}\n" in with_jdk
+    without = envsetup.dev_ini_text(home, home / "data", home / "modules")
+    assert "\n# drishti.java.home=C:/jdk-21" in without and "\ndrishti.java.home=" not in without

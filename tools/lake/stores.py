@@ -176,7 +176,7 @@ def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None 
     from javacmd import java_cmd
     java = writers.find_java(java)
     if not java:
-        raise SystemExit("stores: no java (Java 21 or newer: DRISHTI_JAVA_HOME, JAVA_HOME or java on the PATH)")
+        raise SystemExit("stores: no java (Java 21 or newer: drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME or java on the PATH)")
     heap = "-Xmx" + os.environ.get("DRISHTI_LOADER_HEAP", "2g")
     cp = os.environ.get("DRISHTI_ICEBERG_CLASSPATH")
     if cp:

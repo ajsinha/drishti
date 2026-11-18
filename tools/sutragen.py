@@ -385,7 +385,7 @@ def find_jar(explicit: str | None) -> str:
 
 
 def find_java(explicit: str | None) -> str:
-    """The one order of every Drishti tool (tools/javacmd.py ``find_java``): --java, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH; Java 21+."""
+    """The one order of every Drishti tool (tools/javacmd.py ``find_java``): --java, drishti.java.home of --settings, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH; Java 21+."""
     import javacmd
     try:
         return javacmd.find_java(explicit)
@@ -502,7 +502,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--fallback", action="store_true", help="also write <kind>-default (no where, priority 1)")
     p.add_argument("--name-prefix", default="", help="prefix of every Sutra name")
     p.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib, made by drishti.py build jar)")
-    p.add_argument("--java", help="java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    p.add_argument("--java", help="java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
 
 

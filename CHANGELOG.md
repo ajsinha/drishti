@@ -18,6 +18,10 @@
 
 ## Unreleased
 
+- **The JDK of the Python tools comes from the settings file.** `drishti.java.home` in the file `--settings` names (a PyCharm launcher's
+  `dev.ini`) is the JDK the tools run Java from, after `--java` and `--java-home` and before `DRISHTI_JAVA_HOME`, `JAVA_HOME` and the PATH
+  (`javacmd.locate_java`, the one lookup; a named folder without `bin/java` is refused in words). `drishti.py setup` writes it into a new
+  `dev.ini` when it finds Java 21 or newer. A machine whose `JAVA_HOME` is Java 8 no longer needs an environment variable.
 - **IntelliJ IDEA builds and runs Drishti with Java only.** The one module packer is Java: `ModulePack` in the module runtime, run as
   `module pack` of the server jar (`ModuleCli`, with `first-party`, `fresh`, `install` and `install-jar` beside `verify`, `inspect` and
   `visual`); `tools/modulepack.py` is gone. The packages are byte for byte what the Python packer made (all twelve modules and

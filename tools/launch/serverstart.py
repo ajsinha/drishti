@@ -14,7 +14,7 @@
 
 """``drishti.py start server`` and ``stop server``: a Drishti server, alone or as a node of a Drishti*net cluster.
 
-Java 21+ (the one lookup: --java-home, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH), the newest server jar, the temporary folder, the native
+Java 21+ (the one lookup: --java-home, drishti.java.home of --settings, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH), the newest server jar, the temporary folder, the native
 memory settings and the logs under the data folder; waits for /actuator/health and prints the address other machines open. The options
 and the environment are in ``drishti.py start server --help`` and docs/DEPLOYMENT_AND_QA_GUIDE.md section 6."""
 from __future__ import annotations

@@ -62,7 +62,7 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--port", type=int, help="the server's port (default DRISHTI_PORT, else 18480)")
         p.add_argument("--heap", metavar="SIZE", help="the heap limit, -Xmx (default 2g; 4g with --demo)")
         p.add_argument("--jar", metavar="FILE", help="a server jar for a one-off run (default the newest in <home>/lib: drishti.py build jar)")
-        p.add_argument("--java-home", metavar="DIR", help="the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+        p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
         p.add_argument("--modules-dev", action="store_true", help="the development switch (drishti.modules.dev): module source folders are loaded as they are, unverified "
                                                                   "(no .dmod needed, no stale check); refused in a cluster and under prod")
         p.add_argument("--packs", metavar="LIST", help="the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)")
@@ -91,7 +91,7 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--server-port", type=int, default=procs.DEFAULT_SERVER_PORT, help="the server's port (default 18480)")
         p.add_argument("--console-port", type=int, help="the console's port (default 17480)")
         p.add_argument("--heap", metavar="SIZE", help="the server's heap (-Xmx)")
-        p.add_argument("--java-home", metavar="DIR", help="the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
+        p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
 
 
 def _ns(**kw) -> argparse.Namespace:
@@ -245,7 +245,7 @@ def register(groups, add) -> None:
     s.add_argument("--home", help="the install folder (default DRISHTI_HOME, else the folder these tools are in)")
     s.add_argument("--data-dir", metavar="DIR", help="the data folder to prepare (default DRISHTI_DATA_DIR, else <home>/data)")
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
-    s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
+    s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
     s.add_argument("--python", metavar="FILE", help="the Python to make drishti-console/.venv with (default this one)")
     s.add_argument("--skip-venv", action="store_true", help="leave drishti-console/.venv alone")
     s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install drishti-console/requirements.txt")
@@ -255,7 +255,7 @@ def register(groups, add) -> None:
     bs = b.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     bj = bs.add_parser("jar", help="build jar: mvn -q clean package -DskipTests -pl :drishti-app -am (Maven installs the exec jar into <home>/lib)", formatter_class=RAW,
                        description="Builds the server's exec jar with the install's Maven wrapper (Java from the one lookup: --java-home, "
-                                   "DRISHTI_JAVA_HOME, JAVA_HOME, the PATH); Maven itself installs it into <home>/lib, where every tool finds it.",
+                                   "drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH); Maven itself installs it into <home>/lib, where every tool finds it.",
                        epilog=f"examples:\n  {P} build jar\n  {P} build jar --offline\n  {P} build jar --no-copy")
     bj.add_argument("--java-home", metavar="DIR", help="the JDK to build with (Java 21+)")
     bj.add_argument("--offline", action="store_true", help="Maven offline (-o)")

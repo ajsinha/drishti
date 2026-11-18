@@ -119,6 +119,8 @@ REPO = Path(__file__).resolve().parent.parent
 # ---- finding Java: ONE order for every tool (drishti.py start, setup, build, lake demo, lake build, the loaders, sutra, doctor) ----------
 #: the oldest Java Drishti runs on
 MIN_JAVA = 21
+#: the settings-file key naming the JDK the Python tools run Java from (the server in an IDE uses the project's JDK)
+JAVA_HOME_KEY = "drishti.java.home"
 
 
 class JavaError(RuntimeError):
@@ -132,7 +134,7 @@ def java_binary(home) -> Path:
 
 def locate_java(explicit=None, java_home=None, env=None) -> tuple:
     """(the java to run, where it came from), in the one order: ``--java FILE`` (a binary; a JDK folder is taken as its home), ``--java-home
-    DIR``, ``DRISHTI_JAVA_HOME``, ``JAVA_HOME``, then ``java`` on the PATH; (None, why) when there is none. A place that is named but holds
+    DIR``, ``drishti.java.home`` of the settings file, ``DRISHTI_JAVA_HOME``, ``JAVA_HOME``, then ``java`` on the PATH; (None, why) when there is none. A place that is named but holds
     no java is refused in words (never silently skipped for the next one)."""
     env = os.environ if env is None else env
     if explicit:
@@ -142,14 +144,15 @@ def locate_java(explicit=None, java_home=None, env=None) -> tuple:
         if e.is_file() or shutil.which(str(explicit)):
             return str(explicit) if e.is_file() else shutil.which(str(explicit)), f"--java {explicit}"
         raise JavaError(f"--java {explicit}: no such file: give the java binary of a JDK {MIN_JAVA} (or --java-home <the JDK folder>)")
-    for name, home in (("--java-home", java_home), ("DRISHTI_JAVA_HOME", (env.get("DRISHTI_JAVA_HOME") or "").strip()),
+    from_file = (_SETTINGS_KEYS.get(JAVA_HOME_KEY) or "").strip()
+    for name, home in (("--java-home", java_home), (f"{JAVA_HOME_KEY} (settings file)", from_file), ("DRISHTI_JAVA_HOME", (env.get("DRISHTI_JAVA_HOME") or "").strip()),
                        ("JAVA_HOME", (env.get("JAVA_HOME") or "").strip())):
         if home:
-            return _home_java(Path(home), name), f"{name}={home}"
+            return _home_java(Path(home), name), (f"{name}: {home}" if name.endswith("(settings file)") else f"{name}={home}")
     found = shutil.which("java", path=env.get("PATH"))
     if found:
         return found, "java on the PATH"
-    return None, "none of --java, --java-home, DRISHTI_JAVA_HOME, JAVA_HOME names a JDK and no java is on the PATH"
+    return None, "none of --java, --java-home, drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME names a JDK and no java is on the PATH"
 
 
 def _home_java(home: Path, name: str) -> str:
@@ -167,12 +170,12 @@ def find_java(explicit=None, java_home=None, env=None, required: bool = True):
     if not java:
         if not required:
             return None
-        raise JavaError(f"no Java found ({why}): install a JDK {MIN_JAVA} (Temurin) and set DRISHTI_JAVA_HOME (or JAVA_HOME) to its "
+        raise JavaError(f"no Java found ({why}): install a JDK {MIN_JAVA} (Temurin) and set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME, JAVA_HOME) to its "
                         "folder, or pass --java-home")
     v = java_version(java)
     if v < MIN_JAVA:
-        raise JavaError(f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}: set DRISHTI_JAVA_HOME to a "
-                        f"JDK {MIN_JAVA} folder (it comes before JAVA_HOME and the PATH), or pass --java-home")
+        raise JavaError(f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}: set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME) to a "
+                        f"JDK {MIN_JAVA} folder (they come before JAVA_HOME and the PATH), or pass --java-home")
     return java
 
 

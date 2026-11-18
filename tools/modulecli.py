@@ -171,5 +171,5 @@ def register(cli, sub, add, srv, js) -> None:
     p.add_argument("--port", type=int, help="the port (default: a free one, never 18480)")
     p.add_argument("--dir", help="keep the run's data here (default: a temporary folder removed on exit)")
     p.add_argument("--jar", help="the server jar (default: DRISHTI_KERNEL_JAR, then the one in <home>/lib)")
-    p.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    p.add_argument("--java", help="the java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("--dry-run", action="store_true", help="lay out the run folder and print the command, without starting")

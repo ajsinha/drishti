@@ -135,22 +135,24 @@ file names this clone in `drishti.home`; a `DRISHTI_HOME` or `drishti.home` that
 3. **With no Python on the machine** (a server-only machine): copy `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` and
    replace `/path/to/drishti` with the clone's folder (forward slashes, also on Windows).
 
-**The three folders in `dev.ini`, explained.** The example file has `/path/to/drishti` as a placeholder; each line names a folder on
+**The folders in `dev.ini`, explained.** The example file has `/path/to/drishti` as a placeholder; each line names a folder on
 *your* machine. On a normal developer machine all three are your clone of the repository, and two folders inside it:
 
 | Key | What it is | Normally | Windows example (clone in `C:\Users\you\IdeaProjects\drishti`) |
 |---|---|---|---|
 | `drishti.home` | **The install folder**: the folder Drishti runs from. It holds `lib/` (the server jar the build puts there), `config/`, `modules/` and `data/`. For a developer it is the clone itself; on a server it is the folder the release was unpacked into. The server refuses to start without it. | the clone | `drishti.home=C:/Users/you/IdeaProjects/drishti` |
 | `drishti.data.dir` | **The data folder**: everything Drishti writes while it runs: the demo lakes (`delta/demo`), the user and audit databases, logs, the data inbox (`dataload/inbox`), caches. It is git-ignored. Point it elsewhere (a bigger disk, a folder per test set) and the clone stays clean. | `<home>/data` | `drishti.data.dir=C:/Users/you/IdeaProjects/drishti/data` |
+| `drishti.java.home` | **The JDK the Python tools run** (**Build demo lakes**, `lake build --engine java`, `start`): the folder that holds `bin/java`, Java 21 or newer. It beats `DRISHTI_JAVA_HOME` and `JAVA_HOME`, so a machine whose `JAVA_HOME` is Java 8 needs nothing else. The server in IntelliJ does not read it: it runs on the project's JDK. `drishti.py setup` writes it when it finds a Java 21+; otherwise the line is commented in the file. | (commented) | `drishti.java.home=C:/jdk-21` |
 | `drishti.modules.home` | **The modules folder**: where the module packages (`banking-….dmod`, `trading-….dmod` …) are. **Drishti build all** writes them there, and the server loads every package it finds there at start. | `<home>/modules` | `drishti.modules.home=C:/Users/you/IdeaProjects/drishti/modules` |
 
 Rules: absolute paths only; forward slashes, also on Windows (or doubled backslashes, `C:\\Users\\…`); no quotes; no trailing
-slash. So for a clone at `C:\Users\asinh09\IdeaProjects\drishti-orig` the three lines are:
+slash. So for a clone at `C:\Users\asinh09\IdeaProjects\drishti-orig` the lines are:
 
 ```ini
 drishti.home=C:/Users/asinh09/IdeaProjects/drishti-orig
 drishti.data.dir=C:/Users/asinh09/IdeaProjects/drishti-orig/data
 drishti.modules.home=C:/Users/asinh09/IdeaProjects/drishti-orig/modules
+drishti.java.home=C:/Users/asinh09/.jdks/temurin-21
 ```
 
 Leave the rest of the file as it is: the other keys are optional and **commented out on purpose**, each with its default already in
@@ -421,7 +423,7 @@ Two servers must never share a data folder.
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 1.1). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
-| A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | the Python tools find Java in this order: `--java FILE`, `--java-home DIR`, **`DRISHTI_JAVA_HOME`**, `JAVA_HOME`, `java` on the PATH. Leave `JAVA_HOME` alone (other programs may need Java 8) and set `DRISHTI_JAVA_HOME` to the JDK 21 folder: for every launcher, `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm; for one launcher, **Edit Configurations → Environment variables** `DRISHTI_JAVA_HOME=C:\jdk-21`. The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
+| A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | Add one line to your `dev.ini` (the file the launcher passes with `--settings`): `drishti.java.home=C:/jdk-21` (the JDK 21 folder; forward slashes). The tools find Java in this order: `--java FILE`, `--java-home DIR`, **`drishti.java.home`** of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the PATH, so `JAVA_HOME` can stay Java 8 for other programs. (Alternatives: `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm, or **Edit Configurations → Environment variables** for one launcher.) The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
 | A run configuration is missing or shows `<no module>` | IntelliJ: the project is not the root `pom.xml`; open the root and let the Maven import finish. The consoles and the tools are PyCharm's (`drishti-console/`). |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 

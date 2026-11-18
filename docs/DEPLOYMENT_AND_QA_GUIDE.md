@@ -641,7 +641,8 @@ each table is still written by every core.
 drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java --jobs 3 --memory-mb 12288
 ```
 
-**Which Java.** The one order of every command: `--java FILE` (the `java` executable), `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the
+**Which Java.** The one order of every command: `--java FILE` (the `java` executable), `--java-home DIR`, `drishti.java.home` in the settings file
+(`--settings`; for a machine whose `JAVA_HOME` is an older Java), `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the
 `PATH`; older than 21 is refused in words. The jar: the newest `drishti-server-*-exec.jar` in `<drishti>/lib` (`--jar FILE` for another).
 
 In PyCharm: the run configuration **Build demo lakes** (it runs `lake demo --engine java` with the same settings file; build the jar first

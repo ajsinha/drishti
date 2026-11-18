@@ -46,7 +46,7 @@ def jvm_parent() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
     g = p.add_argument_group("the Java tool")
     g.add_argument("--jar", help="the drishti-server exec jar (default: the newest drishti-server-*-exec.jar in <home>/lib, made by drishti.py build jar)")
-    g.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    g.add_argument("--java", help="the java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     return p
 
 
@@ -129,7 +129,7 @@ def build_parser(h) -> argparse.ArgumentParser:
         mp.set_defaults(module_cmd=name)
         mp.add_argument("path", help="a module folder (module.yaml at its root) or a .dmod")
         mp.add_argument("--jar", help="the server's exec jar (default: the newest in <Drishti folder>/lib)")
-        mp.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+        mp.add_argument("--java", help="the java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
         if name in ("verify", "check"):
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
             mp.add_argument("--with", dest="with_modules", action="append", default=[], metavar="DMOD",
@@ -366,7 +366,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     dr = groups.add_parser("doctor", help="doctor: is this machine ready (Java, jar, Python, directories, ports, and with --server the token)",
                            description="Green/yellow/red lines with a fix for each; exit 1 on any red. Nothing is changed or stopped.",
                            parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
-    dr.add_argument("--java", help="the java binary to check (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    dr.add_argument("--java", help="the java binary to check (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     dr.set_defaults(func=h.cmd_doctor, cmd=None)
     # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
     bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")

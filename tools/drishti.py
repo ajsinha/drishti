@@ -113,7 +113,7 @@ def find_jar(explicit: str | None = None) -> str:
 
 
 def find_java(explicit: str | None = None) -> str:
-    """The ``java`` to run, in the one order of every Drishti tool (``javacmd.find_java``): ``explicit`` (--java), ``DRISHTI_JAVA_HOME``,
+    """The ``java`` to run, in the one order of every Drishti tool (``javacmd.find_java``): ``explicit`` (--java), ``drishti.java.home`` of the settings file, ``DRISHTI_JAVA_HOME``,
     ``JAVA_HOME``, then ``java`` on the PATH; Java 21 or newer, else a CliError in words."""
     try:
         return javacmd.find_java(explicit)
@@ -129,7 +129,7 @@ def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> s
         try:
             return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
         except FileNotFoundError as e:
-            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set DRISHTI_JAVA_HOME") from None
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set drishti.java.home in the settings file") from None
 
 
 def run_module_cli(a: argparse.Namespace, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
@@ -141,7 +141,7 @@ def run_module_cli(a: argparse.Namespace, args: list[str], capture: bool = False
         try:
             return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
         except FileNotFoundError as e:
-            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set DRISHTI_JAVA_HOME") from None
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set drishti.java.home in the settings file") from None
 
 
 def cmd_module(a, extra) -> int:

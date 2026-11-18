@@ -89,7 +89,7 @@ def find_jar(explicit: str | None = None) -> str | None:
 
 
 def find_java(explicit: str | None = None) -> str | None:
-    """The java the lake tools run, in the one order of every Drishti tool (tools/javacmd.py ``find_java``: --java, DRISHTI_JAVA_HOME,
+    """The java the lake tools run, in the one order of every Drishti tool (tools/javacmd.py ``find_java``: --java, --java-home, drishti.java.home, DRISHTI_JAVA_HOME,
     JAVA_HOME, the PATH), Java 21 or newer (an older one is refused in words); None when there is none."""
     tools = str(ROOT / "tools")
     if tools not in sys.path:

@@ -977,7 +977,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib, made by drishti.py build jar)")
-    g.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    g.add_argument("--java", help="the java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
     g.add_argument("--plan", action="store_true", help="say what the load would do, file by file (table, pack, business date, mode and where "
                                                           "each comes from), and stop: nothing is read or written")

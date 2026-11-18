@@ -920,7 +920,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--jobs", type=int, metavar="N", help="datasets loaded at the same time (default: a quarter of the cores, at most 6)")
     p.add_argument("--memory-mb", type=int, metavar="MB", help="the loaders' heaps together, shared by the jobs (default: 4 GB a job)")
     p.add_argument("--jar", help="the drishti-server exec jar for the Java loader (default: the newest in <home>/lib, made by drishti.py build jar)")
-    p.add_argument("--java", help="the java executable (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    p.add_argument("--java", help="the java executable (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")

@@ -22,6 +22,7 @@ and prints the next steps. ``--check`` changes nothing and only reports (exit 1 
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -52,11 +53,14 @@ def secret(name: str) -> bool:
     return any(w in name for w in ("SECRET", "TOKEN", "PASSWORD"))
 
 
-def dev_ini_text(home: Path, data: Path, modules: Path) -> str:
+def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None) -> str:
     """config/settings.examples/dev.ini with its placeholder paths replaced by this machine's (forward slashes, as the file asks)."""
     text = (home / "config" / "settings.examples" / "dev.ini").read_text(encoding="utf-8")
-    return (text.replace(f"{PLACEHOLDER}/data", data.as_posix()).replace(f"{PLACEHOLDER}/modules", modules.as_posix())
+    text = (text.replace(f"{PLACEHOLDER}/data", data.as_posix()).replace(f"{PLACEHOLDER}/modules", modules.as_posix())
             .replace(PLACEHOLDER, home.as_posix()))
+    if java is not None:   # the JDK 21+ setup found: the key written live (the example line stays commented otherwise)
+        text = re.sub(r"^# drishti\.java\.home=.*$", lambda m: f"drishti.java.home={java.as_posix()}", text, count=1, flags=re.M)
+    return text
 
 
 def setup(a, env: dict | None = None) -> int:
@@ -81,7 +85,7 @@ def setup(a, env: dict | None = None) -> int:
         line("ok", "java", f"{j['java']}  Java {j['version']}  (from {j['why']})")
     else:
         line("FAIL", "java", j["problem"] + (f"  ({j['java']}, from {j['why']})" if j["java"] else ""))
-        problems.append("install a JDK 21 (Temurin) and set DRISHTI_JAVA_HOME to its folder (or pass --java-home)")
+        problems.append("install a JDK 21 (Temurin) and set drishti.java.home in your settings file (or DRISHTI_JAVA_HOME) to its folder, or pass --java-home")
     # the roots
     roots = javacmd.launch_roots(None, a.data_dir, env, javacmd.settings()[1])
     home, data, modules = roots["home"][0], roots["data"][0], roots["modules"][0]
@@ -128,8 +132,13 @@ def setup(a, env: dict | None = None) -> int:
         todo.append(f"copy config/settings.examples/dev.ini to {ini}")
     else:
         edir.mkdir(parents=True, exist_ok=True)
-        ini.write_text(dev_ini_text(home, data, modules), encoding="utf-8")
-        line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in)")
+        jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
+        ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
+        line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in" +
+             (f"; drishti.java.home={jdk.as_posix()}" if jdk else "") + ")")
+        if jdk is None:
+            line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
+            todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
     # the console's Python environment
     py = procs.venv_python(home)
     if a.skip_venv:

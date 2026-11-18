@@ -336,7 +336,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--force", action="store_true", help="replace --out when it exists")
     p.add_argument("--samples", type=int, default=5, help="samples per group (default 5)")
     p.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib)")
-    p.add_argument("--java", help="java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    p.add_argument("--java", help="java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
     _schemapack().add_schema_arguments(p)
     p.add_argument("--code", help="with --schema: the pack code typed alone to open the pack (default: initials of the name)")
