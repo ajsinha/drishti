@@ -135,6 +135,27 @@ file names this clone in `drishti.home`; a `DRISHTI_HOME` or `drishti.home` that
 3. **With no Python on the machine** (a server-only machine): copy `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` and
    replace `/path/to/drishti` with the clone's folder (forward slashes, also on Windows).
 
+**The three folders in `dev.ini`, explained.** The example file has `/path/to/drishti` as a placeholder; each line names a folder on
+*your* machine. On a normal developer machine all three are your clone of the repository, and two folders inside it:
+
+| Key | What it is | Normally | Windows example (clone in `C:\Users\you\IdeaProjects\drishti`) |
+|---|---|---|---|
+| `drishti.home` | **The install folder**: the folder Drishti runs from. It holds `lib/` (the server jar the build puts there), `config/`, `modules/` and `data/`. For a developer it is the clone itself; on a server it is the folder the release was unpacked into. The server refuses to start without it. | the clone | `drishti.home=C:/Users/you/IdeaProjects/drishti` |
+| `drishti.data.dir` | **The data folder**: everything Drishti writes while it runs: the demo lakes (`delta/demo`), the user and audit databases, logs, the data inbox (`dataload/inbox`), caches. It is git-ignored. Point it elsewhere (a bigger disk, a folder per test set) and the clone stays clean. | `<home>/data` | `drishti.data.dir=C:/Users/you/IdeaProjects/drishti/data` |
+| `drishti.modules.home` | **The modules folder**: where the module packages (`banking-….dmod`, `trading-….dmod` …) are. **Drishti build all** writes them there, and the server loads every package it finds there at start. | `<home>/modules` | `drishti.modules.home=C:/Users/you/IdeaProjects/drishti/modules` |
+
+Rules: absolute paths only; forward slashes, also on Windows (or doubled backslashes, `C:\\Users\\…`); no quotes; no trailing
+slash. So for a clone at `C:\Users\asinh09\IdeaProjects\drishti-orig` the three lines are:
+
+```ini
+drishti.home=C:/Users/asinh09/IdeaProjects/drishti-orig
+drishti.data.dir=C:/Users/asinh09/IdeaProjects/drishti-orig/data
+drishti.modules.home=C:/Users/asinh09/IdeaProjects/drishti-orig/modules
+```
+
+Leave the rest of the file as it is: the other keys are optional and commented. A second clone on the same machine needs its own
+settings file (for example `~/drishti-envs/dev-orig.ini`, named in that clone's run configurations), because `drishti.home` names one clone.
+
 What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
 
 ### 2.2 Python for the console and the tools (PyCharm)
