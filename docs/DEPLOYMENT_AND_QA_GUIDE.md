@@ -1267,7 +1267,7 @@ either.
 
 The demo uses only the demo lake: do not drop files into a real lake to test. Check that the inbox runs and what it would take.
 
-**In the UI.** **Admin → Data loads → Inbox**: the inbox's folders under `data/dataload/`, this node as its owner, the next cycle, and
+**In the UI.** **Admin → Data loads → Inbox**: the inbox's folders under `data/dataload/` (in a fresh clone, each with a `README.md` the inbox ignores), this node as its owner, the next cycle, and
 the files it has seen (none yet). **Admin → Data loads → Feeds**: the public-data feeds with their lake, schedule and licence.
 
 ![Admin → Data loads → Inbox](img/deploy/13-inbox.jpg)

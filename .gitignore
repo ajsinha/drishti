@@ -41,6 +41,25 @@ hs_err_pid*
 !/data/delta/referencelake/
 /data/delta/referencelake/*
 !/data/delta/referencelake/README.md
+# the data inbox's folders are kept in git (each with only its README.md); files dropped or moved there, the ledger and inbox.lock are never committed
+!/data/dataload/
+/data/dataload/*
+!/data/dataload/README.md
+!/data/dataload/inbox/
+/data/dataload/inbox/*
+!/data/dataload/inbox/README.md
+!/data/dataload/inprocess/
+/data/dataload/inprocess/*
+!/data/dataload/inprocess/README.md
+!/data/dataload/outbox/
+/data/dataload/outbox/*
+!/data/dataload/outbox/README.md
+!/data/dataload/failed/
+/data/dataload/failed/*
+!/data/dataload/failed/README.md
+!/data/dataload/ledger/
+/data/dataload/ledger/*
+!/data/dataload/ledger/README.md
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
