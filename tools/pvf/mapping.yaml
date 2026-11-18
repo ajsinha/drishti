@@ -49,7 +49,7 @@ run:
 # The scenario set the vectors are indexed by. Never padded: a vector whose length is not `count` is refused.
 scenario_set:
   count: 251                                # paths 0..250 (pvf_join.py --max-path 250)
-  path_order: oldest-first                  # DECISION (owner): path_num 0 is the oldest scenario day; newest-first reverses the vector
+  path_order: newest-first                  # owner 2026-11-18: path_num 0 is the LATEST scenario day; the vector is reversed to Drishti's oldest-first order
   emit: true                                # write scenario-set/<date>/cob.jsonl.gz beside the PVs (the date has no set otherwise)
   dates: weekdays                           # DECISION (owner): the `count` weekdays before the business date (no holiday calendar), or a
                                             # file of dates, one YYYY-MM-DD a line, oldest first: dates: data/pvf/scenario_dates_20261029.txt

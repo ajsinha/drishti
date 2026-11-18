@@ -188,7 +188,7 @@ def test_export_layout_and_contract(extract, tmp_path, small_mapping):
     recs = [json.loads(x) for x in gzip.open(out / "scenario-pv" / BD / "cob.part-001.jsonl.gz", "rt")]
     assert [json.loads(x) for x in (out / f"scenario_pv.{BD}.jsonl").read_text().splitlines()] == recs
     r = recs[1]
-    assert r["POSITION_ID"] == "POS-PVF-2" and r["SCENARIO_PV_ID"] == "SPV-POS-PVF-2-HS-PVF-251" and r["SCENARIO_PV"] == [200.0, 202.0, 202.0, 202.0]
+    assert r["POSITION_ID"] == "POS-PVF-2" and r["SCENARIO_PV_ID"] == "SPV-POS-PVF-2-HS-PVF-251" and r["SCENARIO_PV"] == [202.0, 202.0, 202.0, 200.0]   # path 0 is the latest day (newest-first): reversed to oldest first
     assert r["DIRECTION"] == "SHORT" and r["QUANTITY"] == -250.0 and r["SOURCE_SYSTEM"] == "CALYPSO" and r["LIMIT_LETTER"] == "LL-7"
     assert r["STATUS"] == "ok" and "MATURITY_DATE" not in r and "TRADE_STATUS" not in r and "TRADE_ID" not in r
     assert r["PVF_POSITION_ID"] == 2 and r["SRC_POSITION_ID"] == "CAL:22.CAL:22" and r["PVF_TRADE_ID"] == "22" and r["PATHS_FILLED"] == 3

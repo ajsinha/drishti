@@ -196,7 +196,8 @@ date's scenario-set record (`scenario-set/<date>/cob.jsonl.gz`) with `SCENARIO_S
 - **Days**: the extract does not say which historical day each path is (`histo_valid_dt` is one date for every row). By default the
   days are the 251 weekdays before the business date, with no holiday calendar, and the set's `DESCRIPTION` says they are assumed. Give
   the real days with `--scenario-dates FILE` (one `YYYY-MM-DD` a line, oldest first, all before the date; exactly 251).
-- **Order**: `scenario_set.path_order: oldest-first` takes path 0 as the oldest day; `newest-first` reverses the vector.
+- **Order**: in the PVF extract **path 0 is the latest scenario day** (owner, 2026-11-18), so `scenario_set.path_order` is `newest-first`: the
+  vector is reversed to Drishti's order, where index i is SCENARIO_DATES[i], oldest first. (`oldest-first` would keep it as it is.)
 - **A lake that already has the date's set**: `--no-scenario-set`, and `--scenario-set-id` with its id. One date has one normal set, and
   the date's other scenario P&L (P&L vectors, other systems' scenario PVs) must use the same set and the same batch.
 
@@ -249,7 +250,7 @@ and no other scenario P&L of the date in another set or batch.
 ## Mapping decisions for the owner
 
 1. `SCENARIO_SET_ID` `HS-PVF-251` and the **scenario days** (assumed weekdays) until the real path dates are known.
-2. **Path order**: is path 0 the oldest or the newest day?
+2. **Path order**: settled — path 0 is the latest day (`newest-first`).
 3. `POSITION_ID` prefix `POS-PVF-`, `INSTRUMENT` built from product, currency and trade.
 4. `SOURCE_SYSTEM` from the `src_position_id` prefix (`CAL` → `CALYPSO`), and names for the `system_id` numbers.
 5. `DIVISION` from `pnl_sheet_nm` while `business_group_nm` is empty; `DESK` from `portfolio_group_nm` while `desk_nm` is empty.
