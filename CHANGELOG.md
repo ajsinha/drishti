@@ -18,6 +18,20 @@
 
 ## Unreleased
 
+- **Launchers: one per real job (29 → 13), the development switch gone.** IntelliJ keeps **Drishti build all**, **Drishti build
+  modules**, **Drishti server (demo lakes)**, **Drishti server (built-in samples)** (formerly **Drishti server**) and **Drishti server (QA,
+  port 18580)**; PyCharm keeps **Drishti console**, **Drishti console (QA, port 17580)**, **(Risk)**, **(Finance)**, **Build demo lakes**,
+  **Load a file into the lake** (a template: a file, a lake, a kind), **Drishti doctor** and **Drishti doctor (QA)**. Removed: **Drishti
+  build server jar** (it left the modules stale), the **(All)**, **(Risk)** and **(Finance)** servers (one server of every module serves
+  both distribution consoles), **(debug-friendly)** (every launcher debugs with Shift+F9), **(dev switch)**, **Drishti console (All)**, and
+  the example tool launchers (`server smoke`, `view get`, `data profile`, `pack make`, `pack regenerate`, `sutra gen`, the QA pack and lake
+  ones), which stay as examples in CLI_REFERENCE.md. `drishti.py start server --modules-dev` is gone, and so is its advice in the
+  stale-modules message: a module is always loaded from its verified package (`build modules <id>`, then restart).
+  `tools/test_run_configs.py` holds the exact set. Point fixes: the Risk and Finance consoles' temp folder is `<data>/tmp/console-<distribution>`
+  (it was inside `drishti-console/`), the template `dev.ini`'s comment is whole, the cluster docs name `drishti.py start|stop cluster`
+  instead of the retired scripts and Python instead of `openssl` for the keys, and `deploy/lake-maintenance.yaml` names its lake by an
+  absolute path.
+
 - **IntelliJ's server launchers run the jar the modules are stamped for.** A server started from IntelliJ's compiled classes (the
   **Application** launchers, with *Make* before launch) had no `META-INF/build-info.properties` (Maven's `build-info` goal; IntelliJ's
   compile never runs it and clears `target/classes` when it rebuilds a module), so its kernel build was unknown (*dev* in Admin → Modules)

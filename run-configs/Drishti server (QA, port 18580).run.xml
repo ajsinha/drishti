@@ -16,9 +16,9 @@
 <component name="ProjectRunConfigurationManager">
   <!-- the server jar Drishti build all installed (lib/drishti-server-exec.jar is lib/drishti-server-<version>-exec.jar under a name
        that does not change with the version): the same jar the modules in modules/ are stamped for. Nothing is built before launch. -->
-  <configuration default="false" name="Drishti server (All)" type="JarApplication" folderName="Drishti">
+  <configuration default="false" name="Drishti server (QA, port 18580)" type="JarApplication" folderName="Drishti">
     <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
-    <option name="VM_PARAMETERS" value="-Ddrishti.home=$PROJECT_DIR$ -Djava.io.tmpdir=$PROJECT_DIR$/data/tmp/server -Xmx2g -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini" />
+    <option name="VM_PARAMETERS" value="-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580 -Djava.io.tmpdir=$PROJECT_DIR$/data/qa/data/tmp/server -Xmx2g -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH" />
@@ -31,8 +31,8 @@
       <env name="DRISHTI_SEED_ADMIN" value="true" />
       <env name="DRISHTI_SEED_USERNAME" value="drishti-dev-admin" />
       <env name="DRISHTI_SEED_PASSWORD" value="drishti-dev-admin123" />
-      <env name="DRISHTI_PORT" value="18480" />
-      <env name="DRISHTI_DISTRIBUTION" value="all" />
+      <env name="DRISHTI_PORT" value="18580" />
+      <env name="DRISHTI_DATA_DIR" value="$PROJECT_DIR$/data/qa/data" />
     </envs>
     <method v="2" />
   </configuration>

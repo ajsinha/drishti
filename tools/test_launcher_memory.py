@@ -41,10 +41,9 @@ LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too (drishti.py start se
     "tools/launch/serverstart.py": True,
     "deploy/docker/ecs/server-entrypoint.sh": True,
     "deploy/docker/server.Dockerfile": True,
-    "run-configs/Drishti server.run.xml": True,
+    "run-configs/Drishti server (built-in samples).run.xml": True,
     "run-configs/Drishti server (demo lakes).run.xml": True,
-    "run-configs/Drishti server (debug-friendly).run.xml": True,
-    "run-configs/Drishti server (QA profile).run.xml": True,
+    "run-configs/Drishti server (QA, port 18580).run.xml": True,
 }
 
 

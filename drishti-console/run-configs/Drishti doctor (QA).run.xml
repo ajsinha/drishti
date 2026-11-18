@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="drishti sutra gen" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="Drishti doctor (QA)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
     <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -28,7 +28,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini sutra gen data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras" />
+    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini doctor --server http://localhost:18580 --token-file $PROJECT_DIR$/../data/qa/token.txt" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

@@ -132,7 +132,7 @@ The distribution is chosen **at start, by one argument or one setting**; nothing
 | One node, Windows | `py tools\drishti.py start all --distribution risk` |
 | A cluster | `python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
 | Any start, by setting | `DRISHTI_DISTRIBUTION=risk` or `drishti.distribution: risk` in `config/drishti.yaml`; a path instead of a name loads a custom distribution file |
-| IntelliJ / PyCharm | the run configurations gain `Drishti server (Risk)`, `(Finance)`, `(All)` and the console's `--distribution` |
+| IntelliJ / PyCharm | the consoles `Drishti console (Risk)` and `(Finance)` pass the console's `--distribution`; one server of every module serves both |
 
 `python tools/drishti.py status` and Admin → White label show the running distribution; Health says which modules it asked for and which loaded. A short
 name maps to `config/distributions/drishti.<name>.yaml`; a site may add its own file there (its own brand) without touching the shipped ones.
@@ -247,7 +247,8 @@ and takes effect at the next start.
 **Starting.** `python tools/drishti.py start all --distribution risk`, `start server --distribution finance`,
 `start console --distribution finance --port 17481 --name finance` (the same on Windows with `py tools\drishti.py`); a stack file's `consoles:` list (section 7) starts one
 console per entry, each `console-<name>` with its own pid file, log and temp folder; `drishti.py status` shows each process's distribution.
-IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
+IDEs: `Drishti server (demo lakes)` (every module) with PyCharm's `Drishti console (Risk)` (17480) and `(Finance)` (17481); a server of
+one distribution is the settings line `drishti.distribution=risk` in a settings file of your own. The
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
 **Banking as a module.** The server jar (drishti-app) is the kernel and holds no module. The first-party packages (`modules/banking-1.0.0.dmod`,

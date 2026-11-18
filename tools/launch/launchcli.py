@@ -63,8 +63,6 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--heap", metavar="SIZE", help="the heap limit, -Xmx (default 2g; 4g with --demo)")
         p.add_argument("--jar", metavar="FILE", help="a server jar for a one-off run (default the newest in <home>/lib: drishti.py build jar)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
-        p.add_argument("--modules-dev", action="store_true", help="the development switch (drishti.modules.dev): module source folders are loaded as they are, unverified "
-                                                                  "(no .dmod needed, no stale check); refused in a cluster and under prod")
         p.add_argument("--packs", metavar="LIST", help="the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)")
         p.add_argument("--engine", help="the Delta engine: native, hadoop or auto (DRISHTI_DELTA_ENGINE)")
         p.add_argument("--lake-root", metavar="DIR", help="the Delta lake root (DRISHTI_DELTA_ROOT)")

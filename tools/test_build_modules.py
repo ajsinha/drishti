@@ -136,7 +136,16 @@ def test_an_install_holds_packages_and_no_sources_and_needs_no_java_to_be_curren
 
 
 def args(**kw):
-    return type("A", (), {"modules_dev": False, **kw})()
+    return type("A", (), kw)()
+
+
+def launchcli_help():
+    """start server's options: the development switch (--modules-dev) is gone (LAUNCHER_REVIEW.md D5); build modules and restart."""
+    import argparse
+    import launchcli
+    ap = argparse.ArgumentParser()
+    launchcli.add_options(ap, "start", "server")
+    return ap.format_help()
 
 
 def test_start_server_refuses_sources_without_a_package_and_a_stale_package_in_words(tmp_path, jar):
@@ -149,7 +158,7 @@ def test_start_server_refuses_sources_without_a_package_and_a_stale_package_in_w
     (folder / "packs" / "a.yaml").write_text("a: 2\n", encoding="utf-8")
     with pytest.raises(procs.LaunchError, match=r"modules/greet changed since greet-0\.1\.0\.dmod was built.*build modules greet"):
         serverstart.check_modules(args(), modules, jar)
-    assert "development switch" in serverstart.check_modules(args(modules_dev=True), modules, jar)
+    assert "--modules-dev" not in str(launchcli_help())
 
 
 def test_an_empty_modules_folder_starts_a_server_with_no_module(tmp_path):

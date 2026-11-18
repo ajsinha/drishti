@@ -144,8 +144,6 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     An install holds packages and no sources and is never stale; an empty folder starts a server with no module (Health says so)."""
     import modulesbuild
     dmods = modulesbuild.packages(modules)
-    if getattr(a, "modules_dev", False):
-        return f"modules: development switch on, the module folders of {modules} load as they are (unverified)"
     problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
     if problems:
         raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
@@ -246,8 +244,6 @@ def start(a, env: dict | None = None) -> int:
         flags.append(f"-Ddrishti.settings.file={settings}")
     workdir = Path(a.workdir).resolve() if a.workdir else home
     flags += memory_flags(workdir, env)
-    if getattr(a, "modules_dev", False):
-        flags.append("-Ddrishti.modules.dev=true")
     flags += list(a.java_opt or [])
     args = [f"--server.port={port}"]
     if a.background:

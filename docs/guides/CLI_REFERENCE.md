@@ -2729,7 +2729,6 @@ Options of `start server`, `start console` and `start all`:
 | `--port PORT` | the server's port (default `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else 17480). `start all` has `--server-port` and `--console-port` |
 | `--heap SIZE` | the server's `-Xmx` (default 2g; 4g with `--demo`) |
 | `--jar FILE` | a server jar for one run (default the newest in `<home>/lib`) |
-| `--modules-dev` | `start server`: the development switch (`drishti.modules.dev`): module folders load as they are, unverified, no `.dmod` needed; refused in a cluster and under `prod` |
 | `--packs LIST`, `--engine ENGINE`, `--lake-root DIR` | the packs to load (`DRISHTI_PACKS`), the Delta engine `native`, `hadoop` or `auto`, the Delta root |
 | `--iceberg`, `--iceberg-root DIR` | serve the stores from Iceberg tables: copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` |
 | `--java-opt FLAG`, `--server-arg ARG`, `--workdir DIR` | one more JVM flag, one more server argument (both repeatable); the server's working folder |

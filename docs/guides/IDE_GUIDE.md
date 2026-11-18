@@ -58,15 +58,14 @@ Open the **Drishti build all** configuration and press **Run** (Shift+F10).
 | Run configuration | What it runs (Maven, from the repository root) | Use it when |
 |---|---|---|
 | **Drishti build all** | `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar, installed into `lib/` (`lib/drishti-server-<version>-exec.jar`, and the same file as `lib/drishti-server-exec.jar` for the server launchers), and the twelve module packages, packed, checked and installed into `modules/` (`<id>-<version>.dmod` and `modules/first-party.yaml`), stamped for that jar | the first build on a clone, and after every pull: **this is the one to click** |
-| **Drishti build server jar** | `clean package -DskipTests -pl :drishti-app -am`: the server jar into `lib/` | you changed only the kernel and the modules are current |
-| **Drishti build modules** | `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only`: only the module packages into `modules/`, stamped for the jar already in `lib/` | you changed only module code. It is also the before-launch step of **Drishti server (debug-friendly)**. |
+| **Drishti build modules** | `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only`: only the module packages into `modules/`, stamped for the jar already in `lib/` | you changed only module code |
 
 **You should see** Maven's progress and `BUILD SUCCESS`; the build itself installs what it made: the exec jar into `lib/` (any other
 server jar there is replaced; `lib/ext`, your own jars, is never touched; `lib/drishti-server-exec.jar` is the same jar under a name that
 does not change with the version: a hard link, or a copy on a file system without them, renewed by every build) and each package into `modules/` through a `.part` file and one
 rename, an older version of the same module removed, then `modules/first-party.yaml`. The packer and the conformance checks are the
-server's own Java (`module pack`, `module verify`): no Python runs. The jar holds no module, so **`build server jar` alone leaves
-`modules/` empty or stale and the server will not start** (section 6). The first build downloads Maven dependencies and takes minutes;
+server's own Java (`module pack`, `module verify`): no Python runs. The jar holds no module, so the jar is always built with the
+modules (**Drishti build all**); a new jar with old modules is refused at start (section 6). The first build downloads Maven dependencies and takes minutes;
 later ones are faster. Every build runs `clean`, so `lib/` never holds a stale jar.
 
 **From a terminal** the same commands are `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am` (Windows
@@ -115,8 +114,7 @@ local repository, and `install` only adds time.
 ### 1.5 A module of your own
 
 A project with `module.yaml` at its top, under `<Drishti folder>/modules/`, has two ways to show an edit: rebuild the packages with
-**Drishti build modules** and restart, or run **Drishti server (dev switch)** (section 3.7), which loads the module folders as they are,
-unverified. A third party builds against the SDK folder alone ([DEVELOPER_GUIDE.md › The module SDK](DEVELOPER_GUIDE.md#16-the-module-sdk)):
+**Drishti build modules** (or `python tools/drishti.py build modules <id>` for one) and restart the server (section 3.7). A third party builds against the SDK folder alone ([DEVELOPER_GUIDE.md › The module SDK](DEVELOPER_GUIDE.md#16-the-module-sdk)):
 its module project packs and verifies with the install's server jar (`java -jar lib/drishti-server-<version>-exec.jar module pack|verify`).
 
 ## 2. Prepare the environment
@@ -222,7 +220,7 @@ launcher (**Copy Configuration**, then *Parameters*), so a pull never overwrites
 
 **Your own files**
 
-Any `lake build` launcher (**Load ENDUR file into the lake**, **QA lake build (big JSON to Delta)**) uses the Java loader when its
+**Load a file into the lake** (a template: copy it with Ctrl+D and name your file in *Parameters*) uses the Java loader when its
 *Parameters* include **`--engine java`**; without it the Python writer is used. Use the Java loader for big files (it uses every core
 within a fixed memory budget). Its options (`--loader-set memory.budget-mb=…`, the heap, S3):
 [CLI_REFERENCE.md › The parallel lake loader](CLI_REFERENCE.md#713-the-parallel-lake-loader); a worked example with your own trade
@@ -230,11 +228,10 @@ files: [DEPLOYMENT_AND_QA_GUIDE.md › Put the data in place](../DEPLOYMENT_AND_
 
 ### 2.5 Your own data and the QA folder (PyCharm)
 
-- **Load ENDUR file into the lake**: a real ENDUR file (never committed) into the demo lake; edit the file name in *Parameters* (section 4.3).
-- **QA pack make (from JSON)** and **QA lake build (big JSON to Delta)**: a pack and a lake from your own JSON under the git-ignored
-  `data/qa/` (section 3.9). Keep local files to ten thousand trades.
-- **The QA token**: the QA tools read `data/qa/token.txt`; make the token in the console (**My account → API tokens**) once the QA
-  server and console run (section 3.9, step 4).
+- **Load a file into the lake**: one file of yours (never committed) into the demo lake, by its kind; copy the launcher and name the file
+  in *Parameters* (section 4).
+- A pack or a lake of your own JSON for the QA server: the `pack make` and `lake build` commands of section 3.9, from a terminal or a
+  copy of **Load a file into the lake**. Keep local files to ten thousand trades.
 
 ## 3. Run
 
@@ -250,7 +247,7 @@ block that names `dev.ini` as the origin of the data folder. Check: `curl -s loc
 compiled before the launch: after a change to Java code run **Drishti build all** (with the server stopped: Windows keeps a running jar
 locked) and start again.
 
-If you have not built the lakes, use **Drishti server** instead: the same on 18480 with the packs' small samples (demo on), `-Xmx2g`.
+If you have not built the lakes, use **Drishti server (built-in samples)** instead: the same on 18480 with the packs' small samples (demo on), `-Xmx2g`.
 
 ### 3.2 Start the console (PyCharm)
 
@@ -263,27 +260,27 @@ Open `http://localhost:17480` and sign in as **`drishti-dev-admin`** / **`drisht
 configurations; development only). Then **Admin → Health** lists the server and each module as *loaded*. More on signing in, and a token for the command line:
 [DEPLOYMENT_AND_QA_GUIDE.md › Sign in](../DEPLOYMENT_AND_QA_GUIDE.md#93-sign-in-and-a-token-for-the-command-line).
 
-### 3.4 A distribution: Risk, Finance or All
+### 3.4 A distribution: Risk or Finance
 
 A white-labelled instance is a server and a console started with the same distribution
 ([DEPLOYMENT_AND_QA_GUIDE.md › A white-labelled instance](../DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance)).
-In IntelliJ start **Drishti server (All)** (every module; a Risk or Finance server would limit both consoles to its own), then in PyCharm
-**Drishti console (Risk)** (port 17480, own temp folder `data/tmp/console-risk`) and **Drishti console (Finance)** (port 17481). Open the
-second by another host name (`http://127.0.0.1:17481`) or another browser profile, because browsers share sign-in cookies across the ports
-of one host. **Drishti console (All)** is the console for the **All** distribution on 17480. Do not run **Drishti console (All)** and
-**(Risk)** together: both use 17480.
+In IntelliJ start **Drishti server (demo lakes)** (every module: the All distribution is the default, and a Risk or Finance server would
+limit both consoles to its own), then in PyCharm **Drishti console (Risk)** (port 17480, its own temp folder `<data>/tmp/console-risk`) and
+**Drishti console (Finance)** (port 17481, `<data>/tmp/console-finance`). Open the second by another host name (`http://127.0.0.1:17481`)
+or another browser profile, because browsers share sign-in cookies across the ports of one host. **Drishti console** is the console of
+the All distribution on 17480: do not run it and **(Risk)** together. A server limited to one distribution is the settings line
+`drishti.distribution=risk` in a settings file of your own named after the profile (section 2.1).
 
 ### 3.5 Debug the server (IntelliJ)
 
 1. Run **Drishti build all** after your last change to kernel code: the debugger runs the jar in `lib/`, so a breakpoint matches the source
    only when the jar was built from it.
-2. Choose **Drishti server (debug-friendly)** and press **Debug** (Shift+F9). Its before-launch step is the Maven **Drishti build modules**
-   (the packages for the jar already in `lib/`, quick); it listens on **18580**, sign-in is off, and the log is at DEBUG. Every server
-   launcher debugs the same way: a JAR Application starts the jar with the debugger attached, and IntelliJ finds the source of each class
+2. Choose any server launcher, **Drishti server (demo lakes)** for example, and press **Debug** (Shift+F9). Every server launcher debugs
+   the same way: a JAR Application starts the jar with the debugger attached, and IntelliJ finds the source of each class
    in the project (**Edit Configurations → Search sources using module's classpath**: leave it at *&lt;whole project&gt;*, so the kernel and
    the modules' sources, `modules/*/java`, are both found). No *attach sources* is needed; a class from a library shows IntelliJ's
    decompiled view, or the library's sources after **Download Sources** in the Maven tool window.
-3. The console to pair with it (PyCharm): copy **Drishti console (QA profile)** (Ctrl+D) and set `DRISHTI_AUTH_ENABLED` to `false` in the copy; the console (17580) then needs no sign-in.
+3. The console to pair with it (PyCharm): **Drishti console** (or **Drishti console (QA, port 17580)** for the QA server); sign in as in 3.3.
 4. Good breakpoints: `com.ash.drishti.engine.ViewPipeline` (a view being built), `com.ash.drishti.rachana.SutraRegistry` (which Sutra was chosen),
    a plugin's `SourcePlugin.fetch(…)`, and the controllers under `com.ash.drishti.server`.
 5. While it runs: **Run → Debugging Actions → Reload Changed Classes** reloads method bodies (a changed signature, field or class needs a restart);
@@ -298,15 +295,10 @@ reload with the browser page; Python code needs a restart (Ctrl+F5).
 ### 3.7 Work on a module (IntelliJ)
 
 **A shipped module** (banking, trading, the source systems …): change its code, run **Drishti build modules** (the packages, stamped for
-the jar in `lib/`) and restart the server; **Drishti server (debug-friendly)** does both in one press.
+the jar in `lib/`) and restart the server. From a terminal, `python tools/drishti.py build modules banking` builds one module.
 
-**A module of your own:** **Drishti server (dev switch)** (port 18580) runs the same jar as the other launchers with
-`DRISHTI_MODULES_DEV=true`: every folder of the modules folder loads as it is, unpacked and unverified; the log says *modules from the
-boot: …* and Health marks each *development (unverified)*. Nothing is built. It suits a modules folder that holds your own module (name
-it with `DRISHTI_MODULES_HOME` on a copy of the configuration): the shipped modules do not load as folders (banking's kernel-internals
-allowance needs its verified package, and the others need the files their build adds to the package), so on the clone's own `modules/`
-they are refused and VaR is absent. The switch is refused in a cluster and under the `prod` or `production` profile, and never belongs
-on a shared server. The terminal equivalent is `python3 tools/drishti.py start server --modules-dev`.
+**A module of your own** works the same way: put its project under `modules/`, run **Drishti build modules** and restart. A module is
+always loaded from its verified package, never from its folder.
 
 ### 3.8 Run the tests from the IDEs
 
@@ -318,29 +310,26 @@ on a shared server. The terminal equivalent is `python3 tools/drishti.py start s
   or pack a module with it, need it built (section 1.3). Both are skipped otherwise.
 - Keep local data small: ten thousand trades at most.
 
-### 3.9 The QA profile, end to end (no terminal)
+### 3.9 The QA profile, end to end
 
-Ports 18580 and 17580 and the git-ignored folder `data/qa/`, so it never disturbs the default stack or `data/`. Start again from scratch by
-stopping both and deleting `data/qa/`.
+Ports 18580 and 17580 and the git-ignored folder `data/qa/`, so it never disturbs the default stack or `data/`. The profile is the
+committed settings file `config/profiles/qa.ini`. Start again from scratch by stopping both and deleting `data/qa/`.
 
 1. IntelliJ: **Drishti build all** (the server needs the packages; `pack make` and `lake build` use the jar).
-2. IntelliJ: **Drishti server (QA profile)**; http://127.0.0.1:18580/actuator/health says `{"status":"UP"...}`.
-3. PyCharm: **Drishti console (QA profile)**; open http://localhost:17580 and sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
-4. *My account → API tokens*: make one and save its text as `data/qa/token.txt`.
-5. **QA server smoke** ends `smoke: OK`; **QA doctor** shows no red line.
-6. Optional: **QA pack make (from JSON)**, *Parameters*: your sample file (JSON, JSON Lines or `.gz`; or
-   `data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz`), `--kind`, `--match` (the field that tells kinds apart, e.g.
-   `PRODUCT_TYPE`), `--name`. It writes `data/qa/packs/<name>/` (the pack in `pack/<name>`).
-7. **QA lake build (big JSON to Delta)**: `--from` your file named by its business date (or add `--as-of YYYY-MM-DD`), `--kind`/`--key`
-   (`trade`, `TRADE_ID`), `--mode overwrite-dates` (a re-run replaces the date), `--partition-by PRODUCT_TYPE`, `--lake data/qa/delta`,
-   `--pack data/qa/packs/<name>/pack/<name>` (the folder holding `pack.yaml`), and `--signal http://localhost:18580 --token-file
-   $PROJECT_DIR$/data/qa/token.txt`. The last line says `lake-build ok exit=0 ... rows=N`. Keep it to 10,000 trades locally.
-8. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
-9. **Admin → Packs → Deploy** the archive of step 6 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
+2. IntelliJ: **Drishti server (QA, port 18580)**; http://127.0.0.1:18580/actuator/health says `{"status":"UP"...}`.
+3. PyCharm: **Drishti console (QA, port 17580)**; open http://localhost:17580 and sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
+4. PyCharm: **Drishti doctor (QA)** shows no red line (without a token it says how to make one: *My account → API tokens*).
+5. Optional, from a terminal at the repository root: a pack from your sample, then a lake of it:
+   ```
+   python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa pack make YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack
+   python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa lake build --from trade.2026-07-08.jsonl --kind trade --key TRADE_ID --mode overwrite-dates --lake-root "$PWD/data/qa/delta" --pack data/qa/packs/qa-pack/pack/qa-pack
+   ```
+   (`data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` is a sample to try). Keep it to 10,000 trades locally.
+6. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
+7. **Admin → Packs → Deploy** the archive of step 5 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
    `data/qa/data/packs/`, never `config/packs`.
-10. **Admin → Data loads**: the pack's loads show the table of step 7 (a refused lake folder is outside the QA console's
-    `DRISHTI_LAKE_ROOTS`).
-11. **Explore**, choose the pack and kind, open a row: the deal's page opens with its Sutra view.
+8. **Admin → Data loads**: the pack's loads show the table of step 5.
+9. **Explore**, choose the pack and kind, open a row: the deal's page opens with its Sutra view.
 
 ## 4. Every launcher
 
@@ -355,22 +344,16 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 
 | Name | What it runs | Port, data folder | Use it when |
 |---|---|---|---|
-| **Drishti server** | the seven core packs with demo data generated on, sign-in on, `-Xmx2g` | 18480, `drishti.data.dir` of `dev.ini` | a quick look without building lakes |
+| **Drishti server (built-in samples)** | the seven core packs with demo data generated on, sign-in on, `-Xmx2g` | 18480, `drishti.data.dir` of `dev.ini` | a quick look without building lakes |
 | **Drishti server (demo lakes)** | the ten packs, demo off, offline, system baskets seeded, `-Xmx4g` | 18480, `dev.ini` | the normal run after **Build demo lakes** |
-| **Drishti server (All)** | every module; `DRISHTI_DISTRIBUTION=all`; the seven core packs, `-Xmx2g` | 18480, `dev.ini` | with **Drishti console (All)** or the two distribution consoles |
-| **Drishti server (Risk)** | `DRISHTI_DISTRIBUTION=risk` | 18480, `dev.ini` | with **Drishti console (Risk)** |
-| **Drishti server (Finance)** | `DRISHTI_DISTRIBUTION=finance` | 18480, `dev.ini` | with **Drishti console (Finance)** |
-| **Drishti server (QA profile)** | the seven packs, sign-in on, `-Xmx2g`, its own folder given as `-D` (`-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580`; a `-D` beats the settings file) | 18580, `data/qa/data` | QA or a second server beside the first; never touches your data |
-| **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g`; **before launch: the Maven Drishti build modules** | 18580, `data/qa/data` | stepping through code (section 3.5) |
-| **Drishti server (dev switch)** | the QA profile with sign-in off, DEBUG, and `DRISHTI_MODULES_DEV=true`: module folders load as they are, nothing built | 18580, `data/qa/data` | a module of your own, restarted without packing it (section 3.7; not the shipped modules) |
+| **Drishti server (QA, port 18580)** | the seven packs, sign-in on, `-Xmx2g`, its own folder given as `-D` (`-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580`; a `-D` beats the settings file) | 18580, `data/qa/data` | QA or a second server beside the first; never touches your data |
 
 ### 4.2 Consoles (PyCharm)
 
 | Name | What it runs | Port, backend | Use it when |
 |---|---|---|---|
 | **Drishti console** | `run_drishti_web.py`, sign-in on, development secrets | 17480, server 18480 | the normal console |
-| **Drishti console (QA profile)** | the same with `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` | 17580, server 18580 | with **Drishti server (QA profile)** |
-| **Drishti console (All)** | `--distribution=all` | 17480, server 18480 | with **Drishti server (All)** |
+| **Drishti console (QA, port 17580)** | the same with `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` | 17580, server 18580 | with **Drishti server (QA, port 18580)** |
 | **Drishti console (Risk)** | `--distribution=risk`, temp folder `data/tmp/console-risk` | 17480, server 18480 | Drishti Risk |
 | **Drishti console (Finance)** | `--distribution=finance`, temp folder `data/tmp/console-finance` | 17481, server 18480 | Drishti Finance, beside the Risk console |
 
@@ -379,10 +362,9 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | IDE | Name | What it runs | Use it when |
 |---|---|---|---|
 | IntelliJ | **Drishti build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | after a clone or a pull |
-| IntelliJ | **Drishti build server jar** | Maven `clean package -DskipTests -pl :drishti-app -am` | the kernel only |
 | IntelliJ | **Drishti build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | module code only |
 | PyCharm | **Build demo lakes** | `drishti.py --settings … lake demo --engine java` | after a build, server stopped |
-| PyCharm | **Load ENDUR file into the lake** | `… lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --pack $PROJECT_DIR$/../modules/banking/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates --lake demo` | you hold a real ENDUR file (never committed); edit the file name |
+| PyCharm | **Load a file into the lake** | `… lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --pack $PROJECT_DIR$/../modules/banking/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates --lake demo` | you hold a real ENDUR file (never committed); edit the file name |
 
 ### 4.4 Command-line tools (PyCharm)
 
@@ -391,24 +373,15 @@ The first group runs against the default server on 18480, the QA group against 1
 
 | Name | What it runs |
 |---|---|
-| **drishti doctor** | `doctor --server http://localhost:18480`: checks the server and the environment, a red line names the problem |
-| **drishti server smoke** | `server smoke --server http://localhost:18480 --ids 2 --dates 2` |
-| **drishti view get** | `view get trade/1000001 --server http://localhost:18480` |
-| **drishti data profile** | `data profile data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` |
-| **drishti pack make** | `pack make <file> --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
-| **drishti pack regenerate** | `pack regenerate data/build/my-bank/pack/my-bank <file> --dry-run` (run **drishti pack make** first) |
-| **drishti sutra gen** | `sutra gen <file> --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
-| **QA doctor** | `doctor --server http://localhost:18580 --token-file data/qa/token.txt` |
-| **QA server smoke** | `server smoke --server http://localhost:18580 --ids 2 --dates 2 --token-file data/qa/token.txt`; ends `smoke: OK` |
-| **QA pack make (from JSON)** | `pack make $USER_HOME$/Downloads/YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack --force`; replace `YOUR_SAMPLE.jsonl` |
-| **QA lake build (big JSON to Delta)** | `lake build --from $USER_HOME$/Downloads/trade.YYYY-MM-DD.json --kind trade --key TRADE_ID --mode overwrite-dates --partition-by PRODUCT_TYPE --lake data/qa/delta --pack data/qa/packs/qa-pack/pack/qa-pack`; replace the date. Keep it to 10,000 trades on a laptop. |
+| **Drishti doctor** | `doctor --server http://localhost:18480`: checks the server and the environment, a red line names the problem |
+| **Drishti doctor (QA)** | `doctor --server http://localhost:18580 --token-file data/qa/token.txt` |
 
 The QA end to end, step by step: [3.9](#39-the-qa-profile-end-to-end-no-terminal).
 Every command's options: [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 **Your own configuration.** Never edit a shipped file for yourself: **Copy Configuration** (Ctrl+D) and change the copy. The copy lives in the git-ignored `.idea/`.
 By hand: **Run → Edit Configurations → + → JAR Application**, *Path to JAR* `$PROJECT_DIR$/lib/drishti-server-exec.jar` (or the versioned
-`lib/drishti-server-<version>-exec.jar`), JRE 21, VM options copied from **Drishti server** (at least
+`lib/drishti-server-<version>-exec.jar`), JRE 21, VM options copied from **Drishti server (demo lakes)** (at least
 `-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`), working directory `$PROJECT_DIR$`, the
 environment variables copied too, and no *Build* before launch (section 6.1, recipe A).
 
@@ -418,7 +391,7 @@ A three-node stack (started by `drishti.py start cluster`) holds **18480** (the 
 the console on **17480**. A run configuration on the same port fails with *Port 18480 was already in use* or the console's *address already in use*. Choose one:
 
 1. **Stop the stack:** `python3 tools/drishti.py stop cluster` (Windows `py tools\drishti.py stop cluster`); `python3 tools/drishti.py status` shows nothing running. Then run the default configurations.
-2. **Or use the other ports:** **Drishti server (QA profile)** or **(debug-friendly)** on 18580 with **Drishti console (QA profile)** on 17580. They have their own data folder `data/qa/data`,
+2. **Or use the other ports:** **Drishti server (QA, port 18580)** with **Drishti console (QA, port 17580)**. They have their own data folder `data/qa/data`,
    so they never touch the stack's.
 3. A second server of your own: copy a configuration, add `-Dserver.port=18481` and `-Ddrishti.data.dir=…` (its own data folder, never shared), and start a console with
    `--backend.url=http://127.0.0.1:18481` on another `--server.port`.
@@ -430,7 +403,7 @@ Two servers must never share a data folder.
 | What you see | Cause and fix |
 |---|---|
 | `drishti.settings.file names …/dev.ini, which is not a file` (a server) or the same from the console, or `drishti.home … names another clone` | the settings file is missing or names another folder: recipe F (section 2.1). |
-| `the modules beside the jar are not current:` followed by a list, and the server stops | `modules/` is missing a package or holds one older than its module folder or built for another jar, typically after **Drishti build server jar** alone or a pull. Run **Drishti build all**. Or use **Drishti server (dev switch)**. |
+| `the modules beside the jar are not current:` followed by a list, and the server stops | `modules/` is missing a package or holds one older than its module folder or built for another jar, typically after a pull. Run **Drishti build all**. |
 | Admin → Modules shows banking *stale*: *built for kernel 2.9.11.…+2026-…Z, this is an unknown build: install the matching module* (the words of servers before this change; now *…this is an unknown build (a server started from compiled classes, not from the server jar): start the server from the jar that built the modules…*), the kernel shows as *dev*, and every `VAR` call answers 404 | the server ran IntelliJ's compiled classes (an **Application** configuration, a copy made before this change, or the ▶ in the margin), which carry no build stamp, while banking is stamped for the exact jar **Drishti build all** made. Start the server from that jar: **recipe A** of section 6.1. |
 | Health says *no modules*, banking is missing from Admin → Modules, or `VAR` answers *not installed* | `modules/` is empty or holds no `banking-*.dmod`: run **Drishti build all** (recipe B). |
 | `GET /api/v1/risk/var/…` (or VAR BANK in the console) answers **404** | banking is not loaded: Admin → Modules says why (stale: recipe A; missing: recipe B). |
@@ -462,19 +435,18 @@ survives it names a build no package is stamped for: Admin → Modules shows the
 1. Stop the server.
 2. IntelliJ: **Drishti build all**, ending `BUILD SUCCESS` (`lib/` holds `drishti-server-<version>-exec.jar` and `drishti-server-exec.jar`;
    `modules/` the `.dmod` packages and `first-party.yaml`).
-3. Start one of the shipped server launchers (**Drishti server**, **Drishti server (demo lakes)** …): each is a JAR Application on that jar.
+3. Start one of the shipped server launchers (**Drishti server (demo lakes)**, **Drishti server (built-in samples)** …): each is a JAR Application on that jar.
    A copy you made of an older **Application** configuration keeps the old shape: delete it and copy a shipped one again.
 4. **By hand**, if you need your own: **Run → Edit Configurations → + → JAR Application**; *Path to JAR*
    `C:\Users\you\IdeaProjects\drishti\lib\drishti-server-exec.jar` (or `…\lib\drishti-server-<version>-exec.jar`); *VM options* copied
-   from **Drishti server** (open it, select the whole field, copy); *Working directory* the clone (`C:\Users\you\IdeaProjects\drishti`);
-   *Environment variables* copied from **Drishti server**; *JRE* 21; under *Before launch* remove **Build** if it is there; **OK**, **Run**.
+   from **Drishti server (demo lakes)** (open it, select the whole field, copy); *Working directory* the clone (`C:\Users\you\IdeaProjects\drishti`);
+   *Environment variables* copied from the same launcher; *JRE* 21; under *Before launch* remove **Build** if it is there; **OK**, **Run**.
 5. Check: the start-up log names the modules it loaded; **Admin → Modules** shows banking *ok* and the kernel with its build (the
    version, not *dev*); in the console `VAR BANK <GO>` computes.
 
 The terminal does the same: `python3 tools/drishti.py start server` always runs the jar in `lib/`.
 
-**Recipe B: banking (or every module) is missing.** `modules/` holds no packages. Run **Drishti build all** (not **Drishti build server
-jar** alone: the jar holds no module), check that `modules/` lists twelve `.dmod` files and `first-party.yaml`, and restart the server.
+**Recipe B: banking (or every module) is missing.** `modules/` holds no packages. Run **Drishti build all** (the jar holds no module), check that `modules/` lists twelve `.dmod` files and `first-party.yaml`, and restart the server.
 
 **Recipe C: Maven stops with `PKIX path building failed` (Windows, company network).**
 

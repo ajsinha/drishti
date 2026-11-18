@@ -61,7 +61,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),
    `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`,
-   and the server jar in `lib/`: the run configuration **Drishti build server jar** (or `python tools/drishti.py build jar`).
+   and the server jar in `lib/`: the run configuration **Drishti build all** (or `python tools/drishti.py build all`).
 3. **Build the demo lakes**: the run configuration **Build demo lakes**, or
 
    Run these from the Drishti folder (the repository root, or the install folder of a release).
@@ -313,7 +313,7 @@ those same connectors, which the pack serves from the demo lake when the live co
 - **world-economy** needs no snapshot: its thirteen kinds are the pack's samples (real World Bank, IMF, Factbook and UNDP figures),
   already in the repository and built into `macro/` and `civic/`; it has no live connector.
 
-**Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti build server jar**):
+**Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti build all**):
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py testdata capture-market            # about four minutes

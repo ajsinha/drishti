@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="QA lake build (big JSON to Delta)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti QA">
+  <configuration default="false" name="Drishti doctor" folderName="Drishti" type="PythonConfigurationType" factoryName="Python">
     <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -28,7 +28,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini lake build --from $USER_HOME$/Downloads/trade.YYYY-MM-DD.json --kind trade --key TRADE_ID --mode overwrite-dates --partition-by PRODUCT_TYPE --lake data/qa/delta --pack data/qa/packs/qa-pack/pack/qa-pack" />
+    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini doctor --server http://localhost:18480" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

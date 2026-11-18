@@ -298,20 +298,16 @@ server; discovery lists `*.dmod` there and nothing else); at start the server ch
 and Health notes *single node: placed here*). In a cluster the same file goes into every node's modules folder, one node restarted after the other ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 **Production loads only verified `.dmod` packages.**
 
-**Edit → restart, in development mode.** While you work on a module, the kernel can load its source folder without packing a `.dmod`, as
-Tomcat runs an unpacked web application; a change shows at the next start. The module project's folder (the one with `module.yaml` at its top) sits under
-`<Drishti folder>/modules/`; the commands run from the Drishti folder.
+**Edit → rebuild → restart.** While you work on a module, rebuild its package and restart the server; a change shows at the next start.
+The module project's folder (the one with `module.yaml` at its top) sits under `<Drishti folder>/modules/`; the commands run from the
+Drishti folder.
 
 ```bash
-# once: a development server (single node, never the prod or production profile): the module folders under modules/ load as they are, unverified
-python3 tools/drishti.py start server --modules-dev
-# the loop: edit, rebuild the module, restart the server
-python3 tools/drishti.py build modules greet      # (or IntelliJ's Drishti build modules) the server log says "modules from the boot: ... greet" and Health marks it development (unverified)
+python3 tools/drishti.py build modules greet      # (or IntelliJ's Drishti build modules) the package, stamped for the jar in lib/
+python3 tools/drishti.py start server             # the log says "modules from the boot: ... greet"; Admin → Modules shows it ok
 ```
 
-Development mode loads the folder **unverified** (no hash list, no checks), and Health and Admin → Modules mark
-the module *development (unverified)*. `drishti.modules.dev` is refused in a cluster and under the `prod` or `production` profile: the
-server logs the refusal and loads only verified packages. Run `mvn verify` (the fourteen checks) before you ship.
+A module always loads from its verified package. Run `mvn verify` (the fourteen checks) before you ship.
 
 **Several jars.** `java.jars` names the module's own jars (the project's first: a service jar, a compute jar ...); `java.lib` names
 third-party jars, packed under the package's `lib/`. Every jar of the package is named in one of the two (V1 refuses one that is not); all of them are
@@ -3754,7 +3750,7 @@ python3 tools/drishti.py module inspect java/freight/build/dmod/freight-0.1.0.dm
 
 | Where | How | What you see |
 |---|---|---|
-| your own machine, while you edit | a development server on the module folder: `python tools/drishti.py start server --modules-dev` (the project's folder sits under `<Drishti folder>/modules/`); restart it after a rebuild ([section 1.6](#16-the-module-sdk)) | the log's *modules from the boot: … freight*; Health marks it *development (unverified)* |
+| your own machine, while you edit | `python tools/drishti.py build modules freight`, then restart the server (the project's folder sits under `<Drishti folder>/modules/`; [section 1.6](#16-the-module-sdk)) | the log's *modules from the boot: … freight*; Admin → Modules shows it *ok* |
 | your own machine, the package alone | `python3 tools/drishti.py module run java/freight/build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
 | one server | put the `.dmod` into `<Drishti folder>/modules/` and restart; the server checks, unpacks and loads it | Admin → Modules: *LOADED* |
 | a cluster | place its parts (section 12.5), then the same file into every node's modules folder and a restart, one node after another ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster)) | Admin → Modules on each node: *LOADED* |
