@@ -73,6 +73,29 @@ One IntelliJ IDEA Ultimate with the Python plugin can run both kinds of configur
    `drishti-console/.venv/bin/pip install -r drishti-console/requirements-polars.txt`, or give those scripts another interpreter (Python 3.11 or later with Polars,
    NumPy and PyYAML) in their own run configuration. The details are in `tools/pvf/README.md`.
 
+### 2.3 A local Python instead of `drishti-console/.venv`
+
+Any Python 3.11 or later on the machine works as the interpreter: a python.org install, a company-packaged Python, conda, or the
+one your team already uses. Drishti needs only its packages installed in it.
+
+1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
+   `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
+2. Install Drishti's packages into it, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
+
+   ```bash
+   <that python> -m pip install -r drishti-console/requirements.txt
+   <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/pvf
+   ```
+
+   No administrator rights: add `--user`.
+3. **IntelliJ**: **File → Project Structure → SDKs → + → Add Python SDK → System Interpreter** (or **Existing**), choose that
+   `python.exe`; then **Project Structure → Modules → drishti-console → Dependencies → Module SDK**: the same Python.
+   **PyCharm**: **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → System Interpreter**, choose it.
+4. Every Python launcher now uses it: they store no interpreter path of their own (section 2.1 step 5).
+
+`drishti.py build all` needs only PyYAML besides the standard library: `<that python> -m pip install pyyaml` is enough to build. The
+console and the data tools need step 2.
+
 ## 3. Build
 
 Open the **Drishti build all** configuration (IntelliJ, `run-configs/`) and press **Run** (Shift+F10).
@@ -88,6 +111,32 @@ alone leaves `modules/` empty or stale and the server will not start** (section 
 takes minutes; later ones are faster. `build all` always runs `clean`, so `lib/` never holds a stale jar.
 
 From a terminal the same is `python3 tools/drishti.py build all` (Windows `py tools\drishti.py build all`; `--offline` builds without the network).
+
+### 3.1 Maven behind a company network: `PKIX path building failed`
+
+On a company network Maven often stops on its first download with
+
+```
+Failed to execute goal org.codehaus.mojo:flatten-maven-plugin:… Could not transfer artifact … from/to central
+(https://repo.maven.apache.org/maven2): PKIX path building failed … unable to find valid certification path to requested target
+```
+
+The network re-signs HTTPS with the company's own root certificate, which Windows trusts but the JDK does not. Nothing is wrong with
+Drishti. Fix it one of three ways, the first that your company allows:
+
+1. **The company's Maven mirror** (Artifactory, Nexus): put the `<mirror>` your team uses in `%USERPROFILE%\.m2\settings.xml`
+   (Linux `~/.m2/settings.xml`). IntelliJ reads the same file (**Settings → Build Tools → Maven → User settings file**).
+2. **Let Java trust the Windows certificate store**, with no file change and no administrator rights:
+   - IntelliJ: **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options**:
+     `-Djavax.net.ssl.trustStoreType=Windows-ROOT`; the same in **Maven → Importing → VM options for importer**.
+   - A terminal (and `py tools\drishti.py build all`, which runs Maven): `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`,
+     then open a new terminal.
+3. **Add the company root certificate to the JDK** (needs write access to the JDK folder): export it from the browser's padlock or ask
+   the IT team for the `.cer`, then `C:\jdk-21\bin\keytool -importcert -cacerts -alias company-root -file company-root.cer`
+   (the store's password is `changeit`).
+
+Then run **Drishti build all** again. Use **Drishti build all** (`clean package`), not Maven's **clean install**: nothing needs the
+local repository, and `install` only adds time.
 
 **For a module of your own** (a project with `module.yaml` at its top, under `<Drishti folder>/modules/`) there are two ways to see an edit:
 rebuild its package with `python3 tools/drishti.py build modules <module-id>` and restart, or run **Drishti server (dev switch)** (section 6.3),
@@ -289,6 +338,7 @@ Two servers must never share a data folder.
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
 | *Error running 'Drishti build all': Unknown run configuration type PythonConfigurationType*; the Python launchers are under **Unknown** with a red cross; *This configuration cannot be edited* | the Python plugin is not installed: **Settings → Plugins → Marketplace → Python Community Edition** (Community) or **Python** (Ultimate), restart, then the interpreter `drishti-console\.venv\Scripts\python.exe` (section 2.1 step 5). Plugins blocked: `py tools\drishti.py build all` in IntelliJ's terminal |
+| Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: section 3.1 (the mirror, `-Djavax.net.ssl.trustStoreType=Windows-ROOT`, or the root certificate in the JDK) |
 | A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing: open the root and let the Maven import finish; Python configurations need PyCharm |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 
