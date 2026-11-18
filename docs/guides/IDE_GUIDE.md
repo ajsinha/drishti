@@ -56,7 +56,9 @@ One IntelliJ IDEA Ultimate with the Python plugin can run both kinds of configur
 5. For the Python launchers (`Drishti build all`, `Drishti console (All)` and the like, which live in `run-configs/`) IntelliJ needs the Python plugin and an interpreter.
    **Install the plugin first**: **File → Settings → Plugins → Marketplace**, search **Python** (IntelliJ IDEA Ultimate) or **Python Community
    Edition** (IntelliJ IDEA Community), **Install**, restart IntelliJ. A plugin is a plain download inside IntelliJ, no `.exe`. Without it
-   those launchers sit under **Unknown** with a red cross and say *Unknown run configuration type PythonConfigurationType*. Then the interpreter:
+   those launchers sit under **Unknown** with a red cross and say *Unknown run configuration type PythonConfigurationType*. Where plugins
+   are blocked, build from IntelliJ's own terminal instead: `py tools\drishti.py build all` (Linux `python3 tools/drishti.py build all`) does
+   exactly what the launcher does. If `drishti-console\.venv` does not exist yet, `py tools\drishti.py setup` makes it. Then the interpreter:
    **Project Structure → SDKs → Add → Python SDK → Existing**, `drishti-console/.venv/bin/python` (Windows `drishti-console\.venv\Scripts\python.exe`).
    The configurations store no interpreter path of their own; they use the project's.
 
@@ -286,7 +288,7 @@ Two servers must never share a data folder.
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 2). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
-| *Error running 'Drishti build all': Unknown run configuration type PythonConfigurationType*; the Python launchers are under **Unknown** with a red cross; *This configuration cannot be edited* | the Python plugin is not installed: **Settings → Plugins → Marketplace → Python Community Edition** (Community) or **Python** (Ultimate), restart, then the interpreter `drishti-console\.venv\Scripts\python.exe` (section 2.1 step 5) |
+| *Error running 'Drishti build all': Unknown run configuration type PythonConfigurationType*; the Python launchers are under **Unknown** with a red cross; *This configuration cannot be edited* | the Python plugin is not installed: **Settings → Plugins → Marketplace → Python Community Edition** (Community) or **Python** (Ultimate), restart, then the interpreter `drishti-console\.venv\Scripts\python.exe` (section 2.1 step 5). Plugins blocked: `py tools\drishti.py build all` in IntelliJ's terminal |
 | A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing: open the root and let the Maven import finish; Python configurations need PyCharm |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 
