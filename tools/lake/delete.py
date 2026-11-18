@@ -164,9 +164,11 @@ def date_spec(dates: list[str] | None, start: str | None, end: str | None) -> tu
 def plan(root: str, fmt: str, name: str, spec: str, dry_run: bool, jar=None, java=None, runner=None) -> dict:
     """LakeRetention's answer for the dates (``dry_run``: what it would delete): {table, format, held, dropped, dates: [{date, rows, dropped}],
     version}. ``runner(cmd)`` gives its JSON line (tests); by default it runs."""
+    import lakeconfig
     import maintain_iceberg
     import stores
-    data = pathlib.Path(root) / "_drishti-lake" if "://" not in root else pathlib.Path(".")
+    # the Java tool's temporary folder: the lake's own state folder, or for a lake in object storage the configured data folder's
+    data = pathlib.Path(root) / "_drishti-lake" if "://" not in root else lakeconfig.data_dir()
     cmd = stores.loader_command(data, jar, java, main=RETENTION) + ["--lake", root, "--format", fmt, "--table", name, "--dates", spec, "--json"]
     if dry_run:
         cmd.append("--dry-run")
