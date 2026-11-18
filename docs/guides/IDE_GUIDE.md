@@ -187,7 +187,7 @@ The first group runs against the default server on 18480, the QA group against 1
 | **QA pack make (from JSON)** | `pack make $USER_HOME$/Downloads/YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack --force`; replace `YOUR_SAMPLE.jsonl` |
 | **QA lake build (big JSON to Delta)** | `lake build --from $USER_HOME$/Downloads/trade.YYYY-MM-DD.json --kind trade --key TRADE_ID --mode overwrite-dates --partition-by PRODUCT_TYPE --lake data/qa/delta --pack data/qa/packs/qa-pack/pack/qa-pack`; replace the date. Keep it to 10,000 trades on a laptop. |
 
-The QA end to end, step by step: [OPERATIONS_GUIDE.md › The QA profile](OPERATIONS_GUIDE.md#35-the-qa-profile-end-to-end-no-terminal).
+The QA end to end, step by step: [6.5](#65-the-qa-profile-end-to-end-no-terminal).
 Every command's options: [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 **Your own configuration.** Never edit a shipped file for yourself: **Copy Configuration** (Ctrl+D) and change the copy. The copy lives in the git-ignored `.idea/`.
@@ -231,6 +231,30 @@ and restart. The switch is refused in a cluster and under the `prod` or `product
   Both are skipped otherwise.
 - Keep local data small: ten thousand trades at most.
 
+### 6.5 The QA profile, end to end (no terminal)
+
+Ports 18580 and 17580 and the git-ignored folder `data/qa/`, so it never disturbs the default stack or `data/`. Start again from scratch by
+stopping both and deleting `data/qa/`.
+
+1. IntelliJ: **Drishti build server jar** (`pack make` and `lake build` use the jar).
+2. IntelliJ: **Drishti server (QA profile)**; http://127.0.0.1:18580/actuator/health says `{"status":"UP"...}`.
+3. PyCharm: **Drishti console (QA profile)**; open http://localhost:17580 and sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
+4. *My account → API tokens*: make one and save its text as `data/qa/token.txt`.
+5. **QA server smoke** ends `smoke: OK`; **QA doctor** shows no red line.
+6. Optional: **QA pack make (from JSON)**, *Parameters*: your sample file (JSON, JSON Lines or `.gz`; or
+   `data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz`), `--kind`, `--match` (the field that tells kinds apart, e.g.
+   `PRODUCT_TYPE`), `--name`. It writes `data/qa/packs/<name>/` (the pack in `pack/<name>`).
+7. **QA lake build (big JSON to Delta)**: `--from` your file named by its business date (or add `--as-of YYYY-MM-DD`), `--kind`/`--key`
+   (`trade`, `TRADE_ID`), `--mode overwrite-dates` (a re-run replaces the date), `--partition-by PRODUCT_TYPE`, `--lake data/qa/delta`,
+   `--pack data/qa/packs/<name>/pack/<name>` (the folder holding `pack.yaml`), and `--signal http://localhost:18580 --token-file
+   $PROJECT_DIR$/data/qa/token.txt`. The last line says `lake-build ok exit=0 ... rows=N`. Keep it to 10,000 trades locally.
+8. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
+9. **Admin → Packs → Deploy** the archive of step 6 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
+   `data/qa/data/packs/`, never `config/packs`.
+10. **Admin → Data loads**: the pack's loads show the table of step 7 (a refused lake folder is outside the QA console's
+    `DRISHTI_LAKE_ROOTS`).
+11. **Explore**, choose the pack and kind, open a row: the deal's page opens with its Sutra view.
+
 ## 7. When a stack is already running
 
 A three-node stack (started from `drishti-stack/` or by `drishti.py start cluster`) holds **18480** (the main node), **18791** and **18792** (its other nodes) and
@@ -259,6 +283,8 @@ Two servers must never share a data folder.
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 2). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
+| A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing: open the root and let the Maven import finish; Python configurations need PyCharm |
+| Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 
 More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troubleshooting). The terminal equivalent of every step above:
 [DEPLOYMENT_AND_QA_GUIDE.md › Start the server and the console](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).

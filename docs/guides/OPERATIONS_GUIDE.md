@@ -373,27 +373,7 @@ The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#22-pycharm-dri
 
 ### 3.5 The QA profile, end to end (no terminal)
 
-Ports 18580 and 17580 and the git-ignored folder `data/qa/`, so it never disturbs the default stack or `data/`. Start again from scratch by
-stopping both and deleting `data/qa/`.
-
-1. IntelliJ: **Drishti build server jar** (`pack make` and `lake build` use the jar).
-2. IntelliJ: **Drishti server (QA profile)**; http://127.0.0.1:18580/actuator/health says `{"status":"UP"...}`.
-3. PyCharm: **Drishti console (QA profile)**; open http://localhost:17580 and sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
-4. *My account → API tokens*: make one and save its text as `data/qa/token.txt`.
-5. **QA server smoke** ends `smoke: OK`; **QA doctor** shows no red line.
-6. Optional: **QA pack make (from JSON)**, *Parameters*: your sample file (JSON, JSON Lines or `.gz`; or
-   `data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz`), `--kind`, `--match` (the field that tells kinds apart, e.g.
-   `PRODUCT_TYPE`), `--name`. It writes `data/qa/packs/<name>/` (the pack in `pack/<name>`).
-7. **QA lake build (big JSON to Delta)**: `--from` your file named by its business date (or add `--as-of YYYY-MM-DD`), `--kind`/`--key`
-   (`trade`, `TRADE_ID`), `--mode overwrite-dates` (a re-run replaces the date), `--partition-by PRODUCT_TYPE`, `--lake data/qa/delta`,
-   `--pack data/qa/packs/<name>/pack/<name>` (the folder holding `pack.yaml`), and `--signal http://localhost:18580 --token-file
-   $PROJECT_DIR$/data/qa/token.txt`. The last line says `lake-build ok exit=0 ... rows=N`. Keep it to 10,000 trades locally.
-8. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
-9. **Admin → Packs → Deploy** the archive of step 6 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
-   `data/qa/data/packs/`, never `config/packs`.
-10. **Admin → Data loads**: the pack's loads show the table of step 7 (a refused lake folder is outside the QA console's
-    `DRISHTI_LAKE_ROOTS`).
-11. **Explore**, choose the pack and kind, open a row: the deal's page opens with its Sutra view.
+The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md › The QA profile, end to end](IDE_GUIDE.md#65-the-qa-profile-end-to-end-no-terminal).
 
 ## 4. Drishti on Windows
 
@@ -455,7 +435,7 @@ the console's environment (with uv when present, else `python -m venv` and pip).
 temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 Admin → Health then lists each lake connector as `UP (engine: native)`. The console's environment by hand: `py -3.13 -m venv
 drishti-console\.venv`, `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements.txt`. From IntelliJ IDEA
-instead of the command: [DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](../DEPLOYMENT_AND_QA_GUIDE.md#78-from-intellij-idea-or-pycharm).
+instead of the command: [IDE_GUIDE.md](IDE_GUIDE.md).
 
 **Iceberg tables on Windows** run on the native engine too. The loader `tools/load-iceberg.sh` needs bash there (Git Bash or WSL):
 `python tools/drishti.py data load --store iceberg` runs it (the samples, ten business days; `--trades 10000 --days 3` adds a book), then
@@ -3239,9 +3219,7 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
 | `the server cannot start: … nothing names its folder`, `… is '…', a relative path`, `… holds no identity database` | a launch root not named, or named relative, or a data folder nobody named | name the roots absolutely: `tools/drishti.py start server` does, the run configurations pass `-Ddrishti.home` and the settings file; a new data folder must be named ([CONFIGURATION.md › Launch roots](../admin/CONFIGURATION.md#launch-roots)) |
-| A run configuration stops at once: `drishti.settings.file names …dev.ini, which is not a file` | the per-developer settings file is missing | make `$USER_HOME$/drishti-envs/dev.ini` from `config/settings.examples/dev.ini` ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
-| A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing | open the root and let the Maven import finish; Python configurations need PyCharm |
-| Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration | clear them in the JUnit template |
+| A run configuration fails, is missing, or tests pass in a terminal but fail in the IDE | an IDE set-up issue | [IDE_GUIDE.md › Troubleshooting](IDE_GUIDE.md#8-troubleshooting) |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |
 | `pack make` says no `drishti-server-*-exec.jar`; `lake build: ... pack.yaml: no such file` | the jar is not built; `--pack` is not the folder holding `pack.yaml` | build the jar; `--pack data/qa/packs/<name>/pack/<name>` |
 | Smoke or doctor says `401 DRS-5010 missing bearer token` | sign-in is on | make an API token ([2.8](#28-a-personal-api-token-for-the-command-line)) |
