@@ -1044,7 +1044,7 @@ stops the start with *names …dev.ini, which is not a file*.
 
 Then open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123` (section 9.3).
 
-**Drishti build modules** (`run-configs/`) runs `tools/drishti.py --settings … build modules` and is the before-launch step of **Drishti server (debug-friendly)**; **Drishti server (dev switch)** sets `DRISHTI_MODULES_DEV=true` (module folders loaded as they are, nothing built). **Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
+**Drishti build all** (`run-configs/`) runs `tools/drishti.py --settings … build all`: the server jar into `lib/` and every module package into `<home>/modules` in one Maven run, the one click to use after a pull. **Drishti build modules** (`run-configs/`) runs `tools/drishti.py --settings … build modules` and is the before-launch step of **Drishti server (debug-friendly)**; **Drishti server (dev switch)** sets `DRISHTI_MODULES_DEV=true` (module folders loaded as they are, nothing built). **Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
 of PyCharm: Maven's `clean package` of `drishti-app`, then the jar into `lib/`, so `lib/` never holds a stale jar (`lake demo --engine
 java`, `start` and every tool read it there). The other configurations: **Drishti server** (the packs' samples, demo on), **Drishti
 server (QA profile)** and **(debug-friendly)** (port 18580 and their own data folder `data/qa/data`, given as `-D`, so they never touch
