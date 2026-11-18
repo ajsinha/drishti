@@ -52,7 +52,7 @@ afterwards.
 12. [`bi` and `tables`](#12-bi-and-tables)
 13. [The risk engines: `var`, `exposure`, `sens`, `frtb`, `simm`, `pivot`](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot)
 14. [`compute`, `contract` and `feed`](#14-compute-contract-and-feed)
-15. [Store loaders: `tools/load-*.sh`](#15-store-loaders-toolsload-sh)
+15. [Store loaders: `data load`](#15-store-loaders-data-load)
 16. [Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`](#16-generators-toolspackgen-toolssamplegen-toolsrealdata)
 17. [Developer tools](#17-developer-tools)
 18. [Recipes](#18-recipes)
@@ -70,7 +70,7 @@ codes and, where it helps scripts, `--json`.
 |---|---|---|---|
 | `sutra` | `shape`, `design`, `lint`, `test`, `preview`, `gen` | the Java tool in the exec jar; `tools/sutragen.py` (JDK 21+) | [4](#4-sutra-shape-design-gen-lint-test-preview) |
 | `pack` | `make`, `new`, `regenerate`, `diff`, `catalogue`, `i18n`, `check`, `about-check`, `bundle`, `verify`, `deploy`, `rollback`, `publish`, `keygen`, `install` | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | [5](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install) |
-| `data` | `profile`, `ingest`, `load`, `landed`, `loads`, `get` | `tools/ingest_jsonl.py`, `tools/load-<store>.sh`; REST for `landed`, `loads`, `get` | [6](#6-data-profile-ingest-and-load) |
+| `data` | `profile`, `ingest`, `load`, `landed`, `loads`, `get` | `tools/ingest_jsonl.py`, `tools/storeload.py`; REST for `landed`, `loads`, `get` | [6](#6-data-profile-ingest-and-load) |
 | `dataload` | `status`, `run`, `retry`, `ready`, `undo` (the data inbox) | REST | [6](#dataload-the-data-inbox) |
 | `testdata` | `capture-market` | a scratch server and the market connectors | [6](#testdata-capture-market-the-market-snapshot-for-offline-demos) |
 | `lake` | `build`, `scan`, `status`, `publish`, `demo`, `show`, `check`, `migrate-config`, `maintain`, `relocate`, `undo`, `memory` | `tools/lake/`; the server jar's writer and parallel loader | [7](#7-lake-a-large-json-export-into-a-delta-lake) |
@@ -85,6 +85,7 @@ codes and, where it helps scripts, `--json`.
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
 | `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
 | `docs` | `docs shots` | `tools/docs/screenshots.py` (Playwright) | [17](#docs-shots-screenshots) |
+| `calc`, `dev` | `calc install` (Calc's Python runtime); `dev bicompute-unit` (the pivot engine without Maven) | `tools/calcruntime.py`; `tools/dev/bicompute_unit.py` | [17](#17-developer-tools) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
 
 Concepts used throughout (each is explained in its own guide; this one only links to them):
@@ -119,7 +120,7 @@ The browser column names the console page that runs the same engine; those pages
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
-| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
+| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS_GUIDE.md section 2.1](OPERATIONS_GUIDE.md#149-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; [7.14](#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)) |
@@ -190,7 +191,7 @@ scripts, `--json`.
 |---|---|---|---|
 | `sutra` | shape, design, lint, test and preview Sutras; `gen` drafts one Sutra per group of JSON Lines | the Java tool in the exec jar; `tools/sutragen.py` | JDK 21+, the exec jar |
 | `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
-| `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/load-<store>.sh` | `deltalake` + `pyarrow` for Delta |
+| `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/storeload.py` | `deltalake` + `pyarrow` for Delta |
 | `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
 | `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
 | `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
@@ -1580,11 +1581,11 @@ drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
 
 ### `data load`: the demo data, at three sizes
 
-`data load --store <store>` runs `tools/load-<store>.sh`, which builds the **shipped banking packs' demo data** (1,791 sample documents
-x 10 business days) in that store, and with `--trades N` a generated trade book of N trades a day for `--days` days. Stores:
-`delta`, `files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`, `cassandra`. The scripts run from the repository root, so
-a relative root is relative to it. Options after the known ones go to the script unchanged. Everything about the scripts, the
-stores and the sizes is in [DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data).
+`data load --store <store>` builds the **shipped banking packs' demo data** (1,791 sample documents x 10 business days) in that
+store, and with `--trades N` a generated trade book of N trades a day for `--days` days (`tools/storeload.py`). Stores: `delta`,
+`files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`, `cassandra`. A relative root or database means what it means
+where you type the command. Each store's own options are in [section 15](#15-store-loaders-data-load); an option the store does not
+take is refused (exit 2). Everything about the stores and the sizes is in [DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data).
 
 | Size | Command | Use |
 |---|---|---|
@@ -1592,17 +1593,22 @@ stores and the sizes is in [DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-
 | medium | `data load --store files --trades 10000 --days 3` | a realistic local demo |
 | large | `data load --store delta --trades 1000000 --days 3` | the scale test; **not on a laptop**: about 1.6 GB a day of Delta |
 
-Keep local runs to 10,000 trades; a million-trade run needs a machine sized for it. `--dry-run` prints the command:
+Keep local runs to 10,000 trades; a million-trade run needs a machine sized for it. `--dry-run` prints each step (the generators
+with the Python that runs `drishti.py`, the loader as a main class of the server jar in `<home>/lib`, through the one Java of every
+tool) and runs nothing:
 
 ```bash
 python3 tools/drishti.py data load --store files data/demo-files --trades 1000 --days 2 --dry-run
 ```
 
 ```text
-bash tools/load-files.sh data/demo-files --trades 1000 --days 2
+/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/packgen/banking/make_data.py --jsonl /opt/drishti/data/build/loader-rows/banking.tar
+/usr/lib/jvm/temurin-21/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Djdk.nio.maxCachedBufferSize=262144 -Ddrishti.home=/opt/drishti -Ddrishti.modules.home=/opt/drishti/modules -Xmx4g -Dloader.main=com.ash.drishti.plugin.file.JsonlLoader -jar /opt/drishti/lib/drishti-server-<version>-exec.jar /opt/drishti/data/build/loader-rows/banking.tar /opt/drishti/data/demo-files
+/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/samplegen/bulk_trades.py --trades 1000 --days 2 --jsonl /opt/drishti/data/build/loader-rows/bulk-trades.tar
+/usr/lib/jvm/temurin-21/bin/java ... -Dloader.main=com.ash.drishti.plugin.file.JsonlLoader -jar /opt/drishti/lib/drishti-server-<version>-exec.jar /opt/drishti/data/build/loader-rows/bulk-trades.tar /opt/drishti/data/demo-files
 ```
 
-A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
+A real small run (200 trades, one day) into a scratch folder; the generators write under the data folder (`DRISHTI_DATA_DIR`, else
 the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
 `DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 `make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
@@ -1610,7 +1616,7 @@ load, and the loader files each row under its folder's date and says so:
 
 ```text
 feeds: data/feeds/fixing.jsonl
-jsonl: 25430 rows in data/build/loader-rows/banking.tar (<kind>/<YYYY-MM-DD>/rows.jsonl; tools/load-postgres.sh, load-aerospike.sh and the other store loaders load it)
+jsonl: 25430 rows in data/build/loader-rows/banking.tar (<kind>/<YYYY-MM-DD>/rows.jsonl; drishti.py data load --store postgres, aerospike and the other stores load it)
 files: banking.tar: business dates 2026-09-17 to 2026-09-30 (10 dates) from the archive's folders
 files: wrote 25,430 rows into 450 files under data/demo-files in 1 s
 
@@ -1622,7 +1628,7 @@ files: wrote 200 rows into 1 files under data/demo-files in 0 s
 
 **Which loader when.** `data ingest` is for a demo or a small team: use [`lake build`](#7-lake-a-large-json-export-into-a-delta-lake) instead for JSON
 arrays, large files, classifier partitions or a lock and a run summary, and `data ingest --store files` for the File connector. The
-store loaders `data load` runs are listed in [section 15](#15-store-loaders-toolsload-sh). From cron, `data ingest --watch DIR --once`
+store loaders `data load` runs are listed in [section 15](#15-store-loaders-data-load). From cron, `data ingest --watch DIR --once`
 is a drop folder polled every few minutes (exit `1` when a file failed); `data landed` is the last step of any ETL job that loads a
 store itself.
 
@@ -1657,9 +1663,10 @@ Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), 
 | `lake status` | a lake's tables, its lock and its last runs ([7.7](#77-exit-codes-the-lock-the-log-and-the-summary)) |
 | `lake publish` | a built day committed into a Delta table in S3 ([7.11](#711-lake-publish-a-built-day-into-a-delta-table-in-s3)) |
 | `lake demo` | every demo lake from the committed test data ([7.10](#710-the-demo-lakes-lake-demo)) |
-| `lake show`, `lake check`, `lake migrate-config` | the lakes and tables as the server reads them; connectors that name known lakes and lake files that match the disk; lake files from connector files that still describe their lake |
+| `lake show`, `lake check` | the lakes and tables as the server reads them; connectors that name known lakes and lake files that match the disk |
+| `lake migrate-config` (deprecated: from an older release, retired in the next release) | lake files from connector files that still describe their lake; says it is deprecated when it runs |
 | `lake maintain` | keeps a lake small and fast, on a timer ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)) |
-| `lake relocate` | a lake built in the older layout moved once into its own folder, `<data>/delta/<lake>` ([DATA_LAKE_GUIDE.md section 7](DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)) |
+| `lake relocate` (deprecated: from an older release, retired in the next release) | a lake built in the older layout moved once into its own folder, `<data>/delta/<lake>` ([DATA_LAKE_GUIDE.md section 7](DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)); says it is deprecated when it runs |
 | `lake undo` | one load's rows removed by its load id ([DATA_LAKE_GUIDE.md section 5.5](DATA_LAKE_GUIDE.md#55-undo-a-load)) |
 | `lake memory` | the in-memory lake's stores, jobs and refills (`status`, `jobs`, `refill`; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) |
 
@@ -1689,7 +1696,7 @@ python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-o
     --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
 python3 tools/drishti.py lake show                       # every lake and table as the server reads them
 python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
-python3 tools/drishti.py lake migrate-config [--write]   # lake files from connector files that still describe their lake
+python3 tools/drishti.py lake migrate-config [--write]   # deprecated (an older release's layout): lake files from connector files that still describe their lake
 ```
 
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
@@ -2701,7 +2708,8 @@ rewritten every time: `launchers --machine`), makes `drishti-console/.venv`, and
 | `--skip-venv` | leave `drishti-console/.venv` alone |
 | `--reinstall` | remake `drishti-console/.venv` and install `drishti-console/requirements.txt` |
 
-**`build jar`** runs one Maven command, `clean package -DskipTests -pl :drishti-app -am` (never `install`), with the install's Maven
+**`build jar|modules|all`** refuses in one line while a server of this install runs (from an IDE, a terminal or `start`): *stop the server
+first: pid N on port P runs the jar and the modules this build replaces* (Windows keeps a running jar locked). **`build jar`** runs one Maven command, `clean package -DskipTests -pl :drishti-app -am` (never `install`), with the install's Maven
 wrapper; the build itself installs the server's exec jar into `<home>/lib` (`-Ddrishti.home.lib`), where every start finds it, replacing
 any other server jar there (`lib/ext` is never touched). Options: `--java-home DIR`, `--offline` (Maven `-o`), `--no-copy`
 (`-Ddrishti.install.skip=true`: the jar stays in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing). It
@@ -2746,7 +2754,8 @@ file of the data folder), `stop console` takes `--name NAME`, `stop all` takes `
 names. Exit codes of `start`: 0 ok, 1 failed, 2 a wrong option, 3 already running or the port in use.
 
 **`drishti.py status`** shows pid, state, port, health answer, distribution and LAN address of every process started from the data
-folder; `--cluster FILE` adds the members each node sees and the console's servers. Options: `--home`, `--data-dir` (repeatable),
+folder, and every server or console of this install started elsewhere (an IDE's launcher, by hand) as `server (elsewhere)`, found by its
+command line, its port from the settings files it names; `--cluster FILE` adds the members each node sees and the console's servers. Options: `--home`, `--data-dir` (repeatable),
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
 
@@ -3899,7 +3908,7 @@ holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEME
 
 drishti-feeds, the data feeds that pull external data and load it into the lakes (`tools/feeds/`, one file a feed in `config/feeds/`;
 the guide [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). The pull is Python; the load is `lake build` (the parallel loader by default) or the data
-inbox. `python tools/drishti.py feed run <feed>` runs it on every system (on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>`); `tools/feeds/feed.sh` is the Linux and macOS wrapper.
+inbox. `python tools/drishti.py feed run <feed>` runs it on every system; cron, systemd and Task Scheduler run it with the console's Python (`drishti-console/.venv/bin/python`, on Windows `drishti-console\.venv\Scripts\python.exe`).
 
 - `feed list [--json]`: every feed: its lake, load route, schedule, licence (internal only or not) and datasets.
 - `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--lake L] [--dry-run] [--snapshot [--internal-ok]]
@@ -3919,37 +3928,46 @@ python3 tools/drishti.py feed run --all
 python3 tools/drishti.py feed schedule --cron
 ```
 
-## 15. Store loaders: `tools/load-*.sh`
+## 15. Store loaders: `data load`
 
-Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
-generated trade book) into one store, **in the layout that store's connector reads at scale**. `drishti.py data load
---store S` runs them with the same options. Keep local runs small (`--trades 10000`).
+`python tools/drishti.py data load --store <store> [target ...] [--trades N --days D] [options]` (`tools/storeload.py`) writes the
+banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a generated trade book) into one
+store, **in the layout that store's connector reads at scale**. The generators run with the Python that runs `drishti.py`; the
+loader is a main class of the server jar in `<home>/lib` (`-Dloader.main`), started with the one Java of every tool (`--java`,
+`drishti.java.home`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; `--jar` names another jar) at the heap `DRISHTI_LOADER_HEAP` (default
+`4g`). It runs the same on Windows, Linux and macOS. Keep local runs small (`--trades 10000`).
 
-| Script | Store and layout | Retention |
-|---|---|---|
-| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (on Windows: `python tools/drishti.py lake demo --engine java`) | `drishti.py lake maintain` |
-| `tools/load-files.sh` | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | delete old day folders |
-| `tools/load-postgres.sh` | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns | `--keep-months N` |
-| `tools/load-duckdb.sh` | one DuckDB file, written beside and renamed over the old one | `--keep-days N` |
-| `tools/load-mongodb.sh` | MongoDB, a collection per domain, zstd, the `day_ids` index | `--keep-days N` or `--ttl-days N` |
-| `tools/load-redis.sh` | Redis, a compressed document per entity per day, each day replaced atomically | `--ttl-days N` |
-| `tools/load-aerospike.sh` | Aerospike, a set per domain, promoted fields as bins | `--ttl-days N` |
-| `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`python tools/drishti.py data load --store cassandra`) | `--ttl-days N` or `--keep-days N` |
-| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop (`python tools/drishti.py data load --store iceberg`) | `--keep-days N` |
+| Store | Targets (defaults) | Store and layout | Its own options | Retention |
+|---|---|---|---|---|
+| `delta` | root (`DRISHTI_DELTA_ROOT`, else `<data>/delta/demo`) | Delta Lake, the demo lake, the pack's layout (no Java) | none | `drishti.py lake maintain` |
+| `files` | root (`<data>/files`) | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | | delete old day folders |
+| `postgres` | JDBC URL (`DRISHTI_PG_URL`, else `jdbc:postgresql://localhost:5432/drishti`) | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns; the samples with `--recreate` | `--user`, `--password` (default `DRISHTI_PG_USER` / `DRISHTI_PG_PASSWORD`), `--writers`, `--batch` | `--keep-months N` |
+| `duckdb` | database (`DRISHTI_DUCKDB_PATH`, else `<data>/duckdb/drishti.duckdb`) | one DuckDB file, written beside and renamed over the old one; the samples with `--recreate` | `--memory-limit`, `--parsers`, `--threads` | `--keep-days N` |
+| `iceberg` | root (`<data>/iceberg`, or `s3a://…`) | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop | `--engine`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--spill-dir`, `--set k=v`, `--threads`, `--buffer-mb`, `--file-rows`, `--row-group-mb` | `--keep-days N` |
+| `mongodb` | URI (`mongodb://localhost:27017`), database (`drishti`) | MongoDB, a collection per domain, zstd, the `day_ids` index | `--doc-format string\|bson`, `--batch`, `--in-flight` | `--keep-days N` or `--ttl-days N` |
+| `redis` | URI (`redis://localhost:6379`) | Redis, a compressed document per entity per day, each day replaced atomically (`--merge` adds instead; with `--trades` the samples merge and the book replaces); `--days` defaults to 1 | `--codec`, `--level`, `--chunk-rows`, `--in-flight`, `--threads`, `--keep-replaced-seconds`, `--cluster`, `--publish`, `--retrain`, `--replace`, `--merge` | `--ttl-days N` |
+| `aerospike` | hosts (`localhost:3000`), namespace (`test`) | Aerospike, a set per domain, promoted fields as bins | | `--ttl-days N` |
+| `cassandra` | contact points (`localhost:9042`), datacenter (`datacenter1`) | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole) | `--create` (makes the tables; without it the CQL is printed), `--create-keyspace RF`, `--keyspace`, `--buckets`, `--in-flight`, `--batch-rows`, `--consistency`, `--username`, `--password`, `--setting k=v` | `--ttl-days N` or `--keep-days N` |
+
+Every store but `delta` also takes the date guard's `--future-days N` and `--zone Z`, and every one but `files` and `aerospike` the
+retention guard's `--max-drop-share F` and `--force-drop`. Iceberg and Cassandra load the samples and the book in one run (each business
+day written once); the others load the samples, then the book. A failed step ends the command with exit 1 and the line
+`data load <store>: the load did not finish: see the line above`; the loader rows are removed either way.
 
 ```bash
-tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3
-drishti-console/.venv/bin/python tools/drishti.py data load --store files --trades 1000 --days 1 -- /tmp/demo-files
+python tools/drishti.py data load --store duckdb /tmp/demo.duckdb --trades 10000 --days 3
+python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1
+python tools/drishti.py data load --store files /tmp/demo-files --trades 1000 --days 1 --dry-run
 ```
 
-**Dates.** The scripts' generators write loader rows as tars of `<kind>/<YYYY-MM-DD>/` folders under `<data folder>/build/loader-rows/`
+**Dates.** The generators write loader rows as tars of `<kind>/<YYYY-MM-DD>/` folders under `<data folder>/build/loader-rows/`
 (removed after the load), and every loader files each row under its folder's date, or a plain file's (`--as-of`, its `.ready` file,
 its name, the business today), never the row's own `date`, which it only counts when it differs: the load rules of
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), the same as `lake build`'s.
 
 **Scheduling.** The loaders guard dates (a tar folder dated in the future refuses the archive; a business date after tomorrow is not loaded and the run fails naming it), replace each day
 they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
-that re-runs is safe; the details are at the top of each script and in [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data). The connectors.
+that re-runs is safe; the details are in `tools/storeload.py` and [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data). The connectors.
 guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors).
 
 ## 16. Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`
@@ -3981,7 +3999,7 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it; the Python files run on every system with the console's Python) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) and [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `drishti-console/.venv/bin/python tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
 | `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run ([`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)): 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity ([`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path))) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 74 netting sets, 8,022 live trades on the data's date; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
 | `tools/testdata/sample_docs.py` | **The data samples** ([docs/contracts/samples/README.md](../contracts/samples/README.md)): one page per data type of `data/testdata` (and per kind a bank or a public source produces that has only pack samples), each with a real record pretty-printed as JSON, long arrays folded, one record per sub-type (a trade's product type, a P&L or PV form, a curve type), every field explained from the kind's data contract, the fields only other rows have, and a checklist for the production query; the index groups them by what the bank produces and lists the kinds Drishti computes. Reads every row of the test data (four worker processes, about 25 s). `--check` fails when a page is stale; `audit` compares every contract with all its committed rows (fields missing from the contract, required fields null, types and enums that differ). `tools/test_sample_docs.py` runs both. |
-| `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE.tar` loader rows for the other stores: a tar of `trade/<YYYY-MM-DD>/` folders; a plain file or `-` only with `--days 1`) |
+| `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`data load --store delta --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE.tar` loader rows for the other stores: a tar of `trade/<YYYY-MM-DD>/` folders; a plain file or `-` only with `--days 1`) |
 | `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DATA_GUIDE.md section 11](DATA_GUIDE.md#1114-your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([section 10](#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
 | `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.tar`, `<name>-restated.tar`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
@@ -4009,7 +4027,7 @@ of Parquet.
 | `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted), `workers` (the browser lane's workers from the memory available, the CPU threads and the scratch ports' limit of 12), `budget` (the browser files of a run over the 300 s per-file budget; `tools/drill-budgets.txt` lists the files allowed over it with their reasons), `static` (the quick file checks the gate runs: the console files with a test marked `static`, or `--kind tools` the tools files marked so) |
 | `tools/drillkit/drill_monitor.py` | what a test run holds in memory: `watch` samples, every few seconds, the server JVMs, other JVMs, Chromium processes, consoles and pytest processes (count and resident memory) and the machine's available memory into a CSV (`--under PID` for one lane); `summary` prints the peaks. The drill samples its browser lane into `data/drill/monitor-browser.csv` |
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
-| `tools/bicompute-unit.sh` | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`; with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
+| `tools/dev/bicompute_unit.py` (`python tools/drishti.py dev bicompute-unit [--server] [TEST ...]`) | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`, with the one Java of every tool (`javac` beside it); with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
@@ -4025,7 +4043,7 @@ of Parquet.
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale ([ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md#6-the-render-folder-and-the-embed)). A released version's folder never changes: a change means a new version folder |
 | `tools/renderer_fixtures.py` | writes drishti-renderer's harness fixtures (`static/elements/drishti-renderer/drishti_fixtures.json`) from the parity suite's cases; `--check` says whether they are stale |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
-| `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
+| `python tools/drishti.py calc install` (`tools/calcruntime.py`; `--tarball FILE` offline, `--dest DIR`, `--cache DIR`, `--force`) | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN); standard library only, so the console's Docker image runs it alone as `python tools/calcruntime.py` |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
 | `tools/rachana/md_to_yaml.py` | converts Markdown Sutras into YAML Sutras |
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
@@ -4041,8 +4059,7 @@ of Parquet.
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/drishti.py setup`, `build jar`, `start`, `stop`, `status` | preparing the machine, building the server jar, and starting, stopping and showing the server, its cluster nodes and the console on Windows, Linux and macOS ([above](#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti); [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)) |
 | `tools/rolling.py` (`python tools/rolling.py --inventory my-cluster.yaml --version X [--dry-run]`, any system; needs PyYAML, which the console's environment has) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), BI and data-serving, coordinators, owners zone by zone, then the consoles; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_GUIDE.md section 10.1](CLUSTER_GUIDE.md#82-rolling-upgrades)) |
-| `bin/drishti-node.sh` | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS_GUIDE.md section 7.2](OPERATIONS_GUIDE.md#53-running-as-services-systemd)) |
-| `tools/feeds/feed.sh` | the wrapper of every data feed on Linux and macOS: `drishti.py feed ...` with the console's Python (on Windows Task Scheduler runs `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>` directly; cron and systemd run the wrapper; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
+| `drishti.py node` (`tools/launch/nodecmd.py`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready` (`--server`, `DRISHTI_NODE_URL`; the token `DRISHTI_DRAIN_TOKEN`). The server drains itself on a stop (`drishti.node.drain.on-stop`), so the service unit and the images need no hook ([OPERATIONS_GUIDE.md section 5.3](OPERATIONS_GUIDE.md#53-running-as-services-systemd)) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/entitypath.py` | the one way the tools name an entity in a server path: an id with `/` or `\` (or `.`, `..`, `~`) goes in the query as `id` with `~` in the path (`smoke`, `view`, `history`, `change history`) |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |

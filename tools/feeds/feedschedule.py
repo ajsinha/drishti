@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py feed schedule --cron | --systemd | --windows``: ready-to-use DAILY entries, one per enabled feed at the time its feed
-file's ``schedule`` gives (docs/guides/WORLD_DATA_GUIDE.md section "Run it every day"). Every entry runs the one command of its system:
-tools/feeds/feed.sh (Linux, macOS) or the console's own Python running tools\\drishti.py feed run (Windows), so the Python it uses is the console's."""
+file's ``schedule`` gives (docs/guides/WORLD_DATA_GUIDE.md section "Run it every day"). Every entry runs the one command on every system:
+the console's own Python (drishti-console/.venv) running tools/drishti.py feed run <feed>."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,6 +29,11 @@ def _hm(spec: FB.FeedSpec) -> tuple[int, int]:
     return int(h), int(m)
 
 
+def command(root: Path, feed: str) -> str:
+    """The scheduled command of one feed on Linux and macOS: the console's Python running tools/drishti.py feed run."""
+    return f"{root}/drishti-console/.venv/bin/python {root}/tools/drishti.py feed run {feed} --trigger schedule"
+
+
 def cron(specs: list[FB.FeedSpec], root: Path = ROOT, data: str | None = None) -> str:
     log = (data or "$HOME/drishti-feeds-logs").rstrip("/")
     lines = ["# Drishti data feeds: daily (crontab -e, then paste; the times are this machine's local time)",
@@ -40,7 +45,7 @@ def cron(specs: list[FB.FeedSpec], root: Path = ROOT, data: str | None = None) -
         h, m = _hm(s)
         dow = "1-5" if s.schedule_days == "weekdays" else "*"
         prefix = "" if s.enabled else "# (disabled) "
-        lines.append(f"{prefix}{m} {h} * * {dow} {root}/tools/feeds/feed.sh run {s.name} --trigger schedule >> {log}/{s.name}.log 2>&1")
+        lines.append(f"{prefix}{m} {h} * * {dow} {command(root, s.name)} >> {log}/{s.name}.log 2>&1")
     return "\n".join(lines) + "\n"
 
 
@@ -57,7 +62,7 @@ def systemd(specs: list[FB.FeedSpec], root: Path = ROOT, user_unit: bool = True)
         days = "Mon..Fri " if s.schedule_days == "weekdays" else ""
         out += [f"# ---- drishti-feed-{s.name}.service",
                 "[Unit]", f"Description=Drishti data feed {s.name}: {s.title}", "Wants=network-online.target", "After=network-online.target", "",
-                "[Service]", "Type=oneshot", f"WorkingDirectory={root}", f"ExecStart={root}/tools/feeds/feed.sh run {s.name} --trigger schedule",
+                "[Service]", "Type=oneshot", f"WorkingDirectory={root}", f"ExecStart={command(root, s.name)}",
                 "Nice=10", "", f"# ---- drishti-feed-{s.name}.timer",
                 "[Unit]", f"Description=Run the Drishti data feed {s.name} daily", "",
                 "[Timer]", f"OnCalendar={days}*-*-* {h:02d}:{m:02d}:00", "Persistent=true", "RandomizedDelaySec=120", "",

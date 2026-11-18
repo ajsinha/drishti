@@ -18,7 +18,7 @@
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
 # config/lakes/iceberg.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-description: trades read from Iceberg (loaded by tools/load-iceberg.sh)
+description: trades read from Iceberg (loaded by python tools/drishti.py data load --store iceberg)
 settings:
   lake: iceberg
   lake-tables: trading.trade

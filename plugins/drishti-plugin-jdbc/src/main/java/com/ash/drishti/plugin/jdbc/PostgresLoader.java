@@ -62,7 +62,7 @@ import com.ash.drishti.common.RowFeed;
  * then ends with an error naming it), and {@code --keep-months N} drops the partitions older than the N newest months
  * counted back from the newest business date of the load (a plain file's date, a tar's newest folder), never from the
  * newest date the store holds, and refuses to drop more than
- * {@code --max-drop-share} of a domain's rows without {@code --force-drop}. {@code tools/load-postgres.sh} runs it.
+ * {@code --max-drop-share} of a domain's rows without {@code --force-drop}. {@code python tools/drishti.py data load --store postgres} runs it.
  */
 public final class PostgresLoader {
 

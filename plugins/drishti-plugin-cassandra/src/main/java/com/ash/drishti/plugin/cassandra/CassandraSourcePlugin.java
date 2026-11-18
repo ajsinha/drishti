@@ -177,11 +177,11 @@ public final class CassandraSourcePlugin implements SourcePlugin {
     /** Each kind's days from {@code kind_days} (one small partition per kind), then the type-ahead ids of kinds whose newest day changed. */
     void refresh() {
         if (store.keyspace(keyspace).isEmpty()) {
-            throw new IllegalStateException("keyspace " + keyspace + " does not exist (load it with tools/load-cassandra.sh, or set keyspace)");
+            throw new IllegalStateException("keyspace " + keyspace + " does not exist (load it with python tools/drishti.py data load --store cassandra, or set keyspace)");
         }
         if (store.table(keyspace, CassandraLayout.KIND_DAYS).isEmpty()) {
             throw new IllegalStateException("keyspace " + keyspace + " has no kind_days table: nothing has been loaded in the connector's layout "
-                    + "(tools/load-cassandra.sh --create, or the CQL it prints)");
+                    + "(python tools/drishti.py data load --store cassandra --create, or the CQL it prints)");
         }
         Map<String, String> byComment = store.kindTables(keyspace);
         Map<String, String> t = new LinkedHashMap<>();

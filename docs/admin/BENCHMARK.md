@@ -107,7 +107,7 @@ tools/bench/scale.sh delta 10000 --run r2              # a second run of the sam
 python3 tools/bench/report.py results.jsonl > report.md
 ```
 
-`scale.sh` starts the store's container if it needs one, loads it with the project's loader (`tools/load-<store>.sh … --trades N --days 3`),
+`scale.sh` starts the store's container if it needs one, loads it with the project's loader (`drishti.py data load --store <store> … --trades N --days 3`),
 starts a Drishti server with the store's Spring profile, waits for health, runs `measure.py` (waits until searches are exact, warms up
 with 5 rounds of every question, measures, appends one JSON line per measure), then stops the server by its process id and removes the
 container, its volume and the scratch data.

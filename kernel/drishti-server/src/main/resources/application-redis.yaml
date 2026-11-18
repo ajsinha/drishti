@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Profile `redis` (SPRING_PROFILES_ACTIVE=redis): the banking packs' data domains are read from Redis (keys prefixed
-# by the domain, loaded by tools/load-redis.sh) instead of Delta Lake. The packs still decide the kinds, routes, modes
+# by the domain, loaded by python tools/drishti.py data load --store redis) instead of Delta Lake. The packs still decide the kinds, routes, modes
 # and promoted fields of each <domain>-store connector; the key prefix is the connector's domain. Redis holds today and
 # the last few days in memory: in production put a Delta Lake or Iceberg connector for the same kinds behind it for the
 # years of history (docs/REDIS_CONNECTOR.md, section 7).

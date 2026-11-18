@@ -14,7 +14,7 @@
 # Example: copy to config/connectors/risk-store.yaml to read the risk-store data from cassandra. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: cassandra
-description: risk-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
+description: risk-store read from Apache Cassandra (loaded by python tools/drishti.py data load --store cassandra)
 settings:
   domain: risk
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}

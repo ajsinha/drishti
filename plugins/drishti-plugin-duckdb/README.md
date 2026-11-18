@@ -49,7 +49,7 @@ settings:
 - index.kinds.*
 auth: None; a local file read by the server process (file-system permissions only).
 licence: DuckDB JDBC driver 1.5.6 (MIT), bundled; it carries DuckDB's native library inside the jar, unpacked at start.
-windows: The connector reads on Windows (the native library is inside the jar, no .exe); a load cannot rename a file over one the server holds open, so load into a new path and switch path, or stop the server; tools/load-duckdb.sh needs bash.
+windows: The connector reads on Windows (the native library is inside the jar, no .exe); a load cannot rename a file over one the server holds open, so load into a new path and switch path, or stop the server; python tools/drishti.py data load --store duckdb loads it from any system.
 doc: plugins/drishti-plugin-duckdb/README.md
 ---
 # The duckdb connector
@@ -59,7 +59,7 @@ over a whole day and no PostgreSQL, Aerospike or lake to run. It mirrors the `jd
 
 ## What it reads
 
-One DuckDB file (for example `data/duckdb/drishti.duckdb`) that `tools/load-duckdb.sh` writes. A data domain (`trading`) is a
+One DuckDB file (for example `data/duckdb/drishti.duckdb`) that `python tools/drishti.py data load --store duckdb` writes. A data domain (`trading`) is a
 schema; its kinds share the table `<domain>.entities`, a row per entity per business day. All connectors on the same `path` share one
 read-only DuckDB instance, so one memory limit and one buffer pool; the first connector on a file sets `memory-limit` and `threads`.
 The connector checks the file every `refresh-seconds` (10) and opens a new one when a load has replaced it. It never writes.
@@ -168,12 +168,12 @@ Load data:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the banking samples
-tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and 10,000 generated trades a day for 3 days
-tools/load-duckdb.sh data/duckdb/drishti.duckdb --keep-days 2557             # keep seven years
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb                              # the banking samples
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --trades 10000 --days 3      # and 10,000 generated trades a day for 3 days
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --keep-days 2557             # keep seven years
 ```
 
-Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [database]`): `--recreate` (drop the existing rows of
+Loader options (`DuckDbLoader FILE|- DATABASE`, through `python tools/drishti.py data load --store duckdb [database]`): `--recreate` (drop the existing rows of
 each domain the stream reaches; other domains are copied unchanged), `--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (a plain
 file's business date; refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`),
 `--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`), `--threads N` (every

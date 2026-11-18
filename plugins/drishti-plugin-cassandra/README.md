@@ -53,13 +53,13 @@ settings:
 - tls.*
 auth: Password log-in (username + password as ${ENV} or file:), mutual TLS (tls.*), DataStax Astra (secure-connect-bundle + token), Amazon Keyspaces SigV4 (sigv4, plug-in jar not shipped).
 licence: Apache Cassandra Java driver 4 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the loader is `python tools/drishti.py data load --store cassandra`, which runs `tools/load-cassandra.sh` (on Windows it needs bash, Git Bash or WSL).
+windows: Works the same on Windows (pure Java driver); the loader is `python tools/drishti.py data load --store cassandra` (any system).
 doc: plugins/drishti-plugin-cassandra/README.md
 ---
 # The cassandra connector
 
 Plugin `cassandra` (`plugins/drishti-plugin-cassandra`): one entity in a few milliseconds, type-ahead from memory and searches over a
-day's promoted columns, from a keyspace that `tools/load-cassandra.sh` (or any writer keeping the same layout) fills.
+day's promoted columns, from a keyspace that `python tools/drishti.py data load --store cassandra` (or any writer keeping the same layout) fills.
 
 ## What it reads
 
@@ -179,7 +179,7 @@ Delta connector of that name and serves every system's trades the loader wrote),
 
 1. Run Cassandra: `docker run -d --name cass -p 9042:9042 cassandra:5.0.6` (ScyllaDB: `scylladb/scylla:6.2 --smp 1
    --developer-mode 1`). Wait until `cqlsh` answers.
-2. Load the samples and a small book: `tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000
+2. Load the samples and a small book: `python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000
    --days 3`. The last line reads `cassandra: loaded … rows (… days)`.
 3. `cp config/connectors.examples/cassandra/*.yaml config/connectors/`.
 4. Check: Admin → Connectors → `trade-endur` → **Test connection** lists the days and their rows; Admin → Health says `UP`.
@@ -210,7 +210,7 @@ found after a colon. With nothing added, the node answers CQL: look at `local-da
 | `… : TLS to <host:port> failed (…): the node does not speak TLS on this port …` | `tls.enabled: true` against a plain port | `tls.enabled: false`, or the TLS port |
 | `… : TLS: the node at <host:port> did not answer CQL in plain text …, so it requires TLS` | no TLS against a node that demands it | `tls.enabled: true` with `tls.ca-file` (and the client certificate when asked) |
 | `DOWN: keyspace … does not exist` | the keyspace is named after the domain unless `keyspace` is set | set `keyspace`, or load it |
-| `DOWN: keyspace … has no kind_days table` | nothing was loaded in the connector's layout | `tools/load-cassandra.sh --create`, or run the printed CQL |
+| `DOWN: keyspace … has no kind_days table` | nothing was loaded in the connector's layout | `python tools/drishti.py data load --store cassandra --create`, or run the printed CQL |
 | `UP (2 of 3 nodes up)` | a node is down; reads go to the replicas left | the driver reconnects by itself |
 | a new day does not appear | the catalogue is re-read every `refresh-seconds`; or the load failed before `kind_days` was written | wait, or Admin → Caches → purge; check the loader's last line |
 | searches say `partial: true` | a field the query reads is not a promoted column | add it to `layout.<kind>.columns` and reload with `--create` |
@@ -248,15 +248,15 @@ scans a table: no `ALLOW FILTERING`, no token range.
 
 ## Loading
 
-`tools/load-cassandra.sh` (`python tools/drishti.py data load --store cassandra` runs it) loads the
+`python tools/drishti.py data load --store cassandra` loads the
 packs' sample data and optionally a generated book through `CassandraLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
-tools/load-cassandra.sh localhost:9042 datacenter1 --create --trades 10000 --days 3               # and a book, streamed
-tools/load-cassandra.sh cass1:9042,cass2:9042 dc-east --ttl-days 90 --setting tls.enabled=true \
+python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
+python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --trades 10000 --days 3               # and a book, streamed
+python tools/drishti.py data load --store cassandra cass1:9042,cass2:9042 dc-east --ttl-days 90 --setting tls.enabled=true \
     --setting tls.ca-file=/etc/drishti/tls/ca.pem --username loader --password "$PW"            # a secured cluster
 ```
 

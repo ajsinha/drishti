@@ -31,7 +31,7 @@ doc: plugins/drishti-plugin-redis/README.md
 # Redis connector templates
 
 Ready-made connector files for the `redis` plugin: one file per banking data domain (`trading`, `reference`, `market`, `risk`,
-`credit`, `collateral`), all reading one Redis that `tools/load-redis.sh` fills.
+`credit`, `collateral`), all reading one Redis that `python tools/drishti.py data load --store redis` fills.
 
 ## What it reads
 
@@ -72,7 +72,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 export DRISHTI_REDIS_URI=redis://cache.example.com:6379
-tools/load-redis.sh "$DRISHTI_REDIS_URI"                     # the samples: 1,791 documents x 10 business days
+python tools/drishti.py data load --store redis "$DRISHTI_REDIS_URI"                     # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/redis/*-store.yaml config/connectors/
 ```
 

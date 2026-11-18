@@ -16,7 +16,7 @@
 # in one table, so trade-calypso and trade-murex may be disabled. Credentials are ${ENV_VAR} references; an empty default
 # (${X:}) is a store with no sign-in, as a development node.
 plugin: cassandra
-description: trades read from Apache Cassandra (loaded by tools/load-cassandra.sh)
+description: trades read from Apache Cassandra (loaded by python tools/drishti.py data load --store cassandra)
 settings:
   domain: trading
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}

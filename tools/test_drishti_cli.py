@@ -200,17 +200,28 @@ class Tools(unittest.TestCase):
         self.assertTrue((root / "dm" / "2026-10-01" / "trade.jsonl").is_file())
         self.assertIn("total rows: 2", out)
 
-    def test_data_load_builds_the_script_command(self):
-        code, out, _ = run("data", "load", "--store", "files", "data/x", "--trades", 1000, "--days", 2, "--future-days", 3, "--dry-run")
+    def test_data_load_builds_the_steps(self):
+        code, out, _ = run("data", "load", "--store", "files", str(self.tmp / "x"), "--trades", 1000, "--days", 2, "--future-days", 3, "--dry-run")
         self.assertEqual(0, code)
-        self.assertTrue(out.startswith("bash "))
-        self.assertTrue(out.strip().endswith("load-files.sh data/x --trades 1000 --days 2 --future-days 3"))
+        lines = out.strip().splitlines()
+        self.assertEqual(4, len(lines))                                    # samples, their load, the book, its load
+        self.assertIn("make_data.py --jsonl", lines[0])
+        self.assertIn("-Dloader.main=com.ash.drishti.plugin.file.JsonlLoader", lines[1])
+        self.assertTrue(lines[1].endswith(f"banking.tar {self.tmp / 'x'} --future-days 3"))
+        self.assertIn("bulk_trades.py --trades 1000 --days 2 --jsonl", lines[2])
+        self.assertFalse(list((ROOT / "tools").glob("load-*.sh")), "no shell loaders: data load is Python on every system")
 
     def test_data_load_reaches_the_cassandra_loader(self):
         code, out, _ = run("data", "load", "--store", "cassandra", "localhost:9042", "datacenter1", "--trades", 10000, "--create", "--dry-run")
         self.assertEqual(0, code)
-        self.assertTrue(out.strip().endswith("load-cassandra.sh localhost:9042 datacenter1 --trades 10000 --create"))
-        self.assertTrue((ROOT / "tools" / "load-cassandra.sh").is_file())
+        last = out.strip().splitlines()[-1]
+        self.assertIn("-Dloader.main=com.ash.drishti.plugin.cassandra.CassandraLoader", last)
+        self.assertTrue(last.endswith("loader-rows localhost:9042 datacenter1 --create"))
+
+    def test_data_load_refuses_an_option_the_store_does_not_take(self):
+        code, _, err = run("data", "load", "--store", "aerospike", "--create", "--dry-run")
+        self.assertEqual(2, code)
+        self.assertIn("unknown option --create for --store aerospike", err)
 
     def test_publish_wraps_packreg(self):
         called = {}

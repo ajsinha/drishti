@@ -169,8 +169,8 @@ Ubuntu that stops with *ensurepip is not available … apt install python3.X-ven
   ```
 
   Without it everything else works, and each Python run says why it does not ([section 15](#15-compute-workers)).
-- **Calc** (Python in the browser on a view) needs its runtime once: `tools/fetch-pyodide.sh` (about 340 MB, cached; on Windows in Git
-  Bash or WSL). Without it a Calc panel stays dead ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view) has the offline way).
+- **Calc** (Python in the browser on a view) needs its runtime once: `python tools/drishti.py calc install` (about 340 MB, cached; any
+  system). Without it a Calc panel stays dead ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view) has the offline way).
 
 ### 2.4 Build the demo lakes
 
@@ -439,10 +439,10 @@ Admin → Health then lists each lake connector as `UP (engine: native)`. The co
 drishti-console\.venv`, `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements.txt`. From IntelliJ IDEA
 instead of the command: [IDE_GUIDE.md](IDE_GUIDE.md).
 
-**Iceberg tables on Windows** run on the native engine too. The loader `tools/load-iceberg.sh` needs bash there (Git Bash or WSL):
-`python tools/drishti.py data load --store iceberg` runs it (the samples, ten business days; `--trades 10000 --days 3` adds a book), then
+**Iceberg tables on Windows** run on the native engine too. `py tools\drishti.py data load --store iceberg` loads them (the samples, ten
+business days; `--trades 10000 --days 3` adds a book), then
 `py tools\drishti.py start server --iceberg` (settings only: the connectors folder is `config/connectors.examples/iceberg` and the
-warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux the same is `tools/load-iceberg.sh ./data/iceberg --engine native`.
+warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux and macOS the same is `python tools/drishti.py data load --store iceberg ./data/iceberg --engine native`.
 
 ### 4.4 What works differently on Windows
 
@@ -451,12 +451,12 @@ warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux the same
 | A Delta connector's `engine: hadoop` (or `auto` on Linux) | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default; `auto` is native on Windows); `hadoop` only for Azure (`abfs://`) or Google Cloud Storage (`gs://`), which the native engine does not read. Iceberg's `engine: library` likewise |
 | Local paths | | `C:\lakes\drishti`, `\\fileserver\lakes`, `file:/C:/lakes`, paths with spaces all work; S3 with the connector's `s3.*` settings |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename over an open file | load a new file and switch the connector's `path`, or stop the server first |
-| `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\drishti.py` for starting and stopping the server and console, lakes (`lake demo --engine java`), packs, loads and feeds (`drishti.py feed run <feed>`), `tools\rolling.py` for upgrades; the Python tools run as they are; or Git Bash or WSL |
+| `tools\drill.sh`, `tools\bench\*.sh` (internal test tooling) | they need bash | `tools\drishti.py` for starting and stopping the server and console, lakes (`lake demo --engine java`), packs, loads (`data load --store <store>`) and feeds (`drishti.py feed run <feed>`), `tools\rolling.py` for upgrades; the Python tools run as they are; or Git Bash or WSL |
 | `docker compose` (`deploy\`) | Linux containers | Docker Desktop runs them; the jar runs natively |
 | Python in BI, compute in fork mode | the strict sandbox needs Linux | stays off on Windows, with that reason ([section 15](#15-compute-workers)) |
 
 The Aerospike, Cassandra, PostgreSQL, Kafka, RabbitMQ, ActiveMQ, Redis, MongoDB, S3 and REST connectors are network clients and work
-unchanged (`python tools/drishti.py data load --store cassandra` loads the demo data into Cassandra; it runs a bash script, so on Windows it needs Git Bash or WSL). Windows problems: [21.1](#211-building-and-starting).
+unchanged (`python tools/drishti.py data load --store cassandra` loads the demo data into Cassandra, on Windows too). Windows problems: [21.1](#211-building-and-starting).
 
 ## 5. Install for other people: the layout, services and containers
 
@@ -481,7 +481,7 @@ sudo -u drishti /opt/drishti/drishti-console/.venv/bin/python -m pip install -r 
 ```
 /opt/drishti/
 ├── lib/                         the server jar (drishti-server-<version>-exec.jar, replaced on an upgrade); lib/ext: your jars
-├── bin/                         the drain and stop hook (drishti-node.sh)
+├── bin/                         a README (every command is tools/drishti.py)
 ├── tools/                       drishti.py: setup, start, stop, status and the rest of the command line
 ├── modules/                     the modules: their packs, connector templates, Sutras (DRISHTI_MODULES_HOME)
 ├── config/
@@ -551,8 +551,9 @@ EOF
 sudo chmod 600 /etc/drishti/drishti.env
 ```
 
-`/etc/systemd/system/drishti-server.service` (a copy of `deploy/systemd/drishti-server.service`; `bin/drishti-node.sh` is in
-`/opt/drishti/bin/` from 5.1):
+`/etc/systemd/system/drishti-server.service` (a copy of `deploy/systemd/drishti-server.service`), and its JVM options,
+`deploy/jvm/server-service.args`, copied to `/opt/drishti/lib/server.args` (generated from the function `drishti.py start server` runs:
+the temp folder, heap dumps and GC log under the data folder, a 4 GB heap, ZGC; change the heap there):
 
 ```ini
 [Unit]
@@ -564,15 +565,13 @@ Wants=network-online.target
 User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
-Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
 Environment=DRISHTI_HOME=/opt/drishti
 Environment=DRISHTI_DATA_DIR=/opt/drishti/data
 Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
-ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
-ExecStart=/bin/sh -c 'exec /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/lib/drishti-server-*-exec.jar'
-ExecStop=-/opt/drishti/bin/drishti-node.sh drain
+ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps/server /opt/drishti/data/tmp/server
+ExecStart=/bin/sh -c 'exec java @/opt/drishti/lib/server.args -XX:+ZGenerational -jar /opt/drishti/lib/drishti-server-*-exec.jar'
 SuccessExitStatus=143
 TimeoutStopSec=300
 Restart=on-failure
@@ -582,11 +581,10 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-- **The stop drains first**: `drishti-node.sh drain` drains the node (in a cluster its work moves to other members; readiness turns
-  `OUT_OF_SERVICE`) and waits until it is safe to stop, at most `DRISHTI_DRAIN_WAIT` seconds; systemd then sends SIGTERM and the server
-  shuts down gracefully (running requests finish, up to 30 s; exit 143 is a normal stop). The drain needs `DRISHTI_DRAIN_TOKEN=drk_...` in
-  the environment file: a personal API token of an administrator with only the `node:drain` scope. Without it, or on a single server, the
-  stop goes on at once (the `-` lets a refused drain pass).
+- **The stop drains first**: on systemd's SIGTERM the server drains itself (`drishti.node.drain.on-stop`; in a cluster its work moves to
+  other members, readiness turns `OUT_OF_SERVICE`) and waits until it is safe to stop, at most `DRISHTI_DRAIN_WAIT` seconds, then shuts
+  down gracefully (running requests finish, up to 30 s; exit 143 is a normal stop). No token is needed: the server drains itself. A single
+  server is safe to stop at once.
 - **The heap**: without `-Xmx` the JVM takes a quarter of the machine. Sizing it (VaR at a million positions, dates kept open) is in
   [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); budget the machine for `-Xmx` plus about 1 GB, and more for the page cache of mapped hot files.
 - `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep resident memory near `-Xmx` plus 0.4 GB
@@ -624,7 +622,7 @@ journalctl -u drishti-server -f                            # the log
 
 **Readiness means ready**: it is `DOWN` (`503`) while the VaR or exposure engine opens its newest business date (the check opens it),
 while the node joins a cluster or builds a VaR shard it owns, and `OUT_OF_SERVICE` while it is drained; `/actuator/health/liveness` says
-whether the process is up. `bin/drishti-node.sh wait-ready` waits for it. Lake maintenance and the lake build run as further units
+whether the process is up. `python tools/drishti.py node wait-ready` waits for it. Lake maintenance and the lake build run as further units
 ([section 16](#16-lake-maintenance-and-scheduling)).
 
 ### 5.4 Docker Compose
@@ -640,7 +638,7 @@ docker build -f deploy/docker/console.Dockerfile -t drishti-console:<version> .
 ```
 
 The server image holds the server jar in `lib/` (the install layout: every tool finds the jar in `<home>/lib`), `modules/`,
-`bin/drishti-node.sh` and the configuration it reads (`config/packs`, `lenses`, `ui-kit`, `alerts`, `distributions`, `engines`, `lakes`,
+`lib/server.args` (the generated JVM options) and the configuration it reads (`config/packs`, `lenses`, `ui-kit`, `alerts`, `distributions`, `engines`, `lakes`,
 `modules`, `store`), with `DRISHTI_HOME=/opt/drishti`. **In a container the image is immutable** (root-owned; on ECS a read-only root file
 system): the site's jars (JDBC drivers, connector plugins) live on the data volume, `DRISHTI_LIB_PATH=/opt/drishti/data/lib`, which every
 image and the ECS task definition set; put a driver there, not in `<home>/lib/ext`, and restart. The console image the console, `docs/`, `config/packs/` and the licence and release
@@ -1015,8 +1013,8 @@ its own):
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
-tools/load-aerospike.sh localhost:3000 test
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti
+python tools/drishti.py data load --store aerospike localhost:3000 test
 ```
 
 Point the connectors at a store by copying the example files for it from `config/connectors.examples/<store>/` into `config/connectors/` (a file
@@ -1028,7 +1026,7 @@ The older Spring profiles (`SPRING_PROFILES_ACTIVE=postgres` or `aerospike`, wit
 entity listing its dates) and `<domain>_kinds`. A bulk book with a retention period:
 
 ```bash
-tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 730
+python tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 730
 ```
 
 `--ttl-days N` gives every record a time to live, so Aerospike expires old dates itself (no maintenance job; without it records never expire). A
@@ -1038,7 +1036,7 @@ Drishti's memory does not grow with the days kept ([the Aerospike connector](../
 **Live trades from Kafka**:
 
 ```bash
-uv run --with kafka-python python tools/samplegen/stream.py --rate 5          # 5 trades a second to drishti.trading.trades
+uv run --with kafka-python tools/samplegen/stream.py --rate 5          # 5 trades a second to drishti.trading.trades
 DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
 ```
 
@@ -2803,7 +2801,7 @@ The shipped example configuration is `deploy/lake-maintenance.yaml`. **The sched
 | `drishti.py server smoke` / `server health` | 0 ok, 1 a check failed | none | stdout or `--json` | yes |
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
 | `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` | stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
-| `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
+| `drishti.py data load` | 0 ok, 1 failed, 2 usage | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
 | `tools/drill.sh` | 0 all passed | none: one at a time | `data/drill/*.log` | yes |
 
 Rules for all of them: run as a service user that owns the lake or data folder; pass the server explicitly (`--server`, `--signal`); keep tokens in a

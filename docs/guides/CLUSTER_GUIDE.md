@@ -459,7 +459,9 @@ It starts each node and the console through `tools/drishti.py start` (2.0), so t
 
 `drishti-main` (18480) serves the demo profile's packs (the packs of every module that is on and the demo's extras), the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
 trades; `drishti-c` (18792) synthetic MUREX trades with `counterparty-risk` and `market-risk`; the console (17480) is given `drishti-main`
-alone, learns the others and fails over to them.
+alone, learns the others and fails over to them. Every node and the console start with the cluster file's profile (`profile: demo`, the
+file the IDE's **Drishti server (demo lakes)** and `start server --demo` read), then `stack.ini` (live news) and, for the members,
+`member.ini` (no data inbox); the business day is the newest date of the demo lake.
 
 Each node's net folder is checked in (`advertise-url: http://${DRISHTI_STACK_HOST}:<port>`, `secret: ${DRISHTI_NET_SECRET}`: references,
 never the key or an address). `drishti.py start cluster` finds this machine's real address (the default route's interface, never a docker bridge) and gives
@@ -746,7 +748,7 @@ Environment=MALLOC_ARENA_MAX=2
 ExecStart=/usr/bin/java -Xmx36g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:TrimNativeHeapInterval=60000 -jar /opt/drishti/lib/drishti-server-<version>-exec.jar
 Environment=DRISHTI_DRAIN_WAIT=840
-ExecStop=-/opt/drishti/bin/drishti-node.sh drain   # drain, wait for safeToStop (at most DRISHTI_DRAIN_WAIT), then SIGTERM
+# no ExecStop: on SIGTERM the server drains itself (drishti.node.drain.on-stop), waits for safeToStop (at most DRISHTI_DRAIN_WAIT), then stops
 TimeoutStopSec=900
 ```
 
@@ -944,7 +946,7 @@ standby switchover. The schema files are complete, with no migrations.
 | Endpoint | Process | Means | Used by |
 |---|---|---|---|
 | `GET /actuator/health/liveness` | server | the JVM answers | container health checks: a restart decision |
-| `GET /actuator/health/readiness` | server | ready means ready (below) | load balancers, the rolling runner, `drishti-node.sh wait-ready` |
+| `GET /actuator/health/readiness` | server | ready means ready (below) | load balancers, the rolling runner, `drishti.py node wait-ready` |
 | `GET /actuator/health` | server | the server's own health (sources, disk …); never waits for readiness's gates | monitoring, tools that wait for a start |
 | `GET /healthz` | console | the process answers | the console container's health check |
 | `GET /readyz` | console | the console can reach a server (`503` otherwise) | the ALB target group, the rolling runner |
@@ -1007,7 +1009,7 @@ Settings: `live.relay.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 ### 8.1 Drain before a stop
 
 One action drains a node for a stop: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Cluster → **Drain for a stop**;
-`bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It stops Drishti\*net forwarding to
+`python tools/drishti.py node drain`; administrators, or a personal API token with the `node:drain` scope). It stops Drishti\*net forwarding to
 the node (a forwarded request that reaches it is answered `503` so the caller tries the next peer), hands its VaR shards to their next owners
 and turns readiness `OUT_OF_SERVICE`; `GET /api/v1/admin/node` reports `safeToStop` once every part has handed its work over (the forwarding
 after `drishti.node.drain.settle-seconds`, 5 s; the shards once it holds none). `{"on": false}` takes it back; a restart does too.
@@ -1025,10 +1027,10 @@ the drain:**
 
 | Where | The drain before a stop | How long it may wait |
 |---|---|---|
-| systemd (`deploy/systemd/drishti-server.service`) | `ExecStop=-/opt/drishti/bin/drishti-node.sh drain` | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
-| Docker (`deploy/docker/server.Dockerfile`) | the entry point `drishti-node.sh run java …`, on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
+| systemd (`deploy/systemd/drishti-server.service`) | the server's own drain on SIGTERM (`drishti.node.drain.on-stop`) | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
+| Docker (`deploy/docker/server.Dockerfile`) | the server's own drain on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
 | ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
-| Windows | the REST call `bin/drishti-node.sh` makes, before stopping the process: `POST /api/v1/admin/node/drain` with `{"on":true}` (an administrator's token with the `node:drain` scope, as `Authorization: Bearer`), then `GET /api/v1/admin/node` until it says `safeToStop` | your own wait |
+| Windows | the server's own drain on a stop, or `py tools\drishti.py node drain` first (the same REST call: `POST /api/v1/admin/node/drain` with `{"on":true}` (an administrator's token with the `node:drain` scope, as `Authorization: Bearer`), then `GET /api/v1/admin/node` until it says `safeToStop` | your own wait |
 
 The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`); with sign-in off none is needed. A drain that is refused, or not safe in
 time, never holds the stop: the replicas answer and the next owners build the shards, as after a crash. On ECS with EC2 capacity raise the
@@ -1060,7 +1062,7 @@ python tools/rolling.py --inventory my-cluster.yaml --version <version> --from v
   `{role}`, `{zone}` filled in (`ssh {host} sudo systemctl stop drishti-server`). **ECS** (`platform: ecs`): `aws ecs update-service
   --force-new-deployment` to the node's new task definition (registered first by `deploy/aws/ecs/register.sh`), `aws ecs wait
   services-stable`, then readiness.
-- **Any failure stops the run**, names the node and says how to resume (`--from`) or undrain it (`drishti-node.sh undrain`). `--only a,b`
+- **Any failure stops the run**, names the node and says how to resume (`--from`) or undrain it (`drishti.py node undrain`). `--only a,b`
   upgrades only those, in order. The URLs are the nodes' real addresses (or their Cloud Map names on ECS), never `localhost`.
 
 ### 8.3 Versions side by side
@@ -1291,7 +1293,7 @@ writable NFS mounts (exit 78; `DRISHTI_REQUIRE_EFS=false` only for a local check
 `task.lock` is fresh; finds the task's real IPv4 address (never `127.*`, `0.0.0.0` or `localhost`); on the node's first start writes
 `config/net/node.yaml` (`advertise-url: http://${DRISHTI_NODE_IP}:18480`, `secret: ${DRISHTI_NET_SECRET}`, both resolved at every start) and a
 peer file per seed of `DRISHTI_NET_SEEDS`; starts Java with ZGC, `-XX:-UsePerfData`, the temp folder, home, crash files and heap dumps on EFS,
-and the flags of section 4.4. On SIGTERM `drishti-node.sh run` drains for at most `DRISHTI_DRAIN_WAIT` (90 s), then Spring finishes requests
+and the flags of section 4.4. On SIGTERM the server drains itself for at most `DRISHTI_DRAIN_WAIT` (90 s), then Spring finishes requests
 in flight (`stopTimeout: 120`). Health check: **liveness** on the task's own address every 15 s, 4 retries, 180 s start period. Logs:
 standard output to CloudWatch Logs (`/drishti/<env>`, stream prefix the node id).
 
@@ -1399,10 +1401,10 @@ folders), wait for readiness. `python tools/rolling.py --inventory <file> --vers
 python tools/rolling.py --inventory prod-ecs.yaml --version <version> --dry-run
 python tools/rolling.py --inventory prod-ecs.yaml --version <version>
 # one owner by hand, the same steps
-DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 bin/drishti-node.sh drain
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 python tools/drishti.py node drain
 aws ecs update-service --cluster "$ECS_CLUSTER" --service var-3 --task-definition "drishti-$ENV-var-3:$REV" --force-new-deployment
 aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services var-3
-DRISHTI_NODE_URL=http://var-3.drishti.local:18480 bin/drishti-node.sh wait-ready --wait 1800
+DRISHTI_NODE_URL=http://var-3.drishti.local:18480 python tools/drishti.py node wait-ready --wait 1800
 ```
 
 | Event | What happens, what to do |

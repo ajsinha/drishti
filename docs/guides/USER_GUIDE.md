@@ -3120,7 +3120,7 @@ lists the fields kept as columns.
 
 ```python
 df = drishti.columns("TRD", ["mtm", "book", "desk", "risk.dv01", "counterparty.id"])
-len(df)                                                   # 10000 with tools/load-delta.sh --trades 10000
+len(df)                                                   # 10000 with python tools/drishti.py data load --store delta --trades 10000
 df.groupby("desk")["risk.dv01"].sum()
 ```
 
@@ -3320,12 +3320,12 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 
 ### 12. Installing the Python runtime
 
-The runtime is not in git (53 MB, which `du -sh` shows as 51M). `tools/fetch-pyodide.sh` installs it once:
+The runtime is not in git (53 MB, which `du -sh` shows as 51M). `python tools/drishti.py calc install` installs it once:
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/fetch-pyodide.sh
+python tools/drishti.py calc install
 ```
 
 You should see:
@@ -3341,21 +3341,20 @@ What it does:
 
 1. Downloads the pinned release (Pyodide **314.0.7**, the full distribution from the official GitHub releases) into
    `~/.cache/drishti/` (`--cache` elsewhere), once.
-2. Checks its **SHA-256** against the one pinned in the script, and refuses any other file.
+2. Checks its **SHA-256** against the one pinned in `tools/calcruntime.py`, and refuses any other file.
 3. Unpacks only the core runtime (`pyodide.mjs`, `pyodide.asm.mjs`, `pyodide.asm.wasm`, `python_stdlib.zip`) and
    numpy, pandas, scipy, statsmodels and matplotlib with everything they depend on, and writes a lock file that lists
    only those (so an import of anything else fails at once instead of asking for a file).
 4. Writes `drishti-pyodide.txt` (version, SHA-256, packages) and replaces the folder as a whole.
 
-Run it again and it says *already installed*; `--force` unpacks again. It needs bash and python3, and curl, wget or
-python3 to download.
+Run it again and it says *already installed*; `--force` unpacks again. It needs only Python 3 (the standard library), on any system.
 
 | Situation | Do |
 |---|---|
-| A machine with internet | `tools/fetch-pyodide.sh` |
-| An offline machine | download `pyodide-314.0.7.tar.bz2` elsewhere, copy it over, `tools/fetch-pyodide.sh --tarball pyodide-314.0.7.tar.bz2` (the hash is still checked) |
-| The console Docker image | nothing: `deploy/docker/console.Dockerfile` runs the script in a build stage (it reuses a runtime already in the build context), so the image carries the runtime and a running console needs no internet |
-| Upgrading Pyodide | change `VERSION` and `SHA256` in the script (the release's `.tar.bz2` digest), run it, restart the console. The URL names the version, so browsers fetch the new runtime at once |
+| A machine with internet | `python tools/drishti.py calc install` |
+| An offline machine | download `pyodide-314.0.7.tar.bz2` elsewhere, copy it over, `python tools/drishti.py calc install --tarball pyodide-314.0.7.tar.bz2` (the hash is still checked) |
+| The console Docker image | nothing: `deploy/docker/console.Dockerfile` runs `tools/calcruntime.py` in a build stage (it reuses a runtime already in the build context), so the image carries the runtime and a running console needs no internet |
+| Upgrading Pyodide | change `VERSION` and `SHA256` in `tools/calcruntime.py` (the release's `.tar.bz2` digest), run it, restart the console. The URL names the version, so browsers fetch the new runtime at once |
 
 Restart the console after installing: it mounts the runtime at `/pyodide/<version>/` at start-up, served with
 `Cache-Control: public, max-age=31536000, immutable` (the version is in the URL), so a browser downloads it once.
@@ -3366,12 +3365,12 @@ Check it:
 - **Help → About** shows *Python runtime (Calc): Pyodide 314.0.7 · 53.2 MB, served by this console*.
 
 Without it, views still offer Calc to those allowed, and the panel says **Python runtime not installed: run
-tools/fetch-pyodide.sh** (Run is disabled); `/healthz` and About say the same.
+python tools/drishti.py calc install** (Run is disabled); `/healthz` and About say the same.
 
 ### 13. Sizes and performance, measured
 
 Measured on 2026-10-01 with headless Chrome 154 on the development machine (24 cores), console and server on
-localhost, the banking packs' sample data and a scratch lake of 10,000 trades a day (`tools/load-delta.sh --trades
+localhost, the banking packs' sample data and a scratch lake of 10,000 trades a day (`python tools/drishti.py data load --store delta --trades
 10000`). Each figure is a fresh browser (an empty cache) unless it says *warm*.
 
 | What | Measured |
@@ -3448,13 +3447,13 @@ DRS-5002`), and the runtime under `/pyodide/<version>/`.
 |---|---|---|
 | No **Alt+C Calc** key on a view | The pack that owns the kind does not enable Calc, or the view is in a workspace pane | Enable it in the pack (`python: { enabled: true }`, [section 8](#8-packs-switching-calc-on-and-starter-snippets)), restart the server; open the view on its own |
 | The key is greyed: *Calc needs a role with calc* | None of your roles has the `calc` power | Ask an administrator ([section 9](#9-roles-who-may-use-calc)) |
-| *Python runtime not installed: run tools/fetch-pyodide.sh* | The console has no runtime folder | Run the script on the console's machine (or rebuild the image), restart the console ([section 12](#12-installing-the-python-runtime)) |
+| *Python runtime not installed: run python tools/drishti.py calc install* | The console has no runtime folder | Run it on the console's machine (or rebuild the image), restart the console ([section 12](#12-installing-the-python-runtime)) |
 | *Python could not start: … Content Security Policy …* | A proxy in front of the console rewrites security headers | Let the console's own headers through for `/static/js/drishti_calc-worker.js` |
 | *Python could not start: Failed to fetch* | The runtime was upgraded while the page was open | Reload the page |
 | *No module named 'sklearn' (Calc has numpy, pandas, …)* | Only the packages of [section 7](#7-packages) exist | Use what is there, or a script with a token |
 | *drishti.get() needs JavaScript Promise Integration … write `await drishti.get_async('trade', 'MX-20000001')` instead* | No JavaScript Promise Integration (Safari, or a browser with it switched off) | Write the call as the message says: `await drishti.get_async(...)` (and `search_async`, `columns_async`, `history_async`) |
 | `DrishtiError: DRS-5002: tina may not open pnl-vector entities` | Your roles do not open that kind | As on the screen: ask for a role that opens it |
-| `DrishtiError: DRS-5001: no source of trade keeps its fields as columns here` | `drishti.columns()` needs a laid-out source (a lake) | Use `drishti.search()`, or load the lake (`tools/load-delta.sh`) |
+| `DrishtiError: DRS-5001: no source of trade keeps its fields as columns here` | `drishti.columns()` needs a laid-out source (a lake) | Use `drishti.search()`, or load the lake (`python tools/drishti.py data load --store delta`) |
 | `DrishtiError: DRS-5001: not kept as columns for trade: [notional]` | That field is not promoted | `drishti.columns("TRD", [])` lists those that are |
 | A column of `•••` | Your role sees that field masked | As on the screen: `raw` access shows it |
 | *output capped at 8 MB for one run* | The output budget ([section 6](#6-output-print-show-chart-figures)) | Show less: `df.head()`, a `groupby` |

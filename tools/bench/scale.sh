@@ -100,21 +100,22 @@ ENV=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_DE
      DRISHTI_PACKS_OVERLAY="$SRV/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$SRV/packs/installed" DRISHTI_FEEDS="$SRV/feeds"
      DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false)
 LOADER=(); ENGINE=""
+DLOAD=("${DRISHTI_PYTHON:-drishti-console/.venv/bin/python}" tools/drishti.py data load --store)   # the store loaders (tools/storeload.py)
 case "$STORE" in
   delta)
     mkdir -p "$DATA/lake"; ENGINE=native
-    LOADER=(tools/load-delta.sh "$DATA/lake" --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" delta "$DATA/lake" --trades "$TRADES" --days "$DAYS")
     ENV+=(DRISHTI_DELTA_ROOT="$DATA/lake" DRISHTI_DELTA_ENGINE=native) ;;
   files)
-    LOADER=(tools/load-files.sh "$DATA/files" --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" files "$DATA/files" --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=files DRISHTI_FILES_ROOT="$DATA/files") ;;
   duckdb)
     mkdir -p "$DATA/duckdb"
-    LOADER=(tools/load-duckdb.sh "$DATA/duckdb/drishti.duckdb" --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" duckdb "$DATA/duckdb/drishti.duckdb" --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=duckdb DRISHTI_DUCKDB_PATH="$DATA/duckdb/drishti.duckdb") ;;
   iceberg)
     mkdir -p "$DATA/iceberg" "$DATA/spill"
-    LOADER=(tools/load-iceberg.sh "$DATA/iceberg" --trades "$TRADES" --days "$DAYS" --spill-dir "$DATA/spill")
+    LOADER=("${DLOAD[@]}" iceberg "$DATA/iceberg" --trades "$TRADES" --days "$DAYS" --spill-dir "$DATA/spill")
     ENV+=(SPRING_PROFILES_ACTIVE=iceberg DRISHTI_ICEBERG_ROOT="$DATA/iceberg") ;;
   postgres)
     note "starting postgres:18-alpine (memory $CMEM)"
@@ -123,7 +124,7 @@ case "$STORE" in
     wait_for 120 docker exec "$NAME" pg_isready -U drishti -d drishti -h 127.0.0.1
     sleep 2
     URL="jdbc:postgresql://localhost:$PG_PORT/drishti"
-    LOADER=(tools/load-postgres.sh "$URL" --user drishti --password drishti --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" postgres "$URL" --user drishti --password drishti --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL="$URL" DRISHTI_PG_USER=drishti DRISHTI_PG_PASSWORD=drishti) ;;
   redis)
     note "starting redis:8.2 (memory $CMEM)"
@@ -131,14 +132,14 @@ case "$STORE" in
       --maxmemory "$(( $(numfmt --from=iec "${CMEM^^}") * 3 / 4 ))" --save "" --appendonly no $STORE_ARGS >/dev/null
     wait_for 60 docker exec "$NAME" redis-cli ping
     URI="redis://localhost:$REDIS_PORT"
-    LOADER=(tools/load-redis.sh "$URI" --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" redis "$URI" --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=redis DRISHTI_REDIS_URI="$URI") ;;
   mongodb)
     note "starting mongo:7 (memory $CMEM)"
     docker run -d --name "$NAME" -m "$CMEM" -p "$MONGO_PORT:27017" -v "$VOLUME:/data/db" mongo:7 ${STORE_ARGS:---wiredTigerCacheSizeGB 0.5} >/dev/null
     wait_for 120 docker exec "$NAME" mongosh --quiet --eval 'db.runCommand({ping: 1}).ok'
     URI="mongodb://localhost:$MONGO_PORT"
-    LOADER=(tools/load-mongodb.sh "$URI" drishti --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" mongodb "$URI" drishti --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=mongodb DRISHTI_MONGODB_URI="$URI" DRISHTI_MONGODB_DATABASE=drishti) ;;
   aerospike)
     AS_GB=$(( TRADES * DAYS * 12 / 1000000 )); (( AS_GB < 8 )) && AS_GB=8      # about 7 KB a trade-day, with room
@@ -148,7 +149,7 @@ case "$STORE" in
     wait_for 120 docker exec "$NAME" asinfo -v status
     sleep 3
     HOSTS="localhost:$AS_PORT"
-    LOADER=(tools/load-aerospike.sh "$HOSTS" test --trades "$TRADES" --days "$DAYS")
+    LOADER=("${DLOAD[@]}" aerospike "$HOSTS" test --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=aerospike DRISHTI_AEROSPIKE_HOSTS="$HOSTS" DRISHTI_AEROSPIKE_NAMESPACE=test) ;;
 esac
 mkdir -p "$DATA/empty-lake"

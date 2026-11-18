@@ -31,7 +31,7 @@ doc: docs/connectors/types/file/README.md
 # File connector templates
 
 Ready-made connector files for the `file` plugin: one file per banking data domain (`trading`, `reference`, `market`, `risk`,
-`credit`, `collateral`), all reading folders under one root that `tools/load-files.sh` fills.
+`credit`, `collateral`), all reading folders under one root that `python tools/drishti.py data load --store files` fills.
 
 ## What it reads
 
@@ -67,7 +67,7 @@ loaders' row (`domain`, `kind`, `id`, `date`, `doc`, `columns`) or a plain docum
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-files.sh                                    # the samples: 1,791 documents x 10 business days into data/files
+python tools/drishti.py data load --store files                                    # the samples: 1,791 documents x 10 business days into data/files
 cp config/connectors.examples/files/*-store.yaml config/connectors/
 ```
 

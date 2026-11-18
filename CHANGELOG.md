@@ -18,6 +18,44 @@
 
 ## Unreleased
 
+- **The operator scripts are Python commands on every system; their shell wrappers are gone.** `python tools/drishti.py data load --store
+  <delta|files|postgres|duckdb|iceberg|mongodb|redis|aerospike|cassandra> [target ...] [--trades N --days D] [options]` (`tools/storeload.py`)
+  generates the demo data and runs the store's loader as a main class of the server jar in `<home>/lib`, started through `javacmd` (the one
+  Java of every tool, `DRISHTI_LOADER_HEAP`, default 4g), with no Maven step; each store's options are checked (an unknown one exits 2) and
+  `--dry-run` prints every step. `python tools/drishti.py calc install` (`tools/calcruntime.py`, standard library only; the console images run
+  it) installs Calc's Pyodide, and `python tools/drishti.py dev bicompute-unit` checks the pivot engine without Maven. The feed schedules
+  (`feed schedule --cron | --systemd`) run `drishti-console/.venv/bin/python tools/drishti.py feed run <feed>`; the VaR file generators run
+  as `python tools/pvgen/morning.py`, `intraday.py`, `check.py` and `publish_kafka.py`. Docs, connector READMEs, pack guides, the console's
+  "runtime not installed" message and the tests (`tools/test_store_load.py`) name the commands.
+- **The IDE launchers are generated from one table and committed; the server's JVM options have one source.** `tools/launch/launchers.yaml`
+  names the thirteen launchers (IDE, name, kind, profile, command); `python tools/drishti.py launchers` writes `run-configs/`,
+  `drishti-console/run-configs/` and the tables of IDE_GUIDE section 4, and `launchers --check` (a quick file check of the drill's gate,
+  `tools/test_launchers.py` G1) fails on any hand edit. A server launcher carries the jar, `-Ddrishti.home`, the settings files (`dev.ini`,
+  then its profile) and `@~/drishti-envs/jvm-<profile>.args`: this machine's JVM options, written by `setup` (or `launchers --machine`)
+  from `serverstart.jvm_flags`, the function `drishti.py start server` runs, so the temp folder, heap dumps and GC log follow
+  `drishti.data.dir` (they stayed in the clone before) and the IDE and the terminal run the same flags (the GC log path is quoted, so a
+  Windows drive letter works); macro paths are quoted (a user folder with a space). The service unit and the images take theirs from
+  the committed, generated `deploy/jvm/server-service.args` and `server-container.args` (`java @…/lib/server.args`, ZGC there).
+  Guards G1 to G11 (`tools/test_launchers.py`, `tools/test_run_configs.py`): the exact launcher set, only allowed values in a launcher, the
+  terminal demo and the IDE demo start the same server, paths, every launcher parses with the real command line, every name documented,
+  every pack named exists and no pack list in a tool, the docs name only launchers that exist, no OS-specific path, no `java:` in the
+  cluster file.
+- **The cluster file runs on the demo profile.** `deploy/stack/stack.yaml` names `profile: demo` and its own `stack.ini` (live news) and
+  `member.ini` (the members run no data inbox), with only what makes it a cluster (nodes, ports, packs of the members, lakes, what is off);
+  its `settings:` block, the `java:` key (a Linux path that broke a Windows start) and the fixed business day are gone: `start cluster`
+  takes the business day from the demo lake's newest date, and the JDK from the one lookup. A member's `packs:` beats the profile's.
+- **`status` sees a server or console started from an IDE, and `build` refuses while a server runs.** Both find this install's processes
+  by their command line on Linux, macOS and Windows (`procs.drishti_processes`, the port from the settings files they name): `status`
+  lists them as `server (elsewhere)`; `build jar|modules|all` says *stop the server first: pid … on port …* in one line instead of a Maven
+  failure on Windows' locked jar.
+- **The server drains itself on a stop; `bin/drishti-node.sh` is gone.** On SIGTERM (a service stop, docker stop, ECS, Ctrl+C) the server
+  drains its node before its graceful shutdown and waits for safeToStop at most `DRISHTI_DRAIN_WAIT` (`drishti.node.drain.on-stop`,
+  `on-stop-wait-seconds`; `NodeDrainOnStop`), so the systemd unit has no `ExecStop` and the images run `java` directly.
+  `python tools/drishti.py node drain|undrain|status|wait-ready` drains a node ahead of a stop on any OS.
+- **`lake` help is current.** `lake demo` no longer speaks of seven packs or of pointing connector files; the `lake build` examples name the
+  lake (`--lake demo`); `lake relocate` and `lake migrate-config`, one-time moves from an older release's layout, are marked deprecated
+  in their help and say so when they run (retired in the next release).
+
 - **Profiles: the demo, the samples and the QA pair are committed settings files, read the same way by the IDEs and the terminal.**
   `config/profiles/demo.ini` (sign-in on, demo source off, offline, the system baskets seeded, Studio save, the data inbox on and its
   owner, the packs `default,us-equities,gleif,funds`, a 4 GB heap, the console's sign-in and plain-HTTP cookie), `samples.ini` and
@@ -34,9 +72,10 @@
   (`kernel.yaml` `kernel.packs`) and every module's, in requirement order, less those a module's manifest marks `packs.off-by-default`
   (capital markets' `us-equities` and `funds`, which read a lake built first); `config/packs/default-packs.yaml` and its copy in the
   `drishti-packs` jar are gone, so a module's new pack (genomics' `genomics-showcase`, `protein-engineering`) is on without editing any
-  list. The word `default` may stand in a pack list (`default,us-equities`). `drishti.lenses` defaults to `default`: every lens the
-  registry declares for a module that is on and that has a lens file (Risk, Trading, Market, World, and Research while genomics is on;
-  a lens file may say `offered-by-default: false`, as Drishti Finance's Markets lens does). A lens named that cannot be offered (its module
+  list. The word `default` may stand in a pack list (`default,us-equities`). `drishti.lenses` defaults to `default`: every lens file
+  `config/lenses/<module>/<lens>.yaml` whose module is on (and that the registry offers, when it declares the lens): Risk, Trading,
+  Market, World, and Research while genomics is on; a lens file may say `offered-by-default: false`, as Drishti Finance's Markets lens
+  does. Economy's public-sector packs are off by default too (their feeds fill them first). A lens named that cannot be offered (its module
   off, or no lens and no lens file of that name) never stops the start: it is left out, the start-up log has an ERROR naming it, why and
   the fix, and Admin → Health shows it in red (health DEGRADED) (`LensOffer`, `LensOfferTest`). The research lens is declared beside the
   others (`META-INF/drishti/lenses.yaml`).

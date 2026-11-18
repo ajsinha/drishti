@@ -50,14 +50,14 @@ settings:
 - tls.*
 auth: Credentials in the uri as ${ENV} references (a literal password is refused); TLS through tls.* (or tls=true in the uri); x.509 certificate log-in with auth-mechanism x509.
 licence: MongoDB Java driver, sync (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the server is yours to run, and tools/load-mongodb.sh needs bash.
+windows: Works the same on Windows (pure Java driver); the server is yours to run, and python tools/drishti.py data load --store mongodb loads it from any system.
 doc: plugins/drishti-plugin-mongodb/README.md
 ---
 # The mongodb connector
 
 Plugin `mongodb` (`plugins/drishti-plugin-mongodb`): a document per entity per day, read as columns. One entity is one `_id` lookup;
 a day's promoted fields come from a narrow second collection, so a search over a million trades does not decompress a million
-documents. `tools/load-mongodb.sh` (or any writer keeping the same layout) fills it.
+documents. `python tools/drishti.py data load --store mongodb` (or any writer keeping the same layout) fills it.
 
 ## What it reads
 
@@ -133,7 +133,7 @@ settings:
 ```
 
 Ready-made files for the six banking domains: `config/connectors.examples/mongodb/`; over TLS: `other/positions-mongo.yaml`. Load data
-with `tools/load-mongodb.sh mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
+with `python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
 
 ## Troubleshooting
 
@@ -187,16 +187,16 @@ text. The layout's `sort-by`, `file-rows` and `row-group-rows` do not apply.
 
 ## Loading
 
-`tools/load-mongodb.sh` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
+`python tools/drishti.py data load --store mongodb` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
 through `MongoLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-mongodb.sh mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
-tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
-tools/load-mongodb.sh mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
-tools/load-mongodb.sh mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
 ```
 
 - **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
@@ -398,8 +398,8 @@ A quick start (MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7
 
 ```bash
 docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
-tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples, 10 business days
-tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples, 10 business days
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
 cp config/connectors.examples/mongodb/*.yaml config/connectors/               # the banking domains on MongoDB
 ```
 

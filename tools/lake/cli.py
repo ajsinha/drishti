@@ -19,12 +19,15 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     scan       the fields of an export with their values, and the suggested --key and --partition-by (tools/lake/scan.py)
     publish    commit a table lake build wrote (a scratch lake) into a Delta table in S3, one commit (tools/lake/publish.py)
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
-    demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
+    demo       the demo lakes from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
     memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/DATA_LAKE_GUIDE.md)
     show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/DATA_LAKE_GUIDE.md)
     check      connectors name known lakes; each lake file matches its tables on disk (format, partitions, promoted columns)
-    migrate-config  lake files from connector files that still describe their lake; the connectors rewritten to lake: <name>
+
+  From an older release (deprecated: retired in the next release; each says so when it runs):
+    relocate        move a lake of the older layout (<data>/delta/<domain>) into its own folder, once
+    migrate-config  lake files from connector files that still describe their lake
 """
 from __future__ import annotations
 
@@ -34,6 +37,12 @@ import re
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
+DEPRECATED = ("lake {cmd} is deprecated: a one-time move from an older release's layout, retired in the next release. "
+              "Run it once if your install still has that layout; nothing else needs it.")
+
+
+def deprecated(cmd: str) -> None:
+    print(DEPRECATED.format(cmd=cmd), file=sys.stderr, flush=True)
 
 
 def _mod(name: str):
@@ -109,6 +118,7 @@ def cmd_undo(a, extra) -> int:
 
 
 def cmd_relocate(a, extra) -> int:
+    deprecated("relocate")
     return _mod("relocate").run(a)
 
 
@@ -124,7 +134,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     sub = g.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     b = add(sub, "build", cmd_build, "lake build: stream a JSON array / JSON Lines / .gz export into a Delta table, partitioned, with promoted columns",
             [], "examples:\n  drishti.py lake build --from exports/deal.2026-10-01.json --kind deal --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates "
-                "--lake data/delta/demo --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta/demo --as-of 2026-10-01 "
+                "--lake demo --domain trading\n  drishti.py lake build --from drop/ --kind trade --lake demo --as-of 2026-10-01 "
                 "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
                 "Guide: docs/guides/CLI_REFERENCE.md")
     _mod("build").add_arguments(b)
@@ -142,8 +152,8 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     st.add_argument("--lake", required=True, metavar="NAME|DIR", help="a lake of config/lakes/ by its name (where its lake file says), or a folder")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")
     st.add_argument("--json", action="store_true")
-    dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes of the seven packs from data/testdata (sixty business days), point the "
-             "connector files at them, say what to start next", [],
+    dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes from data/testdata (sixty business days) where the lake files say "
+             "(config/lakes), and say what to start next", [],
              "examples:\n  drishti.py lake demo\n  drishti.py lake demo --lake /tmp/demo-lake\n"
              "  drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json      (LOCAL ONLY: never into data/testdata)\n"
              "Guide: data/testdata/README.md")
@@ -152,8 +162,8 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --dry-run\n"
             "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --yes\nGuide: docs/guides/DATA_LAKE_GUIDE.md section 5.5")
     _mod("undo").add_arguments(u)
-    rl = add(sub, "relocate", cmd_relocate, "lake relocate: move a lake built in the older layout (<data>/delta/<domain>) into its own folder "
-             "<data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
+    rl = add(sub, "relocate", cmd_relocate, "lake relocate (deprecated, from an older release; retired in the next release): move a lake built "
+             "in the older layout (<data>/delta/<domain>) into its own folder <data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
              "examples:\n  drishti.py lake relocate demo --dry-run\n  drishti.py lake relocate demo\n"
              "The server does it for the demo lake at start (drishti.lakes.relocate-on-start). Guide: docs/guides/OPERATIONS_GUIDE.md")
     _mod("relocate").add_arguments(rl)

@@ -179,7 +179,7 @@ python3 tools/drishti.py feed run funds --snapshot                # the download
 python3 tools/packgen/funds/make.py --check              # no network: the pack matches its generator
 ```
 
-`tools/feeds/feed.sh run funds` (Linux, macOS) and `drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run funds` (Windows) run the same script. The downloads stay in the data folder
+`drishti-console/.venv/bin/python tools/drishti.py feed run funds` (Linux, macOS) and `drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run funds` (Windows) run the same script. The downloads stay in the data folder
 (`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 """
 

@@ -243,7 +243,7 @@ $ curl -s localhost:18480/actuator/health/liveness       # restart the process i
 $ curl -s localhost:18480/actuator/health/readiness      # send traffic only when this is UP (DOWN while the newest VaR date opens)
 {"status":"UP"}
 $ curl -s localhost:17480/healthz                        # the console process answers
-{"status":"UP","pythonRuntime":"not installed: run tools/fetch-pyodide.sh"}
+{"status":"UP","pythonRuntime":"not installed: run python tools/drishti.py calc install"}
 $ curl -s localhost:17480/readyz                         # the console can reach the server
 {"status":"UP","server":"reachable"}
 ```

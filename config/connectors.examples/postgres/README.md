@@ -31,7 +31,7 @@ doc: plugins/drishti-plugin-jdbc/README.md
 # PostgreSQL connector templates
 
 Ready-made connector files for the `jdbc` plugin in table mode: one file per banking data domain (`trading`, `reference`, `market`,
-`risk`, `credit`, `collateral`), all reading one PostgreSQL database that `tools/load-postgres.sh` fills.
+`risk`, `credit`, `collateral`), all reading one PostgreSQL database that `python tools/drishti.py data load --store postgres` fills.
 
 ## What it reads
 
@@ -73,7 +73,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 export DRISHTI_PG_URL=jdbc:postgresql://db.example.com:5432/drishti DRISHTI_PG_USER=drishti DRISHTI_PG_PASSWORD=...
-tools/load-postgres.sh "$DRISHTI_PG_URL"                       # the samples: 1,791 documents x 10 business days
+python tools/drishti.py data load --store postgres "$DRISHTI_PG_URL"                       # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/postgres/risk-store.yaml config/connectors/
 ```
 
@@ -95,7 +95,7 @@ The server starts the copied connector within seconds. `trading-store.yaml` is a
 ## Troubleshooting
 
 - `DOWN: <driver message> (reconnecting)`: the database is unreachable or `DRISHTI_PG_PASSWORD` is not set or wrong.
-- `UP (catalogue not refreshed: …)`: the schema or table is missing; load that domain with `tools/load-postgres.sh`.
+- `UP (catalogue not refreshed: …)`: the schema or table is missing; load that domain with `python tools/drishti.py data load --store postgres`.
 - `UP (not laid out as the pack declares: …; searches read documents)`: add the pack's `layout.<kind>.columns` and reload.
 - Trades still come from Delta: the trading pack does not read `trading-store`; see the note above.
 

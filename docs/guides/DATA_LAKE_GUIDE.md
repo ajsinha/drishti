@@ -1469,7 +1469,7 @@ without a write path for the command refuses the change, with the reason.
 
 The demo lake is `<data>/delta/demo/`. A demo lake built in the older layout, its tables directly in `<data>/delta/<domain>/`, is
 **moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
-the server stopped:
+the server stopped (`lake relocate` is deprecated: it serves only an install still in the older layout and is retired in the next release):
 
 ```bash
 python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
@@ -1727,7 +1727,7 @@ load mode), read-only; a lake file the reader refuses is shown as the refusal. T
 (`?check=true` adds the comparison with the tables on disk).
 
 **Connectors by path to a lake file.** A connector that names its tables by path keeps working with no warning. To give such tables a
-lake file of their own:
+lake file of their own (`lake migrate-config` is deprecated: a one-time move, retired in the next release):
 
 1. `python3 tools/drishti.py lake migrate-config` prints the lake files it would write (one per distinct root, named after the root's
    last folder) and each connector rewritten to `lake: <name>`; nothing is written.

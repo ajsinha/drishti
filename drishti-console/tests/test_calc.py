@@ -159,7 +159,7 @@ def test_calc_is_a_labs_switch_off_as_shipped_and_never_publishes():
 def test_the_runtime_folder_is_read_from_its_stamp(tmp_path):
     missing = Runtime(tmp_path / "pyodide")
     assert not missing.installed and missing.describe() == {"installed": False, "message": NOT_INSTALLED}
-    assert NOT_INSTALLED == "Python runtime not installed: run tools/fetch-pyodide.sh"
+    assert NOT_INSTALLED == "Python runtime not installed: run python tools/drishti.py calc install"
     folder = tmp_path / "pyodide"
     folder.mkdir()
     (folder / "drishti-pyodide.txt").write_text("version=314.0.7\nsha256=abc\npackages=numpy pandas\n")
@@ -178,7 +178,7 @@ def test_a_view_says_when_the_runtime_is_missing(client, calc_on, tmp_path):
     try:
         html = client.get("/v/trade/IRS-48213").text
         assert NOT_INSTALLED in html and 'data-runtime=""' in html
-        assert client.get("/healthz").json()["pythonRuntime"] == "not installed: run tools/fetch-pyodide.sh"
+        assert client.get("/healthz").json()["pythonRuntime"] == "not installed: run python tools/drishti.py calc install"
     finally:
         calc.runtime = real
 

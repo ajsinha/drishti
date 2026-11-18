@@ -312,7 +312,7 @@ python3 tools/drishti.py feed run market-data                                   
 python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
 ```
 
-The same through the wrapper `tools/feeds/feed.sh run market-data` on Linux and macOS, and on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run market-data` (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the console's Python: `drishti-console/.venv/bin/python tools/drishti.py feed run market-data` on Linux and macOS, `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Generators
 

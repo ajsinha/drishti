@@ -181,12 +181,12 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
-| `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
+| `tools/storeload.py` (`drishti.py data load`) | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [BUILD_GUIDE.md](BUILD_GUIDE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
+| `tools/` (files) | `drill.sh` (verify and publish), `calcruntime.py` (`drishti.py calc install`: installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `storeload.py` (`drishti.py data load`: the demo data into any of the nine stores), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
@@ -627,9 +627,9 @@ for this machine only). `drishti-console/requirements.txt` holds FastAPI, Uvicor
 tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Without uv, `python3 -m venv drishti-console/.venv` and
 `drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
 
-For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
+For Calc (Python on a view, `Alt+C`), install its runtime once: `python tools/drishti.py calc install` (about 340 MB downloaded to
 `~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
-as usual, `GET /healthz` says `"pythonRuntime": "not installed: run tools/fetch-pyodide.sh"` and the Calc panel says how to install it.
+as usual, `GET /healthz` says `"pythonRuntime": "not installed: run python tools/drishti.py calc install"` and the Calc panel says how to install it.
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
 (git-ignored), then environment variables, then `--key=value` arguments:
@@ -660,9 +660,10 @@ DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
 
 Server settings follow the same precedence as the console: `kernel/drishti-server/src/main/resources/application.yaml`, then
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
-arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The run configurations in `run-configs/` carry the
-settings of each way of starting it (sign-in on with the development admin, the demo source on or off, the QA profile on its own ports
-and data folder); [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
+arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The settings of each way of starting it (the demo, the
+built-in samples, the QA pair on its own ports and data folder) are the committed profiles `config/profiles/*.ini`, which the run
+configurations in `run-configs/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
+[IDE_GUIDE.md](IDE_GUIDE.md) lists them.
 
 The development loop that works best:
 
@@ -936,7 +937,7 @@ Two files have their own, narrower policy. Calc's worker, `/static/js/drishti_ca
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile
 WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's
 session).
-For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
+For Pyodide, `python tools/drishti.py calc install` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
 ([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).
 

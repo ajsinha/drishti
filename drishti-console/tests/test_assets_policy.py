@@ -92,18 +92,18 @@ def test_the_worker_points_pyodide_at_this_origin_for_everything():
 
 
 def test_the_runtime_is_fetched_pinned_and_verified_and_never_committed():
-    script = (REPO / "tools/fetch-pyodide.sh").read_text(encoding="utf-8")
-    assert re.search(r'^VERSION="\d+\.\d+\.\d+"$', script, re.M)
-    assert re.search(r'^SHA256="[0-9a-f]{64}"$', script, re.M)
-    assert 'URL="https://github.com/pyodide/pyodide/releases/download/${VERSION}/pyodide-${VERSION}.tar.bz2"' in script
+    script = (REPO / "tools/calcruntime.py").read_text(encoding="utf-8")
+    assert re.search(r'^VERSION = "\d+\.\d+\.\d+"$', script, re.M)
+    assert re.search(r'^SHA256 = "[0-9a-f]{64}"$', script, re.M)
+    assert 'URL = f"https://github.com/pyodide/pyodide/releases/download/{VERSION}/pyodide-{VERSION}.tar.bz2"' in script
     assert "refusing it" in script                                   # a tarball with another hash is not unpacked
     assert "drishti-console/web/static/vendor/pyodide/" in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
     docker = (REPO / "deploy/docker/console.Dockerfile").read_text(encoding="utf-8")
-    assert "tools/fetch-pyodide.sh" in docker                        # the image carries it: no internet at run time
+    assert "RUN python tools/calcruntime.py" in docker              # the image carries it: no internet at run time
 
 
 def test_an_installed_runtime_is_whole_and_names_only_local_files():
-    """When tools/fetch-pyodide.sh has run: every package in the lock file is a file here, and none is a URL."""
+    """When drishti.py calc install has run: every package in the lock file is a file here, and none is a URL."""
     import json
     folder = WEB / "static/vendor/pyodide"
     if not (folder / "drishti-pyodide.txt").exists():

@@ -386,7 +386,7 @@ python3 tools/drishti.py feed run gleif --snapshot --offline            # rebuil
 python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
 ```
 
-`tools/feeds/feed.sh run gleif` (Linux, macOS) and `drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run gleif` (Windows) run the same command. Underneath it are the generator's two
+`drishti-console/.venv/bin/python tools/drishti.py feed run gleif` (Linux, macOS) and `drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run gleif` (Windows) run the same command. Underneath it are the generator's two
 steps, which can also be run by hand:
 
 ```bash

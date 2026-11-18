@@ -297,7 +297,7 @@ settings:
 
 `DRISHTI_DELTA_ROOT=s3://risk-lake/banking` moves every pack's lake at once. Ready-made files: `config/connectors.examples/other/customer-lake.yaml`
 (S3-compatible, keys as references), `other/delta-private-ca.yaml` (TLS), `config/connectors.examples/delta-s3/` (AWS). Build a demo lake
-with `drishti.py lake demo`, `tools/load-delta.sh` (`--trades 50000` for a generated book) (on Windows: `python tools\drishti.py lake demo --engine java`).
+with `drishti.py lake demo`, `python tools/drishti.py data load --store delta` (`--trades 50000` for a generated book) (on Windows: `python tools\drishti.py lake demo --engine java`).
 
 ## Troubleshooting
 

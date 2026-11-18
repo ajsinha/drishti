@@ -59,7 +59,7 @@ public final class RowForms {
         }
         return name + " holds loader rows ({domain, kind, id, date, doc, columns}): the parallel lake loader reads documents (one entity a "
                 + "line) and has no reader for loader rows, so the inbox does not load them; load them with the store's own loader "
-                + "(tools/load-*.sh), or drop the documents themselves";
+                + "(drishti.py data load), or drop the documents themselves";
     }
 
     /** The first non-blank line as JSON (null: none, or not JSON), through gzip or zstd when the file's first bytes say so. */

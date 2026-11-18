@@ -228,15 +228,19 @@ def build_parser(h) -> argparse.ArgumentParser:
     add(d, "ingest", h.cmd_data_ingest, "data ingest: write JSON Lines documents into a Delta lake or the File connector's layout (tools/ingest_jsonl.py)",
         [IJ.build_parser(add_help=False)], "examples:\n  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta\n"
         "  drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run")
-    dl = add(d, "load", h.cmd_data_load, "data load: load the demo data (1,791 sample documents x 10 days, optionally a trade book) into a store (tools/load-<store>.sh)",
+    dl = add(d, "load", h.cmd_data_load, "data load: load the demo data (1,791 sample documents x 10 days, optionally a trade book) into a store "
+             "(tools/storeload.py: the generators, then the store's loader from the server jar)", [jvm],
              epilog="examples:\n  drishti.py data load --store delta\n  drishti.py data load --store files --trades 10000 --days 3\n"
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"
-                    "Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
+                    "  drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1\n"
+                    "Each store's own options (--keep-days, --ttl-days, --create, ...) are listed in tools/storeload.py and docs/guides/CLI_REFERENCE.md; "
+                    "the loader's heap is DRISHTI_LOADER_HEAP (default 4g). Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
     dl.add_argument("--store", required=True, choices=LOADERS)
-    dl.add_argument("target", nargs="*", help="the store's root, URL or database (the script's default when omitted; mongodb takes a URI and a database)")
+    dl.add_argument("target", nargs="*", help="the store's root, URL or database (its default when omitted; mongodb takes a URI and a database, "
+                                                "aerospike hosts and a namespace, cassandra contact points and a datacenter)")
     dl.add_argument("--trades", type=int, help="also generate a trade book of this many trades a day")
-    dl.add_argument("--days", type=int, help="business days the book covers (script default 3)")
-    dl.add_argument("--dry-run", action="store_true", help="print the command instead of running it")
+    dl.add_argument("--days", type=int, help="business days the book covers (default 3; redis 1)")
+    dl.add_argument("--dry-run", action="store_true", help="print the steps instead of running them")
     srv_d = server_parent()
     la = add(d, "landed", h.cmd_data_landed, "data landed: tell the server a batch has landed (or failed) so it refreshes, verifies, checks alerts and tells people (POST /api/v1/packs/{pack}/loads)",
              [srv_d], "examples:\n  drishti.py data landed --pack my-bank --kind trade --date 2026-10-06 --rows 48213 --rejected 12 --batch eod-1007\n"
@@ -415,6 +419,8 @@ def build_parser(h) -> argparse.ArgumentParser:
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
     load_module("feedcli", "feeds/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
+    load_module("calcruntime", "calcruntime.py").register(groups)                                                    # calc install (Pyodide for Calc)
+    load_module("bicompute_unit", "dev/bicompute_unit.py").register(groups)                                          # dev bicompute-unit
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|migrate (2.9.11.e)
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")

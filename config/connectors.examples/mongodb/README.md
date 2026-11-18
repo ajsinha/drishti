@@ -31,7 +31,7 @@ doc: plugins/drishti-plugin-mongodb/README.md
 # MongoDB connector templates
 
 Ready-made connector files for the `mongodb` plugin: one file per banking data domain (`trading`, `reference`, `market`, `risk`,
-`credit`, `collateral`), all reading one database that `tools/load-mongodb.sh` fills.
+`credit`, `collateral`), all reading one database that `python tools/drishti.py data load --store mongodb` fills.
 
 ## What it reads
 
@@ -69,7 +69,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 export DRISHTI_MONGODB_URI=mongodb://db.example.com:27017 DRISHTI_MONGODB_DATABASE=drishti
-tools/load-mongodb.sh "$DRISHTI_MONGODB_URI" "$DRISHTI_MONGODB_DATABASE"     # the samples: 1,791 documents x 10 business days
+python tools/drishti.py data load --store mongodb "$DRISHTI_MONGODB_URI" "$DRISHTI_MONGODB_DATABASE"     # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/mongodb/*-store.yaml config/connectors/
 ```
 

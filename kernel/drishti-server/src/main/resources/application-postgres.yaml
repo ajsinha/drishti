@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Profile `postgres` (SPRING_PROFILES_ACTIVE=postgres): the banking packs' data domains are read from PostgreSQL
-# (one table <domain>.entities each, loaded by tools/load-postgres.sh) instead of Delta Lake. The packs still
+# (one table <domain>.entities each, loaded by python tools/drishti.py data load --store postgres) instead of Delta Lake. The packs still
 # decide the kinds, routes and modes of each <domain>-store connector; this profile only changes the store.
 drishti:
   sources:

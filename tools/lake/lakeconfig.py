@@ -266,6 +266,7 @@ def cmd_check(a) -> int:
 def cmd_migrate(a) -> int:
     """L4: lake files written from the connector files that still describe their lake; the connectors rewritten to ``lake: <name>``.
     A dry run (the files printed) unless --write. Nothing under the data folder changes."""
+    print("lake migrate-config is deprecated: a one-time move from an older release's layout, retired in the next release.", file=sys.stderr, flush=True)
     args = ["migrate-config", "--connectors", str(_connectors_dir(a).resolve())] + (["--write"] if a.write else [])
     try:
         out = run(args, pathlib.Path(a.dir) if a.dir else None)
@@ -299,7 +300,7 @@ def register(sub, add) -> None:
     c.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
     c.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     c.add_argument("--json", action="store_true")
-    m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config: write lake files from connector files that "
+    m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config (deprecated, from an older release; retired in the next release): write lake files from connector files that "
             "describe their lake (root, domain, table.<kind>, layout.<kind>.*) and rewrite those connectors to lake: <name>", [],
             "examples:\n  drishti.py lake migrate-config                 (a dry run: prints the files)\n"
             "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/DATA_LAKE_GUIDE.md section 12")

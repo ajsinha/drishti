@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Profile `iceberg` (SPRING_PROFILES_ACTIVE=iceberg): the banking packs' data domains are read from Apache Iceberg tables
-# (one table per kind, loaded by tools/load-iceberg.sh) instead of Delta Lake: path-based tables under
+# (one table per kind, loaded by python tools/drishti.py data load --store iceberg) instead of Delta Lake: path-based tables under
 # DRISHTI_ICEBERG_ROOT (<root>/<domain>/<kind>, local or s3a://), or, with DRISHTI_ICEBERG_CATALOG=rest, the tables of a
 # REST catalog (Apache Polaris, Snowflake Open Catalog, AWS Glue's REST endpoint) whose namespace is the domain. The
 # packs still decide the kinds, routes, modes and promoted columns of each <domain>-store connector.

@@ -14,7 +14,7 @@
 # Example: copy to config/connectors/reference-store.yaml to read the reference-store data from cassandra. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: cassandra
-description: reference-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
+description: reference-store read from Apache Cassandra (loaded by python tools/drishti.py data load --store cassandra)
 settings:
   domain: reference
   mode.counterparty: effective

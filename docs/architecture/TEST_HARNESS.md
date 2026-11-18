@@ -215,7 +215,7 @@ What is marked today: in the console, `test_java_launch_guard.py`, `test_browser
 `test_assets_policy.py`, `test_contrast.py`, `test_command_catalog.py`, `test_console_does_not_aggregate.py`,
 `test_no_shared_user_state.py`, `test_engine_help_pages.py`, `test_settings_catalogue.py`, and the file scans of `test_asset_names.py`,
 `test_branding_guard.py`, `test_under_construction.py` and `test_bi_no_browser_compute.py`; in the tools, `test_readmes.py`,
-`test_pack_guides.py`, `test_run_configs.py`, `test_exports_offer_jsonl.py` and `test_knowledge_pages.py`. The docs checks
+`test_pack_guides.py`, `test_run_configs.py`, `test_launchers.py` (the launchers are what their table generates, guards G1 to G11), `test_exports_offer_jsonl.py` and `test_knowledge_pages.py`. The docs checks
 (`test_docs_*.py`, `test_help*.py`, `test_tools_guide.py`) were already in the gate's docs job, and the licence headers and the
 generated documents in its static job.
 

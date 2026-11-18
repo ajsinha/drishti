@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * QA3B-03 and QA3B-04 on the path QA took: a domain written by {@link IcebergLoader} with {@code --engine native} (as
- * {@code tools/load-iceberg.sh --engine native} runs it), its folder moved, read by the native engine with table discovery and with
+ * {@code python tools/drishti.py data load --store iceberg --engine native} runs it), its folder moved, read by the native engine with table discovery and with
  * {@code kinds}. {@code IcebergMovedTableTest} writes its table through the library engine; this one through the loader, two tables moved
  * together, so the summary names both with one {@code relocate}, and the read's failure says what is wrong without a path. The server's
  * side (the badge of Admin → Connectors, the 502 and its one log line) is {@code IcebergMovedConnectorFileTest} in drishti-server.

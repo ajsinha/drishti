@@ -25,7 +25,7 @@
     python3 tools/drishti.py feed status                                  last success, rows, duration, failures per feed
     python3 tools/drishti.py feed schedule --cron                         daily crontab lines (--systemd, --windows)
 
-    tools/feeds/feed.sh <the same arguments>                              Linux and macOS (the console's Python)
+    drishti-console/.venv/bin/python tools/drishti.py feed <the same arguments>                Linux and macOS (the console's Python)
     drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed <the same arguments>    Windows (the console's Python)
 
 Exit codes (for schedulers): 0 ok, 1 failed, 2 refused or a usage error (a bad feed file, a key not set, an unknown feed), 3 another

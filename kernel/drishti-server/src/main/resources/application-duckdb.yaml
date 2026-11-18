@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Profile `duckdb` (SPRING_PROFILES_ACTIVE=duckdb): the banking packs' data domains are read from one DuckDB file
-# (a schema per domain, <domain>.entities, loaded by tools/load-duckdb.sh) instead of Delta Lake. The six connectors
+# (a schema per domain, <domain>.entities, loaded by python tools/drishti.py data load --store duckdb) instead of Delta Lake. The six connectors
 # share one read-only DuckDB instance on the file; a load writes a new file and renames it over this one, and the
 # connectors reopen it within refresh-seconds. The packs still decide the kinds, routes, modes and promoted columns.
 drishti:

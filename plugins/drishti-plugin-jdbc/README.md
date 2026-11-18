@@ -73,7 +73,7 @@ doc: plugins/drishti-plugin-jdbc/README.md
 # The jdbc connector
 
 Plugin `jdbc` (`plugins/drishti-plugin-jdbc`): one plugin, two ways to read a database. **Table mode** (setting `table`) reads
-the layout `tools/load-postgres.sh` writes, a monthly-partitioned table per data domain, and needs no SQL from you. **Query
+the layout `python tools/drishti.py data load --store postgres` writes, a monthly-partitioned table per data domain, and needs no SQL from you. **Query
 mode** (settings `query.<kind>`) reads your own schema as it is, with your own `SELECT` per kind.
 
 ## What it reads
@@ -201,7 +201,7 @@ settings:
   query.counterparty: SELECT * FROM counterparties WHERE id = :id
 ```
 
-Load table mode with `tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti` (add `--trades N --days D` for a
+Load table mode with `python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti` (add `--trades N --days D` for a
 generated book, `--keep-months N` for retention).
 
 ## Troubleshooting
@@ -209,7 +209,7 @@ generated book, `--keep-months N` for retention).
 - `DOWN: <driver message> (reconnecting)`: the database is unreachable or the credentials are wrong; check `url`, `user`,
   `password`. Connections reopen by themselves.
 - `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read documents)`: the table lacks the promoted
-  columns; reload with `tools/load-postgres.sh`.
+  columns; reload with `python tools/drishti.py data load --store postgres`.
 - `not a plain SQL identifier: ...`: `table` or a column name holds more than letters, digits, `_` and one `.`.
 - A view fails with `… its query query.<kind>.<part> failed (SQL state …)`, Health `DEGRADED: query.<kind>.<part> failed: …`:
   run that query in a client with the parameters filled in.
@@ -260,16 +260,16 @@ question becomes a scan: `LIKE` over every row for type-ahead, `MAX(business_dat
 
 ## Table mode: loading
 
-`tools/load-postgres.sh` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
+`python tools/drishti.py data load --store postgres` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
 generated book, through `PostgresLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3     # the scale test
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --keep-months 84              # keep seven years
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3     # the scale test
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --keep-months 84              # keep seven years
 ```
 
 - **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
@@ -627,7 +627,7 @@ for the whole load (it holds the advisory lock) and one per batch, never more th
 6. Use `tls.enabled: true` and a database user with `SELECT` only.
 7. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
 
-A quick start: `docker compose -f deploy/docker/compose.data.yaml up -d postgres`, `tools/load-postgres.sh
+A quick start: `docker compose -f deploy/docker/compose.data.yaml up -d postgres`, `python tools/drishti.py data load --store postgres
 jdbc:postgresql://localhost:5432/drishti` (one table per banking domain, ten business days), copy
 `config/connectors.examples/postgres/*.yaml` into `config/connectors/`, start the server, then
 `curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance` shows

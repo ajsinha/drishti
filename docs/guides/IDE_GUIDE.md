@@ -60,7 +60,8 @@ Open the **Drishti build all** configuration and press **Run** (Shift+F10).
 | **Drishti build all** | `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar, installed into `lib/` (`lib/drishti-server-<version>-exec.jar`, and the same file as `lib/drishti-server-exec.jar` for the server launchers), and the twelve module packages, packed, checked and installed into `modules/` (`<id>-<version>.dmod` and `modules/first-party.yaml`), stamped for that jar | the first build on a clone, and after every pull: **this is the one to click** |
 | **Drishti build modules** | `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only`: only the module packages into `modules/`, stamped for the jar already in `lib/` | you changed only module code |
 
-**You should see** Maven's progress and `BUILD SUCCESS`; the build itself installs what it made: the exec jar into `lib/` (any other
+Stop the server first: the build replaces the jar and the packages it runs (Windows keeps them locked), and `drishti.py build` says so in
+one line while a server of this clone runs. **You should see** Maven's progress and `BUILD SUCCESS`; the build itself installs what it made: the exec jar into `lib/` (any other
 server jar there is replaced; `lib/ext`, your own jars, is never touched; `lib/drishti-server-exec.jar` is the same jar under a name that
 does not change with the version: a hard link, or a copy on a file system without them, renewed by every build) and each package into `modules/` through a `.part` file and one
 rename, an older version of the same module removed, then `modules/first-party.yaml`. The packer and the conformance checks are the
@@ -332,7 +333,7 @@ committed settings file `config/profiles/qa.ini`. Start again from scratch by st
 5. Optional, from a terminal at the repository root: a pack from your sample, then a lake of it:
    ```
    python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa pack make YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack
-   python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa lake build --from trade.2026-07-08.jsonl --kind trade --key TRADE_ID --mode overwrite-dates --lake-root "$PWD/data/qa/delta" --pack data/qa/packs/qa-pack/pack/qa-pack
+   python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa lake build --from trade.2026-07-08.jsonl --kind trade --key TRADE_ID --mode overwrite-dates --lake demo --pack data/qa/packs/qa-pack/pack/qa-pack
    ```
    (`data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` is a sample to try). Keep it to 10,000 trades locally.
 6. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
@@ -401,6 +402,7 @@ A three-node stack (started by `drishti.py start cluster`) holds **18480** (the 
 the console on **17480**. A run configuration on the same port fails with *Port 18480 was already in use* or the console's *address already in use*. Choose one:
 
 1. **Stop the stack:** `python3 tools/drishti.py stop cluster` (Windows `py tools\drishti.py stop cluster`); `python3 tools/drishti.py status` shows nothing running. Then run the default configurations.
+   `status` also lists a server or console of this clone started from an IDE, as `server (elsewhere)` with its port: stop it in the IDE.
 2. **Or use the other ports:** **Drishti server (QA, port 18580)** with **Drishti console (QA, port 17580)**. They have their own data folder `data/qa/data`,
    so they never touch the stack's.
 3. A second server of your own: copy a configuration, add `-Dserver.port=18481` and `-Ddrishti.data.dir=…` (its own data folder, never shared), and start a console with

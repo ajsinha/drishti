@@ -683,16 +683,9 @@ def cmd_data_ingest(a, extra) -> int:
 
 
 def cmd_data_load(a, extra) -> int:
-    cmd = ["bash", str(TOOLS / f"load-{a.store}.sh"), *a.target]
-    if a.trades is not None:
-        cmd += ["--trades", str(a.trades)]
-    if a.days is not None:
-        cmd += ["--days", str(a.days)]
-    cmd += extra
-    if a.dry_run:
-        print(" ".join(cmd))
-        return 0
-    return subprocess.run(cmd, cwd=ROOT).returncode
+    """The demo data into a store (tools/storeload.py: the generators, then the store's loader from the server jar)."""
+    return load_module("storeload", "storeload.py").run(a.store, a.target, a.trades, a.days, extra, dry_run=a.dry_run,
+                                                        java=getattr(a, "java", None), jar=getattr(a, "jar", None))
 
 
 def load_date(text: str) -> str:

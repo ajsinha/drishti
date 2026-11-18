@@ -39,7 +39,7 @@ import java.util.Set;
  * to {@code <root>/<domain>/<date>/<kind>.jsonl}. A file the stream reaches is replaced whole: lines go to a
  * {@code .tmp} file beside it, moved into place at the end, so a running server never reads half a day. At most 256
  * files are open at once. A row dated after tomorrow in the business zone is not written, and the load ends with an
- * error naming it ({@link LoadGuard}). {@code tools/load-files.sh} runs it.
+ * error naming it ({@link LoadGuard}). {@code python tools/drishti.py data load --store files} runs it.
  */
 public final class JsonlLoader {
 

@@ -31,7 +31,7 @@ doc: plugins/drishti-plugin-duckdb/README.md
 # DuckDB connector templates
 
 Ready-made connector files for the `duckdb` plugin: one file per banking data domain (`trading`, `reference`, `market`, `risk`,
-`credit`, `collateral`), all reading the same DuckDB file, which `tools/load-duckdb.sh` writes.
+`credit`, `collateral`), all reading the same DuckDB file, which `python tools/drishti.py data load --store duckdb` writes.
 
 ## What it reads
 
@@ -71,7 +71,7 @@ The file holds, per domain, the layout of the [duckdb connector README](../../..
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-duckdb.sh data/duckdb/drishti.duckdb                 # the samples: 1,791 documents x 10 business days
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb                 # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/duckdb/*-store.yaml config/connectors/
 ```
 

@@ -718,7 +718,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)
-    if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
+    if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (python tools/drishti.py calc install)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
     app.include_router(edition_routes.router)              # an edition's landings and the lens (LENSES.md › The design)

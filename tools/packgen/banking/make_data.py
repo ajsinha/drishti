@@ -25,7 +25,7 @@
                                                                 tools/samplegen/load_rows.py into data/delta/demo/<domain>/<kind>/, each kind in the
                                                                 layout its pack declares (the trade table's); --no-load stops after the JSONL
     python3 tools/packgen/banking/make_data.py --jsonl data/banking.tar     loader rows (a tar of <kind>/<YYYY-MM-DD>/ folders) for the store
-                                                                loaders (tools/load-postgres.sh, load-aerospike.sh ...)
+                                                                loaders (drishti.py data load --store postgres, aerospike ...)
 
 Generation and loading are separate steps (docs/guides/DATA_GUIDE.md): every output is JSON Lines. --lake and --jsonl write rows
 only: they never rewrite the packs' samples, the Sutra tests or the feed (the feed is written when the data folder has none, so the
@@ -339,7 +339,7 @@ def main() -> None:
                 by_kind.setdefault(kind, {}).setdefault(d.isoformat(), []).append(json.dumps(row, ensure_ascii=False))
                 n += 1
         feedfiles.rows_tar(out, by_kind)
-        print(f"jsonl: {n} rows in {out} (<kind>/<YYYY-MM-DD>/rows.jsonl; tools/load-postgres.sh, load-aerospike.sh and the other store loaders load it)")
+        print(f"jsonl: {n} rows in {out} (<kind>/<YYYY-MM-DD>/rows.jsonl; drishti.py data load --store postgres, aerospike and the other stores load it)")
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import rows_dir, write_rows

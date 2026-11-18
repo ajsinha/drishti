@@ -130,7 +130,7 @@
   }
 
   function run() {
-    if (!base) { status('Python runtime not installed: run tools/fetch-pyodide.sh', true); return; }
+    if (!base) { status('Python runtime not installed: run python tools/drishti.py calc install', true); return; }
     if (running) { say('Still running: Stop ends it'); return; }
     var text = code();
     if (!text.trim()) { return; }

@@ -84,6 +84,12 @@ public final class SettingsFile {
                 from.put(e.getKey(), f);
             }
         }
+        // ${drishti.home} in a value is the install folder (a committed profile names folders under it: qa.ini's data folder), resolved
+        // here, so a reader of the raw system property sees a real path
+        String home = System.getProperty("drishti.home", merged.get("drishti.home"));
+        if (home != null && !home.isBlank()) {
+            merged.replaceAll((k, v) -> v == null ? null : v.replace("${drishti.home}", home.strip()));
+        }
         for (Map.Entry<String, String> e : merged.entrySet()) {
             String k = e.getKey();
             String now = System.getProperty(k);

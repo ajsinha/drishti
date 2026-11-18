@@ -52,13 +52,13 @@ settings:
 - tls.*
 auth: Internal log-in (user + password as ${ENV} or file:), external (LDAP), or pki (the client certificate is the log-in); TLS through tls.* and tls-name (TLS needs Aerospike Enterprise Edition).
 licence: Aerospike Java client for JDK 21 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java client); the server is yours to run, and tools/load-aerospike.sh needs bash.
+windows: Works the same on Windows (pure Java client); the server is yours to run, and python tools/drishti.py data load --store aerospike loads it from any system.
 doc: plugins/drishti-plugin-aerospike/README.md
 ---
 # The aerospike connector
 
 Plugin `aerospike` (`plugins/drishti-plugin-aerospike`): single-entity reads in a few milliseconds, type-ahead from memory and searches
-over a day's promoted bins with a server-side filter, from a namespace that `tools/load-aerospike.sh` (or any writer keeping the same
+over a day's promoted bins with a server-side filter, from a namespace that `python tools/drishti.py data load --store aerospike` (or any writer keeping the same
 layout) fills.
 
 ## What it reads
@@ -167,8 +167,8 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
-tools/load-aerospike.sh localhost:3000 test                                 # the samples x 10 business days
-tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
+python tools/drishti.py data load --store aerospike localhost:3000 test                                 # the samples x 10 business days
+python tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
 cp config/connectors.examples/aerospike/*.yaml config/connectors/          # picked up without a restart
 ```
 
@@ -233,7 +233,7 @@ later ones read memory. A loader line looks like:
 
 ## Loading
 
-`tools/load-aerospike.sh` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
+`python tools/drishti.py data load --store aerospike` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
 through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
 `aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
 

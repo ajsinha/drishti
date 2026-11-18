@@ -331,9 +331,10 @@ def test_cli_dry_run_and_source_arguments(data):
 
 def test_schedule_entries_for_cron_systemd_and_windows(spec):
     cron = S.cron([spec], Path("/opt/drishti"))
-    assert "15 7 * * 1-5 /opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
+    run = "/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/drishti.py feed run sample-mapping --trigger schedule"
+    assert f"15 7 * * 1-5 {run} >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
     unit = S.systemd([spec], Path("/opt/drishti"))
-    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and "ExecStart=/opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule" in unit
+    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and f"ExecStart={run}" in unit
     assert "Persistent=true" in unit and "Type=oneshot" in unit
     win = S.windows([spec], Path("C:/drishti"))
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win
@@ -343,9 +344,8 @@ def test_schedule_entries_for_cron_systemd_and_windows(spec):
     assert p.returncode == 0 and "sample-mapping" in p.stdout
 
 
-def test_the_wrapper_exists_and_runs_the_feed_command():
-    sh = (ROOT / "tools" / "feeds" / "feed.sh").read_text()
-    assert "tools/drishti.py feed" in sh and "drishti-console/.venv" in sh
+def test_every_system_runs_the_python_feed_command():
+    assert not (ROOT / "tools" / "feeds" / "feed.sh").exists(), "cron, systemd and Task Scheduler run drishti.py feed with the console's Python"
     assert not list((ROOT / "tools" / "windows").glob("*.ps1")), "Windows runs the Python commands, no PowerShell twins"
     assert not list((ROOT / "tools").glob("publicdata")), "tools/publicdata folded into tools/feeds"
 

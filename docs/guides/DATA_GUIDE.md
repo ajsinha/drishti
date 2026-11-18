@@ -3247,10 +3247,10 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
 |---|---|---|---|
 | **samples** | none: the `demo` source serves them | the packs' samples (765 trades, 2,571 documents in the five banking packs), today only, ticking | a first look with no store, writing a pack |
 | **the demo lakes** | `drishti.py lake demo` | 15,000 trades a day and every other dataset, sixty business days | demos, QA, the tutorials |
-| **a store of your choice, small** | `tools/load-<store>.sh` | the samples as ten business days ending 2026-09-30 | trying PostgreSQL, DuckDB, … with the same data |
-| **large** | `tools/load-<store>.sh … --trades 1000000 --days 3`, or `tools/samplegen/bulk_trades.py` | a million trades a day for 3 days | scale tests, performance measurements |
+| **a store of your choice, small** | `drishti.py data load --store <store>` | the samples as ten business days ending 2026-09-30 | trying PostgreSQL, DuckDB, … with the same data |
+| **large** | `drishti.py data load --store <store> … --trades 1000000 --days 3`, or `tools/samplegen/bulk_trades.py` | a million trades a day for 3 days | scale tests, performance measurements |
 
-`--trades N` (the `load-*.sh` scripts) adds a book of N trades a day for `--days D` business days (default 3). The book's first trades
+`--trades N` (`drishti.py data load`) adds a book of N trades a day for `--days D` business days (default 3). The book's first trades
 are the samples; the rest are clones of them, numbered from a higher range of each system's ids (`MX-30000000` …, `CLY-4000000` …),
 keeping their template's product, portfolio, counterparty and legal entity (so every link opens) and scaling the amounts
 (`NOTIONAL`, `QUANTITY`, `AMOUNT` at every level) by a factor between 0.2 and 5. Every size is reproducible: the same command writes
@@ -3261,9 +3261,9 @@ the same data. On a laptop keep books to about 10,000 trades; a million trades a
 The demo lakes above are the normal way. The older script writes the samples as ten days of history, with an optional book:
 
 ```bash
-tools/load-delta.sh                              # the samples as 10 business days: data/delta/demo
-tools/load-delta.sh --trades 10000               # and 10,000 trades a day for 3 days
-tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
+python tools/drishti.py data load --store delta                              # the samples as 10 business days: data/delta/demo
+python tools/drishti.py data load --store delta --trades 10000               # and 10,000 trades a day for 3 days
+python tools/drishti.py data load --store delta /tmp/lake --trades 20000     # somewhere else
 ```
 
 It generates, then loads, in separate steps ([DATA_GUIDE.md](#2-data-formats-json-lines-is-the-standard)): `make_data.py --lake --no-load` writes the
@@ -3281,8 +3281,8 @@ memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
-tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
+python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3296,19 +3296,18 @@ load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/d
 ### 11.6 Apache Iceberg
 
 ```bash
-tools/load-iceberg.sh ./data/iceberg                       # the samples
-tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a laptop
+python tools/drishti.py data load --store iceberg ./data/iceberg                       # the samples
+python tools/drishti.py data load --store iceberg ./data/iceberg --trades 10000        # and a book, for a laptop
 SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
-Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
-`python tools\drishti.py data load --store iceberg`, or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#112-mixed-delta-and-iceberg-storage).)
+Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (The loader is the server jar's; or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#112-mixed-delta-and-iceberg-storage).)
 
 ### 11.7 DuckDB
 
 ```bash
-tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the samples
-tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb                              # the samples
+python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
 SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3320,8 +3319,8 @@ over the old one, so it can run while the server answers; the server picks it up
 
 ```bash
 docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
-tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples
-tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples
+python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
 SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3331,8 +3330,8 @@ Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
 
 ```bash
 docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
-tools/load-redis.sh redis://localhost:6380                       # the samples
-tools/load-redis.sh redis://localhost:6380 --trades 10000        # and a book, for a laptop
+python tools/drishti.py data load --store redis redis://localhost:6380                       # the samples
+python tools/drishti.py data load --store redis redis://localhost:6380 --trades 10000        # and a book, for a laptop
 DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk \
   java -jar lib/drishti-server-*-exec.jar
 ```
@@ -3345,8 +3344,8 @@ a day, so keep large books for a server. Each load replaces the business days it
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
-tools/load-aerospike.sh localhost:3000 test                                  # the samples
-tools/load-aerospike.sh localhost:3000 test --trades 10000                   # and a book
+python tools/drishti.py data load --store aerospike localhost:3000 test                                  # the samples
+python tools/drishti.py data load --store aerospike localhost:3000 test --trades 10000                   # and a book
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3358,8 +3357,8 @@ small for a million-trade book; see [AEROSPIKE_CONNECTOR.md](../../plugins/drish
 Cassandra (or ScyllaDB) is yours to run; a single development node is enough for the samples. Then:
 
 ```bash
-tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples, a keyspace per domain
-tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000   # and a book of 10,000 trades a day
+python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples, a keyspace per domain
+python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000   # and a book of 10,000 trades a day
 cp config/connectors.examples/cassandra/*.yaml config/connectors/                                  # read the domains from Cassandra
 ```
 
@@ -3369,8 +3368,8 @@ expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA
 ### 11.12 JSON-lines files (no store at all)
 
 ```bash
-tools/load-files.sh                              # the samples: data/files
-tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3 days
+python tools/drishti.py data load --store files                              # the samples: data/files
+python tools/drishti.py data load --store files --trades 10000               # and 10,000 trades a day for 3 days
 SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3455,7 +3454,7 @@ feeds: …/data/feeds/fixing.jsonl
 ```
 
 (world-economy and news-and-markets have their own generators under `tools/packgen/`.) The plain run also writes the sample feed file
-`data/feeds/fixing.jsonl` (one fixing series a line, `FIX SOFR-HISTORY`; `lake demo` writes it too). Every `load-*.sh` script runs
+`data/feeds/fixing.jsonl` (one fixing series a line, `FIX SOFR-HISTORY`; `lake demo` writes it too). Every `data load` runs
 `make_data.py --jsonl` or `--lake`, which write rows only: they never rewrite the samples, the Sutra tests or an existing feed. The samples per pack:
 
 | Pack | Samples | Kinds | Live | On disk |
@@ -3522,24 +3521,24 @@ a new connector adds can be loaded with the same demo data.
 
 ### 11.17 The scripts
 
-| Script | What it does |
+| Command | What it does |
 |---|---|
 | `tools/drishti.py lake demo [--lake DIR] [--as-of today\|data\|DATE] [--only …] [--with-real FILE] [--server URL] [--no-signal]` | the demo lakes from `data/testdata` (`tools/lake/demo.py`) |
 | `tools/drishti.py lake build --from FILE --pack DIR --kind K …` | one Delta table from a large JSON export, streamed (`tools/lake/build.py`) |
 | `tools/testdata/make_testdata.py [--check]` | writes `data/testdata` |
-| `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl` (a tar), then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
-| `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
-| `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl` (a tar), then `PostgresLoader` (samples with `--recreate`), then the bulk book's tar |
-| `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl` and the bulk book (two tars), then `IcebergLoader` on their folder in one load (each day sorted by id) |
-| `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl` (a tar), then `DuckDbLoader` (samples with `--recreate`), then the bulk book's tar; each load builds `<database>.loading` and renames it over the database |
-| `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl` (a tar), then `MongoLoader`, then the bulk book's tar |
-| `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl` (a tar), then `RedisLoader`, then the bulk book's tar |
-| `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl` (a tar), then `AerospikeLoader`, then the bulk book's tar |
-| `tools/load-cassandra.sh [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book (two tars), then `CassandraLoader` on their folder in one load |
+| `python tools/drishti.py data load --store files [root] [--trades N] [--days D]` | `make_data.py --jsonl` (a tar), then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
+| `python tools/drishti.py data load --store delta [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
+| `python tools/drishti.py data load --store postgres [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl` (a tar), then `PostgresLoader` (samples with `--recreate`), then the bulk book's tar |
+| `python tools/drishti.py data load --store iceberg [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl` and the bulk book (two tars), then `IcebergLoader` on their folder in one load (each day sorted by id) |
+| `python tools/drishti.py data load --store duckdb [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl` (a tar), then `DuckDbLoader` (samples with `--recreate`), then the bulk book's tar; each load builds `<database>.loading` and renames it over the database |
+| `python tools/drishti.py data load --store mongodb [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl` (a tar), then `MongoLoader`, then the bulk book's tar |
+| `python tools/drishti.py data load --store redis [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl` (a tar), then `RedisLoader`, then the bulk book's tar |
+| `python tools/drishti.py data load --store aerospike [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl` (a tar), then `AerospikeLoader`, then the bulk book's tar |
+| `python tools/drishti.py data load --store cassandra [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book (two tars), then `CassandraLoader` on their folder in one load |
 | `tools/packgen/banking/make_data.py` | the samples, `--lake` (JSONL rows, then loaded; `--no-load`), `--jsonl FILE.tar` (loader rows), `--check` |
 | `tools/samplegen/load_rows.py --rows F --restated F --root R` | loads dated loader rows (JSONL) into the lake |
 | `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl FILE.tar`, a tar of `trade/<YYYY-MM-DD>/` folders) |
 
 `lake demo` and `lake build` need only the console's Python (`drishti-console/.venv`, with PyYAML, deltalake and pyarrow). The
-`load-*.sh` scripts need `uv` (Python), Java 21 or newer (`JAVA_HOME`; the scripts default to Java 21), and Maven's offline cache for the
-Java loaders (run `./mvnw install` once).
+`data load` needs the same Python and, for every store but Delta, Java 21 or newer (found as by every tool: `drishti.java.home`,
+`DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH) and the server jar in `<home>/lib` (`python tools/drishti.py build jar`), whose loaders it runs.

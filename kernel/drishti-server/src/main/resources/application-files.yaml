@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Profile `postgres` (SPRING_PROFILES_ACTIVE=postgres): the banking packs' data domains are read from PostgreSQL
 # Profile `files` (SPRING_PROFILES_ACTIVE=files): the banking packs' data domains are read from JSON-lines files, one
-# per kind per business day (<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl, written by tools/load-files.sh), instead of
+# per kind per business day (<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl, written by python tools/drishti.py data load --store files), instead of
 # Delta Lake. The packs still decide the kinds, routes, modes and promoted columns of each <domain>-store connector;
 # this profile only changes the store.
 drishti:

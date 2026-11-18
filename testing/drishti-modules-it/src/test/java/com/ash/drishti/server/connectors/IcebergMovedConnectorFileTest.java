@@ -82,9 +82,9 @@ class IcebergMovedConnectorFileTest {
                     rows(rows, "market", kind, d);
                 }
             }
-            // the rows as load-iceberg.sh gives them: a tar of <kind>/<YYYY-MM-DD>/ folders (the load rules: each row under its folder's date)
+            // the rows as drishti.py data load --store iceberg gives them: a tar of <kind>/<YYYY-MM-DD>/ folders (the load rules: each row under its folder's date)
             lines = com.ash.drishti.testkit.LoaderRows.write(base.resolve("rows"), List.of(rows.toString().split("\n")));
-            // the loader load-iceberg.sh runs, with the options QA gave it
+            // the loader drishti.py data load --store iceberg runs, with the options QA gave it
             com.ash.drishti.plugin.iceberg.IcebergLoader.main(new String[] {lines.toString(), base.resolve("ice1").toString(), "--engine", "native",
                 "--spill-dir", base.resolve("spill").toString()});
             Files.move(base.resolve("ice1"), base.resolve("ice2"));

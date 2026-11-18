@@ -14,7 +14,7 @@
 
 """Calc, the console side (USER_GUIDE.md): Python run in the browser, in Pyodide (CPython on WebAssembly) inside a Web
 Worker. The console serves the runtime from its own origin, under ``/pyodide/<version>/`` (installed by
-``tools/fetch-pyodide.sh``; never a CDN), decides whether a view offers Calc (a pack that owns the view's kind enables
+``python tools/drishti.py calc install``; never a CDN), decides whether a view offers Calc (a pack that owns the view's kind enables
 it in ``pack.yaml``, and the user's roles include ``calc``), and lists the snippets packs ship for a kind. The code
 itself never runs on the console or the server."""
 from __future__ import annotations
@@ -26,7 +26,7 @@ from core.servers import scoped
 
 STAMP = "drishti-pyodide.txt"
 LEGACY_STAMP = ".drishti-pyodide"
-NOT_INSTALLED = "Python runtime not installed: run tools/fetch-pyodide.sh"
+NOT_INSTALLED = "Python runtime not installed: run python tools/drishti.py calc install"
 
 
 class Runtime:

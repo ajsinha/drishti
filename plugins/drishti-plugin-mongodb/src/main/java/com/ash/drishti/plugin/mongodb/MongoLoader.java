@@ -70,7 +70,7 @@ import org.bson.conversions.Bson;
  * day after it is neither counted nor deleted), and refuses
  * to delete more than {@code --max-drop-share} (0.5) of a kind's days without {@code --force-drop}. {@code --ttl-days
  * N} stamps each document with {@code expireAt} (its business date plus N days) and adds the TTL index, so MongoDB
- * deletes old days by itself. {@code tools/load-mongodb.sh} runs it.
+ * deletes old days by itself. {@code python tools/drishti.py data load --store mongodb} runs it.
  */
 public final class MongoLoader {
 

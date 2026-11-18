@@ -31,7 +31,7 @@ doc: plugins/drishti-plugin-aerospike/README.md
 # The aerospike connector templates
 
 Six ready-made connector files for the `aerospike` plugin: each reads one data domain of the banking packs from an Aerospike namespace
-that `tools/load-aerospike.sh` (or your own loader keeping the same layout) fills. They do what the deprecated
+that `python tools/drishti.py data load --store aerospike` (or your own loader keeping the same layout) fills. They do what the deprecated
 `application-aerospike.yaml` profile did, as connector files.
 
 ## What it reads
@@ -84,8 +84,8 @@ Run these from the Drishti folder (the repository root, or the install folder of
 ```bash
 cp config/connectors.examples/aerospike/*.yaml config/connectors/       # or only the domains you want
 export DRISHTI_AEROSPIKE_HOSTS=aero-1.example.com:3000 DRISHTI_AEROSPIKE_NAMESPACE=drishti
-tools/load-aerospike.sh "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE"          # the samples x 10 days
-tools/load-aerospike.sh "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE" --ttl-days 90   # records expire after 90 days
+python tools/drishti.py data load --store aerospike "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE"          # the samples x 10 days
+python tools/drishti.py data load --store aerospike "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE" --ttl-days 90   # records expire after 90 days
 ```
 
 A file copied into `config/connectors/` replaces the connector file of the same name (settings are not merged) and is applied within
@@ -110,7 +110,7 @@ seconds. The trading pack routes `trade` to `trade-endur`: save `trading-store.y
   `mode.<kind>: effective`.
 - Searches say `partial: true`: the field is not a promoted bin; add it to `layout.<kind>.columns` and reload.
 - Trades from the lake still show: the file was saved as `trading-store.yaml`, which the trading pack does not route to; name it `trade-endur.yaml`.
-- Loader `max connections … would be exceeded`: an old loader; use the current `tools/load-aerospike.sh`.
+- Loader `max connections … would be exceeded`: an old loader; use the current `python tools/drishti.py data load --store aerospike`.
 
 ## See also
 

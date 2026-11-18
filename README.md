@@ -336,7 +336,7 @@ repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
+# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options) and drishti-console/.venv
 python tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
@@ -347,13 +347,15 @@ python tools/drishti.py build sdk
 # 3. The demo lake, from the committed test data in data/testdata
 python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
 
-# 4. The server on :18480 and the console on :17480, in the background, with the demo's settings
+# 4. The server on :18480 and the console on :17480, in the background, with the demo profile (config/profiles/demo.ini, the file the IDE's demo launcher names)
 python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
 python tools/drishti.py status                                                # both UP, with the addresses to open
 python tools/drishti.py stop all                                              # when you are done
 ```
 
-On Windows the same commands run as `py tools\drishti.py ...` with backslash paths.
+On Windows the same commands run as `py tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
+launchers **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console**
+([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)); they read the same profile, so the IDE and the terminal start the same server.
 
 Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`

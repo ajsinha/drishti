@@ -349,7 +349,7 @@ private-credit funds without a ticker are skipped. `--scope FUNDS:<n>` takes mor
 
 ### 15. The refresh script
 
-`drishti.py feed run funds` (with `tools/feeds/feed.sh run funds` on Linux and macOS) takes the same commands and
+`drishti.py feed run funds` (with `python tools/drishti.py feed run funds` on Linux and macOS) takes the same commands and
 options as every public-data script: `status`, `refresh --dry-run`, `refresh [SOURCE ...]`, with `--since YEAR`, `--years N`,
 `--scope FUNDS:<n>,HOLDINGS:<n>`, `--offline`, `--cache DIR`, `--max-age HOURS` (a week by default), `--pause`, `--no-check`,
 `--into-pack`.
@@ -357,17 +357,17 @@ options as every public-data script: `status`, `refresh --dry-run`, `refresh [SO
 On Linux and macOS:
 
 ```bash
-tools/feeds/feed.sh run funds status                                # offline: the committed funds, each source's licence, last refresh, cache size
-tools/feeds/feed.sh run funds --dry-run                     # the quarters and files a refresh would fetch; changes nothing
-tools/feeds/feed.sh run funds --snapshot                               # download (about 700 MB the first time), build, check
-tools/feeds/feed.sh run funds --snapshot --offline                     # rebuild from the downloads only
-tools/feeds/feed.sh run funds --snapshot ncen rr --since 2025          # every census and summary quarter since 2025
-tools/feeds/feed.sh run funds --snapshot --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/datafeeds/sources/funds
+python tools/drishti.py feed run funds status                                # offline: the committed funds, each source's licence, last refresh, cache size
+python tools/drishti.py feed run funds --dry-run                     # the quarters and files a refresh would fetch; changes nothing
+python tools/drishti.py feed run funds --snapshot                               # download (about 700 MB the first time), build, check
+python tools/drishti.py feed run funds --snapshot --offline                     # rebuild from the downloads only
+python tools/drishti.py feed run funds --snapshot ncen rr --since 2025          # every census and summary quarter since 2025
+python tools/drishti.py feed run funds --snapshot --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/datafeeds/sources/funds
 python3 tools/drishti.py lake demo                              # then rebuild the lake
 ```
 
 ```text
-$ tools/feeds/feed.sh run funds status
+$ python tools/drishti.py feed run funds status
 committed pack: 200 funds in 5 parts, data retrieved 2026-10-26
 SOURCE   LICENCE                                           USE          LAST REFRESHED       CACHED
 tickers  Public domain (U.S. Government work); SEC fair a  committable  2026-10-26T19:37:15  1.7 MB
@@ -390,7 +390,7 @@ python tools\build_demo_lakes.py --only funds
 The dry run names every request and writes nothing:
 
 ```text
-$ tools/feeds/feed.sh run funds --dry-run
+$ python tools/drishti.py feed run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
   tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json
@@ -521,7 +521,7 @@ which runs the parallel loader in the server's jar, or drops files into the data
 | the command line | `tools/feeds/cli.py` | `drishti.py feed list|run|status|schedule` |
 | the polite HTTP client and download cache | `tools/feeds/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
 | each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
-| the wrapper and the command | `tools/feeds/feed.sh` (Linux, macOS), `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
+| the command | `drishti-console/.venv/bin/python tools/drishti.py feed run` (Linux, macOS), `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
 
 Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
 world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
@@ -713,7 +713,7 @@ python3 tools/drishti.py feed schedule --cron
 # Drishti data feeds: daily (crontab -e, then paste; the times are this machine's local time)
 # mkdir -p $HOME/drishti-feeds-logs   (one log file per feed; each run appends its one log line and any messages)
 SHELL=/bin/bash
-30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule >> $HOME/drishti-feeds-logs/gleif.log 2>&1
+30 5 * * * /opt/drishti/python tools/drishti.py feed run gleif --trigger schedule >> $HOME/drishti-feeds-logs/gleif.log 2>&1
 ```
 
 **Linux, systemd** (a missed day runs at the next boot):
@@ -732,7 +732,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/drishti
-ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule
+ExecStart=/opt/drishti/python tools/drishti.py feed run gleif --trigger schedule
 Nice=10
 
 # ---- drishti-feed-gleif.timer
@@ -1621,7 +1621,7 @@ python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS
 ```
 
 On Windows the same through `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds --dry-run`; on Linux and macOS
-`tools/feeds/feed.sh run funds` takes the same arguments.
+`python tools/drishti.py feed run funds` takes the same arguments.
 
 - **The 200.** Every fund's newest N-PORT report in the quarter (amendments win over the report they amend), ranked by net assets;
   a fund needs a ticker (a share class in `company_tickers_mf.json`, or, for a unit investment trust such as SPY or DIA, its
@@ -1813,7 +1813,7 @@ python3 tools/drishti.py feed status gdelt-events                # its last runs
 python3 tools/drishti.py feed schedule --cron world-development central-banks national-statistics oecd official-news gdelt-events
 ```
 
-The wrapper is `tools/feeds/feed.sh` (Linux, macOS) and on Windows the command is `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>`; Admin → Data loads → Feeds shows each
+The command is `drishti-console/.venv/bin/python tools/drishti.py feed run <feed>` (Linux, macOS) and `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>` (Windows); Admin → Data loads → Feeds shows each
 run and offers Run now. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 
 **Keys.** Only FRED needs one: a free key from https://fred.stlouisfed.org/docs/api/api_key.html in `DRISHTI_FRED_API_KEY` where the feed
@@ -2512,13 +2512,13 @@ Further in the guide: [section 7](../guides/WORLD_DATA_GUIDE.md#7-commands-searc
 **From the command line.** On Linux and macOS (on Windows `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds` takes the same arguments):
 
 ```bash
-tools/feeds/feed.sh run funds --dry-run      # what would be fetched; changes nothing
-tools/feeds/feed.sh run funds --snapshot                # about 700 MB of downloads the first time, kept in the data folder; then make.py --check
+python tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing
+python tools/drishti.py feed run funds --snapshot                # about 700 MB of downloads the first time, kept in the data folder; then make.py --check
 python3 tools/drishti.py lake demo               # rebuild the lake
 ```
 
 ```text
-$ tools/feeds/feed.sh run funds --dry-run
+$ python tools/drishti.py feed run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
   tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json

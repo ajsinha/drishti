@@ -17,7 +17,7 @@
     drishti-console/.venv/bin/python drishti-console/tests/bi_python_shots.py <pictures dir>
 
 Ports 18955 (server) and 17955 (console) and the stack of tests/test_bi_python_browser.py: the sample report "Desk P&L risk (Python)" run on the server, run in the browser
-(needs Pyodide: tools/fetch-pyodide.sh), and an item page with its Check."""
+(needs Pyodide: python tools/drishti.py calc install), and an item page with its Check."""
 import os
 import sys
 import tempfile

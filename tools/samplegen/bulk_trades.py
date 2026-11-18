@@ -29,7 +29,7 @@ python3 tools/packgen/banking/make_data.py --lake data/delta/demo (with uv run -
 
 --jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/guides/DATA_LAKE_GUIDE.md)
 writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
-pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
+pack promotes, by path), for python tools/drishti.py data load --store aerospike and the other stores' loaders.
 
 The trades are the system's sample trades (modules/banking/packs/trading/samples/trade.jsonl, written by make_data.py, in the common
 schema of tools/packgen/trades/schema.py), kept as they are, and clones of them. A clone continues the system's numbering
@@ -176,7 +176,7 @@ def _docs(job):
 
 
 def _lines(job):
-    """Rows of a slice as JSON lines for tools/load-aerospike.sh: the document and its promoted values by path."""
+    """Rows of a slice as JSON lines for python tools/drishti.py data load --store aerospike: the document and its promoted values by path."""
     indices, day, steps = job
     names = dict(zip(_layout.names, _layout.columns))
     out = []
@@ -206,7 +206,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--system", default="MUREX", choices=("MUREX", "CALYPSO"), help="the source system whose trades are cloned and whose table "
                                                                                         "(trading/trade_<system>) is replaced (default MUREX)")
     ap.add_argument("--jsonl", default=None, help="write loader rows instead: FILE.tar (trade/<YYYY-MM-DD>/ folders, any --days), or a plain "
-                                                  "file or - (standard output) of one day (--days 1), for tools/load-aerospike.sh "
+                                                  "file or - (standard output) of one day (--days 1), for python tools/drishti.py data load --store aerospike "
                                                   "and the other stores' loaders: the documents with the fields the trading pack promotes")
     ap.add_argument("--out", default=(os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")) + "/build/bulk",
                     help="where the JSONL files go: <out>/<system>/trade_<system>.<date>.jsonl.gz (default <data>/build/bulk)")

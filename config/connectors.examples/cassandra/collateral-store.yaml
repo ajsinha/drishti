@@ -14,7 +14,7 @@
 # Example: copy to config/connectors/collateral-store.yaml to read the collateral-store data from cassandra. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: cassandra
-description: collateral-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
+description: collateral-store read from Apache Cassandra (loaded by python tools/drishti.py data load --store cassandra)
 settings:
   domain: collateral
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}

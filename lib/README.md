@@ -21,7 +21,8 @@ Every jar sits under the install folder, every piece of data under the data fold
   which builds with Maven and copies the server's exec jar here). Every tool and script finds the server jar in this one folder;
   `--jar FILE` names another for a one-off run. The tools refuse when this folder holds more than one Drishti server exec jar, or one whose version is not this install's (`build jar` replaces the old one).
 - `<home>/lib/drishti-server-exec.jar` is the same jar under a name that does not change with the version (a hard link, or a copy where
-  the file system has none), written by the same build: IntelliJ's server launchers (JAR Applications) run it. The tools never read it
+  the file system has none), written by the same build: IntelliJ's server launchers (JAR Applications) run it. `lib/server.args` in a service install or an image
+holds the server's JVM options (`deploy/jvm/*.args`, generated from the function `drishti.py start server` runs). The tools never read it
   (their pattern `drishti-server-*-exec.jar` does not match it).
 - `<home>/lib/ext` holds YOUR jars (JDBC drivers, connector plugins, a company's own libraries): kept on an upgrade, read by the server
   at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`; see [ext/README.md](ext/README.md)). A Drishti server jar put there is skipped.

@@ -46,7 +46,7 @@ settings:
 - index.kinds.*
 auth: None; local files read by the server process (file-system permissions only).
 licence: Jackson core (Apache-2.0), bundled; no client library and no native library.
-windows: Works the same on Windows (pure Java; Windows paths under root are fine); tools/load-files.sh needs bash, but any tool that writes the files will do.
+windows: Works the same on Windows (pure Java; Windows paths under root are fine); python tools/drishti.py data load --store files runs there too, and any tool that writes the files will do.
 doc: docs/connectors/types/file/README.md
 ---
 # The file connector
@@ -62,7 +62,7 @@ nightly export or reference data kept by hand; for a million entities a day kept
 background, older days on first use, and a changed file is re-indexed when next read. Kinds are `snapshot` or `effective`
 (`mode.<kind>`). It also reads the older layout of one file per entity (`<root>/<kind>/<id>.json` or `.csv`, CSV deprecated: logged once per file and named in health, dated
 `<root>/<yyyy-MM-dd>/<kind>/<id>.json`), as the public-data feeds use. No time travel: a *known at* read is refused with `DRS-1007`.
-It never writes; `tools/load-files.sh` (`JsonlLoader`) does.
+It never writes; `python tools/drishti.py data load --store files` (`JsonlLoader`) does.
 
 ## Settings
 
@@ -143,7 +143,7 @@ settings:
   layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,CURRENCY,QUANTITY,COUNTERPARTY,PORTFOLIO
 ```
 
-Ready-made files for the six banking domains: `config/connectors.examples/files/`. Load the samples with `tools/load-files.sh` (add
+Ready-made files for the six banking domains: `config/connectors.examples/files/`. Load the samples with `python tools/drishti.py data load --store files` (add
 `--trades 10000` for a generated book). Writing files yourself needs no loader: write `<kind>.jsonl.tmp` and rename it into place.
 
 ## Troubleshooting
@@ -224,13 +224,13 @@ hold is refused with `DRS-1007` (400), never answered with today's file.
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-files.sh                              # the samples: 1,791 documents x 10 business days, into data/files
-tools/load-files.sh --trades 10000               # and a book of 10,000 trades a day for 3 days
-tools/load-files.sh /tmp/files --trades 50000    # somewhere else, a larger book
+python tools/drishti.py data load --store files                              # the samples: 1,791 documents x 10 business days, into data/files
+python tools/drishti.py data load --store files --trades 10000               # and a book of 10,000 trades a day for 3 days
+python tools/drishti.py data load --store files /tmp/files --trades 50000    # somewhere else, a larger book
 SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
-`JsonlLoader` (in the plugin; `JsonlLoader FILE|- <root> [--future-days N] [--zone Z]`, run by `tools/load-files.sh [root] [--trades N]
+`JsonlLoader` (in the plugin; `JsonlLoader FILE|- <root> [--future-days N] [--zone Z]`, run by `python tools/drishti.py data load --store files [root] [--trades N]
 [--days D]`) reads the loaders' rows from a file or standard input and copies each line into `<root>/<domain>/<date>/<kind>.jsonl`:
 
 - **A file the stream reaches is replaced whole**: its lines go to `<kind>.jsonl.tmp`, renamed into place at the end, so a running

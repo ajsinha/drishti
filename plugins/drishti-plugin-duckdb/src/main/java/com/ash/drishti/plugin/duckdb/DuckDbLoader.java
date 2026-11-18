@@ -77,7 +77,7 @@ import org.duckdb.DuckDBConnection;
  *
  * <p>The new file is written compactly from scratch, so retention and replaced days never leave free space behind;
  * the price is that every load rewrites the whole file (see the document for the production pattern). A lock file
- * ({@code DATABASE.lock}) keeps two loads of one file apart. {@code tools/load-duckdb.sh} runs it.
+ * ({@code DATABASE.lock}) keeps two loads of one file apart. {@code python tools/drishti.py data load --store duckdb} runs it.
  */
 public final class DuckDbLoader {
 

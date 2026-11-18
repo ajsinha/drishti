@@ -327,7 +327,7 @@ runs Drishti. It holds:
 <drishti>/                     DRISHTI_HOME: read only
   lib/                         drishti-server-<version>-exec.jar (Drishti's own; every Java library inside)
     ext/                       your site's jars: JDBC drivers, connector plugins (kept on an upgrade)
-  bin/                         drishti-node.sh (the stop hook of the service unit and the images)
+  bin/                         README.md (the commands are tools/drishti.py)
   config/                      the kernel's packs, lakes, module switches, lenses, engines, settings examples
   modules/                     the modules (the server refuses to start without this folder)
   tools/                       drishti.py (every command) and what it runs
@@ -411,7 +411,7 @@ the jar into `<drishti>/lib` (removing an older server jar there) and the packag
 | Path | What |
 |---|---|
 | `lib/drishti-server-<version>-exec.jar` | the server, every library inside; `lib/ext/` is for your site's jars ([1.4](#14-drishtis-jars-and-your-jars)) |
-| `bin/drishti-node.sh` | the node drain script: the stop hook of the service unit and the images |
+| `deploy/jvm/server-service.args` | the service unit's JVM options (generated from the function `start server` runs), copied to `<drishti>/lib/server.args` |
 | `modules/` | the modules (banking, capital markets, economy, market data, trading and one per trading system): their packs, connector templates, Sutras and help. The server refuses to start without this folder |
 | `config/` | the kernel's packs, the lakes, the module switches, lenses, engines, tables, BI files and the example settings files (`config/settings.examples/`): the site's configuration |
 | `drishti-console/` | the console's code and `requirements.txt` (its `.venv` is made on the machine, never copied) |
@@ -878,6 +878,10 @@ console: stopped (pid 1975138)
 server: stopped (pid 1974114)
 ```
 
+A server or console of this install started from an IDE (or by hand) has no pid file; `status` still lists it, found by its command line,
+as `server (elsewhere)` or `console (elsewhere)` with its port and health, and says to stop it where it was started. `build` refuses in
+one line while such a server runs (*stop the server first: pid … on port …*): the build replaces the jar and the packages it runs.
+
 A start of something already running says so and exits `3`; a stop of something not running says so and exits `0`; a pid file whose
 process is gone (after a reboot, a crash) is a **stale pid**: `status` shows it, and the next stop or start removes it and says so.
 Each pid file (mode 600) holds the stop key the launcher made for that process (`stop=`); a process started by an older launcher has
@@ -1039,7 +1043,7 @@ py tools\drishti.py status
 
 **Linux (systemd).** The shipped unit is `deploy/systemd/drishti-server.service`: the layout `/opt/drishti` with the one server jar in
 `/opt/drishti/lib/` (the unit runs `lib/drishti-server-*-exec.jar`, so an upgrade only replaces that jar), the user `drishti`, `DRISHTI_HOME=/opt/drishti`, `DRISHTI_DATA_DIR=/opt/drishti/data`,
-`DRISHTI_MODULES_HOME=/opt/drishti/modules`, secrets from `/etc/drishti/drishti.env`, and `bin/drishti-node.sh drain` before every stop.
+`DRISHTI_MODULES_HOME=/opt/drishti/modules`, secrets from `/etc/drishti/drishti.env`, and the server's own drain on every stop (`drishti.node.drain.on-stop`).
 Only the server's unit ships; the console's unit, the layout and the environment file are in
 [OPERATIONS_GUIDE.md › Running as services](guides/OPERATIONS_GUIDE.md#53-running-as-services-systemd). A settings file goes in as
 `-Ddrishti.settings.file=/etc/drishti/prod.ini` on the unit's `java` line.
@@ -1635,7 +1639,7 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: applic
 curl -s -H "Authorization: Bearer $ADMIN_TOKEN" http://<host-c>:18480/api/v1/admin/node        # "safeToStop": true once handed over
 ```
 
-(Windows: the same calls with `Invoke-RestMethod`, or `curl.exe`, which Windows 10 and 11 carry; Linux: `bin/drishti-node.sh drain`; a
+(Windows: the same calls with `Invoke-RestMethod`, or `curl.exe`, which Windows 10 and 11 carry; every OS: `python tools/drishti.py node drain`; a
 personal token needs the `node:drain` scope.)
 The drain answers at once with what it is handing over; `safeToStop` turns true within a few seconds:
 
@@ -1683,7 +1687,7 @@ by themselves; on Windows drain before stopping the task ([section 8](#8-run-the
 | | Windows | Linux | macOS |
 |---|---|---|---|
 | start a node | `py tools\drishti.py start server --node …` (a scheduled task per node, section 8) | `python3 tools/drishti.py start server --node …`; systemd, one unit per node | the same as Linux; launchd, one plist per node |
-| drain before a stop | **Admin → Cluster → Drain for a stop**, or the drain call (`Invoke-RestMethod`, section 8) | `ExecStop=` in the unit does it | `bin/drishti-node.sh drain` before `launchctl unload` |
+| drain before a stop | **Admin → Cluster → Drain for a stop**, or the drain call (`Invoke-RestMethod`, section 8) | the server drains itself on the unit's stop | the server drains itself on `launchctl unload` (or `python3 tools/drishti.py node drain` first) |
 | the shared lake | SMB, a UNC path | NFS or S3 | NFS or S3 |
 | three on one machine | three `start server --node … --port … --node-data …`, or `start cluster` | the same | the same |
 

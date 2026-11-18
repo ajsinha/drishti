@@ -68,7 +68,7 @@ python3 tools/drishti.py feed run central-banks               # pull today's dat
 python3 tools/drishti.py feed run central-banks --load inbox  # the same through the data inbox (FRED needs DRISHTI_FRED_API_KEY; without it the Bank of Canada still loads)
 ```
 
-The same through the wrapper `tools/feeds/feed.sh run central-banks` on Linux and macOS, and on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run central-banks` (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the console's Python: `drishti-console/.venv/bin/python tools/drishti.py feed run central-banks` on Linux and macOS, `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run central-banks` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

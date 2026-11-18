@@ -42,7 +42,7 @@ hs_err_pid*
 /data/delta/referencelake/*
 !/data/delta/referencelake/README.md
 .claude/
-# the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
+# the Python runtime of Calc: installed by python tools/drishti.py calc install (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
 # DuckDB-Wasm (Rupaka proof of concept): installed by tools/fetch-duckdb-wasm.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/duckdb-wasm/*/

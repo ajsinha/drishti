@@ -48,7 +48,7 @@ class RowFormsTest {
         try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(loader))) {
             out.write(LOADER_ROW.getBytes(StandardCharsets.UTF_8));
         }
-        assertThat(RowForms.refusal(loader)).startsWith("rows.jsonl.gz holds loader rows").contains("tools/load-*.sh");
+        assertThat(RowForms.refusal(loader)).startsWith("rows.jsonl.gz holds loader rows").contains("drishti.py data load");
         Path zst = tmp.resolve("rows.jsonl.zst");
         try (OutputStream out = new com.github.luben.zstd.ZstdOutputStream(Files.newOutputStream(zst))) {
             out.write(LAKE_ROW.getBytes(StandardCharsets.UTF_8));

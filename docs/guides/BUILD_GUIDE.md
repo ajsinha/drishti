@@ -4945,7 +4945,7 @@ alternative to the seven, not an addition.
 The server reads `drishti.packs.enabled` from `DRISHTI_PACKS` (a comma-separated list; default the seven). Packs are looked for in `drishti.packs.dir`
 (`DRISHTI_PACKS_DIR`, default `./config/packs`), then in `drishti.packs.extra-dirs`.
 
-1. Start the server with the packs you want (or the IDE run configuration **Drishti server** with `DRISHTI_PACKS` changed;
+1. Start the server with the packs you want (or the IDE run configuration **Drishti server (built-in samples)** with a settings file of yours naming `drishti.packs.enabled` after its profile;
    [OPERATIONS_GUIDE.md](IDE_GUIDE.md)):
 
    ```bash

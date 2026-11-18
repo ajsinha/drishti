@@ -132,7 +132,7 @@ final class CassandraNode {
         return a.toArray(new String[0]);
     }
 
-    /** Loads JSON lines as {@code tools/load-cassandra.sh} would. */
+    /** Loads JSON lines as {@code python tools/drishti.py data load --store cassandra} would. */
     static CassandraLoader.Result load(String[] args, List<String> lines) throws Exception {
         try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), LoadGuard.fromArgs(args))) {
             return loader.load(LoaderRows.feed(lines));

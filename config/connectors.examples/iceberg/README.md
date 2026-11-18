@@ -30,8 +30,7 @@ doc: plugins/drishti-plugin-iceberg/README.md
 # Iceberg connector templates
 
 Ready-made connector files for the `iceberg` plugin: one file per banking data domain (`reference`, `market`, `risk`, `credit`,
-`collateral`), all reading tables that `tools/load-iceberg.sh` (or
-`python tools/drishti.py data load --store iceberg`) writes. `python tools/drishti.py start server --iceberg` reads them from here, as settings only (`DRISHTI_CONNECTORS_DIR` names this folder; nothing is copied or written). The loader runs `tools/load-iceberg.sh`, so on Windows it needs bash (Git Bash or WSL).
+`collateral`), all reading tables that `python tools/drishti.py data load --store iceberg` writes. `python tools/drishti.py start server --iceberg` reads them from here, as settings only (`DRISHTI_CONNECTORS_DIR` names this folder; nothing is copied or written). The loader runs on any system.
 
 ## What it reads
 
@@ -73,7 +72,7 @@ fields, partitioned by `identity(business_date)`, sorted by `id`.
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-iceberg.sh ./data/iceberg                        # the samples: 1,791 documents x 10 business days
+python tools/drishti.py data load --store iceberg ./data/iceberg                        # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/iceberg/*.yaml config/connectors/
 ```
 

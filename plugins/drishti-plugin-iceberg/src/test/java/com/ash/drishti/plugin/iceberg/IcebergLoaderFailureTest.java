@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 /**
- * QA3B-12: {@code load-iceberg.sh} (and its PowerShell twin, which run the same loader) ends a failed load with one clear line, never a Java
+ * QA3B-12: {@code drishti.py data load --store iceberg} (which runs this loader) ends a failed load with one clear line, never a Java
  * stack trace: a REST catalog whose bucket is missing names the bucket, the endpoint and what to check.
  */
 class IcebergLoaderFailureTest {

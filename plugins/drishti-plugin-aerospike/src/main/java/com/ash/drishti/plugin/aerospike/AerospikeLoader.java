@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * recorded once at the end. {@code --ttl-days} lets Aerospike expire each day's documents after that long (history
  * retention without a maintenance job; counted from when each document is written, never from a business date). A row
  * dated after tomorrow in the business zone is not loaded, and the load ends with an error naming it ({@link LoadGuard}).
- * {@code tools/load-aerospike.sh} runs it.
+ * {@code python tools/drishti.py data load --store aerospike} runs it.
  */
 public final class AerospikeLoader {
 

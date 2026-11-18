@@ -85,7 +85,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (runs `tools/load-iceberg.sh`, so on Windows it needs bash, Git Bash or WSL); `python tools/drishti.py start server --iceberg` copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (any system); `python tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -100,7 +100,7 @@ A data domain is a folder (`<root>/<domain>/<kind>`, `catalog: hadoop`, the defa
 with `uri`, `warehouse`, `credential`), and each kind is one Iceberg table (or `table.<kind>` when its name differs). A table can also
 be named by its metadata file (`metadata-location.<kind>`), and a table copied elsewhere is read with `relocate`. Two engines: `native`
 (drishti-iceberg, no Hadoop, the default) and `library` (Apache Iceberg Java over Hadoop; also `abfs://`, `gs://`, `hdfs://`). It
-reads position and equality deletes and answers *known at* from older snapshots. It never writes; `tools/load-iceberg.sh` does.
+reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python tools/drishti.py data load --store iceberg` does.
 
 ## Settings
 
@@ -307,17 +307,17 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 
 ## Loading
 
-`tools/load-iceberg.sh` (`python tools/drishti.py data load --store iceberg`) loads the packs' samples and, optionally, a generated book through
+`python tools/drishti.py data load --store iceberg` loads the packs' samples and, optionally, a generated book through
 `IcebergLoader`:
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-tools/load-iceberg.sh ./data/iceberg                                   # the sample documents
-tools/load-iceberg.sh ./data/iceberg --trades 10000 --days 3           # and a book of 10,000 trades, streamed
-tools/load-iceberg.sh ./data/iceberg --keep-days 1800                  # keep seven years of business days
-tools/load-iceberg.sh --catalog rest --uri http://polaris:8181/api/catalog --warehouse risk --credential id:secret
-tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
+python tools/drishti.py data load --store iceberg ./data/iceberg                                   # the sample documents
+python tools/drishti.py data load --store iceberg ./data/iceberg --trades 10000 --days 3           # and a book of 10,000 trades, streamed
+python tools/drishti.py data load --store iceberg ./data/iceberg --keep-days 1800                  # keep seven years of business days
+python tools/drishti.py data load --store iceberg --catalog rest --uri http://polaris:8181/api/catalog --warehouse risk --credential id:secret
+python tools/drishti.py data load --store iceberg s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
 ```
 
 - **Input**: loader rows, JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, as a tar of

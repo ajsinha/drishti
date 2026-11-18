@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Profile `mongodb` (SPRING_PROFILES_ACTIVE=mongodb): the banking packs' data domains are read from MongoDB
-# (a collection per domain in database `drishti`, loaded by tools/load-mongodb.sh) instead of Delta Lake. The packs still
+# (a collection per domain in database `drishti`, loaded by python tools/drishti.py data load --store mongodb) instead of Delta Lake. The packs still
 # decide the kinds, routes and modes of each <domain>-store connector; the collection is the connector's domain.
 drishti:
   sources:
