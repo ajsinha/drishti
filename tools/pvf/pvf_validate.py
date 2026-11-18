@@ -19,9 +19,9 @@ direction and quantity, valuation dates) and each business date as a whole (uniq
 as the set's SCENARIO_DATES, the set's days in order and before the date).
 
 examples (from the repository root):
-    python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/pvf-2026-10-29.tar
+    python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
     python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl data/pvf/pvf-2026-10-29/scenario-set
-    python3 tools/pvf/pvf_validate.py --strict data/pvf/pvf-2026-10-29/pvf-2026-10-29.tar      the contract to the letter
+    python3 tools/pvf/pvf_validate.py --strict data/pvf/pvf-2026-10-29/scenario-pv data/pvf/pvf-2026-10-29/scenario-set   to the letter
 
 A path is a .jsonl or .jsonl.gz file, a folder of them (recursively) or a .tar. A record is a scenario-set record when it has
 SCENARIO_DATES, else a scenario-pv record. The source attributes kept beside the contract's fields (mapping.yaml pass_through) and the

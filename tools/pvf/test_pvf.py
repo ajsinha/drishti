@@ -193,17 +193,20 @@ def test_export_layout_and_contract(extract, tmp_path, small_mapping):
     assert r["STATUS"] == "ok" and "MATURITY_DATE" not in r and "TRADE_STATUS" not in r and "TRADE_ID" not in r
     assert r["PVF_POSITION_ID"] == 2 and r["SRC_POSITION_ID"] == "CAL:22.CAL:22" and r["PVF_TRADE_ID"] == "22" and r["PATHS_FILLED"] == 3
     assert all(not common.lower_keys(x) for x in recs)
-    with tarfile.open(out / f"pvf-{BD}.tar") as t:
-        assert sorted(t.getnames()) == [f"scenario-pv/{BD}/cob.part-001.jsonl.gz", f"scenario-set/{BD}/cob.jsonl.gz"]
-    assert "scenario-pv" in (out / f"pvf-{BD}.tar.ready").read_text()
+    tars = [out / f"scenario-pv-{BD}.tar", out / f"scenario-set-{BD}.tar"]
+    with tarfile.open(tars[0]) as t:
+        assert t.getnames() == [f"scenario-pv/{BD}/cob.part-001.jsonl.gz"]
+    with tarfile.open(tars[1]) as t:
+        assert t.getnames() == [f"scenario-set/{BD}/cob.jsonl.gz"]
+    assert 'folders: {"scenario-pv": "market-risk"}' in Path(f"{tars[0]}.ready").read_text()
     sums = dict(reversed(x.split("  ")) for x in (out / f"pvf-{BD}.sha256").read_text().splitlines())
-    assert sums[f"pvf-{BD}.tar"] == common.sha256_of(out / f"pvf-{BD}.tar")
-    res = V.validate([out / f"pvf-{BD}.tar"], omitted=V.known_gaps(small_mapping))
+    assert sums[tars[0].name] == common.sha256_of(tars[0])
+    res = V.validate(tars, omitted=V.known_gaps(small_mapping))
     assert res["OK"], res
-    assert not V.validate([out / f"pvf-{BD}.tar"], strict=True)["OK"]     # the extras and the gaps are errors to the letter
-    first = (out / f"pvf-{BD}.tar").read_bytes()
+    assert not V.validate(tars, strict=True)["OK"]                         # the extras and the gaps are errors to the letter
+    first = tars[0].read_bytes()
     E.export(E.ExportConfig(joined, out, small_mapping))
-    assert (out / f"pvf-{BD}.tar").read_bytes() == first                   # deterministic
+    assert tars[0].read_bytes() == first                                   # deterministic
 
 
 def test_export_refuses_a_wrong_length_and_newest_first(extract, tmp_path, small_mapping):

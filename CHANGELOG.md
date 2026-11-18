@@ -25,7 +25,7 @@
   config-driven mapping to the contract (`tools/pvf/mapping.yaml`: const, columns, templates, lookups, signs; required fields checked
   against the contract; four required fields the extract cannot give left out by name with the reason; the other source attributes kept
   beside the contract's fields, every name UPPER_SNAKE), the date's scenario set declared (251 paths, never padded), and the loadable
-  layout (`scenario-pv/<date>/cob.part-NNN.jsonl.gz`, `scenario-set/<date>/cob.jsonl.gz`, one `.tar` with its `.ready` and SHA-256 list,
+  layout (`scenario-pv/<date>/cob.part-NNN.jsonl.gz`, `scenario-set/<date>/cob.jsonl.gz`, one `.tar` per kind with its `.ready`, a SHA-256 list,
   a plain `.jsonl`). `pvf_validate.py` checks any output against the contracts; `pvf_join.py`, `pvf_export_gz.py`, `pvf_gen.py` run
   alone too; `test_pvf.py` tests it. Polars and NumPy in `drishti-console/requirements-polars.txt` and the drill's tool-test environment.
   Guide: `tools/pvf/README.md`.

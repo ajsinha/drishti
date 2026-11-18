@@ -43,7 +43,7 @@ python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio dat
 Then check the result and load it (section "Loading into Drishti"):
 
 ```bash
-python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/pvf-2026-10-29.tar
+python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
 ```
 
 **Why three input files.** `--positions` is required: the PV file carries only `position_id` (with `valid_dt`, `risk_metric_cd`,
@@ -68,7 +68,7 @@ No Java, no server and no network are needed to convert; loading uses Drishti's 
 |---|---|
 | `tools/pvf/pvf_run.py` | **the driver**: join, map, check, write the plain JSONL and the loadable layout, one summary |
 | `tools/pvf/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
-| `tools/pvf/pvf_export_gz.py` | the mapping on its own: a joined file to scenario-pv records as `.jsonl.gz` parts, the scenario set, a `.tar` |
+| `tools/pvf/pvf_export_gz.py` | the mapping on its own: a joined file to scenario-pv records as `.jsonl.gz` parts, the scenario set, a `.tar` per kind |
 | `tools/pvf/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
 | `tools/pvf/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
 
@@ -211,8 +211,8 @@ Under `<out>/pvf-<date>/`:
 | `scenario_pv.<date>.jsonl` | the scenario-pv records with the source attributes, one plain JSON Lines file |
 | `scenario-pv/<date>/cob.part-NNN.jsonl.gz` | the same records, 20,000 a part (`--rows-per-part`), `POSITION_ID` order |
 | `scenario-set/<date>/cob.jsonl.gz` | the date's scenario set |
-| `pvf-<date>.tar`, `pvf-<date>.tar.ready` | both folders in one archive, and its marker for the data inbox (`folders`, `mode: replace`, `rows`, `sha256`) |
-| `pvf-<date>.sha256` | the SHA-256 of every part and of the `.tar` (`sha256sum -c pvf-<date>.sha256`) |
+| `scenario-pv-<date>.tar`, `scenario-set-<date>.tar` (+ `.ready`) | one archive per kind (the form of the repository's own test data), each with its marker for the data inbox (`folders`, `mode: replace`, `rows`, `sha256`) |
+| `pvf-<date>.sha256` | the SHA-256 of every part and archive (`sha256sum -c pvf-<date>.sha256`) |
 | `pvf-<date>.export-audit.csv`, `.export-summary.json` | rows the mapping or the contract refused; the export's counts |
 | `pvf-<date>.summary.json` | the whole run: rows in and out at each step, audited by reason, fills, seconds, peak memory |
 
@@ -220,17 +220,20 @@ A re-run replaces the date's parts. Exit codes: `0` done (the audits list what w
 
 ## Loading into Drishti
 
-The `.tar` follows the load rules (`docs/guides/DATA_LAKE_GUIDE.md` section 4.4): each top folder is a kind (`scenario-pv`,
-`scenario-set`), each subfolder a business date. Load it into a lake with Drishti's loader:
+Each archive follows the load rules (`docs/guides/DATA_LAKE_GUIDE.md` section 4.4): its top folder is the kind (`scenario-pv`,
+`scenario-set`, both of the market-risk pack), its subfolder the business date; nothing overrides them. Load both with Drishti's loader,
+the scenario set too (the date has no set otherwise):
 
 ```bash
-python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/pvf-2026-10-29.tar --lake risklake --plan    # what would happen
-python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/pvf-2026-10-29.tar --lake risklake
+python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar --lake risklake --plan   # what would happen
+python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar --lake risklake
+python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar --lake risklake
 ```
 
-or drop `pvf-<date>.tar` and then `pvf-<date>.tar.ready` into the data inbox (`<data>/dataload/inbox`; `--lake NAME` on the export writes
-`lake:` into the `.ready` file). The plain file loads on its own too (table and date from its name):
-`lake build --from data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl --lake risklake --kind scenario-pv --pack market-risk`.
+or drop each `.tar` and then its `.tar.ready` into the data inbox (`<data>/dataload/inbox`; `--lake NAME` on the export writes `lake:`
+into the `.ready` files). One archive per kind because `lake build --from` loads one table per run: a single archive holding both
+folders is planned for both tables but refused at load (*folder scenario-set matches no configured dataset (scenario-pv)*). The 2,000-position
+slice loaded into a scratch copy of the `demo` lake's layout this way (`--lake demo --lake-root <scratch>`).
 
 For VaR on the date the lake also needs what the engine reads beside the PVs: the currencies' scenario FX (all USD here: none needed),
 and no other scenario P&L of the date in another set or batch.

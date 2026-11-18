@@ -33,7 +33,8 @@ writes, under <out>/pvf-<date>/ (--out defaults to the PV file's folder):
   pvf_joined.<date>.fills.csv      every position with a filled path (PATH0_FROM_BASE, PATHS_FILLED, PATHS_SUPPLIED), most filled first
   scenario_pv.<date>.jsonl         the scenario-pv records with every other source attribute beside them (UPPER_SNAKE), one plain
                                    JSON Lines file (loadable on its own: table and date in its name)
-  scenario-pv/<date>/cob.part-NNN.jsonl.gz, scenario-set/<date>/cob.jsonl.gz, pvf-<date>.tar (+ .ready, .sha256)   the loadable layout
+  scenario-pv/<date>/cob.part-NNN.jsonl.gz, scenario-set/<date>/cob.jsonl.gz   the loadable layout, and one archive per kind:
+  scenario-pv-<date>.tar, scenario-set-<date>.tar (each with its .ready), pvf-<date>.sha256 (every part and archive)
   pvf-<date>.export-audit.csv      rows the mapping or the contract refused
   pvf-<date>.summary.json          the whole run: rows in and out at each step, audited by reason, seconds, peak memory
 Exit 0 done (the audits list what was left out), 1 refused (one line saying why), 2 usage.
@@ -102,7 +103,7 @@ def run(a: argparse.Namespace) -> dict:
     summary = {"BUSINESS_DATE": a.date, "FOLDER": str(folder), "POSITIONS_READ": j["POSITIONS_READ"],
                "JOIN_EXCLUDED": j["POSITIONS_EXCLUDED"], "JOIN_EXCLUDED_BY_REASON": j["EXCLUDED_BY_REASON"], "FILLS": j["FILLS"],
                "EXPORT_AUDITED": e["ROWS_AUDITED"], "EXPORT_AUDITED_BY_REASON": e["AUDITED_BY_REASON"], "RECORDS_WRITTEN": e["RECORDS_WRITTEN"],
-               "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "TAR": e.get("TAR"), "PLAIN_JSONL": e["PLAIN_JSONL"],
+               "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "TARS": e.get("TARS"), "PLAIN_JSONL": e["PLAIN_JSONL"],
                "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e}
     (folder / f"pvf-{a.date}.summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     log.info("pvf run of %s: %s positions in, %s excluded by the join, %s by the mapping, %s records written; %ss, peak memory %s MB; %s",

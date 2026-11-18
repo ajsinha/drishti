@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Maps joined PVF rows (pvf_join.py) to scenario-pv records by mapping.yaml and writes them in the layout Drishti's loaders take:
-gzipped JSON Lines parts per table and business date, the date's scenario set beside them, one .tar of both with its .ready file, and
+gzipped JSON Lines parts per table and business date, the date's scenario set beside them, one .tar per kind with its .ready file, and
 (--jsonl) the same records as one plain .jsonl file.
 
 examples (from the repository root):
@@ -24,13 +24,13 @@ examples (from the repository root):
 writes, under --out (the date from the rows' BUSINESS_DATE):
   scenario-pv/<date>/cob.part-001.jsonl.gz ...   the records, --rows-per-part each (20,000), in POSITION_ID order
   scenario-set/<date>/cob.jsonl.gz               the date's scenario set (mapping.yaml scenario_set; --no-scenario-set: none)
-  pvf-<date>.tar, pvf-<date>.tar.ready           both folders in one archive: `lake build --from` or the data inbox
-  pvf-<date>.sha256                              the SHA-256 of every part and of the .tar (sha256sum -c reads it)
+  scenario-pv-<date>.tar, scenario-set-<date>.tar   one archive per kind, each with its .ready: `lake build --from` or the data inbox
+  pvf-<date>.sha256                              the SHA-256 of every part and archive (sha256sum -c reads it)
   pvf-<date>.export-audit.csv                    rows that could not be mapped or break the contract: POSITION_ID, REASON, DETAIL
   pvf-<date>.export-summary.json                 rows in and out, audited by reason, statuses, parts, seconds, peak memory
 Every record is checked against the contract as it is written (required fields but mapping.yaml omit_required, types, enums, patterns,
 UPPER_SNAKE names; the source attributes kept by pass_through ride beside the contract's fields) and the date as a whole (one set, one batch, every vector as long as the set: never padded). Exit 0 every row written, 2 written
-with rows audited, 1 refused (no .tar).
+with rows audited, 1 refused (no archive).
 """
 from __future__ import annotations
 
@@ -214,18 +214,23 @@ def write_set(c: ExportConfig, m: Mapping, ctx: dict, out: Outputs, check: DateC
 
 
 def package(c: ExportConfig, out: Outputs, set_rec: dict | None) -> dict:
-    """The .tar of both folders, its .ready file and the .sha256 list; the paths written."""
-    files = list(out.parts.paths) + ([out.set_dir / "cob.jsonl.gz"] if set_rec else [])
-    sums = {f.relative_to(c.out).as_posix(): sha256_of(f) for f in files}
-    res: dict = {"PARTS": list(sums)}
+    """One .tar per kind (scenario-pv-<date>.tar, scenario-set-<date>.tar: the form of the repository's own test data, which
+    `lake build --from` loads one table at a time), each with its .ready file, and the .sha256 list of every part and archive."""
+    by_kind = {"scenario-pv": list(out.parts.paths)}
+    if set_rec:
+        by_kind["scenario-set"] = [out.set_dir / "cob.jsonl.gz"]
+    sums = {f.relative_to(c.out).as_posix(): sha256_of(f) for files in by_kind.values() for f in files}
+    res: dict = {"PARTS": list(sums), "TARS": []}
+    bd = out.pv_dir.name
     if c.tar and out.written:
-        tar = make_tar(Path(f"{out.stem}.tar"), c.out, files)
-        sums[tar.name] = sha256_of(tar)
-        ready = {**({"lake": c.lake} if c.lake else {}),
-                 "folders": {"scenario-pv": "market-risk", **({"scenario-set": "market-risk"} if set_rec else {})},
-                 "mode": "replace", "rows": out.written + (1 if set_rec else 0), "sha256": sums[tar.name]}
-        Path(f"{tar}.ready").write_text("".join(f"{k}: {json.dumps(v)}\n" for k, v in ready.items()), encoding="utf-8")
-        res["TAR"] = str(tar)
+        for kind, files in by_kind.items():
+            tar = make_tar(c.out / f"{kind}-{bd}.tar", c.out, files)
+            sums[tar.name] = sha256_of(tar)
+            rows = out.written if kind == "scenario-pv" else 1
+            ready = {**({"lake": c.lake} if c.lake else {}), "folders": {kind: "market-risk"}, "mode": "replace", "rows": rows,
+                     "sha256": sums[tar.name]}
+            Path(f"{tar}.ready").write_text("".join(f"{k}: {json.dumps(v)}\n" for k, v in ready.items()), encoding="utf-8")
+            res["TARS"].append(str(tar))
     sha = Path(f"{out.stem}.sha256")
     sha.write_text("".join(f"{h}  {p}\n" for p, h in sums.items()), encoding="utf-8")
     res["SHA256"] = str(sha)
@@ -269,7 +274,7 @@ def export(c: ExportConfig) -> dict:
     if not c.dry_run:
         Path(f"{out.stem}.export-summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     log.info("summary: %s rows in, %s records %s, %s audited; scenario set %s; %s; %ss, peak memory %s MB", f"{read:,}", f"{out.written:,}",
-             dict(statuses), summary["ROWS_AUDITED"], ctx["scenario_set_id"], summary.get("TAR", "no tar"), summary["SECONDS"],
+             dict(statuses), summary["ROWS_AUDITED"], ctx["scenario_set_id"], ", ".join(summary.get("TARS") or ["no tar"]), summary["SECONDS"],
              summary["PEAK_MEMORY_MB"])
     return summary
 
