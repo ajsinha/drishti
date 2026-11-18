@@ -252,7 +252,7 @@ Request body (JSON):
 | `kind` | string | yes | | a kind the pack owns (`DRS-5012` otherwise); at most 100 characters |
 | `businessDate` | string `yyyy-MM-dd` | yes, or `asOf` | | the business date the batch is for; not in the future (in the server's business-date zone); weekends and holidays are accepted as given |
 | `asOf` | string `yyyy-MM-dd` | alias | | used when `businessDate` is absent |
-| `status` | `ready` or `failed` | no | `ready` | anything else is `DRS-5001` |
+| `status` | `ready`, `failed` or `deleted` | no | `ready` | `deleted`: the date was removed from the lake (`lake delete`, [DATA_LAKE_GUIDE.md section 5.8](DATA_LAKE_GUIDE.md#58-delete-business-dates)): the kind's caches are dropped and the engines drop the date; nothing is verified, alerted or captured. Anything else is `DRS-5001` |
 | `rows` | integer >= 0 | no | unknown | shown in the notice and the history |
 | `rejected` | integer >= 0 | no | unknown | rows your ETL rejected |
 | `source` | string | no | none | the job or system name; at most 200 characters |

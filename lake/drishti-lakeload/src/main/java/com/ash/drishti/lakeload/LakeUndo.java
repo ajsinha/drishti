@@ -356,9 +356,7 @@ public final class LakeUndo {
     static long rewrite(Engine engine, String table, Snapshot s, String date, List<TableUpkeep.Staged> rows) throws IOException {
         List<String> partitions = s.getPartitionColumnNames();
         if (rows.isEmpty()) {
-            List<Row> removes = LakeWriter.removals(engine, s, pv -> date.equals(pv.get("business_date")));
-            var txn = Table.forPath(engine, table).createTransactionBuilder(engine, DeltaTarget.ENGINE_INFO, Operation.WRITE).build(engine);
-            return txn.commit(engine, CloseableIterable.inMemoryIterable(toIterator(removes))).getVersion();
+            return removeDates(engine, table, s, date::equals);
         }
         Path dir = com.ash.drishti.common.TempFiles.createDir("drishti-undo-");
         try {
@@ -398,6 +396,16 @@ public final class LakeUndo {
                 s2.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
             }
         }
+    }
+
+    /**
+     * Every file of the business dates {@code dates} accepts removed from the Delta table, one commit (a date left empty, a date deleted:
+     * {@code lake delete}); the files stay on disk for time travel until the table's vacuum. Returns the version committed.
+     */
+    static long removeDates(Engine engine, String table, Snapshot s, java.util.function.Predicate<String> dates) throws IOException {
+        List<Row> removes = LakeWriter.removals(engine, s, pv -> pv.get("business_date") != null && dates.test(pv.get("business_date")));
+        var txn = Table.forPath(engine, table).createTransactionBuilder(engine, DeltaTarget.ENGINE_INFO, Operation.WRITE).build(engine);
+        return txn.commit(engine, CloseableIterable.inMemoryIterable(toIterator(removes))).getVersion();
     }
 
     private static <T> CloseableIterator<T> toIterator(List<T> list) {

@@ -119,6 +119,26 @@ public final class IcebergMaintenance {
         }
     }
 
+    /**
+     * Whole business dates removed from the Iceberg table {@code domain/table} of the lake at {@code root} ({@code lake delete},
+     * DATA_LAKE_GUIDE.md section 5.8): {@code held} (every date the table holds before), {@code dates} (a line per date {@code wanted}
+     * accepts: {@code date}, {@code rows}, {@code dropped}). One metadata-only commit for all of them (no file rewritten); nothing on a dry run.
+     * Called by name from {@code LakeRetention} (the Delta side).
+     */
+    public static Map<String, Object> dropDates(String root, String domain, String kind, java.util.function.Predicate<String> wanted, boolean dryRun)
+            throws Exception {
+        try (LayoutLake view = LayoutLake.of(new HashMap<>(Map.of("root", root, "domain", domain, "engine", "native")))) {
+            var table = view.load(kind);
+            if (table.isEmpty()) {
+                Map<String, Object> none = new java.util.LinkedHashMap<>();
+                none.put("held", List.of());
+                none.put("dates", List.of());
+                return none;
+            }
+            return NativeMaintenance.dropDates(((LayoutLake.Native.Kind) table.get()).t(), wanted, dryRun);
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Map<String, String> settings = new HashMap<>();
         settings.put("root", args.length > 0 && !args[0].startsWith("--") ? args[0] : com.ash.drishti.api.DataDir.under("iceberg"));

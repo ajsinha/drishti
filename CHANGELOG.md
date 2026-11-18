@@ -18,6 +18,23 @@
 
 ## Unreleased
 
+- **`drishti.py lake delete`: whole business dates out of one table, and the server drops them at once.** `lake delete --lake risklake
+  --kind scenario-pv --date 2026-11-16` (or `--table domain/table`, `--date` repeatable, `--from`/`--to`) removes the dates with the lake
+  loader's own writer (`LakeRetention --dates`, the machinery of row retention and undo): one Delta commit removing the dates' files, one
+  Iceberg partition delete, or a files store's day files (`DeleteDatesParityTest`: the same rows left in all three, delta-rs reads the Delta
+  result). It says first what it would delete (rows per date; `--dry-run` stops there), refuses a date the table does not hold in words, asks
+  for the table's name (`--yes` for scripts), holds the table's lock and logs a `lake-delete` line in `_drishti-lake/runs.log`. With
+  `--server` (or `DRISHTI_SERVER`; `--token-file`/`DRISHTI_TOKEN`) it sends the data-load signal with the new status **`deleted`**: the
+  server drops the kind's caches and calls its deleted listeners (no verify, alerts or capture; history *scenario-pv for 2026-11-16 deleted
+  from the lake: N rows*; audit `data-load-deleted`). The VaR engine drops the date (`VarOfficial.onDeleted`: book, hot file, currencies,
+  cached answers; never captured), so a request for it is answered by the newest earlier date with *scenario P&L for D not loaded — showing
+  D-1* and the default date moves back; the exposure engine and BI's layers drop it too. Without a signal the same state is reached by
+  itself (the connector's new version; the version watch). Official captures of the date stay as history. Loading the date again brings it
+  back. A normal scenario set is now used only for its own business date: a date whose set was deleted (or never delivered) is refused
+  (*no scenario set for D*) instead of being computed with the day before's scenario days. `lake undo` cannot restore a deleted date (it
+  works by load id on rows still in the table); the way back is a load. Docs: DATA_LAKE_GUIDE section 5.8, CLI_REFERENCE 7.15,
+  VAR_GUIDE 15.8, DATA_GUIDE (the `status` field), DEPLOYMENT_AND_QA_GUIDE 9.14 and checklist 20a.
+
 - **IntelliJ's server launchers run the jar the modules are stamped for.** A server started from IntelliJ's compiled classes (the
   **Application** launchers, with *Make* before launch) had no `META-INF/build-info.properties` (Maven's `build-info` goal; IntelliJ's
   compile never runs it and clears `target/classes` when it rebuilds a module), so its kernel build was unknown (*dev* in Admin → Modules)

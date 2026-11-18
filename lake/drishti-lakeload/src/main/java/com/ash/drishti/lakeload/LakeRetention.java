@@ -45,8 +45,12 @@ import java.util.stream.Stream;
  * Iceberg tables by {@code IcebergMaintenance.retentionTable} when the Iceberg plugin is on the class path (the server's); a files store's
  * {@code <root>/<domain>/<date>/<kind>.jsonl} day files are rewritten through a temporary file moved into place.
  *
- * <pre>LakeRetention --lake ROOT --format delta|iceberg|files --table domain/table [--ttl 8h] [--on FIELD] [--max-rows N] [--dry-run] [--json]</pre>
- * A table's age is its {@code on} field; without it the {@code arrived_at} column, else the row's business date. Exit codes: 0 done, 1 failed.
+ * <pre>LakeRetention --lake ROOT --format delta|iceberg|files --table domain/table [--ttl 8h] [--on FIELD] [--max-rows N] [--dry-run] [--json]
+ * LakeRetention --lake ROOT --format delta|iceberg|files --table domain/table --dates 2026-11-16[,2026-11-01..2026-11-10] [--dry-run] [--json]</pre>
+ * A table's age is its {@code on} field; without it the {@code arrived_at} column, else the row's business date. {@code --dates} removes
+ * whole business dates instead ({@code lake delete}, DATA_LAKE_GUIDE.md section 5.8): every file of those dates, one commit for all of them
+ * (a Delta remove commit, an Iceberg partition delete, a files store's day files deleted); its answer also lists the dates the table
+ * held before ({@code held}). Exit codes: 0 done, 1 failed.
  */
 public final class LakeRetention {
 
@@ -65,6 +69,7 @@ public final class LakeRetention {
         String ttl = null;
         String on = null;
         Integer max = null;
+        String dates = null;
         boolean dry = false;
         boolean json = false;
         try {
@@ -76,6 +81,7 @@ public final class LakeRetention {
                     case "--ttl" -> ttl = args[++i];
                     case "--on" -> on = args[++i];
                     case "--max-rows" -> max = Integer.valueOf(args[++i]);
+                    case "--dates" -> dates = args[++i];
                     case "--dry-run" -> dry = true;
                     case "--json" -> json = true;
                     default -> throw new IllegalArgumentException("unknown option " + args[i]);
@@ -83,6 +89,12 @@ public final class LakeRetention {
             }
             if (root == null || table == null) {
                 throw new IllegalArgumentException("give --lake ROOT and --table domain/table");
+            }
+            if (dates != null) {
+                Map<String, Object> done = dropDates(root, format, table, dates(dates), dry);
+                out.println(json ? JSON.writeValueAsString(done) : table + ": " + done.get("dropped") + " rows " + (dry ? "would be deleted" : "deleted")
+                        + " in " + ((List<?>) done.get("dates")).size() + " business dates");
+                return 0;
             }
             Map<String, Object> done = apply(root, format, table, new RowRetention(ttl, on, max), Instant.now(), dry);
             out.println(json ? JSON.writeValueAsString(done) : table + ": " + done.get("dropped") + " rows " + (dry ? "would be dropped" : "dropped")
@@ -112,6 +124,183 @@ public final class LakeRetention {
         m.put("dropped", dates.stream().mapToLong(d -> ((Number) d.get("dropped")).longValue()).sum());
         m.put("dates", dates);
         return m;
+    }
+
+    /**
+     * The dates a {@code --dates} list names: {@code yyyy-MM-dd} each, or a range {@code from..to} (both ends included), comma separated.
+     * Every item is checked as a date (a typo is refused, never matched as nothing).
+     */
+    public static java.util.function.Predicate<String> dates(String spec) {
+        java.util.function.Predicate<String> any = d -> false;
+        for (String item : spec.split(",")) {
+            String it = item.strip();
+            if (it.isEmpty()) {
+                continue;
+            }
+            int dots = it.indexOf("..");
+            java.time.LocalDate from = java.time.LocalDate.parse(dots < 0 ? it : it.substring(0, dots).strip());
+            java.time.LocalDate to = dots < 0 ? from : java.time.LocalDate.parse(it.substring(dots + 2).strip());
+            if (to.isBefore(from)) {
+                throw new IllegalArgumentException("the range " + it + " ends before it starts");
+            }
+            any = any.or(d -> {
+                try {
+                    java.time.LocalDate x = java.time.LocalDate.parse(d);
+                    return !x.isBefore(from) && !x.isAfter(to);
+                } catch (java.time.format.DateTimeParseException e) {
+                    return false;
+                }
+            });
+        }
+        return any;
+    }
+
+    /**
+     * Whole business dates removed from {@code domain/table} ({@code lake delete}): {@code table}, {@code format}, {@code dryRun},
+     * {@code held} (the dates the table held before), {@code dropped} (rows), {@code dates} (a line per date removed: {@code date},
+     * {@code rows}, {@code dropped}; {@code rows} is -1 when a Delta file states no row count), {@code version} (Delta: the commit).
+     */
+    public static Map<String, Object> dropDates(String root, String format, String table, java.util.function.Predicate<String> wanted, boolean dryRun)
+            throws Exception {
+        Map<String, Object> got = switch (format) {
+            case "delta" -> deltaDates(root, table, wanted, dryRun);
+            case "files" -> filesDates(root, table, wanted, dryRun);
+            case "iceberg" -> icebergDates(root, table, wanted, dryRun);
+            default -> throw new IllegalArgumentException("format " + format + " is delta, iceberg or files");
+        };
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> lines = (List<Map<String, Object>>) got.get("dates");
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("table", table);
+        m.put("format", format);
+        m.put("dryRun", dryRun);
+        m.put("held", got.get("held"));
+        m.put("dropped", lines.stream().mapToLong(d -> Math.max(0, ((Number) d.get("dropped")).longValue())).sum());
+        m.put("dates", lines);
+        if (got.containsKey("version")) {
+            m.put("version", got.get("version"));
+        }
+        return m;
+    }
+
+    /** A Delta table: the dates' files removed in one commit (the writer's remove actions, as an undo that leaves a date empty). */
+    static Map<String, Object> deltaDates(String root, String table, java.util.function.Predicate<String> wanted, boolean dryRun) throws IOException {
+        Map<String, Object> out = new LinkedHashMap<>();
+        String path = Path.of(root).resolve(table).toString();
+        Engine engine = LakeWriter.engineFor(path, Map.of());
+        Snapshot s;
+        try {
+            s = Table.forPath(engine, path).getLatestSnapshot(engine);
+        } catch (TableNotFoundException e) {
+            throw new IOException("no Delta table " + table + " in " + root);
+        }
+        java.util.SortedMap<String, Long> rows = rowsPerDate(engine, s);
+        List<Map<String, Object>> lines = new ArrayList<>();
+        rows.forEach((d, n) -> {
+            if (wanted.test(d)) {
+                line(lines, d, n, n);
+            }
+        });
+        out.put("held", new ArrayList<>(rows.keySet()));
+        out.put("dates", lines);
+        if (!dryRun && !lines.isEmpty()) {
+            java.util.Set<String> gone = new java.util.HashSet<>();
+            lines.forEach(l -> gone.add((String) l.get("date")));
+            out.put("version", LakeUndo.removeDates(engine, path, s, gone::contains));
+        }
+        return out;
+    }
+
+    /** The rows of each business date of a Delta snapshot, from its files' statistics (no data file opened; -1: a file without them). */
+    static java.util.SortedMap<String, Long> rowsPerDate(Engine engine, Snapshot s) throws IOException {
+        java.util.SortedMap<String, Long> out = new TreeMap<>();
+        // the files' statistics come with the scan files only when asked for (ScanImpl's includeStats)
+        try (io.delta.kernel.utils.CloseableIterator<io.delta.kernel.data.FilteredColumnarBatch> it =
+                ((io.delta.kernel.internal.ScanImpl) s.getScanBuilder().build()).getScanFiles(engine, true)) {
+            while (it.hasNext()) {
+                try (io.delta.kernel.utils.CloseableIterator<io.delta.kernel.data.Row> files = it.next().getRows()) {
+                    while (files.hasNext()) {
+                        io.delta.kernel.data.Row f = files.next();
+                        String d = io.delta.kernel.internal.InternalScanFileUtils.getPartitionValues(f).get("business_date");
+                        if (d != null) {
+                            out.merge(d, numRecords(f), (a, b) -> a < 0 || b < 0 ? -1 : a + b);
+                        }
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    private static long numRecords(io.delta.kernel.data.Row scanFile) {
+        try {
+            io.delta.kernel.data.Row add = scanFile.getStruct(io.delta.kernel.internal.InternalScanFileUtils.ADD_FILE_ORDINAL);
+            int at = add.getSchema().indexOf("stats");
+            if (at < 0 || add.isNullAt(at)) {
+                return -1;
+            }
+            return JSON.readTree(add.getString(at)).path("numRecords").asLong(-1);
+        } catch (IOException | RuntimeException e) {
+            return -1;
+        }
+    }
+
+    /** A files store: the dates' day files ({@code <root>/<domain>/<date>/<kind>.jsonl}) deleted. */
+    static Map<String, Object> filesDates(String root, String table, java.util.function.Predicate<String> wanted, boolean dryRun) throws IOException {
+        int slash = table.indexOf('/');
+        String domain = slash < 0 ? "" : table.substring(0, slash);
+        String kind = table.substring(slash + 1);
+        Path base = domain.isEmpty() ? Path.of(root) : Path.of(root).resolve(domain);
+        List<String> held = new ArrayList<>();
+        List<Map<String, Object>> lines = new ArrayList<>();
+        List<Path> gone = new ArrayList<>();
+        if (Files.isDirectory(base)) {
+            try (Stream<Path> days = Files.list(base)) {
+                for (Path d : days.filter(Files::isDirectory).sorted().toList()) {
+                    Path f = d.resolve(kind + ".jsonl");
+                    if (!Files.isRegularFile(f)) {
+                        continue;
+                    }
+                    String date = d.getFileName().toString();
+                    held.add(date);
+                    if (wanted.test(date)) {
+                        long n;
+                        try (Stream<String> ls = Files.lines(f, StandardCharsets.UTF_8)) {
+                            n = ls.filter(l -> !l.isBlank()).count();
+                        }
+                        line(lines, date, n, n);
+                        gone.add(f);
+                    }
+                }
+            }
+        }
+        if (!dryRun) {
+            for (Path f : gone) {
+                Files.delete(f);                                       // a reader sees the whole day or none of it
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("held", held);
+        out.put("dates", lines);
+        return out;
+    }
+
+    /** An Iceberg table, by the Iceberg plugin (on the server's class path): whole partitions deleted, one commit. */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> icebergDates(String root, String table, java.util.function.Predicate<String> wanted, boolean dryRun) throws Exception {
+        Class<?> ice;
+        try {
+            ice = Class.forName("com.ash.drishti.plugin.iceberg.IcebergMaintenance");
+        } catch (ClassNotFoundException e) {
+            throw new IOException("the Iceberg plugin is not on the class path");
+        }
+        int slash = table.indexOf('/');
+        try {
+            return (Map<String, Object>) ice.getMethod("dropDates", String.class, String.class, String.class, java.util.function.Predicate.class, boolean.class)
+                    .invoke(null, root, slash < 0 ? "" : table.substring(0, slash), table.substring(slash + 1), wanted, dryRun);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            throw e.getCause() instanceof Exception x ? x : e;
+        }
     }
 
     private static List<Map<String, Object>> line(List<Map<String, Object>> out, String date, long rows, long dropped) {

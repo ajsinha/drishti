@@ -1365,6 +1365,72 @@ $ curl -s -H "Authorization: Bearer $(cat ~/drishti-token)" http://<host>:18480/
 Every endpoint and alert: [OPERATIONS_GUIDE.md › Monitoring and health](guides/OPERATIONS_GUIDE.md#13-monitoring-and-health), the logs:
 [› Logs](guides/OPERATIONS_GUIDE.md#139-logs).
 
+### 9.14 Delete a date from a lake
+
+To take a business date out of one table (a date loaded by mistake, or to test how the server reacts), use `lake delete`. Here the
+newest date of the demo lake's scenario PVs, `2026-11-13`; use a date your lake holds (`lake status --lake demo` lists them).
+
+**1 · See what it would delete** (nothing changes):
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --dry-run
+```
+
+```powershell
+py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --dry-run
+```
+
+```text
+would delete risk/scenario-pv 2026-11-13: 15,000 rows
+risk/scenario-pv would keep 59 business dates (newest 2026-11-12)
+```
+
+A date the table does not hold is refused, nothing deleted: *2026-11-15 is not in risk/scenario-pv: it holds 60 business dates
+(2026-08-19 .. 2026-11-13); nothing deleted*.
+
+**2 · Delete it and tell the running server.** The token needs the `loads:write` scope (your name → **My account** → **API tokens** →
+scope `loads:write`); the command asks you to type the table's name (`risk/scenario-pv`) unless you give `--yes`:
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --server http://<host>:18480 --token-file ~/drishti-token
+```
+
+```powershell
+py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --server http://<host>:18480 --token-file C:\Users\you\drishti-token
+```
+
+```text
+deleted risk/scenario-pv 2026-11-13: 15,000 rows
+risk/scenario-pv keeps 59 business dates (newest 2026-11-12)
+one commit, version 61 (the files stay for time travel until the table's vacuum)
+  signal 2026-11-13: sent: the server dropped the date
+run 20261113T180210.441-5120 logged in /home/you/drishti/data/delta/demo/_drishti-lake/runs.log
+```
+
+**3 · How the running server reacts.** The signal (status `deleted`) drops the date from the VaR engine at once; nothing is captured
+for it. `VAR BANK` (or the VaR explorer) opens on the newest date that still has scenario P&L (2026-11-12). Asked for the deleted date
+(`asOf=2026-11-13`, or the date picker), it shows the earlier date with the notice **scenario P&L for 2026-11-13 not loaded — showing
+2026-11-12** at the top and in the provenance: never the deleted figures. **Admin → Data loads** lists the signal as *scenario-pv for
+2026-11-13 deleted from the lake: 15,000 rows*; **Admin → Audit** has `data-load-deleted` and `var-reload`. The official records already
+captured for 2026-11-13 stay as history (the node history still shows them); they are not the date's live VaR. With `--no-signal` (or no
+token) the server reaches the same state by itself within its version check (30 s).
+
+```text
+$ drishti-console/.venv/bin/python tools/drishti.py var show BANK --date 2026-11-13
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-12
+  …
+  warning: scenario P&L for 2026-11-13 not loaded — showing 2026-11-12
+```
+
+**4 · Bring it back.** Load the date again, with its signal: in the demo lake, `lake demo --only market-risk/scenario-pv` (that table
+rebuilt from the test data; the server told as in section 6); your own file through `lake build … --signal http://<host>:18480` or the
+data inbox ([12.2](#122-put-the-data-in-place)). The date answers again at once and is
+captured again. `lake undo` cannot bring back a deleted date (it works on the rows of one load, and those rows are gone).
+
+More: [DATA_LAKE_GUIDE.md section 5.8](guides/DATA_LAKE_GUIDE.md#58-delete-business-dates),
+[VAR_GUIDE.md section 15.8](guides/VAR_GUIDE.md#158-cadence-delivery-and-the-load-signal),
+[CLI_REFERENCE.md section 7.15](guides/CLI_REFERENCE.md#715-lake-delete-whole-business-dates-out-of-a-table).
+
 ## 10. The QA checklist
 
 Tick one column per operating system tested. *Expected* is what section 9 shows.
@@ -1392,6 +1458,7 @@ Tick one column per operating system tested. *Expected* is what section 9 shows.
 | 18 | Phone width (390 px) | one column, no sideways scroll | ☐ | ☐ | ☐ |
 | 19 | Logs and `/actuator/prometheus` | no `ERROR`; `drishti_` metrics | ☐ | ☐ | ☐ |
 | 20 | Service start at boot, stop with drain | the process comes back after a reboot; a stop drains first | ☐ | ☐ | ☐ |
+| 20a | `lake delete --kind scenario-pv --date <newest>` (9.14), then load it again | dry run counts; `signal … sent`; `VAR BANK` on the date before with the notice *not loaded — showing …*; back after the load | ☐ | ☐ | ☐ |
 | 21 | Optional: the cluster checklist | [section 11.10](#1110-the-cluster-qa-checklist) | ☐ | ☐ | ☐ |
 
 ## 11. A cluster of three

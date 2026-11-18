@@ -100,6 +100,7 @@ public class BiQueryConfiguration {
             AuditLog audit, PackRegistry packs, ReferenceCatalog graph, SourceGateway sources, LoadService loads) {
         DatasetService service = new DatasetService(bi, queries, props, entitlements, security, users, audit, packs, graph, sources);
         loads.onReady(service::onLoad);                                  // a data-load signal rebuilds exactly the date it names
+        loads.onDeleted(service::onLoad);                                // a date deleted from the lake (lake delete): its layers go too
         return service;
     }
 
