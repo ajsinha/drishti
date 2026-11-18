@@ -149,7 +149,7 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
     if problems:
         raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
-                          + "\n(python tools/drishti.py build all builds the jar and every module; start server --modules-dev loads the folders as they are)")
+                          + "\n(python tools/drishti.py build all builds the jar and every module; build modules <id> rebuilds one, then start again)")
     if not dmods:
         return f"modules: none ({modules} holds no .dmod: the server starts with no module)"
     return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"

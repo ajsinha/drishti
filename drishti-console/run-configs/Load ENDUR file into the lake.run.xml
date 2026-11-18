@@ -28,7 +28,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --pack $PROJECT_DIR$/../modules/banking/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates --lake demo" />
+    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

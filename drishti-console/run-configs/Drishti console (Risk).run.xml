@@ -25,7 +25,6 @@
       <env name="DRISHTI_AUTH_ENABLED" value="true" />
       <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
       <env name="DRISHTI_SECURE_COOKIE" value="false" />
-      <env name="DRISHTI_CONSOLE_TMP_DIR" value="$PROJECT_DIR$/data/tmp/console-risk" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />

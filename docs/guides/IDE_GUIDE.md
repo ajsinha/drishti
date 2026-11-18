@@ -414,7 +414,7 @@ environment variables copied too, and no *Build* before launch (section 6.1, rec
 
 ## 5. When a stack is already running
 
-A three-node stack (started from `drishti-stack/` or by `drishti.py start cluster`) holds **18480** (the main node), **18791** and **18792** (its other nodes) and
+A three-node stack (started by `drishti.py start cluster`) holds **18480** (the main node), **18791** and **18792** (its other nodes) and
 the console on **17480**. A run configuration on the same port fails with *Port 18480 was already in use* or the console's *address already in use*. Choose one:
 
 1. **Stop the stack:** `python3 tools/drishti.py stop cluster` (Windows `py tools\drishti.py stop cluster`); `python3 tools/drishti.py status` shows nothing running. Then run the default configurations.

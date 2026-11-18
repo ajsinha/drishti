@@ -46,11 +46,14 @@ def factory():
 
 def temp_under_data(settings) -> None:
     """The console's temp folder under <data dir>/tmp/console (the server's is <data dir>/tmp/server), unless one is configured: never the system temp folder,
-    which can be a small in-memory file system. Set here (a real run), not in create_app (tests make apps too)."""
+    which can be a small in-memory file system. A console of one distribution (--distribution=risk) takes <data dir>/tmp/console-risk, so two
+    consoles of one data folder never share one. Set here (a real run), not in create_app (tests make apps too)."""
     if str(settings.get("tmp_dir", "") or "").strip() or os.environ.get("DRISHTI_CONSOLE_TMP_DIR") or os.environ.get("DRISHTI_TMP_DIR"):
         return
     data = os.environ.get("DRISHTI_DATA_DIR") or str(HERE.parent / "data")
-    os.environ["DRISHTI_CONSOLE_TMP_DIR"] = str(Path(data) / "tmp" / "console")
+    dist = str(settings.get("distribution", "") or "").strip().lower()
+    name = "console-" + dist if dist and dist != "all" and dist.replace("-", "").isalnum() else "console"
+    os.environ["DRISHTI_CONSOLE_TMP_DIR"] = str(Path(data) / "tmp" / name)
 
 
 def log_config() -> dict:

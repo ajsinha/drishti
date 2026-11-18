@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The launch groups of ``tools/drishti.py``: ``setup``, ``build jar``, ``start``, ``stop`` and ``status`` (server, console, all, cluster).
-Python only, the same on Linux, macOS and Windows: they replace the bin/ shell and PowerShell scripts. ``--settings`` is drishti.py's own
+Python only, the same on Linux, macOS and Windows. ``--settings`` is drishti.py's own
 (read before the command; handed to the server and the console). Exit codes: 0 ok, 1 failed, 2 a wrong option, 3 already running or the
 port in use."""
 from __future__ import annotations

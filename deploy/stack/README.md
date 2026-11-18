@@ -33,9 +33,6 @@ set `JAVA_HOME` to your JDK 21: `stack.yaml`'s `java:` is a Linux path, and `JAV
 (a node's own `settings:` wins over it). Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the file's
 ([docs/DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../../docs/DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)).
 
-**An older `drishti-stack/` folder** beside the repository is not read: move your own `secrets.env` (and any `net-key`) from it to this
-folder before the first `start cluster`, or new secrets are made here (and the sessions signed with the old ones end).
-
 **The data folder** of every cluster command is the one launch-roots lookup: `--data-dir`, else `drishti.data.dir` of the settings file,
 else `DRISHTI_DATA_DIR`, else `<drishti>/data`.
 
@@ -110,7 +107,7 @@ The repository is public, so no secret is ever in it. `secrets.env` holds three:
 | `DRISHTI_SESSION_SECRET` | every server and the console | the console's session cookie |
 | `DRISHTI_NET_SECRET` | every server | every call between the nodes (the cluster key; `node.yaml` names it, `secret: ${DRISHTI_NET_SECRET}`) |
 
-`start cluster` makes any that is missing with `openssl rand -hex 32` and keeps it, so sessions and tokens survive restarts. They reach the
+`start cluster` makes any that is missing (32 random bytes from Python's `secrets` module, the same on Windows) and keeps it, so sessions and tokens survive restarts. They reach the
 processes through their environment only; no command prints them. To use your own, copy `secrets.env.example` to `secrets.env` and fill
 it. Changing one signs everyone out (token, session) or splits the cluster until every node has the new key (net secret: rotate it as
 [CLUSTER_GUIDE.md › Security](../../docs/guides/CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
@@ -128,8 +125,8 @@ trades meanwhile answers "the node that holds it is down", never "not found". `c
 
 ## Upgrade
 
-The three nodes first, one at a time (`bin/stop-cluster.sh drishti-main`, update, `bin/start-cluster.sh drishti-main`, then `drishti-b`,
-then `drishti-c`), the console last. A console asks its servers for what it draws (packs, menus, the version shown); in front of an older
+The three nodes first, one at a time (`python tools/drishti.py stop cluster drishti-main`, update, `python tools/drishti.py start cluster drishti-main`, then
+`drishti-b`, then `drishti-c`), the console last. A console asks its servers for what it draws (packs, menus, the version shown); in front of an older
 server it shows no packs and says on every page and on Admin → Health that the server is older than the console
 ([OPERATIONS_GUIDE.md section 18](../../docs/guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback)).
 

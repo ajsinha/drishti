@@ -75,7 +75,7 @@ files), `<data dir>/net/identity-deleted.json` (deletion tombstones). Nothing ou
 Generate the key, do not invent it, and keep it where only the service user can read it:
 
 ```bash
-openssl rand -hex 32          # the same value goes into DRISHTI_NET_SECRET on every node
+python -c "import secrets; print(secrets.token_hex(32))"   # the same value goes into DRISHTI_NET_SECRET on every node (any OS)
 ```
 
 The key is never written in a file of `config/net/` in clear: the file names the variable (`secret: ${DRISHTI_NET_SECRET}`), and a file
@@ -457,15 +457,15 @@ python tools/drishti.py stop cluster        # stop everything the cluster file s
 
 It starts each node and the console through `tools/drishti.py start` (2.0), so their pid files and logs are in `data/run/` and `data/logs/`.
 
-`drishti-main` (18480) serves the seven default packs, the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
+`drishti-main` (18480) serves the demo profile's packs (the packs of every module that is on and the demo's extras), the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
 trades; `drishti-c` (18792) synthetic MUREX trades with `counterparty-risk` and `market-risk`; the console (17480) is given `drishti-main`
 alone, learns the others and fails over to them.
 
 Each node's net folder is checked in (`advertise-url: http://${DRISHTI_STACK_HOST}:<port>`, `secret: ${DRISHTI_NET_SECRET}`: references,
-never the key or an address). `start.sh` finds this machine's real address (the default route's interface, never a docker bridge) and gives
+never the key or an address). `drishti.py start cluster` finds this machine's real address (the default route's interface, never a docker bridge) and gives
 it to every node as `DRISHTI_STACK_HOST`; on a machine with several interfaces set `host:` in `stack.yaml`. The secrets
 (`DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET`) are made on the first start in the git-ignored `secrets.env`
-(mode 600). Open the console at the address `start.sh` prints and go to **Admin → Cluster**: the three members are alive. The stack runs G1
+(mode 600). Open the console at the address `drishti.py start cluster` prints and go to **Admin → Cluster**: the three members are alive. The stack runs G1
 with `-XX:G1PeriodicGCInterval=60000` and a faster failover for a lab (`suspect-after: 3s`, `dead-after: 10s`). It is for trying a cluster,
 not for production.
 
