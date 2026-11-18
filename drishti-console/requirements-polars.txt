@@ -1,0 +1,20 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# Optional: Polars and NumPy for the tools that need them (tools/pvf: the PVF extract to scenario PVs, tools/pvf/README.md). Install
+# beside requirements.txt, in the same environment:
+#
+#     pip install -r requirements.txt -r requirements-polars.txt
+polars==2.1.0
+numpy>=2.0

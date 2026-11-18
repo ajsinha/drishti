@@ -18,6 +18,18 @@
 
 ## Unreleased
 
+- **tools/pvf: a PVF extract to scenario PVs.** The owner's per-path PV extract (the per-path PV file, the positions, PORTFOLIO_D2) becomes
+  scenario-pv records in one command, `python3 tools/pvf/pvf_run.py --pv … --portfolio … --positions … --date YYYY-MM-DD`: a streaming
+  Polars join (the PV file scanned, never loaded whole; explicit types; `POSITION_ID` order; the audit of excluded positions kept and
+  widened; `--fill-policy forward|base|refuse` with every fill counted and listed, since a filled path understates risk), a
+  config-driven mapping to the contract (`tools/pvf/mapping.yaml`: const, columns, templates, lookups, signs; required fields checked
+  against the contract; four required fields the extract cannot give left out by name with the reason; the other source attributes kept
+  beside the contract's fields, every name UPPER_SNAKE), the date's scenario set declared (251 paths, never padded), and the loadable
+  layout (`scenario-pv/<date>/cob.part-NNN.jsonl.gz`, `scenario-set/<date>/cob.jsonl.gz`, one `.tar` with its `.ready` and SHA-256 list,
+  a plain `.jsonl`). `pvf_validate.py` checks any output against the contracts; `pvf_join.py`, `pvf_export_gz.py`, `pvf_gen.py` run
+  alone too; `test_pvf.py` tests it. Polars and NumPy in `drishti-console/requirements-polars.txt` and the drill's tool-test environment.
+  Guide: `tools/pvf/README.md`.
+
 ## 2.9.11.i7a
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.

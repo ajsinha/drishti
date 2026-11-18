@@ -343,7 +343,7 @@ gate_java() {
 # ---- stage two ---------------------------------------------------------------------------------------------------------------
 # The tools' tests: EVERY test file under tools/ (tools/**/test_*.py, and the tests/ folders as folders), found, not listed: a test
 # file nobody named never ran. Each file runs in a pytest process of its own (the tools put themselves on sys.path; a module of one
-# must not shadow another's), all in one uv environment (deltalake, pyarrow, PyYAML, pytest, moto for the S3 simulators); a failed
+# must not shadow another's), all in one uv environment (deltalake, pyarrow, PyYAML, pytest, moto for the S3 simulators, polars and numpy for tools/pvf); a failed
 # file fails its lane after every file ran, so one drill shows every failure. Two lanes run side by side (about 15 minutes each
 # beside each other): tools-a the tools' own command tests and the test data check, tools-b the tools' folders (lake, generators, public data,
 # benchmarks) with three long command tests (schema to pack, the sample pages, the generators). The gate built the exec jar: the tests that start the Java loader run.
@@ -363,7 +363,7 @@ tool_test_files() {   # lane (a or b): its test files and folders
 }
 run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed
   command -v uv >/dev/null || { echo "drill: the tools' tests need uv (it provides deltalake, pyarrow, PyYAML, pytest and moto)" >&2; return 1; }
-  timeout --kill-after=60 3600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with "moto[server]==5.2.3" bash -c '
+  timeout --kill-after=60 3600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with polars==2.1.0 --with numpy --with "moto[server]==5.2.3" bash -c '
     rc=0
     for f in "$@"; do
       t=$SECONDS
