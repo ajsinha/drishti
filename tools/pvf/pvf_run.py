@@ -21,6 +21,8 @@ examples (from the repository root):
       --positions data/pvf/pos_20261029.csv --date 2026-10-29
   python3 tools/pvf/pvf_run.py ... --limit 2000             a quick trial on the first 2,000 positions
   python3 tools/pvf/pvf_run.py ... --dry-run                check the inputs and the mapping; write nothing
+  python3 tools/pvf/pvf_run.py ... --inbox                  also hand both archives to the data inbox (data/dataload/inbox):
+                                                            the running server loads them (the scenario set first)
 
 --positions is required: the PV file carries POSITION_ID only (no portfolio, currency, trade or amount), so the positions file is what
 links each position to its portfolio and gives the record its attributes; a PV file alone cannot be joined.
@@ -43,6 +45,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -54,6 +58,34 @@ from pvf.common import PvfError, Timer, iso_date, log, peak_memory_mb, setup_log
 from pvf.mapping import Mapping  # noqa: E402
 from pvf.pvf_export_gz import ExportConfig, add_mapping_arguments, export, run_overrides  # noqa: E402
 from pvf.pvf_join import FILL_POLICIES, JoinConfig, modified_utc, run as join  # noqa: E402
+
+
+REPO = Path(__file__).resolve().parents[2]
+DEFAULT_INBOX = REPO / "data" / "dataload" / "inbox"
+#: the order the inbox must receive the kinds in: a date's scenario set before its PVs (the engine sizes a date's vectors from its set)
+INBOX_ORDER = ("scenario-set", "scenario-pv")
+
+
+def to_inbox(tars: list[str], inbox: Path) -> list[str]:
+    """Hand the archives to the data inbox: each archive is copied under a temporary name and renamed into place, and only then its
+    .ready marker, so the watcher never sees a half-written archive; the scenario set goes before the PVs. Returns the names delivered."""
+    if not inbox.is_dir():
+        raise PvfError(f"the data inbox {inbox} does not exist: is the server's data load on (DRISHTI_DATALOAD_ENABLED)?")
+    def rank(t: str) -> int:
+        name = Path(t).name
+        return next((i for i, kind in enumerate(INBOX_ORDER) if name.startswith(kind + "-")), len(INBOX_ORDER))
+    done = []
+    for tar in sorted(tars, key=rank):
+        src, ready = Path(tar), Path(f"{tar}.ready")
+        if not ready.is_file():
+            raise PvfError(f"{src.name} has no .ready marker: run without --no-tar")
+        part = inbox / f"{src.name}.copying"             # no hidden names; the watcher reads only .ready markers
+        shutil.copyfile(src, part)
+        os.replace(part, inbox / src.name)
+        shutil.copyfile(ready, inbox / ready.name)
+        done.append(src.name)
+        log.info("handed %s and its .ready to the data inbox %s", src.name, inbox)
+    return done
 
 
 def strict_date(text: str) -> str:
@@ -83,6 +115,9 @@ def parser() -> argparse.ArgumentParser:
                    help="a missing path: forward (default, the original rule: path 0 = BASE_PV, then the previous path), base (BASE_PV), "
                         "refuse (exclude the position); fills are listed in pvf_joined.<date>.fills.csv")
     o.add_argument("--chunk", type=int, default=50_000, help="positions joined per step (memory: about chunk x 2 KB; default 50,000)")
+    o.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
+                   help="after the export, copy each archive and then its .ready into the data inbox the running server watches "
+                        f"(default {DEFAULT_INBOX.relative_to(REPO)}); the scenario set goes first, so the PVs find their set")
     o.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     add_mapping_arguments(p.add_argument_group("mapping (tools/pvf/mapping.yaml)"))
     return p
@@ -105,6 +140,10 @@ def run(a: argparse.Namespace) -> dict:
                "EXPORT_AUDITED": e["ROWS_AUDITED"], "EXPORT_AUDITED_BY_REASON": e["AUDITED_BY_REASON"], "RECORDS_WRITTEN": e["RECORDS_WRITTEN"],
                "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "TARS": e.get("TARS"), "PLAIN_JSONL": e["PLAIN_JSONL"],
                "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e}
+    if a.inbox:
+        if not e.get("TARS"):
+            raise PvfError("--inbox needs the archives: run without --no-tar")
+        summary["INBOX"] = {"FOLDER": str(a.inbox), "DELIVERED": to_inbox(e["TARS"], a.inbox)}
     (folder / f"pvf-{a.date}.summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     log.info("pvf run of %s: %s positions in, %s excluded by the join, %s by the mapping, %s records written; %ss, peak memory %s MB; %s",
              a.date, f"{j['POSITIONS_READ']:,}", f"{j['POSITIONS_EXCLUDED']:,}", e["ROWS_AUDITED"], f"{e['RECORDS_WRITTEN']:,}",

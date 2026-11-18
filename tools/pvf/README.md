@@ -231,6 +231,18 @@ python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-set-
 python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar --lake risklake
 ```
 
+**One command, from the CSVs to loaded data:** add `--inbox` to the driver and it hands both archives to the data inbox the
+running server watches (`data/dataload/inbox` by default, or `--inbox DIR`), the scenario set first and each archive before its
+`.ready` marker, so the server loads them by itself:
+
+```bash
+python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+    --positions data/pvf/pos_20261029.csv --date 2026-10-29 --inbox
+```
+
+The node that owns the data load (`DRISHTI_DATALOAD_ENABLED`, drishti-main in the stack) must be running; the summary lists what
+was delivered under `INBOX`.
+
 or drop each `.tar` and then its `.tar.ready` into the data inbox (`<data>/dataload/inbox`; `--lake NAME` on the export writes `lake:`
 into the `.ready` files). One archive per kind because `lake build --from` loads one table per run: a single archive holding both
 folders is planned for both tables but refused at load (*folder scenario-set matches no configured dataset (scenario-pv)*). The 2,000-position

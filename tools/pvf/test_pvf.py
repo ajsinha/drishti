@@ -276,3 +276,21 @@ def test_quantity_priority_list_and_sign_from(tmp_path):
     with pytest.raises(M.RowProblem, match="neither"):
         m._value("QUANTITY", signed, {"POSITION_AMT": 9.0, "BUY_SELL_CD": "X"}, {}, {})
     assert m._value("DIRECTION", doc["fields"]["DIRECTION"], {}, {"QUANTITY": -9.0}, {}) == "SHORT"
+
+
+def test_inbox_hand_over_puts_the_set_first_and_each_marker_after_its_archive(tmp_path):
+    """--inbox: the scenario set is delivered before the PVs, every archive before its .ready, nothing half-written left behind."""
+    from pvf import pvf_run
+    out, inbox = tmp_path / "out", tmp_path / "inbox"
+    out.mkdir(), inbox.mkdir()
+    tars = []
+    for kind in ("scenario-pv", "scenario-set"):                 # the export's order; the inbox wants the set first
+        t = out / f"{kind}-2026-10-29.tar"
+        t.write_bytes(kind.encode())
+        Path(f"{t}.ready").write_text("rows: 1\n", encoding="utf-8")
+        tars.append(str(t))
+    assert pvf_run.to_inbox(tars, inbox) == ["scenario-set-2026-10-29.tar", "scenario-pv-2026-10-29.tar"]
+    assert sorted(p.name for p in inbox.iterdir()) == ["scenario-pv-2026-10-29.tar", "scenario-pv-2026-10-29.tar.ready",
+                                                      "scenario-set-2026-10-29.tar", "scenario-set-2026-10-29.tar.ready"]
+    with pytest.raises(pvf_run.PvfError):
+        pvf_run.to_inbox(tars, tmp_path / "missing")
