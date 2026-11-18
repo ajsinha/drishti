@@ -1,0 +1,1 @@
+{"case":"FXS-EUR-HS-5","document":{"FX_SCENARIO_ID":"FXS-EUR-HS-5","BUSINESS_DATE":"2026-11-06","SCENARIO_SET_ID":"HS-5","CURRENCY":"EUR","QUOTE":"USD per 1 EUR","RATE":1.17,"RATES":[1.171,1.168,1.175,1.169,1.172],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-11-06-01","_meta":{"source":"risk-store","generation":1}}}

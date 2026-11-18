@@ -661,14 +661,25 @@ public final class Binder {
             data = EvalContext.of(d.data(), formats);
             source = linkView(src.get().kind(), src.get().id());
         }
-        DataNode rows = where(p, node(eval(p.option("rows").orElse("points"), data)), data);
-        String x = p.option("x").orElse("tenor");
-        String y = p.option("y").orElse("value");
         List<String> xs = new ArrayList<>();
         List<Double> ys = new ArrayList<>();
-        for (int i = 0; i < rows.size(); i++) {
-            xs.add(rows.get(i).get(x).asText());
-            ys.add(rows.get(i).get(y).asDouble());
+        if (p.option("values").isPresent()) {
+            // a vector: the y values are a list of numbers (a scenario's rates), the x labels another list (its dates) or the position
+            DataNode values = node(eval(p.option("values").get(), data));
+            Optional<String> labelExpr = p.option("labels");
+            DataNode labels = labelExpr.isPresent() ? node(eval(labelExpr.get(), data)) : null;
+            for (int i = 0; i < values.size(); i++) {
+                ys.add(values.get(i).asDouble());
+                xs.add(labels != null && i < labels.size() ? labels.get(i).asText() : String.valueOf(i));
+            }
+        } else {
+            DataNode rows = where(p, node(eval(p.option("rows").orElse("points"), data)), data);
+            String x = p.option("x").orElse("tenor");
+            String y = p.option("y").orElse("value");
+            for (int i = 0; i < rows.size(); i++) {
+                xs.add(rows.get(i).get(x).asText());
+                ys.add(rows.get(i).get(y).asDouble());
+            }
         }
         String mark = p.option("mark").map(m -> Values.text(eval(m, c.eval()))).filter(s -> !s.isEmpty()).orElse(null);
         String markText = null;

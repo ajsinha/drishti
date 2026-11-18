@@ -27,7 +27,7 @@ public enum PanelKind {
     KV(Set.of(), Set.of("rows", "columns", "fields")),
     TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "highlight", "search", "pivot", "children", "expand", "levels", "crumb", "root", "empty")),
     TABS(Set.of("each"), Set.of("tabTitle", "layout")),
-    LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt", "step")),
+    LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt", "step", "values", "labels")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),
     /** Bars, one per row; {@code shape: donut} draws the same rows as a ring of shares of their total. */
     HBAR(Set.of("rows"), Set.of("label", "value", "fmt", "tone", "shape")),

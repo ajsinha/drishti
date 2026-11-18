@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **The scenario set, FX scenario and scenario PV pages show their vectors.** `SSET HS-509`, `FXS FXS-EUR-HS-509` and `SPV <id>` had only a
+  strip (the market-risk pack had no Sutra for the three kinds). Now `scenario-set` lists every scenario day with its index *i* (paged),
+  `fx-scenario` charts and lists its rates by scenario day (the days read from its set) with the change against today's rate, and
+  `scenario-pv` charts and lists the PV and the P&L (PV minus base PV, in the position's currency) by scenario day. A `line` panel takes
+  `values` (a list of numbers) and `labels` (a list of texts) beside `rows`, `x` and `y`. Tests: the pack's Sutra cases;
+  screenshots of the three pages need a refresh.
 - **The data inbox's folders are in a fresh clone.** `data/dataload/` with `inbox/`, `inprocess/`, `outbox/`, `failed/` and `ledger/` is kept
   in git, each with only a `README.md` (what a load writes there stays ignored, also `inbox.lock`). The inbox ignores every `README.md`
   (`Inbox.ignored`, one rule for the scan, the status board, recovery and the failed list), so one is never claimed, reported as waiting

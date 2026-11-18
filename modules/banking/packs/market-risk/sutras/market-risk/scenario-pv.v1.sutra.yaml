@@ -1,0 +1,80 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (docs/guides/VAR_GUIDE.md section 15.9): a position's or trade's PV under each scenario day, in its own currency. Data: tools/packgen/var/make_var_data.py.
+rachana: 1
+sutra: scenario-pv
+version: 1
+description: "A position's or trade's present value under each scenario day and its base PV, in its own currency."
+doc:
+  summary: "Scenario PVs: the PV under each scenario day and the P&L against the base PV, in the position's currency"
+  description: >-
+    The present value of one position or trade under each scenario day of the date's scenario set (SCENARIO_PV, oldest first) and
+    its base PV of the same run, in the position's own currency. The charts and the grid show, by scenario day, the PV and the P&L in that
+    currency, PV(s) minus BASE_PV; the VaR engine turns them into USD P&L with the FX scenario of the currency when it loads the date.
+    The grid gives each day's index i (the position in the vector), its date from the scenario set, the PV and the P&L, paged.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/scenario-pv/SPV-POS-ENDUR-BOOK-COMM-1-ComSwap-USD"
+    - "SPV SPV-POS-ENDUR-BOOK-COMM-1-ComSwap-USD"
+  since: "2.9.11"
+match: { kind: scenario-pv, priority: 10 }
+title: { pill: "Market risk · Scenario PVs", id: $.SCENARIO_PV_ID, with: "nonblank($.POSITION_ID, $.TRADE_ID)" }
+strip:
+  - { label: Position, bind: "link($.POSITION_ID, 'position')" }
+  - { label: Trade, bind: "link($.TRADE_ID, 'trade')" }
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Base PV, bind: $.BASE_PV, fmt: amount0, emphasis: true }
+  - { label: Scenario set, bind: "link($.SCENARIO_SET_ID, 'scenario-set')" }
+  - { label: Business date, bind: $.BUSINESS_DATE }
+panels:
+  - id: pnl-chart
+    kind: line
+    title: "P&L under each scenario day (PV minus base PV, in the position's currency)"
+    code: PNL
+    key: F2
+    source: { kind: scenario-set, id: $.SCENARIO_SET_ID }
+    values: "map($.SCENARIO_PV, @ - $.BASE_PV)"
+    labels: $src.SCENARIO_DATES
+  - id: pv-chart
+    kind: line
+    title: "PV under each scenario day (in the position's currency)"
+    code: PV
+    source: { kind: scenario-set, id: $.SCENARIO_SET_ID }
+    values: $.SCENARIO_PV
+    labels: $src.SCENARIO_DATES
+  - id: scenarios
+    kind: table
+    title: "PV and P&L by scenario day"
+    code: DAYS
+    key: F3
+    source: { kind: scenario-set, id: $.SCENARIO_SET_ID }
+    rows: $.SCENARIO_PV
+    limit: 30
+    empty: No scenario PVs
+    columns:
+      - { label: "Index i", bind: "#index" }
+      - { label: Scenario day, bind: "$src.SCENARIO_DATES[#index]" }
+      - { label: PV, bind: "@", fmt: amount0 }
+      - { label: "P&L (PV - base PV)", bind: "@ - $.BASE_PV", fmt: signed0, tone: sign }
+  - use: explainer-note@1
+    with:
+      title: How to read it
+      area: right
+      text: "Index i is the position of the value in SCENARIO_PV and of the day in the scenario set ${$.SCENARIO_SET_ID}. P&L here is in ${$.CURRENCY}, before the FX scenario of the currency turns it into USD."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.SCENARIO_SET_ID, 'scenario-set')", F9: raw }

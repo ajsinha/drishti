@@ -2708,6 +2708,8 @@ when the batch sends a **stress set** for stressed VaR (`SET_TYPE: STRESS`, [sec
 is not loaded (`DRS-5203`), nor one whose `SCENARIO_DATES` are not strictly increasing or not all before the business date; two stress
 sets refuse the stress set alone.
 
+**The page.** `SSET HS-509` shows the set's facts (business date, number of days, window, horizon, revaluation, batch), a paged grid of every scenario day with its index *i* (0 is the oldest: the position in every vector of the date), a note that every vector of the date is in this order, and the FX scenarios of the set as links.
+
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-set.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-set.contract.yaml), published as [SSET: `scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-set).
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
@@ -2872,6 +2874,8 @@ scopes, captures and the official record do not know which form it came in (the 
 `SPV`. **Table:** `risk/scenario-pv/`, the vector column `SCENARIO_PV` (`list<double>`), the same promoted trade columns as `pnl-vector`
 plus `CURRENCY`, `BASE_PV` and the valuation dates.
 
+**The page.** `SPV <id>` shows the position or trade (linked), its currency, base PV and scenario set, a chart of the P&L (PV minus base PV, in the position's own currency) and one of the PV under each scenario day, and a paged grid (index *i*, scenario day, PV, P&L); the links lead to the scenario set and the position.
+
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml), published as [SPV: `scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-pv).
 
 **What the load checks** (each a rejected row, counted and listed in `provenance.rejections`, never padded): a `null` or `NaN` in
@@ -2894,6 +2898,8 @@ neither, or whose history does not cover every scenario day and the day before t
 days, so the demo **supplies** its scenario FX (AUD, CAD, CHF, EUR, GBP, JPY); a bank with 510 days of FX history needs to send none.
 `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date, and they enter the hot file's digest); `fx-spot` is
 read when a date loads, not watched.
+
+**The page.** `FXS FXS-EUR-HS-509` shows the currency, quote and today's rate, a chart of the rate under each scenario day (the x axis is the scenario set's `SCENARIO_DATES`, read through the set's link), a paged grid (index *i*, scenario day, rate, change against today's rate in percent) and a link to its scenario set.
 
 **Fields and example of `fx-scenario`.** Every field is its data contract, [`fx-scenario.contract.yaml`](../../modules/banking/packs/market-risk/contracts/fx-scenario.contract.yaml), published as [FXS: `fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#fx-scenario).
 
