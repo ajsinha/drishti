@@ -4946,7 +4946,7 @@ The server reads `drishti.packs.enabled` from `DRISHTI_PACKS` (a comma-separated
 (`DRISHTI_PACKS_DIR`, default `./config/packs`), then in `drishti.packs.extra-dirs`.
 
 1. Start the server with the packs you want (or the IDE run configuration **Drishti server** with `DRISHTI_PACKS` changed;
-   [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)):
+   [OPERATIONS_GUIDE.md](IDE_GUIDE.md)):
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64

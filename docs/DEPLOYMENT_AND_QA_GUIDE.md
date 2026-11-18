@@ -395,8 +395,7 @@ dir lib modules
 
 It always builds with `clean` (an older jar never stays beside the new one), with the Java of the one lookup ([1.5](#15-environment-variables)),
 and copies the jar into `<drishti>/lib`, removing an older server jar there; Maven's own copy stays in `kernel/drishti-server/target/`.
-`--offline` runs Maven offline, `--no-copy` leaves the jar in `target/`, `--dry-run` prints the Maven command. In IntelliJ the run
-configuration **Build server jar (into lib)** runs the same ([7.8](#78-from-intellij-idea-or-pycharm)).
+`--offline` runs Maven offline, `--no-copy` leaves the jar in `target/`, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-or-pycharm).
 
 **B. Copy a release** built elsewhere (Java bytecode is the same on every operating system). The release folder holds:
 
@@ -1000,10 +999,8 @@ path to a site's own file (`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`; Window
 setting `drishti.distribution` (`--drishti.distribution=finance` as a server argument); on the console the setting `distribution`
 (`--distribution=finance` as a console argument). A console given its own keeps it whatever the server runs.
 
-**From the IDEs.** The run configurations `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)`, `(Finance)`,
-`(All)` start each distribution ([7.8](#78-from-intellij-idea-or-pycharm)). **Two consoles against one server:**
-start `Drishti server (All)` (every module; a Risk or Finance server would limit both consoles to its own), then `Drishti console
-(Risk)` (port 17480) and `Drishti console (Finance)` (port 17481). **You should see** Drishti Risk at `http://localhost:17480` and
+**From the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#45-a-distribution-risk-finance-or-all) (**Two consoles against one server**, Risk on 17480 and Finance on 17481).
+**You should see** Drishti Risk at `http://localhost:17480` and
 Drishti Finance at `http://127.0.0.1:17481`, each with its own top bar, theme and Help. Open the second by another host name (or in
 another browser profile): browsers share sign-in cookies across the ports of one host.
 
@@ -1012,50 +1009,9 @@ label: every distribution side by side, the running one first.
 
 ### 7.8 From IntelliJ IDEA or PyCharm
 
-The repository carries its run configurations as files: `run-configs/*.run.xml` (the server, the Maven jar build and the distributions'
-consoles) and `drishti-console/run-configs/*.run.xml` (the console and the command-line tools). IntelliJ IDEA lists them as soon as the
-project is open; nothing is installed and no `.exe` is added. Every one of them uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so the
-same files work on Windows and Linux, and **every one passes your settings file, `$USER_HOME$/drishti-envs/dev.ini`** (a Java
-configuration as `-Ddrishti.settings.file=…`, a Python one as `--settings …`). The file must exist before the first run: a missing one
-stops the start with *names …dev.ini, which is not a file*.
+The repository carries run configurations for IntelliJ IDEA (the server, the modules, the distributions) and PyCharm (the console and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`.
 
-**A clean first open, checklist:**
-
-- [ ] **The machine is prepared**: `python tools/drishti.py setup` has run ([1.6](#16-the-settings-file-and-drishtipy-setup)), so
-  `~/drishti-envs/dev.ini` (`C:\Users\you\drishti-envs\dev.ini`) exists with your paths and `drishti-console/.venv` is made.
-- [ ] **IntelliJ IDEA opens the project**: **File → Open**, the repository's root `pom.xml`, **Open as Project**; wait for the **Maven
-  import** to finish (the Maven tool window lists `drishti-app`). Opened on the root, IntelliJ shows the run configurations of both folders.
-- [ ] **Project SDK is a JDK 21**: **File → Project Structure → Project → SDK** (**Add SDK → JDK…**, `C:\jdk-21` or
-  `/usr/lib/jvm/java-21-openjdk-amd64`); **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK*.
-- [ ] **PyCharm opens `drishti-console/`** as its own project with the interpreter **`drishti-console/.venv`** (**Settings → Project →
-  Python Interpreter → Add Interpreter → Existing**: `C:\Users\you\IdeaProjects\drishti\drishti-console\.venv\Scripts\python.exe`, Linux
-  `…/drishti-console/.venv/bin/python`). Or, in IntelliJ IDEA with its Python plugin, the same interpreter for the module
-  `drishti-console`. Never both IDEs on the same folder: they overwrite each other's `.idea`.
-- [ ] **`dev.ini` is in place** and names this clone in `drishti.home` (a `DRISHTI_HOME` or `drishti.home` naming another clone is refused).
-
-**Run, in this order:** build the jar → build the demo lakes → start the server → start the console.
-
-| # | Run configuration | What it does | You should see |
-|---|---|---|---|
-| a | **Build server jar (into lib)** (`drishti-console/run-configs`) | `tools/drishti.py --settings … build jar`: Maven `clean package -DskipTests -pl :drishti-app -am`, then the jar copied into `<drishti>/lib` | `built drishti-server-<version>-exec.jar; copied into …/lib` |
-| b | **Build demo lakes** | `tools/drishti.py --settings … lake demo --engine java` ([section 6](#6-build-the-demo-lake)): the Java loader from the jar of step a | `Demo lake ready: …` |
-| c | **Drishti server (demo lakes)** | the server of module `drishti-app` on 18480 with the demo off, offline, sign-in on, the development administrator, the ten demo packs, `-Ddrishti.home=$PROJECT_DIR$` | `Started DrishtiApplication in … seconds`; a `resolved paths:` block naming `dev.ini` as the origin of the data folder |
-| d | **Drishti console** | `run_drishti_web.py --settings … --server.port=17480 --backend.url=http://127.0.0.1:18480`, sign-in on with the development secrets | `Uvicorn running on http://0.0.0.0:17480` |
-
-Then open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123` (section 9.3).
-
-**Drishti build all** (`run-configs/`) runs `tools/drishti.py --settings … build all`: the server jar into `lib/` and every module package into `<home>/modules` in one Maven run, the one click to use after a pull. **Drishti build modules** (`run-configs/`) runs `tools/drishti.py --settings … build modules` and is the before-launch step of **Drishti server (debug-friendly)**; **Drishti server (dev switch)** sets `DRISHTI_MODULES_DEV=true` (module folders loaded as they are, nothing built). **Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
-of PyCharm: Maven's `clean package` of `drishti-app`, then the jar into `lib/`, so `lib/` never holds a stale jar (`lake demo --engine
-java`, `start` and every tool read it there). The other configurations: **Drishti server** (the packs' samples, demo on), **Drishti
-server (QA profile)** and **(debug-friendly)** (port 18580 and their own data folder `data/qa/data`, given as `-D`, so they never touch
-your data; debug-friendly has sign-in off), **Drishti console (QA profile)** (17580), the distributions of
-[7.7](#77-starting-a-white-labelled-instance), and the tools: **QA doctor**, **QA server smoke**, **QA pack make (from JSON)**, **QA lake
-build (big JSON to Delta)**, **Load ENDUR file into the lake** (section 12), **drishti doctor**, **drishti view get** and the rest. Never
-use the ▶ in the margin of `DrishtiApplication.java`: it sets none of these settings. Change a configuration for yourself with **Copy
-Configuration** (the copy stays in the git-ignored `.idea/`). Debugging, the tests and every configuration in detail:
-[OPERATIONS_GUIDE.md › IntelliJ IDEA](guides/OPERATIONS_GUIDE.md#32-intellij-idea-open-build-run-and-debug-the-server).
-
-**From the terminal instead of the IDE** it is the same four steps:
+The same four steps from a terminal:
 
 ```bash
 cd /home/you/drishti
@@ -1822,8 +1778,7 @@ antivirus scanning `data`).
 
 The business date comes from the file name; the pack's schema checks each trade; `--mode overwrite-dates` makes a repeat safe. The last
 line reads `lake-build ok exit=0 … kind=trade … rows=500 rejected=0 dates=1 …`; a non-zero `rejected` is explained, with the line, above
-it. Use full paths: a relative path is taken from the folder the command runs in. The run configuration **Load ENDUR file into the
-lake** is this command with `$USER_HOME$\drishti-private\endur\trade_endur.2026-10-16.jsonl`: edit `--from` to your file. With the
+it. Use full paths: a relative path is taken from the folder the command runs in. From the IDE: [IDE_GUIDE.md](guides/IDE_GUIDE.md#53-build-and-data-tools). With the
 Java loader (every core, bounded memory) add `--engine java`
 ([CLI_REFERENCE.md › The parallel lake loader](guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)).
 

@@ -61,14 +61,8 @@ On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
-**Your settings file**, once: every IntelliJ and PyCharm run configuration passes `$USER_HOME$/drishti-envs/dev.ini`, and a missing file
-stops it at once. Copy `config/settings.examples/dev.ini` there and replace its `/path/to/drishti` with your clone's full path
-(`mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini`; Windows `C:\Users\you\drishti-envs\dev.ini`).
-`python tools/drishti.py setup` makes it for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEVELOPER_GUIDE.md › Your settings file](guides/DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers),
-[DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)).
-`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup (IntelliJ
-IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
-[OPERATIONS_GUIDE.md › Maven, IntelliJ IDEA and PyCharm](guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
+**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#1-what-you-need)).
+`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md).
 
 ## 2. Build the server
 
@@ -108,8 +102,7 @@ env-file for your own secrets, a cluster of several servers with `--node`, the c
 and what to do when a command stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)
 and [CLI_REFERENCE.md](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 A cluster of three servers and a console on this machine, from one file: `python tools/drishti.py start cluster`, `python tools/drishti.py status --cluster deploy/stack/stack.yaml`, `python tools/drishti.py stop cluster`
-([deploy/stack/README.md](../deploy/stack/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging, with
-your settings file ([DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](DEPLOYMENT_AND_QA_GUIDE.md#78-from-intellij-idea-or-pycharm)); why each
+([deploy/stack/README.md](../deploy/stack/README.md)). From the IDEs: [IDE_GUIDE.md](guides/IDE_GUIDE.md). Why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
@@ -132,13 +125,7 @@ module: what the drill, the page walk and the tutorials use.
 `python tools/drishti.py status` shows each process's distribution; Admin → White label shows them all side by side. The
 setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
 
-**In the IDEs.** IntelliJ IDEA lists, under *Drishti*, `Drishti server (Risk)`, `(Finance)` and `(All)` (each sets the environment
-variable `DRISHTI_DISTRIBUTION`) and the Python configurations `Drishti console (Risk)` (argument `--distribution=risk`, port 17480),
-`Drishti console (Finance)` (`--distribution=finance`, port 17481) and `Drishti console (All)` (`--distribution=all`), all in
-`run-configs/`. Run the console ones from IntelliJ with the Python plugin or from PyCharm opened on the repository root. **Two consoles
-against one server:** run `Drishti server (All)`, then `Drishti console (Risk)` and `Drishti console (Finance)`; Drishti Risk opens on
-`http://localhost:17480` and Drishti Finance on `http://127.0.0.1:17481` (use a different host name, or another browser profile, for the
-second: browsers share sign-in cookies across ports of one host). Every step, Linux, macOS and Windows:
+**In the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#45-a-distribution-risk-finance-or-all). Every step, Linux, macOS and Windows:
 [DEPLOYMENT_AND_QA_GUIDE.md › 7.7](DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## 4. The repository map

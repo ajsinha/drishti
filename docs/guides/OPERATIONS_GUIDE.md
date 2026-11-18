@@ -89,8 +89,7 @@ Things worth knowing before you plan an installation:
 - **With security off (the development default) the server trusts every caller**: anyone who reaches port 18480 is an administrator.
   In a shared installation turn security on ([section 11](#11-security-checklist)) and never expose 18480 to users.
 
-Two ways to run it on your own machine give the same result: **IntelliJ IDEA (and PyCharm) with no terminal** (the ready-made run
-configurations; [section 3](#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)), or **`tools/drishti.py`** (`setup`, `build jar`, `start`, `stop`, `status`)
+Two ways to run it on your own machine give the same result: **IntelliJ IDEA (and PyCharm) with no terminal** ([IDE_GUIDE.md](IDE_GUIDE.md)), or **`tools/drishti.py`** (`setup`, `build jar`, `start`, `stop`, `status`)
 ([section 2](#2-install-and-run-on-one-machine)).
 
 ## 2. Install and run on one machine
@@ -362,82 +361,15 @@ mvn -q clean package -DskipTests -pl :drishti-app -am    # the server and what i
 
 ### 3.2 IntelliJ IDEA: open, build, run and debug the server
 
-Two IDEs, two projects, never one folder: **IntelliJ opens the repository root**, **PyCharm opens `drishti-console/`**. Opened on the same
-folder they overwrite each other's `.idea` and IntelliJ loses the Maven modules ("module not specified"); if that happened, close both,
-delete the root's `.idea/` (IDE settings only) and reopen. One IntelliJ IDEA Ultimate with the Python plugin can run both.
-
-1. **File → Open**, the root `pom.xml`, **Open as Project**; wait for the import and indexing.
-2. **File → Project Structure → Project**: **SDK** a JDK 21 or newer (**Add SDK → Add JDK…** with its folder, for example
-   `/usr/lib/jvm/java-21-openjdk-amd64`, `C:\Program Files\Java\jdk-21` or `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`);
-   **Language level** *SDK default*. Java 25 needs IDEA 2025.2 or newer.
-3. **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK* (Maven in the IDE ignores your
-   shell's `JAVA_HOME`).
-4. **Create → Build Project** (Ctrl+F9). The runnable jar: Maven tool window, **drishti → Lifecycle → package** (with *Skip Tests*), or the
-   run configuration **Drishti build server jar**. After pulling a change of the Java bytecode level, **Build → Rebuild Project** once.
-
-The run configurations are in the repository (`run-configs/` for IntelliJ, `drishti-console/run-configs/` for PyCharm), in the drop-down as
-soon as the project is open. They use `$PROJECT_DIR$`, `$USER_HOME$` and the project's JDK, and **every one passes your settings file,
-`$USER_HOME$/drishti-envs/dev.ini`** (`-Ddrishti.settings.file=…` for the Java ones, `--settings …` for the Python ones), which must
-exist: make it once from `config/settings.examples/dev.ini`
-([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file),
-[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers)). The order to run them on a new machine:
-[DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](../DEPLOYMENT_AND_QA_GUIDE.md#78-from-intellij-idea-or-pycharm).
-
-| Run configuration | What it does | Ports |
-|---|---|---|
-| **Drishti server** | `DrishtiApplication` on the class path of module `drishti-app` (the core with the domain modules this build ships), `-Ddrishti.home=$PROJECT_DIR$`, the settings file, the seven packs, sign-in on with the development administrator, `-Xmx2g`; data in the settings file's `drishti.data.dir` | 18480 |
-| **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
-| **Drishti server (QA profile)** | its own data folder and port as `-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580` (a `-D` beats the settings file), so QA never touches your data | 18580 |
-| **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
-| **Drishti build server jar** | `tools/drishti.py --settings … build jar`: Maven `clean package -DskipTests -pl :drishti-app -am`, then the jar into `lib/` | |
-| **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
-| **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
-
-They are plain Application configurations (the same in Community and Ultimate). Every server configuration uses the class path of
-module **`drishti-app`**: `drishti-server` alone carries no domain module, so `VAR` and every banking function would answer *not
-installed*. Each passes its class path through an argument file (**Shorten command line: @argfile (Java 9+)**, `ARGS_FILE` in the
-`.run.xml`), so Windows' command-line length limit raises no warning. Change one for yourself with **Copy Configuration** (Ctrl+D; the copy
-lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
-`com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-app`, **Shorten command line** *@argfile*, JRE 21 or newer,
-VM options `-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`, and the environment above.
-
-**Run** (Shift+F10) ends its log with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/info` gives the version, and the
-OpenAPI page is `http://127.0.0.1:18480/api/docs`. **Debug** (Shift+F9): good breakpoints are `com.ash.drishti.engine.ViewPipeline` (a view
-being built), `com.ash.drishti.rachana.SutraRegistry` (which Sutra was chosen), a plugin's `SourcePlugin.fetch(…)` and the controllers
-under `com.ash.drishti.server` ([ARCHITECTURE.md section 5](../architecture/ARCHITECTURE.md#5-walk-through-one-request) follows one
-request). While it runs: Java method bodies reload with **Run → Debugging Actions → Reload Changed Classes** (signatures, fields and new
-classes need a restart); Sutras, packs and connector files reload by themselves; `application.yaml` and the environment need a restart. A
-second server needs `-Dserver.port=18481`, its own data folder (`-Ddrishti.data.dir=…`) so it never shares one, and a console with
-`DRISHTI_BACKEND_URL=http://127.0.0.1:18481`.
+Opening the project, the run configurations, running and debugging the server: [IDE_GUIDE.md](IDE_GUIDE.md#2-open-the-projects).
 
 ### 3.3 PyCharm: run and debug the console
 
-**File → Open** `drishti-console/`. Then once: **Settings → Project → Python Interpreter → Add Local Interpreter → Existing**,
-`drishti-console/.venv/bin/python` (Windows `drishti-console\.venv\Scripts\python.exe`), or **Virtualenv → New** at that location and
-`pip install -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt`; **Project Structure → + Add Content Root** the
-repository's `tools/` marked **Sources** (for reading; the run configurations work without it); right-click `tests/` → **Mark Directory as
-→ Test Sources Root**.
-
-| Run configuration | Parameters | Talks to |
-|---|---|---|
-| **Drishti console** | `--settings $USER_HOME$/drishti-envs/dev.ini --server.port=17480 --backend.url=http://127.0.0.1:18480`, `DRISHTI_AUTH_ENABLED=true`, the development `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE=false` | the default server |
-| **Drishti console (QA profile)** | the settings file, `--server.port=17580 --backend.url=http://127.0.0.1:18580`, `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` and the same sign-in settings | the QA server |
-
-Each runs from the repository root with the **project interpreter** and stores no interpreter path, so it works as it is on Linux, macOS
-and Windows. **Run** shows `Uvicorn running on http://0.0.0.0:17480`. For **Debug** add `DRISHTI_CONSOLE_WORKERS=1` so every request reaches
-the process the debugger is in; good breakpoints are the routes in `drishti-console/core/app.py`. Templates and static files reload with
-the browser page; Python code needs a restart (Ctrl+F5). The command-line tools run from PyCharm the same way
-([CLI_REFERENCE.md](CLI_REFERENCE.md#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)).
+The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#22-pycharm-drishti-console) and [section 6.2](IDE_GUIDE.md#62-debug-the-console).
 
 ### 3.4 Running the tests from the IDEs
 
-- **Java in IntelliJ:** a class or method from its gutter icon, a module with **Run 'All Tests'**, everything with **drishti → Lifecycle →
-  verify**. **Clear the `DRISHTI_*` variables** in test configurations (or the JUnit template): the server tests set their own packs and
-  fail when `DRISHTI_PACKS` and its siblings are set. Tests that need a broker or database start it in Docker (Testcontainers) and are
-  skipped without Docker. To test on Java 21 and 25, switch the SDK and run again.
-- **Python in PyCharm:** **Settings → Tools → Python Integrated Tools → Default test runner: pytest**, then **Run 'pytest in tests'** on
-  `drishti-console/tests`. Browser tests (`*_browser.py`) need `drishti-console/.venv/bin/python -m playwright install chromium` once; tests
-  that start the server jar need it built; both are skipped otherwise.
+[IDE_GUIDE.md › Run the tests from the IDE](IDE_GUIDE.md#64-run-the-tests-from-the-ide).
 
 ### 3.5 The QA profile, end to end (no terminal)
 

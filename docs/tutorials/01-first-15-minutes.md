@@ -136,8 +136,7 @@ will also have a token that lets the command line talk to your server, which tut
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
-Then, in PyCharm opened on `drishti-console/` (its run configurations are in `drishti-console/run-configs/`), run **Build demo lakes**.
+**In the UI.** In IntelliJ IDEA run **Drishti build all**, then in PyCharm run **Build demo lakes** ([IDE_GUIDE.md](../guides/IDE_GUIDE.md#3-build)).
 
 **From the command line:**
 
@@ -426,7 +425,7 @@ export DRISHTI_SERVER=http://localhost:18480
 export DRISHTI_TOKEN=$(cat ~/drishti-tokens/tutorial.token)
 ```
 
-(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
+(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [IDE_GUIDE.md](../guides/IDE_GUIDE.md). The folder `data/` is git-ignored.)
 
 Without a token a signed-in server says no, in plain words:
 

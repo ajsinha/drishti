@@ -179,8 +179,7 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 - **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run, so a stack file's
   `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
   Drishti Risk and Drishti Finance side by side; `tools/drishti.py status` shows each process's distribution.
-- **The IDEs**: the IntelliJ run configurations in `run-configs/` include `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti
-  console (Risk)`, `(All)`.
+- **The IDEs**: [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
 - **Admin → White label** shows every distribution side by side; Health shows the running one and which of its modules loaded.
   Step by step for each, on Linux, macOS and Windows:
   [DEPLOYMENT_AND_QA_GUIDE.md section 7.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
@@ -375,7 +374,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
-  [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
+  [IDEs](docs/guides/IDE_GUIDE.md).
 
 ## Measured performance
 

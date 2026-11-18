@@ -25,7 +25,7 @@ Every class, path and command here exists in the repository; the recipes follow 
 Every endpoint, with its parameters and a captured answer, and every error code are in [API_REFERENCE.md](API_REFERENCE.md).
 
 If you only want to run Drishti, read [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine); to run it from IntelliJ IDEA and PyCharm, read
-[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
+[IDE_GUIDE.md](IDE_GUIDE.md). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
 architecture [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) and the [decision records](../architecture/adr/README.md).
 
 The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](CLI_REFERENCE.md#api-references)).
@@ -174,7 +174,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)): **Drishti build server jar** (`tools/drishti.py build jar`: the jar into `lib/`), **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**, the servers each on module `drishti-app` with the class path in an argument file (`ARGS_FILE`). The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
+| `run-configs/` | The IntelliJ IDEA run configurations, and `drishti-console/run-configs/` the PyCharm ones: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
@@ -658,7 +658,7 @@ Server settings follow the same precedence as the console: `kernel/drishti-serve
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The run configurations in `run-configs/` carry the
 settings of each way of starting it (sign-in on with the development admin, the demo source on or off, the QA profile on its own ports
-and data folder); [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) lists them.
+and data folder); [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
 
 The development loop that works best:
 
@@ -777,9 +777,7 @@ that is the machine, not the drill.
 
 ### Your settings file for the IDE launchers
 
-Every shared IntelliJ and PyCharm run configuration passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini` (the IDE expands
-`$USER_HOME$` to your full home path, so it never depends on the working folder): a Java configuration as the VM option
-`-Ddrishti.settings.file=...`, a Python one as `--settings ...`. Create it once from the example:
+Every IDE launcher passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini`: [IDE_GUIDE.md › What you need](IDE_GUIDE.md#1-what-you-need). Create it once from the example:
 
 ```
 mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini    # then edit the /path/to/... placeholders
@@ -1848,9 +1846,7 @@ level for Drishti's packages with Spring's usual environment form:
 LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar lib/drishti-server-*-exec.jar
 ```
 
-The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
-(debug-friendly)** is the one to start with **Debug** in IntelliJ: sign-in off (no token to mint while you step through), a 1 GB heap, port
-18580 and the QA data folder `data/qa/data`, so it runs beside a normal server ([OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)).
+The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). To debug the server from the IDE: [IDE_GUIDE.md › Debug the server](IDE_GUIDE.md#61-debug-the-server).
 
 ### 7.3 Debugging a live view
 
@@ -1935,7 +1931,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.java-version` | version managers (jenv, SDKMAN) |
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
-| `.idea/` | IntelliJ IDEA at the root, PyCharm in `drishti-console/` (our run configurations are in the visible `run-configs/` and `drishti-console/run-configs/`) |
+| `.idea/` | the IDEs' settings ([IDE_GUIDE.md](IDE_GUIDE.md)) |
 | `.venv/` | the Python convention for a virtual environment (git-ignored) |
 | `.claude/` | Claude Code |
 | `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
