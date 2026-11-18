@@ -37,6 +37,11 @@
   works by load id on rows still in the table); the way back is a load. Docs: DATA_LAKE_GUIDE section 5.8, CLI_REFERENCE 7.15,
   VAR_GUIDE 15.8, DATA_GUIDE (the `status` field), DEPLOYMENT_AND_QA_GUIDE 9.14 and checklist 20a.
 
+- **The data inbox's folders are in a fresh clone.** `data/dataload/` with `inbox/`, `inprocess/`, `outbox/`, `failed/` and `ledger/` is kept
+  in git, each with only a `README.md` (what a load writes there stays ignored, also `inbox.lock`). The inbox ignores every `README.md`
+  (`Inbox.ignored`, one rule for the scan, the status board, recovery and the failed list), so one is never claimed, reported as waiting
+  for a `.ready`, moved or counted. A cycle makes all five folders when missing, and `drishti.py setup` makes them (with the READMEs) in a
+  data folder outside the clone. Tests: `ReadmeFoldersTest`.
 - **IntelliJ's server launchers run the jar the modules are stamped for.** A server started from IntelliJ's compiled classes (the
   **Application** launchers, with *Make* before launch) had no `META-INF/build-info.properties` (Maven's `build-info` goal; IntelliJ's
   compile never runs it and clears `target/classes` when it rebuilds a module), so its kernel build was unknown (*dev* in Admin → Modules)

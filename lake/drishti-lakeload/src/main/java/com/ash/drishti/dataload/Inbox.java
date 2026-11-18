@@ -36,6 +36,14 @@ import java.util.List;
  */
 public final class Inbox {
 
+    /** The README.md each folder of the data inbox keeps in git: never claimed, listed, moved or counted (one rule, used by every scanner). */
+    public static final String README = "README.md";
+
+    /** Whether a name in any of the inbox's folders is not a data file or a marker: a hidden name or the folder's {@link #README}. */
+    public static boolean ignored(String name) {
+        return name.startsWith(".") || name.equals(README);
+    }
+
     /** The marker's suffix: {@code trades.2026-11-03.jsonl.gz.ready} or {@code trades.2026-11-03.ready}. */
     public static final String READY = ".ready";
     /** The data extensions a short marker's name leaves out (DATA_LAKE_GUIDE.md section 4), longest first. */
@@ -142,10 +150,11 @@ public final class Inbox {
             ds.forEach(entries::add);
         }
         java.util.Set<String> names = new java.util.HashSet<>();
+        entries.removeIf(p -> ignored(p.getFileName().toString()));
         entries.forEach(p -> names.add(p.getFileName().toString()));
         for (Path p : entries) {
             String name = p.getFileName().toString();
-            if (name.startsWith(".") || name.equals(READY_ALL)) {
+            if (ignored(name) || name.equals(READY_ALL)) {
                 continue;
             }
             if (name.endsWith(READY)) {

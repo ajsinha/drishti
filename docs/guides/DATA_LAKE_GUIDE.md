@@ -370,7 +370,9 @@ python3 tools/drishti.py server engines on dataload --reason "load risklake"
 or `DRISHTI_DATALOAD_ENABLED=true`. In a cluster, set `owner: true` on one node only (`DRISHTI_DATALOAD_OWNER`); a folder lock keeps a
 second runner out anyway.
 
-**The folders**, all under `<data>/dataload` (`dir`), on one file system so a move is an atomic rename:
+**The folders**, all under `<data>/dataload` (`dir`), on one file system so a move is an atomic rename. A clone has them already, each with
+only a `README.md` that the inbox ignores (never claimed, listed or moved; what a load writes there is never committed); the server makes any
+that is missing, and `drishti.py setup` makes them, with the READMEs, in a data folder outside the clone:
 
 | Folder | Holds | Written by |
 |---|---|---|

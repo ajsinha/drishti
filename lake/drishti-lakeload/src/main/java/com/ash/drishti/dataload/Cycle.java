@@ -165,7 +165,9 @@ public final class Cycle {
         Duration beat = Duration.ofMillis(Math.max(1000, Math.min(60_000, settings.interval().toMillis() / 3)));
         Claims.Lock lock;
         try {
-            Files.createDirectories(root.resolve("inbox"));
+            for (String folder : List.of("inbox", "inprocess", "outbox", "failed", "ledger")) {
+                Files.createDirectories(root.resolve(folder));
+            }
             lock = claims.lock(run, node, stale, beat);
         } catch (IOException e) {
             return skipped(run, trigger, t0, "the folder lock could not be taken: " + e.getMessage());

@@ -184,7 +184,7 @@ final class InboxStatus {
     private static Set<String> names(Path inbox) {
         Set<String> out = new java.util.HashSet<>();
         try (var s = Files.list(inbox)) {
-            s.forEach(p -> out.add(p.getFileName().toString()));
+            s.filter(p -> !Inbox.ignored(p.getFileName().toString())).forEach(p -> out.add(p.getFileName().toString()));
         } catch (IOException e) {
             // no folder: no names
         }
