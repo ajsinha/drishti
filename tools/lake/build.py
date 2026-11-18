@@ -770,9 +770,10 @@ def _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, rem
 
 # ------------------------------------------------------------------------------------------------ the data-load signal
 
-def signal(a, p, summary) -> list[dict]:
+def signal(a, p, summary, status: str = "ready", source: str = "lake build") -> list[dict]:
     """POST /api/v1/packs/{pack}/loads per business date written: the server refreshes, verifies, checks alerts and tells people.
-    The server is the one --signal names (never a default); the token comes from --token-file or DRISHTI_TOKEN (never printed)."""
+    The server is the one --signal names (never a default); the token comes from --token-file or DRISHTI_TOKEN (never printed).
+    ``status`` ``deleted`` is lake delete's: the server drops the dates (DATA_LAKE_GUIDE.md section 5.8)."""
     if not p.get("pack"):
         return [{"ok": False, "error": "--signal needs the pack's name (--pack DIR or --pack-name NAME)"}]
     token = None
@@ -781,8 +782,8 @@ def signal(a, p, summary) -> list[dict]:
     token = token or os.environ.get("DRISHTI_TOKEN")
     out = []
     for day, rows in summary["rows"].items():
-        body = {"kind": p["kind"], "businessDate": day, "status": "ready", "rows": rows, "rejected": summary["rejected"],
-                "batchId": summary["run"], "source": "lake build"}
+        body = {"kind": p["kind"], "businessDate": day, "status": status, "rows": rows, "rejected": summary["rejected"],
+                "batchId": summary["run"], "source": source}
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if token:
             headers["Authorization"] = "Bearer " + token

@@ -160,6 +160,20 @@ final class VarOfficial implements AutoCloseable {
         runCapture(date, p);
     }
 
+    /**
+     * A date of an input kind deleted from the lake ({@code lake delete}, VAR_GUIDE.md section 15.8): the date is dropped from the engine
+     * (its book, hot file, reporting currencies and cached answers), never captured; the next request reads the lake as it is now. Its
+     * official records stay as history.
+     */
+    void onDeleted(String kind, LocalDate date) {
+        VarProperties p = svc.props();
+        if (!p.enabled() || date == null || !(p.kinds().inputs().contains(kind) || "trade".equals(kind))) {
+            return;
+        }
+        svc.reload(date);
+        svc.audit(VarOfficialStore.OWNER, "var-reload", date.toString(), kind + " of the date was deleted from the lake");
+    }
+
     private void runCapture(LocalDate date, VarProperties p) {
         if (p.official().enabled()) {
             runner.execute(() -> {                                     // after the reload: the date is read again from the lake

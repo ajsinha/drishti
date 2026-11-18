@@ -607,6 +607,12 @@ final class VarLoader {
         Map<String, DataNode> stress = new LinkedHashMap<>();
         documents(props.kinds().scenarioSet(), asOf).forEach((id, d) -> {
             boolean s = props.stress().isStress(text(d, "SET_TYPE"), text(d, "SCENARIO_SET_ID"));
+            // a normal set is the date's own: one read as of the date but written for an earlier date (the date's own set not delivered,
+            // or deleted from the lake) is never used for it, its scenario days would be a day off (VAR_GUIDE.md section 15.8)
+            String day = text(d, "BUSINESS_DATE");
+            if (!s && day != null && !day.isBlank() && !day.startsWith(date.toString())) {
+                return;
+            }
             (s ? stress : normal).put(id, d);
         });
         return new Sets(normal, stress, props.kinds().scenarioSet());

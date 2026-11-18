@@ -1661,6 +1661,7 @@ Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), 
 | `lake maintain` | keeps a lake small and fast, on a timer ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)) |
 | `lake relocate` | a lake built in the older layout moved once into its own folder, `<data>/delta/<lake>` ([DATA_LAKE_GUIDE.md section 7](DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)) |
 | `lake undo` | one load's rows removed by its load id ([DATA_LAKE_GUIDE.md section 5.5](DATA_LAKE_GUIDE.md#55-undo-a-load)) |
+| `lake delete` | whole business dates removed from one table, one commit, then the server told ([7.15](#715-lake-delete-whole-business-dates-out-of-a-table)) |
 | `lake memory` | the in-memory lake's stores, jobs and refills (`status`, `jobs`, `refill`; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) |
 
 `drishti.py lake build` reads an export of any size (a JSON array, pretty-printed or on one line, JSON Lines, either gzipped, one
@@ -2413,6 +2414,47 @@ Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy
 Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
 available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](../../deploy/aws/s3-tables/README.md)
 and [`deploy/aws/delta-s3/README.md`](../../deploy/aws/delta-s3/README.md).
+
+### 7.15 lake delete: whole business dates out of a table
+
+```text
+drishti.py lake delete --lake NAME|DIR (--kind KIND | --table DOMAIN/TABLE) (--date YYYY-MM-DD ... | --from YYYY-MM-DD --to YYYY-MM-DD)
+                       [--format delta|iceberg|files] [--dry-run] [--yes] [--json]
+                       [--server URL] [--token-file FILE] [--user NAME] [--no-signal] [--pack NAME] [--jar FILE] [--java FILE]
+```
+
+| Option | Meaning |
+|---|---|
+| `--lake` | a lake of `config/lakes/` by its name (`risklake`, where its lake file says), or the lake's folder |
+| `--kind` / `--table` | the table: the pack's table of the kind (`scenario-pv` is `risk/scenario-pv`), or its path in the lake |
+| `--date` | a business date to delete; repeatable, or comma separated. A date the table does not hold is refused, nothing deleted |
+| `--from`, `--to` | every date of the table in the range, both ends included (one end alone: open on the other side) |
+| `--format` | the table's store; default: read from the table on disk (a `_delta_log`, Iceberg `metadata/`, or day files) |
+| `--dry-run` | the rows per date it would delete, and the dates the table keeps; nothing changed |
+| `--yes` | no question (scripts); without it, the table's name must be typed; without a terminal and without `--yes`, refused |
+| `--server`, `--token-file`, `--user` | the server told (default `DRISHTI_SERVER`; the token `DRISHTI_TOKEN`, with `loads:write`): one data-load signal with status `deleted` per date |
+| `--no-signal` | tell no server (a running server notices within its version check, 30 s) |
+| `--pack` | the pack for the signal when no pack has the kind |
+
+```bash
+python3 tools/drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --dry-run
+python3 tools/drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --server http://localhost:18480 --yes
+python3 tools/drishti.py lake delete --lake data/delta/demo --table risk/pnl-vector --from 2026-10-01 --to 2026-10-03 --no-signal
+```
+
+```text
+deleted risk/scenario-pv 2026-11-16: 15,000 rows
+risk/scenario-pv keeps 59 business dates (newest 2026-11-13)
+one commit, version 61 (the files stay for time travel until the table's vacuum)
+  signal 2026-11-16: sent: the server dropped the date
+run 20261118T093000.123-4242 logged in data/delta/risklake/_drishti-lake/runs.log
+```
+
+The dates are removed by the lake loader's `LakeRetention --dates` (the writer of row retention and undo): one Delta commit, one Iceberg
+partition delete, or the files store's day files. What the server does with the signal, how to bring a date back, and why `lake undo`
+cannot: [DATA_LAKE_GUIDE.md section 5.8](DATA_LAKE_GUIDE.md#58-delete-business-dates). Exit codes: 0 deleted (or a dry run), 1 refused
+or failed (nothing changed), 2 deleted but the signal failed, 3 another run holds the table's lock. The tests: `tools/lake/test_delete.py`,
+`DeleteDatesParityTest` (drishti-lakeload: the three stores), `VarDeletedDateTest` (the VaR engine) and `LoadsApiTest` (the signal).
 
 ## 8. `server`: health and packs
 
@@ -4107,7 +4149,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/approvalscli.py` (`approvals`), `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, section 7.5), `tools/lake/childload.py` (child kinds in `lake build`: each array the pack declares is built as a table of its own after its parent), `tools/test_child_parity.py` (child tables give the same rows in Delta, Iceberg and files), `tools/lake/demo.py` (`lake demo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/compare_lakes.py` (two Delta lakes compared table by table, partition by partition, by row counts from their logs: `compare_lakes.py LAKE_A LAKE_B [--out result.json]`, exit 1 on any difference), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, section 7.5), `tools/lake/childload.py` (child kinds in `lake build`: each array the pack declares is built as a table of its own after its parent), `tools/test_child_parity.py` (child tables give the same rows in Delta, Iceberg and files), `tools/lake/demo.py` (`lake demo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/undo.py` (`lake undo`), `tools/lake/delete.py` (`lake delete`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/compare_lakes.py` (two Delta lakes compared table by table, partition by partition, by row counts from their logs: `compare_lakes.py LAKE_A LAKE_B [--out result.json]`, exit 1 on any difference), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) "Upgrades").
 
 ### Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 

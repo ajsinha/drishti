@@ -2847,6 +2847,28 @@ hot file is built (its name is the digest of the new inputs, [section 26](#26-th
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
 day*) reads the table at that instant, within the 7 years kept.
 
+**A date deleted from the lake.** `drishti.py lake delete` removes whole business dates from a table
+([DATA_LAKE_GUIDE.md section 5.8](DATA_LAKE_GUIDE.md#58-delete-business-dates)) and sends the data-load signal with status `deleted`. For an
+input kind (`pnl-vector`, `scenario-pv`, `scenario-set`, `fx-scenario`, `var-limit`) or `trade`, the engine drops the date at once, as a
+reload does (its book, hot file, reporting currencies, cached answers; audited `var-reload`, *scenario-pv of the date was deleted from the
+lake*), and captures nothing. What a request then sees:
+
+| Deleted | A request for the date | The default date |
+|---|---|---|
+| its P&L (`pnl-vector` and `scenario-pv`, or the only form it had) | answered by the newest earlier date, with the notice *scenario P&L for 2026-11-16 not loaded — showing 2026-11-13* in the headline and the provenance; never the deleted figures | the newest date that still has P&L |
+| its scenario set | refused, `404 DRS-1001` *no scenario set for 2026-11-16* (a set written for an earlier date is never used for it: its scenario days would be a day off) | when it was the newest: the date before, with the warning *no scenario set for 2026-11-16 …; answered from 2026-11-13 instead* |
+| one form of two (`scenario-pv` deleted, `pnl-vector` kept) | the date with the trades that are left | unchanged |
+| its limits (`var-limit`) or scenario FX (`fx-scenario`) | the date, with the limits the newest earlier delivery set (limits are sent when they change) and the scenario FX derived from the FX history (section 15.9) | unchanged |
+
+Without the signal (`--no-signal`, or a delete made by other means) the same happens by itself, a few seconds later: each request asks
+the connector which dates hold P&L, and the connector sees the table's new version at its next refresh (seconds), so the deleted date is
+no longer answered from its old book; the version watch (`drishti.var.version-check`, 30 s) then finds the date's inputs gone and drops
+that book. **Official records stay**:
+the date's official captures and published rows ([section 19](#19-official-end-of-day-results)) are history and are kept as they were
+captured (the node history in `official` mode still shows them); they are never served as the date's live VaR. **Loading the date again**
+(`lake build`, the data inbox, a feed) with its signal makes it answer again at once (without a signal: as a new date, on the next
+request), and the official capture runs again: unchanged inputs are `unchanged`, new ones the next result version.
+
 ### 15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency
 
 A bank's batch may send a trade's scenario P&L in a second form (product owner, 2026-10-27): the trade **revalued under each scenario**

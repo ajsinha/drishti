@@ -1306,6 +1306,46 @@ ids, links, promoted columns, date) and the answers through the BI relationship 
 its own (`trade-leg.2026-11-03.jsonl`) where the parent has no array to split. `pack new` and the Pack designer plan child kinds and write this
 block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
 
+### 5.8 Delete business dates
+
+`drishti.py lake delete` removes whole business dates from **one table** of a lake: a date loaded by mistake, a date to be sent again from
+scratch, or test data to clear. Name the table by its kind (`--kind scenario-pv`: the pack's table of that kind, where `lake build` writes
+it) or by its path (`--table risk/scenario-pv`), and the dates by `--date` (repeatable, or comma separated) or a range `--from`/`--to`
+(both ends included):
+
+```bash
+python3 tools/drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --dry-run
+python3 tools/drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --server http://localhost:18480
+```
+
+```text
+would delete risk/scenario-pv 2026-11-16: 15,000 rows
+risk/scenario-pv would keep 59 business dates (newest 2026-11-13)
+```
+
+- **One writer, every store.** The lake's own writer removes the dates, the same machinery as row retention and undo (the lake loader's
+  `LakeRetention --dates`): a Delta table gets one commit removing every file of the dates, an Iceberg table one partition delete, a files
+  store loses the dates' day files (`<root>/<domain>/<date>/<kind>.jsonl`). A reader sees the whole date or none of it. The same rows go in
+  all three stores (a parity test, and delta-rs reads the Delta result).
+- **Checked first.** It first says what it would delete, rows per date, then asks for the table's name to confirm (`--yes` for scripts;
+  without a terminal it is refused unless given). A date the table does not hold is refused in words, nothing deleted: *2026-11-14 is not
+  in risk/scenario-pv: it holds 60 business dates (2026-08-19 .. 2026-11-16); nothing deleted*. `--dry-run` stops after the counts.
+- **Locked and logged** like a build: it holds the table's lock (exit 3 when another run holds it) and writes a `lake-delete` line to
+  `<lake>/_drishti-lake/runs.log` and the run's summary to `runs/<run>.json` (`lake status` lists it).
+- **The server is told.** With `--server URL` (or `DRISHTI_SERVER`; `--token-file` or `DRISHTI_TOKEN` for the token, `loads:write`) it
+  sends the data-load signal with status `deleted`, one per date (`POST /api/v1/packs/{pack}/loads`): the server drops the kind's
+  connector caches and every engine drops the date at once (the VaR engine: [VAR_GUIDE.md section 15.8](VAR_GUIDE.md#158-cadence-delivery-and-the-load-signal));
+  nothing is verified, alerted or captured, and the load history records it as *scenario-pv for 2026-11-16 deleted from the lake: 15,000
+  rows*. `--no-signal` tells no server; a running server then notices within its version check (`drishti.var.version-check`, 30 s).
+  `--pack NAME` names the pack when no pack has the kind.
+
+**Bringing a date back.** Load it again (`lake build`, the data inbox or a feed): the load's signal makes it today's again. `lake undo`
+cannot bring back a deleted date: it removes and restores the rows of one load by its id, and the deleted rows are no longer in the table.
+Until the table's vacuum (Delta, `time-travel:` of section 2.6) or snapshot expiry (Iceberg), the removed files are still on disk and the
+table can be read as it was before the delete (time travel), but the way back is a load.
+
+Exit codes: 0 deleted (or a dry run), 1 refused or failed (nothing changed), 2 deleted but the signal failed, 3 another run holds the lock.
+
 ## 6. Pointing Drishti at a lake
 
 A lake is read by the Delta and Iceberg connectors that name it. A connector is its **template** (the `connectors:` section of its

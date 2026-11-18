@@ -95,6 +95,45 @@ final class NativeMaintenance {
         return old.size();
     }
 
+    /** As {@link IcebergMaintenance#dropDates}: the dates {@code wanted} accepts removed, whole partitions, one commit. */
+    static Map<String, Object> dropDates(Table t, java.util.function.Predicate<String> wanted, boolean dryRun) {
+        t.refresh();
+        List<String> held = new ArrayList<>();
+        List<Map<String, Object>> lines = new ArrayList<>();
+        Set<LocalDate> gone = new HashSet<>();
+        if (t.currentSnapshot().isPresent()) {
+            NavigableMap<LocalDate, Day> days;
+            try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+                days = layout(t, pool).days();
+            }
+            for (Day day : days.values()) {
+                if (LocalDate.MIN.equals(day.date())) {
+                    continue;
+                }
+                String d = day.date().toString();
+                held.add(d);
+                if (wanted.test(d)) {
+                    Map<String, Object> line = new LinkedHashMap<>();
+                    line.put("date", d);
+                    line.put("rows", day.rows());
+                    line.put("dropped", day.rows());
+                    lines.add(line);
+                    gone.add(day.date());
+                }
+            }
+        }
+        if (!dryRun && !gone.isEmpty()) {
+            Operations.deletePartitions(t, f -> {
+                LocalDate d = NativeLayout.dateOf(t, f);
+                return d != null && gone.contains(d);
+            }, Map.of("drishti.delete-dates", String.join(",", new java.util.TreeSet<>(gone).stream().map(LocalDate::toString).toList())));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("held", held);
+        out.put("dates", lines);
+        return out;
+    }
+
     /** As {@link IcebergMaintenance#expireSnapshots(org.apache.iceberg.Table, long)}: the current snapshot always stays. */
     static void expireSnapshots(Table t, long hours) {
         t.refresh();

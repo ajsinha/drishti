@@ -37,6 +37,8 @@ public record LoadRecord(String id, String pack, String kind, LocalDate business
 
     public static final String READY = "ready";
     public static final String FAILED = "failed";
+    /** A business date removed from the lake ({@code lake delete}): the engines drop it, nothing is verified or alerted. */
+    public static final String DELETED = "deleted";
 
     /** One thing done for the load, with its own result: {@code ok}, {@code warn}, {@code failed} or {@code skipped}. */
     public record Step(String name, String status, String detail, long ms) {}

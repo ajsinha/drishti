@@ -149,6 +149,30 @@ class LoadsApiTest {
                 .andExpect(jsonPath("$[*].action").value(org.hamcrest.Matchers.hasItem("load-announced")));
     }
 
+    @Autowired LoadService loads;
+
+    /**
+     * A date deleted from the lake ({@code lake delete}, status {@code deleted}): the kind's caches dropped, nothing verified or alerted,
+     * the deleted listeners called (the engines drop the date), the ready ones not; recorded and audited as {@code data-load-deleted}.
+     */
+    @Test
+    void aDeletedDateDropsTheCachesAndCallsTheDeletedListenersOnly() throws Exception {
+        List<String> deleted = new java.util.concurrent.CopyOnWriteArrayList<>();
+        List<String> ready = new java.util.concurrent.CopyOnWriteArrayList<>();
+        loads.onDeleted(r -> deleted.add(r.kind() + " " + r.businessDate()));
+        loads.onReady(r -> ready.add(r.kind() + " " + r.businessDate()));
+        String body = "{\"kind\":\"trade\",\"businessDate\":\"2026-09-25\",\"status\":\"deleted\",\"rows\":120,\"source\":\"lake delete\","
+                + "\"batchId\":\"del-" + UUID.randomUUID() + "\"}";
+        JsonNode load = body(announce(as(ADMIN, "admin"), "finance", body).andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("deleted")));
+        assertThat(load.path("steps").findValuesAsText("name")).containsExactly("record", "refresh", "verify", "notices");
+        assertThat(load.path("steps").get(2).path("status").asText()).isEqualTo("skipped");
+        assertThat(load.path("summary").asText()).isEqualTo("trade for 2026-09-25 deleted from the lake: 120 rows");
+        assertThat(deleted).containsExactly("trade 2026-09-25");
+        assertThat(ready).doesNotContain("trade 2026-09-25");
+        mvc.perform(get("/api/v1/admin/audit").header("Authorization", as(ADMIN, "admin")))
+                .andExpect(jsonPath("$[*].action").value(org.hamcrest.Matchers.hasItem("data-load-deleted")));
+    }
+
     @Test
     void badInputIsRefusedWithTheRegistryCodes() throws Exception {
         String admin = as(ADMIN, "admin");

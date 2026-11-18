@@ -121,6 +121,16 @@ final class ExposureOfficial implements AutoCloseable {
         }
     }
 
+    /** A date of an input kind deleted from the lake ({@code lake delete}): dropped from the engine, not captured (its official records stay). */
+    void onDeleted(String kind, LocalDate date) {
+        ExposureProperties p = svc.props();
+        if (!p.enabled() || date == null || !p.kinds().inputs().contains(kind)) {
+            return;
+        }
+        svc.reload(date);
+        svc.audit(ExposureOfficialStore.OWNER, "ccr-reload", date.toString(), kind + " of the date was deleted from the lake");
+    }
+
     Map<String, Object> capture(LocalDate date) {
         lock.lock();
         try {
