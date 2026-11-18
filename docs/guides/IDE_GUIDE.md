@@ -81,19 +81,31 @@ Failed to execute goal org.codehaus.mojo:flatten-maven-plugin:… Could not tran
 (https://repo.maven.apache.org/maven2): PKIX path building failed … unable to find valid certification path to requested target
 ```
 
-The network re-signs HTTPS with the company's own root certificate, which Windows trusts but the JDK does not. Nothing is wrong with
-Drishti. Fix it one of three ways, the first that your company allows:
+The network re-signs HTTPS with the company's own root certificate, which Windows trusts but the JDK does not (the browser opens
+`https://repo.maven.apache.org/maven2` fine; Java refuses it). Nothing is wrong with Drishti or with Maven Central.
 
-1. **The company's Maven mirror** (Artifactory, Nexus): put the `<mirror>` your team uses in `%USERPROFILE%\.m2\settings.xml`
-   (Linux `~/.m2/settings.xml`). IntelliJ reads the same file (**Settings → Build Tools → Maven → User settings file**).
-2. **Let Java trust the Windows certificate store**, with no file change and no administrator rights:
-   - IntelliJ: **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options**:
-     `-Djavax.net.ssl.trustStoreType=Windows-ROOT`; the same in **Maven → Importing → VM options for importer**.
-   - A terminal (`mvnw`, and `py tools\drishti.py build all`, which runs Maven): `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`,
-     then open a new terminal.
-3. **Add the company root certificate to the JDK** (needs write access to the JDK folder): export it from the browser's padlock or ask
-   the IT team for the `.cer`, then `C:\jdk-21\bin\keytool -importcert -cacerts -alias company-root -file company-root.cer`
-   (the store's password is `changeit`).
+**The fix on Windows (proven on a company laptop): let Java trust the Windows certificate store.** One VM option, no file change,
+no administrator rights:
+
+```
+-Djavax.net.ssl.trustStoreType=Windows-ROOT
+```
+
+1. IntelliJ: **File → Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → VM Options**: paste the option.
+2. The same screen family, **Maven → Importing → VM options for importer**: paste it too (the Maven import downloads as well).
+3. **Apply**, then run **Drishti build all** again.
+4. A terminal (`mvnw`, `py tools\drishti.py build all`): `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, then open a
+   new terminal.
+5. The server itself, when it reaches outside sources over HTTPS on that network (public data feeds, news): add the same option to the
+   server run configuration's **VM options** (on a copy: **Copy Configuration**, so a pull never overwrites it).
+
+Other ways, if your company prefers them:
+
+- **The company's Maven mirror** (Artifactory, Nexus): put the `<mirror>` your team uses in `%USERPROFILE%\.m2\settings.xml`
+  (Linux `~/.m2/settings.xml`). IntelliJ reads the same file (**Settings → Build Tools → Maven → User settings file**).
+- **Add the company root certificate to the JDK** (needs write access to the JDK folder): export it from the browser's padlock or ask
+  the IT team for the `.cer`, then `C:\jdk-21\bin\keytool -importcert -cacerts -alias company-root -file company-root.cer`
+  (the store's password is `changeit`).
 
 Then run **Drishti build all** again. Use **Drishti build all** (`clean package`), not Maven's **clean install**: nothing needs the
 local repository, and `install` only adds time.
@@ -357,7 +369,7 @@ Two servers must never share a data folder.
 | `the modules beside the jar are not current:` followed by a list, and the server stops | `modules/` is missing a package or holds one older than its module folder or built for another jar, typically after **Drishti build server jar** alone or a pull. Run **Drishti build all**. Or use **Drishti server (dev switch)**. |
 | Health says *no modules*, and `VAR` or a banking function answers *not installed* | the class path was not module `drishti-app`, or `modules/` is empty. Run **Drishti build all**, and start from a shipped configuration or copy one. |
 | Maven fails with *invalid target release* or *release version 21 not supported* | the wrong JDK: set the Project SDK (section 1.2 step 2) and **Maven → Runner → JRE** to *Use Project JDK*; the shell's `JAVA_HOME` does not count in the IDE. |
-| Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: section 1.4 (the mirror, `-Djavax.net.ssl.trustStoreType=Windows-ROOT`, or the root certificate in the JDK) |
+| Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: on Windows add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to Maven's Runner and Importer VM options (section 1.4; or the mirror, or the root certificate in the JDK) |
 | Maven: *module pack … refused:* followed by a reason | the packer refused a module folder (a jar `module.yaml` names is missing, a `content.yaml` that leaves out what a pack serves, a file outside the layout): the line names the module and the file; fix it and build again |
 | A Python configuration says *Python interpreter is not configured* | PyCharm: choose the interpreter (section 2.3, step 2). |
 | `lake demo` says the jar is missing | run **Drishti build all** first; `lake demo --engine java` reads the jar in `lib/`. |
