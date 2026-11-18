@@ -476,8 +476,8 @@ module". First-party modules without an allowance, and every third-party module,
 one build and release train builds banking with each kernel, so the two always ship together.
 
 **As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the verifier (`ModuleCli`) and the kernel.
-The build (`packaging/dist`) packs the product's modules with the Python packager (`tools/modulepack.py`), verifies the ones with a server part with `ModuleCli verify` and writes
-`first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files, in `packaging/dist/target/dmod`; `drishti.py build modules` copies the packages and the list into the modules folder beside the server jar, which holds neither. A package is stale (R2) when `modulepack.stale` finds its module folder changed or its stamp is another jar's; `start server`, `start cluster` and a test session refuse it, naming the module and the command. A manifest
+The build (`packaging/dist`, Maven with no Python) packs every one of the product's twelve modules with the one packer (`ModulePack` of the module runtime, run as `ModuleCli module pack` on the server classes), verifies the ones with a server part with `ModuleCli verify` and writes
+`first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files, in `packaging/dist/target/dmod`; at `package` it installs the packages and the list into the modules folder beside the server jar, which holds neither (`module install`: each through a `.part` file and one replace, an older version of the same module removed; `-Ddrishti.install.skip=true` installs nothing), and `packaging/drishti-app` installs the exec jar into `lib/` the same way (`module install-jar`). A package is stale (R2) when `module fresh` finds its module folder changed (by content, never by time) or its stamp is another jar's; `start server`, `start cluster` and a test session refuse it, naming the module and the command. A manifest
 whose `kernel-internals:` names a file (banking's `java/kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
 `kernel-build:` with the build of the server jar the build runs for (`<version>+<build time>` from the server's `build-info.properties`, read from the jar or from its nested server jar in an exec jar, or `--kernel-build`).
 Verification adds `origin: first-party (verified ...)` or `origin: third-party (why)` as the first Health note; an allowance on a module
@@ -1325,7 +1325,7 @@ sub-module per part, is kept for the parts not built yet (Python, the harness su
 `-docs`) are the top-level folders of section 8.10.
 
 The design: one **multi-module Maven project** per module. The parent pom inherits `drishti-module-parent`, depends on `drishti-kernel-api` with scope
-`provided`, lists the sub-modules and runs the parent's `exec-maven-plugin` executions (the Python packager and the server jar's verifier) once, after them. Each sub-module maps to one part of the
+`provided`, lists the sub-modules and runs the parent's `exec-maven-plugin` executions (the server jar's packer and verifier, `java -jar … module pack|verify`) once, after them. Each sub-module maps to one part of the
 `.dmod` (section 3.2):
 
 | Sub-module | Holds | Into the `.dmod` | Needed when |
@@ -1492,7 +1492,7 @@ modules/<module>/
 
 The names a module's top may hold are ONE list, `module-layout.yaml` (`ModuleLayout` in the kernel's API; `tools/module_layout.py` reads
 the same file): `content`, the `.dmod` content of section 3.2, and `build`, what only builds the module (`content.yaml`, `pom.xml`,
-`target/`, `tools/`). The packer (`tools/modulepack.py`, one for Maven, the command line and `packaging/dist`) stages only the
+`target/`, `tools/`). The packer (`ModulePack`, `module pack` of the server jar: one for Maven, the command line and `packaging/dist`) stages only the
 content names (in `java/`, only jars already there are kept) and names anything else at the top in words, left out (an old build folder
 an older checkout keeps); a `content.yaml` `trim` or `copy` may leave out only what a module does not carry (a pack's `tests/`, `tools/`),
 never what a pack serves (`samples/`, the records a read falls back to when no lake is built, `sutras/`, `config/`, `contracts/`,

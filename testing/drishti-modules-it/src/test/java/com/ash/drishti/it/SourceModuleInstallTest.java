@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A source module as a real package: {@code source-swapone} packed by the one packer (tools/modulepack.py), dropped into a modules folder,
+ * A source module as a real package: {@code source-swapone} packed by the one packer (ModulePack), dropped into a modules folder,
  * booted by {@link ModuleBoot} (its inbox rules and its connector templates), then taken out again and gone.
  */
 class SourceModuleInstallTest {

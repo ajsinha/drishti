@@ -28,7 +28,8 @@
   <name>drishti-app</name>
   <description>The runnable server: the kernel (drishti-server) as one executable jar. It holds no code and no module: the modules are packages
     (.dmod) beside the jar, built by packaging/dist (docs/architecture/KERNEL_AND_MODULES.md). The jar keeps its path,
-    kernel/drishti-server/target/drishti-server-VERSION-exec.jar</description>
+    kernel/drishti-server/target/drishti-server-VERSION-exec.jar, and at package is installed into the lib folder (drishti.home.lib, default
+    the repository's lib/), unless -Ddrishti.install.skip=true (the properties are the parent pom's)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
   </dependencies>
@@ -98,11 +99,30 @@
             <phase>package</phase>
             <goals><goal>java</goal></goals>
             <configuration>
+              <!-- no exec jar to check when none is made (the profile modules-only) -->
+              <skip>${spring-boot.repackage.skip}</skip>
               <mainClass>com.ash.drishti.module.runtime.KernelLibraries</mainClass>
               <arguments>
                 <argument>check</argument>
                 <argument>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</argument>
                 <argument>${project.build.outputDirectory}/META-INF/drishti/kernel-libraries.txt</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- the install (on by default; -Ddrishti.install.skip=true, or drishti.install.jar.skip, leaves it in kernel/drishti-server/target):
+                 the exec jar into the install's lib folder through a .part file and one replace, any other server jar there removed (lib/ext untouched) -->
+            <id>install-jar</id>
+            <phase>package</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <skip>${drishti.install.jar.skip}</skip>
+              <mainClass>com.ash.drishti.server.cli.ModuleCli</mainClass>
+              <blockSystemExit>true</blockSystemExit>
+              <arguments>
+                <argument>module</argument><argument>install-jar</argument>
+                <argument>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</argument>
+                <argument>--into</argument><argument>${drishti.home.lib}</argument>
               </arguments>
             </configuration>
           </execution>

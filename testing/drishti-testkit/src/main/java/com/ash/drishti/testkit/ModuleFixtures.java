@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.testkit;
 
+import com.ash.drishti.module.runtime.ModulePack;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -42,7 +43,8 @@ import org.w3c.dom.NodeList;
 /**
  * Modules built in tests, the way a publisher builds them: a project generated from the SDK's archetype templates (as
  * {@code mvn archetype:generate} would), Java sources compiled against the test class path (the kernel API and Spring, as
- * {@code provided}) and packed into jars. The {@code .dmod} itself is packed by the one packager, {@code tools/modulepack.py}.
+ * {@code provided}) and packed into jars. The {@code .dmod} itself is packed by the one packager, {@code ModulePack} (drishti-module-runtime,
+ * which a test that packs has on its class path).
  */
 public final class ModuleFixtures {
 
@@ -186,67 +188,14 @@ public final class ModuleFixtures {
         return out.toString();
     }
 
-    /** Packs a module folder with the one packager ({@code tools/modulepack.py}): {@code jars} as {@code --jar}, the package in {@code out}. */
+    /** Packs a module folder with the one packager ({@code ModulePack}): {@code jars} as {@code --jar}, the package in {@code out}. */
     public static Path pack(Path source, List<Path> jars, Path out) {
         return pack(source, jars, out, null);
     }
 
     /** As above, stamping {@code kernelBuild} in a module with a kernel-internals allowance ({@code --kernel-build}). */
     public static Path pack(Path source, List<Path> jars, Path out, String kernelBuild) {
-        String root = System.getProperty("drishti.repo.root");
-        Path packager = root == null ? null : Path.of(root).resolve("tools/modulepack.py");
-        if (packager == null || !Files.isRegularFile(packager)) {
-            throw new IllegalStateException("tools/modulepack.py is not under drishti.repo.root (" + root + "): modules are packed by Python");
-        }
-        List<String> cmd = new ArrayList<>(List.of(python(), packager.toString(), "pack", source.toString(), "--out", out.toString()));
-        for (Path j : jars) {
-            cmd.add("--jar");
-            cmd.add(j.toString());
-        }
-        if (kernelBuild != null) {
-            cmd.add("--kernel-build");
-            cmd.add(kernelBuild);
-        }
-        try {
-            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            String said = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            if (p.waitFor() != 0) {
-                throw new IllegalStateException("the packager refused " + source + ": " + said.strip());
-            }
-            String id = null;
-            String version = null;
-            for (String l : Files.readAllLines(source.resolve("module.yaml"))) {
-                if (l.startsWith("id:")) {
-                    id = l.substring(3).strip().replace("'", "").replace("\"", "");
-                } else if (l.startsWith("version:")) {
-                    version = l.substring(8).strip().replace("'", "").replace("\"", "");
-                }
-            }
-            return out.resolve(id + "-" + version + ".dmod");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(e);
-        }
-    }
-
-    /** The Python (with PyYAML) the packager runs on: {@code python3}, then {@code python}. */
-    private static String python() {
-        for (String name : List.of("python3", "python")) {
-            try {
-                Process p = new ProcessBuilder(name, "-c", "import yaml").redirectErrorStream(true).start();
-                p.getInputStream().readAllBytes();
-                if (p.waitFor() == 0) {
-                    return name;
-                }
-            } catch (IOException e) {
-                // the next name
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        throw new IllegalStateException("modules are packed by Python: python3 with PyYAML is needed on the path");
+        return ModulePack.pack(source, jars, out, kernelBuild).dmod();
     }
 
     /** Writes a text file, its folders made. */

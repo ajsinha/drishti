@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``drishti.py setup`` (prepare this machine) and ``drishti.py build jar`` (the server jar into <home>/lib; the modules: modulesbuild.py).
+"""``drishti.py setup`` (prepare this machine); the Maven every build runs (:func:`maven_command`; the builds: modulesbuild.py).
 
 setup, idempotent, on Linux, macOS and Windows alike: checks Python and Java 21+ (says which java and why), shows the install folder
 (DRISHTI_HOME, read only), the data folder (DRISHTI_DATA_DIR, writable) and the modules folder with where each came from, makes the data
@@ -184,59 +184,3 @@ def maven_command(home: Path) -> list:
     if not mvn:
         raise LaunchError("no Maven: the install has no mvnw and mvn is not on the PATH")
     return [mvn]
-
-
-def build_jar(a, env: dict | None = None) -> int:
-    """``drishti.py build jar``: ``mvn -q clean package -DskipTests -pl :drishti-app -am`` (never install) with the Java of the one lookup,
-    then the newest exec jar copied into <home>/lib (unless --no-copy). The jar Maven writes stays in kernel/drishti-server/target."""
-    env = dict(os.environ if env is None else env)
-    roots = javacmd.launch_roots(None, None, env, javacmd.settings()[1])
-    home = roots["home"][0]
-    java = javacmd.find_java(None, a.java_home, env)
-    env["JAVA_HOME"] = javacmd.java_home_of(java)
-    tmp = roots["data"][0] / "tmp" / "maven"                 # Maven's own temp files in the data folder (the install is read only)
-    tmp.mkdir(parents=True, exist_ok=True)
-    if "-Djava.io.tmpdir=" not in env.get("MAVEN_OPTS", ""):
-        env["MAVEN_OPTS"] = f"-Djava.io.tmpdir={tmp} " + env.get("MAVEN_OPTS", "")
-    cmd = [*maven_command(home), "-q", *(["-o"] if a.offline else []), "clean", "package", "-DskipTests", "-pl", ":drishti-app", "-am"]
-    say(f"building the server jar with Java {javacmd.java_version(java)} ({java}): {' '.join(cmd[-8:])}")
-    if a.dry_run:
-        return 0
-    r = subprocess.run(cmd, cwd=str(home), env=env)
-    if r.returncode:
-        say("the build failed: see Maven's messages above")
-        return 1
-    jar = copy_exec_jar(a, home)
-    if jar is not None:
-        import modulesbuild
-        roots = javacmd.launch_roots(None, None, env, javacmd.settings()[1])
-        problems = modulesbuild.missing_report(roots["modules"][0]) + modulesbuild.fresh_report(roots["modules"][0], jar)
-        if problems:
-            say("the modules are not beside this jar (a module is a package in the modules folder, never inside the jar):")
-            for p in problems:
-                say("  " + p)
-            say("python tools/drishti.py build modules   builds them for this jar (build all does the jar and the modules)")
-        elif modulesbuild.module_folders(roots["modules"][0]):
-            say(f"the modules in {roots['modules'][0]} are current for this jar")
-    return 0
-
-
-def copy_exec_jar(a, home: Path, say_it: bool = False):
-    """The newest exec jar Maven wrote under kernel/drishti-server/target, copied into <home>/lib (one server jar there; lib/ext untouched);
-    the jar in lib/. With --no-copy: left where it is and None."""
-    built = sorted((home / "kernel" / "drishti-server" / "target").glob(javacmd.JAR_GLOB), key=lambda p: p.stat().st_mtime)
-    if not built:
-        raise LaunchError("Maven finished but wrote no drishti-server-*-exec.jar under kernel/drishti-server/target")
-    if a.no_copy:
-        say(f"built {built[-1]} (--no-copy: not copied into {home / 'lib'})")
-        return None
-    lib = javacmd.lib_dir(home)
-    lib.mkdir(parents=True, exist_ok=True)
-    for old in lib.glob(javacmd.JAR_GLOB):              # one server jar in lib: the one just built; lib/ext (the site's jars) is never touched
-        if old.name != built[-1].name:
-            old.unlink()
-    part = lib / (built[-1].name + ".part")
-    shutil.copy2(built[-1], part)
-    os.replace(part, lib / built[-1].name)
-    say(f"built {built[-1].name}; copied into {lib}")
-    return lib / built[-1].name

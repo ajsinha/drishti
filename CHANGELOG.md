@@ -18,6 +18,22 @@
 
 ## Unreleased
 
+- **IntelliJ IDEA builds and runs Drishti with Java only.** The one module packer is Java: `ModulePack` in the module runtime, run as
+  `module pack` of the server jar (`ModuleCli`, with `first-party`, `fresh`, `install` and `install-jar` beside `verify`, `inspect` and
+  `visual`); `tools/modulepack.py` is gone. The packages are byte for byte what the Python packer made (all twelve modules and
+  `first-party.yaml` compared by SHA-256 on the same inputs). Maven packs all twelve modules in `packaging/dist` and installs what it builds:
+  `packaging/drishti-app` the exec jar into `lib/`, `packaging/dist` the packages and `first-party.yaml` into `modules/`, each through a
+  `.part` file and one replace, an older version of a module removed; `-Ddrishti.install.skip=true` installs nothing, `-Pmodules-only`
+  stamps the packages for the jar already in `lib/`, `-Ddrishti.modules.ids=a,b` installs only those. `drishti.py build jar|modules|all`
+  each run that one Maven command (flags kept: `--offline`, `--no-copy`, `--java-home`, `--dry-run`, ids); `build modules --no-maven` is
+  gone (the drill's gate build installs by itself). The freshness rule (R2) is the jar's `module fresh`; `start server`, `start cluster`
+  and the test sessions ask it. The SDK parent pom packs and verifies with `java -jar <home>/lib/drishti-server-<version>-exec.jar module …`.
+  IntelliJ's run configurations (`run-configs/`) hold no Python configuration: **Drishti build all**, **Drishti build server jar** and
+  **Drishti build modules** are Maven configurations, the before-launch step of **Drishti server (debug-friendly)** is the Maven one; the
+  distributions' consoles moved to PyCharm (`drishti-console/run-configs`), and PyCharm's **Build server jar (into lib)** is gone
+  (`tools/test_run_configs.py` guards both). The packer's tests are JUnit (`ModulePackTest`, `@TempDir`). `IDE_GUIDE.md` is now three parts:
+  build (IntelliJ, Java only), prepare the environment, run.
+
 - **tools/pvf: a PVF extract to scenario PVs.** The owner's per-path PV extract (the per-path PV file, the positions, PORTFOLIO_D2) becomes
   scenario-pv records in one command, `python3 tools/pvf/pvf_run.py --pv … --portfolio … --positions … --date YYYY-MM-DD`: a streaming
   Polars join (the PV file scanned, never loaded whole; explicit types; `POSITION_ID` order; the audit of excluded positions kept and

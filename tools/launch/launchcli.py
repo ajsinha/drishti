@@ -229,17 +229,11 @@ def cmd_setup(a, extra) -> int:
 
 
 def cmd_build(a, extra) -> int:
-    import envsetup
     import modulesbuild
-    if a.cmd == "modules":
-        return _run(modulesbuild.build_modules, a)
     if a.cmd == "sdk":
         import sdkbuild
         return _run(sdkbuild.build_sdk, a)
-    if a.cmd == "all":
-        a.ids = []
-        return _run(modulesbuild.build_modules, a, None, True)
-    return _run(envsetup.build_jar, a)
+    return _run(modulesbuild.build, a, a.cmd)
 
 
 def register(groups, add) -> None:
@@ -259,13 +253,13 @@ def register(groups, add) -> None:
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")
     bs = b.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
-    bj = bs.add_parser("jar", help="build jar: mvn -q clean package -DskipTests -pl :drishti-app -am, then the exec jar into <home>/lib", formatter_class=RAW,
+    bj = bs.add_parser("jar", help="build jar: mvn -q clean package -DskipTests -pl :drishti-app -am (Maven installs the exec jar into <home>/lib)", formatter_class=RAW,
                        description="Builds the server's exec jar with the install's Maven wrapper (Java from the one lookup: --java-home, "
-                                   "DRISHTI_JAVA_HOME, JAVA_HOME, the PATH) and copies it into <home>/lib, where every tool finds it.",
+                                   "DRISHTI_JAVA_HOME, JAVA_HOME, the PATH); Maven itself installs it into <home>/lib, where every tool finds it.",
                        epilog=f"examples:\n  {P} build jar\n  {P} build jar --offline\n  {P} build jar --no-copy")
     bj.add_argument("--java-home", metavar="DIR", help="the JDK to build with (Java 21+)")
     bj.add_argument("--offline", action="store_true", help="Maven offline (-o)")
-    bj.add_argument("--no-copy", action="store_true", help="leave the jar in kernel/drishti-server/target only")
+    bj.add_argument("--no-copy", action="store_true", help="install nothing: the jar stays in kernel/drishti-server/target")
     bj.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
     bj.set_defaults(func=cmd_build)
     bk = bs.add_parser("sdk", help="build sdk: the Module SDK folder <home>/sdk (a Maven file repository and the parent pom), for building a module with no kernel source",
@@ -279,18 +273,16 @@ def register(groups, add) -> None:
     for verb, text in (("modules", "the module packages (.dmod) and first-party.yaml into <home>/modules, stamped for the server jar in <home>/lib"),
                        ("all", "the server jar into <home>/lib, then the modules into <home>/modules: one Maven run, everything stamped for that jar")):
         bm = bs.add_parser(verb, help=f"build {verb}: {text}", formatter_class=RAW,
-                           description=f"Builds {text}. The server jar holds no module: a module is a package beside it. Modules with Java are built "
-                                       "and packed by Maven (packaging/dist, through the one packer tools/modulepack.py); the others are packed from their folders.",
-                           epilog=f"examples:\n  {P} build {verb}" + (f"\n  {P} build modules banking\n  {P} build modules source-endur   (no Maven: packed from its folder)" if verb == "modules" else ""))
+                           description=f"Builds {text}. The server jar holds no module: a module is a package beside it. One Maven run (packaging/dist) "
+                                       "builds the modules' jars, packs every module with the one packer (module pack of the server classes, Java), runs the "
+                                       "conformance checks and installs the packages (an older version of a module removed, first-party.yaml written).",
+                           epilog=f"examples:\n  {P} build {verb}" + (f"\n  {P} build modules banking source-endur   (only those packages are installed)" if verb == "modules" else f"\n  {P} build all --no-copy"))
         if verb == "modules":
             bm.add_argument("ids", nargs="*", metavar="ID", help="only these modules (default: every module folder under <home>/modules)")
         bm.add_argument("--java-home", metavar="DIR", help="the JDK to build with (Java 21+)")
         bm.add_argument("--offline", action="store_true", help="Maven offline (-o)")
-        bm.add_argument("--no-copy", action="store_true", help=("leave the jar in kernel/drishti-server/target only" if verb == "all" else argparse.SUPPRESS))
+        bm.add_argument("--no-copy", action="store_true", help="install nothing: the jar stays in kernel/drishti-server/target, the packages in packaging/dist/target/dmod")
         bm.add_argument("--dry-run", action="store_true", help="print the Maven command; build nothing")
-        if verb == "modules":
-            bm.add_argument("--no-maven", action="store_true", help="take the Java modules' packages from packaging/dist/target/dmod, which a Maven run just before "
-                                                                    "(the drill's gate: build all's reactor) left there; refused when they are not stamped for the jar in <home>/lib")
         bm.set_defaults(func=cmd_build)
 
     for verb, fn in (("start", cmd_start), ("stop", cmd_stop)):

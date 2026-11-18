@@ -37,8 +37,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools" / "launch"))
 import javacmd  # noqa: E402
-import modulepack  # noqa: E402
+import modulesbuild  # noqa: E402
 
 
 def free_port() -> int:
@@ -104,8 +105,7 @@ def _genomics_package(tmp: Path, version: str) -> Path:
         for n in names:
             (jars / Path(n).name).write_bytes(z.read(n))
     out = tmp / f"pack-{version}"
-    dmod, _ = modulepack.pack(folder, sorted(jars.glob("*.jar")), out)
-    return dmod
+    return modulesbuild.pack(folder, out, sorted(jars.glob("*.jar")))
 
 
 def place(modules: Path, dmod: Path | None) -> None:
@@ -114,7 +114,8 @@ def place(modules: Path, dmod: Path | None) -> None:
         old.unlink()
     if dmod is not None:
         shutil.copy2(dmod, modules / dmod.name)
-    modulepack.first_party(modules)
+    r = modulesbuild.module_cli(["first-party", modules])
+    assert r.returncode == 0, r.stderr
 
 
 def _jar_hash() -> str:

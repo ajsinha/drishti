@@ -43,21 +43,12 @@
   </dependencies>
   <properties>
     <drishti.repo>${project.basedir}/../..</drishti.repo>
-    <drishti.python>python3</drishti.python>
     <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
-    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
   </properties>
-  <profiles>
-    <profile>
-      <id>windows</id>
-      <activation><os><family>windows</family></os></activation>
-      <properties><drishti.python>python</drishti.python></properties>
-    </profile>
-  </profiles>
   <build>
     <plugins>
       <plugin>
-        <!-- the modules as an install holds them: the packages of packaging/dist (first-party.yaml with them), no source folder, never the repository's modules/ -->
+        <!-- the modules as an install holds them: the twelve packages of packaging/dist and their first-party.yaml, no source folder, never the repository's modules/ -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
@@ -68,92 +59,6 @@
             <configuration>
               <outputDirectory>${project.build.directory}/modules-home</outputDirectory>
               <resources><resource><directory>${project.basedir}/../../packaging/dist/target/dmod</directory></resource></resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <!-- the modules without Java (the six source-system modules), packed by the one packer into the same folder; first-party.yaml again for all of them -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.6.3</version>
-        <configuration><executable>${drishti.python}</executable></configuration>
-        <executions>
-          <execution>
-            <id>pack-source-calypso</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-calypso</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>pack-source-endur</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-endur</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>pack-source-ici</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-ici</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>pack-source-murex</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-murex</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>pack-source-swapone</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-swapone</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>pack-source-wss</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-wss</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>first-party</id>
-            <phase>generate-test-resources</phase>
-            <goals><goal>exec</goal></goals>
-            <configuration>
-              <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.modules.home}</argument>
-                <argument>--out</argument><argument>${drishti.modules.home}/first-party.yaml</argument>
-              </arguments>
             </configuration>
           </execution>
         </executions>

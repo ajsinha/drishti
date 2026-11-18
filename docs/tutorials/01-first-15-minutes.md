@@ -136,7 +136,7 @@ will also have a token that lets the command line talk to your server, which tut
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** In IntelliJ IDEA run **Drishti build all**, then in PyCharm run **Build demo lakes** ([IDE_GUIDE.md](../guides/IDE_GUIDE.md#3-build)).
+**In the UI.** In IntelliJ IDEA run **Drishti build all**, then in PyCharm run **Build demo lakes** ([IDE_GUIDE.md](../guides/IDE_GUIDE.md#13-the-maven-build-launchers)).
 
 **From the command line:**
 

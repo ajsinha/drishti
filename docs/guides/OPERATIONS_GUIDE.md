@@ -361,19 +361,19 @@ mvn -q clean package -DskipTests -pl :drishti-app -am    # the server and what i
 
 ### 3.2 IntelliJ IDEA: open, build, run and debug the server
 
-Opening the project, the run configurations, running and debugging the server: [IDE_GUIDE.md](IDE_GUIDE.md#2-open-the-projects).
+Opening the project, the run configurations, running and debugging the server: [IDE_GUIDE.md](IDE_GUIDE.md#12-open-the-root-pomxml-in-intellij-idea).
 
 ### 3.3 PyCharm: run and debug the console
 
-The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#22-pycharm-drishti-console) and [section 6.2](IDE_GUIDE.md#62-debug-the-console).
+The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-open-drishti-console) and [section 6.2](IDE_GUIDE.md#36-debug-the-console-pycharm).
 
 ### 3.4 Running the tests from the IDEs
 
-[IDE_GUIDE.md › Run the tests from the IDE](IDE_GUIDE.md#64-run-the-tests-from-the-ide).
+[IDE_GUIDE.md › Run the tests from the IDE](IDE_GUIDE.md#38-run-the-tests-from-the-ides).
 
 ### 3.5 The QA profile, end to end (no terminal)
 
-The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md › The QA profile, end to end](IDE_GUIDE.md#65-the-qa-profile-end-to-end-no-terminal).
+The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md › The QA profile, end to end](IDE_GUIDE.md#39-the-qa-profile-end-to-end-no-terminal).
 
 ## 4. Drishti on Windows
 
@@ -3219,7 +3219,7 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
 | `the server cannot start: … nothing names its folder`, `… is '…', a relative path`, `… holds no identity database` | a launch root not named, or named relative, or a data folder nobody named | name the roots absolutely: `tools/drishti.py start server` does, the run configurations pass `-Ddrishti.home` and the settings file; a new data folder must be named ([CONFIGURATION.md › Launch roots](../admin/CONFIGURATION.md#launch-roots)) |
-| A run configuration fails, is missing, or tests pass in a terminal but fail in the IDE | an IDE set-up issue | [IDE_GUIDE.md › Troubleshooting](IDE_GUIDE.md#8-troubleshooting) |
+| A run configuration fails, is missing, or tests pass in a terminal but fail in the IDE | an IDE set-up issue | [IDE_GUIDE.md › Troubleshooting](IDE_GUIDE.md#6-troubleshooting) |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |
 | `pack make` says no `drishti-server-*-exec.jar`; `lake build: ... pack.yaml: no such file` | the jar is not built; `--pack` is not the folder holding `pack.yaml` | build the jar; `--pack data/qa/packs/<name>/pack/<name>` |
 | Smoke or doctor says `401 DRS-5010 missing bearer token` | sign-in is on | make an API token ([2.8](#28-a-personal-api-token-for-the-command-line)) |

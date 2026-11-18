@@ -41,8 +41,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The one Java verifier, {@link ModuleCli}: a module generated from the SDK's archetype, compiled, packed by the one packager (Python,
- * {@code tools/modulepack.py}) and verified by the command, with exit codes and plain words for a good package, a changed file, a wrong
+ * The module tool, {@link ModuleCli}: a module generated from the SDK's archetype, compiled, packed by the one packager
+ * ({@code ModulePack}, as {@code module pack} runs it) and verified by the command, with exit codes and plain words for a good package, a changed file, a wrong
  * kernel range, a wrong kernel build, a module that breaks the rules and a first-party allowance.
  */
 class ModuleCliTest {
@@ -128,7 +128,8 @@ class ModuleCliTest {
         assertThat(cli("module")).isEqualTo(2);
         assertThat(cli("module", "verify", dmod.toString(), "--bogus")).isEqualTo(2);
         assertThat(cli("module", "verify", tmp.resolve("nothing.dmod").toString())).isEqualTo(2);
-        assertThat(cli("module", "pack", dmod.toString())).as("packing is Python's, not this command's").isEqualTo(2);
+        assertThat(cli("module", "pack", dmod.toString())).as("pack takes the module's folder, not a package").isEqualTo(1);
+        assertThat(err.toString()).contains("is not a folder: pack takes the module's folder");
     }
 
     @Test

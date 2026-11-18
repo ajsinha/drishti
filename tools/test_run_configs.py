@@ -15,12 +15,13 @@
 """Guard: the committed IDE run configurations work on Windows, macOS and Linux without editing.
 
 Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ opens the repository root and reads the Java ones in
-run-configs/ (with the consoles of each distribution, Drishti console (Risk), (Finance), (All), which run from the repository root);
-PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/. A Python run configuration uses
+run-configs/ (the Maven builds and the server launchers: no Python configuration at all, so IntelliJ needs neither Python nor its Python
+plugin); PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/ (the consoles, the distributions'
+consoles Drishti console (Risk), (Finance), (All) included, and the tools). A Python run configuration uses
 the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
 drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
 from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/architecture/TEST_HARNESS.md and
-docs/guides/OPERATIONS_GUIDE.md (Running from IntelliJ IDEA and PyCharm, section 4) rely on this.
+docs/guides/IDE_GUIDE.md rely on this.
 """
 import pathlib
 import unittest
@@ -44,35 +45,52 @@ class RunConfigs(unittest.TestCase):
     def test_there_are_run_configurations(self):
         self.assertGreaterEqual(len(CONFIGS), 10)
 
+    def test_intellij_holds_no_python_configuration(self):
+        """IntelliJ builds and runs the server with Java only: run-configs/ holds Maven builds and Java launchers, never a Python one."""
+        for f in JAVA:
+            conf = ET.parse(f).getroot().find("configuration")
+            self.assertIn(conf.get("type"), ("Application", "MavenRunConfiguration"), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
+            text = ET.tostring(conf, encoding="unicode")                 # what IntelliJ runs (a comment may name a PyCharm step)
+            self.assertNotIn("PythonConfigurationType", text, f"{f.name}: a before-launch step on a Python configuration")
+            self.assertNotIn("drishti.py", text, f.name)
+
     def test_python_configurations_use_the_project_interpreter(self):
         python = 0
-        for f in CONFIGS:
+        for f in PYTHON:
             conf = ET.parse(f).getroot().find("configuration")
-            if conf.get("type") != "PythonConfigurationType":
-                continue
+            self.assertEqual(conf.get("type"), "PythonConfigurationType", f"{f.name}: PyCharm's run-configs/ holds Python configurations")
             python += 1
             o = options(conf)
             self.assertEqual(o.get("SDK_HOME"), "", f"{f.name}: SDK_HOME must be empty (the project interpreter), not {o.get('SDK_HOME')}")
             self.assertEqual(o.get("IS_MODULE_SDK"), "false", f"{f.name}: IS_MODULE_SDK must be false (the project interpreter)")
-            if f in PYTHON:                                  # PyCharm's project, drishti-console/: the repository root is $PROJECT_DIR$/..
-                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
-                self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
-            elif f.name == "Drishti build server jar.run.xml":  # IntelliJ's build: the one way, drishti.py build jar (the jar into lib/)
-                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
-                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
-            elif f.name == "Drishti build modules.run.xml":     # IntelliJ's modules build: drishti.py build modules (the packages into <home>/modules)
-                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
-                self.assertIn("build modules", o.get("PARAMETERS"), f.name)
-            elif f.name == "Drishti build all.run.xml":         # IntelliJ's one-click build: drishti.py build all (the jar into lib/ and the packages)
-                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
-                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
-                self.assertTrue(o.get("PARAMETERS", "").endswith(" build all"), f.name)
-            else:                                            # the distributions' consoles beside the servers (run-configs/, the repository root)
-                self.assertTrue(f.name.startswith("Drishti console ("), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
-                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
-                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/drishti-console/run_drishti_web.py", f.name)
+            # PyCharm's project is drishti-console/: the repository root is $PROJECT_DIR$/..
+            self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
+            self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
             self.assertNotIn("/bin/python", f.read_text(encoding="utf-8"), f.name)
-        self.assertGreaterEqual(python, 10)
+            self.assertNotRegex(o.get("PARAMETERS", ""), r"\bbuild (jar|modules|all)\b", f"{f.name}: building is IntelliJ's (Maven) or the terminal's")
+        self.assertGreaterEqual(python, 15)
+
+    def test_the_distributions_consoles_are_pycharm_s(self):
+        for d in ("All", "Finance", "Risk"):
+            f = ROOT / "drishti-console" / "run-configs" / f"Drishti console ({d}).run.xml"
+            o = options(ET.parse(f).getroot().find("configuration"))
+            self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/run_drishti_web.py", f.name)
+            self.assertIn(f"--distribution={d.lower()}", o.get("PARAMETERS", ""), f.name)
+
+    def test_the_maven_builds_are_one_command_each_and_never_install(self):
+        """Drishti build all / server jar / modules: the Maven commands drishti.py build runs (Maven itself installs the jar into lib/ and
+        the packages into modules/)."""
+        want = {"Drishti build all": "clean package -DskipTests -pl :drishti-app,:drishti-modules -am",
+                "Drishti build server jar": "clean package -DskipTests -pl :drishti-app -am",
+                "Drishti build modules": "clean package -DskipTests -pl :drishti-modules -am -Pmodules-only"}
+        for name, goals in want.items():
+            conf = ET.parse(ROOT / "run-configs" / f"{name}.run.xml").getroot().find("configuration")
+            self.assertEqual(conf.get("type"), "MavenRunConfiguration", name)
+            self.assertEqual(conf.get("name"), name)
+            got = [o.get("value") for o in conf.find("MavenSettings").iter("option") if o.get("name") is None and o.get("value")]
+            self.assertEqual(" ".join(got), goals, name)
+            params = conf.find("MavenSettings").find("option[@name='myRunnerParameters']").find("MavenRunnerParameters")
+            self.assertEqual(options(params).get("workingDirPath"), "$PROJECT_DIR$", name)
 
     def test_application_configurations_run_from_the_repository_root(self):
         for f in CONFIGS:
@@ -125,16 +143,16 @@ def test_the_server_run_configurations_carry_the_domain_modules():
     for f in servers:
         assert '<module name="drishti-app" />' in f.read_text(encoding="utf-8"), f.name
     build = (folder / "Drishti build server jar.run.xml").read_text(encoding="utf-8")
-    # one way to build: `drishti.py build jar` (Maven clean package of drishti-app, then the jar into <home>/lib), so lib/ never goes stale
-    assert '$PROJECT_DIR$/tools/drishti.py' in build and 'build jar"' in build and "MavenRunConfiguration" not in build
+    # one way to build: Maven clean package of drishti-app, which installs the jar into <home>/lib, so lib/ never goes stale
+    assert "MavenRunConfiguration" in build and "drishti.py" not in build
 
 
 def test_the_debug_configuration_builds_the_modules_first_and_the_dev_switch_one_does_not():
-    """A module is a package beside the jar: the debug server builds them before it launches (python tools/drishti.py build modules);
+    """A module is a package beside the jar: the debug server builds them before it launches (the Maven "Drishti build modules");
     the dev switch configuration loads the module folders as they are (DRISHTI_MODULES_DEV) and builds nothing."""
     folder = ROOT / "run-configs"
     debug = (folder / "Drishti server (debug-friendly).run.xml").read_text(encoding="utf-8")
-    assert 'run_configuration_name="Drishti build modules"' in debug
+    assert 'run_configuration_name="Drishti build modules" run_configuration_type="MavenRunConfiguration"' in debug
     dev = (folder / "Drishti server (dev switch).run.xml").read_text(encoding="utf-8")
     assert 'name="DRISHTI_MODULES_DEV" value="true"' in dev and "RunConfigurationTask" not in dev
 

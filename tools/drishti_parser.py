@@ -106,9 +106,9 @@ def build_parser(h) -> argparse.ArgumentParser:
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
     # module -----------------------------------------------------------------------------------------------
-    mg = group("module", "Modules: pack a folder into a reproducible .dmod (tools/modulepack.py, Python only), verify a package and run the conformance checks C1-C14 (the server jar's own verifier), inspect one; run one module alone")
+    mg = group("module", "Modules: pack a folder into a reproducible .dmod, verify a package and run the conformance checks C1-C14, inspect one; run one module alone (the server jar's own packer and verifier)")
     mp = add(mg, "pack", h.cmd_module, "module pack: a module folder (module.yaml at its root) -> <out>/<id>-<version>.dmod, the same bytes on every run, plus its .sha256; "
-             "no Java needed", [],
+             "the one packer, inside the server jar in <Drishti folder>/lib", [],
              "examples:\n  drishti.py module pack modules/trading\n  drishti.py module pack build/greet --jar build/libs/greet.jar --out dist\n"
              "exit: 0 done, 1 refused (the reason in one line), 2 usage")
     mp.set_defaults(module_cmd="pack")
@@ -116,7 +116,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     mp.add_argument("--jar", action="append", default=[], type=pathlib.Path, dest="jars",
                     help="a jar of the module (repeatable): placed by the names module.yaml gives; the first unnamed one is the module's own")
     mp.add_argument("--out", type=pathlib.Path, help="the folder the .dmod is written to (default: <module>/target/dmod)")
-    mp.add_argument("--kernel-build", help="the kernel build to stamp in a first-party module (default: the server jar in <Drishti folder>/lib)")
+    mp.add_argument("--kernel-build", help="the kernel build to stamp in a first-party module (default: the build of the server jar that packs)")
     mp.add_argument("--kernel-jar", type=pathlib.Path, help="the server jar whose build is stamped (instead of --kernel-build)")
     for name, what in (("verify", "the package rules and API ranges of a .dmod (or --manifest-only for a folder); --conformance adds the checks C1-C14; exit 1 when one fails"),
                        ("check", "module verify --conformance: the conformance checks C1-C14 on a .dmod"),

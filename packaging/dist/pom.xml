@@ -27,19 +27,18 @@
   <artifactId>drishti-modules</artifactId>
   <packaging>pom</packaging>
   <name>drishti-modules</name>
-  <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): banking
-    (with its code and its kernel-internals allowance, stamped with the kernel build of this build), market-data, trading, capital-markets and
-    economy and genomics, each packed by the Python packager (tools/modulepack.py) into target/dmod/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
+  <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): all twelve
+    modules (banking with its code and its kernel-internals allowance, stamped with the kernel build of this build; market-data, trading and
+    genomics with their jars; capital-markets, economy and the six source-system modules from their folders), each packed by the one packer
+    (ModuleCli module pack, Java) into target/dmod/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
     Banking, market-data, trading and genomics (the modules with a server part) go through the fourteen conformance checks (ModuleCli verify) as part of the build.
-    Nothing here goes into the server jar: the packages are copied beside it by "python tools/drishti.py build modules" (into the install's modules folder).
-    Each is stamped for the kernel build of drishti.kernel.jar: the exec jar of this reactor by default, the jar in lib/ when "build modules" runs alone.</description>
+    Nothing here goes into the server jar: at package the packages are installed into the modules folder (drishti.home.modules, default
+    the repository's modules/), unless -Ddrishti.install.skip=true (the properties are the parent pom's).
+    Each is stamped for the kernel build of drishti.kernel.jar: the exec jar of this reactor by default, the jar in lib/ with -Pmodules-only.</description>
   <properties>
     <drishti.dmods>${project.build.directory}/dmod</drishti.dmods>
     <drishti.jars>${project.build.directory}/module-jars</drishti.jars>
     <drishti.repo>${project.basedir}/../..</drishti.repo>
-    <!-- the build of this kernel, stamped into a module with a kernel-internals allowance (never a default: the jar of this reactor) -->
-    <drishti.kernel.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
-    <drishti.python>python3</drishti.python>
     <skipTests>false</skipTests>
   </properties>
   <dependencies>
@@ -57,13 +56,6 @@
     <!-- the genomics sample ships with the product too (its server part: the showcase API its pages call) -->
     <dependency><groupId>org.helixlab</groupId><artifactId>genomics</artifactId><version>0.1.0</version><scope>provided</scope></dependency>
   </dependencies>
-  <profiles>
-    <profile>
-      <id>windows</id>
-      <activation><os><family>windows</family></os></activation>
-      <properties><drishti.python>python</drishti.python></properties>
-    </profile>
-  </profiles>
   <build>
     <plugins>
       <plugin>
@@ -89,7 +81,7 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- the packager is Python (tools/modulepack.py: the one packer), the verifier is Java (ModuleCli, in the server jar on this class path) -->
+        <!-- the one packer and the verifier, both ModuleCli of the server classes on this class path (module pack, first-party, verify, install) -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.6.3</version>
@@ -97,10 +89,10 @@
           <execution>
             <id>pack-banking</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/banking</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-banking.jar</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-compute-banking.jar</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/banking</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-banking.jar</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-compute-banking.jar</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -108,10 +100,10 @@
           <execution>
             <id>pack-market-data</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/market-data</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-market-data.jar</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/market-data</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-market-data.jar</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -119,10 +111,10 @@
           <execution>
             <id>pack-trading</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/trading</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-trading.jar</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/trading</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-trading.jar</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -130,10 +122,10 @@
           <execution>
             <id>pack-genomics</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/genomics</argument><argument>--jar</argument><argument>${drishti.jars}/genomics.jar</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/genomics</argument><argument>--jar</argument><argument>${drishti.jars}/genomics.jar</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -141,10 +133,10 @@
           <execution>
             <id>pack-capital-markets</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/capital-markets</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/capital-markets</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -152,10 +144,76 @@
           <execution>
             <id>pack-economy</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>pack</argument><argument>${drishti.repo}/modules/economy</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/economy</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-calypso</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-calypso</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-endur</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-endur</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-ici</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-ici</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-murex</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-murex</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-swapone</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-swapone</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-source-wss</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/source-wss</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
@@ -163,10 +221,10 @@
           <execution>
             <id>first-party</id>
             <phase>process-classes</phase>
-            <goals><goal>exec</goal></goals>
+            <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>${drishti.repo}/tools/modulepack.py</argument><argument>first-party</argument><argument>${drishti.dmods}</argument>
+                <argument>module</argument><argument>first-party</argument><argument>${drishti.dmods}</argument>
                 <argument>--out</argument><argument>${drishti.dmods}/first-party.yaml</argument>
               </arguments>
             </configuration>
@@ -221,9 +279,23 @@
               </arguments>
             </configuration>
           </execution>
+          <execution>
+            <!-- the install (on by default; -Ddrishti.install.skip=true leaves the packages in target/dmod): every package, or the ids of
+                 drishti.modules.ids, into the modules folder through a .part file and one replace, an older version of the same module removed,
+                 then first-party.yaml of that folder -->
+            <id>install-modules</id>
+            <phase>package</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <skip>${drishti.install.skip}</skip>
+              <arguments>
+                <argument>module</argument><argument>install</argument><argument>${drishti.dmods}</argument>
+                <argument>--into</argument><argument>${drishti.home.modules}</argument><argument>--only=${drishti.modules.ids}</argument>
+              </arguments>
+            </configuration>
+          </execution>
         </executions>
         <configuration>
-          <executable>${drishti.python}</executable>
           <mainClass>com.ash.drishti.server.cli.ModuleCli</mainClass>
           <blockSystemExit>true</blockSystemExit>
           <cleanupDaemonThreads>false</cleanupDaemonThreads>

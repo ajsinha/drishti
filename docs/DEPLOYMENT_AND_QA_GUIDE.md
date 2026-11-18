@@ -82,7 +82,7 @@ there waits and says so, and the rest works). The two can run on one machine or 
 | **Python 3.11 or newer** (the release is tested on 3.13) | python.org's installer for Windows (it adds the `py` launcher), or its embeddable ZIP with pip | the distribution's `python3` when 3.11+, else `uv python install 3.13` | `brew install python@3.13`, or `uv python install 3.13` |
 | The console's environment | made by `setup` with Python's own `venv` and `pip` (no other tool) | `setup` (with `uv` when installed, else `venv` and `pip`) | the same as Linux |
 | The commands | `py tools\drishti.py …` (or `python`) in PowerShell or `cmd` | `python3 tools/drishti.py …` | the same as Linux |
-| An IDE (optional) | IntelliJ IDEA (Community or Ultimate) for the server; PyCharm (or IntelliJ's Python plugin) for the console | the same | the same |
+| An IDE (optional) | IntelliJ IDEA (Community or Ultimate) to build and run the server, Java only (no Python, no Python plugin); PyCharm for the console and the tools | the same | the same |
 | **Memory** | 8 GB free for the demo (the server's heap 4 GB, the console about 1 GB); building the demo lake: 4 GB a loader job ([section 6](#6-build-the-demo-lake)) | the same | the same |
 | **Disk** | 5 GB free: the release about 1 GB (the committed test data 140 MB of it), the demo lake 3.4 GB | the same | the same |
 | Ports | 18480 and 17480 open on the machine's firewall for the people who use it | the same | the same |
@@ -136,11 +136,11 @@ Every jar lives under the install folder, in two places that never mix:
 | | `<drishti>/lib` | `<drishti>/lib/ext` |
 |---|---|---|
 | Holds | **Drishti's own** jar: the one `drishti-server-<version>-exec.jar` (every Java library is inside it) | **your site's** jars: JDBC drivers, connector plugins |
-| Put there by | the release, or `python tools/drishti.py build jar` (it builds and copies the jar there, removing an older one; `build all` does the jar and the modules) | you |
+| Put there by | the release, or the build (`python tools/drishti.py build jar`, or IntelliJ's **Drishti build server jar**: Maven installs the jar there, removing an older one; `build all` does the jar and the modules) | you |
 | On an upgrade | replaced with the release | kept: copy it into the new install |
 | Found by | every tool: `start`, `lake demo --engine java`, `doctor` (exactly one server jar: `start` refuses two) | the server at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`) |
 
-**Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run) makes them: Maven builds and packs the modules with Java, the one packer (`tools/modulepack.py`) packs the others, and each package goes in through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core). For a developer's own server, `start server --modules-dev` (`drishti.modules.dev`) loads the module folders as they are, unverified; it is refused in a cluster and under the `prod` profile.
+**Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run; in IntelliJ **Drishti build modules** and **Drishti build all**) makes them: Maven builds the modules' jars, packs every module with the one packer (`module pack` of the server classes, Java; no Python), and installs each package through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core). For a developer's own server, `start server --modules-dev` (`drishti.modules.dev`) loads the module folders as they are, unverified; it is refused in a cluster and under the `prod` profile.
 
 A jar found in the data folder's old `lib/` is moved into `lib/ext` once, at the first start that finds it, listed in the moved list, and
 **Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)).
@@ -383,7 +383,7 @@ environment (step 6), start again.
 
 ```bash
 cd /home/you/drishti
-python3 tools/drishti.py build all           # one Maven clean package: the jar copied into lib/, the module packages into modules/
+python3 tools/drishti.py build all           # one Maven clean package: it installs the jar into lib/, the module packages into modules/
 ls lib/ modules/                             # drishti-server-<version>-exec.jar  ext/ ; banking-1.0.0.dmod ... first-party.yaml
 ```
 
@@ -393,9 +393,12 @@ py tools\drishti.py build all
 dir lib modules
 ```
 
-It always builds with `clean` (an older jar never stays beside the new one), with the Java of the one lookup ([1.5](#15-environment-variables)),
-and copies the jar into `<drishti>/lib`, removing an older server jar there; Maven's own copy stays in `kernel/drishti-server/target/`.
-`--offline` runs Maven offline, `--no-copy` leaves the jar in `target/`, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-or-pycharm).
+It always builds with `clean` (an older jar never stays beside the new one), with the Java of the one lookup ([1.5](#15-environment-variables)).
+`build all` is one Maven command, `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, and the Maven build itself installs
+the jar into `<drishti>/lib` (removing an older server jar there) and the packages into `<drishti>/modules`; Maven's own copies stay in
+`kernel/drishti-server/target/` and `packaging/dist/target/dmod/`. So the same build runs with no Python at all: `./mvnw clean package
+-DskipTests -pl :drishti-app,:drishti-modules -am` (Windows `mvnw.cmd …`), or IntelliJ's **Drishti build all**.
+`--offline` runs Maven offline, `--no-copy` (`-Ddrishti.install.skip=true`) installs nothing, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-or-pycharm).
 
 **B. Copy a release** built elsewhere (Java bytecode is the same on every operating system). The release folder holds:
 
@@ -929,7 +932,7 @@ machine and on three machines, are in [section 11.6](#116-start-order-and-joinin
 |---|---|
 | `port 18480 is in use by another process` (exit 3) | another copy runs: `drishti.py status` (is it ours?), then `drishti.py stop server`; something else on the port: pick another with `--port` |
 | `no Java found` or `Drishti runs on Java 21 or newer; the java from … is Java …` | install Temurin JDK 21 and set `DRISHTI_JAVA_HOME` (it comes before `JAVA_HOME` and the `PATH`), or pass `--java-home`; on macOS `/usr/libexec/java_home -V` lists the JDKs |
-| `no server jar in <drishti>/lib` | `python3 tools/drishti.py build jar` (it builds the jar and copies it there), or pass `--jar` |
+| `no server jar in <drishti>/lib` | `python3 tools/drishti.py build jar` (Maven builds the jar and installs it there), or pass `--jar` |
 | `the modules beside the jar are not current` (a module named, with the command) | `python3 tools/drishti.py build modules <id>` (or `build all` after a new jar): a package is older than its module folder, missing, or stamped for another jar |
 | `DRISHTI_HOME is …, but these tools come from …` | `DRISHTI_HOME` (or `drishti.home` in the settings file) names another install: run that install's own `tools/drishti.py`, or unset it |
 | `already running (pid …)` (exit 3) | it is: `status` shows it; stop it first to restart |
@@ -999,7 +1002,7 @@ path to a site's own file (`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`; Window
 setting `drishti.distribution` (`--drishti.distribution=finance` as a server argument); on the console the setting `distribution`
 (`--distribution=finance` as a console argument). A console given its own keeps it whatever the server runs.
 
-**From the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#45-a-distribution-risk-finance-or-all) (**Two consoles against one server**, Risk on 17480 and Finance on 17481).
+**From the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-finance-or-all) (**Two consoles against one server**, Risk on 17480 and Finance on 17481).
 **You should see** Drishti Risk at `http://localhost:17480` and
 Drishti Finance at `http://127.0.0.1:17481`, each with its own top bar, theme and Help. Open the second by another host name (or in
 another browser profile): browsers share sign-in cookies across the ports of one host.
@@ -1009,7 +1012,7 @@ label: every distribution side by side, the running one first.
 
 ### 7.8 From IntelliJ IDEA or PyCharm
 
-The repository carries run configurations for IntelliJ IDEA (the server, the modules, the distributions) and PyCharm (the console and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`.
+The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`.
 
 The same four steps from a terminal:
 
@@ -1739,8 +1742,8 @@ $py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\
    `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its
    date is refused, with the name to give it.
 3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-or-pycharm)
-   (**Build server jar (into lib)**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, **Load ENDUR file into the
-   lake**). With PyCharm for the console, PyCharm opens `<drishti>\drishti-console` and IntelliJ `<drishti>`, never one folder in both
+   (IntelliJ: **Drishti build all**, **Drishti server (demo lakes)**; PyCharm: **Build demo lakes**, **Drishti console**, **Load ENDUR file
+   into the lake**). With PyCharm for the console, PyCharm opens `<drishti>\drishti-console` and IntelliJ `<drishti>`, never one folder in both
    (they overwrite each other's `.idea`; IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).
 
 ### 12.2 Put the data in place
@@ -1778,7 +1781,7 @@ antivirus scanning `data`).
 
 The business date comes from the file name; the pack's schema checks each trade; `--mode overwrite-dates` makes a repeat safe. The last
 line reads `lake-build ok exit=0 … kind=trade … rows=500 rejected=0 dates=1 …`; a non-zero `rejected` is explained, with the line, above
-it. Use full paths: a relative path is taken from the folder the command runs in. From the IDE: [IDE_GUIDE.md](guides/IDE_GUIDE.md#53-build-and-data-tools). With the
+it. Use full paths: a relative path is taken from the folder the command runs in. From the IDE: [IDE_GUIDE.md](guides/IDE_GUIDE.md#43-build-intellij-and-data-tools-pycharm). With the
 Java loader (every core, bounded memory) add `--engine java`
 ([CLI_REFERENCE.md › The parallel lake loader](guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)).
 

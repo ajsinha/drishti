@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 /**
  * Two small reads of a module's folder (or of an unpacked module) the verifier and the checks share: its {@code module.yaml}, and the
  * manifest-only verification (the manifest reads, its id and version are a project's, its jar names are jar names). Packing is not here:
- * the one packager is {@code tools/modulepack.py}.
+ * the one packager is {@link ModulePack}.
  */
 public final class ModuleFolder {
 

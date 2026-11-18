@@ -340,7 +340,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 python tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
-python tools/drishti.py build all
+python tools/drishti.py build all          # one Maven command; with no Python: ./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am
 # (optional) the Module SDK folder for module builders: <home>/sdk
 python tools/drishti.py build sdk
 

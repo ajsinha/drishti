@@ -30,6 +30,8 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
+    <!-- the one packager (ModuleFixtures.pack): optional, a test that packs modules has the module runtime on its class path -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><optional>true</optional></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>compile</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-api</artifactId><scope>compile</scope></dependency>
     <!-- the S3 simulators (com.ash.drishti.testkit.s3): optional, a test that uses them adds these itself -->

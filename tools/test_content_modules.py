@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """The product's modules as packages: every module folder without a server part (capital-markets, economy, the source-* modules) is packed
-by the one packager (tools/modulepack.py) and goes through the conformance checks C1-C14 of the server jar's verifier (ModuleCli, when the
-jar is built: python tools/drishti.py build jar); their manifests say what they require; a module with a server part is not packed without
+by the one packager and goes through the conformance checks C1-C14 (both ModuleCli of the server jar, when the jar is built:
+python tools/drishti.py build jar); their manifests say what they require; a module with a server part is not packed without
 its jar; and every module under modules/ with a java: block is in the set packaging/dist ships (or is listed here as not shipped, with the reason).
 """
 from __future__ import annotations
@@ -30,8 +30,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-import modulepack  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "launch"))
 import drishti  # noqa: E402
+import modulesbuild  # noqa: E402
+from procs import LaunchError  # noqa: E402
 
 MODULES = ROOT / "modules"
 CONTENT = ["capital-markets", "economy", "source-calypso", "source-endur", "source-ici", "source-murex", "source-swapone", "source-wss"]
@@ -64,6 +66,23 @@ def verifier_built() -> bool:
         return False
 
 
+def needs_packer() -> None:
+    if not verifier_built():
+        pytest.skip("needs the server jar in lib/ (python tools/drishti.py build jar) and a JDK: the packer is the jar's")
+
+
+def pack_module(folder: Path, out: Path) -> Path:
+    needs_packer()
+    return modulesbuild.pack(folder, out)
+
+
+def restricted_paths(folder: Path) -> list[str]:
+    """The files content.yaml of a module folder restricts (a licence keeps them out of the package), package-relative."""
+    f = folder / "content.yaml"
+    spec = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
+    return [str(e["path"]).strip("/") for e in spec.get("restricted") or []]
+
+
 def shipped_by_dist() -> set[str]:
     """The modules packaging/dist packs: its pack-<module> executions."""
     pom = (ROOT / "packaging/dist/pom.xml").read_text(encoding="utf-8")
@@ -72,9 +91,7 @@ def shipped_by_dist() -> set[str]:
 
 @pytest.mark.parametrize("mid", CONTENT)
 def test_a_content_module_is_packed_and_passes_the_fourteen_checks(mid, tmp_path):
-    if not verifier_built():
-        pytest.skip("needs the server jar in lib/ (python tools/drishti.py build jar) and a JDK")
-    dmod, _ = modulepack.pack(MODULES / mid, out=tmp_path)
+    dmod = pack_module(MODULES / mid, tmp_path)
     r = drishti.run_module_cli(type("A", (), {})(), ["verify", str(dmod), "--conformance", "--with", *shipped_requirements(mid, tmp_path)], capture=True)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "all 14 conformance checks passed" in r.stdout
@@ -87,7 +104,7 @@ def shipped_requirements(mid: str, tmp: Path) -> list[str]:
         stems = {req, req.replace("-", "")}                  # a package is named by its id, hyphens left out (capitalmarkets-1.0.0.dmod)
         built = sorted(f for d in (ROOT / "modules", ROOT / "packaging/dist/target/dmod") for st in stems for f in d.glob(f"{st}-[0-9]*.dmod"))
         if (MODULES / req / "module.yaml").is_file() and manifest(req).get("java") is None:
-            out.append(str(modulepack.pack(MODULES / req, out=tmp / "requires")[0]))
+            out.append(str(pack_module(MODULES / req, tmp / "requires")))
         elif built:
             out.append(str(built[-1]))
     if not out:
@@ -97,17 +114,17 @@ def shipped_requirements(mid: str, tmp: Path) -> list[str]:
 
 @pytest.mark.parametrize("mid", ["capital-markets", "economy"])
 def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
-    dmod, _ = modulepack.pack(MODULES / mid, out=tmp_path)
+    dmod = pack_module(MODULES / mid, tmp_path)
     with zipfile.ZipFile(dmod) as z:
         names = z.namelist()
         m = yaml.safe_load(z.read("module.yaml"))
         assert m.get("java") is None                                   # content only
-        assert modulepack.CONTENT_YAML not in names                      # the list itself is not packed
+        assert "content.yaml" not in names                      # the list itself is not packed
         for pack in (m.get("provides") or {}).get("kinds", {}):
             assert f"packs/{pack}/pack.yaml" in names, pack
             assert z.read(f"packs/{pack}/pack.yaml").decode() == (MODULES / mid / "packs" / pack / "pack.yaml").read_text(encoding="utf-8")
     # a restricted file (content.yaml, with its licence reason) is absent; every other sample of the pack travels
-    restricted = set(modulepack.restricted_paths(MODULES / mid))
+    restricted = set(restricted_paths(MODULES / mid))
     assert not restricted & set(names), sorted(restricted & set(names))
     for r in restricted:
         assert (MODULES / mid / r).is_file(), r
@@ -128,8 +145,8 @@ def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
 @pytest.mark.parametrize("mid", ["market-data", "trading", "banking", "genomics"])
 def test_a_module_with_a_server_part_is_not_packed_without_its_jar(mid, tmp_path):
     assert manifest(mid).get("java") is not None
-    with pytest.raises(modulepack.PackError):
-        modulepack.pack(MODULES / mid, out=tmp_path)
+    with pytest.raises(LaunchError, match="neither in the folder nor given"):
+        pack_module(MODULES / mid, tmp_path)
 
 
 def test_banking_is_not_a_carrier_of_the_market_data_pack():
@@ -153,6 +170,11 @@ def test_every_module_with_a_java_block_is_shipped_or_listed_as_not_shipped_with
     assert all(NOT_SHIPPED[m].strip() for m in NOT_SHIPPED)
     assert not (set(NOT_SHIPPED) & shipped), "listed as not shipped, but packaged"
     assert {"banking", "market-data", "trading", "genomics"} <= shipped
+
+
+def test_packaging_dist_packs_every_module_folder():
+    """One Maven run packs every module (Java, ModuleCli module pack): no module is packed anywhere else."""
+    assert shipped_by_dist() == {d.name for d in MODULES.iterdir() if (d / "module.yaml").is_file()}
 
 
 def test_dist_pom_has_a_check_for_every_module_with_a_server_part():

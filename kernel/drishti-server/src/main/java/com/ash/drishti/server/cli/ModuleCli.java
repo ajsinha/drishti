@@ -25,6 +25,7 @@ import com.ash.drishti.module.runtime.KernelFacts;
 import com.ash.drishti.module.runtime.KernelLibraries;
 import com.ash.drishti.module.runtime.ModuleCandidate;
 import com.ash.drishti.module.runtime.ModuleFolder;
+import com.ash.drishti.module.runtime.ModulePack;
 import com.ash.drishti.module.runtime.ModuleRefusedException;
 import com.ash.drishti.module.runtime.ModuleVerifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,11 +38,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * The one Java verifier of a module package, inside the server jar (no Spring, no web server):
- * {@code java -jar drishti-server-...-exec.jar module verify|inspect|visual ...}. The packager is Python ({@code tools/modulepack.py});
- * what only Java can answer is here, because it is the kernel's own code that decides: the package rules and the API ranges (V1, V2, V3, V5,
+ * The module tool inside the server jar (no Spring, no web server): {@code java -jar drishti-server-...-exec.jar module COMMAND ...}. It
+ * packs ({@link ModulePack}, the one packager), installs packages and the server jar into an install, says whether the packages are current,
+ * and verifies: the package rules and the API ranges (V1, V2, V3, V5,
  * V7, V8: {@link ModuleVerifier}), the origin and the kernel-internals allowance ({@link FirstParty}) and, with {@code --conformance}, the
  * fourteen conformance checks C1-C14 ({@link ModuleConformance}).
  *
@@ -50,12 +52,17 @@ import java.util.Map;
  * verify  FOLDER --manifest-only [--id ID] [--version V]          the manifest of a folder against a project's id and version
  * inspect FILE.dmod|FOLDER [--first-party FILE] [--kernel-build ID]   what the module is and holds, its origin and its hash list's verdict
  * visual  FOLDER --id ID --name NAME [--title T]                   adds a visual kind (an Elements extension) to a module folder
+ * pack    FOLDER [--jar JAR]... [--out DIR] [--kernel-build ID | --kernel-jar JAR]   the module folder into DIR/ID-VERSION.dmod (and .sha256)
+ * first-party FOLDER [--out FILE]                                  first-party.yaml of the packages in a folder
+ * fresh   MODULES [--kernel-jar JAR]                               the packages of a modules folder against their sources (and JAR's build)
+ * install DMODS --into MODULES [--only ID,ID]                      the packages into an install's modules folder, then its first-party.yaml
+ * install-jar JAR --into LIB                                       the server jar into an install's lib folder
  * </pre>
  *
  * {@code --with} names a module this one requires (repeat it, or comma-separate): installed beside it for C11, C13 and C14.
  * {@code --first-party} names the first-party list to verify against and {@code --kernel-build} the kernel build to check against (both
  * default to this jar's own; a build that makes the jar passes the list it has just made). Exit codes: 0 verified, 1 refused or a check
- * failed, 2 usage.
+ * failed, 2 usage. {@code fresh} exits 1 when a package is not current (each said in one line with the command that mends it).
  */
 public final class ModuleCli {
 
@@ -65,6 +72,11 @@ public final class ModuleCli {
               verify  FOLDER --manifest-only [--id ID] [--version V]                              the manifest of a folder
               inspect FILE.dmod|FOLDER                                                            what the module is and holds, its origin, its hash list
               visual  FOLDER --id ID --name NAME [--title T]                                      add a visual kind to a module folder
+              pack    FOLDER [--jar JAR]... [--out DIR] [--kernel-build ID | --kernel-jar JAR]    pack a module folder into DIR/ID-VERSION.dmod
+              first-party FOLDER [--out FILE]                                                     first-party.yaml of the packages in a folder
+              fresh   MODULES [--kernel-jar JAR]                                                  are the packages of a modules folder current
+              install DMODS --into MODULES [--only ID,ID]                                         packages into an install's modules folder
+              install-jar JAR --into LIB                                                          the server jar into an install's lib folder
             --first-party FILE  the first-party list to verify against; --kernel-build ID  the kernel build to check against
             exit: 0 verified, 1 refused or a check failed, 2 usage""";
 
@@ -107,26 +119,38 @@ public final class ModuleCli {
                 case "verify" -> verify(path, opts, out, err);
                 case "inspect" -> inspect(path, facts(opts), out);
                 case "visual" -> visual(path, opts, out, err);
+                case "pack" -> pack(path, opts, out, err);
+                case "first-party" -> {
+                    out.println("wrote " + ModulePack.firstParty(path, one(opts, "--out") == null ? null : Path.of(one(opts, "--out")).toAbsolutePath()));
+                    yield 0;
+                }
+                case "fresh" -> fresh(path, opts, out);
+                case "install" -> install(path, opts, out, err);
+                case "install-jar" -> installJar(path, opts, out, err);
                 default -> {
                     err.println("unknown command " + args[1]);
                     err.println(USAGE);
                     yield 2;
                 }
             };
-        } catch (ModuleRefusedException | IllegalArgumentException | IllegalStateException | UncheckedIOException e) {
+        } catch (ModuleRefusedException | ModulePack.PackException | IllegalArgumentException | IllegalStateException | UncheckedIOException e) {
             err.println("refused: " + e.getMessage());
             return 1;
         }
     }
 
     private static final List<String> FLAGS = List.of("--conformance", "--json", "--manifest-only");
-    private static final List<String> VALUED = List.of("--with", "--project", "--first-party", "--kernel-build", "--id", "--version", "--name", "--title");
+    private static final List<String> VALUED = List.of("--with", "--project", "--first-party", "--kernel-build", "--id", "--version", "--name", "--title",
+            "--jar", "--out", "--kernel-jar", "--into", "--only");
 
     private static Map<String, List<String>> options(String[] args) {
         Map<String, List<String>> out = new LinkedHashMap<>();
         for (int i = 3; i < args.length; i++) {
             if (FLAGS.contains(args[i])) {
                 out.computeIfAbsent(args[i], k -> new ArrayList<>());
+            } else if (args[i].contains("=") && VALUED.contains(args[i].substring(0, args[i].indexOf('=')))) {     // --only=a,b (empty allowed)
+                int eq = args[i].indexOf('=');
+                out.computeIfAbsent(args[i].substring(0, eq), k -> new ArrayList<>()).add(args[i].substring(eq + 1));
             } else if (VALUED.contains(args[i]) && i + 1 < args.length) {
                 out.computeIfAbsent(args[i], k -> new ArrayList<>()).add(args[++i]);
             } else {
@@ -232,6 +256,62 @@ public final class ModuleCli {
         } finally {
             quietDelete(work);
         }
+    }
+
+    private static int pack(Path folder, Map<String, List<String>> opts, PrintStream out, PrintStream err) {
+        String build = one(opts, "--kernel-build");
+        if (one(opts, "--kernel-jar") != null) {
+            if (build != null) {
+                err.println("give --kernel-build or --kernel-jar, not both");
+                return 2;
+            }
+            build = ModulePack.kernelBuildOfJar(Path.of(one(opts, "--kernel-jar")).toAbsolutePath());
+        }
+        List<Path> jars = opts.getOrDefault("--jar", List.of()).stream().map(j -> Path.of(j).toAbsolutePath()).toList();
+        Path dir = one(opts, "--out") == null ? null : Path.of(one(opts, "--out")).toAbsolutePath();
+        ModulePack.Packed p = ModulePack.pack(folder, jars, dir, build);
+        p.notes().forEach(n -> err.println("note: " + n));
+        try {
+            out.println("packed " + p.dmod() + " (" + Files.size(p.dmod()) + " bytes; the hash of every file in " + Dmod.HASHES + ")");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return 0;
+    }
+
+    private static int fresh(Path modules, Map<String, List<String>> opts, PrintStream out) {
+        String jar = one(opts, "--kernel-jar");
+        List<String> said = ModulePack.fresh(modules, jar == null ? null : Path.of(jar).toAbsolutePath());
+        said.forEach(out::println);
+        return said.isEmpty() ? 0 : 1;
+    }
+
+    private static int install(Path dmods, Map<String, List<String>> opts, PrintStream out, PrintStream err) {
+        if (one(opts, "--into") == null) {
+            err.println("install needs --into (the install's modules folder)");
+            return 2;
+        }
+        Path modules = Path.of(one(opts, "--into")).toAbsolutePath().normalize();
+        Set<String> only = new java.util.TreeSet<>();
+        for (String v : opts.getOrDefault("--only", List.of())) {
+            for (String s : v.split(",")) {
+                if (!s.isBlank()) {
+                    only.add(s.strip());
+                }
+            }
+        }
+        List<String> done = ModulePack.install(dmods, modules, only);
+        out.println(done.size() + " package(s) in " + modules + ": " + String.join(", ", done) + "; first-party.yaml written");
+        return 0;
+    }
+
+    private static int installJar(Path jar, Map<String, List<String>> opts, PrintStream out, PrintStream err) {
+        if (one(opts, "--into") == null) {
+            err.println("install-jar needs --into (the install's lib folder)");
+            return 2;
+        }
+        out.println("the server jar in " + ModulePack.installJar(jar, Path.of(one(opts, "--into")).toAbsolutePath().normalize()));
+        return 0;
     }
 
     private static int visual(Path folder, Map<String, List<String>> opts, PrintStream out, PrintStream err) {

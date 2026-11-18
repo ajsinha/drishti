@@ -100,7 +100,7 @@ class VarInstalledModuleRestartTest {
     }
 
     /**
-     * The module packed by the one packer (tools/modulepack.py) and dropped into a modules folder: {@code <modules>/banking-1.0.0.dmod}. Its
+     * The module packed by the one packer (ModulePack) and dropped into a modules folder: {@code <modules>/banking-1.0.0.dmod}. Its
      * jars are stand-ins: the test's server has banking's classes already.
      */
     static Path install(Path source, Path work, String... jarNames) throws Exception {

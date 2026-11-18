@@ -74,7 +74,7 @@ artifact id (`./mvnw -pl :drishti-server -am ...`), which works wherever its fol
 | `plugins/` | `drishti-connectors` and the thirteen `drishti-plugin-*` | the connectors: the light ones built in, one module; each with a driver or a native library a plugin of its own ([§1.2](#12-source-plugins)) |
 | `modules/` | `banking`, `market-data`, `capital-markets`, `economy`, `genomics` | the domain modules, each packed into a `.dmod` |
 | `drishti-sdk/` | `drishti-module-parent`, `drishti-module-archetype` | the Module SDK ([§1.6](#16-the-module-sdk)) |
-| `packaging/` | `drishti-app`, `dist` (`drishti-modules`), `drishti-elements` | what the build ships: the server jar (the kernel; no module in it), the first-party `.dmod` packages (`packaging/dist/target/dmod`, copied into `modules/` by `python tools/drishti.py build modules`), the Elements release |
+| `packaging/` | `drishti-app`, `dist` (`drishti-modules`), `drishti-elements` | what the build ships: the server jar (the kernel; no module in it), the first-party `.dmod` packages (`packaging/dist/target/dmod`, installed into `modules/` by the same Maven build), the Elements release |
 | `testing/` | `drishti-it`, `drishti-testkit`, `drishti-benchmarks` | repository-wide rules, the connector contract kit, the JMH benchmarks |
 
 **A module per subject, not per class group.** A small part is a package of its neighbour rather than a module of its own: the disk
@@ -100,7 +100,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-lakeload` | `lakeload`, `dataload`, `memlake` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)). The data inbox (package `dataload`): files dropped with a `.ready` marker, claimed, routed, loaded by the loader, recorded and moved to the outbox. The in-memory lake (package `memlake`, plain Java with no Spring, [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks; the server keeps only its Spring wiring (`server.memlake`, `server.dataload`). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget`, `dataload.DataInbox`, `memlake.MemoryLake`, `memlake.store.MemoryStores` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the conformance checks C1–C14 ([§1.6](#16-the-module-sdk): `module.conformance`, run by `ModuleCli` in the server jar). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `KernelLibraries`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
-| `drishti-sdk/drishti-module-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project and the parent it inherits, whose executions run the Python packager and the server jar's verifier (validate, pack the `.dmod`, the conformance checks C1–C14). | (none: the parent binds `exec-maven-plugin` to `tools/drishti.py module verify` and `module pack`) |
+| `drishti-sdk/drishti-module-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project and the parent it inherits, whose executions run the server jar's packer and verifier (validate, pack the `.dmod`, the conformance checks C1–C14). | (none: the parent binds `exec-maven-plugin` to `java -jar <server jar> module verify` and `module pack`) |
 | `modules/banking/java/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/java/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
 | `drishti-app` | (none) | The runnable jar, no code and no module: the kernel as `lib/drishti-server-<v>-exec.jar`. The modules are `.dmod` packages beside it in `modules/` (`build modules`, or `build all` for the jar and the modules); with none, Health says *no modules*. | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
@@ -237,24 +237,25 @@ A module is built apart from the kernel, against the kernel API (the design: [KE
 **A `.dmod` is a documented zip anyone can produce** ([KERNEL_AND_MODULES.md section 3](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)):
 `module.yaml` first, then the module's folders (`java/`, `console/`, `data/`, `packs/`, `docs/` …) and `META-INF/DMOD.MF`, the SHA-256 of
 every file. Any build that produces one is fine, **as long as it passes `check`** (the fourteen conformance checks below). Maven is one way,
-not the only one: the packer and the checks are one implementation in `drishti-module-runtime` (the packer is `tools/modulepack.py`, Python; the verifier is `ModuleCli` in the server jar), reached
+not the only one: the packer and the checks are one implementation in `drishti-module-runtime` (`ModulePack` packs, `ModuleVerifier` and the
+conformance checks verify), run by `ModuleCli` inside the server jar (`java -jar lib/drishti-server-<version>-exec.jar module pack|verify|inspect …`), reached
 three ways:
 
 | Way | For | Commands |
 |---|---|---|
-| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run `module verify --manifest-only`, `module pack`, `module verify --conformance` (set `DRISHTI_HOME` to your Drishti folder) |
-| **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `python3 tools/drishti.py module pack <folder> [--jar <jar>] [--out <dir>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
-| **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module verify <.dmod> --conformance`, `module inspect <.dmod>` (the last two run the server jar's verifier) |
+| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run the server jar's `module verify --manifest-only`, `module pack`, `module verify --conformance` with the Java that runs Maven (set `DRISHTI_HOME` to your Drishti folder; no Python) |
+| **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar <Drishti folder>/lib/drishti-server-<version>-exec.jar module pack <folder> [--jar <jar>] [--out <dir>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
+| **The command line** | Linux, macOS and Windows | `python3 tools/drishti.py module pack <folder>`, `module verify <.dmod> --conformance`, `module inspect <.dmod>`: each runs the same `module` command of the server jar |
 
-The verifier is `ModuleCli` inside the server jar (`<Drishti folder>/lib`, made by `python tools/drishti.py build jar`; `--jar` names another one). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
+The packer and the verifier are `ModuleCli` inside the server jar (`<Drishti folder>/lib`, made by the build; `drishti.py … --jar` names another one). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
 the jar named in `module.yaml`'s `java.jars` is either already under `java/` or given with `--jar`. `verify` takes a `.dmod` (a folder only with `--manifest-only`) and
 `--conformance` for C1–C14, `--project <dir>` (the sources C10 reads), `--with <.dmod>` (a module it requires); exit 0 when every check passed, 1 when one failed or
 the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict; `visual <folder> --id <module> --name <kind>` adds a visual. A Gradle build, for example. Run these from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`).
 
 ```bash
 gradle jar                                          # build/libs/greet.jar, compiled against drishti-kernel-api (compileOnly)
-python3 tools/drishti.py module pack . --jar java/greet/build/libs/greet.jar --out java/greet/build/dmod
-python3 tools/drishti.py module verify java/greet/build/dmod/greet-0.1.0.dmod --conformance --project .
+java -jar $DRISHTI_HOME/lib/drishti-server-*-exec.jar module pack . --jar java/greet/build/libs/greet.jar --out java/greet/build/dmod
+java -jar $DRISHTI_HOME/lib/drishti-server-*-exec.jar module verify java/greet/build/dmod/greet-0.1.0.dmod --conformance --project .
 ```
 
 For Maven the SDK is two more artifacts of this repository, `com.ash.drishti:*` at the product's version:
@@ -262,7 +263,7 @@ For Maven the SDK is two more artifacts of this repository, `com.ash.drishti:*` 
 | Artifact | What it is |
 |---|---|
 | `drishti-module-archetype` | makes a module in the one module layout that builds green on its first `mvn verify`: the `.dmod` content at the folder's top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/`), the code as the Maven project `java/<artifactId>/` with the aggregating `pom.xml` beside `java/`; a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
-| `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the `exec-maven-plugin` executions that run the packager and the verifier (`validate`: `module verify --manifest-only`; `package`: `module pack`; `verify`: `module verify --conformance`) |
+| `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the `exec-maven-plugin` executions that run the packager and the verifier of the install's server jar, `java -jar ${drishti.home}/lib/drishti-server-<version>-exec.jar module …` with the Java that runs Maven (`validate`: `module verify --manifest-only`; `package`: `module pack`; `verify`: `module verify --conformance`) |
 
 **The SDK folder.** A third party builds a module from the SDK alone, with no Drishti source. `python tools/drishti.py build sdk` (Java 21 and
 the install's Maven wrapper; it runs `package`, never `install`, so nothing reaches `~/.m2`) writes `<Drishti folder>/sdk/`:
@@ -305,7 +306,7 @@ Tomcat runs an unpacked web application; a change shows at the next start. The m
 # once: a development server (single node, never the prod or production profile): the module folders under modules/ load as they are, unverified
 python3 tools/drishti.py start server --modules-dev
 # the loop: edit, rebuild the module, restart the server
-python3 tools/drishti.py build modules greet      # the server log says "modules from the boot: ... greet" and Health marks it development (unverified)
+python3 tools/drishti.py build modules greet      # (or IntelliJ's Drishti build modules) the server log says "modules from the boot: ... greet" and Health marks it development (unverified)
 ```
 
 Development mode loads the folder **unverified** (no hash list, no checks), and Health and Admin → Modules mark
@@ -377,10 +378,10 @@ Pages and their routes come from the console part (`console/plugin.yaml` format 
 
 **First-party modules and the allowance** ([KERNEL_AND_MODULES.md section 3.3](../architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml)).
 The product's own modules say `origin: first-party`; the kernel believes it only when the module's id and the SHA-256 of its
-`META-INF/DMOD.MF` are in the `first-party.yaml` of the same build (`python3 tools/modulepack.py first-party DIR --out FILE` writes
-it; `packaging/dist` does in the build). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
+`META-INF/DMOD.MF` are in the `first-party.yaml` of the same build (`module first-party DIR --out FILE` of the server jar writes
+it; `packaging/dist` does in the build, and the install into `modules/` writes it again for the packages there). Only such a module may declare `kernel-internals:` (a list, or a file the packer writes in): its
 class loader then asks the kernel for those kernel packages too (never a library: every library the kernel ships reaches every module), C1 lets them through, and the packer stamps `kernel-build:`, the one kernel
-build it loads on (`module pack --kernel-build ID` or `--kernel-jar FILE`, default the server jar in `lib/`). Anything else is refused in words: an allowance
+build it loads on (`module pack --kernel-build ID` or `--kernel-jar FILE`, default the build of the server jar that packs). Anything else is refused in words: an allowance
 on a third-party module or on a first-party claim that does not verify (C1), or another kernel build ("built for kernel X, this is Y:
 install the matching module", V3). `module inspect` and `drishti.py module list` print the origin; Health's module rows carry it.
 `check --with a.dmod,b.dmod` installs the modules it requires beside it for the runtime checks; a module with an allowance is made with its
@@ -421,7 +422,7 @@ failure a sentence naming the file and the fix:
 | C13 Off means gone | switched off, every route answers 404 and nothing stays loaded |
 | C14 Absent everywhere | stopped, no contribution is left and the class loader is collected |
 
-`ModuleCliTest` (in `drishti-server`) runs these paths without Maven: it generates a module from the archetype's templates, compiles it, packs it with the Python packager, passes the fourteen checks through `ModuleCli`, adds a visual, and a broken copy fails the checks with their words.
+`ModuleCliTest` (in `drishti-server`) runs these paths without Maven: it generates a module from the archetype's templates, compiles it, packs it with the one packer (`ModulePack`), passes the fourteen checks through `ModuleCli`, adds a visual, and a broken copy fails the checks with their words.
 
 ### 1.7 A module's console part
 
@@ -557,7 +558,10 @@ Run them from the repository root.
 | You want to… | Command |
 |---|---|
 | Build everything, no tests | `./mvnw -q package -DskipTests` |
-| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl :drishti-app -am` |
+| Build the server jar and every module package, and install them into `lib/` and `modules/` (what `drishti.py build all` runs) | `./mvnw -q clean package -DskipTests -pl :drishti-app,:drishti-modules -am` |
+| Build only the server jar and install it into `lib/` (`build jar`) | `./mvnw -q clean package -DskipTests -pl :drishti-app -am` |
+| Build only the module packages, stamped for the jar already in `lib/` (`build modules`) | `./mvnw -q clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` |
+| Any of these without installing anything (`--no-copy`) | add `-Ddrishti.install.skip=true` |
 | Build and run every test and rule | `./mvnw -q verify` |
 | The same, without touching the network (what the drill runs) | `./mvnw -q -o verify` |
 | Build one module and what it needs | `./mvnw -q -pl :drishti-engine -am package -DskipTests` |
@@ -578,7 +582,11 @@ What the flags mean:
   because they hold no such test.
 
 The server jar is `lib/drishti-server-<version>-exec.jar` (the `exec` classifier is set on the
-`spring-boot-maven-plugin` in `kernel/drishti-server/pom.xml`). The plain `drishti-server-<version>.jar` beside it is the library jar, not the
+`spring-boot-maven-plugin` of `packaging/drishti-app`, which writes it to `kernel/drishti-server/target` and installs it into `lib/` at
+`package`, through a `.part` file and one rename, any other server jar there removed; `-Ddrishti.install.skip=true` leaves it in `target/`).
+`packaging/dist` packs every module with the server classes' `module pack` (Java, no Python), runs the conformance checks of the
+modules with a server part, and installs the packages and `first-party.yaml` into `modules/` the same way (an older version of a module removed;
+`-Ddrishti.modules.ids=a,b` installs only those). A full `./mvnw package` installs as well. The plain `drishti-server-<version>.jar` beside it is the library jar, not the
 application.
 
 > **Note:** tests read the same `${ENV:default}` placeholders as the running server. Run Maven in a shell where `DRISHTI_PACKS`,
@@ -777,7 +785,7 @@ that is the machine, not the drill.
 
 ### Your settings file for the IDE launchers
 
-Every IDE launcher passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini`: [IDE_GUIDE.md › What you need](IDE_GUIDE.md#1-what-you-need). Create it once from the example:
+Every IDE launcher passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini`: [IDE_GUIDE.md › What you need](IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini). Create it once from the example:
 
 ```
 mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini    # then edit the /path/to/... placeholders
@@ -1846,7 +1854,7 @@ level for Drishti's packages with Spring's usual environment form:
 LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar lib/drishti-server-*-exec.jar
 ```
 
-The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). To debug the server from the IDE: [IDE_GUIDE.md › Debug the server](IDE_GUIDE.md#61-debug-the-server).
+The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). To debug the server from the IDE: [IDE_GUIDE.md › Debug the server](IDE_GUIDE.md#35-debug-the-server-intellij).
 
 ### 7.3 Debugging a live view
 

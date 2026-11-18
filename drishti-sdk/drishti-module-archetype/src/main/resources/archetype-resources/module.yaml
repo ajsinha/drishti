@@ -1,4 +1,4 @@
-# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (drishti.py module verify --manifest-only).
+# The module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3). Its id and version are the pom's (module verify --manifest-only).
 format: 1
 id: ${artifactId}
 version: ${version}

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The banking module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 3.3): first-party, with the code of
-# modules/banking/java/banking-service and banking-compute, packed by tools/modulepack.py into banking-1.0.0.dmod in the normal build.
+# modules/banking/java/banking-service and banking-compute, packed by the one packer (module pack, Java) into banking-1.0.0.dmod in the normal build.
 format: 1
 id: banking
 version: 1.0.0

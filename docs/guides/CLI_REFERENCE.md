@@ -276,7 +276,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 | PyYAML | `pack`, `data ingest`, `design create --from-sutra` | `python3 -c "import yaml"` |
 | `deltalake` and `pyarrow` | `data ingest --store delta`, `pack new --lake` | only when you write a Delta lake |
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
-| the exec jar `lib/drishti-server-<version>-exec.jar` | the same | `python tools/drishti.py build jar` (builds with Maven, copies the jar into `<home>/lib`), or pass `--jar` for a one-off run |
+| the exec jar `lib/drishti-server-<version>-exec.jar` | the same | `python tools/drishti.py build jar` (Maven builds it and installs it into `<home>/lib`), or pass `--jar` for a one-off run |
 | `openssl` | `pack keygen` | `openssl version` |
 | Playwright | `docs shots` | see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 
@@ -1282,20 +1282,21 @@ the installed and loaded versions.)
 ### `module pack`, `module verify`, `module check`, `module inspect`, `module visual`: a module package without Maven
 
 `pack` turns a module folder (`module.yaml` at its root, its jar under `java/` or given with `--jar`) into `<out>/<id>-<version>.dmod` and
-its `.sha256`. It is the Python packager (`tools/modulepack.py`): no Java and no Maven are needed, and the package is reproducible, the same
+its `.sha256`. It is the one packer, `module pack` of the server jar (`ModuleCli`, the same Java the Maven build runs; `java -jar
+lib/drishti-server-<version>-exec.jar module pack …` does exactly what this command does), and the package is reproducible, the same
 bytes on every run (`module.yaml` first and stored, every other entry sorted by name, every entry timed 1980-01-01 00:00, mode 0644, the hash
 list `META-INF/DMOD.MF` last). `--jar` may be given more than once (a jar is placed by the name `module.yaml` gives in `java.jars` or
 `java.lib`; the first unnamed one is the module's own); `--out` defaults to `<module>/target/dmod`. A first-party module with a
 `kernel-internals:` allowance is stamped with one kernel build: `--kernel-build BUILD`, or `--kernel-jar FILE` (the server jar whose
-`build-info.properties` says it), by default the server jar in `<Drishti folder>/lib`.
+`build-info.properties` says it), by default the build of the server jar that packs.
 
-`verify` is the one Java verifier, `ModuleCli` inside the server jar (`<Drishti folder>/lib`, made by `build jar`; `--jar` names another): it
+`verify` is the one verifier, `ModuleCli` inside the same server jar (`<Drishti folder>/lib`, made by `build jar`; `--jar` names another): it
 checks a `.dmod` against the package rules and this kernel's API ranges (the hash list, no executables, the licence, the data needs, the origin
 and the kernel-internals allowance), and with `--conformance` runs the checks C1–C14 (`--project DIR` gives C10 the Java sources, `--with FILE`
 the modules it requires, `--first-party FILE` and `--kernel-build ID` the list and build to check against; `--json` prints the verdict). On a
 folder `verify --manifest-only [--id ID] [--version V]` reads the manifest only. `check` is `verify --conformance`; `inspect` says what a
 package is and whether its files match its hash list; `visual FOLDER --id ID --name NAME` adds a visual kind to a module folder. Exit 0 verified,
-1 refused or a check failed, 2 usage. Packing stays Python's: `verify` never packs a folder.
+1 refused or a check failed, 2 usage. `verify` never packs a folder; `pack` takes a folder, never a package.
 
 ```bash
 python3 tools/drishti.py module pack modules/trading --jar build/drishti-trading.jar
@@ -1305,6 +1306,15 @@ python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
 ```
 
 Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
+
+The server jar's `module` command has four more verbs, the ones the Maven build and the launchers run (`java -jar lib/drishti-server-<version>-exec.jar module …`):
+
+| Verb | What it does |
+|---|---|
+| `first-party FOLDER [--out FILE]` | writes `first-party.yaml` for every `.dmod` in a folder: id, version and the SHA-256 of its `META-INF/DMOD.MF`, under the licence header of the nearest `config/license-header.txt` above it |
+| `fresh MODULES [--kernel-jar JAR]` | the packages of a modules folder against their module folders, by content, never by time (a changed, new or removed file; with `--kernel-jar`, a package stamped for another kernel build); one line each with the command that mends it, exit 1 when there is one. `start server`, `start cluster` and the test sessions ask it |
+| `install DMODS --into MODULES [--only ID,ID]` | the packages of a folder into an install's modules folder, each through a `.part` file and one replace, an older version of the same module removed (`banking-1.0.0`, never `banking-risk-1.0.0`), then `first-party.yaml` of that folder |
+| `install-jar JAR --into LIB` | the server's exec jar into an install's `lib/` the same way, any other `drishti-server-*-exec.jar` there removed; `lib/ext` is never touched |
 
 ### `module list` and `module run`: the modules folder, and one module alone
 
@@ -2687,13 +2697,15 @@ filled in (an existing file is never overwritten), makes `drishti-console/.venv`
 | `--skip-venv` | leave `drishti-console/.venv` alone |
 | `--reinstall` | remake `drishti-console/.venv` and install `drishti-console/requirements.txt` |
 
-**`build jar`** runs Maven (`clean package`, never `install`) with the install's Maven wrapper and copies the server's exec jar into
-`<home>/lib`, where every start finds it (the newest jar there). Options: `--java-home DIR`, `--offline` (Maven `-o`), `--no-copy` (leave
-the jar in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing). It says which modules are missing or stale for the new jar.
+**`build jar`** runs one Maven command, `clean package -DskipTests -pl :drishti-app -am` (never `install`), with the install's Maven
+wrapper; the build itself installs the server's exec jar into `<home>/lib` (`-Ddrishti.home.lib`), where every start finds it, replacing
+any other server jar there (`lib/ext` is never touched). Options: `--java-home DIR`, `--offline` (Maven `-o`), `--no-copy`
+(`-Ddrishti.install.skip=true`: the jar stays in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing). It
+says which modules are missing or stale for the new jar.
 
 **`build sdk`**: the Module SDK folder `<home>/sdk` (`repo/`, a Maven file repository with the kernel API, the product's parent pom, `drishti-module-parent` and the archetype; `settings.xml` naming it by absolute path; `drishti-module-parent/pom.xml`), so a module is built from it with no Drishti source ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)). Maven runs `package`, never `install`. Options: `--java-home DIR`, `--offline`, `--dry-run`.
 
-**`build modules [ID ...]`** and **`build all`**: the server jar holds no module; each is a package `<id>-<version>.dmod` in `<home>/modules` with `first-party.yaml` beside them. `build modules` runs Maven (`clean package -DskipTests -pl :drishti-modules -am`) for the modules with Java, stamped for the jar in `<home>/lib`, packs the others with the one packer (`tools/modulepack.py`, no Maven; naming only such modules builds without Maven), puts every package in through a `.part` file and one replace (an older file of the same module is removed), and writes `first-party.yaml`. `build all` is one Maven run of the jar and the modules (`-pl :drishti-app,:drishti-modules -am`), everything stamped for the jar it builds, then the jar into `lib/` and the packages into `modules/`. Options: `--java-home DIR`, `--offline`, `--dry-run`; `build modules --no-maven` takes the Java modules' packages from `packaging/dist/target/dmod` (the drill's gate); `build all --no-copy`. A package whose module folder changed, or that is stamped for another jar, is *stale*: `start server`, `start cluster` and a test session refuse it, naming the module and the command.
+**`build modules [ID ...]`** and **`build all`**: the server jar holds no module; each is a package `<id>-<version>.dmod` in `<home>/modules` with `first-party.yaml` beside them. Each is one Maven command (no Python runs in it): `build modules` is `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` (the packages stamped for the jar already in `<home>/lib`; no new jar), `build all` is `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` (the jar and the packages, everything stamped for the jar it builds). `packaging/dist` packs every module with the one packer (`module pack`), runs the conformance checks of the modules with a server part, and installs the packages into `<home>/modules` (`-Ddrishti.home.modules`): each through a `.part` file and one replace, an older file of the same module removed, then `first-party.yaml`; `build all` installs the jar into `lib/` too. Named ids install only those packages (`-Ddrishti.modules.ids=a,b`). Options: `--java-home DIR`, `--offline`, `--dry-run`, `--no-copy` (`-Ddrishti.install.skip=true`: nothing installed; the jar stays in `kernel/drishti-server/target`, the packages in `packaging/dist/target/dmod`). IntelliJ IDEA runs the same three commands as the Maven configurations **Drishti build all**, **Drishti build server jar** and **Drishti build modules** ([IDE_GUIDE.md](IDE_GUIDE.md#13-the-maven-build-launchers)). A package whose module folder changed, or that is stamped for another jar, is *stale*: `start server`, `start cluster` and a test session refuse it, naming the module and the command.
 
 **`start server|console|all|cluster`** and **`stop server|console|all|cluster`**:
 
@@ -3995,7 +4007,6 @@ of Parquet.
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`<version>`), `--tag` the release tag (`v<version>`, an i-step written `i_<n>`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
-| `tools/modulepack.py` | the one module packager: `pack FOLDER [--jar FILE]… [--out DIR] [--kernel-build BUILD]` writes `<id>-<version>.dmod` (module.yaml first, every other entry sorted, fixed times, a `META-INF/DMOD.MF` hash list: the same bytes on every run), `first-party HOME/modules` writes `first-party.yaml` (the SHA-256 of each package's `DMOD.MF`); Python only packs, the one verifier is Java (`Dmod`) |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |
 | `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the pinned Drishti Elements, the folder under `static/vendor/drishti-elements/`): the pack generators write it into a module's `elements:` |
@@ -4100,7 +4111,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 
 ### Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 
-Run and debug the tools from PyCharm, and the Java `sutra` from IntelliJ IDEA: [IDE_GUIDE.md › Run and debug the command-line tools](IDE_GUIDE.md#9-run-and-debug-the-command-line-tools).
+Run and debug the tools from PyCharm, and the Java `sutra` from IntelliJ IDEA: [IDE_GUIDE.md › Run and debug the command-line tools](IDE_GUIDE.md#7-run-and-debug-the-command-line-tools).
 
 ## 18. Recipes
 
@@ -4351,4 +4362,4 @@ Some commands add codes of their own, each named in its section:
 
 ## 14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 
-Run and debug the tools from PyCharm, and the Java `sutra` from IntelliJ IDEA: [IDE_GUIDE.md › Run and debug the command-line tools](IDE_GUIDE.md#9-run-and-debug-the-command-line-tools).
+Run and debug the tools from PyCharm, and the Java `sutra` from IntelliJ IDEA: [IDE_GUIDE.md › Run and debug the command-line tools](IDE_GUIDE.md#7-run-and-debug-the-command-line-tools).

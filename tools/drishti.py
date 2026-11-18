@@ -145,11 +145,19 @@ def run_module_cli(a: argparse.Namespace, args: list[str], capture: bool = False
 
 
 def cmd_module(a, extra) -> int:
-    """`module pack` is the Python packager (tools/modulepack.py); `module verify|check|inspect|visual` run ModuleCli, the verifier
-    inside the server jar (`python tools/drishti.py build jar` makes it)."""
+    """`module pack|verify|check|inspect|visual` run ModuleCli, the one packer and verifier inside the server jar in <home>/lib
+    (`python tools/drishti.py build jar` makes it)."""
     if a.module_cmd == "pack":
-        a.cmd = "pack"                                           # the one packager: Python, tools/modulepack.py (no Java, no second copy)
-        return load_module("modulepack", "modulepack.py").run(a)
+        args = ["pack", absolute(a.path)]
+        for j in a.jars:
+            args += ["--jar", absolute(j)]
+        if a.out:
+            args += ["--out", absolute(a.out)]
+        if a.kernel_build:
+            args += ["--kernel-build", a.kernel_build]
+        if a.kernel_jar:
+            args += ["--kernel-jar", absolute(a.kernel_jar)]
+        return run_module_cli(a, args).returncode
     verb = {"check": "verify"}.get(a.module_cmd, a.module_cmd)
     args = [verb, absolute(a.path)]
     if a.module_cmd == "check":

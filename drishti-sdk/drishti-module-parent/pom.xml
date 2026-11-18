@@ -16,8 +16,8 @@
 -->
 <!-- The parent every module project inherits (docs/architecture/KERNEL_AND_MODULES.md section 8.1). It stands alone (it does not
      inherit the kernel's build): Java 21, the kernel API and Spring as `provided` (the kernel supplies them at run time; never inside a
-     .dmod), JUnit for the module's tests, and exec-maven-plugin bound to the lifecycle: validate (manifest), package (the Python packager packs the .dmod),
-     verify (the conformance checks C1-C14 of the server jar's own verifier). Its version is the kernel's: a module built against this kernel version runs on kernel API 0.2. -->
+     .dmod), JUnit for the module's tests, and exec-maven-plugin bound to the lifecycle: validate (manifest), package (the one packer packs the .dmod),
+     verify (the conformance checks C1-C14): each is the install's server jar (java -jar <home>/lib/drishti-server-VERSION-exec.jar module ...), no Python. Its version is the kernel's: a module built against this kernel version runs on kernel API 0.2. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ash.drishti</groupId>
@@ -31,9 +31,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <drishti.sdk.version>${revision}</drishti.sdk.version>
-    <!-- the Drishti install the module is packed and verified with (its tools/ folder and lib/ server jar); the module's folder is two up -->
+    <!-- the Drishti install the module is packed and verified with (its lib/ server jar); the module's folder is two up -->
     <drishti.home>${env.DRISHTI_HOME}</drishti.home>
-    <drishti.python>python3</drishti.python>
+    <!-- the java that runs the server jar's module tool: the one running Maven (Java 21+); its server jar: the install's, of this SDK's version -->
+    <drishti.java>${java.home}/bin/java</drishti.java>
+    <drishti.server.jar>${drishti.home}/lib/drishti-server-${drishti.sdk.version}-exec.jar</drishti.server.jar>
     <!-- the SDK folder of that install (python tools/drishti.py build sdk): its Maven file repository holds the kernel API this module compiles against -->
     <drishti.sdk.repo>${drishti.home}/sdk/repo</drishti.sdk.repo>
     <drishti.sdk.repo.url>file://${drishti.sdk.repo}</drishti.sdk.repo.url>
@@ -77,7 +79,7 @@
     <profile>
       <id>windows</id>
       <activation><os><family>windows</family></os></activation>
-      <properties><drishti.python>python</drishti.python><drishti.sdk.repo.url>file:///${drishti.sdk.repo}</drishti.sdk.repo.url></properties>
+      <properties><drishti.java>${java.home}/bin/java.exe</drishti.java><drishti.sdk.repo.url>file:///${drishti.sdk.repo}</drishti.sdk.repo.url></properties>
     </profile>
   </profiles>
 
@@ -107,15 +109,15 @@
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
         <!-- the kernel's build runs spotless:check on every module of its reactor (this pom included); a module project may use it too -->
         <plugin><groupId>com.diffplug.spotless</groupId><artifactId>spotless-maven-plugin</artifactId><version>3.10.2</version></plugin>
-        <!-- a module project names exec-maven-plugin in its <build><plugins> (the archetype does): these executions then apply. The packager
-             and the verifier are the Drishti install's: tools/drishti.py module pack (Python) and module verify (the server jar's own
-             verifier); drishti.home is the folder of that install (its tools/ and lib/) -->
+        <!-- a module project names exec-maven-plugin in its <build><plugins> (the archetype does): these executions then apply. The packer
+             and the verifier are the Drishti install's: module pack and module verify of its server jar (drishti.server.jar, in the lib/ of
+             drishti.home), run by drishti.java -->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
           <version>3.6.3</version>
           <configuration>
-            <executable>${drishti.python}</executable>
+            <executable>${drishti.java}</executable>
           </configuration>
           <executions>
             <execution>
@@ -124,7 +126,7 @@
               <goals><goal>exec</goal></goals>
               <configuration>
                 <arguments>
-                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>verify</argument>
+                  <argument>-jar</argument><argument>${drishti.server.jar}</argument><argument>module</argument><argument>verify</argument>
                   <argument>${drishti.dmod.source}</argument><argument>--manifest-only</argument>
                   <argument>--id</argument><argument>${project.artifactId}</argument><argument>--version</argument><argument>${project.version}</argument>
                 </arguments>
@@ -136,7 +138,7 @@
               <goals><goal>exec</goal></goals>
               <configuration>
                 <arguments>
-                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>pack</argument>
+                  <argument>-jar</argument><argument>${drishti.server.jar}</argument><argument>module</argument><argument>pack</argument>
                   <argument>${drishti.dmod.source}</argument><argument>--jar</argument><argument>${project.build.directory}/${project.build.finalName}.jar</argument>
                   <argument>--out</argument><argument>${project.build.directory}/dmod</argument>
                 </arguments>
@@ -149,7 +151,7 @@
               <configuration>
                 <skip>${drishti.conformance.skip}</skip>
                 <arguments>
-                  <argument>${drishti.home}/tools/drishti.py</argument><argument>module</argument><argument>verify</argument>
+                  <argument>-jar</argument><argument>${drishti.server.jar}</argument><argument>module</argument><argument>verify</argument>
                   <argument>${project.build.directory}/dmod/${project.artifactId}-${project.version}.dmod</argument><argument>--conformance</argument>
                   <argument>--project</argument><argument>${project.basedir}</argument>
                 </arguments>

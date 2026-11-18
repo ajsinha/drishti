@@ -323,14 +323,10 @@ gate_java() {
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
-  # <home>/lib is the one place every tool finds the server jar: the newest exec jar is copied there
-  # and it REPLACES any other server jar there (lib/ holds exactly one; lib/ext is the site's and never touched)
-  local built; built=$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)
-  mkdir -p lib && find lib -maxdepth 1 -name 'drishti-server-*-exec.jar' ! -name "$(basename "$built")" -delete \
-    && cp -f "$built" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
-  # the modules are packages beside the jar: the build just made the Java ones (packaging/dist/target/dmod, stamped for this very exec jar);
-  # the packer packs the others; all go into modules/ with first-party.yaml (refused when not stamped for the jar now in lib/)
-  python3 tools/drishti.py build modules --no-maven || { echo "drill: the gate's build left the modules unbuilt: no packages in modules/" >&2; return 1; }
+  # the build itself installed the exec jar into lib/ (it replaces any other server jar there; lib/ext is the site's) and every module's
+  # package with first-party.yaml into modules/, stamped for that very jar (packaging/drishti-app and packaging/dist, no Python)
+  compgen -G 'lib/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build installed no server jar into lib/" >&2; return 1; }
+  [[ -f modules/first-party.yaml ]] && compgen -G 'modules/*.dmod' >/dev/null || { echo "drill: the gate's build left the modules unbuilt: no packages in modules/" >&2; return 1; }
   : > "$LOGS/gate-jar.ready"   # the gate's checks that run the jar wait for this
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
@@ -465,7 +461,7 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
     JAVA_HOME="$jdk" ./mvnw -q -o clean package -DskipTests ${DRILL_MVN_ARGS:-} || return $?
     after 7200 "$COPY_THEN_WAIT"; echo "drill: $name tests start at $(date +%T)"; goals=(verify)
   fi
-  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 -Ddrishti.test.requires-python=true "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
   local flaky
   flaky=$(grep -l -E '<flaky(Failure|Error)' $(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null) /dev/null 2>/dev/null \
           | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u || true)

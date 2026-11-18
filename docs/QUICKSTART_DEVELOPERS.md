@@ -61,7 +61,7 @@ On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
-**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#1-what-you-need)).
+**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
 `requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md).
 
 ## 2. Build the server
@@ -71,7 +71,7 @@ python tools/drishti.py build all        # Windows: py tools\drishti.py build al
 ls lib/*-exec.jar modules/*.dmod
 ```
 
-**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs `mvnw clean package` for the server and the modules, copies the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network). The first build downloads
+**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs one `mvnw clean package` for the server and the modules, and the Maven build itself installs the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the same command with no Python: `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, or IntelliJ's **Drishti build all**) (the jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network). The first build downloads
 its libraries (several minutes); later ones take about a minute. `-pl :drishti-app,:drishti-modules -am` builds the jar that runs (the kernel and the plugins) and the module packages, and only what they need; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands).
 
@@ -125,7 +125,7 @@ module: what the drill, the page walk and the tutorials use.
 `python tools/drishti.py status` shows each process's distribution; Admin → White label shows them all side by side. The
 setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
 
-**In the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#45-a-distribution-risk-finance-or-all). Every step, Linux, macOS and Windows:
+**In the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-finance-or-all). Every step, Linux, macOS and Windows:
 [DEPLOYMENT_AND_QA_GUIDE.md › 7.7](DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## 4. The repository map
