@@ -55,15 +55,15 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
                                   "another install's folder is refused)")
     for flag, kw in common:
         p.add_argument(flag, **kw)
-    p.add_argument("--demo", action="store_true", help="the offline demo on the lakes, with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION")
+    p.add_argument("--demo", action="store_true", help="the demo profile, config/profiles/demo.ini (the offline demo on the lakes; the same file the IDE's demo launcher names), with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION")
     p.add_argument("--distribution", metavar="NAME", help="risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION); docs/architecture/DISTRIBUTIONS.md")
     p.add_argument("--background", action="store_true", help="detach: log and pid file under the data folder (logs/, run/)")
     if what == "server":
-        p.add_argument("--port", type=int, help="the server's port (default DRISHTI_PORT, else 18480)")
-        p.add_argument("--heap", metavar="SIZE", help="the heap limit, -Xmx (default 2g; 4g with --demo)")
+        p.add_argument("--port", type=int, help="the server's port (default server.port of the settings files, else DRISHTI_PORT, else 18480)")
+        p.add_argument("--heap", metavar="SIZE", help="the heap limit, -Xmx (default drishti.launch.heap of the settings files: 4g in the demo profile; else 2g)")
         p.add_argument("--jar", metavar="FILE", help="a server jar for a one-off run (default the newest in <home>/lib: drishti.py build jar)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
-        p.add_argument("--packs", metavar="LIST", help="the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)")
+        p.add_argument("--packs", metavar="LIST", help="the packs to load, beating any settings file (default drishti.packs.enabled of the settings files, else DRISHTI_PACKS, else the packs of the modules that are on)")
         p.add_argument("--engine", help="the Delta engine: native, hadoop or auto (DRISHTI_DELTA_ENGINE)")
         p.add_argument("--lake-root", metavar="DIR", help="the Delta lake root (DRISHTI_DELTA_ROOT)")
         p.add_argument("--iceberg", action="store_true", help="serve the stores from Iceberg tables: the connectors folder is config/connectors.examples/iceberg (settings only; nothing is written)")
@@ -304,6 +304,14 @@ def register(groups, add) -> None:
         c.add_argument("--data-dir", metavar="DIR", help="the data folder (default DRISHTI_DATA_DIR, else <home>/data)")
         c.add_argument("names", nargs="*", help='only these nodes; "console" for the console')
         c.set_defaults(func=cmd_cluster, cmd="cluster", verb=verb)
+
+    lg = groups.add_parser("launchers", help="launchers [--check|--machine]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
+                           description=__import__("launchers").__doc__, formatter_class=RAW,
+                           epilog=f"examples:\n  {P} launchers\n  {P} launchers --check\n  {P} --settings ~/drishti-envs/dev.ini launchers --machine")
+    lg.add_argument("--check", action="store_true", help="change nothing; exit 1 naming each committed launcher (or IDE_GUIDE section 4) that differs from the table")
+    lg.add_argument("--machine", action="store_true", help="write this machine's JVM arguments files, <settings folder>/jvm-<profile>.args (setup runs it)")
+    lg.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs)")
+    lg.set_defaults(func=lambda a, extra: __import__("launchers").main(a), cmd=None)
 
     st = groups.add_parser("status", help="status: the resolved home, data, modules and java; then every process started with drishti.py start",
                            formatter_class=RAW, epilog=f"examples:\n  {P} status\n  {P} status --cluster deploy/stack/stack.yaml\n"

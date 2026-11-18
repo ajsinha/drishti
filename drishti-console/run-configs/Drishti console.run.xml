@@ -12,6 +12,11 @@
   written permission of the copyright holder.
 
   See the LICENSE file in the root of this repository for the full terms.
+
+  Drishti console: the console on 17480 for the server on 18480, sign-in on.
+  Use it when: with either 18480 server.
+  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti console" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
@@ -22,9 +27,7 @@
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
-      <env name="DRISHTI_AUTH_ENABLED" value="true" />
       <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
-      <env name="DRISHTI_SECURE_COOKIE" value="false" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
@@ -32,7 +35,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_drishti_web.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini --server.port=17480 --backend.url=http://127.0.0.1:18480" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

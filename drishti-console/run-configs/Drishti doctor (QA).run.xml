@@ -12,6 +12,11 @@
   written permission of the copyright holder.
 
   See the LICENSE file in the root of this repository for the full terms.
+
+  Drishti doctor (QA): the same for the QA server on 18580.
+  Use it when: with the QA pair.
+  The profile config/profiles/qa.ini (after your dev.ini) holds its settings.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti doctor (QA)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
@@ -28,7 +33,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini doctor --server http://localhost:18580 --token-file $PROJECT_DIR$/../data/qa/token.txt" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile qa doctor" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

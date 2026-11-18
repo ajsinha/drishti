@@ -2671,11 +2671,14 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 [exit 1]
 ```
 
-### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
+### `setup`, `build jar`, `start`, `stop`, `status` and `launchers`: install, build, run and stop Drishti
 
 One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
 cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\drishti.py ...` (or `python`) and backslash paths. The
-settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`.
+settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`, and so does a
+**profile**: `--profile NAME` adds the install's `config/profiles/<NAME>.ini` (`demo`, `samples`, `qa`) after the settings files, so it
+wins over them (`python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa start all`: the QA pair on 18580 and 17580;
+`--demo` is `--profile demo`). The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
 
 **The roots.** The install folder (`DRISHTI_HOME`) is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the
 folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative) and that same folder. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
@@ -2685,7 +2688,8 @@ folder `tools/drishti.py` lives in; a named one must be an absolute path (a rela
 
 **`drishti.py setup`** prepares the machine and is safe to repeat: it checks Python 3.11+ and Java 21+, makes the data folder's layout
 (`run/ logs/ tmp/ dumps/ modules/ delta/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths
-filled in (an existing file is never overwritten), makes `drishti-console/.venv`, and prints the next steps.
+filled in (an existing file is never overwritten), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`,
+rewritten every time: `launchers --machine`), makes `drishti-console/.venv`, and prints the next steps.
 
 | Option | Meaning |
 |---|---|
@@ -2705,7 +2709,7 @@ says which modules are missing or stale for the new jar.
 
 **`build sdk`**: the Module SDK folder `<home>/sdk` (`repo/`, a Maven file repository with the kernel API, the product's parent pom, `drishti-module-parent` and the archetype; `settings.xml` naming it by absolute path; `drishti-module-parent/pom.xml`), so a module is built from it with no Drishti source ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)). Maven runs `package`, never `install`. Options: `--java-home DIR`, `--offline`, `--dry-run`.
 
-**`build modules [ID ...]`** and **`build all`**: the server jar holds no module; each is a package `<id>-<version>.dmod` in `<home>/modules` with `first-party.yaml` beside them. Each is one Maven command (no Python runs in it): `build modules` is `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` (the packages stamped for the jar already in `<home>/lib`; no new jar), `build all` is `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` (the jar and the packages, everything stamped for the jar it builds). `packaging/dist` packs every module with the one packer (`module pack`), runs the conformance checks of the modules with a server part, and installs the packages into `<home>/modules` (`-Ddrishti.home.modules`): each through a `.part` file and one replace, an older file of the same module removed, then `first-party.yaml`; `build all` installs the jar into `lib/` too. Named ids install only those packages (`-Ddrishti.modules.ids=a,b`). Options: `--java-home DIR`, `--offline`, `--dry-run`, `--no-copy` (`-Ddrishti.install.skip=true`: nothing installed; the jar stays in `kernel/drishti-server/target`, the packages in `packaging/dist/target/dmod`). IntelliJ IDEA runs the same three commands as the Maven configurations **Drishti build all**, **Drishti build server jar** and **Drishti build modules** ([IDE_GUIDE.md](IDE_GUIDE.md#13-the-maven-build-launchers)). A package whose module folder changed, or that is stamped for another jar, is *stale*: `start server`, `start cluster` and a test session refuse it, naming the module and the command.
+**`build modules [ID ...]`** and **`build all`**: the server jar holds no module; each is a package `<id>-<version>.dmod` in `<home>/modules` with `first-party.yaml` beside them. Each is one Maven command (no Python runs in it): `build modules` is `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` (the packages stamped for the jar already in `<home>/lib`; no new jar), `build all` is `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` (the jar and the packages, everything stamped for the jar it builds). `packaging/dist` packs every module with the one packer (`module pack`), runs the conformance checks of the modules with a server part, and installs the packages into `<home>/modules` (`-Ddrishti.home.modules`): each through a `.part` file and one replace, an older file of the same module removed, then `first-party.yaml`; `build all` installs the jar into `lib/` too. Named ids install only those packages (`-Ddrishti.modules.ids=a,b`). Options: `--java-home DIR`, `--offline`, `--dry-run`, `--no-copy` (`-Ddrishti.install.skip=true`: nothing installed; the jar stays in `kernel/drishti-server/target`, the packages in `packaging/dist/target/dmod`). IntelliJ IDEA runs `build all` and `build modules` as the Maven configurations **Drishti build all** and **Drishti build modules** ([IDE_GUIDE.md](IDE_GUIDE.md#13-the-maven-build-launchers)). A package whose module folder changed, or that is stamped for another jar, is *stale*: `start server`, `start cluster` and a test session refuse it, naming the module and the command.
 
 **`start server|console|all|cluster`** and **`stop server|console|all|cluster`**:
 
@@ -2723,18 +2727,18 @@ Options of `start server`, `start console` and `start all`:
 |---|---|
 | `--home`, `--data-dir`, `--java-home` | the roots and the JDK, as above (`start console` has no `--java-home`) |
 | `--env-file FILE` | `KEY=VALUE` lines put into the process's environment; secrets stay off the command line and are never printed |
-| `--demo` | the offline demo on the lakes, with development secrets and the `drishti-dev-admin` account: not for production |
+| `--demo` | the demo profile, `config/profiles/demo.ini` (the offline demo on the lakes; the file **Drishti server (demo lakes)** names), with development secrets and the `drishti-dev-admin` account: not for production |
 | `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)) |
 | `--background` | detach: log and pid file under `logs/` and `run/` |
-| `--port PORT` | the server's port (default `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else 17480). `start all` has `--server-port` and `--console-port` |
-| `--heap SIZE` | the server's `-Xmx` (default 2g; 4g with `--demo`) |
+| `--port PORT` | the server's port (default `server.port` of the settings files, else `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else `console.server.port`, else 17480). `start all` has `--server-port` and `--console-port` |
+| `--heap SIZE` | the server's `-Xmx` (default `drishti.launch.heap` of the settings files: 4g in the demo profile; else 2g) |
 | `--jar FILE` | a server jar for one run (default the newest in `<home>/lib`) |
-| `--packs LIST`, `--engine ENGINE`, `--lake-root DIR` | the packs to load (`DRISHTI_PACKS`), the Delta engine `native`, `hadoop` or `auto`, the Delta root |
+| `--packs LIST`, `--engine ENGINE`, `--lake-root DIR` | the packs to load (beats a profile's `drishti.packs.enabled`; default the packs of the modules that are on), the Delta engine `native`, `hadoop` or `auto`, the Delta root |
 | `--iceberg`, `--iceberg-root DIR` | serve the stores from Iceberg tables: copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` |
 | `--java-opt FLAG`, `--server-arg ARG`, `--workdir DIR` | one more JVM flag, one more server argument (both repeatable); the server's working folder |
 | `--wait SECONDS` | how long to wait for the health answer (server 300, console 90) |
 | `--node NODE`, `--node-dir DIR`, `--node-data DIR`, `--seed HOST:PORT`, `--advertise IP` | a cluster node: its id (pid, log and temp folder are named after it), its Drishti\*net folder, its own data folder, a member to join through, the address it advertises (default this machine's real address, never a loopback one) |
-| `--server URLS` | `start console`: the server, or a cluster's entry nodes, comma-separated (default `DRISHTI_SERVER_URL`) |
+| `--server URLS` | `start console`: the server, or a cluster's entry nodes, comma-separated (default `DRISHTI_SERVER_URL`, else `console.backend.url` or a profile's `server.port`) |
 | `--name NAME`, `--python FILE`, `--reinstall` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`); the Python for the `.venv`; remake the `.venv` |
 
 `stop` takes `--data-dir`, `--env-file` and `--timeout SECONDS`; `stop server` takes `--node NODE` and `--all-nodes` (every server pid
@@ -2745,6 +2749,11 @@ names. Exit codes of `start`: 0 ok, 1 failed, 2 a wrong option, 3 already runnin
 folder; `--cluster FILE` adds the members each node sees and the console's servers. Options: `--home`, `--data-dir` (repeatable),
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
+
+**`drishti.py launchers`** writes the IDE launchers (`run-configs/`, `drishti-console/run-configs/`) and the tables of IDE_GUIDE section 4
+from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
+that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
+of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.
 
 ```
 python tools/drishti.py setup                                                        # once per machine

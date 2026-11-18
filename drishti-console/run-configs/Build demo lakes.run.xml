@@ -12,6 +12,10 @@
   written permission of the copyright holder.
 
   See the LICENSE file in the root of this repository for the full terms.
+
+  Build demo lakes: the demo lakes with the Java loader of the jar in `lib/`.
+  Use it when: after a build, with the server stopped.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
@@ -28,7 +32,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini lake demo --engine java" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake demo --engine java" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

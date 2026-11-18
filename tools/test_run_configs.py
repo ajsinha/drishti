@@ -106,16 +106,17 @@ class RunConfigs(unittest.TestCase):
             if conf.get("type") == "JarApplication":
                 self.assertEqual(options(conf).get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
 
-    def test_the_server_configurations_keep_native_libraries_out_of_the_system_temp_folder(self):
-        """-Djava.io.tmpdir=<data dir>/tmp/server, the server's own temp base: DuckDB, RocksDB and CatBoost unpack there, not in /tmp."""
-        for f in CONFIGS:
+    def test_the_server_configurations_name_this_machine_s_jvm_options(self):
+        """-Djava.io.tmpdir and the heap dumps follow the data folder: a server launcher names ~/drishti-envs/jvm-<profile>.args (the
+        options drishti.py start server runs, with this machine's data folder), never a folder of its own."""
+        for f in JAVA:
             conf = ET.parse(f).getroot().find("configuration")
             if conf.get("type") != "JarApplication":
                 continue
-            envs = {e.get("name"): e.get("value") for e in conf.iter("env")}
-            data = envs.get("DRISHTI_DATA_DIR", "$PROJECT_DIR$/data")
-            self.assertIn(f"-Djava.io.tmpdir={data}/tmp/server", options(conf).get("VM_PARAMETERS", ""), f.name)
-
+            vm = options(conf).get("VM_PARAMETERS", "")
+            self.assertRegex(vm, r'^"@\$USER_HOME\$/drishti-envs/jvm-(demo|samples|qa)\.args" ', f.name)
+            self.assertNotIn("java.io.tmpdir", vm, f.name)
+            self.assertNotIn("HeapDumpPath", vm, f.name)
 
     def test_every_launcher_passes_the_settings_file_by_an_absolute_macro_path(self):
         """The one per-developer settings file, $USER_HOME$/drishti-envs/dev.ini (created from config/settings.examples/dev.ini; see the
@@ -127,9 +128,9 @@ class RunConfigs(unittest.TestCase):
             conf = ET.parse(f).getroot().find("configuration")
             o = options(conf)
             if conf.get("type") == "JarApplication":
-                self.assertIn("-Ddrishti.settings.file=" + ini, o.get("VM_PARAMETERS", ""), f.name)
+                self.assertIn('"-Ddrishti.settings.file=' + ini + ",$PROJECT_DIR$/config/profiles/", o.get("VM_PARAMETERS", ""), f.name)
             elif conf.get("type") == "PythonConfigurationType":
-                self.assertTrue(o.get("PARAMETERS", "").startswith("--settings " + ini + " "), f"{f.name}: --settings {ini} first")
+                self.assertTrue(o.get("PARAMETERS", "").startswith(f'--settings "{ini}" '), f"{f.name}: --settings {ini} first, quoted")
             else:
                 self.assertEqual(conf.get("type"), "MavenRunConfiguration", f.name)
                 continue

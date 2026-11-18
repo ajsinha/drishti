@@ -41,9 +41,6 @@ LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too (drishti.py start se
     "tools/launch/serverstart.py": True,
     "deploy/docker/ecs/server-entrypoint.sh": True,
     "deploy/docker/server.Dockerfile": True,
-    "run-configs/Drishti server (built-in samples).run.xml": True,
-    "run-configs/Drishti server (demo lakes).run.xml": True,
-    "run-configs/Drishti server (QA, port 18580).run.xml": True,
 }
 
 
@@ -52,8 +49,6 @@ class LauncherMemory(unittest.TestCase):
         for rel, arenas in LAUNCHERS.items():
             text = (ROOT / rel).read_text(encoding="utf-8")
             with self.subTest(rel):
-                if rel.startswith("run-configs/"):
-                    self.assertEqual(text.count("MaxDirectMemorySize="), 1, "given once: the JVM takes the last, a second one hides the first")
                 for flag in self.flags(rel):
                     self.assertIn(flag.split("=")[0].replace("-XX:", ""), text)
                     self.assertTrue(flag in text or f'"{flag}"' in text or f"'{flag}'" in text, flag)
@@ -69,10 +64,23 @@ class LauncherMemory(unittest.TestCase):
     def flags(rel: str) -> tuple:
         """The flags ``rel`` must give: an IntelliJ run configuration the direct memory sized once (the base plus Arrow's exchange budget,
         and that budget for Arrow); a started launcher the base, which it raises by what memory_caps.py sizes."""
-        if not rel.startswith("run-configs/"):
-            return FLAGS
-        return (f"-XX:MaxDirectMemorySize={CAPS.BASE_MB + CAPS.ARROW_EXCHANGE_MB}m", f"-Ddrishti.arrow.max-bytes={CAPS.ARROW_EXCHANGE_MB * 1048576}",
-                *FLAGS[1:])
+        return FLAGS
+
+    def test_the_ide_server_launchers_take_the_flags_from_the_one_function(self):
+        """An IntelliJ server launcher names this machine's arguments file (@~/drishti-envs/jvm-<profile>.args), which
+        drishti.py launchers --machine writes from serverstart.jvm_flags, the function start server runs: no flag is written twice."""
+        import sys
+        sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tools" / "launch")]
+        import serverstart
+        flags = serverstart.jvm_flags(Path("/d"), "2g")
+        for f in (*FLAGS, *[d for d in DIAGNOSTICS]):
+            self.assertTrue(any(f.split("=")[0] in x for x in flags), f)
+        for f in sorted((ROOT / "run-configs").glob("Drishti server*.run.xml")):
+            text = f.read_text(encoding="utf-8")
+            with self.subTest(f.name):
+                self.assertIn("@$USER_HOME$/drishti-envs/jvm-", text)
+                self.assertNotIn("MaxDirectMemorySize", text)
+                self.assertIn("MALLOC_ARENA_MAX", text)
 
     def test_production_launchers_dump_the_heap_and_log_gc(self):
         for rel in PRODUCTION:

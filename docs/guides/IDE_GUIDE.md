@@ -124,14 +124,22 @@ lakes, your own files, the QA folder). Each step says the IDE its launcher lives
 
 ### 2.1 The settings file `~/drishti-envs/dev.ini`
 
-**Every run configuration passes `dev.ini`** (a Java one as `-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`, a Python one as
+**Every run configuration passes `dev.ini`** (a Java one as `-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,…`, a Python one as
 `--settings $USER_HOME$/drishti-envs/dev.ini`), so it must exist before the first run (Windows `C:\Users\you\drishti-envs\dev.ini`). The
 file names this clone in `drishti.home`; a `DRISHTI_HOME` or `drishti.home` that names another clone is refused.
 
+**A launcher names a profile after it** (`config/profiles/demo.ini`, `samples.ini` or `qa.ini`, committed): what makes the demo, the
+built-in samples or the QA pair, the same file `drishti.py start server --demo` (or `--profile qa`) reads, so the IDE and the terminal start
+the same server. **A server launcher also names this machine's JVM options**, `~/drishti-envs/jvm-<profile>.args` (`@…` in its VM
+options): the options `drishti.py start server` uses, with your data folder in them (the temp folder, heap dumps and the GC log follow
+`drishti.data.dir`). `setup` writes them; after you change `drishti.data.dir`, run `python tools/drishti.py --settings ~/drishti-envs/dev.ini
+launchers --machine` (or `setup` again) to rewrite them.
+
 1. From the clone: `python3 tools/drishti.py setup --check` (Windows `py tools\drishti.py setup --check`) lists what is missing and changes nothing.
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
-   folder and `drishti-console/.venv`. You should see `[made] settings file …/drishti-envs/dev.ini` and `[made] console .venv …`; a file
-   already there is never overwritten.
+   folder and `drishti-console/.venv`, and writes the JVM arguments files. You should see `[made] settings file …/drishti-envs/dev.ini`,
+   `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there is never
+   overwritten (the arguments files are rewritten every time: they are generated).
 3. **With no Python on the machine** (a server-only machine): copy `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` and
    replace `/path/to/drishti` with the clone's folder (forward slashes, also on Windows).
 
@@ -157,7 +165,8 @@ drishti.java.home=C:/Users/asinh09/.jdks/temurin-21
 
 Leave the rest of the file as it is: the other keys are optional and **commented out on purpose**, each with its default already in
 force. For example `[lake.demo] root=…`: the demo lake is `<drishti.data.dir>/delta/demo` unless you uncomment it to put the lake
-somewhere else (another disk, a shared folder); `[server] server.port=…` moves every launcher's port at once. Uncomment a section (its
+somewhere else (another disk, a shared folder); `[server] server.port=…` moves the server's port, the console's server address and the
+tools' `--server` default together. Uncomment a section (its
 `[name]` line and its keys) only when you want to change that default. A second clone on the same machine needs its own
 settings file (for example `~/drishti-envs/dev-orig.ini`, named in that clone's run configurations), because `drishti.home` names one clone.
 
@@ -240,19 +249,20 @@ The order matters: the lakes are written by the Java loader of the jar, the serv
 ### 3.1 Start the server (IntelliJ)
 
 **Drishti server (demo lakes)**. It is a **JAR Application** on `lib/drishti-server-exec.jar`, the jar **Drishti build all** made and the
-modules in `modules/` are stamped for (section 4), port **18480**,
-`-Ddrishti.home=$PROJECT_DIR$`, `-Xmx4g`, offline, sign-in on, the ten demo packs, the development administrator, `DRISHTI_DEMO_ENABLED=false`
-(it reads the lakes of 2.4 and generates nothing). **You should see** in the Run window `Started DrishtiApplication in … seconds` and a `resolved paths:`
+modules in `modules/` are stamped for (section 4), port **18480**, with `dev.ini` and the demo profile `config/profiles/demo.ini`: offline,
+sign-in on, the packs of every module that is on plus us-equities, gleif and funds, the lenses of the modules that are on (Risk, Trading,
+Market, World, Research), the data inbox on, the demo source off (it reads the lakes of 2.4 and generates nothing), a 4 GB heap; the
+development administrator. `python tools/drishti.py start server --demo` starts the same server. **You should see** in the Run window `Started DrishtiApplication in … seconds` and a `resolved paths:`
 block that names `dev.ini` as the origin of the data folder. Check: `curl -s localhost:18480/actuator/health` answers `UP`. Nothing is
 compiled before the launch: after a change to Java code run **Drishti build all** (with the server stopped: Windows keeps a running jar
 locked) and start again.
 
-If you have not built the lakes, use **Drishti server (built-in samples)** instead: the same on 18480 with the packs' small samples (demo on), `-Xmx2g`.
+If you have not built the lakes, use **Drishti server (built-in samples)** instead: the samples profile on 18480, the packs' small samples (demo on), a 2 GB heap.
 
 ### 3.2 Start the console (PyCharm)
 
-**Drishti console**. It runs `drishti-console/run_drishti_web.py --settings … --server.port=17480 --backend.url=http://127.0.0.1:18480` with sign-in on and the
-development secrets. **You should see** `Uvicorn running on http://0.0.0.0:17480`.
+**Drishti console**. It runs `drishti-console/run_drishti_web.py --settings …/dev.ini --profile demo`: port 17480 and the server on 18480
+(the defaults), sign-in on (the profile's `[console.auth]`), the development secrets. **You should see** `Uvicorn running on http://0.0.0.0:17480`.
 
 ### 3.3 Sign in
 
@@ -337,53 +347,53 @@ All run from the repository root. Server configurations are IntelliJ **JAR Appli
 `$PROJECT_DIR$/lib/drishti-server-exec.jar`, the jar **Drishti build all** installed (the same file as `lib/drishti-server-<version>-exec.jar`),
 so the server is exactly the build the module packages in `modules/` are stamped for; nothing is compiled before they start. They never
 run IntelliJ's compiled classes: those carry no build stamp, and the server would refuse banking (section 6.1). The builds are IntelliJ **Maven** configurations; everything in
-PyCharm is a Python configuration of the project interpreter. `dev.ini` is passed by every launcher but the Maven builds. **Ports**: 18480
+PyCharm is a Python configuration of the project interpreter. `dev.ini` is passed by every launcher but the Maven builds, then the
+launcher's profile (section 2.1); a server launcher's JVM options are `~/drishti-envs/jvm-<profile>.args`. The launchers are generated from
+one table, `tools/launch/launchers.yaml`, by `python tools/drishti.py launchers` (the tables below too), and the drill's gate fails when
+a committed launcher differs from it: change the table, never a `.run.xml`. **Ports**: 18480
 default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Finance console.
+
+<!-- generated: launchers begin (python tools/drishti.py launchers) -->
 
 ### 4.1 Servers (IntelliJ)
 
-| Name | What it runs | Port, data folder | Use it when |
+| Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti server (built-in samples)** | the seven core packs with demo data generated on, sign-in on, `-Xmx2g` | 18480, `drishti.data.dir` of `dev.ini` | a quick look without building lakes |
-| **Drishti server (demo lakes)** | the ten packs, demo off, offline, system baskets seeded, `-Xmx4g` | 18480, `dev.ini` | the normal run after **Build demo lakes** |
-| **Drishti server (QA, port 18580)** | the seven packs, sign-in on, `-Xmx2g`, its own folder given as `-D` (`-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580`; a `-D` beats the settings file) | 18580, `data/qa/data` | QA or a second server beside the first; never touches your data |
+| **Drishti server (demo lakes)** | the jar, profile `demo.ini` | the demo lakes, offline, sign-in on, the data inbox on | the normal run, after **Build demo lakes** |
+| **Drishti server (built-in samples)** | the jar, profile `samples.ini` | the packs' small built-in samples (generated, ticking), sign-in on | a first look before any lake is built |
+| **Drishti server (QA, port 18580)** | the jar, profile `qa.ini` | the samples on its own port and data folder (`data/qa/data`), sign-in on | QA, or a second server beside the first |
 
 ### 4.2 Consoles (PyCharm)
 
-| Name | What it runs | Port, backend | Use it when |
+| Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti console** | `run_drishti_web.py`, sign-in on, development secrets | 17480, server 18480 | the normal console |
-| **Drishti console (QA, port 17580)** | the same with `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` | 17580, server 18580 | with **Drishti server (QA, port 18580)** |
-| **Drishti console (Risk)** | `--distribution=risk`, temp folder `data/tmp/console-risk` | 17480, server 18480 | Drishti Risk |
-| **Drishti console (Finance)** | `--distribution=finance`, temp folder `data/tmp/console-finance` | 17481, server 18480 | Drishti Finance, beside the Risk console |
+| **Drishti console** | `run_drishti_web.py`, profile `demo.ini` | the console on 17480 for the server on 18480, sign-in on | with either 18480 server |
+| **Drishti console (QA, port 17580)** | `run_drishti_web.py`, profile `qa.ini` | the console on 17580 for the QA server on 18580 | with **Drishti server (QA, port 18580)** |
+| **Drishti console (Risk)** | `run_drishti_web.py`, profile `demo.ini`, `--distribution=risk` | the Risk distribution's console on 17480 (temp folder `<data>/tmp/console-risk`) | Drishti Risk, with **Drishti server (demo lakes)** |
+| **Drishti console (Finance)** | `run_drishti_web.py`, profile `demo.ini`, `--distribution=finance --server.port=17481` | the Finance distribution's console on 17481 (temp folder `<data>/tmp/console-finance`) | Drishti Finance, beside the Risk console |
 
-### 4.3 Build (IntelliJ) and data tools (PyCharm)
+### 4.3 Build (IntelliJ) and tools (PyCharm)
 
-| IDE | Name | What it runs | Use it when |
-|---|---|---|---|
-| IntelliJ | **Drishti build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | after a clone or a pull |
-| IntelliJ | **Drishti build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | module code only |
-| PyCharm | **Build demo lakes** | `drishti.py --settings … lake demo --engine java` | after a build, server stopped |
-| PyCharm | **Load a file into the lake** | `… lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --pack $PROJECT_DIR$/../modules/banking/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates --lake demo` | you hold a real ENDUR file (never committed); edit the file name |
+| IDE | Name | What it runs | What it is | Use it when |
+|---|---|---|---|---|
+| IntelliJ | **Drishti build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar | after a clone or a pull (the one to click) |
+| IntelliJ | **Drishti build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
+| PyCharm | **Build demo lakes** | `drishti.py lake demo --engine java`, `dev.ini` only | the demo lakes with the Java loader of the jar in `lib/` | after a build, with the server stopped |
+| PyCharm | **Load a file into the lake** | `drishti.py lake build`, `dev.ini` only | one file of yours into the demo lake, by its kind (a template; copy it and name your file) | you hold a file of your own (never committed) |
+| PyCharm | **Drishti doctor** | `drishti.py doctor`, profile `demo.ini` | this machine and the server on 18480 (without a token it says how to make one) | something does not start or answer |
+| PyCharm | **Drishti doctor (QA)** | `drishti.py doctor`, profile `qa.ini` | the same for the QA server on 18580 | with the QA pair |
 
-### 4.4 Command-line tools (PyCharm)
+<!-- generated: launchers end -->
 
-The first group runs against the default server on 18480, the QA group against 18580 with a token file `data/qa/token.txt`
-(**My account → API tokens**, save the text there). Edit *Parameters* for your own files.
-
-| Name | What it runs |
-|---|---|
-| **Drishti doctor** | `doctor --server http://localhost:18480`: checks the server and the environment, a red line names the problem |
-| **Drishti doctor (QA)** | `doctor --server http://localhost:18580 --token-file data/qa/token.txt` |
-
-The QA end to end, step by step: [3.9](#39-the-qa-profile-end-to-end-no-terminal).
+The QA end to end, step by step: [3.9](#39-the-qa-profile-end-to-end).
 Every command's options: [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 **Your own configuration.** Never edit a shipped file for yourself: **Copy Configuration** (Ctrl+D) and change the copy. The copy lives in the git-ignored `.idea/`.
 By hand: **Run → Edit Configurations → + → JAR Application**, *Path to JAR* `$PROJECT_DIR$/lib/drishti-server-exec.jar` (or the versioned
-`lib/drishti-server-<version>-exec.jar`), JRE 21, VM options copied from **Drishti server (demo lakes)** (at least
-`-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`), working directory `$PROJECT_DIR$`, the
-environment variables copied too, and no *Build* before launch (section 6.1, recipe A).
+`lib/drishti-server-<version>-exec.jar`), JRE 21, VM options copied from **Drishti server (demo lakes)** (the arguments file, the home and
+the settings files: `"@$USER_HOME$/drishti-envs/jvm-demo.args" "-Ddrishti.home=$PROJECT_DIR$" "-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/demo.ini"`),
+working directory `$PROJECT_DIR$`, the environment variables copied too, and no *Build* before launch (section 6.1, recipe A). A setting
+of your own goes in a settings file of yours named after the profile (`…,demo.ini,$USER_HOME$/drishti-envs/mine.ini`), never in the launcher.
 
 ## 5. When a stack is already running
 
@@ -477,6 +487,14 @@ Maven builds and the server JAR Applications only; every Python launcher (the co
    `drishti.modules.home` `<clone>/modules`; forward slashes, no quotes, no trailing slash; and `drishti.java.home` (recipe E).
 3. Start the server again: the `resolved paths:` block of its log names `dev.ini` as the origin of each folder.
 
+**Recipe G: a server launcher says *could not open …/drishti-envs/jvm-demo.args*, or the temp folder or heap dumps are in the old data
+folder.** The JVM arguments file of the launcher's profile is missing or was written for another data folder.
+
+1. `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini launchers --machine` (or `py tools\drishti.py setup`): *You should
+   see* `written …\jvm-demo.args`, `jvm-qa.args`, `jvm-samples.args`.
+2. Open one: each line is one JVM option, its folders under your `drishti.data.dir` (the QA one under `data/qa/data`).
+3. Start the launcher again.
+
 Starting again from scratch, checking each step: [section 8](#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
 More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troubleshooting). The terminal equivalent of every step above:
 [DEPLOYMENT_AND_QA_GUIDE.md › Start the server and the console](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
@@ -484,7 +502,7 @@ More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troublesh
 ## 7. Run and debug the command-line tools
 
 The tools (`tools/drishti.py pack make`, `sutra gen`, `data ingest`, `pack check` and the rest; every command is in [CLI_REFERENCE.md](CLI_REFERENCE.md)) are ordinary Python
-scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ IDEA. The shipped configurations of section 4.4 cover the common ones;
+scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ IDEA. The shipped configurations of section 4.3 cover the common ones;
 this section makes your own.
 
 ### 7.1 A run configuration for one task
@@ -497,7 +515,7 @@ this section makes your own.
 | **Parameters** | `--settings $USER_HOME$/drishti-envs/dev.ini` followed by the command, for example `pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
 | **Python interpreter** | the project interpreter (section 2.2) |
 | **Working directory** | the repository root: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `PYTHONUNBUFFERED=1`; `JAVA_HOME` may be left out (the tool then looks for a JDK 21 and for the newest `lib/*-exec.jar` of the repository); for server commands `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN` (a personal API token) |
+| **Environment variables** | `PYTHONUNBUFFERED=1`; `JAVA_HOME` may be left out (the tool then looks for a JDK 21 and for the one `lib/*-exec.jar` of the repository); for server commands `DRISHTI_TOKEN` (a personal API token); the server's address comes from `--profile` (`--profile qa`: 18580) or `--server` |
 
 More *Parameters* to start from: `data profile <file>`, `pack regenerate data/build/my-bank/pack/my-bank <file> --dry-run`, `sutra gen <file> --kind trade --match PRODUCT_TYPE --out data/build/sutras`,
 `data ingest --from your-new-days/ --pack data/build/my-bank/pack/my-bank --lake data/build/my-bank/data/delta --dry-run`, `pack check data/build/my-bank/pack/my-bank --strict --junit data/build/reports`,
@@ -549,19 +567,22 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
 2. **IntelliJ: Drishti build all** (section 1.3). *You should see* `BUILD SUCCESS`; `lib\` holds `drishti-server-<version>-exec.jar`
    and `drishti-server-exec.jar` (the same jar); `modules\` holds twelve `.dmod` packages and `first-party.yaml`. *If not:*
    `PKIX path building failed`: recipe C; *invalid target release*: the JDK (section 6); *module pack … refused*: the line names the file.
-3. **Check `C:\Users\you\drishti-envs\dev.ini`** (section 2.1). *You should see* `drishti.home` naming this clone, `drishti.data.dir`
-   `<clone>/data`, `drishti.modules.home` `<clone>/modules`, and `drishti.java.home` a JDK 21 folder; forward slashes. *If not:* recipe F;
-   for the Java line, recipe E.
+3. **Check `C:\Users\you\drishti-envs\`** (section 2.1): run `py tools\drishti.py setup` once (again after a pull that changed the
+   launchers). *You should see* `dev.ini` with `drishti.home` naming this clone, `drishti.data.dir` `<clone>/data`, `drishti.modules.home`
+   `<clone>/modules`, and `drishti.java.home` a JDK 21 folder (forward slashes), and beside it `jvm-demo.args`, `jvm-samples.args` and
+   `jvm-qa.args`. *If not:* recipe F; for the Java line, recipe E; a server launcher that says *could not open …jvm-demo.args*: recipe G.
 4. **PyCharm: Build demo lakes** (section 2.4), with no server running. *You should see* `lake writer: java (asked for)`, the tables,
    then `Demo lake ready: …`. *If not:* Java 1.8 named: recipe E; *the jar is missing*: step 2; a launcher missing or *Unknown
    configuration type*: recipe D.
-5. **IntelliJ: Drishti server (demo lakes)** (section 3.1). *You should see* `Started DrishtiApplication`, and in the start-up log the
-   modules line *Modules: banking, capitalmarkets, economy, …* with no *module refused* after it. *If not:* *module refused: banking …
+5. **IntelliJ: Drishti server (demo lakes)** (section 3.1). *You should see* `Started DrishtiApplication`, the `settings file …demo.ini`
+   lines, and in the start-up log the modules line *Modules: banking, capitalmarkets, economy, …* with no *module refused* after it and no
+   *lens … is not offered* ERROR. *If not:* *module refused: banking …
    this is an unknown build*: the server did not run the jar, recipe A; *the modules beside the jar are not current*: step 2 again;
    *dev.ini … not a file*: recipe F; *Port 18480 was already in use*: section 5.
 6. **PyCharm: Drishti console** (section 3.2). *You should see* `Uvicorn running on http://0.0.0.0:17480`. *If not:* *Python
    interpreter is not configured*: section 2.3 step 2; *Unknown configuration type*: recipe D.
 7. **Sign in and check.** `http://localhost:17480`, `drishti-dev-admin` / `drishti-dev-admin123`; **Admin → Modules**: *You should
-   see* all twelve modules *ok* (thirteen rows with core), none *stale*, and the kernel with its version (not *dev*). Then `VAR BANK <GO>`
+   see* all twelve modules *ok* (thirteen rows with core), none *stale*, and the kernel with its version (not *dev*); Home offers **Open
+   Drishti Research** beside Risk, Trading, Market and World; **Admin → Data loads** shows the inbox running. Then `VAR BANK <GO>`
    computes. *If not:* banking *stale*: recipe A; banking missing: recipe B; VaR (or `GET /api/v1/risk/var/…`) answers 404: banking
    is not loaded, Admin → Modules says why (recipe A or B).

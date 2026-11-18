@@ -13,37 +13,24 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  The demo lakes, read with the samples off (DRISHTI_DEMO_ENABLED=false): every page reads the lakes, and nothing ticks. For
-  tutorial 12 (live BI and boards) set DRISHTI_DEMO_ENABLED=true below: the demo source then ticks the live trades about twice a
-  second (data/testdata/README.md, "The demo ticker").
-
-  Offline mode (DRISHTI_OFFLINE=true): the server never reaches the internet. The news and yfinance connectors do not start (Admin,
-  Connectors shows them "off (offline mode)"), and the news-and-markets quotes and headlines come from the captured snapshot that
-  `drishti.py lake demo` builds into news/quote and news/news. Set it to false on a machine with internet to use the live connectors
-  (when they are enabled).
+  Drishti server (demo lakes): the demo lakes, offline, sign-in on, the data inbox on.
+  Use it when: the normal run, after **Build demo lakes**.
+  The profile config/profiles/demo.ini holds its settings; ~/drishti-envs/jvm-demo.args its JVM options
+  (python tools/drishti.py setup writes it, from the function drishti.py start server runs).
+  The server jar Drishti build all installed (lib/drishti-server-exec.jar): the jar the modules are stamped for; nothing is built before launch.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <!-- the server jar Drishti build all installed (lib/drishti-server-exec.jar is lib/drishti-server-<version>-exec.jar under a name
-       that does not change with the version): the same jar the modules in modules/ are stamped for. Nothing is built before launch. -->
   <configuration default="false" name="Drishti server (demo lakes)" type="JarApplication" folderName="Drishti">
     <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
-    <option name="VM_PARAMETERS" value="-Ddrishti.home=$PROJECT_DIR$ -Djava.io.tmpdir=$PROJECT_DIR$/data/tmp/server -Xmx4g -XX:MaxDirectMemorySize=768m -Ddrishti.arrow.max-bytes=536870912 --add-opens=java.base/java.nio=ALL-UNNAMED -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini" />
+    <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-demo.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/demo.ini&quot;" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH" />
     <envs>
       <env name="MALLOC_ARENA_MAX" value="2" />
-      <env name="DRISHTI_PACKS" value="core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds" />
-      <env name="DRISHTI_STUDIO_SAVE" value="true" />
-      <env name="DRISHTI_SECURITY_ENABLED" value="true" />
       <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
-      <env name="DRISHTI_SEED_ADMIN" value="true" />
-      <env name="DRISHTI_SEED_USERNAME" value="drishti-dev-admin" />
-      <env name="DRISHTI_SEED_PASSWORD" value="drishti-dev-admin123" />
-      <env name="DRISHTI_PORT" value="18480" />
-      <env name="DRISHTI_DEMO_ENABLED" value="false" />
-      <env name="DRISHTI_VAR_SYSTEM_BASKETS_SEED" value="true" />
-      <env name="DRISHTI_OFFLINE" value="true" />
+      <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
     </envs>
     <method v="2" />
   </configuration>

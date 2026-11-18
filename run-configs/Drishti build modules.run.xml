@@ -12,9 +12,12 @@
   written permission of the copyright holder.
 
   See the LICENSE file in the root of this repository for the full terms.
+
+  Drishti build modules: the module packages only, stamped for the jar already in `lib/`.
+  Use it when: you changed only module code.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <!-- every module's package with first-party.yaml into modules/, stamped for the server jar already in lib/ (no Python) -->
   <configuration default="false" name="Drishti build modules" type="MavenRunConfiguration" factoryName="Maven" folderName="Drishti">
     <MavenSettings>
       <option name="myGeneralSettings" />

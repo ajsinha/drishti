@@ -139,6 +139,21 @@ def setup(a, env: dict | None = None) -> int:
         if jdk is None:
             line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
             todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
+    # the JVM arguments files of the IDE's server launchers (generated: rewritten every time, from the function start server runs)
+    import launchers
+    args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
+    if check:
+        missing = [f.name for f in args_files if not f.is_file()]
+        line("todo" if missing else "ok", "JVM options", f"{edir}: " + (f"missing {', '.join(missing)}" if missing else ", ".join(f.name for f in args_files)))
+        if missing:
+            todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
+    elif ini.is_file():
+        try:
+            written = launchers.machine(home, edir, ini)
+            line("made", "JVM options", f"{edir}: {', '.join(f.name for f in written)}  (the IDE server launchers' @files; data folder from {ini.name})")
+        except Exception as e:                                   # noqa: BLE001 - a setup step reports, never stops the others
+            line("FAIL", "JVM options", f"{e}")
+            problems.append("python tools/drishti.py --settings <dev.ini> launchers --machine")
     # the console's Python environment
     py = procs.venv_python(home)
     if a.skip_venv:
