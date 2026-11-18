@@ -89,11 +89,15 @@ class VarDeletedDateTest {
     final ObjectMapper json = new ObjectMapper();
 
     private JsonNode bank(LocalDate asOf) throws Exception {
+        return bank(asOf, 200);
+    }
+
+    private JsonNode bank(LocalDate asOf, int expect) throws Exception {
         var req = get("/api/v1/risk/var/scope").param("scope", "BANK").header("Authorization", "Bearer " + tokens.mint("rita", List.of("risk"), 300));
         if (asOf != null) {
             req = req.param("asOf", asOf.toString());
         }
-        return json.readTree(mvc.perform(req).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        return json.readTree(mvc.perform(req).andExpect(status().is(expect)).andReturn().getResponse().getContentAsString());
     }
 
     /**
@@ -101,15 +105,19 @@ class VarDeletedDateTest {
      * then the deleted or ready listeners; the signal's own steps are LoadServiceDeletedTest's): the VaR official's listener called.
      */
     private void signal(boolean deleted, String before) throws Exception {
+        signal(deleted, before, "pnl-vector");
+    }
+
+    private void signal(boolean deleted, String before, String kind) throws Exception {
         long until = System.currentTimeMillis() + 20_000;
         while (svc.loader().version(D2).equals(before) && System.currentTimeMillis() < until) {
             Thread.sleep(50);
         }
         Thread.sleep(1500);                                              // the connector's refresh (1 s) has the new version
         if (deleted) {
-            official.onDeleted("pnl-vector", D2);
+            official.onDeleted(kind, D2);
         } else {
-            official.onLoad("pnl-vector", D2);
+            official.onLoad(kind, D2);
         }
     }
 
@@ -122,6 +130,7 @@ class VarDeletedDateTest {
         assertThat(d2.get("var").asDouble()).as("D2's own figures (twice D1's)").isNotEqualTo(d1Var);
 
         String before = svc.loader().version(D2);
+        var official0 = svc.official().index(D2, VarDate.USD);            // a capture the other test's load may have made: kept as history
         Map<String, Object> done = LakeRetention.dropDates(lake.toString(), "delta", "risk/pnl-vector", LakeRetention.dates(D2.toString()), false);
         assertThat(done.get("dropped")).isNotEqualTo(0L);
         signal(true, before);
@@ -131,7 +140,8 @@ class VarDeletedDateTest {
         assertThat(gone.get("asOfNotice").asText()).isEqualTo("scenario P&L for " + D2 + " not loaded — showing " + D1);
         assertThat(gone.get("var").asDouble()).isEqualTo(d1Var);
         assertThat(bank(null).get("businessDate").asText()).as("the default date moves back").isEqualTo(D1.toString());
-        assertThat(svc.official().index(D2, VarDate.USD)).as("a deleted date is never captured").isEmpty();
+        Thread.sleep(500);                                               // a capture would run in the background
+        assertThat(svc.official().index(D2, VarDate.USD)).as("a deleted date is never captured; its records stay").isEqualTo(official0);
 
         before = svc.loader().version(D2);
         VarLakeFixture.write(lake, D2, 2.0, false, false);                    // loaded again
@@ -141,5 +151,34 @@ class VarDeletedDateTest {
         assertThat(back.get("asOfNotice").isNull()).isTrue();
         assertThat(back.get("var").asDouble()).isEqualTo(d2.get("var").asDouble());
         assertThat(bank(null).get("businessDate").asText()).isEqualTo(D2.toString());
+    }
+
+    /**
+     * The scenario set of the newest date deleted, its P&amp;L kept: the date is refused by its date (DRS-1001, never computed with the
+     * day before's set, whose scenario days are a day off), the default date is the date before with the reason as a warning.
+     */
+    @Test
+    void aDeletedScenarioSetRefusesItsDateAndTheDefaultIsTheDateBefore() throws Exception {
+        assertThat(bank(D2).get("businessDate").asText()).isEqualTo(D2.toString());
+        String before = svc.loader().version(D2);
+        LakeRetention.dropDates(lake.toString(), "delta", "risk/scenario-set", LakeRetention.dates(D2.toString()), false);
+        Thread.sleep(1500);                                              // the connector's refresh (1 s): the set's table is read again
+        official.onDeleted("scenario-set", D2);
+        JsonNode refused = bank(D2, 404);
+        assertThat(refused.get("detail").asText()).contains("no scenario set for " + D2);
+        JsonNode dflt = bank(null);
+        assertThat(dflt.get("businessDate").asText()).isEqualTo(D1.toString());
+        assertThat(dflt.at("/provenance/warnings").toString()).contains("no scenario set for " + D2).contains("answered from " + D1);
+        assertThat(svc.loader().version(D2)).isEqualTo(before);         // the P&L is untouched
+
+        VarLakeFixture.write(lake, D2, 2.0, false, false);              // the date sent again, its set with it
+        Thread.sleep(1500);
+        official.onLoad("scenario-set", D2);
+        assertThat(bank(D2).get("businessDate").asText()).isEqualTo(D2.toString());
+        long until = System.currentTimeMillis() + 20_000;                 // the load's official capture, in the background: done before the
+        while (svc.official().index(D2, VarDate.USD).isEmpty() && System.currentTimeMillis() < until) {   // next test counts the records
+            Thread.sleep(100);
+        }
+        assertThat(svc.official().index(D2, VarDate.USD)).as("the date loaded again is captured").isPresent();
     }
 }

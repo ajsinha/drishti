@@ -2854,13 +2854,14 @@ lake*), and captures nothing. What a request then sees:
 | Deleted | A request for the date | The default date |
 |---|---|---|
 | its P&L (`pnl-vector` and `scenario-pv`, or the only form it had) | answered by the newest earlier date, with the notice *scenario P&L for 2026-11-16 not loaded — showing 2026-11-13* in the headline and the provenance; never the deleted figures | the newest date that still has P&L |
-| its scenario set | refused: *no scenario set for 2026-11-16* (a set written for an earlier date is never used for it: its scenario days would be a day off) | unchanged |
+| its scenario set | refused, `404 DRS-1001` *no scenario set for 2026-11-16* (a set written for an earlier date is never used for it: its scenario days would be a day off) | when it was the newest: the date before, with the warning *no scenario set for 2026-11-16 …; answered from 2026-11-13 instead* |
 | one form of two (`scenario-pv` deleted, `pnl-vector` kept) | the date with the trades that are left | unchanged |
 | its limits (`var-limit`) or scenario FX (`fx-scenario`) | the date, with the limits the newest earlier delivery set (limits are sent when they change) and the scenario FX derived from the FX history (section 15.9) | unchanged |
 
-Without the signal (`--no-signal`, or a delete made by other means) the same happens by itself: the connector sees the table's new
-version within its refresh, and each request asks it which dates hold P&L, so the deleted date is not answered from its old book (that
-book leaves memory at the version watch, `drishti.var.version-check`, or as the least recently used date). **Official records stay**:
+Without the signal (`--no-signal`, or a delete made by other means) the same happens by itself, a few seconds later: each request asks
+the connector which dates hold P&L, and the connector sees the table's new version at its next refresh (seconds), so the deleted date is
+no longer answered from its old book; the version watch (`drishti.var.version-check`, 30 s) then finds the date's inputs gone and drops
+that book. **Official records stay**:
 the date's official captures and published rows ([section 19](#19-official-end-of-day-results)) are history and are kept as they were
 captured (the node history in `official` mode still shows them); they are never served as the date's live VaR. **Loading the date again**
 (`lake build`, the data inbox, a feed) with its signal makes it answer again at once (without a signal: as a new date, on the next

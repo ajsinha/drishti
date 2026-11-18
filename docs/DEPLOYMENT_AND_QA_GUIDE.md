@@ -1413,7 +1413,7 @@ for it. `VAR BANK` (or the VaR explorer) opens on the newest date that still has
 2026-11-12** at the top and in the provenance: never the deleted figures. **Admin → Data loads** lists the signal as *scenario-pv for
 2026-11-13 deleted from the lake: 15,000 rows*; **Admin → Audit** has `data-load-deleted` and `var-reload`. The official records already
 captured for 2026-11-13 stay as history (the node history still shows them); they are not the date's live VaR. With `--no-signal` (or no
-token) the server reaches the same state by itself within its version check (30 s).
+token) the server reaches the same state by itself a few seconds later (the connector's next refresh; at most the version check, 30 s).
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py var show BANK --date 2026-11-13

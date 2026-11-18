@@ -31,7 +31,9 @@
   D-1* and the default date moves back; the exposure engine and BI's layers drop it too. Without a signal the same state is reached by
   itself (the connector's new version; the version watch). Official captures of the date stay as history. Loading the date again brings it
   back. A normal scenario set is now used only for its own business date: a date whose set was deleted (or never delivered) is refused
-  (*no scenario set for D*) instead of being computed with the day before's scenario days. `lake undo` cannot restore a deleted date (it
+  (*no scenario set for D*, `DRS-1001`) instead of being computed with the day before's scenario days; when it is the newest date, the
+  default date is the date before with that reason as a warning. The version watch drops an open date whose inputs are gone instead of
+  keeping its old book. `lake undo` cannot restore a deleted date (it
   works by load id on rows still in the table); the way back is a load. Docs: DATA_LAKE_GUIDE section 5.8, CLI_REFERENCE 7.15,
   VAR_GUIDE 15.8, DATA_GUIDE (the `status` field), DEPLOYMENT_AND_QA_GUIDE 9.14 and checklist 20a.
 
