@@ -18,6 +18,7 @@ its jar; and every module under modules/ with a java: block is in the set packag
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -111,12 +112,17 @@ def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
     for r in restricted:
         assert (MODULES / mid / r).is_file(), r
     if mid == "economy":
-        assert restricted == {f"packs/world-economy/samples/{n}.jsonl" for n in ("catalog", "economic-forecast", "economy", "fiscal-position", "macro-indicator")}
+        assert restricted == {f"packs/world-economy/samples/{n}.jsonl" for n in ("economic-forecast", "economy", "fiscal-position", "macro-indicator")}
         shipped = {Path(n).name for n in names if n.startswith("packs/world-economy/samples/")}
         assert {"jurisdiction.jsonl", "region.jsonl", "region-economy.jsonl", "election.jsonl", "party.jsonl", "office-holder.jsonl",
                 "labour-market.jsonl", "social-indicator.jsonl"} <= shipped                    # the non-IMF samples travel
-        samples = [p for p in (MODULES / mid / "packs" / "world-economy" / "samples").glob("*.jsonl") if f"packs/world-economy/samples/{p.name}" not in restricted]
-        assert not [p.name for p in samples if re.search(r"imf|weo", p.read_text(encoding="utf-8"), re.I)], "a shipped sample names the IMF"
+        with zipfile.ZipFile(dmod) as zz:
+            cat = [json.loads(l) for l in zz.read("packs/world-economy/samples/catalog.jsonl").decode().splitlines() if l.strip()]
+        kinds = {c["kind"] for c in cat}
+        assert {"jurisdiction", "social-indicator", "region"} <= kinds and not kinds & {"economy", "macro-indicator", "economic-forecast", "fiscal-position"}, kinds
+        with zipfile.ZipFile(dmod) as zz:          # what the package carries (the catalogue as trimmed), not the source folder
+            shipped_text = {n: zz.read(n).decode("utf-8") for n in names if n.startswith("packs/world-economy/samples/") and n.endswith(".jsonl")}
+        assert not [n for n, t in shipped_text.items() if re.search(r"imf|weo", t, re.I)], "a shipped sample names the IMF"
 
 
 @pytest.mark.parametrize("mid", ["market-data", "trading", "banking", "genomics"])

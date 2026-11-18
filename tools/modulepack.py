@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import json
 import os
 import sys
 import zipfile
@@ -211,6 +212,22 @@ def _leave_restricted(f: Path, e: dict, entries: dict) -> None:
     if p not in entries:
         raise PackError(f"{f}: restricted {p} is not a file of the package's layout (a wrong name would restrict nothing)")
     del entries[p]
+    _trim_catalogue(p, entries)
+
+
+def _trim_catalogue(p: str, entries: dict) -> None:
+    """The samples folder's catalogue lists the ids of every kind (a server finds a document by it): with a kind's samples restricted, the
+    package carries the catalogue without that kind's entries, so the other kinds are still found by their ids and the restricted kind is
+    not named at all. (A restricted catalogue itself is simply absent.)"""
+    folder, _, name = p.rpartition("/")
+    cat = folder + "/catalog.jsonl"
+    if not folder.endswith("/samples") or name == "catalog.jsonl" or cat not in entries:
+        return
+    kind = name[:-len(".jsonl")]
+    src = entries[cat]
+    text = src.decode("utf-8") if isinstance(src, bytes) else Path(src).read_text(encoding="utf-8")
+    keep = [ln for ln in text.splitlines() if ln.strip() and json.loads(ln).get("kind") != kind]
+    entries[cat] = ("\n".join(keep) + "\n").encode("utf-8")
 
 
 def restricted_paths(folder: Path) -> list[str]:

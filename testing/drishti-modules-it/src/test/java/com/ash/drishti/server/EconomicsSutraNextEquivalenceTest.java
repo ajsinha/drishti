@@ -90,6 +90,7 @@ class EconomicsSutraNextEquivalenceTest {
             }
         }
         r.add("drishti.rachana.dirs", SITE::toString);
+        InternalImfFixture.register(r);                // the IMF samples are not in the package: internal test data, read from the checkout
     }
 
     private JsonNode read(String kind, String role) throws Exception {

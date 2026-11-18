@@ -40,6 +40,8 @@ import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 /**
  * The {@code map} panel: the grammar (link and shade are mappings, the expressions are compiled when the Sutra loads), the
@@ -49,6 +51,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=world-economy"})
 class MapPanelTest {
+
+    /** The shade reads the economies, whose IMF samples the package does not carry: the internal fixture ({@link InternalImfFixture}). */
+    @DynamicPropertySource
+    static void imf(DynamicPropertyRegistry r) throws Exception {
+        InternalImfFixture.register(r);
+    }
 
     @Autowired ViewPipeline pipeline;
     @Autowired JsonCodec codec;

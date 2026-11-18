@@ -22,6 +22,7 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **The IMF rule in the tests.** The economy package leaves the four IMF samples out and ships the samples' catalogue without those kinds' entries (the packer trims it; the other kinds, JUR-AUS among them, are found by their ids again). Tests that draw IMF figures read them from `InternalImfFixture`, the checkout's module source wrapped as a test-run file connector; `PackagedEconomyServesNonImfTest` shows what an install serves.
 - **Admin → Modules as mock-up C (I8b).** The page is cluster-first, on Drishti Elements and one fetch of `GET /api/v1/admin/modules`: summary tiles, the
   *Nodes disagree* banner with a copy-fix-command button, the nodes × modules matrix (the content hash each node booted, red when it differs from the
   majority; the console grid with chips that set its filter), the chosen module's detail, the install commands, and saved work that needs a module that is

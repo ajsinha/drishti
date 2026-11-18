@@ -50,10 +50,8 @@ trim:
   - tests
   - tools
 # Files the package may never carry, each with the licence reason (the packer refuses a restriction with no reason, or one that names
-# no file): the IMF World Economic Outlook figures are for internal demos only. The rest of world-economy's samples travel (JUR-AUS...).
+# no file): the IMF World Economic Outlook figures are for internal demos only. The rest of world-economy's samples travel (JUR-AUS...), with the catalogue of ids the packer trims of the restricted kinds.
 restricted:
-- path: packs/world-economy/samples/catalog.jsonl
-  reason: IMF World Economic Outlook data, internal demos only; never shipped
 - path: packs/world-economy/samples/economic-forecast.jsonl
   reason: IMF World Economic Outlook data, internal demos only; never shipped
 - path: packs/world-economy/samples/economy.jsonl

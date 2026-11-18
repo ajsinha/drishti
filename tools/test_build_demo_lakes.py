@@ -12,6 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """tools/build_demo_lakes.py in --dry-run: the whole lakes, one dataset only, and one system's files only."""
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -20,8 +21,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "build_demo_lakes.py"
 
 
-def run(*args):
-    return subprocess.run([sys.executable, str(SCRIPT), *args, "--dry-run"], capture_output=True, text=True)
+def run(*args, data_dir=None):
+    """The script, dry. ``data_dir``: the test's own data folder, which wins over the process's DRISHTI_DATA_DIR (conftest gives each pytest process one)."""
+    env = {**os.environ, "DRISHTI_DATA_DIR": str(data_dir)} if data_dir else None
+    return subprocess.run([sys.executable, str(SCRIPT), *args, "--dry-run"], capture_output=True, text=True, env=env)
 
 
 def files(tmp_path, system="endur"):
@@ -219,7 +222,7 @@ def test_store_all_and_wrong_values(tmp_path):
 
 def test_store_with_files_only_loads_the_files_into_iceberg_through_a_staging_lake(tmp_path):
     out = run("--source-dir", str(files(tmp_path, "murex")), "--system", "murex", "--files-only", "--store", "murex=iceberg",
-              "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors")).stdout
+              "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors"), data_dir=tmp_path / "data").stdout
     assert "drishti.py lake demo" not in out and out.count("lake build --from") == 2
     assert str(tmp_path / "data" / "build" / "iceberg-stage") in out and "MUREX into Iceberg" in out
     assert "trade-murex: would read iceberg" in out
