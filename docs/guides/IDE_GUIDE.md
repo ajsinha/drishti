@@ -174,12 +174,37 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 
 An IntelliJ IDEA Ultimate with the Python plugin may open `drishti-console/` as a second project in the same way; it is optional.
 
-### 2.4 The demo lakes (PyCharm)
+### 2.4 The demo lakes (PyCharm): the Java concurrent loader
 
 **Build demo lakes** runs `tools/drishti.py --settings … lake demo --engine java`, the demo lake of
 [section 6 of the Deployment guide](../DEPLOYMENT_AND_QA_GUIDE.md#6-build-the-demo-lake): sixty business days of production-shaped data
-ending today's business date. The lakes are written by the Java loader of the jar in `lib/`, so build first (section 1.3); stop the
-server first. **You should see** `Demo lake ready: …` (this takes several minutes and writes under your data folder).
+ending today's business date, written into `<data>/delta/demo` (what the packs read).
+
+**How it loads.** Python only plans the work (which datasets, which dates, the connector files); the Delta tables are written by
+**Drishti's concurrent Java loader** inside the server jar in `lib/`. Several datasets load at the same time, each in its own Java
+process. So:
+
+1. **Build first**: **Drishti build all** (section 1.3); the loader is the jar in `lib/` (`--jar FILE` names another).
+2. **Stop the server** that reads the demo lake (it holds the tables open), or point the lake elsewhere with `--lake`.
+3. In PyCharm run **Build demo lakes**. **You should see** the datasets reported as they load, then `Demo lake ready: …`. On a laptop
+   this takes a few minutes.
+
+**Tuning it** (PyCharm: **Edit Configurations → Build demo lakes → Parameters**, on a copy: **Copy Configuration**):
+
+| Option | What it does | Default |
+|---|---|---|
+| `--engine java` | the concurrent Java loader. `auto` uses it when the jar is found and loads a table it fails on again with Drishti's single-process writer | `java` in the launcher |
+| `--jobs N` | datasets loaded at the same time (Java processes) | a quarter of the cores, at most 6 |
+| `--memory-mb MB` | the loaders' heaps together, shared by the jobs | 4 GB a job |
+| `--java PATH` | the `java` to run (Java 21) | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, then the PATH |
+| `--only PREFIX[,PREFIX]` | only some datasets: a folder prefix (`trades/`, `core/counterparty`) or a pack name | everything |
+| `--as-of today\|data\|YYYY-MM-DD` | the lake's last business date | today's business date |
+| `--no-signal` | tell no running server about the new data | tells `http://localhost:18480` |
+| `--dry-run` | print the plan, write nothing | |
+
+On a 16 GB laptop use `--jobs 2 --memory-mb 6000`; on a large machine `--jobs 6` (memory follows). From a terminal the same is
+`python tools/drishti.py lake demo --engine java --jobs 2` (Windows `py tools\drishti.py …`). The loader itself, its formats and its
+switches for big files: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md).
 
 ### 2.5 Your own data and the QA folder (PyCharm)
 
