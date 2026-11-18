@@ -1,0 +1,12 @@
+# The JVM options of the systemd unit (deploy/systemd/drishti-server.service): /opt/drishti/lib/server.args
+# Written by python tools/drishti.py launchers; generated from serverstart.jvm_flags and committed: never edit it.
+"-Djava.io.tmpdir=/opt/drishti/data/tmp/server"
+"-Xmx4g"
+"-XX:+UseZGC"
+"-XX:MaxDirectMemorySize=256m"
+"-XX:TrimNativeHeapInterval=60000"
+"-Djdk.nio.maxCachedBufferSize=262144"
+"-XX:NativeMemoryTracking=summary"
+"-XX:+HeapDumpOnOutOfMemoryError"
+"-XX:HeapDumpPath=/opt/drishti/data/dumps/server"
+"-Xlog:gc*:file=\"/opt/drishti/data/logs/gc-server-%p.log\":time,uptime:filecount=5,filesize=20m"

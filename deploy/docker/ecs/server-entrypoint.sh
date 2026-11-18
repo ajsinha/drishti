@@ -76,10 +76,11 @@ if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- 
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 # the hot files kept across restarts on the node's disk (PO-10, 2.9.7): bounded by max-disk-gb and the free-space guard
 export DRISHTI_VAR_KEEP_HOT_FILES="${DRISHTI_VAR_KEEP_HOT_FILES:-true}" DRISHTI_EXPOSURE_KEEP_HOT_FILES="${DRISHTI_EXPOSURE_KEEP_HOT_FILES:-true}"
-mkdir -p "$D/data/logs" "$D/data/dumps"
-# the stop hook (CD2, CLUSTER_GUIDE.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
-# at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then Java gets the signal and shuts down gracefully. The
-# drain needs DRISHTI_DRAIN_TOKEN (a personal API token with node:drain, from Secrets Manager); the rolling runner drains before the stop
+mkdir -p "$D/data/logs" "$D/data/dumps/server"
+# the stop (CD2, CLUSTER_GUIDE.md section 4.6): on ECS's SIGTERM the server drains itself first (drishti.node.drain.on-stop: forwarded
+# work and VaR shards handed over, at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then shuts down gracefully
+# The JVM options: lib/server.args (deploy/jvm/server-container.args, generated from the function drishti.py start server runs); the
+# flags after it are this task's (a later flag wins)
 # direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there. The image has no Python, so the task definition sets the
 # figures tools/lake/memory_caps.py prints (--stores-only, --arrow-only): DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB (default 512, the
@@ -94,9 +95,6 @@ fi
 JAR=$(ls "$D"/lib/drishti-server-*-exec.jar 2>/dev/null | head -1)
 [ -n "$JAR" ] || fail "no drishti-server-*-exec.jar in $D/lib (the image is built after the jar: see deploy/docker/ecs/server.Dockerfile)"
 # shellcheck disable=SC2086
-exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData $DIRECT -XX:TrimNativeHeapInterval=60000 \
-  -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
-  -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
-  -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \
-  -Xlog:gc*:file="$D/data/logs/gc-%p.log":time,uptime:filecount=5,filesize=20m \
+exec java @"$D/lib/server.args" "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:-UsePerfData $DIRECT \
+  -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" \
   -jar "$JAR"

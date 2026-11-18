@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti server as a systemd service (docs/admin/OPERATIONS.md section 7.2). Copy to /etc/systemd/system/drishti-server.service,
-# and bin/drishti-node.sh to /opt/drishti/bin/. The stop drains the node first (CD2, CLUSTER_DEPLOYMENT.md section 4.6):
-# forwarded work and VaR shards go to other members, then SIGTERM runs Spring's graceful shutdown. The drain needs DRISHTI_DRAIN_TOKEN in
-# the environment file (an administrator's personal API token with the node:drain scope); without it the stop goes on undrained.
+# The Drishti server as a systemd service (docs/guides/OPERATIONS_GUIDE.md section 5.3). Copy to /etc/systemd/system/drishti-server.service,
+# and deploy/jvm/server-service.args (the JVM options, generated from the function drishti.py start server runs) to /opt/drishti/lib/server.args.
+# The stop drains the node first: on SIGTERM the server drains itself (CD2, drishti.node.drain.on-stop: forwarded work and VaR shards go
+# to other members, at most DRISHTI_DRAIN_WAIT), then Spring's graceful shutdown.
 [Unit]
 Description=Drishti server
 After=network-online.target
@@ -25,7 +25,6 @@ Wants=network-online.target
 User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
-Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
 # the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder, the data folder and the modules;
 # the others sit under them unless /etc/drishti/drishti.env names them
@@ -34,12 +33,10 @@ Environment=DRISHTI_DATA_DIR=/opt/drishti/data
 # the packages (*.dmod) and first-party.yaml: modules are packages beside the server jar in /opt/drishti/lib
 Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
-ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
-# the one server jar of the install, <home>/lib (whatever its version: the shell expands the name); %%p is the JVM's pid (systemd's own %p is escaped)
-ExecStart=/bin/sh -c 'exec /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/lib/drishti-server-*-exec.jar'
-# the stop hook: drain, wait for safeToStop (at most DRISHTI_DRAIN_WAIT); systemd then sends SIGTERM. The leading '-' lets the stop go on
-# when the drain is refused or not safe in time
-ExecStop=-/opt/drishti/bin/drishti-node.sh drain
+ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps/server /opt/drishti/data/tmp/server
+# the one server jar of the install, <home>/lib (whatever its version: the shell expands the name); the GC log, heap dumps and temp folder are in server.args
+# Java 21+: java on the PATH, or name your JDK's bin/java here; -XX:+ZGenerational on Java 21 (the default from 23)
+ExecStart=/bin/sh -c 'exec java @/opt/drishti/lib/server.args -XX:+ZGenerational -jar /opt/drishti/lib/drishti-server-*-exec.jar'
 SuccessExitStatus=143
 # the drain (240 s) plus Spring's graceful shutdown (30 s) plus a margin
 TimeoutStopSec=300

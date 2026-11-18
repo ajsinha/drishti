@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -218,35 +219,23 @@ class Running(unittest.TestCase):
 
 
 class StopHook(unittest.TestCase):
-    """bin/drishti-node.sh: POSIX sh, its help needs nothing, a drain against a server that does not answer gives up at once."""
+    """drishti.py node: the drain before a stop, in Python on every OS (the server also drains itself on a stop: NodeDrainOnStop)."""
 
-    SCRIPT = ROOT / "bin" / "drishti-node.sh"
+    def node(self, *args, env=None):
+        return subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "node", *args], capture_output=True, text=True,
+                              env={**os.environ, **(env or {})}, timeout=60, check=False)
 
     def test_it_parses_and_helps(self):
-        for sh in ("sh", "bash"):
-            r = subprocess.run([sh, "-n", str(self.SCRIPT)], capture_output=True, text=True, check=False)
-            self.assertEqual(r.returncode, 0, r.stderr)
-        r = subprocess.run([str(self.SCRIPT), "help"], capture_output=True, text=True, check=False)
-        self.assertEqual(r.returncode, 0)
+        r = self.node("--help")
+        self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("drain [--wait SECONDS]", r.stdout)
-        self.assertEqual(subprocess.run([str(self.SCRIPT), "nonsense"], capture_output=True, check=False).returncode, 2)
+        self.assertNotEqual(self.node("nonsense").returncode, 0)
+        self.assertFalse((ROOT / "bin" / "drishti-node.sh").exists(), "the shell twin is gone (LAUNCHER_REVIEW.md D8)")
 
     def test_a_drain_nobody_answers_lets_the_stop_go_on(self):
-        env = {"PATH": "/usr/bin:/bin", "DRISHTI_NODE_URL": "http://127.0.0.1:9", "DRISHTI_DRAIN_WAIT": "1"}
-        r = subprocess.run([str(self.SCRIPT), "drain"], capture_output=True, text=True, env=env, timeout=30, check=False)
+        r = self.node("drain", env={"DRISHTI_NODE_URL": "http://127.0.0.1:9", "DRISHTI_DRAIN_WAIT": "1"})
         self.assertEqual(r.returncode, 3, r.stderr)
         self.assertIn("stopping without it", r.stderr)
-
-    def test_run_passes_a_stop_on_after_the_drain_and_keeps_the_exit_code(self):
-        env = {"PATH": "/usr/bin:/bin", "DRISHTI_NODE_URL": "http://127.0.0.1:9", "DRISHTI_DRAIN_WAIT": "1"}
-        p = subprocess.Popen([str(self.SCRIPT), "run", "sh", "-c", "trap 'exit 143' TERM; while :; do sleep 0.1; done"], env=env,
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        import time
-        time.sleep(0.5)
-        p.terminate()
-        _, err = p.communicate(timeout=30)
-        self.assertEqual(p.returncode, 143, err)
-        self.assertIn("stopping without it", err)                     # the drain was tried first
 
 
 if __name__ == "__main__":

@@ -83,6 +83,7 @@ packs:
   - oecd
   - official-news
   - gdelt-events
+  off-by-default: [world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]   # the public sector's: filled by their daily feeds first (WORLD_DATA_GUIDE.md); a site names them
 data:
   needs: data/needs.yaml
 console:

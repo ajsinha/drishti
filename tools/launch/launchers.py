@@ -181,10 +181,24 @@ def guide_section(doc: dict) -> str:
     return "\n".join(out)
 
 
+#: the deployment targets' JVM arguments files (committed, generated, checked): the systemd unit and the server images run java @<file>
+DEPLOY = {"deploy/jvm/server-service.args": ("the systemd unit (deploy/systemd/drishti-server.service): /opt/drishti/lib/server.args", "4g"),
+          "deploy/jvm/server-container.args": ("the server images (deploy/docker/server.Dockerfile, ecs/server.Dockerfile): /opt/drishti/lib/server.args", "75%")}
+
+
+def deploy_args(heap: str, why: str) -> str:
+    """A deployment target's arguments file: serverstart.jvm_flags for the install /opt/drishti, ZGC (the GC choice is this one line)."""
+    from pathlib import PurePosixPath
+    return serverstart.argfile_text(serverstart.jvm_flags(PurePosixPath("/opt/drishti/data"), heap, gc="zgc"), f"The JVM options of {why}") \
+        .replace(" (setup runs it); never edit it: run that command again.", "; generated from serverstart.jvm_flags and committed: never edit it.") \
+        .replace("Written by python tools/drishti.py launchers --machine", "Written by python tools/drishti.py launchers")
+
+
 def expected(home: Path) -> dict:
-    """{repository-relative path: the text it must hold}: every launcher file and IDE_GUIDE.md with its section 4 regenerated."""
+    """{repository-relative path: the text it must hold}: every launcher file, the deployment arguments files and IDE_GUIDE.md with its
+    section 4 regenerated."""
     doc = table(home)
-    out = {}
+    out = {p: deploy_args(heap, why) for p, (why, heap) in DEPLOY.items()}
     for ide, folder in FOLDERS.items():
         for row in doc.get(ide) or []:
             out[str(folder / f"{row['name']}.run.xml")] = render(home, ide, row)

@@ -32,9 +32,9 @@ COPY config/ui-kit/ shipped/ui-kit/
 COPY modules/*.dmod modules/first-party.yaml shipped/modules/
 COPY config/distributions/ shipped/distributions/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
-COPY bin/drishti-node.sh bin/drishti-node.sh
+COPY deploy/jvm/server-container.args lib/server.args
 # the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
-RUN chmod 0555 bin/entrypoint.sh bin/drishti-node.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
+RUN chmod 0555 bin/entrypoint.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
 USER drishti
 # the root file system is read-only: the site's jars (drishti.lib.path) live on the data volume (EFS), not in <home>/lib/ext
 ENV DRISHTI_HOME=/opt/drishti \

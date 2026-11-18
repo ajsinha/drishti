@@ -20,12 +20,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * The lenses a server offers (docs/architecture/LENSES.md): {@code drishti.lenses}, where the word {@value #DEFAULT_WORD} stands for every
- * lens of the modules that are on (a lens the registry declares, offered because its modules are on, with a lens file under
- * {@code config/lenses}, and not marked {@code offered-by-default: false} in that file). A lens named that cannot be offered never stops
+ * lens of the modules that are on (a lens file {@code config/lenses/<module>/<lens>.yaml} whose module is on, offered by the registry when
+ * it declares the lens, and not marked {@code offered-by-default: false} in that file). A lens named that cannot be offered never stops
  * the start: it is left out, and each one is a problem in words (why, and how to fix it) for the start-up log (ERROR) and Admin → Health.
  *
  * @param names    the lenses offered, in order, each once
@@ -44,11 +43,27 @@ public record LensOffer(List<String> names, List<String> problems) {
         /** Whether the registry declares the lens (modules on or off). */
         boolean declared(String name);
 
-        /** Whether the lens has its file ({@code config/lenses/<module>/<lens>.yaml}). */
-        boolean hasFile(String name);
+        /** The lenses that have a lens file ({@code config/lenses/<module>/<lens>.yaml}), in name order. */
+        List<String> files();
+
+        /** Whether the lens has its file. */
+        default boolean hasFile(String name) {
+            return files().contains(name);
+        }
+
+        /** Whether the module of the lens file's folder ({@code config/lenses/<module>/}) is on; a file at the top of the folder: yes. */
+        boolean fileModuleOn(String name);
 
         /** Whether its file says {@code offered-by-default: false} (a lens a distribution or a profile names, not the default). */
         boolean offDefault(String name);
+    }
+
+    /** Whether a lens can be offered: the registry offers it, or (declared nowhere) its file's module is on. */
+    private static boolean available(String n, Catalogue c) {
+        if (c.declared(n)) {
+            return c.offered().contains(n);
+        }
+        return c.hasFile(n) && c.fileModuleOn(n);
     }
 
     /** The lenses {@code configured} ({@code drishti.lenses}) resolve to against {@code c}. */
@@ -61,13 +76,13 @@ public record LensOffer(List<String> names, List<String> problems) {
                 continue;
             }
             if (DEFAULT_WORD.equals(name)) {
-                c.offered().stream().filter(c::hasFile).filter(n -> !c.offDefault(n)).forEach(out::add);
+                // every lens file of a module that is on (and offered, when the registry declares it), not marked off by default
+                c.files().stream().filter(n -> c.fileModuleOn(n) && available(n, c) && !c.offDefault(n)).forEach(out::add);
                 continue;
             }
-            Predicate<String> on = n -> c.offered().contains(n);
-            if (on.test(name) || (!c.declared(name) && c.hasFile(name))) {
-                out.add(name);                     // offered, or a site's own lens: its file arranges it
-            } else if (c.declared(name)) {
+            if (available(name, c)) {
+                out.add(name);
+            } else if (c.declared(name) || c.hasFile(name)) {
                 problems.add("lens '" + name + "' is not offered: the module it needs is off or not installed at this site. Fix: switch the module"
                         + " on (Admin → Modules, or drishti.modules.<id>.enabled=true), or take '" + name + "' out of drishti.lenses (DRISHTI_LENSES)");
             } else {

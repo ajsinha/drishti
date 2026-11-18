@@ -29,7 +29,7 @@ public record NodeProperties(Readiness readiness, Drain drain) {
 
     public NodeProperties {
         readiness = readiness == null ? new Readiness(null, null, null, null) : readiness;
-        drain = drain == null ? new Drain(null) : drain;
+        drain = drain == null ? new Drain(null, null, null) : drain;
     }
 
     /** The defaults (tests). */
@@ -60,10 +60,14 @@ public record NodeProperties(Readiness readiness, Drain drain) {
      *
      * @param settleSeconds after its drain, how long Drishti*net needs before no peer forwards work here any more (the drained flag reaches
      *     every peer within a few gossip rounds; 5 s): only then is the forwarding part safe to stop
+     * @param onStop the server drains itself when it is stopped (SIGTERM: a service stop, docker stop, Ctrl+C), before its graceful shutdown
+     * @param onStopWaitSeconds how long that drain waits for safeToStop before the stop goes on anyway (90 s)
      */
-    public record Drain(Integer settleSeconds) {
+    public record Drain(Integer settleSeconds, Boolean onStop, Integer onStopWaitSeconds) {
         public Drain {
             settleSeconds = settleSeconds == null || settleSeconds < 0 ? 5 : settleSeconds;
+            onStop = onStop == null || onStop;
+            onStopWaitSeconds = onStopWaitSeconds == null || onStopWaitSeconds < 0 ? 90 : onStopWaitSeconds;
         }
     }
 }

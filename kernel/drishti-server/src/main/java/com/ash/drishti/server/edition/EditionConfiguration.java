@@ -39,9 +39,57 @@ public class EditionConfiguration {
     public EditionContext editionContext(Edition edition, Environment env, com.ash.drishti.registry.AccessRegistry access) {
         // the lenses offered (LENSES.md): drishti.lenses, "default" being every lens of the modules that are on; a lens whose modules are
         // off, or a name nothing knows, is left out: never a failed start, but an ERROR in the log and a red line on Admin → Health
-        LensOffer offer = lensOffer(env, access);
-        offer.problems().forEach(p -> System.getLogger(EditionConfiguration.class.getName()).log(System.Logger.Level.ERROR, p));
-        return new EditionContext(edition, offer.names(), offer.problems());
+        return new EditionContext(edition, new LensMemo(env, access));
+    }
+
+    /** The lenses resolved once per state of the access registry (a module loaded, switched on or off); a new problem logged as an ERROR. */
+    static final class LensMemo implements java.util.function.Supplier<LensOffer> {
+        private final Environment env;
+        private final com.ash.drishti.registry.AccessRegistry access;
+        private Object seen;
+        private LensOffer offer;
+
+        LensMemo(Environment env, com.ash.drishti.registry.AccessRegistry access) {
+            this.env = env;
+            this.access = access;
+        }
+
+        @Override
+        public synchronized LensOffer get() {
+            Object now = access.lenses();                              // a new list for each new state of the registry
+            if (offer == null || now != seen) {
+                LensOffer next = lensOffer(env, access);
+                if (offer == null || !next.problems().equals(offer.problems())) {
+                    next.problems().forEach(p -> System.getLogger(EditionConfiguration.class.getName()).log(System.Logger.Level.ERROR, p));
+                }
+                offer = next;
+                seen = now;
+            }
+            return offer;
+        }
+    }
+
+    /** At the end of the start (every module loaded): the lenses resolved once, so a lens that cannot be offered is in the start-up log. */
+    @Bean
+    public org.springframework.context.ApplicationListener<org.springframework.boot.context.event.ApplicationReadyEvent> lensesAtStart(EditionContext context) {
+        return e -> System.getLogger(EditionConfiguration.class.getName()).log(System.Logger.Level.INFO, "lenses offered: {0}", context.lensNames());
+    }
+
+    /** The lens files: {lens: the module folder it is in ("" at the top of the folder)}, in name order. */
+    static java.util.Map<String, String> lensFiles(java.nio.file.Path dir) {
+        java.util.Map<String, String> out = new java.util.TreeMap<>();
+        if (dir == null || !java.nio.file.Files.isDirectory(dir)) {
+            return out;
+        }
+        try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.walk(dir, 2)) {
+            s.filter(f -> f.getFileName().toString().endsWith(".yaml") && java.nio.file.Files.isRegularFile(f)).forEach(f -> {
+                String lens = f.getFileName().toString().replaceAll("\\.yaml$", "");
+                out.putIfAbsent(lens, f.getParent().equals(dir) ? "" : f.getParent().getFileName().toString());
+            });
+        } catch (java.io.IOException e) {
+            return out;
+        }
+        return out;
     }
 
     /** {@code drishti.lenses} against the access registry and the lens files ({@code drishti.lenses-dir}, else {@code config/lenses}). */
@@ -60,8 +108,14 @@ public class EditionConfiguration {
             }
 
             @Override
-            public boolean hasFile(String name) {
-                return com.ash.drishti.server.console.ConsoleDistribution.lens(dir, name) != null;
+            public java.util.List<String> files() {
+                return lensFiles(dir).keySet().stream().toList();
+            }
+
+            @Override
+            public boolean fileModuleOn(String name) {
+                String module = lensFiles(dir).get(name);
+                return module == null || module.isEmpty() || access.moduleOn(module);
             }
 
             @Override

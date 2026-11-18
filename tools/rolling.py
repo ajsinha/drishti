@@ -309,7 +309,7 @@ class Runner:
                 except Failed as e:
                     self.say(f"STOPPED at {node.name}, {s.what}: {e}")
                     if s.kind in ("wait-safe", "run") and not node.console:
-                        self.say(f"   {node.name} may still be drained: drishti-node.sh undrain (DRISHTI_NODE_URL={node.url}), or resume with "
+                        self.say(f"   {node.name} may still be drained: python tools/drishti.py node undrain --server {node.url}, or resume with "
                                  f"--from {node.name}")
                     else:
                         self.say(f"   resume with --from {node.name}")

@@ -58,6 +58,16 @@ public class NodeConfiguration {
         });
     }
 
+    /**
+     * The drain on a stop (CD2): when the server is stopped (SIGTERM from a service manager, docker stop, ECS, Ctrl+C) it drains itself
+     * first, while it still serves (the phase runs before the web server's graceful shutdown), and waits for safeToStop at most
+     * {@code drishti.node.drain.on-stop-wait-seconds}; no stop hook or script is needed (LAUNCHER_REVIEW.md D8).
+     */
+    @Bean
+    public org.springframework.context.SmartLifecycle nodeDrainOnStop(NodeProperties props, NodeDrain drain) {
+        return new NodeDrainOnStop(drain, props.drain().onStop(), props.drain().onStopWaitSeconds());
+    }
+
     /** Registered as {@value NodeReadiness#NAME} (Spring drops the bean name's {@code HealthIndicator} suffix). */
     @Bean
     public NodeReadiness nodeReadinessHealthIndicator(NodeProperties props, NodeDrain drain, ObjectProvider<DigestService> digests,

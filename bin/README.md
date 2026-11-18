@@ -13,14 +13,11 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# bin: the node drain hook
+# bin: where the commands are
 
-Starting, stopping and checking Drishti is one Python command, `tools/drishti.py` (on Windows `py tools\drishti.py ...`). `bin/` holds one file:
-`drishti-node.sh`.
-
-| File | What it does |
-|---|---|
-| `drishti-node.sh` | POSIX `sh` with `curl` or `wget`, no Python needed: one node's drain before a stop and its readiness (`drain`, `undrain`, `status`, `wait-ready`, `run`). The stop hook of the service unit and the container images |
+Starting, stopping and checking Drishti is one Python command, `tools/drishti.py` (on Windows `py tools\drishti.py ...`), the same on
+Linux, macOS and Windows; no shell script. `bin/` holds only this README. A server drains itself when it is stopped (the service unit, the
+images, a terminal's Ctrl+C: `drishti.node.drain.on-stop`); `drishti.py node drain|undrain|status|wait-ready` drains one ahead of a stop.
 
 ## The command
 
@@ -30,7 +27,9 @@ Starting, stopping and checking Drishti is one Python command, `tools/drishti.py
 | `build jar`, `build modules`, `build all` | the server's executable jar into `<DRISHTI_HOME>/lib`; the module packages (`.dmod`) and `first-party.yaml` into `<DRISHTI_HOME>/modules` (the jar holds no module); both in one Maven run |
 | `start server\|console\|all\|cluster` | Java 21+, the one server jar in `<DRISHTI_HOME>/lib` (more than one is refused), temp folder, memory settings and logs under the data folder; waits for health; prints the LAN address. `--node` starts a cluster node; `all` is one server and one console on this machine; `cluster --cluster FILE` starts a cluster from a file (default `deploy/stack/stack.yaml`) |
 | `stop server\|console\|all\|cluster` | stops by the pid file only (never by name): graceful first, forced after `--timeout`; `--node`, `--all-nodes` |
-| `status` | pid, state, port, health answer, distribution and LAN address of every process started from here; with `--cluster FILE` also the members each node sees and the console's servers |
+| `status` | pid, state, port, health answer, distribution and LAN address of every process started from here, and of every server or console of this install started elsewhere (an IDE); with `--cluster FILE` also the members each node sees and the console's servers |
+| `node drain\|undrain\|status\|wait-ready` | one server's drain before a stop and its readiness (`--server`, `DRISHTI_NODE_URL`; the token `DRISHTI_DRAIN_TOKEN`) |
+| `launchers [--check\|--machine]` | the IDE launchers from `tools/launch/launchers.yaml`; this machine's JVM options files for them |
 
 Run them from the Drishti folder (the repository root, or the install folder of a release). Every command takes `--help`.
 

@@ -33,23 +33,24 @@ public final class EditionContext {
     public static final EditionContext NONE = new EditionContext(Edition.NONE, List.of());
 
     private final Edition instance;
-    private final List<String> lenses;
-    private final List<String> lensProblems;
+    private final java.util.function.Supplier<LensOffer> lenses;
 
     public EditionContext(Edition instance, List<String> lenses) {
-        this(instance, lenses, List.of());
+        this(instance, () -> new LensOffer(List.copyOf(lenses), List.of()));
     }
 
-    /** As above, with the lenses named that are not offered, each in words ({@link LensOffer}). */
-    public EditionContext(Edition instance, List<String> lenses, List<String> lensProblems) {
+    /**
+     * As above, the lenses resolved when asked ({@link LensOffer}): a module's lenses are known once its package has loaded, and a module
+     * switched on or off at run time changes them.
+     */
+    public EditionContext(Edition instance, java.util.function.Supplier<LensOffer> lenses) {
         this.instance = instance;
-        this.lenses = List.copyOf(lenses);
-        this.lensProblems = List.copyOf(lensProblems);
+        this.lenses = lenses;
     }
 
     /** The lenses {@code drishti.lenses} names that are not offered, each with why and how to fix it (Health shows them red). */
     public List<String> lensProblems() {
-        return lensProblems;
+        return lenses.get().problems();
     }
 
     /** The distribution's filter ({@link Edition#NONE} for Drishti All). */
@@ -59,7 +60,7 @@ public final class EditionContext {
 
     /** The lenses the site offers, sorted. */
     public List<String> lensNames() {
-        return lenses.stream().sorted().toList();
+        return lenses.get().names().stream().sorted().toList();
     }
 
     /** The filter the current request is seen through: the distribution's, whatever lens the person works in. */

@@ -16,12 +16,12 @@
 # section 6). Build from the repository root:
 #   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:$(python3 tools/version.py) .
 # Calc's Python runtime (Pyodide) is fetched in the first stage (pinned, SHA-256 checked), so a running console needs no
-# internet; the stage sees only the fetch script and the vendored libraries, so a console change does not fetch it again.
+# internet; the stage sees only tools/calcruntime.py and the vendored libraries, so a console change does not fetch it again.
 FROM python:3.13-slim AS pyodide
 WORKDIR /src
-COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
+COPY tools/calcruntime.py tools/calcruntime.py
 COPY drishti-console/web/static/vendor/ drishti-console/web/static/vendor/
-RUN bash tools/fetch-pyodide.sh && rm -rf /root/.cache/drishti
+RUN python tools/calcruntime.py && rm -rf /root/.cache/drishti
 
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 drishti

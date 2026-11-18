@@ -27,12 +27,16 @@ import org.junit.jupiter.api.Test;
  */
 class LensOfferTest {
 
-    /** risk, trading, market, world, research declared; genomics off (research not offered); markets marked offered-by-default: false. */
-    private static LensOffer.Catalogue catalogue(boolean genomicsOn) {
-        List<String> offered = genomicsOn ? List.of("world", "markets", "research", "cio", "risk", "trading", "market")
-                : List.of("world", "markets", "cio", "risk", "trading", "market");
-        Set<String> declared = Set.of("world", "markets", "research", "cio", "risk", "trading", "market", "publicsector");
-        Set<String> files = Set.of("world", "markets", "research", "risk", "trading", "market", "mysite");
+    /**
+     * As a server of shipped .dmod modules sees it: the kernel declares world, markets, research, cio, publicsector (the registry offers
+     * a declared lens while its modules are on); banking's risk, trading and market are known by their lens files only
+     * (config/lenses/banking/); markets is marked offered-by-default: false; mysite is a site's own lens file at the top of the folder.
+     */
+    private static LensOffer.Catalogue catalogue(boolean genomicsOn, boolean bankingOn) {
+        List<String> offered = genomicsOn ? List.of("world", "markets", "research", "cio", "publicsector") : List.of("world", "markets", "cio", "publicsector");
+        Set<String> declared = Set.of("world", "markets", "research", "cio", "publicsector");
+        java.util.Map<String, String> files = new java.util.TreeMap<>(java.util.Map.of("market", "banking", "risk", "banking", "trading", "banking",
+                "markets", "capitalmarkets", "world", "economy", "research", "genomics", "mysite", ""));
         return new LensOffer.Catalogue() {
             @Override
             public List<String> offered() {
@@ -45,8 +49,14 @@ class LensOfferTest {
             }
 
             @Override
-            public boolean hasFile(String name) {
-                return files.contains(name);
+            public List<String> files() {
+                return List.copyOf(files.keySet());
+            }
+
+            @Override
+            public boolean fileModuleOn(String name) {
+                String m = files.get(name);
+                return m == null || m.isEmpty() || !m.equals("banking") && !m.equals("genomics") || m.equals("banking") && bankingOn || m.equals("genomics") && genomicsOn;
             }
 
             @Override
@@ -56,13 +66,18 @@ class LensOfferTest {
         };
     }
 
+    private static LensOffer.Catalogue catalogue(boolean genomicsOn) {
+        return catalogue(genomicsOn, true);
+    }
+
     @Test
     void theDefaultIsEveryLensOfTheModulesThatAreOn() {
         LensOffer on = LensOffer.of(List.of("default"), catalogue(true));
-        assertThat(on.names()).containsExactlyInAnyOrder("world", "research", "risk", "trading", "market");   // no file: cio; off by default: markets
+        assertThat(on.names()).containsExactlyInAnyOrder("world", "research", "risk", "trading", "market", "mysite");   // no file: cio; off by default: markets
         assertThat(on.problems()).isEmpty();
         LensOffer off = LensOffer.of(List.of("default"), catalogue(false));
-        assertThat(off.names()).containsExactlyInAnyOrder("world", "risk", "trading", "market");               // genomics off: no Research
+        assertThat(off.names()).containsExactlyInAnyOrder("world", "risk", "trading", "market", "mysite");     // genomics off: no Research
+        assertThat(LensOffer.of(List.of("default"), catalogue(true, false)).names()).doesNotContain("risk", "trading", "market");   // banking off
         assertThat(off.problems()).isEmpty();
     }
 
@@ -78,6 +93,8 @@ class LensOfferTest {
         LensOffer o = LensOffer.of(List.of("risk", "research", "nosuch"), catalogue(false));
         assertThat(o.names()).containsExactly("risk");
         assertThat(o.problems()).hasSize(2);
+        assertThat(LensOffer.of(List.of("risk"), catalogue(true, false)).problems()).singleElement().asString().contains("module it needs is off");
+        assertThat(LensOffer.of(List.of("publicsector"), catalogue(true)).names()).containsExactly("publicsector");   // declared, no file: offered
         assertThat(o.problems().get(0)).contains("lens 'research' is not offered", "module it needs is off", "Fix:");
         assertThat(o.problems().get(1)).contains("lens 'nosuch' is not offered", "no lens file", "Fix:");
     }

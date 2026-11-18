@@ -116,13 +116,17 @@ def memory_flags(workdir: Path, env: dict) -> list:
     return out
 
 
-def jvm_flags(data: Path, heap: str, stem: str = "server", label: str = "server", workdir: Path | None = None, env: dict | None = None) -> list:
+def jvm_flags(data: Path, heap: str, stem: str = "server", label: str = "server", workdir: Path | None = None, env: dict | None = None,
+              gc: str | None = None) -> list:
     """The server's JVM options, the one source (LAUNCHER_REVIEW.md F2, F9): ``start server`` runs them and ``drishti.py launchers``
     writes them into the arguments files the IDE launchers name (``<settings folder>/jvm-<profile>.args``), so the two never differ.
     Every folder follows the data folder: the temp folder (``<data>/tmp/<stem>``, where DuckDB, RocksDB and CatBoost unpack), heap dumps
     (``<data>/dumps/<label>``) and the GC log (``<data>/logs/gc-<stem>-%p.log``); then the heap and the native-memory settings, and direct
-    memory beyond 256 MB from tools/lake/memory_caps.py (a later flag wins)."""
-    flags = [f"-Djava.io.tmpdir={data / 'tmp' / stem}", f"-Xmx{heap}", "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000",
+    memory beyond 256 MB from tools/lake/memory_caps.py (a later flag wins). ``heap`` is a size (4g) or a share of the machine's memory
+    (75%: a container); ``gc`` "zgc" chooses ZGC (the service unit and the images), else the JVM's default (G1)."""
+    flags = [f"-Djava.io.tmpdir={data / 'tmp' / stem}",
+             f"-XX:MaxRAMPercentage={heap.rstrip('%')}" if heap.endswith("%") else f"-Xmx{heap}",
+             *(["-XX:+UseZGC"] if gc == "zgc" else []), "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000",
              "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary", "-XX:+HeapDumpOnOutOfMemoryError",
              f"-XX:HeapDumpPath={data / 'dumps' / label}", f"-Xlog:gc*:file=\"{(data / 'logs' / f'gc-{stem}-%p.log').as_posix()}\":time,uptime:filecount=5,filesize=20m"]   # quoted: C: on Windows
     if workdir is not None:

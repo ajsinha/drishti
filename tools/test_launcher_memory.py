@@ -36,11 +36,11 @@ CAPS = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(CAPS)
 FLAGS = (f"-XX:MaxDirectMemorySize={CAPS.BASE_MB}m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
 DIAGNOSTICS = ("HeapDumpOnOutOfMemoryError", "HeapDumpPath=", "-Xlog:gc*:file=", "filecount=5,filesize=20m")
-PRODUCTION = ("tools/launch/serverstart.py", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile")
+PRODUCTION = ("tools/launch/serverstart.py", "deploy/jvm/server-service.args", "deploy/jvm/server-container.args")   # the images and the unit run java @server.args
 LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too (drishti.py start server sets it everywhere: Windows ignores it)
     "tools/launch/serverstart.py": True,
-    "deploy/docker/ecs/server-entrypoint.sh": True,
-    "deploy/docker/server.Dockerfile": True,
+    "deploy/jvm/server-service.args": False,
+    "deploy/jvm/server-container.args": False,
 }
 
 
@@ -90,15 +90,24 @@ class LauncherMemory(unittest.TestCase):
                     self.assertIn(d, text)
 
     def test_every_lake_loader_caps_the_cached_buffers(self):
-        loaders = [p for p in sorted((ROOT / "tools").glob("load-*.sh")) if "bin/java" in p.read_text(encoding="utf-8")]
-        loaders += [ROOT / "deploy/aws/ecs/templates/lake-task.json", ROOT / "tools/javacmd.py"]
-        self.assertGreater(len(loaders), 6)
-        for p in loaders:
-            text = p.read_text(encoding="utf-8")
+        for p in (ROOT / "deploy/aws/ecs/templates/lake-task.json", ROOT / "tools/javacmd.py"):
             with self.subTest(p.name):
-                self.assertIn("jdk.nio.maxCachedBufferSize=", text)
-                if p.suffix == ".sh":
-                    self.assertEqual(text.count("bin/java\" -D"), text.count("-Djdk.nio.maxCachedBufferSize=262144"), "every java line")
+                self.assertIn("jdk.nio.maxCachedBufferSize=", p.read_text(encoding="utf-8"))
+        # the store loaders (drishti.py data load) start every loader JVM through javacmd.java_cmd, which adds the cap
+        import sys
+        sys.path.insert(0, str(ROOT / "tools"))
+        import javacmd
+        import storeload
+        javacmd._VERSIONS.setdefault("java", 21)            # no java is run: the command line is only built
+        for store in sorted(storeload.STORES):
+            if store == "delta":
+                continue                                    # Python only, no JVM
+            with self.subTest(store):
+                _, steps = storeload.plan(store, [], 10, 1, [], data=ROOT / "data", env={}, cwd=ROOT, java="java", jar="drishti-server-exec.jar")
+                javas = [s for s in steps if s[0] == "java"]
+                self.assertEqual(len(javas), 1 if storeload.STORES[store].together else 2)
+                for s in javas:
+                    self.assertIn("-Djdk.nio.maxCachedBufferSize=262144", s)
 
     def test_the_stack_starts_each_server_with_them(self):
         """drishti.py start cluster starts every node through drishti.py start server, which sets them (one launcher, not two)."""
@@ -126,7 +135,9 @@ class LauncherMemory(unittest.TestCase):
             text = (ROOT / rel).read_text(encoding="utf-8")
             with self.subTest(rel):
                 self.assertIn("-ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi", text)
-                self.assertIn("-XX:+UseZGC", text)
+                self.assertIn("server.args", text)                     # the generated options: ZGC is there
+        for rel in ("deploy/jvm/server-container.args", "deploy/jvm/server-service.args"):
+            self.assertIn("-XX:+UseZGC", (ROOT / rel).read_text(encoding="utf-8"), rel)
         for jdk, flag in (("/usr/lib/jvm/java-21-openjdk-amd64", "-XX:+ZGenerational"), ("/usr/lib/jvm/java-25-openjdk-amd64", javacmd.COMPACT)):
             java = Path(jdk) / "bin" / "java"
             if java.exists():

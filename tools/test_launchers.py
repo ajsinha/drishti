@@ -167,3 +167,134 @@ def test_profiles_hold_no_launcher_values_twice_and_the_demo_names_its_extras_on
     assert settingsfile.read(ROOT / "config" / "profiles" / "qa.ini")["drishti.data.dir"].startswith("${drishti.home}/")
     assert "DEMO_PACKS" not in (ROOT / "tools" / "launch" / "serverstart.py").read_text(encoding="utf-8")
     assert "DRISHTI_LENSES" not in (ROOT / "tools" / "launch" / "serverstart.py").read_text(encoding="utf-8")
+
+
+def test_status_and_build_see_a_server_started_from_an_ide(tmp_path, monkeypatch):
+    """F20, F25 (D7): a server of this install run from IntelliJ (no pid file) is found by its command line; its port comes from the
+    settings files it names; build refuses in one line while it runs."""
+    home = ROOT
+    ide = (f"/usr/lib/jvm/java-21/bin/java @/home/u/drishti-envs/jvm-qa.args -Ddrishti.home={home} "
+           f"-Ddrishti.settings.file={tmp_path / 'dev.ini'},{home / 'config' / 'profiles' / 'qa.ini'} -jar {home}/lib/drishti-server-exec.jar")
+    (tmp_path / "dev.ini").write_text("drishti.home=/x\n", encoding="utf-8")
+    console = f"python {home}/drishti-console/run_drishti_web.py --settings {tmp_path / 'dev.ini'} --profile qa"
+    other = "/usr/bin/java -jar /elsewhere/lib/drishti-server-exec.jar"
+    monkeypatch.setattr(procs, "_all_command_lines", lambda: {101: ide, 102: console, 103: other})
+    found = {p["pid"]: (p["kind"], p["port"]) for p in procs.drishti_processes(home)}
+    assert found == {101: ("server", 18580), 102: ("console", 17580)}, "another install's server is not ours"
+    import modulesbuild
+    with pytest.raises(procs.LaunchError, match=r"stop the server first: pid 101 on port 18580"):
+        modulesbuild.holding_jar(home)
+    monkeypatch.setattr(procs, "_all_command_lines", lambda: {103: other})
+    modulesbuild.holding_jar(home)
+
+
+def _params(f: Path) -> str:
+    return {x.get("name"): x.get("value") or "" for x in conf(f).findall("option")}.get("PARAMETERS", "")
+
+
+def test_g3_every_pycharm_launcher_parses_with_the_real_command_line():
+    """A retired command or option in a launcher fails here, not in a tester's PyCharm."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_main_for_test", ROOT / "tools" / "drishti.py")
+    cli = importlib.util.module_from_spec(spec)
+    sys.modules["drishti_main_for_test"] = cli                 # build_parser looks itself up by its module name
+    spec.loader.exec_module(cli)
+    import yaml
+    console_keys = yaml.safe_load((ROOT / "drishti-console" / "config" / "application.yaml").read_text(encoding="utf-8"))
+    for f in sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml")):
+        words = shlex.split(_params(f))
+        assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
+        words = words[2:]
+        if words[:1] == ["--profile"]:
+            assert (ROOT / "config" / "profiles" / f"{words[1]}.ini").is_file(), f.name
+            words = words[2:]
+        script = {x.get("name"): x.get("value") for x in conf(f).findall("option")}["SCRIPT_NAME"]
+        if script.endswith("run_drishti_web.py"):
+            for w in words:                                          # --a.b=v: a key of the console's application.yaml
+                node = console_keys
+                for part in w[2:].split("=", 1)[0].split("."):
+                    assert isinstance(node, dict) and part in node, f"{f.name}: {w} is no key of drishti-console/config/application.yaml"
+                    node = node[part]
+            continue
+        a, extra = cli.build_parser().parse_known_args(words)
+        assert not extra, f"{f.name}: {extra} are not options of drishti.py {' '.join(words[:2])}"
+
+
+NAME = __import__("re").compile(r"\b(DRISHTI_[A-Z0-9_]+|drishti\.[a-z0-9.-]+[a-z0-9])\b")
+
+
+def test_g4_every_setting_a_launcher_profile_or_cluster_file_names_is_documented():
+    """A name in a launcher, a profile, the cluster files or the systemd unit is a row of CONFIGURATION.md (F11: no undocumented name)."""
+    doc = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
+    files = [*LAUNCHERS, *sorted((ROOT / "config" / "profiles").glob("*.ini")), ROOT / "deploy" / "stack" / "stack.yaml",
+             *sorted((ROOT / "deploy" / "stack").glob("*.ini")), ROOT / "deploy" / "systemd" / "drishti-server.service"]
+    for f in files:
+        code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#"))
+        if f.suffix == ".xml":
+            code = ET.tostring(conf(f), encoding="unicode")
+        for name in sorted(n for n in set(NAME.findall(code)) if not n.endswith((".env", ".ini", ".yaml", ".service", ".args"))):
+            if name in ("drishti.home", "drishti.settings.file"):
+                assert name in doc, name
+                continue
+            assert f"`{name}`" in doc or name in doc, f"{f.relative_to(ROOT)}: {name} is not in docs/admin/CONFIGURATION.md"
+
+
+def test_g5_every_pack_named_is_a_pack_and_no_tool_or_launcher_holds_a_pack_list():
+    """D1: the default packs follow the modules; a profile or the cluster file names extra packs by id, each a pack.yaml on disk; no
+    launcher and no tool writes a pack list of its own."""
+    known = {p.parent.name for p in [*ROOT.glob("modules/*/packs/*/pack.yaml"), *ROOT.glob("config/packs/core/*/pack.yaml")]}
+    named = []
+    for f in sorted((ROOT / "config" / "profiles").glob("*.ini")):
+        named += [p.strip() for p in (settingsfile.read(f).get("drishti.packs.enabled") or "").split(",") if p.strip() and p.strip() != "default"]
+    import yaml
+    stack = yaml.safe_load((ROOT / "deploy" / "stack" / "stack.yaml").read_text(encoding="utf-8"))
+    for n in stack.get("nodes") or []:
+        named += [p.strip() for p in str(n.get("packs") or "").split(",") if p.strip()]
+    assert named and not [p for p in named if p not in known], [p for p in named if p not in known]
+    lists = __import__("re").compile(r"core,market-data,trading")
+    launch_tools = [*sorted((ROOT / "tools" / "launch").glob("*.py")), *sorted((ROOT / "tools" / "lake").glob("*.py")),
+                    ROOT / "tools" / "drishti.py", ROOT / "tools" / "drishti_parser.py", ROOT / "tools" / "javacmd.py", ROOT / "tools" / "settingsfile.py"]
+    for f in [*LAUNCHERS, *launch_tools]:
+        if f.name.startswith("test_"):
+            continue
+        assert not lists.search(f.read_text(encoding="utf-8", errors="replace")), f"{f.relative_to(ROOT)}: a pack list (D1: the modules' manifests are the home)"
+
+
+def test_g8_the_docs_name_launchers_that_exist_and_no_retired_script():
+    import yaml
+    doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
+    names = {r["name"] for ide in ("intellij", "pycharm") for r in doc[ide]}
+    pat = __import__("re").compile(r"\*\*((?:Drishti (?:server|console|doctor)(?: \([^)*]*\))?|Drishti build [a-z ]+|Build demo lakes|Load (?:a|ENDUR) file into the lake))\*\*")
+    retired = ("start.sh", "stop-cluster.sh", "start-cluster.sh", "drishti-stack/")
+    for f in sorted((ROOT / "docs").rglob("*.md")) + [ROOT / "README.md", ROOT / "bin" / "README.md", ROOT / "lib" / "README.md", ROOT / "deploy" / "stack" / "README.md"]:
+        if "plans" in f.parts or not f.is_file():
+            continue
+        text = f.read_text(encoding="utf-8")
+        for m in pat.finditer(text):
+            assert m.group(1) in names, f"{f.relative_to(ROOT)}: **{m.group(1)}** is no launcher (tools/launch/launchers.yaml)"
+        for r in retired:
+            assert r not in text, f"{f.relative_to(ROOT)}: names the retired {r}"
+
+
+def test_g9_a_file_a_launcher_names_exists_unless_it_is_a_template():
+    import yaml
+    doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
+    for row in doc["pycharm"]:
+        words = str(row.get("command") or "").split()
+        for i, w in enumerate(words):
+            if w == "--from":
+                path = words[i + 1]
+                if row.get("template"):
+                    continue
+                assert (ROOT / path).exists() and path.startswith("data/testdata/"), f"{row['name']}: {path} (a sample under data/testdata/, or template: true)"
+
+
+def test_g10_no_shipped_launcher_or_config_holds_an_os_specific_path():
+    import yaml
+    files = [*LAUNCHERS, *sorted((ROOT / "config" / "profiles").glob("*.ini")), ROOT / "deploy" / "stack" / "stack.yaml",
+             *sorted((ROOT / "deploy" / "stack").glob("*.ini")), ROOT / "config" / "settings.examples" / "dev.ini"]
+    bad = __import__("re").compile(r"/usr/lib/jvm|[A-Za-z]:\\\\|[A-Za-z]:/(?:Users|Program)")
+    for f in files:
+        code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith(("#", "<!--")))
+        assert not bad.search(code), f"{f.relative_to(ROOT)}: an OS-specific absolute path"
+    assert "java" not in (yaml.safe_load((ROOT / "deploy" / "stack" / "stack.yaml").read_text(encoding="utf-8")) or {}), "stack.yaml: no java: (the one JDK lookup)"
