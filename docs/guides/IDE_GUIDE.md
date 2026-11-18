@@ -421,6 +421,7 @@ Two servers must never share a data folder.
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 1.1). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
+| A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | the Python tools find Java in this order: `--java FILE`, `--java-home DIR`, **`DRISHTI_JAVA_HOME`**, `JAVA_HOME`, `java` on the PATH. Leave `JAVA_HOME` alone (other programs may need Java 8) and set `DRISHTI_JAVA_HOME` to the JDK 21 folder: for every launcher, `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm; for one launcher, **Edit Configurations → Environment variables** `DRISHTI_JAVA_HOME=C:\jdk-21`. The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
 | A run configuration is missing or shows `<no module>` | IntelliJ: the project is not the root `pom.xml`; open the root and let the Maven import finish. The consoles and the tools are PyCharm's (`drishti-console/`). |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
 
