@@ -15,6 +15,8 @@
 -->
 # Plan: release i7b (eventing, role Homes, K5) with Rachana R0 alongside
 
+**Owner decision, 2026-11-17: all 21 recommendations in section 7 are accepted** (decision 7 on the basis that no page outside this machine pins `render/1.2.0`, `render/2.4.0` or `/embed/v1/channel`).
+
 **Status: analysis and plan, written 2026-11-17 22:00. Nothing built, nothing run** (i7a was being released on this machine).
 Read from git only: this worktree (`wip/i7b` = `wip/i7a` at `42047f059`), `drishti-elements` (`main` at `39ca755`, `design/eventing` at
 `a974666`, `feature/events` = the design merge only), `drishti-rachana` (`main` at `2235a42`, `docs/plans/R0_R1_I8_PLAN.md`).
