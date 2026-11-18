@@ -33,11 +33,15 @@ import javacmd  # noqa: E402 - tools/ is on the path through procs
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lake"))
 import lakeconfig  # noqa: E402 - the one name of the demo lake's root variable
 
-DEMO_PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds"
+import settingsfile  # noqa: E402 - tools/ is on the path through procs
+
+#: the development secrets (D6: kept as they are, here once): drishti.py start --demo and the generated launchers take them from here
 DEV = {"DRISHTI_SEED_PASSWORD": "drishti-dev-admin123",
        "DRISHTI_TOKEN_SECRET": "drishti-dev-only-token-secret-change-me-0123456789",
        "DRISHTI_SESSION_SECRET": "drishti-dev-only-session-secret-change-me-0123456789",
        "DRISHTI_NET_SECRET": "drishti-dev-only-cluster-key-change-me-0123456789"}
+#: the profile key of the server's heap (a JVM option the launchers and start server read from the settings files; the server ignores it)
+HEAP_KEY = "drishti.launch.heap"
 HEADER = "".join(line + "\n" for line in Path(__file__).read_text(encoding="utf-8").splitlines()[:13])
 
 
@@ -112,6 +116,28 @@ def memory_flags(workdir: Path, env: dict) -> list:
     return out
 
 
+def jvm_flags(data: Path, heap: str, stem: str = "server", label: str = "server", workdir: Path | None = None, env: dict | None = None) -> list:
+    """The server's JVM options, the one source (LAUNCHER_REVIEW.md F2, F9): ``start server`` runs them and ``drishti.py launchers``
+    writes them into the arguments files the IDE launchers name (``<settings folder>/jvm-<profile>.args``), so the two never differ.
+    Every folder follows the data folder: the temp folder (``<data>/tmp/<stem>``, where DuckDB, RocksDB and CatBoost unpack), heap dumps
+    (``<data>/dumps/<label>``) and the GC log (``<data>/logs/gc-<stem>-%p.log``); then the heap and the native-memory settings, and direct
+    memory beyond 256 MB from tools/lake/memory_caps.py (a later flag wins)."""
+    flags = [f"-Djava.io.tmpdir={data / 'tmp' / stem}", f"-Xmx{heap}", "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000",
+             "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary", "-XX:+HeapDumpOnOutOfMemoryError",
+             f"-XX:HeapDumpPath={data / 'dumps' / label}", f"-Xlog:gc*:file=\"{(data / 'logs' / f'gc-{stem}-%p.log').as_posix()}\":time,uptime:filecount=5,filesize=20m"]   # quoted: C: on Windows
+    if workdir is not None:
+        flags += memory_flags(workdir, dict(os.environ if env is None else env))
+    return flags
+
+
+def argfile_text(flags: list, why: str) -> str:
+    """A java ``@argfile`` of ``flags`` (one per line, each quoted, forward slashes: a path with a space works and Windows reads it)."""
+    out = [f"# {why}", "# Written by python tools/drishti.py launchers --machine (setup runs it); never edit it: run that command again."]
+    for f in flags:
+        out.append('"' + f.replace("\\", "/").replace('"', '\\"') + '"')
+    return "\n".join(out) + "\n"
+
+
 def iceberg_settings(a, env: dict, roots: dict) -> None:
     """``--iceberg``: the banking domains read from Iceberg, given to the server as settings only; nothing is written (connector files are
     read-only, the install folder is never written): the connectors folder is the shipped Iceberg templates,
@@ -153,6 +179,17 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"
 
 
+def profiled(a) -> tuple:
+    """(the settings files, their keys): what ``drishti.py --settings``/``--profile`` named, with ``--demo``'s profile, config/profiles/demo.ini,
+    appended (a later file wins). The demo is described there once; the IDE's demo launcher names the same file."""
+    settings, keys = javacmd.settings()
+    if getattr(a, "demo", False):
+        home = javacmd.launch_roots(getattr(a, "home", None), None, None, keys)["home"][0]
+        settings = settingsfile.with_profiles(settings, home, ["demo"])
+        keys = settingsfile.read_all(settings)
+    return settings or "", keys
+
+
 def start(a, env: dict | None = None) -> int:
     """Starts one server (or a cluster node) from the options of ``drishti.py start server``; the exit code."""
     env = dict(os.environ if env is None else env)
@@ -161,7 +198,7 @@ def start(a, env: dict | None = None) -> int:
         procs.load_env_file(a.env_file, env)
     if a.distribution:
         env["DRISHTI_DISTRIBUTION"] = a.distribution         # the server reads it as drishti.distribution
-    settings, keys = javacmd.settings()
+    settings, keys = profiled(a)
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home = roots["home"][0]
     data = roots["data"][0]
@@ -172,7 +209,8 @@ def start(a, env: dict | None = None) -> int:
     # the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the server takes no root from its working folder
     env["DRISHTI_HOME"] = str(home)
     env["DRISHTI_MODULES_HOME"] = str(roots["modules"][0])
-    port = int(a.port or env.get("DRISHTI_PORT") or procs.DEFAULT_SERVER_PORT)
+    # the port: --port, else server.port of the settings files (a profile's), else DRISHTI_PORT, else 18480 (the server's own order)
+    port = int(a.port or (keys.get("server.port") or "").strip() or env.get("DRISHTI_PORT") or procs.DEFAULT_SERVER_PORT)
     stem = f"server-{a.node}" if a.node else "server"
     label = a.node or "server"
     pid_file, log, tmp = data / "run" / f"{stem}.pid", data / "logs" / f"{stem}.log", data / "tmp" / stem
@@ -200,21 +238,9 @@ def start(a, env: dict | None = None) -> int:
     if not (home / "config" / "packs").is_dir():
         warn(f"no config/packs/ in {home}: the server starts without domain packs")
 
-    dev, packs, heap = [], a.packs, a.heap
-    if a.demo:
-        packs = packs or env.get("DRISHTI_PACKS") or DEMO_PACKS
-        heap = heap or "4g"
-        env.update(DRISHTI_DEMO_ENABLED="false", DRISHTI_VAR_SYSTEM_BASKETS_SEED="true", DRISHTI_OFFLINE="true", DRISHTI_SECURITY_ENABLED="true",
-                   DRISHTI_SEED_ADMIN="true", DRISHTI_STUDIO_SAVE="true")
-        env.setdefault("DRISHTI_LENSES", "risk,world,market,trading")
-        env.setdefault("DRISHTI_SEED_USERNAME", "drishti-dev-admin")
-        dev = dev_secrets(env, ["DRISHTI_SEED_PASSWORD", "DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"] + (["DRISHTI_NET_SECRET"] if a.node else []))
-        if not a.node:
-            env.setdefault("DRISHTI_DATALOAD_ENABLED", "true")
-            env.setdefault("DRISHTI_DATALOAD_OWNER", "true")
-    heap = heap or "2g"
-    if packs:
-        env["DRISHTI_PACKS"] = packs
+    dev, heap = [], a.heap or (keys.get(HEAP_KEY) or "").strip() or "2g"   # --heap, else the profile's drishti.launch.heap
+    if a.demo:   # everything else of the demo is config/profiles/demo.ini (profiled); only the development secrets come from here
+        dev = dev_secrets(env, ["DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"] + (["DRISHTI_NET_SECRET"] if a.node else []))
     if a.engine:
         env["DRISHTI_DELTA_ENGINE"] = a.engine
     if a.lake_root:
@@ -236,23 +262,21 @@ def start(a, env: dict | None = None) -> int:
         d.mkdir(parents=True, exist_ok=True)
     env["DRISHTI_TMP_DIR"] = str(tmp)
     env.setdefault("MALLOC_ARENA_MAX", "2")                        # glibc: two malloc arenas, not one per busy thread
-    flags = [f"-Djava.io.tmpdir={tmp}", f"-Xmx{heap}", "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000",
-             "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary", "-XX:+HeapDumpOnOutOfMemoryError",
-             f"-XX:HeapDumpPath={data / 'dumps' / label}", f"-Xlog:gc*:file={data / 'logs' / f'gc-{stem}-%p.log'}:time,uptime:filecount=5,filesize=20m",
-             f"-Ddrishti.data.dir={server_data}"]
+    workdir = Path(a.workdir).resolve() if a.workdir else home
+    flags = jvm_flags(data, heap, stem, label, workdir, env) + [f"-Ddrishti.data.dir={server_data}"]
     if settings:
         flags.append(f"-Ddrishti.settings.file={settings}")
-    workdir = Path(a.workdir).resolve() if a.workdir else home
-    flags += memory_flags(workdir, env)
     flags += list(a.java_opt or [])
-    args = [f"--server.port={port}"]
+    args = [f"--server.port={port}"] + ([f"--drishti.packs.enabled={a.packs}"] if a.packs else [])   # --packs beats a profile's packs
     if a.background:
         args += [f"--drishti.logging.file={log}", "--logging.threshold.console=OFF"]
     args += list(a.server_arg or []) + list(getattr(a, "rest", None) or [])
 
     url, health = f"http://{url_host}:{port}", f"http://127.0.0.1:{port}/actuator/health"
     say(f"Drishti {'node ' + a.node + ' ' if a.node else ''}server: {jar.name} on Java {major}, port {port}, heap {heap}, "
-        f"packs {env.get('DRISHTI_PACKS') or 'the default'}, data {server_data}")
+        f"packs {a.packs or keys.get('drishti.packs.enabled') or env.get('DRISHTI_PACKS') or 'the default'}, data {server_data}")
+    if settings:
+        say(f"  settings {settings}")
     for line in roots_line(roots, java, why):
         say(line)
     say("  " + modules_line)

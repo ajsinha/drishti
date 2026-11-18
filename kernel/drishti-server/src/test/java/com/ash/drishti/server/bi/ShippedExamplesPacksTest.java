@@ -55,7 +55,8 @@ class ShippedExamplesPacksTest {
     @Test
     void everyShippedBiItemReadsOnlyWhatTheShippedPacksServe() throws IOException {
         List<Pack> packs = new PackLoader().load(com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent()),
-                List.of(PackPaths.DEFAULT_ENABLED.split(",")));
+                com.ash.drishti.packs.distribution.Distributions.defaultPacks(Path.of(TestRoots.repo(), "config", "distributions", "kernel.yaml"),
+                        com.ash.drishti.api.resolution.ModuleHomes.source(Path.of(TestRoots.repo()))));
         Map<String, List<String>> kindsByPack = new java.util.HashMap<>();
         Set<String> kinds = new HashSet<>();
         Set<String> connectors = new HashSet<>();

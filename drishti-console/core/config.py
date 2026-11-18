@@ -144,19 +144,45 @@ def _read_settings_file(named: str) -> dict[str, str]:
     return {k[len("console."):]: v for k, v in entries.items() if k.startswith("console.")}
 
 
+#: the keys the console shares with the server in a settings file (a profile): each fills its environment variable when that is unset, so
+#: the console and the server started on the same files agree (the data folder, the install, the distribution)
+SHARED = {"drishti.home": "DRISHTI_HOME", "drishti.data.dir": "DRISHTI_DATA_DIR", "drishti.distribution": "DRISHTI_DISTRIBUTION"}
+
+
+def _shared(named: str) -> dict[str, Any]:
+    """The server's keys the console reads too (``SHARED``, into the environment where unset) and the server's address the files give
+    (``console.backend.url``, else a profile's ``server.port``), as the console's ``backend.url`` where DRISHTI_BACKEND_URL is unset."""
+    try:
+        entries = settings_ini.read_all(named)
+    except settings_ini.SettingsError as e:
+        raise SystemExit(f"--settings: {e}") from None
+    home = os.environ.get("DRISHTI_HOME") or entries.get("drishti.home") or str(Path(__file__).resolve().parents[2])
+    for key, var in SHARED.items():
+        value = str(entries.get(key) or "").strip()
+        if value and not (os.environ.get(var) or "").strip():
+            os.environ[var] = settings_ini.home_value(value, home)
+    url = settings_ini.server_url(entries)
+    return {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
+
+
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
     if not Path(config_dir).is_dir():   # a file named instead of its folder read no file at all, and every setting fell to its default
         raise ValueError(f"load_settings takes the console's config folder, not {config_dir}")
+    try:
+        argv, settings_path = settings_ini.pop_option(list(argv or []))
+        # --profile demo|samples|qa: the install's committed settings file (config/profiles/<name>.ini), after --settings
+        argv, profiles = settings_ini.pop_profile(argv)
+        settings_path = settings_ini.with_profiles(settings_path, Path(config_dir).resolve().parents[1], profiles)
+    except settings_ini.SettingsError as e:
+        raise SystemExit(str(e)) from None
+    shared = _shared(settings_path) if settings_path else {}
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name
         files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
     base, over = files
-    try:
-        argv, settings_path = settings_ini.pop_option(list(argv or []))
-    except settings_ini.SettingsError as e:
-        raise SystemExit(str(e)) from None
     if settings_path:                       # --settings /abs/drishti.ini: the file's keys sit below the environment and the command line
+        _merge(over, shared)
         for k, v in _read_settings_file(settings_path).items():
             _set(over, k, _coerce(v))
     for key, value in os.environ.items():

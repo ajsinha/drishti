@@ -57,7 +57,7 @@ def stack(tmp_path_factory):
         return
     lake = shared_lake(tmp_path_factory)
     # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own; the full product's packs and
-    # the capital-markets module's (off by default: config/packs/default-packs.yaml), and the Markets lens beside the four default ones
+    # the capital-markets module's (off by default: its manifest's packs.off-by-default), and the Markets lens beside the four default ones
     for st in var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),
                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
         _packs_ready(st.server, WALK_PACKS.split(","))

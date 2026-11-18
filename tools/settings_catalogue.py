@@ -124,8 +124,15 @@ AREAS = [
          "A lens file (`config/lenses/<module>/<lens>.yaml`): a workspace a person opens, read by the console (`core/edition.py`); it "
          "arranges Home and the menus and never hides anything. The feature presets a distribution may name (`features:` of "
          "`config/distributions/kernel.yaml`, read by the server's `EditionEnvironmentPostProcessor` and the console) and the default packs "
-         "(`config/packs/default-packs.yaml`, by module). What exists is the distribution's; the site's own configuration wins over any "
+         "(the kernel's, `kernel.yaml` `kernel.packs`, and every module's, less those its manifest marks `packs.off-by-default`). What exists is the distribution's; the site's own configuration wins over any "
          "preset ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
+    Area("profiles", "Profiles: `config/profiles/*.ini`",
+         "A profile is a committed settings file of the install (the settings file's format, [above](#the-settings-file--ddrishtisettingsfile)): "
+         "what makes the demo (`demo.ini`), the first look on the built-in samples (`samples.ini`) or the QA pair (`qa.ini`). It is named "
+         "after your own settings file, so it wins over it: an IDE launcher passes `-Ddrishti.settings.file=<dev.ini>,<home>/config/profiles/<name>.ini` "
+         "(or `--profile <name>`), `drishti.py --profile <name>` does the same, and `start server --demo` is `--profile demo`. Nothing repeats a "
+         "profile's values: the launchers, the terminal and the cluster read the same file. A value may name the install as `${drishti.home}`. "
+         "`drishti.launch.heap` is read by the launchers and `start server` only (the JVM's `-Xmx`)."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
@@ -365,6 +372,30 @@ def feature_rows() -> list[Row]:
     return rows
 
 
+def profile_rows() -> list[Row]:
+    """config/profiles/*.ini: one row per key of each profile, its meaning the comment lines just above it."""
+    rows = []
+    for f in sorted((ROOT / "config" / "profiles").glob("*.ini")):
+        prefix, comment = "", []
+        for n, raw in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            line = raw.strip()
+            if line.startswith("#"):
+                comment.append(line.lstrip("#").strip())
+                continue
+            if not line:
+                comment = []
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                section = line[1:-1].strip()
+                prefix, comment = (section + "." if "." in section else ""), []
+                continue
+            key, _, value = line.partition("=")
+            meaning = " ".join(c for c in comment if c) or f"Set by the {f.stem} profile"
+            rows.append(Row("profiles", f"`{f.name}`", _rel(f), prefix + key.strip(), "string", value.strip(), [], "server and console",
+                            _clean(meaning), "restart", "", False, n))
+    return rows
+
+
 # ---- the compute engines' files ---------------------------------------------------------------------------------------------
 
 ENGINES_DIR = ROOT / "config" / "engines"
@@ -439,8 +470,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
     rows += yaml_rows("editions", editions_files(), "a lens (the console)", "restart", "A lens file: `config/lenses/<module>/<lens>.yaml`",
                       collapse=COLLAPSE["editions"])
     rows += feature_rows()
-    rows += yaml_rows("editions", [ROOT / "config/packs/default-packs.yaml"], "server and console", "restart",
-                      "The default packs: `default-packs.yaml`")
+    rows += profile_rows()
     rows += yaml_rows("store", [ROOT / "config/store/store.yaml"], "every node (the same everywhere)", "restart", "")
     rows += yaml_rows("runs", [ROOT / "config/runs/runs.yaml"], "server", "restart", None)
     for name in ("edit", "lanes", "policy", "retention"):

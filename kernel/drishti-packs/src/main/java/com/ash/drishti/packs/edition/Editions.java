@@ -19,8 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,8 +30,7 @@ import org.springframework.core.env.Environment;
 
 /**
  * Reads the distribution's filter: its keys as properties under {@link #SPEC} (written by {@link EditionEnvironmentPostProcessor} from
- * the distribution file) and the {@link Edition} the environment describes; the lens names the site offers. Also the one default pack list
- * ({@code config/packs/default-packs.yaml}, copied into this jar at build).
+ * the distribution file) and the {@link Edition} the environment describes; the lens names the site offers.
  */
 public final class Editions {
 
@@ -47,14 +44,8 @@ public final class Editions {
     public static final String SPEC = "drishti.edition-spec";
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final List<String> DEFAULT_PACKS = readDefaultPacks();
 
     private Editions() {
-    }
-
-    /** The packs a server enables when neither {@code drishti.packs.enabled} nor an edition names them. */
-    public static List<String> defaultPacks() {
-        return DEFAULT_PACKS;
     }
 
     /** The edition the environment describes: {@link Edition#NONE} when {@code drishti.edition} is blank. */
@@ -149,19 +140,5 @@ public final class Editions {
 
     private static List<String> list(Binder b, String key) {
         return b.bind(key, Bindable.listOf(String.class)).orElse(List.of()).stream().map(String::strip).filter(s -> !s.isEmpty()).toList();
-    }
-
-    private static List<String> readDefaultPacks() {
-        try (InputStream in = Editions.class.getResourceAsStream("default-packs.yaml")) {
-            if (in == null) {
-                throw new IllegalStateException("default-packs.yaml is missing from the drishti-packs jar (config/packs/default-packs.yaml)");
-            }
-            java.util.Set<String> out = new java.util.LinkedHashSet<>();          // by module, in order (a plain list is read as well)
-            JsonNode packs = YAML.readTree(in).path("packs");
-            (packs.isObject() ? packs.elements() : List.of(packs).iterator()).forEachRemaining(m -> m.forEach(p -> out.add(p.asText().strip())));
-            return List.copyOf(out);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }

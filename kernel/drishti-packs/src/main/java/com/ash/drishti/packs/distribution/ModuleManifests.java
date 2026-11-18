@@ -103,6 +103,19 @@ public final class ModuleManifests {
         }
     }
 
+    /**
+     * The packs a module turns on by default: its manifest's {@code packs.list} without {@code packs.off-by-default} (packs that read a
+     * lake that must be built first: a site, or the demo profile, names them in {@code drishti.packs.enabled}). A module jar's manifest
+     * lists only packs that are on by default.
+     */
+    public static List<String> defaultPacks(Entry e) {
+        if (e.source() == null || !e.source().getFileName().toString().equals("module.yaml") || !Files.isRegularFile(e.source())) {
+            return e.packs();
+        }
+        Set<String> off = new LinkedHashSet<>(texts(tree(e.source()).path("packs").path("off-by-default")));
+        return e.packs().stream().filter(p -> !off.contains(p)).toList();
+    }
+
     /** The modules {@code listed} with every module they require, transitively (unknown ones are left to the caller). */
     public static Set<String> withRequired(List<String> listed, Map<String, Entry> known) {
         Set<String> out = new LinkedHashSet<>();

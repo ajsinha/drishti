@@ -18,6 +18,29 @@
 
 ## Unreleased
 
+- **Profiles: the demo, the samples and the QA pair are committed settings files, read the same way by the IDEs and the terminal.**
+  `config/profiles/demo.ini` (sign-in on, demo source off, offline, the system baskets seeded, Studio save, the data inbox on and its
+  owner, the packs `default,us-equities,gleif,funds`, a 4 GB heap, the console's sign-in and plain-HTTP cookie), `samples.ini` and
+  `qa.ini` (port 18580, console 17580, data folder `${drishti.home}/data/qa/data`). A launcher names its profile after `dev.ini`;
+  `drishti.py --profile <name>` adds one; `start server --demo` and `start console --demo` read `demo.ini` (the `DEMO_PACKS` list, the
+  forced demo variables and the duplicate lens default of `serverstart.py` are gone; only the development secrets, kept as they are,
+  still come from `serverstart.DEV` where none is set). `--packs` beats a profile's list; `--port` and `--heap` default to the files'
+  `server.port` and `drishti.launch.heap`. The console reads the keys it shares with the server from the settings files (`drishti.home`,
+  `drishti.data.dir`, `drishti.distribution`) and takes the server's address from the one key `console.backend.url`, else
+  `http://127.0.0.1:<server.port>` of a profile; the tools' `--server` default and `start console`'s server follow the same key
+  (`DRISHTI_SERVER`, `DRISHTI_SERVER_URL` and `DRISHTI_BACKEND_URL` are its environment aliases). A root's value may name the install as
+  `${drishti.home}` (Python and Java alike). CONFIGURATION.md lists every profile key (new area *Profiles*).
+- **The default packs and lenses follow the modules that are on (D1).** With nothing set, a server loads the kernel's packs
+  (`kernel.yaml` `kernel.packs`) and every module's, in requirement order, less those a module's manifest marks `packs.off-by-default`
+  (capital markets' `us-equities` and `funds`, which read a lake built first); `config/packs/default-packs.yaml` and its copy in the
+  `drishti-packs` jar are gone, so a module's new pack (genomics' `genomics-showcase`, `protein-engineering`) is on without editing any
+  list. The word `default` may stand in a pack list (`default,us-equities`). `drishti.lenses` defaults to `default`: every lens the
+  registry declares for a module that is on and that has a lens file (Risk, Trading, Market, World, and Research while genomics is on;
+  a lens file may say `offered-by-default: false`, as Drishti Finance's Markets lens does). A lens named that cannot be offered (its module
+  off, or no lens and no lens file of that name) never stops the start: it is left out, the start-up log has an ERROR naming it, why and
+  the fix, and Admin → Health shows it in red (health DEGRADED) (`LensOffer`, `LensOfferTest`). The research lens is declared beside the
+  others (`META-INF/drishti/lenses.yaml`).
+
 - **Launchers: one per real job (29 → 13), the development switch gone.** IntelliJ keeps **Drishti build all**, **Drishti build
   modules**, **Drishti server (demo lakes)**, **Drishti server (built-in samples)** (formerly **Drishti server**) and **Drishti server (QA,
   port 18580)**; PyCharm keeps **Drishti console**, **Drishti console (QA, port 17580)**, **(Risk)**, **(Finance)**, **Build demo lakes**,

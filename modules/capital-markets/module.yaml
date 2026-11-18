@@ -53,6 +53,7 @@ packs:
   list:
   - us-equities
   - funds
+  off-by-default: [us-equities, funds]   # they read lakes that are built first (drishti.py lake demo): a site or the demo profile names them
 data:
   needs: data/needs.yaml
 console:

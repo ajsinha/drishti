@@ -34,6 +34,8 @@ PROPERTY = _INI.PROPERTY
 FLAG = "-D" + PROPERTY + "="
 SettingsError = _INI.SettingsError
 check, files, read, read_all = _INI.check, _INI.files, _INI.read, _INI.read_all
+profile_path, pop_profile, with_profiles, home_value = _INI.profile_path, _INI.pop_profile, _INI.with_profiles, _INI.home_value
+server_url = _INI.server_url
 
 
 def resolve(named, explicit: dict[str, str] | None = None) -> dict[str, str]:
@@ -62,8 +64,9 @@ def apply_roots(entries: dict[str, str], environ=None) -> list[str]:
     import os
     env = os.environ if environ is None else environ
     out = []
+    home = (env.get("DRISHTI_HOME") or entries.get("drishti.home") or "").strip() or str(Path(__file__).resolve().parents[1])
     for key in ROOTS:
-        value = (entries.get(key) or "").strip()
+        value = home_value((entries.get(key) or "").strip(), home)
         if value and not (env.get(env_name(key)) or "").strip():
             env[env_name(key)] = value
             out.append(env_name(key))

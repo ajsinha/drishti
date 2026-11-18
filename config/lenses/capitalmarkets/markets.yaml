@@ -17,6 +17,7 @@
 # names first, nothing left out) and default screens. It never hides anything: what exists is the distribution's
 # (config/distributions/drishti.<name>.yaml), what runs where is the module and engine switches'.
 edition: markets
+offered-by-default: false   # Drishti Finance's lens (its distribution offers it); the full product offers the Market lens of the same data
 title: Drishti Markets
 description: Companies, funds and ETFs, indices and the market data around them, in one place
 

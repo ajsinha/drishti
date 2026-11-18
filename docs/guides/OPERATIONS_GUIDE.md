@@ -205,14 +205,16 @@ today, and a past date says *No data held for <date>*.
 
 ### 2.5 Start the server
 
-**On the demo lakes, with sign-in** (what the run configuration **Drishti server (demo lakes)** sets):
+**On the demo lakes, with sign-in**: the demo profile, `config/profiles/demo.ini`, the one file that describes the demo; the run
+configuration **Drishti server (demo lakes)** names the same file, so both start the same server:
 
 ```bash
 cd /home/you/drishti
 python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start server --demo        # Windows: py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start server --demo
 ```
 
-`--demo` sets the variables below with the development secrets; without it, set them yourself (or in an `--env-file`). Every option of
+`--demo` adds that profile after your settings file and gives the development secrets where none is set; without it, name your own
+settings (or an `--env-file` for the secrets). Every key of the profile: [CONFIGURATION.md › Profiles](../admin/CONFIGURATION.md#profiles-configprofilesini). Every option of
 the script, where its pid, log and temporary files go and its errors:
 [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console). The plain `java -jar` line,
 for a service manager, is in [5.3](#53-running-as-services-systemd): it needs `DRISHTI_HOME`, `DRISHTI_DATA_DIR` and the modules named.
@@ -220,7 +222,7 @@ for a service manager, is in [5.3](#53-running-as-services-systemd): it needs `D
 | Setting | Meaning |
 |---|---|
 | `-Djava.io.tmpdir=<data>/tmp/server` (the script sets it) | Java's temporary folder: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies at start. Only the command line moves it (or `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…`); without it the server warns in its log and on Admin → Health |
-| `DRISHTI_PACKS` | the packs to load, comma-separated; a pack's parents load with it (`market-risk` brings `core`, `market-data`, `trading`). Unset: the seven |
+| `DRISHTI_PACKS` (`drishti.packs.enabled`) | the packs to load, comma-separated; a pack's parents load with it (`market-risk` brings `core`, `market-data`, `trading`). Unset (`default`): the packs of every module that is on, less those a module marks off by default; the word `default` may stand in a list (the demo profile's `default,us-equities,gleif,funds`) |
 | `DRISHTI_STUDIO_SAVE=true` | lets the Build workbench save Sutras (the view layouts); only in authoring environments |
 | `DRISHTI_SECURITY_ENABLED=true` | sign-in on: every call needs a token. Off by default |
 | `DRISHTI_TOKEN_SECRET` | the secret the server and the console share to sign tokens, at least 32 bytes. The value above is the development secret: never on a shared machine |

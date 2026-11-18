@@ -51,10 +51,13 @@ class EditionsTest {
     }
 
     @Test
-    void theDefaultPackListIsTheOneFile() throws Exception {
-        String file = Files.readString(Path.of(TestRoots.repo(), "config", "packs", "default-packs.yaml"));   // by module
-        assertThat(Editions.defaultPacks()).isNotEmpty().allSatisfy(p -> assertThat(file).contains(p));
-        assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo(String.join(",", Editions.defaultPacks()));
+    void theDefaultPacksFollowTheModulesLessTheirOffByDefaultOnes() {
+        java.util.List<String> d = com.ash.drishti.packs.distribution.Distributions.defaultPacks(Path.of(TestRoots.repo(), "config", "distributions", "kernel.yaml"),
+                com.ash.drishti.api.resolution.ModuleHomes.source(Path.of(TestRoots.repo())));
+        assertThat(d).startsWith("core").contains("market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
+                "genomics-showcase", "protein-engineering").doesNotContain("us-equities", "funds", "gleif", "compute-demo");
+        assertThat(d.indexOf("market-data")).isLessThan(d.indexOf("trading"));     // requirement order: market-data before the packs that extend it
+        assertThat(Files.exists(Path.of(TestRoots.repo(), "config", "packs", "default-packs.yaml"))).as("no pack list beside the manifests").isFalse();
     }
 
     @Test
@@ -71,7 +74,7 @@ class EditionsTest {
         assertThat(none.datasetShown("trades-basic-trade")).isTrue();
         assertThat(none.adminPageShown("ai")).isTrue();
         assertThat(none.about()).isNull();
-        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.DEFAULT_ENABLED);
+        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.defaultEnabled(env));
     }
 
     @Test
@@ -79,7 +82,7 @@ class EditionsTest {
         StandardEnvironment env = env(map("drishti.edition", "risk", "DRISHTI_EDITION", "risk"), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         assertThat(Editions.of(env)).isSameAs(Edition.NONE);               // a lens never filters: what exists is the distribution's
-        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.DEFAULT_ENABLED);
+        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.defaultEnabled(env));
         assertThat(env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated")).contains("drishti.edition is no longer read");
     }
 

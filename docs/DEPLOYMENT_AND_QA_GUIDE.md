@@ -248,6 +248,12 @@ A `FAIL` line says what to install (Java older than 21: *set DRISHTI_JAVA_HOME t
 file it made is what the IDE run configurations and the commands below pass with `--settings`; what it holds and its rules are in
 [section 5.1](#51-the-settings-file).
 
+**Profiles.** What makes the demo, the first look on the built-in samples and the QA pair is not in your settings file and not in any
+launcher: it is a committed settings file of the install, `config/profiles/demo.ini`, `samples.ini` or `qa.ini`, named after yours (a later
+file wins). `drishti.py --profile <name>` adds one (`start server --demo` is `--profile demo`), and the IDE launchers name the same files
+([IDE_GUIDE.md section 4](guides/IDE_GUIDE.md#4-every-launcher)), so the terminal and the IDEs start the same server. Every key of each profile
+is listed in [CONFIGURATION.md › Profiles](admin/CONFIGURATION.md#profiles-configprofilesini).
+
 ## 2. Deploy and run Drishti: the short way
 
 From nothing to the console in a browser, on one machine, with the demo lake. Each step says what you should see; the sections after this
@@ -491,9 +497,9 @@ came from.
 | **The data folder** | `drishti.data.dir` in the settings file, `--data-dir`, or `DRISHTI_DATA_DIR` | `<drishti>/data` |
 | **The lakes** | one file per lake, `config/lakes/<lake>.yaml` (and `config/lakes/<module>/`), each with its root folder | `demo` at `<data>/delta/demo`; `risklake`, `worldlake`, `newslake`, `referencelake`, `capitalmarket`, `regulators` ship empty |
 | **The demo lake** | built by `lake demo` ([section 6](#6-build-the-demo-lake)); `DRISHTI_DELTA_ROOT` moves it | `<data>/delta/demo` |
-| **Packs** | `DRISHTI_PACKS` (comma list) | the seven of `config/packs/default-packs.yaml` |
+| **Packs** | `drishti.packs.enabled` in a settings file, or `DRISHTI_PACKS` (comma list; the word `default` stands for the default packs) | the packs of every module that is on, less those its manifest marks `off-by-default` (us-equities and funds); the demo profile adds us-equities, gleif and funds |
 | **Modules** | `config/modules/<module>.yaml` (`enabled: true/false`), or `DRISHTI_MODULES_<MODULE>_ENABLED` | banking, capitalmarkets, economy, market-data and the six trading-system modules (source-endur, -calypso, -murex, -wss, -swapone, -ici) on; the core and trading are always loaded |
-| **Lenses** | `config/lenses/<module>/<lens>.yaml`; the lenses each person may open: `DRISHTI_LENSES` | risk, trading, market (banking), world (economy) |
+| **Lenses** | `config/lenses/<module>/<lens>.yaml`; the lenses each person may open: `drishti.lenses` (`DRISHTI_LENSES`) | `default`: every lens of the modules that are on: risk, trading, market (banking), world (economy), research (genomics). A lens named that cannot be offered is left out with an ERROR in the log and a red line on Admin → Health; the server still starts |
 | **Engines** | `config/engines/<engine>.yaml`, **Admin → Engines** | VaR, exposure, sensitivities, FRTB-SA, SIMM, pivot and the MR cube on; the data inbox, Arrow Flight, the in-memory lake and OpenBLAS off |
 | **Connectors** | the modules' templates (a source module's `connectors/` folder, `modules/source-endur/connectors/`, or a pack's `connectors:` section): read only, never written by the server. A site changes one with an override file in `config/connectors/<name>.yaml` (`template: <name>` and only the keys it changes), or a `[connector.<name>]` section of the settings file | every connector of every module that is on, as its template says; none in `config/connectors/` |
 | **Brokers** (Kafka, ActiveMQ, RabbitMQ) | `[broker.<name>]` sections of the settings file | **none needed**. A stream connector whose broker does not answer shows *waiting for broker* in Admin, its health says `WAITING`, overall health stays `UP`, and pages serve the lake with a *live updates paused* banner |
@@ -509,8 +515,9 @@ module: { id: banking, domain: banking, title: Banking and risk }
 ```
 
 **Lenses.** A lens is a way of seeing the product (Drishti Risk, Trading, Market, World): its Home, menus, commands and packs. The
-instance stays the full product; each person opens a lens for their session from Home. `DRISHTI_LENSES=risk,world,market,trading`
-offers the four ([ADMIN_GUIDE.md › Modules, functions and lenses](guides/ADMIN_GUIDE.md#121-modules-functions-and-lenses)).
+instance stays the full product; each person opens a lens for their session from Home. `drishti.lenses`
+(`DRISHTI_LENSES`) is `default`: every lens of the modules that are on (Risk, Trading, Market, World, and Research while genomics is on);
+a list narrows it, and a name that cannot be offered is left out with an ERROR in the log and a red line on Admin → Health ([ADMIN_GUIDE.md › Modules, functions and lenses](guides/ADMIN_GUIDE.md#121-modules-functions-and-lenses)).
 
 ### 5.1 The settings file
 
@@ -684,7 +691,7 @@ Two ways to see data, chosen by `DRISHTI_DEMO_ENABLED`:
 | | Demo **off** (`DRISHTI_DEMO_ENABLED=false`): the QA setting | Demo **on** (the default when nothing sets it) |
 |---|---|---|
 | What answers | the demo lake (and any lake you load) | the packs' small built-in samples, ticking live, before any lake |
-| Set by | `drishti.py start server --demo`, `drishti.py start all --demo`, the run configuration **Drishti server (demo lakes)** | a plain `drishti.py start server`, the run configuration **Drishti server** |
+| Set by | the demo profile, `config/profiles/demo.ini`: `drishti.py start server --demo`, `drishti.py start all --demo`, the run configuration **Drishti server (demo lakes)** | a plain `drishti.py start server`, or the samples profile: the run configuration **Drishti server (built-in samples)** |
 | Needs | the demo lake of this section | nothing |
 
 To prove a release from nothing, start on a **clean data folder**: a new empty folder named in the settings file
@@ -714,22 +721,24 @@ environment. This section is the one place for the full list of options; `--help
 | `setup`, `build jar`, `build modules`, `build all` | prepare the machine ([1.6](#16-the-settings-file-and-drishtipy-setup)); build the server jar into `<drishti>/lib`, the module packages into `<drishti>/modules`, or both ([section 4](#4-get-the-release)) |
 
 `--settings FILES` goes **before** the command (`python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo`):
-absolute paths, comma-separated, the right-most winning; the server is given them as `-Ddrishti.settings.file`, the console reads only
-their `console.` keys. Background processes run in their own process group, so closing the terminal does not stop them.
+absolute paths, comma-separated, the right-most winning; the server is given them as `-Ddrishti.settings.file`, the console reads their
+`console.` keys and the keys it shares with the server (`drishti.home`, `drishti.data.dir`, `drishti.distribution`, and the server's address,
+`console.backend.url`, else `http://127.0.0.1:<server.port>` when a file moves the server's port). `--profile NAME` (also before the
+command) adds the install's `config/profiles/<NAME>.ini` after them ([1.6](#16-the-settings-file-and-drishtipy-setup)). Background processes run in their own process group, so closing the terminal does not stop them.
 
 **`start server` options**
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--port N` | `DRISHTI_PORT`, else `18480` | the server's port |
-| `--heap SIZE` | `2g` (`4g` with `--demo`) | the heap limit (`-Xmx`): about 4 GB per 400,000 trades a day |
+| `--port N` | `server.port` of the settings files (a profile's), else `DRISHTI_PORT`, else `18480` | the server's port |
+| `--heap SIZE` | `drishti.launch.heap` of the settings files (`4g` in the demo profile), else `2g` | the heap limit (`-Xmx`): about 4 GB per 400,000 trades a day |
 | `--jar FILE` | the newest `drishti-server-*-exec.jar` in `<drishti>/lib` | a server jar for a one-off run |
 | `--java-home DIR` | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH` | the JDK (21 or newer; refused when older) |
 | `--home DIR` | `DRISHTI_HOME`, `drishti.home` of the settings file, the folder `tools/drishti.py` is in | the install folder; another install's folder is refused |
-| `--packs LIST` | `DRISHTI_PACKS`, else the server's own (the demo's ten with `--demo`) | the packs to load |
+| `--packs LIST` | `drishti.packs.enabled` of the settings files, else `DRISHTI_PACKS`, else the packs of the modules that are on | the packs to load (it beats a profile's list) |
 | `--data-dir DIR` | the settings files' `drishti.data.dir`, else `DRISHTI_DATA_DIR`, else `<drishti>/data` | the data folder; the pid, log and temporary files go under it, and the server is given it as `-Ddrishti.data.dir`, so the two always agree |
 | `--env-file FILE` | none | `KEY=VALUE` lines put into the server's environment: the secrets stay off the command line, and their values are never printed |
-| `--demo` | off | the offline demo on the lake of [section 6](#6-build-the-demo-lake) (the ten packs, samples off, offline, sign-in on, the four lenses, the data inbox on) with **development secrets and the `drishti-dev-admin` account: not for production**; a secret you set yourself wins |
+| `--demo` | off | the demo profile, `config/profiles/demo.ini`, the same file **Drishti server (demo lakes)** names: the offline demo on the lake of [section 6](#6-build-the-demo-lake) (the packs of every module that is on plus us-equities, gleif and funds, samples off, offline, sign-in on, the data inbox on, a 4 GB heap), with **development secrets and the `drishti-dev-admin` account: not for production**; a secret you set yourself wins |
 | `--engine NAME` | the server's own (`native`) | the Delta engine: `native`, `hadoop` or `auto`. Never `hadoop` on Windows: it needs `winutils.exe` |
 | `--lake-root DIR` | the lake files' own roots | the Delta lake root (`DRISHTI_DELTA_ROOT`) |
 | `--iceberg`, `--iceberg-root DIR` | off, `<data folder>/iceberg` | serve the stores from Iceberg tables, as settings only: the connectors folder (`DRISHTI_CONNECTORS_DIR`) is `config/connectors.examples/iceberg`, the bindings and placement files stay in `config/`, the warehouse is under the data folder; nothing is copied or written (connector files are read-only; a `DRISHTI_CONNECTORS_DIR` you set is kept) |
@@ -749,11 +758,11 @@ their `console.` keys. Background processes run in their own process group, so c
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--server URLS` | `DRISHTI_SERVER_URL`, else this machine's LAN address `:18480` (with a warning) | the server, or a cluster's **entry nodes**, comma-separated (`http://<ip>:18480,http://<ip2>:18480`): the console uses the first that answers and **learns the other members from the cluster**, failing over to them |
-| `--port N` | `DRISHTI_CONSOLE_PORT`, else `17480` | the console's port |
+| `--server URLS` | `DRISHTI_SERVER_URL` (or `DRISHTI_SERVER`), else the settings files' `console.backend.url` (or `server.port`), else this machine's LAN address `:18480` (with a warning) | the server, or a cluster's **entry nodes**, comma-separated (`http://<ip>:18480,http://<ip2>:18480`): the console uses the first that answers and **learns the other members from the cluster**, failing over to them |
+| `--port N` | `DRISHTI_CONSOLE_PORT`, else `console.server.port` of the settings files (the QA profile's 17580), else `17480` | the console's port |
 | `--data-dir DIR` | as for the server | the data folder |
 | `--env-file FILE` | none | `KEY=VALUE` lines (the token and session secrets, the same as the servers') |
-| `--demo` | off | the demo's console settings with **development secrets: not for production** (sign-in on, plain-http cookies) |
+| `--demo` | off | the demo profile's console keys (`[console.auth]`: sign-in on, plain-http cookies) with **development secrets: not for production** |
 | `--python FILE` | the Python running the command | the Python 3.11+ that makes `drishti-console/.venv` when `uv` is not installed |
 | `--distribution NAME`, `--name NAME` | the server's; none | the distribution this console shows; a name when several consoles run from one data folder ([7.7](#77-starting-a-white-labelled-instance)) |
 | `--reinstall` | off | remake `drishti-console/.venv` (after `drishti-console/requirements.txt` changed) |
@@ -876,24 +885,15 @@ none: on Linux and macOS it gets SIGTERM, on Windows (where a background process
 
 ### 7.4 The secrets in an env-file
 
-Put the secrets and settings in a file only the service account can read, and give it to every command with `--env-file`: the values
-never appear on the command line, in `ps`, or in the commands' output.
+Put the secrets in a file only the service account can read, and give it to every command with `--env-file`: the values never appear on
+the command line, in `ps`, or in the commands' output. The demo's settings are not repeated here: `--demo` (the demo profile,
+`config/profiles/demo.ini`) gives them; on a server of your own put settings in your settings file ([5.1](#51-the-settings-file)).
 
 ```bash
 # /etc/drishti/drishti.env (Windows: C:\drishti-secrets\drishti.env); chmod 600; never under config/ or in git
-DRISHTI_TOKEN_SECRET=<32+ random bytes: openssl rand -hex 32>        # the same value on every server and the console
+DRISHTI_TOKEN_SECRET=<32+ random bytes>                                # the same value on every server and the console
 DRISHTI_SESSION_SECRET=<32+ random bytes>
 DRISHTI_NET_SECRET=<32+ random bytes>                                  # a cluster only: the cluster key, the same on every node
-DRISHTI_SECURITY_ENABLED=true
-DRISHTI_AUTH_ENABLED=true
-DRISHTI_SECURE_COOKIE=false                                            # false only for plain http; behind TLS leave it on
-DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds
-DRISHTI_DEMO_ENABLED=false
-DRISHTI_VAR_SYSTEM_BASKETS_SEED=true
-DRISHTI_OFFLINE=true
-DRISHTI_LENSES=risk,world,market,trading
-DRISHTI_DATALOAD_ENABLED=true
-DRISHTI_DATALOAD_OWNER=true
 DRISHTI_SERVER_URL=http://<host>:18480                                 # the console's server (instead of --server)
 ```
 

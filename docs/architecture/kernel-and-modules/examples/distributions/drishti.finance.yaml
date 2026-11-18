@@ -15,7 +15,7 @@
 # EXAMPLE (design, not built): the distribution file of Drishti Finance (docs/architecture/KERNEL_AND_MODULES.md section 6).
 # config/distribution.yaml (or DRISHTI_DISTRIBUTION=<path>). It names modules; it never contains code, connectors or credentials, and it
 # cannot widen the licence. It replaces drishti.edition, ui.product/ui.copyright, drishti.branding.*, the lens files' titles and
-# config/packs/default-packs.yaml as the one place a product is defined.
+# the old default pack list as the one place a product is defined.
 format: 1
 distribution: drishti.finance
 version: 1.0.0

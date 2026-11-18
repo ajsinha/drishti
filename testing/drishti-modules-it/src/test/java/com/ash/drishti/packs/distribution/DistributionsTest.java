@@ -54,7 +54,7 @@ class DistributionsTest {
         env.getPropertySources().remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
         env.getPropertySources().addLast(new MapPropertySource("site", s));
         env.getPropertySources().addLast(new MapPropertySource(PRODUCT_DEFAULTS, Map.of("drishti.packs.enabled", "${DRISHTI_PACKS:default}",
-                "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}", "drishti.lenses", "${DRISHTI_LENSES:risk,world,market,trading}")));
+                "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}", "drishti.lenses", "${DRISHTI_LENSES:default}")));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         return env;
     }
@@ -180,8 +180,9 @@ class DistributionsTest {
         StandardEnvironment env = boot();
         assertThat(Editions.of(env)).isSameAs(Edition.NONE);
         assertThat(env.getProperty("drishti.branding.product")).isEqualTo("Drishti");
-        assertThat(env.getProperty("drishti.lenses")).isEqualTo("risk,world,market,trading");
-        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.DEFAULT_ENABLED);
+        assertThat(env.getProperty("drishti.lenses")).isEqualTo("default");          // every lens of the modules that are on (LensOffer)
+        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.defaultEnabled(env));
+        assertThat(PackPaths.enabled(env).split(",")).contains("genomics-showcase").doesNotContain("us-equities");
         assertThat(read("all").all()).isTrue();
         assertThat(Distributions.builtInAll().all()).isTrue();
     }

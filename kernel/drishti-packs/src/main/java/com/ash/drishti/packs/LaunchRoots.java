@@ -376,6 +376,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
      * Resolves every root from the settings ({@code property}: a resolved setting or null) and names where each came from
      * ({@code origin}: the source that set a key). No folder is taken from the process's working folder.
      */
+    /** The one placeholder a root's value may hold: the install folder (a committed profile names folders under it). */
+    static final String HOME_PLACEHOLDER = "${drishti.home}";
+
     public static Result resolve(Function<String, String> property, Function<String, String> origin) {
         Map<String, Path> at = new LinkedHashMap<>();
         Map<String, Object> values = new LinkedHashMap<>();
@@ -422,6 +425,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             Path path;
             String from;
             if (given != null) {
+                if (home != null && given.contains(HOME_PLACEHOLDER)) {      // a profile's drishti.data.dir=${drishti.home}/data/qa/data
+                    given = given.replace(HOME_PLACEHOLDER, home.toString());
+                }
                 Path p = Path.of(given);
                 if (p.isAbsolute()) {
                     path = p.normalize();

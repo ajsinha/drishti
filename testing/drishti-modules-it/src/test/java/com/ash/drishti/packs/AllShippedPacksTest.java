@@ -43,23 +43,23 @@ class AllShippedPacksTest {
     }
 
     static final com.ash.drishti.api.resolution.ConfigResolution REPO = repo(null);
+    /** The packs on with no setting: the kernel's and every module's, less the off-by-default ones (Distributions.defaultPacks). */
+    static final List<String> DEFAULTS = com.ash.drishti.packs.distribution.Distributions.defaultPacks(Path.of(TestRoots.repo(), "config", "distributions", "kernel.yaml"), com.ash.drishti.api.resolution.ModuleHomes.source(Path.of(TestRoots.repo())));
     static final Path EXAMPLES = Path.of(TestRoots.repo(), "examples", "packs").toAbsolutePath().normalize();
 
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
     static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo",
             // the public-sector module's packs, filled by their daily feeds (docs/guides/WORLD_DATA_GUIDE.md)
-            "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events",
-            // the genomics module's showcase packs, read from the demo lake like funds and us-equities (docs/architecture/GENOMICS_SHOWCASE.md)
-            "genomics-showcase", "protein-engineering");
+            "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events");
 
     @Test
     void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {
         assertThat(REPO.problems()).as("the repository resolves cleanly").isEmpty();
         List<String> shipped = REPO.packs().names();
-        assertThat(shipped).contains(PackPaths.DEFAULT_ENABLED.split(","));
-        assertThat(shipped.stream().filter(n -> !List.of(PackPaths.DEFAULT_ENABLED.split(",")).contains(n)).toList()).isSubsetOf(OPT_IN);
+        assertThat(shipped).contains(DEFAULTS.toArray(String[]::new));
+        assertThat(shipped.stream().filter(n -> !DEFAULTS.contains(n)).toList()).isSubsetOf(OPT_IN);
         PackLoader loader = new PackLoader();
-        Map<String, Object> p = loader.properties(loader.load(REPO, List.of(PackPaths.DEFAULT_ENABLED.split(","))));
+        Map<String, Object> p = loader.properties(loader.load(REPO, DEFAULTS));
         assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.kind", "trade").containsEntry("drishti.commands.mnemonics.CPTY.kind", "counterparty")
                 .containsEntry("drishti.commands.mnemonics.AGR.kind", "agreement").containsEntry("drishti.commands.mnemonics.ECON.kind", "economy")
                 .containsEntry("drishti.commands.mnemonics.JUR.kind", "jurisdiction").containsEntry("drishti.commands.mnemonics.CO.kind", "listed-company")
@@ -83,7 +83,7 @@ class AllShippedPacksTest {
         Path dir = SHIPPED;
         assertThat(Files.isDirectory(dir)).as("the shipped packs folder").isTrue();
         List<String> all = REPO.packs().names();
-        assertThat(all).hasSizeGreaterThanOrEqualTo(PackPaths.DEFAULT_ENABLED.split(",").length);
+        assertThat(all).hasSizeGreaterThanOrEqualTo(DEFAULTS.size());
         List<String> clashes = new ArrayList<>();
         for (int i = 0; i < all.size(); i++) {
             for (int j = i + 1; j < all.size(); j++) {

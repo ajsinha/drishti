@@ -266,7 +266,12 @@ public class HealthController {
             out.put("modules", modules(access));                      // the thin jar: no code modules, and Health says so
         }
         for (HealthFigures f : com.ash.drishti.common.Extensions.with(moduleFigures, HealthFigures.class)) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
-            out.put(f.key(), f.value());
+            Object v = f.value();
+            out.put(f.key(), v);
+            // a configuration problem a figure reports (a lens named that is not offered): DEGRADED, as other configuration problems
+            if (v instanceof Map<?, ?> fm && fm.get("lensProblems") instanceof java.util.Collection<?> lp && !lp.isEmpty() && "OK".equals(out.get("status"))) {
+                out.put("status", "DEGRADED");
+            }
         }
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
         out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)

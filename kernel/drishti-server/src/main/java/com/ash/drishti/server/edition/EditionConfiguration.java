@@ -37,11 +37,39 @@ public class EditionConfiguration {
 
     @Bean
     public EditionContext editionContext(Edition edition, Environment env, com.ash.drishti.registry.AccessRegistry access) {
-        // a lens whose modules are off is not offered (ACCESS_MODEL.md): the registry's lens of that name decides; a site's own lens the
-        // registry does not know stays as it is
-        java.util.List<String> lenses = new java.util.ArrayList<>(Editions.lensNames(env));
-        lenses.removeIf(name -> access.lensDeclared(name) && !access.lensOffered(name));
-        return new EditionContext(edition, lenses);
+        // the lenses offered (LENSES.md): drishti.lenses, "default" being every lens of the modules that are on; a lens whose modules are
+        // off, or a name nothing knows, is left out: never a failed start, but an ERROR in the log and a red line on Admin → Health
+        LensOffer offer = lensOffer(env, access);
+        offer.problems().forEach(p -> System.getLogger(EditionConfiguration.class.getName()).log(System.Logger.Level.ERROR, p));
+        return new EditionContext(edition, offer.names(), offer.problems());
+    }
+
+    /** {@code drishti.lenses} against the access registry and the lens files ({@code drishti.lenses-dir}, else {@code config/lenses}). */
+    static LensOffer lensOffer(Environment env, com.ash.drishti.registry.AccessRegistry access) {
+        java.nio.file.Path dir = com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.lenses-dir", com.ash.drishti.api.Roots.config("lenses")));
+        java.util.List<String> configured = Editions.lensNames(env);
+        return LensOffer.of(configured, new LensOffer.Catalogue() {
+            @Override
+            public java.util.List<String> offered() {
+                return access.lenses().stream().map(com.ash.drishti.registry.Lens::id).toList();
+            }
+
+            @Override
+            public boolean declared(String name) {
+                return access.lensDeclared(name);
+            }
+
+            @Override
+            public boolean hasFile(String name) {
+                return com.ash.drishti.server.console.ConsoleDistribution.lens(dir, name) != null;
+            }
+
+            @Override
+            public boolean offDefault(String name) {
+                java.util.Map<String, Object> f = com.ash.drishti.server.console.ConsoleDistribution.lens(dir, name);
+                return f != null && "false".equalsIgnoreCase(String.valueOf(f.get("offered-by-default")));
+            }
+        });
     }
 
     @Bean
@@ -56,7 +84,8 @@ public class EditionConfiguration {
     @Bean
     public com.ash.drishti.kernel.api.health.HealthFigures distributionHealth(Environment env,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node,
+            org.springframework.beans.factory.ObjectProvider<EditionContext> editionContext) {
         String info = com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor.INFO;
         return new com.ash.drishti.kernel.api.health.HealthFigures() {
             @Override
@@ -93,6 +122,8 @@ public class EditionConfiguration {
                 m.put("asked", all ? java.util.List.of("all") : asked);
                 m.put("modules", modules);
                 m.put("deprecated", java.util.Arrays.stream(env.getProperty(info + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList());
+                EditionContext ec = editionContext.getIfAvailable();   // a lens named that is not offered: red on Health (LensOffer)
+                m.put("lensProblems", ec == null ? java.util.List.of() : ec.lensProblems());
                 return m;
             }
         };

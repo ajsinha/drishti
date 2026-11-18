@@ -77,8 +77,8 @@ class EditionNoneAndLensServerTest {
         assertThat(about.path("product").asText()).isEqualTo("Drishti");
         List<String> packs = new ArrayList<>();
         getJson(get("/api/v1/packs")).forEach(p -> packs.add(p.path("name").asText()));
-        assertThat(packs).containsExactlyInAnyOrderElementsOf(Arrays.asList(PackPaths.DEFAULT_ENABLED.split(",")));
-        assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo("core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets");
+        assertThat(packs).containsExactlyInAnyOrderElementsOf(Arrays.asList(PackPaths.enabled(env).split(",")));
+        assertThat(packs).contains("core", "market-data", "trading", "counterparty-risk", "market-risk").doesNotContain("us-equities", "funds", "gleif");
         assertThat(functions(get("/api/v1/functions"))).contains("FRTB", "STR", "CVA", "VRES", "EXP");
         assertThat(datasets(get("/api/v1/bi/datasets"))).contains("file:table:banking.trades_basic_trade", "file:table:banking.market_risk_var_latest");
     }

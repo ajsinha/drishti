@@ -57,7 +57,7 @@ Counts are files (or entries) as surveyed; "core" is everything not listed under
 | Help pages (`help.yaml`) | 56 | 19 | 0 (pack guides) |
 | Packs | 2 (core, compute-demo) | 7 | 2 |
 | Engine files (`config/engines`) | 5 | 6 | 0 |
-| Editions (`config/lenses`) | 2 (default-packs, features) | 3 | 1 (world) |
+| Editions (`config/lenses`) | 1 (features) | 3 | 1 (world) |
 | Configuration files (outside packs, connectors, engines, editions) | 28 | 51 | 6 |
 | Data contracts (`docs/contracts`) | 12 | 87 (4 of them the core pack's finance entities: question D1) | 19 |
 | API prefixes (server) | about 100 | 6 | 0 |
@@ -300,7 +300,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   watchers, Admin -> Packs, deploy and roll back, the Sutra CLI and the lake files' pack tables share it), the Python
   tools read the Java resolver's answer (`tools/resolved.py`: `pack_dirs`, `pack_dir`, `manifests`, through the kernel jar's `resolve --json`;
   KERNEL_AND_MODULES.md section 18).
-  A pack's `domain:` names its folder (`tools/test_pack_layout.py`). The default packs are `config/packs/default-packs.yaml`, by module.
+  A pack's `domain:` names its folder (`tools/test_pack_layout.py`). The default packs are the kernel's and every module's that is on, less a manifest's `packs.off-by-default`.
 - **Banking configuration** (step 8): a content folder holds a domain's files one level down, and a folder named after a module is read
   only while the module is on (`server.modules.DomainFolders`): `config/lakes/banking/{var,ccr}-official.yaml` (`Lakes.files` and
   `Lakes.file` read a lake file in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`, so

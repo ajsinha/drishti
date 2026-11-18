@@ -34,10 +34,22 @@ public final class EditionContext {
 
     private final Edition instance;
     private final List<String> lenses;
+    private final List<String> lensProblems;
 
     public EditionContext(Edition instance, List<String> lenses) {
+        this(instance, lenses, List.of());
+    }
+
+    /** As above, with the lenses named that are not offered, each in words ({@link LensOffer}). */
+    public EditionContext(Edition instance, List<String> lenses, List<String> lensProblems) {
         this.instance = instance;
         this.lenses = List.copyOf(lenses);
+        this.lensProblems = List.copyOf(lensProblems);
+    }
+
+    /** The lenses {@code drishti.lenses} names that are not offered, each with why and how to fix it (Health shows them red). */
+    public List<String> lensProblems() {
+        return lensProblems;
     }
 
     /** The distribution's filter ({@link Edition#NONE} for Drishti All). */

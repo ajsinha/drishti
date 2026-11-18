@@ -28,10 +28,12 @@ import org.springframework.core.env.Environment;
 public final class PackPaths {
 
     /**
-     * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
-     * {@code config/packs/default-packs.yaml} (copied into this jar at build; the console reads the same file).
+     * The packs enabled when {@code drishti.packs.enabled} is not set and no distribution names them: the kernel's packs and the packs of
+     * every module, less those a module marks {@code off-by-default} ({@link com.ash.drishti.packs.distribution.Distributions#defaultPacks}).
      */
-    public static final String DEFAULT_ENABLED = String.join(",", com.ash.drishti.packs.edition.Editions.defaultPacks());
+    public static String defaultEnabled(Environment env) {
+        return String.join(",", com.ash.drishti.packs.distribution.Distributions.defaultPacks(env));
+    }
     private static final String LEGACY_PACKS = "packs";
     private static final AtomicBoolean WARNED = new AtomicBoolean();
 
@@ -42,19 +44,34 @@ public final class PackPaths {
     public static final String DEFAULT_WORD = "default";
 
     /**
-     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when unset or {@value #DEFAULT_WORD}, the edition's
-     * ({@code drishti.edition}), else {@link #DEFAULT_ENABLED}. Set to empty it is empty, as it always was (no packs).
+     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when unset or {@value #DEFAULT_WORD}, the distribution's
+     * ({@code drishti.edition}), else {@link #defaultEnabled}. The word may stand in a list, {@code default,us-equities,gleif}: the default
+     * packs and those named (the demo profile, config/profiles/demo.ini). Set to empty it is empty, as it always was (no packs).
      */
     public static String enabled(Environment env) {
         String v = env.getProperty("drishti.packs.enabled", DEFAULT_WORD);
-        if (!DEFAULT_WORD.equals(v.strip())) {
+        java.util.List<String> items = java.util.Arrays.stream(v.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList();
+        if (!items.contains(DEFAULT_WORD)) {
             return v;
         }
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        for (String item : items) {
+            if (DEFAULT_WORD.equals(item)) {
+                java.util.Arrays.stream(defaults(env).split(",")).map(String::strip).filter(s -> !s.isEmpty()).forEach(out::add);
+            } else {
+                out.add(item);
+            }
+        }
+        return String.join(",", out);
+    }
+
+    /** What the word {@value #DEFAULT_WORD} stands for: the distribution's packs, none for a distribution of no packs, else the default packs. */
+    private static String defaults(Environment env) {
         if (Boolean.parseBoolean(env.getProperty(com.ash.drishti.packs.edition.Editions.SPEC + ".packs.none", "false"))) {
             return "";                                         // a distribution of no packs (Drishti Genomics): none, not the default list
         }
         java.util.List<String> edition = com.ash.drishti.packs.edition.Editions.of(env).packs();
-        return edition.isEmpty() ? DEFAULT_ENABLED : String.join(",", edition);
+        return edition.isEmpty() ? defaultEnabled(env) : String.join(",", edition);
     }
 
     /** The data umbrella ({@code drishti.data.dir}). */

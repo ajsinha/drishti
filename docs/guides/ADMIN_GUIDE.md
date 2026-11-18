@@ -731,8 +731,9 @@ The registry also lists lenses that have no lens file or Home yet (CRO, MR cube,
 **One folder.** The lens files are under `config/lenses` (the server's `drishti.lenses-dir`, default `<config>/lenses`; the console reads none: the server sends each lens in its installation answer): a file sits in its module's
 folder (`config/lenses/<module>/<lens>.yaml`), or in the folder itself for a lens of no module; only the console reads them. The feature
 presets a distribution may name are in [`config/distributions/kernel.yaml`](../../config/distributions/kernel.yaml) (`features:`). The
-full product's packs are [`config/packs/default-packs.yaml`](../../config/packs/default-packs.yaml), by module; a distribution's are its
-modules'.
+full product's packs are the kernel's (`kernel.yaml` `kernel.packs`) and every module's that is on, less those a module's manifest marks
+`packs.off-by-default` (capital markets' us-equities and funds, which read a lake built first); a distribution's are its modules'. The
+lenses offered follow the modules the same way (`drishti.lenses=default`).
 
 ### 12.3 The three layers of switches
 
@@ -764,7 +765,7 @@ configuration and restart the server:
 
 ```yaml
 drishti:
-  lenses: risk,world,market,trading    # the default; DRISHTI_LENSES= (empty): no lens link, the full product only
+  lenses: default                      # every lens of the modules that are on; DRISHTI_LENSES= (empty): no lens link, the full product only
   # lenses: risk                       # one: "Open Drishti Risk"
   # lenses: risk,world                 # two: "Open Drishti Risk" and "Open Drishti World"
 ```
@@ -773,8 +774,11 @@ Each person then sees **Open Drishti Risk** (and the others listed) in the Views
 Opening one arranges, on every page and every server of the cluster, their Home (the lens's landings, cards and chips) and the menus
 (the lens's first, then the rest); every command, page and dataset stays where it was. **Leave Drishti Risk** comes back (to the
 distribution's starting workspace, which has no Leave link of its own). Inside one lens the menu shows
-**Leave …** first, then **Switch to …** each of the others: switching needs no leaving first. The 3-node stack runs
-`DRISHTI_LENSES: risk,world,market,trading` (`deploy/stack/stack.yaml`, `settings:`); after changing it, restart the stack.
+**Leave …** first, then **Switch to …** each of the others: switching needs no leaving first. The default, `default`,
+offers every lens of the modules that are on: a module switched off takes its lenses with it (genomics off: no Research), and a lens
+file may say `offered-by-default: false` (Drishti Finance's Markets lens, which its distribution names). A lens you name that cannot be
+offered (its module off, or no lens of that name) never stops the start: it is left out, the log has an ERROR naming it, why and the
+fix, and **Admin → Health** shows it in red. The 3-node stack uses the default too.
 
 - **Kept per person.** The lens is the person's `lens` setting (the server's user store), so a refresh, another browser or another server
   keeps it. Other people are unaffected. The server's answers are the same inside a lens or not.

@@ -35,10 +35,11 @@ import org.springframework.boot.test.context.SpringBootTest;
  * by the pack's Sutra with every panel filled and no missing link. news-and-markets is the exception: its pages read two on-demand
  * internet connectors that are off as shipped, so its examples only have to open by their Sutra.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=default"})   // PackPaths.DEFAULT_ENABLED
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=default"})   // PackPaths.defaultEnabled
 class DomainPacksTest {
 
     @Autowired ViewPipeline pipeline;
+    @Autowired org.springframework.core.env.Environment environment;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;
 
     /** Panels the exposure engine fills from the lake's paths (2.9.0): empty in the demo, which has no lake; ExposureApiTest covers them. */
@@ -53,7 +54,7 @@ class DomainPacksTest {
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {
         int opened = 0;
-        for (String pack : com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED.split(",")) {
+        for (String pack : com.ash.drishti.packs.PackPaths.enabled(environment).split(",")) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
                     Files.readString(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(pack).resolve("pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {

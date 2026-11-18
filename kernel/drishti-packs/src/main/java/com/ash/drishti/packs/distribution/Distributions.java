@@ -127,6 +127,25 @@ public final class Distributions {
         });
     }
 
+    /**
+     * The packs a server turns on when nothing names them (docs/architecture/DISTRIBUTIONS.md, "The default packs"): the kernel's
+     * ({@code kernel.yaml}'s {@code kernel.packs}; {@code core} without the file), then each module's, in requirement order, without the
+     * packs its manifest marks {@code off-by-default}. A module that is off brings none: the pack loader leaves out the packs of a module
+     * that is off. No pack list is written anywhere else.
+     */
+    public static List<String> defaultPacks(Environment env) {
+        return defaultPacks(dir(env).resolve(KERNEL), homes(env));
+    }
+
+    /** As {@link #defaultPacks(Environment)}, from the kernel's file and the modules (a test: the checkout's, {@code ModuleHomes.source}). */
+    public static List<String> defaultPacks(Path kernelFile, com.ash.drishti.api.resolution.ModuleHomes homes) {
+        Set<String> out = new LinkedHashSet<>(Files.isRegularFile(kernelFile) ? texts(tree(kernelFile).path("kernel").path("packs")) : List.of("core"));
+        for (ModuleManifests.Entry m : ModuleManifests.read(homes).values()) {
+            out.addAll(ModuleManifests.defaultPacks(m));
+        }
+        return List.copyOf(out);
+    }
+
     /** Drishti All with no file: every module, no filter, the product's own brand. */
     public static Distribution builtInAll() {
         ObjectNode spec = YAML.createObjectNode();

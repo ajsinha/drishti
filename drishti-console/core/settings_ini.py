@@ -86,3 +86,69 @@ def pop_option(argv: list[str]) -> tuple[list[str], str | None]:
         else:
             rest.append(a)
     return rest, path
+
+
+#: a profile is a committed settings file of the install: <home>/config/profiles/<name>.ini (docs/admin/CONFIGURATION.md, "Profiles")
+PROFILES = ("config", "profiles")
+#: the one placeholder a settings value may hold for a launch root: the install folder (qa.ini's drishti.data.dir=${drishti.home}/data/qa/data)
+HOME_PLACEHOLDER = "${drishti.home}"
+
+
+def profile_path(home, name: str) -> Path:
+    """The file of profile ``name`` under the install ``home`` (checked: it exists)."""
+    n = str(name).strip()
+    if not n or not all(c.isalnum() or c in "-_" for c in n):
+        raise SettingsError(f"--profile {name!r}: a profile is a name (demo, samples, qa), the file config/profiles/<name>.ini")
+    p = Path(home).resolve().joinpath(*PROFILES, n + ".ini")
+    if not p.is_file():
+        known = sorted(f.stem for f in p.parent.glob("*.ini")) if p.parent.is_dir() else []
+        raise SettingsError(f"--profile {n}: no profile file {p} (the profiles: {', '.join(known) or 'none'})")
+    return p
+
+
+def pop_profile(argv: list[str]) -> tuple[list[str], list[str]]:
+    """``argv`` without ``--profile <name>`` / ``--profile=<name>`` (repeatable, or comma-joined), and the names in order."""
+    rest: list[str] = []
+    names: list[str] = []
+    it = iter(argv)
+    for a in it:
+        if a == "--profile":
+            v = next(it, None)
+            if v is None:
+                raise SettingsError("--profile needs a name (demo, samples, qa)")
+            names += [x.strip() for x in v.split(",") if x.strip()]
+        elif a.startswith("--profile="):
+            names += [x.strip() for x in a.split("=", 1)[1].split(",") if x.strip()]
+        else:
+            rest.append(a)
+    return rest, names
+
+
+def with_profiles(named: str | None, home, names) -> str | None:
+    """The settings value ``named`` (comma-joined absolute paths) with each profile's file appended (a later file wins), each once."""
+    parts = [p.strip() for p in str(named or "").split(",") if p.strip()]
+    for n in names or []:
+        p = str(profile_path(home, n))
+        if p not in parts:
+            parts.append(p)
+    return ",".join(parts) or None
+
+
+def home_value(value: str, home) -> str:
+    """A root's value with ``${drishti.home}`` replaced by the install folder (forward slashes are kept as written)."""
+    return str(value).replace(HOME_PLACEHOLDER, Path(home).resolve().as_posix()) if home and HOME_PLACEHOLDER in str(value) else str(value)
+
+
+#: the one settings key of the server's address (F13): the console's server and every tool's --server default. Its aliases: the
+#: environment's DRISHTI_BACKEND_URL (the console), DRISHTI_SERVER_URL (drishti.py start console), DRISHTI_SERVER (the tools).
+SERVER_KEY = "console.backend.url"
+
+
+def server_url(entries: dict, host: str = "127.0.0.1") -> str | None:
+    """The server's address the settings files give: ``console.backend.url``, else ``http://<host>:<server.port>`` when a file moves the
+    server's port (a profile's server.port=18580), else None (the caller's default)."""
+    url = str(entries.get(SERVER_KEY) or "").strip()
+    if url:
+        return url.rstrip("/")
+    port = str(entries.get("server.port") or "").strip()
+    return f"http://{host}:{port}" if port.isdigit() else None

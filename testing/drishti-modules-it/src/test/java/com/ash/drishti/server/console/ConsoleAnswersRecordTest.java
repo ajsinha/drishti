@@ -113,7 +113,7 @@ class ConsoleAnswersRecordTest {
     static Map<String, Object> commands(List<String> named) {
         com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.repository(REPO);
         Map<String, Map<String, Object>> loaded = new LinkedHashMap<>();
-        for (String name : named.isEmpty() ? com.ash.drishti.packs.edition.Editions.defaultPacks() : named) {
+        for (String name : named.isEmpty() ? com.ash.drishti.packs.distribution.Distributions.defaultPacks(java.nio.file.Path.of(TestRoots.repo(), "config", "distributions", "kernel.yaml"), com.ash.drishti.api.resolution.ModuleHomes.source(java.nio.file.Path.of(TestRoots.repo()))) : named) {
             com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
             if (at != null) {
                 loaded.put(name, ConsoleAnswers.read(at.dir().resolve("pack.yaml")));

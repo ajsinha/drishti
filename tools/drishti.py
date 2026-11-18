@@ -272,7 +272,8 @@ class Api:
                 raise CliError(f"cannot read --token-file {a.token_file}: {e.strerror}") from None
         token = token or os.environ.get("DRISHTI_TOKEN") or None
         wait = getattr(a, "wait_busy", False) or os.environ.get("DRISHTI_WAIT_BUSY", "").lower() in ("1", "true", "yes")
-        return cls(getattr(a, "server", None) or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER, token,
+        # the address: --server, DRISHTI_SERVER, else the settings files' (console.backend.url, or a profile's server.port), else the default
+        return cls(getattr(a, "server", None) or os.environ.get("DRISHTI_SERVER") or settingsfile.server_url(javacmd.settings()[1], "localhost") or DEFAULT_SERVER, token,
                    getattr(a, "user", None) or os.environ.get("DRISHTI_USER"), getattr(a, "timeout", 60), wait)
 
     def request(self, method: str, path: str, body: object = None, data: bytes | None = None, ctype: str | None = None,
@@ -1103,7 +1104,7 @@ def cmd_server_smoke(a, extra) -> int:
 
 def cmd_doctor(a, extra) -> int:
     doctor = load_module("doctor", "doctor.py")
-    api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") else None
+    api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") or settingsfile.server_url(javacmd.settings()[1]) else None
     results = doctor.run(os.environ, ROOT, find_jar, find_java, api, a.java)
     say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
     return doctor.exit_code(results)
@@ -1153,6 +1154,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         # --settings /absolute/drishti.ini: the optional settings file (tools/settingsfile.py), handed on to every java this command starts
         argv, settings = settingsfile.pop_option(list(sys.argv[1:] if argv is None else argv))
+        # --profile demo|samples|qa: a committed settings file of this install (config/profiles/<name>.ini), after --settings (it wins)
+        lead = 0                                # only before the command: a command's own options are its own
+        while lead < len(argv) and (argv[lead] == "--profile" or argv[lead].startswith("--profile=")):
+            lead += 2 if argv[lead] == "--profile" else 1
+        head, profiles = settingsfile.pop_profile(argv[:lead])
+        argv = head + argv[lead:]
+        settings = settingsfile.with_profiles(settings, ROOT, profiles)
         entries = settingsfile.read_all(settings) if settings else {}
         settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
         javacmd.set_settings(settings, entries)

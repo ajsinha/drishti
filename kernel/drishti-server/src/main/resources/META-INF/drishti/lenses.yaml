@@ -58,6 +58,10 @@ lenses:
     chips: [WDI WDI-USA, CBANK CBANK-FED, OECD OECD-USA, PRESS PRESS-ECB]   # Home's chips (the same rule as the cards)
     help: [docs-guides-public-sector-guide, docs-tutorials-14-public-sector-data, world-development-pack, central-banks-pack,
       national-statistics-pack, oecd-pack, official-news-pack, gdelt-events-pack, external-data]
+  - id: research                         # the genomics module's (config/lenses/genomics/research.yaml): offered while genomics is on
+    title: Research
+    modules: [genomics]
+    functions: [VARIANT, GENE, COHORT, GWAS, PROTEIN, DESIGNS]
   - id: cio
     title: Chief information officer
     modules: []

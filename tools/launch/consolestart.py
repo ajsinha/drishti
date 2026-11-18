@@ -26,6 +26,7 @@ import procs
 from procs import LaunchError, say, warn
 import javacmd  # noqa: E402 - tools/ is on the path through procs
 import serverstart
+import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 
 def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True) -> Path:
@@ -58,13 +59,13 @@ def start(a, env: dict | None = None) -> int:
     env = dict(os.environ if env is None else env)
     if a.env_file:
         procs.load_env_file(a.env_file, env)
-    settings, keys = javacmd.settings()
+    settings, keys = serverstart.profiled(a)          # --demo: config/profiles/demo.ini after the settings files (sign-in on, plain-HTTP cookie)
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home, data = roots["home"][0], roots["data"][0]
     data.mkdir(parents=True, exist_ok=True)
     env["DRISHTI_DATA_DIR"] = str(data)
     env["DRISHTI_HOME"] = str(home)
-    port = int(a.port or env.get("DRISHTI_CONSOLE_PORT") or procs.DEFAULT_CONSOLE_PORT)
+    port = int(a.port or env.get("DRISHTI_CONSOLE_PORT") or (keys.get("console.server.port") or "").strip() or procs.DEFAULT_CONSOLE_PORT)
     stem = f"console-{a.name}" if a.name else "console"
     pid_file, log = data / "run" / f"{stem}.pid", data / "logs" / f"{stem}.log"
     if a.distribution:
@@ -91,12 +92,13 @@ def start(a, env: dict | None = None) -> int:
         raise LaunchError(f"no Python at {py}")
 
     dev = []
-    if a.demo:
-        env.update(DRISHTI_AUTH_ENABLED="true", DRISHTI_SECURE_COOKIE="false")
+    if a.demo:   # sign-in and the cookie are the profile's [console.auth]; only the development secrets come from here
         dev = serverstart.dev_secrets(env, ["DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"])
 
     host = procs.lan_ip() or "localhost"
-    servers = ",".join(a.server or []) or env.get("DRISHTI_SERVER_URL") or ""
+    # the server: --server, else DRISHTI_SERVER_URL (or DRISHTI_SERVER), else the settings files' (console.backend.url, a profile's server.port)
+    servers = (",".join(a.server or []) or env.get("DRISHTI_SERVER_URL") or env.get("DRISHTI_SERVER")
+               or settingsfile.server_url(keys, host) or "")
     if not servers:
         servers = f"http://{host}:{procs.DEFAULT_SERVER_PORT}"
         warn(f"no --server (or DRISHTI_SERVER_URL): using this machine's {servers}")

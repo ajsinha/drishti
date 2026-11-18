@@ -52,7 +52,7 @@ Built parts are described as built; everything else is a proposal, a candidate i
 | **CRO** | the Chief Risk Officer and their office: within risk appetite, what changed and why, the decisions waiting, the board pack | proposed (layouts decided) | [8](#8-cro-lens) |
 | **CIO** | the Chief Information Officer, the data office and security: is the risk data estate on time, trustworthy (BCBS 239), healthy, affordable, secure | proposed (layouts decided) | [9](#9-cio-lens) |
 
-The four built lenses are on by default (`drishti.lenses: risk,world,market,trading`). The two risk cubes are two lenses on one shared
+The lenses of the modules that are on are offered by default (`drishti.lenses: default`: Risk, Trading, Market, World, and Research while genomics is on). The two risk cubes are two lenses on one shared
 cube core, because the data grain and the order of aggregation differ (position × scenario for market risk; trade × path × time step,
 netted and collateralised per netting set first, for counterparty risk) while the pivot, provenance, explain and scatter-gather machinery
 are the same ([section 6.5](#65-the-shared-cube-core-mr-and-ccr)). The CRO lens sits above them all: it owns no engine, only the risk
@@ -1221,7 +1221,7 @@ the plan's [Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candida
 | The 200 largest US funds and ETFs: holdings, derivatives and counterparties, flows, returns, N-CEN facts; who holds a company, what tracks an index (`FUND`, `HELD`, `TRACK`) | **Built**, public domain; newest N-PORT only (WL7); no NAV history | [funds README](../../modules/capital-markets/packs/funds/README.md) |
 | BI: `world-economics-economies`, `region-economics-regions` and their reports | **Partly built** (companies, funds, entities: WL8) | `world.yaml` `bi` |
 | One standalone refresh script per pack (`status`, `refresh --dry-run`, `refresh`) | **Built**; a freshness card and schedule: WL11 | [WORLD_DATA_GUIDE.md section 2](../guides/WORLD_DATA_GUIDE.md#2-the-feeds) |
-| A lens beside the others on a full instance (`drishti.lenses: risk,world,market,trading`) | **Built** | [ADMIN_GUIDE.md section 14](../guides/ADMIN_GUIDE.md#14-offer-lenses-to-people) |
+| A lens beside the others on a full instance (`drishti.lenses: default`) | **Built** | [ADMIN_GUIDE.md section 14](../guides/ADMIN_GUIDE.md#14-offer-lenses-to-people) |
 | A change feed ("since yesterday"); news relevance; a coverage list; hiding internal-only sources | **Not built** (WL4, WL5, WL9, WL10, WL12) | section 4.3 |
 
 #### 4.2.1 The landings
@@ -4284,7 +4284,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
 
 | Area | How |
 |---|---|
-| **Packs** | one default list, `config/packs/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` defaults to the word `default`: the lens's packs, else that list; `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher (`403 DRS-1017`) |
+| **Packs** | no list: `drishti.packs.enabled` defaults to the word `default`: the distribution's packs, else the kernel's (`kernel.yaml` `kernel.packs`) and every module's that is on, less a manifest's `packs.off-by-default` (the word may stand in a list: `default,us-equities`); `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher (`403 DRS-1017`) |
 | **Commands** | a command allow-list, separate from kind access (`EditionCommands`): hidden from the command line, `FUNC`, the type-ahead, the packs' examples, the entity page and search (`404 DRS-4023`); the engines still read every kind. The reserved and console words switch on and off, with their pages |
 | **Menus** | `drishti-console/config/sitemap.yaml`: every menu item and footer link with an id and `requires:` (`admin`, `bi`, `designer`, `edition`, `feature:<name>`, `word:<WORD>`, `admin-page:<id>`, `pack:<name>`, `cmd:<WORD>`, `route:<path>`, `module:<id>`, `engine:<id>`); the lens lists what it shows per menu; with more than six menus the labels fold to icons on narrow screens |
 | **Features** | `config/distributions/kernel.yaml `features:`` maps each feature a lens names to the flags of each side (console `features.build`, `forms`, `datamap`, `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`, ...; the engine switches `drishti.engines.<id>.enabled`) |
@@ -4332,7 +4332,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
    labelled, never invented.
 7. With no instance lens Drishti is the full product of the modules that are on.
 8. A person's lens hides and does not secure; who may open a lens is the access model's.
-9. The default lenses offered are `risk,world,market,trading`.
+9. The default lenses offered are those of the modules that are on (`drishti.lenses: default`); a lens file may say `offered-by-default: false`.
 10. The IMF and Yahoo data in World are shown inside the bank; outside it needs a decision.
 
 ### 10.4 Tests

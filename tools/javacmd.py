@@ -265,6 +265,11 @@ def _version_of(home=None) -> str:
     return found.group(1) if found else ""
 
 
+def _home_value(value: str, home) -> str:
+    """``${drishti.home}`` in a root's value (a profile's drishti.data.dir=${drishti.home}/data/qa/data) is the install folder."""
+    return str(value).replace("${drishti.home}", Path(home).as_posix())
+
+
 def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
     """Every root a launcher uses, each {name: (path, where it came from)}: ``home`` (:func:`find_home`), ``data`` (``--data-dir``, else
     ``drishti.data.dir`` in the settings file, else ``DRISHTI_DATA_DIR``, else <home>/data), ``modules`` (``DRISHTI_MODULES_HOME``, else
@@ -279,11 +284,11 @@ def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
         if given:
             out[name] = (Path(given).expanduser().resolve(), f"--{name}-dir" if name == "data" else f"--{name}")
         elif name == "data" and (keys.get(key) or "").strip():
-            out[name] = (Path(keys[key].strip()).expanduser().resolve(), f"{key} in the settings file")
+            out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         elif (env.get(var) or "").strip():
             out[name] = (Path(env[var].strip()).expanduser().resolve(), var)
         elif (keys.get(key) or "").strip():
-            out[name] = (Path(keys[key].strip()).expanduser().resolve(), f"{key} in the settings file")
+            out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         else:
             out[name] = (h / default, f"<home>/{default}")
     out["config"] = (h / "config", "<home>/config")
