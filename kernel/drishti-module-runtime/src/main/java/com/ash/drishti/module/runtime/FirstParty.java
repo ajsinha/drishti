@@ -163,7 +163,7 @@ public final class FirstParty {
         if (here == null || here.isBlank()) {
             return label + ": built for kernel " + built + ", this is an unknown build (a server started from compiled classes, not from the "
                     + "server jar): start the server from the jar that built the modules, lib/drishti-server-<version>-exec.jar (python "
-                    + "tools/drishti.py start server, or an IntelliJ launcher Drishti server after Drishti build all)";
+                    + "tools/drishti.py start server, or IntelliJ's server launchers after the build-all launcher)";
         }
         return label + ": built for kernel " + built + ", this is " + here + ": install the matching module";
     }
