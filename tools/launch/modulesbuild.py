@@ -152,6 +152,17 @@ def maven_line(a, what: str, roots: dict) -> list:
     return cmd
 
 
+def holding_jar(home: Path) -> None:
+    """LaunchError in one line when a server of this install runs (from an IDE, a terminal or drishti.py start): the build replaces the jar
+    and the packages it runs, which Windows keeps locked (and on Linux the server would run on files the build just replaced)."""
+    import procs
+    servers = [p for p in procs.drishti_processes(home) if p["kind"] == "server"]
+    if servers:
+        names = ", ".join(f"pid {p['pid']} on port {p['port']}" for p in servers)
+        raise LaunchError(f"stop the server first: {names} runs the jar and the modules this build replaces "
+                          "(drishti.py stop server, or the IDE's stop button); then build again")
+
+
 def build(a, what: str, env: dict | None = None) -> int:
     """``drishti.py build jar|modules|all``: the Maven command (Java from the one lookup, Maven's temp files in the data folder), then what
     the modules folder holds, in words."""
@@ -174,6 +185,8 @@ def build(a, what: str, env: dict | None = None) -> int:
     if a.dry_run:
         say("(dry run: nothing built)")
         return 0
+    if not getattr(a, "no_copy", False):
+        holding_jar(home)
     tmp.mkdir(parents=True, exist_ok=True)
     if "-Djava.io.tmpdir=" not in env.get("MAVEN_OPTS", ""):
         env["MAVEN_OPTS"] = f"-Djava.io.tmpdir={tmp} " + env.get("MAVEN_OPTS", "")

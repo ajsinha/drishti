@@ -50,7 +50,8 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-#: the settings file every node starts with (--settings; an absolute path), else a node's settings: or the stack's settings-file:
+#: the settings files of drishti.py --settings (absolute paths); every node and the console start with them, then the cluster file's
+#: profile (config/profiles/<profile>.ini), its settings-file: and a node's settings: (both beside the cluster file), a later one winning
 SETTINGS = ""
 SECRET_NAMES = ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
 CONSOLE = "console"
@@ -114,6 +115,32 @@ def load_stack() -> dict:
     if not at.file.exists():
         sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
     return clusterlakes.read_stack(at.file.read_text(encoding="utf-8"))   # YAML 1.2 booleans: a node's off: list stays a list
+
+
+def settings_for(stack: dict, node: dict | None = None) -> str:
+    """The settings files a node (or, with no node, the console) starts with, comma-joined: --settings, the cluster file's profile, its
+    settings-file: and the node's settings: (each a file beside the cluster file); "" when none."""
+    import settingsfile
+    named = settingsfile.with_profiles(SETTINGS or None, ROOT, [stack["profile"]] if stack.get("profile") else [])
+    parts = [p for p in (named or "").split(",") if p]
+    for rel in (stack.get("settings-file"), (node or {}).get("settings")):
+        if rel:
+            f = (at.home / str(rel)).resolve()
+            if not f.is_file():
+                raise procs.LaunchError(f"{at.file}: the settings file {rel} is not at {f}", 2)
+            parts.append(str(f))
+    return ",".join(parts)
+
+
+def business_today(stack: dict) -> None:
+    """The cluster's business day, DRISHTI_BUSINESS_TODAY: the environment's when set, else the newest business date of the demo lake
+    (<data>/delta/demo, where lake demo builds it), so the synthetic lakes and every server agree with the lake; nothing when it has none."""
+    if os.environ.get(clusterlakes.TODAY_ENV):
+        return
+    day = clusterlakes.last_day(at.data / "delta" / "demo")
+    if day:
+        stack.setdefault("settings", {})[clusterlakes.TODAY_ENV] = day
+        say(f"business today {day}: the newest business date of {at.data / 'delta' / 'demo'}")
 
 
 def python() -> str:
@@ -324,7 +351,6 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env.update(keys)
     env["DRISHTI_NET_DIR"] = str(node_net(stack, node))
     env["DRISHTI_STACK_HOST"] = stack_host(stack)
-    env["DRISHTI_PACKS"] = node["packs"]
     env.setdefault("DRISHTI_STORE_ROOT", str(at.data / "fstore"))
     env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (DATA_ARCHITECTURE.md)
     if node.get("home") == "repo":
@@ -389,14 +415,14 @@ def start_node(stack: dict, node: dict, jar: Path, modules: Path | None = None) 
     env["DRISHTI_PYTHON"] = python()
     if modules is not None:
         env["DRISHTI_MODULES_HOME"] = str(modules)        # the pinned copy: every node runs the same packages
-    if stack.get("java") and not (env.get("DRISHTI_JAVA_HOME") or env.get("JAVA_HOME")):
-        env["DRISHTI_JAVA_HOME"] = javacmd.java_home_of(stack["java"])   # the cluster file's java:, when nothing names a JDK
     args = ["--node", name, "--node-dir", env.pop("DRISHTI_NET_DIR"), "--port", str(port), "--heap", str(node.get("heap", "1536m")),
             "--jar", str(jar), "--data-dir", str(at.data), "--env-file", str(at.secrets), "--advertise", stack_host(stack),
             "--workdir", str(cwd), "--background"]
     if node_data:
         args += ["--node-data", node_data]
-    settings = SETTINGS or str(node.get("settings") or stack.get("settings-file") or "")   # --settings, else the node's or the stack's file
+    if node.get("packs"):
+        args += ["--packs", str(node["packs"])]                 # a member's own packs, beating the profile's; else the profile's
+    settings = settings_for(stack, node)                         # --settings, the profile, the cluster's and the node's files
     if settings:
         args += ["--settings", settings]
     for flag in node.get("jvm", []):
@@ -433,6 +459,9 @@ def start_console(stack: dict, c: dict) -> bool:
         args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (DISTRIBUTIONS.md)
     if proc != CONSOLE:
         args += ["--name", proc[len(CONSOLE) + 1:]]
+    settings = settings_for(stack)
+    if settings:
+        args += ["--settings", settings]
     return run_command("console", "start", args, env) == 0
 
 
@@ -461,6 +490,7 @@ def start(names: list[str]) -> int:
         say(refused)
         return 2
     secrets()
+    business_today(stack)
     jar = server_jar()
     modules = modules_pin()
     ok = True

@@ -81,7 +81,9 @@ def test_a_nodes_own_connector_files_count_in_both_forms(tmp_path):
 
 def test_the_lake_ends_on_the_clusters_business_today_and_an_older_one_is_built_again(tmp_path):
     stack = clusterlakes.read_stack(STACK)
-    assert clusterlakes.wanted_end(stack, stack["lakes"]["shared"]) == stack["settings"]["DRISHTI_BUSINESS_TODAY"]
+    assert "settings" not in stack and "java" not in stack, "the business day comes from the demo lake (clusterctl.business_today), the JDK from the one lookup"
+    stack["settings"] = {"DRISHTI_BUSINESS_TODAY": "2026-11-06"}           # what start cluster sets from the demo lake's newest date
+    assert clusterlakes.wanted_end(stack, stack["lakes"]["shared"]) == "2026-11-06"
     assert clusterlakes.wanted_end({}, {"end": "2026-11-08"}) == "2026-11-06", "a Sunday rolls back to the Friday"
     lake = tmp_path / "lakes" / "shared"
     _table(lake, "trading", "trade_endur", "2026-10-16")

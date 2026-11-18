@@ -245,6 +245,86 @@ def _command_line(pid: int) -> str | None:
             return None
 
 
+def _all_command_lines() -> dict:
+    """{pid: command line} of every process this user can see (Linux /proc, else ps; Windows PowerShell, java and python only)."""
+    out = {}
+    if windows():
+        try:
+            r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                                "Get-CimInstance Win32_Process -Filter \"Name='java.exe' or Name='javaw.exe' or Name='python.exe' or Name='py.exe'\" | "
+                                "ForEach-Object { \"$($_.ProcessId)`t$($_.CommandLine)\" }"], capture_output=True, text=True, timeout=60)
+            for line in r.stdout.splitlines():
+                pid, _, cmd = line.partition("\t")
+                if pid.strip().isdigit():
+                    out[int(pid)] = cmd
+        except (OSError, subprocess.SubprocessError):
+            pass
+        return out
+    proc = Path("/proc")
+    if proc.is_dir():
+        for d in proc.iterdir():
+            if d.name.isdigit():
+                try:
+                    out[int(d.name)] = (d / "cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
+                except OSError:
+                    continue
+        return out
+    try:
+        for line in subprocess.run(["ps", "-axww", "-o", "pid=,command="], capture_output=True, text=True, timeout=30).stdout.splitlines():
+            pid, _, cmd = line.strip().partition(" ")
+            if pid.isdigit():
+                out[int(pid)] = cmd
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return out
+
+
+def drishti_processes(home) -> list[dict]:
+    """The servers and consoles of this install that run now, however they were started (an IDE, a terminal, drishti.py start): each
+    {pid, kind (server or console), cmd, port}. A server runs a jar of <home>/lib; a console <home>/drishti-console/run_drishti_web.py.
+    The port: the command line's, else server.port (console.server.port) of the settings files it names, else the default."""
+    h = str(Path(home).resolve()).replace("\\", "/")
+    norm = (lambda s: s.replace("\\", "/").lower()) if windows() else (lambda s: s.replace("\\", "/"))
+    out = []
+    for pid, cmd in sorted(_all_command_lines().items()):
+        c = norm(cmd)
+        if pid == os.getpid():
+            continue
+        if norm(h + "/lib/drishti-server") in c and ".jar" in c:
+            kind = "server"
+        elif norm(h + "/drishti-console/run_drishti_web.py") in c:
+            kind = "console"
+        else:
+            continue
+        out.append({"pid": pid, "kind": kind, "cmd": cmd, "port": _port_of(cmd, kind)})
+    return out
+
+
+def _port_of(cmd: str, kind: str) -> int:
+    """The port a Drishti process listens on, from its command line: --server.port / -Dserver.port, else the settings files it names
+    (-Ddrishti.settings.file= or --settings, and a console's --profile), else the default."""
+    import re
+    m = re.search(r"(?:--|-D)server\.port=(\d+)", cmd)
+    if m:
+        return int(m.group(1))
+    files = []
+    m = re.search(r'(?:-Ddrishti\.settings\.file=|--settings[= ])"?([^"\s]+)', cmd)
+    if m:
+        files += m.group(1).split(",")
+    pm = re.search(r"--profile[= ]([\w,-]+)", cmd)
+    if pm:
+        files += [str(Path(__file__).resolve().parents[2] / "config" / "profiles" / f"{n}.ini") for n in pm.group(1).split(",")]
+    if files:
+        try:
+            import settingsfile
+            v = str(settingsfile.read_all(",".join(f for f in files if Path(f).is_file())).get("server.port" if kind == "server" else "console.server.port") or "")
+            if v.strip().isdigit():
+                return int(v)
+        except Exception:  # noqa: BLE001 - an unreadable file: the default
+            pass
+    return DEFAULT_SERVER_PORT if kind == "server" else DEFAULT_CONSOLE_PORT
+
+
 def running(pid) -> bool:
     """Whether a process of that id exists at all (cheap: POSIX signal 0, Windows tasklist); identity is :func:`alive`'s job."""
     if not pid:

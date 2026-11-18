@@ -196,8 +196,18 @@ def status_table(dirs: list) -> int:
             if state != "running" or answer == "no answer":
                 rc = 1
             say(f"{f.stem:<22} {pid or '-':>8}  {state:<10} {fields.get('port', '-'):<6} {answer:<10} {fields.get('distribution', 'all'):<16} {fields.get('url', '-')}")
+    known = {procs.read_pid(f)[0] for data in dirs for f in (Path(data) / "run").glob("*.pid")}
+    home = javacmd.launch_roots(None, None, None, javacmd.settings()[1])["home"][0]
+    for p in procs.drishti_processes(home):           # started from an IDE or by hand: seen too (LAUNCHER_REVIEW.md F20)
+        if p["pid"] in known:
+            continue
+        any_found = True
+        health = f"http://127.0.0.1:{p['port']}" + ("/actuator/health" if p["kind"] == "server" else "/healthz")
+        answer = "UP" if procs.http_ok(health) else "no answer"
+        say(f"{p['kind'] + ' (elsewhere)':<22} {p['pid']:>8}  {'running':<10} {p['port']:<6} {answer:<10} {'-':<16} http://127.0.0.1:{p['port']}  "
+            "(started elsewhere: an IDE or by hand; stop it there)")
     if not any_found:
-        say("(no Drishti process started with drishti.py start in this data folder)")
+        say("(no Drishti process of this install runs)")
     return rc
 
 
@@ -304,6 +314,8 @@ def register(groups, add) -> None:
         c.add_argument("--data-dir", metavar="DIR", help="the data folder (default DRISHTI_DATA_DIR, else <home>/data)")
         c.add_argument("names", nargs="*", help='only these nodes; "console" for the console')
         c.set_defaults(func=cmd_cluster, cmd="cluster", verb=verb)
+
+    __import__("nodecmd").register(groups)
 
     lg = groups.add_parser("launchers", help="launchers [--check|--machine]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
                            description=__import__("launchers").__doc__, formatter_class=RAW,

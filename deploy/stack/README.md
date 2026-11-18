@@ -26,17 +26,21 @@ python tools/drishti.py status --cluster deploy/stack/stack.yaml      # the proc
 python tools/drishti.py stop cluster        # stop everything start cluster started (by process id, never by name)
 ```
 
-Windows: `py tools\drishti.py start cluster`, `py tools\drishti.py status --cluster deploy\stack\stack.yaml`, `py tools\drishti.py stop cluster` (Java and Python only;
-set `JAVA_HOME` to your JDK 21: `stack.yaml`'s `java:` is a Linux path, and `JAVA_HOME` wins over it).
+Windows: `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start cluster`, `py tools\drishti.py status --cluster deploy\stack\stack.yaml`,
+`py tools\drishti.py stop cluster` (Java and Python only). The JDK is the one lookup of every tool: `drishti.java.home` of the settings
+file, then `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the `PATH`; the cluster file names none.
 
-**A settings file** for every node: `python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start cluster`, or `settings-file:` in `stack.yaml`
-(a node's own `settings:` wins over it). Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the file's
+**The settings of every node and the console**, in order, a later file winning: the files of `drishti.py --settings` (your `dev.ini`),
+the cluster file's `profile:` (`demo`: `config/profiles/demo.ini`, the same file the IDE's **Drishti server (demo lakes)** and
+`start server --demo` read), its `settings-file:` (`stack.ini` beside it: what this lab cluster runs differently, live news) and a node's
+own `settings:` (`member.ini`: the members run no data inbox). A node's `packs:` beats the profile's packs (the members serve their own);
+`drishti-main` names none and serves the profile's. Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the files'
 ([docs/DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../../docs/DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)).
 
 **The data folder** of every cluster command is the one launch-roots lookup: `--data-dir`, else `drishti.data.dir` of the settings file,
 else `DRISHTI_DATA_DIR`, else `<drishti>/data`.
 
-This folder is configuration only (`stack.yaml`, `nodes/`, `secrets.env`); the commands are in [bin/](../../bin/README.md). `--cluster FILE` runs any other file of this format; the default is this one. Each node is started by `drishti.py start server`, the console by `drishti.py start console`, with the settings of `stack.yaml`.
+This folder is configuration only (`stack.yaml`, `stack.ini`, `member.ini`, `nodes/`, `secrets.env`); the commands are in [bin/](../../bin/README.md). `--cluster FILE` runs any other file of this format; the default is this one. Each node is started by `drishti.py start server`, the console by `drishti.py start console`, with the settings of `stack.yaml`.
 
 Open the console at `http://<this machine's address>:17480` (`start cluster` prints it) and go to **Admin → Cluster**: the three members are alive.
 
@@ -44,7 +48,7 @@ Open the console at `http://<this machine's address>:17480` (`start cluster` pri
 
 | Process | Address | What it serves | Its data |
 |---|---|---|---|
-| `drishti-main` | `http://<this machine's address>:18480` (`start cluster` prints it) | your own stack: the ten demo packs, the demo lake, live news | the repository's `data/` (as from the IDE); its connectors are the modules' templates, with any override of yours in `config/connectors/` |
+| `drishti-main` | `http://<this machine's address>:18480` (`start cluster` prints it) | your own stack: the demo profile's packs (every module's that is on, plus us-equities, gleif and funds), the demo lake, live news, the data inbox | the repository's `data/` (as from the IDE); its connectors are the modules' templates, with any override of yours in `config/connectors/` |
 | `drishti-b` | `http://<this machine's address>:18791` (`start cluster` prints it) | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
 | `drishti-c` | `http://<this machine's address>:18792` (`start cluster` prints it) | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
 | console | `http://<this machine's address>:17480` (`start cluster` prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
@@ -63,7 +67,8 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 
 | File | Checked in | What it is |
 |---|---|---|
-| `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the shared settings and the console. `start cluster` reads it |
+| `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the profile and the console. `start cluster` reads it |
+| `stack.ini`, `member.ini` | yes | the cluster's own settings after the profile (live news), and a member node's (no data inbox) |
 | `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP), `gossip.yaml`, `peers/` (the seed) |
 | `secrets.env.example` | yes | the names of the secrets, no values |
 | `secrets.env` | **no** (git-ignored) | the secrets themselves, mode 600 |
@@ -85,8 +90,9 @@ The synthetic lakes are laid out as the demo lake's file says (`config/lakes/dem
 (`DRISHTI_LAKES_DIR`) with its root, `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only
 the root differs.
 
-A synthetic lake **ends on the cluster's business today**: the lake entry's `end:`, else `DRISHTI_BUSINESS_TODAY` of `settings:`, else
-this machine's date, rolled back to a business day. A lake that ends on another day (built before the cluster's today was fixed, or on an
+A synthetic lake **ends on the cluster's business today**: the lake entry's `end:`, else `DRISHTI_BUSINESS_TODAY` (the environment's,
+else the newest business date of the demo lake `data/delta/demo`, which `start cluster` finds and gives every server), else this machine's
+date, rolled back to a business day. A lake that ends on another day (built before the cluster's today was fixed, or on an
 earlier day) is built again beside the old one (`data/stack/lakes/<name>-next`) and swapped in on the next `start cluster` of a node
 that reads it; the node must be stopped. Otherwise the node holds no trade of the day its servers ask for, and the cluster's grouped pages
 (a counterparty's trades) miss its trades.
