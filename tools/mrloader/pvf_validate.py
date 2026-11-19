@@ -19,9 +19,9 @@ direction and quantity, valuation dates) and each business date as a whole (uniq
 as the set's SCENARIO_DATES, the set's days in order and before the date).
 
 examples (from the repository root):
-    python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
-    python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl data/pvf/pvf-2026-10-29/scenario-set
-    python3 tools/pvf/pvf_validate.py --strict data/pvf/pvf-2026-10-29/scenario-pv data/pvf/pvf-2026-10-29/scenario-set   to the letter
+    python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
+    python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl data/pvf/pvf-2026-10-29/scenario-set
+    python3 tools/mrloader/pvf_validate.py --strict data/pvf/pvf-2026-10-29/scenario-pv data/pvf/pvf-2026-10-29/scenario-set   to the letter
 
 A path is a .jsonl or .jsonl.gz file, a folder of them (recursively) or a .tar. A record is a scenario-set record when it has
 SCENARIO_DATES, else a scenario-pv record. The source attributes kept beside the contract's fields (mapping.yaml pass_through) and the
@@ -40,15 +40,15 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from pvf.common import DEFAULT_MAPPING, PvfError, log, read_any, setup_logging  # noqa: E402
-from pvf.contract import DateCheck, record_rules, scenario_pv, scenario_set  # noqa: E402
+from mrloader.common import DEFAULT_MAPPING, PvfError, log, read_any, setup_logging  # noqa: E402
+from mrloader.contract import DateCheck, record_rules, scenario_pv, scenario_set  # noqa: E402
 
 
 def known_gaps(mapping: Path | None) -> frozenset:
     """The required fields mapping.yaml leaves out on purpose (omit_required); none without a mapping."""
     if mapping is None:
         return frozenset()
-    from pvf.mapping import Mapping
+    from mrloader.mapping import Mapping
     return frozenset(Mapping(mapping).omit)
 
 
@@ -85,7 +85,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1],
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("paths", nargs="+", type=Path, help="files, folders or .tar archives of the export")
-    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping whose omit_required are known gaps (default tools/pvf/mapping.yaml)")
+    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping whose omit_required are known gaps (default tools/mrloader/mapping.yaml)")
     p.add_argument("--strict", action="store_true", help="the contract to the letter: extra attributes and omitted required fields are errors")
     p.add_argument("--show", type=int, default=5, help="examples listed per kind of problem (default 5)")
     p.add_argument("--json", action="store_true", help="the result as JSON")

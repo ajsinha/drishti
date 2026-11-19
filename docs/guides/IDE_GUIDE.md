@@ -187,15 +187,15 @@ one your team already uses. Drishti needs only its packages installed in it.
 
    ```bash
    <that python> -m pip install -r drishti-console/requirements.txt
-   <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/pvf
+   <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/mrloader
    ```
 
    No administrator rights: add `--user`.
 3. Choose it in PyCharm (section 2.3, step 2). Every Python launcher then uses it: they store no interpreter path of their own.
 
-The command-line tools in `tools/pvf/` use Polars; the console's environment may not carry it: either
+The command-line tools in `tools/mrloader/` use Polars; the console's environment may not carry it: either
 `drishti-console/.venv/bin/pip install -r drishti-console/requirements-polars.txt`, or give those scripts another interpreter (Python 3.11
-or later with Polars, NumPy and PyYAML) in their own run configuration. The details are in `tools/pvf/README.md`.
+or later with Polars, NumPy and PyYAML) in their own run configuration. The details are in `tools/mrloader/README.md`.
 
 ### 2.3 PyCharm: open `drishti-console/`
 

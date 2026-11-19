@@ -17,11 +17,12 @@
 go: join, map by mapping.yaml (UPPER_SNAKE names), check against the contract, write the plain .jsonl and the loadable .jsonl.gz layout.
 
 examples (from the repository root):
-  python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \\
+  python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \\
       --positions data/pvf/pos_20261029.csv --date 2026-10-29
-  python3 tools/pvf/pvf_run.py ... --limit 2000             a quick trial on the first 2,000 positions
-  python3 tools/pvf/pvf_run.py ... --dry-run                check the inputs and the mapping; write nothing
-  python3 tools/pvf/pvf_run.py ... --inbox                  also hand both archives to the data inbox (data/dataload/inbox):
+  python3 tools/mrloader/pvf_run.py ... --limit 2000             a quick trial on the first 2,000 positions
+  python3 tools/mrloader/pvf_run.py ... --dry-run                check the inputs and the mapping; write nothing
+  python3 tools/mrloader/pvf_run.py ... --fx data/pvf/fx_20261029.csv --inbox    the day in one go: set, FX, PVs, handed over in that order
+  python3 tools/mrloader/pvf_run.py ... --inbox                  also hand both archives to the data inbox (data/dataload/inbox):
                                                             the running server loads them (the scenario set first)
 
 --positions is required: the PV file carries POSITION_ID only (no portfolio, currency, trade or amount), so the positions file is what
@@ -45,8 +46,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -54,48 +53,16 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from pvf.common import PvfError, Timer, iso_date, log, peak_memory_mb, setup_logging  # noqa: E402
-from pvf.mapping import Mapping  # noqa: E402
-from pvf.pvf_export_gz import ExportConfig, add_mapping_arguments, export, run_overrides  # noqa: E402
-from pvf.pvf_join import FILL_POLICIES, JoinConfig, modified_utc, run as join  # noqa: E402
+from mrloader.common import (DEFAULT_INBOX, INBOX_ORDER, PvfError, Timer, log, peak_memory_mb, setup_logging, strict_date,  # noqa: E402,F401
+                        to_inbox)
+from mrloader.mapping import Mapping  # noqa: E402
+from mrloader.pvf_fx_scenario import FxConfig, build_fx, read_fx_file  # noqa: E402
+from mrloader.mapping import scenario_dates  # noqa: E402
+from mrloader.pvf_export_gz import ExportConfig, add_mapping_arguments, export, run_overrides  # noqa: E402
+from mrloader.pvf_join import FILL_POLICIES, JoinConfig, modified_utc, run as join  # noqa: E402
 
 
 REPO = Path(__file__).resolve().parents[2]
-DEFAULT_INBOX = REPO / "data" / "dataload" / "inbox"
-#: the order the inbox must receive the kinds in: a date's scenario set before its PVs (the engine sizes a date's vectors from its set)
-INBOX_ORDER = ("scenario-set", "scenario-pv")
-
-
-def to_inbox(tars: list[str], inbox: Path) -> list[str]:
-    """Hand the archives to the data inbox: each archive is copied under a temporary name and renamed into place, and only then its
-    .ready marker, so the watcher never sees a half-written archive; the scenario set goes before the PVs. Returns the names delivered."""
-    if not inbox.is_dir():
-        raise PvfError(f"the data inbox {inbox} does not exist: is the server's data load on (DRISHTI_DATALOAD_ENABLED)?")
-    def rank(t: str) -> int:
-        name = Path(t).name
-        return next((i for i, kind in enumerate(INBOX_ORDER) if name.startswith(kind + "-")), len(INBOX_ORDER))
-    done = []
-    for tar in sorted(tars, key=rank):
-        src, ready = Path(tar), Path(f"{tar}.ready")
-        if not ready.is_file():
-            raise PvfError(f"{src.name} has no .ready marker: run without --no-tar")
-        part = inbox / f"{src.name}.copying"             # no hidden names; the watcher reads only .ready markers
-        shutil.copyfile(src, part)
-        os.replace(part, inbox / src.name)
-        shutil.copyfile(ready, inbox / ready.name)
-        done.append(src.name)
-        log.info("handed %s and its .ready to the data inbox %s", src.name, inbox)
-    return done
-
-
-def strict_date(text: str) -> str:
-    """--date: exactly YYYY-MM-DD, a real day."""
-    try:
-        if len(text) == 10 and iso_date(text) == text:
-            return text
-    except PvfError:
-        pass
-    raise argparse.ArgumentTypeError(f"{text!r} is not a date YYYY-MM-DD")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -118,15 +85,24 @@ def parser() -> argparse.ArgumentParser:
     o.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
                    help="after the export, copy each archive and then its .ready into the data inbox the running server watches "
                         f"(default {DEFAULT_INBOX.relative_to(REPO)}); the scenario set goes first, so the PVs find their set")
+    o.add_argument("--fx", type=Path, metavar="FILE",
+                   help="also build the date's scenario FX from this CSV (pvf_fx_scenario.py's long or wide form) against the set this run "
+                        "writes: fx-scenario-<date>.tar beside the others; with --inbox the order is set, FX, PVs")
     o.add_argument("-v", "--verbose", action="store_true", help="debug logging")
-    add_mapping_arguments(p.add_argument_group("mapping (tools/pvf/mapping.yaml)"))
+    add_mapping_arguments(p.add_argument_group("mapping (tools/mrloader/mapping.yaml)"))
     return p
 
 
 def run(a: argparse.Namespace) -> dict:
     t = Timer()
     folder = (a.out or a.pv.resolve().parent) / f"pvf-{a.date}"
-    Mapping(a.mapping, run_overrides(a)).resolve_run(a.date, {"pv_file_modified": modified_utc(a.pv)})   # fail fast, before 4 GB are read
+    ctx = Mapping(a.mapping, run_overrides(a)).resolve_run(a.date, {"pv_file_modified": modified_utc(a.pv)})   # fail fast, before 4 GB are read
+    fx_table = None
+    if a.fx:                                                     # the FX file is checked against the set's days before the PV file is read
+        if a.no_scenario_set:
+            raise PvfError("--fx joins to the scenario set this run writes: use pvf_fx_scenario.py with --scenario-set for a set already loaded")
+        days, _ = scenario_dates(Mapping(a.mapping, run_overrides(a)), a.date, a.scenario_dates)
+        fx_table = read_fx_file(a.fx, a.date, days)
     joined = folder / f"pvf_joined.{a.date}.jsonl"
     j = join(JoinConfig(a.portfolio, a.positions, a.pv, joined, business_date=a.date, max_path=a.max_path,
                         limit_positions=a.limit, chunk=a.chunk, dry_run=a.dry_run, fill_policy=a.fill_policy))
@@ -135,11 +111,15 @@ def run(a: argparse.Namespace) -> dict:
         return {"DRY_RUN": True, "JOIN": j}
     e = export(ExportConfig(joined, folder, a.mapping, run_overrides(a), a.date, a.scenario_dates, a.rows_per_part,
                             False if a.no_scenario_set else None, not a.no_tar, folder / f"scenario_pv.{a.date}.jsonl", a.lake))
+    fx = None
+    if fx_table is not None:
+        fx = build_fx(FxConfig(a.date, fx_table, ctx["scenario_set_id"], days, ctx["batch_id"], folder, a.lake))
+        e["TARS"] = [*(e.get("TARS") or []), fx["TAR"]]
     summary = {"BUSINESS_DATE": a.date, "FOLDER": str(folder), "POSITIONS_READ": j["POSITIONS_READ"],
                "JOIN_EXCLUDED": j["POSITIONS_EXCLUDED"], "JOIN_EXCLUDED_BY_REASON": j["EXCLUDED_BY_REASON"], "FILLS": j["FILLS"],
                "EXPORT_AUDITED": e["ROWS_AUDITED"], "EXPORT_AUDITED_BY_REASON": e["AUDITED_BY_REASON"], "RECORDS_WRITTEN": e["RECORDS_WRITTEN"],
                "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "TARS": e.get("TARS"), "PLAIN_JSONL": e["PLAIN_JSONL"],
-               "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e}
+               "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e, "FX": fx}
     if a.inbox:
         if not e.get("TARS"):
             raise PvfError("--inbox needs the archives: run without --no-tar")

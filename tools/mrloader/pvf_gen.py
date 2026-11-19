@@ -17,7 +17,7 @@
 per-path PVs (pvf_path_YYYYMMDD.csv), shuffled as an extract arrives. The same --seed gives the same files.
 
 example (from the repository root):
-  python3 tools/pvf/pvf_gen.py --out data/pvf/synthetic --positions 2000 --portfolios 150 --date 2026-10-29
+  python3 tools/mrloader/pvf_gen.py --out data/pvf/synthetic --positions 2000 --portfolios 150 --date 2026-10-29
 
 Per position: 70% carry path -1 and every path 0..250; 5% have no path -1 (audited by pvf_join.py as MISSING_BASE_PV); 25% have path -1
 and a random gapped subset of 0..250 (filled by pvf_join.py). --missing-portfolio adds positions whose portfolio is not in PORTFOLIO_D2.
@@ -33,7 +33,7 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from pvf.common import iso_date, log, setup_logging  # noqa: E402
+from mrloader.common import iso_date, log, setup_logging  # noqa: E402
 
 try:
     import numpy as np

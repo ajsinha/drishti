@@ -18,8 +18,8 @@ gzipped JSON Lines parts per table and business date, the date's scenario set be
 (--jsonl) the same records as one plain .jsonl file.
 
 examples (from the repository root):
-  python3 tools/pvf/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/pvf-2026-10-29
-  python3 tools/pvf/pvf_export_gz.py ... --limit 100 --dry-run      map and check the first 100 rows; write nothing
+  python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/pvf-2026-10-29
+  python3 tools/mrloader/pvf_export_gz.py ... --limit 100 --dry-run      map and check the first 100 rows; write nothing
 
 writes, under --out (the date from the rows' BUSINESS_DATE):
   scenario-pv/<date>/cob.part-001.jsonl.gz ...   the records, --rows-per-part each (20,000), in POSITION_ID order
@@ -47,10 +47,10 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from pvf.common import (DEFAULT_MAPPING, GzParts, PvfError, Timer, dumps, iso_date, log, lower_keys, make_tar, peak_memory_mb,  # noqa: E402
-                        read_jsonl, setup_logging, sha256_of, write_gz)
-from pvf.contract import DateCheck, record_rules, scenario_set  # noqa: E402
-from pvf.mapping import Mapping, RowProblem, scenario_dates, scenario_set_record  # noqa: E402
+from mrloader.common import (DEFAULT_MAPPING, GzParts, PvfError, Timer, dumps, iso_date, log, lower_keys, make_tar, peak_memory_mb,  # noqa: E402
+                        read_jsonl, setup_logging, sha256_of, write_gz, write_ready)
+from mrloader.contract import DateCheck, record_rules, scenario_set  # noqa: E402
+from mrloader.mapping import Mapping, RowProblem, scenario_dates, scenario_set_record  # noqa: E402
 
 CONTRACT_BREACH = "CONTRACT"
 WRONG_DATE = "WRONG_BUSINESS_DATE"
@@ -227,9 +227,7 @@ def package(c: ExportConfig, out: Outputs, set_rec: dict | None) -> dict:
             tar = make_tar(c.out / f"{kind}-{bd}.tar", c.out, files)
             sums[tar.name] = sha256_of(tar)
             rows = out.written if kind == "scenario-pv" else 1
-            ready = {**({"lake": c.lake} if c.lake else {}), "folders": {kind: "market-risk"}, "mode": "replace", "rows": rows,
-                     "sha256": sums[tar.name]}
-            Path(f"{tar}.ready").write_text("".join(f"{k}: {json.dumps(v)}\n" for k, v in ready.items()), encoding="utf-8")
+            write_ready(tar, kind, rows, c.lake)
             res["TARS"].append(str(tar))
     sha = Path(f"{out.stem}.sha256")
     sha.write_text("".join(f"{h}  {p}\n" for p, h in sums.items()), encoding="utf-8")
@@ -281,7 +279,7 @@ def export(c: ExportConfig) -> dict:
 
 def add_mapping_arguments(p: argparse.ArgumentParser) -> None:
     """The options the export and the driver (pvf_run.py) share."""
-    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping file (default tools/pvf/mapping.yaml)")
+    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping file (default tools/mrloader/mapping.yaml)")
     p.add_argument("--scenario-set-id", help="the scenario set's id (^HS-), instead of mapping.yaml run.scenario_set_id")
     p.add_argument("--batch-id", help="the batch id, instead of run.batch_id")
     p.add_argument("--computed-at", help="the run's ISO-8601 UTC time (2026-10-29T06:00:00Z), instead of run.computed_at")

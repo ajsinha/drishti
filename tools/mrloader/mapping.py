@@ -24,8 +24,8 @@ from pathlib import Path
 
 import yaml
 
-from pvf.common import ROOT, PvfError, iso_date, upper_name
-from pvf.contract import Contract
+from mrloader.common import ROOT, PvfError, iso_date, upper_name
+from mrloader.contract import Contract
 
 RULE_KEYS = {"const", "from", "template", "regex", "map", "else", "sign", "sign_from", "slug", "upper", "prefix", "type", "default"}
 TYPES = {"text", "number", "integer", "date", "list", "vector"}

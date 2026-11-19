@@ -17,12 +17,12 @@
 vector of per-path PVs. A position that cannot be joined goes to an audit file, never into the output.
 
 examples (from the repository root):
-  python3 tools/pvf/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \\
+  python3 tools/mrloader/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \\
       --paths data/pvf/pvf_path_20261029.csv --out data/pvf/out/pvf_joined_20261029.jsonl
-  python3 tools/pvf/pvf_join.py ... --limit-positions 2000          a quick trial on the first 2,000 positions
-  python3 tools/pvf/pvf_join.py ... --dry-run                       check the inputs and say what would be written; write nothing
+  python3 tools/mrloader/pvf_join.py ... --limit-positions 2000          a quick trial on the first 2,000 positions
+  python3 tools/mrloader/pvf_join.py ... --dry-run                       check the inputs and say what would be written; write nothing
 
-the rules (tools/pvf/README.md, "The join rules"):
+the rules (tools/mrloader/README.md, "The join rules"):
   * the per-path file is read lazily (Polars scan_csv, streaming engine): only POSITION_ID, PATH_NUM, VAL and the filter columns, rows
     of the business date (VALID_DT), --risk-metric, --dataset and --shock-group only; it is never held whole in memory;
   * BASE_PV is the value of path -1; PATH_PV holds paths 0..--max-path (251 values by default). A missing path is filled by
@@ -53,7 +53,7 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from pvf.common import PvfError, Timer, date_in_name, iso_date, log, peak_memory_mb, setup_logging, upper_name  # noqa: E402
+from mrloader.common import PvfError, Timer, date_in_name, iso_date, log, peak_memory_mb, setup_logging, upper_name  # noqa: E402
 
 try:
     import numpy as np
