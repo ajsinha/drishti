@@ -1,0 +1,42 @@
+{
+ "baseline": {
+  "commit": "d694c1382",
+  "counts": {
+   "answers": 9,
+   "frames": 5,
+   "noEntity": 2,
+   "pages": 6,
+   "sutras": 217,
+   "viewmodels": 215
+  },
+  "jar": "drishti-server-2.9.11.i7a-exec.jar",
+  "jarSha256": "3002ce9657a8edcd17e6c7d98111693737ffda3aed03c298c9c278444970932e",
+  "label": "v2.9.11.i_7a"
+ },
+ "differences": [
+  {
+   "artefact": "figures.json",
+   "claim": "EV4",
+   "class": "unlisted",
+   "difference": "[0]/body/cells/*|*/values/var(): 167372692.0900454 -> 167372693.0900454",
+   "path": "[0]/body/cells/*|*/values/var()",
+   "reason": null
+  }
+ ],
+ "identical": 233,
+ "new": {
+  "commit": "d694c1382",
+  "counts": {
+   "answers": 9,
+   "frames": 5,
+   "noEntity": 2,
+   "pages": 6,
+   "sutras": 217,
+   "viewmodels": 215
+  },
+  "jar": "drishti-server-2.9.11.i7a-exec.jar",
+  "jarSha256": "3002ce9657a8edcd17e6c7d98111693737ffda3aed03c298c9c278444970932e",
+  "label": "v2.9.11.i_7a"
+ },
+ "status": "unlisted differences"
+}

@@ -1,0 +1,5 @@
+tools proof: i7a against a second run of itself=testing/evidence/proof-i7a-against-itself.json
+tools proof: a planted difference=testing/evidence/proof-planted-difference.json
+C-I The split=testing/evidence/c1-compare.json
+C-II Live feeds=testing/evidence/c2-compare.json
+C-III Painter and the rest=testing/evidence/c3-compare.json
