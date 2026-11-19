@@ -38,7 +38,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 |  |  |
 |---|---|
-| Contract | [counterparty.contract.yaml](../../../config/packs/core/core/contracts/counterparty.contract.yaml) · version 1.0 |
+| Contract | [counterparty.contract.yaml](../../../config/packs/core/core/contracts/counterparty.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -57,21 +57,21 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 |---|---|---|---|---|---|---|
 | `COUNTERPARTY_ID` | id | required |  | The record's id (the business key) | `CP-ALDERSHOT` (pattern `^CP-`) |  |
 | `NAME` | text | required |  | The counterparty's legal name. | `Aldershot Pension Trust` |  |
-| `LEI` | text | required |  | The counterparty's Legal Entity Identifier: 20 characters, ISO 17442. | `549300H5KZ2QJHEAMB55` |  |
+| `LEI` | text | optional |  | The counterparty's Legal Entity Identifier: 20 characters, ISO 17442. | `549300H5KZ2QJHEAMB55` |  |
 | `RATING` | text | required |  | The counterparty's credit rating, S&P-style (AA-, BBB+ …). | `AA-` |  |
-| `SECTOR` | text | required |  | The counterparty's industry sector (Pensions, Banking, Utilities …). | `Pensions` |  |
+| `SECTOR` | text | optional |  | The counterparty's industry sector (Pensions, Banking, Utilities …). | `Pensions` |  |
 | `COUNTRY` | text | required |  | The counterparty's country, ISO 3166-1 alpha-2. | `GB` |  |
-| `TYPE` | text | required |  | The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …). | `Pension fund` |  |
-| `COUNTRY_OF_RISK` | text | required |  | The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK. | `GB` |  |
-| `UEN` | text | required |  | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. | `UEN0100037` |  |
-| `ECONOMY` | id | required |  | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). | `ECON-GBR` (pattern `^ECON-`) | `economy` |
-| `NEWS_ID` | id | required |  | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` |
-| `NET_MTM` | amount | required | USD | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | `15036789` |  |
-| `NETTING_SETS` | record list | required |  | The counterparty's netting sets: one object per netting set. |  | `netting-set` |
-| `KYC` | record | required |  | The counterparty's know-your-customer record: one object. |  |  |
-| `GROUP` | id | required |  | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` |
-| `CREDIT_LIMIT` | id | required |  | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
-| `HIERARCHY` | record | required |  | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. |  |  |
+| `TYPE` | text | optional |  | The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …). | `Pension fund` |  |
+| `COUNTRY_OF_RISK` | text | optional |  | The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK. | `GB` |  |
+| `UEN` | text | optional |  | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. | `UEN0100037` |  |
+| `ECONOMY` | id | optional |  | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). | `ECON-GBR` (pattern `^ECON-`) | `economy` |
+| `NEWS_ID` | id | optional |  | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` |
+| `NET_MTM` | amount | derived | USD | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. *a roll-up Drishti computes from the netting sets' trade valuations; a master file does not carry it and an upstream value is ignored* | `15036789` |  |
+| `NETTING_SETS` | record list | derived |  | The counterparty's netting sets: one object per netting set. *the reverse of the netting set's COUNTERPARTY link, derived by Drishti; a master file does not carry it* |  | `netting-set` |
+| `KYC` | record | optional |  | The counterparty's know-your-customer record: one object. |  |  |
+| `GROUP` | id | optional |  | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` |
+| `CREDIT_LIMIT` | id | optional |  | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
+| `HIERARCHY` | record | derived |  | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. *the legal graph, derived by Drishti from the group, agreements, CSAs and netting sets* |  |  |
 | `CREDIT_CURVE` | id | optional |  | Its CDS curve, when it is also a bond issuer: a CURVE_ID of the market-data pack's credit-curve kind (CDS-…). | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` |
 | `LEGAL_ENTITY` | id | optional |  | The bank's legal entity that faces it: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-NY` (pattern `^LE-`) | `legal-entity` |
 
@@ -89,10 +89,10 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `STATUS` | text | required |  | The KYC review's outcome (Approved …). | `Approved` |  |
-| `RISK_RATING` | text | required |  | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. | `Enhanced`, `Standard` |  |
-| `LAST_REVIEW` | date | required |  | The date of the last KYC review. | `2026-02-11` |  |
-| `EMIR_CLASSIFICATION` | text | required |  | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). | `FC`, `NFC-` |  |
-| `PD_1Y` | rate | required | fraction | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). | `0.0004` |  |
+| `RISK_RATING` | text | optional |  | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. | `Standard` |  |
+| `LAST_REVIEW` | date | optional |  | The date of the last KYC review. | `2026-02-11` |  |
+| `EMIR_CLASSIFICATION` | text | optional |  | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). | `FC` |  |
+| `PD_1Y` | rate | optional | fraction | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). | `0.0004` |  |
 
 **Nested `HIERARCHY`**
 
@@ -121,7 +121,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 **Validation**
 
-- required: fields `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`
+- required: fields `COUNTERPARTY_ID`, `NAME`, `RATING`, `COUNTRY`
 - unique: key `COUNTERPARTY_ID`; per business_date
 - pattern: field COUNTERPARTY_ID; pattern ^CP-
 - link: field ECONOMY; kind economy
@@ -132,8 +132,6 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - link: field CREDIT_CURVE; kind credit-curve
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field NETTING_SETS[].AGREEMENT; kind agreement
-- enum: field KYC.RISK_RATING; values `Enhanced`, `Standard`
-- enum: field KYC.EMIR_CLASSIFICATION; values `FC`, `NFC-`
 - enum: field HIERARCHY.NODES[].TYPE; values `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set`
 - enum: field HIERARCHY.EDGES[].LABEL; values `governs`, `nets`, `parent of`, `secured by`, `signed`
 
@@ -157,7 +155,7 @@ Economic group of related counterparties (obligor group).
 
 |  |  |
 |---|---|
-| Contract | [counterparty-group.contract.yaml](../../../config/packs/core/core/contracts/counterparty-group.contract.yaml) · version 1.0 |
+| Contract | [counterparty-group.contract.yaml](../../../config/packs/core/core/contracts/counterparty-group.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -176,9 +174,9 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|
 | `GROUP_ID` | id | required |  | The record's id (the business key) | `GRP-ALDERSHOT` (pattern `^GRP-`) |  |
 | `NAME` | text | required |  | The group's name: its ultimate parent's name. | `Aldershot Pension Trust` |  |
-| `LIMIT` | amount | required | USD | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
-| `UTILISATION` | rate | required | fraction | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | `0.6671` |  |
-| `MEMBERS` | record list | required |  | The counterparties in the group: one object per member. |  |  |
+| `LIMIT` | amount | optional | USD | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
+| `UTILISATION` | rate | derived | fraction | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). *limit use, computed by the exposure engine; never loaded* | `0.6671` |  |
+| `MEMBERS` | record list | derived |  | The counterparties in the group: one object per member. *the reverse of the counterparty's GROUP link, derived by Drishti; a master file does not carry it* |  |  |
 
 **Nested `MEMBERS[]`**
 
@@ -190,7 +188,7 @@ Economic group of related counterparties (obligor group).
 
 **Validation**
 
-- required: fields `GROUP_ID`, `NAME`, `LIMIT`, `UTILISATION`, `MEMBERS`
+- required: fields `GROUP_ID`, `NAME`
 - unique: key `GROUP_ID`; per business_date
 - pattern: field GROUP_ID; pattern ^GRP-
 
@@ -330,7 +328,7 @@ The bank's own booking entity.
 
 |  |  |
 |---|---|
-| Contract | [legal-entity.contract.yaml](../../../config/packs/core/core/contracts/legal-entity.contract.yaml) · version 1.0 |
+| Contract | [legal-entity.contract.yaml](../../../config/packs/core/core/contracts/legal-entity.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | entity-master |
@@ -348,12 +346,12 @@ The bank's own booking entity.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `ENTITY_ID` | id | required |  | The record's id (the business key) | `LE-FRA` (pattern `^LE-`) |  |
-| `NAME` | text | required |  | The legal entity's registered name. | `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` |  |
-| `LEI` | text | required |  | The entity's Legal Entity Identifier: 20 characters, ISO 17442. | `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744` |  |
+| `NAME` | text | required |  | The legal entity's registered name. | `Drishti Bank Europe AG` |  |
+| `LEI` | text | required |  | The entity's Legal Entity Identifier: 20 characters, ISO 17442. | `549300Z9DXU4T18OK744` (pattern `^[A-Z0-9]{18}[0-9]{2}$`) |  |
 | `JURISDICTION` | id | required |  | The country the entity is incorporated and regulated in, ISO 3166-1 alpha-2. | `DE` | `jurisdiction` |
-| `REGULATOR` | text | required |  | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). | `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` |  |
-| `DESKS` | record list | required |  | The desks that book in the entity: one object per desk. |  |  |
-| `BOOKS` | record list | required |  | The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count. |  |  |
+| `REGULATOR` | text | optional |  | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). | `ECB / BaFin` |  |
+| `DESKS` | record list | derived |  | The desks that book in the entity: one object per desk. *the reverse of the desk's LEGAL_ENTITY link, derived by Drishti; a master file does not carry it* |  |  |
+| `BOOKS` | record list | derived |  | The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count. *a roll-up Drishti computes from the books, desks and trade valuations; a master file does not carry it and an upstream value is ignored* |  |  |
 
 **Nested `DESKS[]`**
 
@@ -376,13 +374,10 @@ The bank's own booking entity.
 
 **Validation**
 
-- required: fields `ENTITY_ID`, `NAME`, `LEI`, `JURISDICTION`, `REGULATOR`, `DESKS`, `BOOKS`
+- required: fields `ENTITY_ID`, `NAME`, `LEI`, `JURISDICTION`
 - unique: key `ENTITY_ID`; per business_date
 - pattern: field ENTITY_ID; pattern ^LE-
-- enum: field NAME; values `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.`
-- enum: field LEI; values `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744`
 - link: field JURISDICTION; kind jurisdiction
-- enum: field REGULATOR; values `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA`
 - link: field BOOKS[].BOOK; kind book
 - link: field BOOKS[].DESK; kind desk
 
@@ -406,7 +401,7 @@ A trading book: owner desk, trades and risk.
 
 |  |  |
 |---|---|
-| Contract | [book.contract.yaml](../../../config/packs/core/core/contracts/book.contract.yaml) · version 1.0 |
+| Contract | [book.contract.yaml](../../../config/packs/core/core/contracts/book.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -425,45 +420,42 @@ A trading book: owner desk, trades and risk.
 |---|---|---|---|---|---|---|
 | `BOOK_ID` | id | required |  | The record's id (the business key) | `BOOK-COMM-1` (pattern `^BOOK-`) | `path-book` |
 | `NAME` | text | required |  | The book's display name: its desk's name and the book's number (Commodities · book 1). | `Commodities · book 1` |  |
-| `DESK_NAME` | text | required |  | The name of the desk the book sits under (the desk's NAME). | `Commodities` |  |
-| `TRADE_COUNT` | integer | required |  | How many trades are booked in the book. | `28` |  |
-| `MTM` | amount | required | USD | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). | `7760837` |  |
-| `DV01` | amount | required | USD per bp | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. | `0` |  |
-| `TOP_TRADES` | record list | required |  | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. |  |  |
+| `DESK_NAME` | text | derived |  | The name of the desk the book sits under (the desk's NAME). *the NAME of the book's DESK, looked up by Drishti; a master file does not carry it* | `Commodities` |  |
+| `TRADE_COUNT` | integer | derived |  | How many trades are booked in the book. *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* | `28` |  |
+| `MTM` | amount | derived | USD | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* | `7760837` |  |
+| `DV01` | amount | derived | USD per bp | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. *a roll-up Drishti computes from the book's sensitivities; a master file does not carry it and an upstream value is ignored* | `0` |  |
+| `TOP_TRADES` | record list | derived |  | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* |  |  |
 | `DESK` | id | required |  | The desk the book sits under: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-COMM` (pattern `^DESK-`) | `desk` |
-| `ACCOUNTING_TREATMENT` | text | required |  | The accounting classification of the book's positions, e.g. Fair value (FVTPL). | `Fair value (FVTPL)` |  |
-| `REGULATORY_BOOK` | text | required |  | Trading book or banking book, as the book is classified for regulatory capital. | `Trading book` |  |
-| `VOLCKER` | text | required |  | The book's Volcker-rule permitted activity (e.g. Market making). | `Market making` |  |
+| `ACCOUNTING_TREATMENT` | text | optional |  | The accounting classification of the book's positions, e.g. Fair value (FVTPL). | `Fair value (FVTPL)` |  |
+| `REGULATORY_BOOK` | text | optional |  | Trading book or banking book, as the book is classified for regulatory capital. | `Trading book` |  |
+| `VOLCKER` | text | optional |  | The book's Volcker-rule permitted activity (e.g. Market making). | `Market making` |  |
 
 **Nested `TOP_TRADES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TRADE_ID` | id | required |  | The trade: a TRADE_ID of the trading pack's trade kind (text). | `MX-20000340` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
-| `STATUS` | text | required |  | The trade's life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case. | `AMENDED`, `LIVE`, `NEW`, `VALIDATED` |  |
+| `TRADE_ID` | id | required |  | The trade: a TRADE_ID of the trading pack's trade kind (text). | `MX-20000340` | `trade` |
+| `STATUS` | text | required |  | The trade's life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case. | `LIVE` |  |
 | `PRODUCT` | text | required |  | The trade's product name (Calendar spread, Interest rate swap …). | `Calendar spread` |  |
 | `ASSET_CLASS` | text | required |  | The trade's asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured). | `Commodity` |  |
-| `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `USD` |  |
 | `BOOK` | id | required |  | The book the trade is held in (a BOOK_ID of this pack). | `BOOK-COMM-1` |  |
 | `NOTIONAL` | amount | required | trade currency | The trade's notional, in the trade's own currency. | `143000000.0` |  |
 | `MATURITY` | date | required |  | The trade's maturity date. | `2026-10-07` |  |
-| `MATURITY_BUCKET` | text | required |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  |
+| `MATURITY_BUCKET` | text | required |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | `0-1Y` |  |
 | `MTM` | amount | required | USD | The trade's MTM, in the bank's reporting currency (USD in the demo). | `3656838` |  |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`, `TOP_TRADES[].TRADE_ID` → `trade`.
 
 **Validation**
 
-- required: fields `BOOK_ID`, `NAME`, `DESK_NAME`, `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES`, `DESK`, `ACCOUNTING_TREATMENT`, `REGULATORY_BOOK`, `VOLCKER`
+- required: fields `BOOK_ID`, `NAME`, `DESK`
 - unique: key `BOOK_ID`; per business_date
 - pattern: field BOOK_ID; pattern ^BOOK-
 - link: field BOOK_ID; kind path-book
 - range: field TRADE_COUNT; min 0
 - link: field DESK; kind desk
 - link: field TOP_TRADES[].TRADE_ID; kind trade
-- enum: field TOP_TRADES[].STATUS; values `AMENDED`, `LIVE`, `NEW`, `VALIDATED`
-- enum: field TOP_TRADES[].CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-- enum: field TOP_TRADES[].MATURITY_BUCKET; values `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y`
 
 **Notes**
 
@@ -484,7 +476,7 @@ A trading desk: books, limits and risk results.
 
 |  |  |
 |---|---|
-| Contract | [desk.contract.yaml](../../../config/packs/core/core/contracts/desk.contract.yaml) · version 1.0 |
+| Contract | [desk.contract.yaml](../../../config/packs/core/core/contracts/desk.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -503,12 +495,12 @@ A trading desk: books, limits and risk results.
 |---|---|---|---|---|---|---|
 | `DESK_ID` | id | required |  | The record's id (the business key) | `DESK-COMM` (pattern `^DESK-`) |  |
 | `NAME` | text | required |  | The desk's name (Commodities, G10 and EM FX …). | `Commodities` |  |
-| `HEAD` | text | required |  | The desk head's name, initial and last name. | `T. Brennan` |  |
-| `BOOKS` | record list | required |  | The desk's books: one object per book. |  |  |
-| `MTM` | amount | required | USD | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). | `14609595` |  |
+| `HEAD` | text | optional |  | The desk head's name, initial and last name. | `T. Brennan` |  |
+| `BOOKS` | record list | derived |  | The desk's books: one object per book. *the reverse of the book's DESK link, derived by Drishti; a master file does not carry it; its figures are a roll-up* |  |  |
+| `MTM` | amount | derived | USD | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). *a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored* | `14609595` |  |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity the desk books in: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `ASSET_CLASSES` | text list | required |  | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...). |  |  |
-| `POSITIONS` | record list | required |  | Every trade of the desk's books, by book then trade id: one object per trade. |  |  |
+| `ASSET_CLASSES` | text list | optional |  | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...). |  |  |
+| `POSITIONS` | record list | derived |  | Every trade of the desk's books, by book then trade id: one object per trade. *a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored* |  |  |
 
 **Nested `BOOKS[]`**
 
@@ -522,9 +514,9 @@ A trading desk: books, limits and risk results.
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TRADE_ID` | id | required |  | The trade: a TRADE_ID of the trading pack's trade kind (text). | `MX-20000291` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
+| `TRADE_ID` | id | required |  | The trade: a TRADE_ID of the trading pack's trade kind (text). | `MX-20000291` | `trade` |
 | `BOOK` | id | required |  | The trade's book: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
-| `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `USD` |  |
 | `FAMILY` | text | required |  | The trade's product family (swap, option, future, bond, linear, exotic, sft, money …). | `future` |  |
 | `MTM` | amount | required | USD | The trade's MTM, in the bank's reporting currency (USD in the demo). | `324697` |  |
 
@@ -532,13 +524,12 @@ A trading desk: books, limits and risk results.
 
 **Validation**
 
-- required: fields `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `MTM`, `LEGAL_ENTITY`, `ASSET_CLASSES`, `POSITIONS`
+- required: fields `DESK_ID`, `NAME`, `LEGAL_ENTITY`
 - unique: key `DESK_ID`; per business_date
 - pattern: field DESK_ID; pattern ^DESK-
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field POSITIONS[].TRADE_ID; kind trade
 - link: field POSITIONS[].BOOK; kind book
-- enum: field POSITIONS[].CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
 
 **Notes**
 

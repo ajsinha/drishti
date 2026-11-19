@@ -17,7 +17,7 @@
 kind: desk
 mnemonic: DESK
 pack: core
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Desk
@@ -50,19 +50,21 @@ fields:
   example: Commodities
 - name: HEAD
   type: text
-  presence: required
+  presence: optional
   description: 'The desk head''s name, initial and last name.'
   example: T. Brennan
 - name: BOOKS
   type: record list
-  presence: required
+  presence: derived
   description: 'The desk''s books: one object per book.'
+  note: 'the reverse of the book''s DESK link, derived by Drishti; a master file does not carry it; its figures are a roll-up'
 - name: MTM
   type: amount
-  presence: required
+  presence: derived
   unit: 'USD'
   description: 'The sum of the MTM of the desk''s trades, in the bank''s reporting currency (USD in the demo).'
   example: 14609595
+  note: 'a roll-up Drishti computes from the trade valuations of the desk''s books; a master file does not carry it and an upstream value is ignored'
 - name: LEGAL_ENTITY
   type: id
   presence: required
@@ -72,12 +74,13 @@ fields:
   link: legal-entity
 - name: ASSET_CLASSES
   type: text list
-  presence: required
+  presence: optional
   description: 'The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...).'
 - name: POSITIONS
   type: record list
-  presence: required
+  presence: derived
   description: 'Every trade of the desk''s books, by book then trade id: one object per trade.'
+  note: 'a roll-up Drishti computes from the trade valuations of the desk''s books; a master file does not carry it and an upstream value is ignored'
 nested:
   BOOKS[]:
   - name: ID
@@ -102,7 +105,6 @@ nested:
     presence: required
     description: 'The trade: a TRADE_ID of the trading pack''s trade kind (text).'
     example: MX-20000291
-    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: BOOK
     type: id
@@ -116,14 +118,6 @@ nested:
     presence: required
     description: 'The trade''s currency, ISO 4217.'
     example: USD
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
   - name: FAMILY
     type: text
     presence: required
@@ -147,12 +141,7 @@ validation:
   fields:
   - DESK_ID
   - NAME
-  - HEAD
-  - BOOKS
-  - MTM
   - LEGAL_ENTITY
-  - ASSET_CLASSES
-  - POSITIONS
 - rule: unique
   key:
   - DESK_ID
@@ -169,16 +158,6 @@ validation:
 - rule: link
   field: POSITIONS[].BOOK
   kind: book
-- rule: enum
-  field: POSITIONS[].CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'

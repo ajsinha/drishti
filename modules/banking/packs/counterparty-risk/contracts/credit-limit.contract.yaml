@@ -17,7 +17,7 @@
 kind: credit-limit
 mnemonic: LIM
 pack: counterparty-risk
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Credit limit
@@ -45,9 +45,10 @@ fields:
   pattern: ^LIM-
 - name: COUNTERPARTY_NAME
   type: text
-  presence: required
+  presence: derived
   description: The legal entity the limit applies to.
   example: Aldershot Pension Trust
+  note: 'the NAME of the limit''s COUNTERPARTY, looked up by Drishti; a limit file does not carry it'
 - name: MEASURE
   type: text
   presence: required
@@ -61,27 +62,27 @@ fields:
   example: 337000000.0
 - name: USED
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The exposure measured today against the limit.
   example: 224800213
+  note: 'limit use, computed by the exposure engine; never loaded'
 - name: UTILISATION
   type: rate
-  presence: required
+  presence: derived
   unit: fraction of the limit (0.6671 is 66.71%)
   description: 'The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach.'
   example: 0.6671
+  note: 'limit use, computed by the exposure engine; never loaded'
 - name: STATUS
   type: text
-  presence: required
+  presence: derived
   description: 'The limit''s state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%.'
   example: Within limit
-  enum:
-  - Early warning
-  - Within limit
+  note: 'limit use, computed by the exposure engine; never loaded'
 - name: BUCKETS
   type: record list
-  presence: required
+  presence: optional
   description: 'The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION.'
 - name: COUNTERPARTY
   type: id
@@ -92,12 +93,12 @@ fields:
   link: counterparty
 - name: APPROVED_BY
   type: text
-  presence: required
+  presence: optional
   description: 'The committee or officer that approved the limit.'
   example: Credit Risk Committee
 - name: REVIEW_DUE
   type: date
-  presence: required
+  presence: optional
   description: 'The date the limit is next due for credit review (YYYY-MM-DD).'
   example: '2027-03-19'
 nested:
@@ -107,12 +108,6 @@ nested:
     presence: required
     description: The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it.
     example: 0-1Y
-    enum:
-    - 0-1Y
-    - 1-3Y
-    - 10Y+
-    - 3-5Y
-    - 5-10Y
   - name: LIMIT
     type: amount
     presence: required
@@ -121,16 +116,18 @@ nested:
     example: 337000000
   - name: USED
     type: amount
-    presence: required
+    presence: derived
     unit: USD
     description: The exposure in this tenor bucket.
     example: 191080181
+    note: 'limit use per bucket, computed by the exposure engine; never loaded'
   - name: UTILISATION
     type: rate
-    presence: required
+    presence: derived
     unit: fraction of the limit (0.567 is 56.7%)
     description: 'The share of the bucket''s limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach.'
     example: 0.567
+    note: 'limit use per bucket, computed by the exposure engine; never loaded'
 links:
 - field: COUNTERPARTY
   kind: counterparty
@@ -138,16 +135,9 @@ validation:
 - rule: required
   fields:
   - LIMIT_ID
-  - COUNTERPARTY_NAME
   - MEASURE
   - LIMIT
-  - USED
-  - UTILISATION
-  - STATUS
-  - BUCKETS
   - COUNTERPARTY
-  - APPROVED_BY
-  - REVIEW_DUE
 - rule: unique
   key:
   - LIMIT_ID
@@ -155,22 +145,9 @@ validation:
 - rule: pattern
   field: LIMIT_ID
   pattern: ^LIM-
-- rule: enum
-  field: STATUS
-  values:
-  - Early warning
-  - Within limit
 - rule: link
   field: COUNTERPARTY
   kind: counterparty
-- rule: enum
-  field: BUCKETS[].BUCKET
-  values:
-  - 0-1Y
-  - 1-3Y
-  - 10Y+
-  - 3-5Y
-  - 5-10Y
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'

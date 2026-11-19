@@ -17,7 +17,7 @@
 kind: legal-entity
 mnemonic: LE
 pack: core
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Bank legal entity
@@ -48,21 +48,12 @@ fields:
   presence: required
   description: 'The legal entity''s registered name.'
   example: Drishti Bank Europe AG
-  enum:
-  - Drishti Bank Europe AG
-  - Drishti Bank Securities Inc.
-  - Drishti Bank plc
-  - Drishti Securities Japan K.K.
 - name: LEI
   type: text
   presence: required
   description: 'The entity''s Legal Entity Identifier: 20 characters, ISO 17442.'
   example: 549300Z9DXU4T18OK744
-  enum:
-  - 549300BLAOJ55ZE6F474
-  - 549300O1N13GO2II2096
-  - 549300Z8F6KKOGHS7Q83
-  - 549300Z9DXU4T18OK744
+  pattern: ^[A-Z0-9]{18}[0-9]{2}$
 - name: JURISDICTION
   type: id
   presence: required
@@ -71,22 +62,19 @@ fields:
   link: jurisdiction
 - name: REGULATOR
   type: text
-  presence: required
+  presence: optional
   description: 'The entity''s prudential and conduct regulators, separated by '' / '' (ECB / BaFin, PRA / FCA …).'
   example: ECB / BaFin
-  enum:
-  - ECB / BaFin
-  - JFSA
-  - PRA / FCA
-  - SEC / CFTC / FINRA
 - name: DESKS
   type: record list
-  presence: required
+  presence: derived
   description: 'The desks that book in the entity: one object per desk.'
+  note: 'the reverse of the desk''s LEGAL_ENTITY link, derived by Drishti; a master file does not carry it'
 - name: BOOKS
   type: record list
-  presence: required
+  presence: derived
   description: 'The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count.'
+  note: 'a roll-up Drishti computes from the books, desks and trade valuations; a master file does not carry it and an upstream value is ignored'
 nested:
   DESKS[]:
   - name: ID
@@ -144,9 +132,6 @@ validation:
   - NAME
   - LEI
   - JURISDICTION
-  - REGULATOR
-  - DESKS
-  - BOOKS
 - rule: unique
   key:
   - ENTITY_ID
@@ -154,30 +139,9 @@ validation:
 - rule: pattern
   field: ENTITY_ID
   pattern: ^LE-
-- rule: enum
-  field: NAME
-  values:
-  - Drishti Bank Europe AG
-  - Drishti Bank Securities Inc.
-  - Drishti Bank plc
-  - Drishti Securities Japan K.K.
-- rule: enum
-  field: LEI
-  values:
-  - 549300BLAOJ55ZE6F474
-  - 549300O1N13GO2II2096
-  - 549300Z8F6KKOGHS7Q83
-  - 549300Z9DXU4T18OK744
 - rule: link
   field: JURISDICTION
   kind: jurisdiction
-- rule: enum
-  field: REGULATOR
-  values:
-  - ECB / BaFin
-  - JFSA
-  - PRA / FCA
-  - SEC / CFTC / FINRA
 - rule: link
   field: BOOKS[].BOOK
   kind: book

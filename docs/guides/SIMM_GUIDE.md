@@ -369,7 +369,7 @@ Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIM
 A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_ID`, `TRADE_IDS` (else `TRADES[].TRADE_ID`),
 `COUNTERPARTY` and `CSA`.
 
-- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/netting-set.contract.yaml).
+- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 5 required; the file [`netting-set.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/netting-set.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#netting-set) (files `data/testdata/counterparty-risk/netting-set/netting-set.*.jsonl.gz`).
 
 ### 13.6 `csa`: the SIMM terms
@@ -377,7 +377,7 @@ A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_
 The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POST_REGIMES`, `IM_CALCULATION_CURRENCY` (else
 `CSA_CURRENCY`), `IM_MODEL`, the add-ons and the dispute tolerance.
 
-- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/csa.contract.yaml).
+- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 15 required; the file [`csa.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/csa.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#csa) (files `data/testdata/counterparty-risk/csa/csa.*.jsonl.gz`).
 
 ### 13.7 `simm-addon`: the notional add-on lines

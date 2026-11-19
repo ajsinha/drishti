@@ -17,7 +17,7 @@
 kind: collateral-balance
 mnemonic: COLL
 pack: counterparty-risk
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Collateral balance
@@ -45,24 +45,27 @@ fields:
   pattern: ^COLL-
 - name: HELD
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: 'The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions'' VALUE
     (market value less the CSA haircut; F3).'
   example: 0
+  note: 'a roll-up Drishti computes from the balance''s POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored'
 - name: POSTED
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: 'The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions'' VALUE
     (F3).'
   example: 228402
+  note: 'a roll-up Drishti computes from the balance''s POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored'
 - name: NET
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: 'HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more.'
   example: -228402
+  note: 'a roll-up Drishti computes from the balance''s POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored'
 - name: AS_OF
   type: date
   presence: required
@@ -117,10 +120,11 @@ nested:
     example: 0.005
   - name: VALUE
     type: amount
-    presence: required
+    presence: derived
     unit: USD
     description: The market value after the haircut, the amount that counts as collateral.
     example: 76134
+    note: 'MARKET_VALUE less the HAIRCUT, computed by Drishti; an upstream value is ignored'
 links:
 - field: CSA
   kind: csa
@@ -130,9 +134,6 @@ validation:
 - rule: required
   fields:
   - BALANCE_ID
-  - HELD
-  - POSTED
-  - NET
   - AS_OF
   - POSITIONS
   - CSA

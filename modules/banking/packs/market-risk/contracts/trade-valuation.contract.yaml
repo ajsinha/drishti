@@ -17,7 +17,7 @@
 kind: trade-valuation
 mnemonic: TVAL
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Trade valuation
@@ -77,13 +77,6 @@ fields:
   presence: required
   description: 'The trade''s booking system: ENDUR, CALYPSO or MUREX.'
   example: ENDUR
-  enum:
-  - CALYPSO
-  - ENDUR
-  - ICI
-  - MUREX
-  - SWAPONE
-  - WSS
 - name: PRODUCT_TYPE
   type: text
   presence: required
@@ -124,7 +117,7 @@ fields:
   link: netting-set
 - name: TRADER_ID
   type: id
-  presence: required
+  presence: optional
   description: 'The trader of the trade: a TRADER_ID of the core pack''s trader kind (TRDR-…). The VaR engine''s VaR by trader joins it to
     the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked
     gets no VaR by trader.'
@@ -155,14 +148,6 @@ fields:
   presence: required
   description: The trade's own currency, ISO 4217 (MTM is in USD whatever it is).
   example: USD
-  enum:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
 - name: NOTIONAL
   type: amount
   presence: required
@@ -182,13 +167,13 @@ fields:
   example: USD
 - name: PNL_1D
   type: amount
-  presence: required
+  presence: optional
   unit: USD
   description: The valuation engine's own one-day P&L of the trade in USD, gain positive.
   example: -277804
 - name: DV01
   type: amount
-  presence: required
+  presence: optional
   unit: USD per basis point
   description: The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk.
   example: 0
@@ -231,15 +216,12 @@ validation:
   - PORTFOLIO
   - DESK
   - COUNTERPARTY
-  - TRADER_ID
   - BUY_SELL_CODE
   - TRADE_STATUS
   - CURRENCY
   - NOTIONAL
   - MTM
   - MTM_CURRENCY
-  - PNL_1D
-  - DV01
   - TRADE_DATE
   - MATURITY_DATE
   - VALUATION_DATE
@@ -253,15 +235,6 @@ validation:
 - rule: link
   field: TRADE_ID
   kind: trade
-- rule: enum
-  field: SOURCE_SYSTEM
-  values:
-  - CALYPSO
-  - ENDUR
-  - ICI
-  - MUREX
-  - SWAPONE
-  - WSS
 - rule: link
   field: PORTFOLIO
   kind: book
@@ -290,16 +263,6 @@ validation:
   - MATURED
   - NEW
   - VALIDATED
-- rule: enum
-  field: CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'

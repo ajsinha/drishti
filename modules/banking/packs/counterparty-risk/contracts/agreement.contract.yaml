@@ -17,7 +17,7 @@
 kind: agreement
 mnemonic: AGR
 pack: counterparty-risk
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Master agreement
@@ -50,20 +50,18 @@ fields:
   example: ISDA 2002 Master
 - name: COUNTERPARTY_NAME
   type: text
-  presence: required
+  presence: derived
   description: The legal entity that signed the agreement with the bank.
   example: Aldershot Pension Trust
+  note: 'the NAME of the agreement''s COUNTERPARTY, looked up by Drishti; a master file does not carry it'
 - name: GOVERNING_LAW
   type: text
   presence: required
   description: The law the agreement is read under, which decides how close-out netting is enforced.
   example: English
-  enum:
-  - English
-  - New York
 - name: SIGNED
   type: date
-  presence: required
+  presence: optional
   description: The date the agreement was signed.
   example: '2015-12-10'
 - name: CLOSE_OUT_NETTING
@@ -73,7 +71,7 @@ fields:
   example: Enforceable
 - name: ELECTIONS
   type: record
-  presence: required
+  presence: optional
   description: 'The master agreement''s elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text).'
   link: election
 - name: COUNTERPARTY
@@ -85,41 +83,42 @@ fields:
   link: counterparty
 - name: CSAS
   type: id list
-  presence: required
+  presence: derived
   description: 'The credit support annexes under this agreement, one per bank legal entity it covers (decision 9): CSA_IDs of the
     csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none.'
   example: CSA-ALDERSHOT-FRA
   link: csa
+  note: 'the reverse of the CSA''s AGREEMENT link, derived by Drishti; a master file does not carry it'
 nested:
   ELECTIONS:
   - name: AUTOMATIC_EARLY_TERMINATION
     type: boolean
-    presence: required
+    presence: optional
     description: Whether the trades end by themselves on certain defaults, without a notice.
     example: false
   - name: CROSS_DEFAULT
     type: text
-    presence: required
+    presence: optional
     description: The threshold above which a default on other debt is a default under this agreement.
     example: 3% of shareholders' equity
   - name: SET_OFF
     type: boolean
-    presence: required
+    presence: optional
     description: Whether amounts owed under other contracts may be set off against the close-out amount.
     example: true
   - name: TERMINATION_CURRENCY
     type: text
-    presence: required
+    presence: optional
     description: The currency the close-out amount is paid in.
     example: USD
   - name: ADDITIONAL_TERMINATION_EVENTS
     type: text
-    presence: required
+    presence: optional
     description: Further events, such as a downgrade, that let a party end the trades.
     example: Rating downgrade below BBB-
   - name: PROTOCOLS
     type: text
-    presence: required
+    presence: optional
     description: The ISDA protocols both parties adhered to, which amend the agreement.
     example: ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay
 links:
@@ -134,13 +133,9 @@ validation:
   fields:
   - AGREEMENT_ID
   - TYPE
-  - COUNTERPARTY_NAME
   - GOVERNING_LAW
-  - SIGNED
   - CLOSE_OUT_NETTING
-  - ELECTIONS
   - COUNTERPARTY
-  - CSAS
 - rule: unique
   key:
   - AGREEMENT_ID
@@ -148,11 +143,6 @@ validation:
 - rule: pattern
   field: AGREEMENT_ID
   pattern: ^AGR-
-- rule: enum
-  field: GOVERNING_LAW
-  values:
-  - English
-  - New York
 - rule: link
   field: ELECTIONS
   kind: election

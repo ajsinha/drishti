@@ -17,7 +17,7 @@
 kind: netting-set
 mnemonic: NSET
 pack: counterparty-risk
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Netting set
@@ -45,43 +45,50 @@ fields:
   pattern: ^NS-
 - name: TRADE_COUNT
   type: integer
-  presence: required
+  presence: derived
   description: The number of trades that are netted together under the agreement.
   example: 3
+  note: 'a roll-up Drishti computes from the set''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: NET_MTM
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another
     if the counterparty defaults.
   example: -339550
+  note: 'a roll-up Drishti computes from the set''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: COLLATERAL
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: 'The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its
     collateral value (market value less the CSA haircut; F3). Equal to the collateral balance''s NET.'
   example: -228402
+  note: 'a roll-up Drishti computes from the set''s collateral balance; a master file does not carry it and an upstream value is ignored'
 - name: LIMIT
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The limit on the counterparty's peak potential future exposure approved for this netting set.
   example: 5000000.0
+  note: 'a roll-up Drishti computes from the counterparty''s credit limit; a master file does not carry it and an upstream value is ignored'
 - name: CVA
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The reduction in the value of the trades for the risk that the counterparty defaults before they mature.
   example: -7
+  note: 'a roll-up Drishti computes from the CVA engine''s result; a master file does not carry it and an upstream value is ignored'
 - name: TRADES
   type: record list
-  presence: required
+  presence: derived
   description: The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date.
+  note: 'a roll-up Drishti computes from the set''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: BY_ASSET
   type: record list
-  presence: required
+  presence: derived
   description: 'The set''s MtM by asset class, one element per class present: ASSET and MTM in USD.'
+  note: 'a roll-up Drishti computes from the set''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: COUNTERPARTY
   type: id
   presence: required
@@ -98,7 +105,7 @@ fields:
   link: agreement
 - name: CSA
   type: id
-  presence: required
+  presence: optional
   description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9);
     absent for an unmargined set.'
   example: CSA-ALDERSHOT-FRA
@@ -106,35 +113,35 @@ fields:
   link: csa
 - name: CREDIT_LIMIT
   type: id
-  presence: required
+  presence: optional
   description: 'The counterparty''s credit limit: a LIMIT_ID of the credit-limit kind (LIM-…).'
   example: LIM-ALDERSHOT
   pattern: ^LIM-
   link: credit-limit
 - name: CVA_RESULT
   type: id
-  presence: required
+  presence: optional
   description: 'The set''s valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>).'
   example: CVA-ALDERSHOT-FRA
   pattern: ^CVA-
   link: cva
 - name: SACCR
   type: id
-  presence: required
+  presence: optional
   description: 'The set''s SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…).'
   example: SACCR-ALDERSHOT-FRA
   pattern: ^SACCR-
   link: sa-ccr
 - name: SIMM
   type: id
-  presence: required
+  presence: optional
   description: 'The counterparty''s SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…).'
   example: SIMM-ALDERSHOT
   pattern: ^SIMM-
   link: simm
 - name: COLLATERAL_BALANCE
   type: id
-  presence: required
+  presence: optional
   description: 'The set''s collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…).'
   example: COLL-ALDERSHOT-FRA
   pattern: ^COLL-
@@ -163,7 +170,6 @@ nested:
     presence: required
     description: 'The member trade: a TRADE_ID of the trading pack''s trade kind, as text.'
     example: CLY-3000280
-    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: STATUS
     type: text
@@ -185,14 +191,6 @@ nested:
     presence: required
     description: 'The member trade''s currency, ISO 4217.'
     example: JPY
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
   - name: BOOK
     type: id
     presence: required
@@ -216,12 +214,6 @@ nested:
     presence: required
     description: 'The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+.'
     example: 0-1Y
-    enum:
-    - 0-1Y
-    - 1-2Y
-    - 10Y+
-    - 2-5Y
-    - 5-10Y
   - name: MTM
     type: amount
     presence: required
@@ -269,21 +261,8 @@ validation:
 - rule: required
   fields:
   - NETTING_SET_ID
-  - TRADE_COUNT
-  - NET_MTM
-  - COLLATERAL
-  - LIMIT
-  - CVA
-  - TRADES
-  - BY_ASSET
   - COUNTERPARTY
   - AGREEMENT
-  - CSA
-  - CREDIT_LIMIT
-  - CVA_RESULT
-  - SACCR
-  - SIMM
-  - COLLATERAL_BALANCE
   - LEGAL_ENTITY
   - NETTING_ENFORCEABLE
 - rule: unique
@@ -329,27 +308,9 @@ validation:
 - rule: link
   field: TRADES[].TRADE_ID
   kind: trade
-- rule: enum
-  field: TRADES[].CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
 - rule: link
   field: TRADES[].BOOK
   kind: book
-- rule: enum
-  field: TRADES[].MATURITY_BUCKET
-  values:
-  - 0-1Y
-  - 1-2Y
-  - 10Y+
-  - 2-5Y
-  - 5-10Y
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'

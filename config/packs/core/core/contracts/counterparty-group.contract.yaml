@@ -17,7 +17,7 @@
 kind: counterparty-group
 mnemonic: GRP
 pack: core
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Counterparty group
@@ -50,21 +50,23 @@ fields:
   example: Aldershot Pension Trust
 - name: LIMIT
   type: amount
-  presence: required
+  presence: optional
   unit: 'USD'
   description: 'The group''s own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members'' limits),
     in the bank''s reporting currency (USD in the demo); a group of several counterparties is approved for less than its members'' limits added.'
   example: 337000000.0
 - name: UTILISATION
   type: rate
-  presence: required
+  presence: derived
   unit: 'fraction'
   description: 'The share of LIMIT in use: the members'' used amounts over LIMIT, as a fraction (0.6671 is 66.71%).'
   example: 0.6671
+  note: 'limit use, computed by the exposure engine; never loaded'
 - name: MEMBERS
   type: record list
-  presence: required
+  presence: derived
   description: 'The counterparties in the group: one object per member.'
+  note: 'the reverse of the counterparty''s GROUP link, derived by Drishti; a master file does not carry it'
 nested:
   MEMBERS[]:
   - name: ID
@@ -88,9 +90,6 @@ validation:
   fields:
   - GROUP_ID
   - NAME
-  - LIMIT
-  - UTILISATION
-  - MEMBERS
 - rule: unique
   key:
   - GROUP_ID

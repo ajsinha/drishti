@@ -5584,7 +5584,7 @@ drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the st
 The trade's MTM today with its attributes (desk, portfolio, counterparty, netting set, trader). Shown on a position's page and used by
 What-if; not needed for the VaR number itself, which comes from the vectors.
 
-- **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 20 required; the file [`trade-valuation.contract.yaml`](../../modules/banking/packs/market-risk/contracts/trade-valuation.contract.yaml).
+- **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 17 required; the file [`trade-valuation.contract.yaml`](../../modules/banking/packs/market-risk/contracts/trade-valuation.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#trade-valuation) (files `data/testdata/market-risk/trade-valuation/trade-valuation.*.jsonl.gz`).
 
 ### 36.11 The trades: `trade_murex`, `trade_endur`, `trade_calypso`

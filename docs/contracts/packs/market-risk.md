@@ -306,7 +306,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 |  |  |
 |---|---|
-| Contract | [trade-valuation.contract.yaml](../../../modules/banking/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
+| Contract | [trade-valuation.contract.yaml](../../../modules/banking/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | risk-engine |
@@ -326,22 +326,22 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 |---|---|---|---|---|---|---|
 | `VALUATION_ID` | id | required |  | The record's id (the business key) | `TVAL-1000001` (pattern `^TVAL-`) |  |
 | `TRADE_ID` | id | required |  | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | `1000001` | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `ENDUR` |  |
 | `PRODUCT_TYPE` | text | required |  | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | `ComSwap` |  |
 | `PRODUCT_GROUP` | text | required |  | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | `Commodity` |  |
 | `PORTFOLIO` | id | required |  | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
 | `DESK` | id | required |  | The desk of the trade's book: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-COMM` (pattern `^DESK-`) | `desk` |
 | `COUNTERPARTY` | id | required |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` |
 | `NETTING_SET` | id | optional |  | The netting set the trade belongs to: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-<counterparty>-<legal entity>). | `NS-BRAMBLE-LDN` (pattern `^NS-`) | `netting-set` |
-| `TRADER_ID` | id | required |  | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). The VaR engine's VaR by trader joins it to the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked gets no VaR by trader. | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
+| `TRADER_ID` | id | optional |  | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). The VaR engine's VaR by trader joins it to the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked gets no VaR by trader. | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
 | `BUY_SELL_CODE` | text | required |  | B when the bank bought (or receives), S when it sold. | `B`, `S` |  |
 | `TRADE_STATUS` | text | required |  | The trade's status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value. | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  |
-| `CURRENCY` | text | required |  | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `CURRENCY` | text | required |  | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | `USD` |  |
 | `NOTIONAL` | amount | required | USD | The trade's current notional in USD, absolute (the first leg's). | `167969743.2` |  |
 | `MTM` | amount | required | USD | The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank. | `4121280` |  |
 | `MTM_CURRENCY` | text | required |  | The currency MTM, PNL_1D and DV01 are reported in (USD in the demo). | `USD` |  |
-| `PNL_1D` | amount | required | USD | The valuation engine's own one-day P&L of the trade in USD, gain positive. | `-277804` |  |
-| `DV01` | amount | required | USD per basis point | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | `0` |  |
+| `PNL_1D` | amount | optional | USD | The valuation engine's own one-day P&L of the trade in USD, gain positive. | `-277804` |  |
+| `DV01` | amount | optional | USD per basis point | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | `0` |  |
 | `TRADE_DATE` | date | required |  | The date the trade was dealt (YYYY-MM-DD). | `2025-06-20` |  |
 | `MATURITY_DATE` | date | required |  | The trade's maturity date. | `2028-07-31` |  |
 | `VALUATION_DATE` | date | required |  | The date the trade is valued on: the business date of the file. | `2026-09-30` |  |
@@ -350,11 +350,10 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 **Validation**
 
-- required: fields `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE`
+- required: fields `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE`
 - unique: key `VALUATION_ID`; per business_date
 - pattern: field VALUATION_ID; pattern ^TVAL-
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS`
 - link: field PORTFOLIO; kind book
 - link: field DESK; kind desk
 - link: field COUNTERPARTY; kind counterparty
@@ -362,7 +361,6 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - link: field TRADER_ID; kind trader
 - enum: field BUY_SELL_CODE; values `B`, `S`
 - enum: field TRADE_STATUS; values `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED`
-- enum: field CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
 
 **Notes**
 

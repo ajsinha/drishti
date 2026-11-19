@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **Contracts of the masters ready for a bank's CSV files (CSV loaders, step 1).** Roll-ups and usage (a book's MtM and trades, a netting set's figures, a limit's use, a group's members, collateral totals) are `derived`; demo-only enumerations (entity names and LEIs, governing law, margin type, eligible assets, seven currencies, source systems) are gone; links to other engines' results and reverse lists are optional or derived; the VaR and exposure numbers are unchanged.
 - **tools/mrloader: daily scenario set and scenario FX, add and remove.** `pvf_scenario_set.py` and `pvf_fx_scenario.py` build the date's set and FX
   (long or wide CSV, dates in either order, contract-checked, tar + `.ready`, `--inbox`), and `--remove` calls `drishti.py lake delete`; `pvf_run.py
   --fx FILE` does set, FX and PVs in one go, handed to the inbox in that order; synthetic samples in `tools/mrloader/samples/`.

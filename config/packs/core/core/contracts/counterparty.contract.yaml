@@ -17,7 +17,7 @@
 kind: counterparty
 mnemonic: CPTY
 pack: core
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Counterparty
@@ -50,7 +50,7 @@ fields:
   example: Aldershot Pension Trust
 - name: LEI
   type: text
-  presence: required
+  presence: optional
   description: 'The counterparty''s Legal Entity Identifier: 20 characters, ISO 17442.'
   example: 549300H5KZ2QJHEAMB55
 - name: RATING
@@ -60,7 +60,7 @@ fields:
   example: AA-
 - name: SECTOR
   type: text
-  presence: required
+  presence: optional
   description: 'The counterparty''s industry sector (Pensions, Banking, Utilities …).'
   example: Pensions
 - name: COUNTRY
@@ -70,66 +70,69 @@ fields:
   example: GB
 - name: TYPE
   type: text
-  presence: required
+  presence: optional
   description: 'The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …).'
   example: Pension fund
 - name: COUNTRY_OF_RISK
   type: text
-  presence: required
+  presence: optional
   description: 'The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK.'
   example: GB
 - name: UEN
   type: text
-  presence: required
+  presence: optional
   description: 'The counterparty''s unique entity number in the bank''s client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN.'
   example: UEN0100037
 - name: ECONOMY
   type: id
-  presence: required
+  presence: optional
   description: 'The economy of its country: an ECONOMY_ID of the world-economy pack''s economy kind (ECON- and the ISO 3166-1 alpha-3 code).'
   example: ECON-GBR
   pattern: ^ECON-
   link: economy
 - name: NEWS_ID
   type: id
-  presence: required
+  presence: optional
   description: 'Its headlines: a NEWS_ID of the news-and-markets pack''s news kind (NEWS- and the name with underscores).'
   example: NEWS-Aldershot_Pension_Trust
   pattern: ^NEWS-
   link: news
 - name: NET_MTM
   type: amount
-  presence: required
+  presence: derived
   unit: 'USD'
   description: 'The sum of the NET_MTM of its netting sets, in the bank''s reporting currency (USD in the demo); positive when the counterparty owes the bank.'
   example: 15036789
+  note: 'a roll-up Drishti computes from the netting sets'' trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: NETTING_SETS
   type: record list
-  presence: required
+  presence: derived
   description: 'The counterparty''s netting sets: one object per netting set.'
   link: netting-set
+  note: 'the reverse of the netting set''s COUNTERPARTY link, derived by Drishti; a master file does not carry it'
 - name: KYC
   type: record
-  presence: required
+  presence: optional
   description: 'The counterparty''s know-your-customer record: one object.'
 - name: GROUP
   type: id
-  presence: required
+  presence: optional
   description: 'The group it belongs to: a GROUP_ID of the core pack''s counterparty-group kind (GRP-…).'
   example: GRP-ALDERSHOT
   pattern: ^GRP-
   link: counterparty-group
 - name: CREDIT_LIMIT
   type: id
-  presence: required
+  presence: optional
   description: 'Its credit limit: a LIMIT_ID of the counterparty-risk pack''s credit-limit kind (LIM-…).'
   example: LIM-ALDERSHOT
   pattern: ^LIM-
   link: credit-limit
 - name: HIERARCHY
   type: record
-  presence: required
+  presence: derived
   description: 'The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets.'
+  note: 'the legal graph, derived by Drishti from the group, agreements, CSAs and netting sets'
 - name: CREDIT_CURVE
   type: id
   presence: optional
@@ -177,28 +180,22 @@ nested:
     example: Approved
   - name: RISK_RATING
     type: text
-    presence: required
+    presence: optional
     description: 'The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise.'
     example: Standard
-    enum:
-    - Enhanced
-    - Standard
   - name: LAST_REVIEW
     type: date
-    presence: required
+    presence: optional
     description: 'The date of the last KYC review.'
     example: '2026-02-11'
   - name: EMIR_CLASSIFICATION
     type: text
-    presence: required
+    presence: optional
     description: 'The counterparty''s EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold).'
     example: FC
-    enum:
-    - FC
-    - NFC-
   - name: PD_1Y
     type: rate
-    presence: required
+    presence: optional
     unit: 'fraction'
     description: 'The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%).'
     example: 0.0004
@@ -277,21 +274,8 @@ validation:
   fields:
   - COUNTERPARTY_ID
   - NAME
-  - LEI
   - RATING
-  - SECTOR
   - COUNTRY
-  - TYPE
-  - COUNTRY_OF_RISK
-  - UEN
-  - ECONOMY
-  - NEWS_ID
-  - NET_MTM
-  - NETTING_SETS
-  - KYC
-  - GROUP
-  - CREDIT_LIMIT
-  - HIERARCHY
 - rule: unique
   key:
   - COUNTERPARTY_ID
@@ -323,16 +307,6 @@ validation:
 - rule: link
   field: NETTING_SETS[].AGREEMENT
   kind: agreement
-- rule: enum
-  field: KYC.RISK_RATING
-  values:
-  - Enhanced
-  - Standard
-- rule: enum
-  field: KYC.EMIR_CLASSIFICATION
-  values:
-  - FC
-  - NFC-
 - rule: enum
   field: HIERARCHY.NODES[].TYPE
   values:

@@ -1102,6 +1102,40 @@ Sizes: **S** up to about 150 lines with tests, **M** about 150 to 500, **L** mor
 | 8 | **Wave 2:** `counterparty-group`, `counterparty`, `agreement`, `csa`, `netting-set`, `collateral-balance`, `credit-limit`, `trade-valuation` | M (eight mapping files, samples) | 1, 3, 7 |
 | 9 | **Wave 3**, each on its own once its extract is known: `exposure-path` with `simulation-run` (a streaming join, as PVF's); `pnl-vector`; `pnl-history`; `trade` from CSV | L, M, S, M | decisions 9 and 10 |
 
+### 18.1 Step 0: what the code settles (2026-11-18)
+
+**A date with no delivery of a master.** The masters are read through Delta connectors (`reference-store` of the core pack:
+counterparty, counterparty-group, legal-entity, book, desk ...; `legal-store`: agreement, csa) set to `mode.<kind>: effective`. An
+effective table answers a date with **each entity's newest row on or before that date, with no look-back limit**
+(`DeltaSourcePlugin.candidates`). So a master that skips a day is answered from its last delivery, and the server says so per source
+(`SourceRouter.carried`: *reference-store: no load for 2026-10-30, showing 2026-10-29*). Two consequences for the runbook:
+
+- a master may skip a day safely; sending it every day remains the recommendation (decision 13), so the date shown is the date asked;
+- **a row left out of today's full file does not disappear**: under `effective`, an entity missing from the newest date is still
+  answered from an older one. Removing an entity from a master therefore needs its older dates removed or a status column, not only a
+  file without it. The `snapshot` tables (the default: `credit-store` netting-set and credit-limit, `collateral-store`, every
+  `risk-store` kind including `risk-factor`) answer from the newest partition on or before the date **within 10 days**
+  (`lookback-days`); there, a full file is the whole truth of its date, and a kind not sent for more than 10 days answers nothing.
+  `risk-factor` (contract: "a date without a delivery keeps the last") is a snapshot table: re-send it at least every 10 days, or set
+  `mode.risk-factor: effective` on the site's connector.
+
+**The order in which one inbox run loads its batch.** `Inbox.look` takes the whole ready batch, sorted by **the data file's last-modified
+time, then its name** (not the marker's time). `Cycle.run` groups the plain files by route (pack, kind, table, lake, mode ...), keeping
+the order of each group's first file, and loads the groups **one after another** in that order; tars come after every plain file. So the
+hand-over orders the load by the order in which it **copies the data files**: `hooks.py` copies the `.jsonl.gz` files in dependency order
+(each a new modification time), then writes the markers in the same order. A file is taken only when it and its marker have been
+unchanged for `stable-seconds` (30), so the markers written within a second land in one cycle. The `--wait` fallback of
+[section 13](#13-the-inbox-order-and-the-dependency-graph) is not needed for the order; it stays for a caller that wants each report.
+
+**The marker's keys.** `ReadyNote.KEYS`: `business-date`, `table`, `pack`, `kind`, `connector`, `mode` (`append` or `replace`),
+`new-table`, `key`, `folders`, `sha256`, `rows`, `hold`, `lake`; an unknown key is refused. The marker of
+[section 6.4](#64-the-pipeline-of-one-kind) uses only known keys.
+
+**The owner's headers.** Only the PVF headers are available (`portfolio_d2.csv`, `pos_YYYYMMDD.csv`); their columns are what
+`kinds/shared/ids.pvf.yaml`, `scenario-pv.pvf.yaml` and `book.pvf.yaml` read. Every other kind ships with its canonical mapping
+(`kinds/<kind>.yaml`, the CSV columns named as the contract's fields) and a synthetic sample; a bank's own column names are a mapping
+file of its own, given by explicit path (`--mapping FILE`, decision 11).
+
 In total about 2,500 to 3,000 lines of Python with tests for steps 2 to 7, plus the mapping files, samples and generated pages. Steps
 4, 5 and 6 can run in parallel once step 3 is in; step 8 is almost only configuration. After step 7 the owner has the daily command for
 VaR; after step 8, for exposure's masters. Each step is proven by its tests and the pre-merge gate (no drill), ships with its pages

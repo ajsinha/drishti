@@ -17,7 +17,7 @@
 kind: book
 mnemonic: BOOK
 pack: core
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Book
@@ -51,30 +51,35 @@ fields:
   example: Commodities · book 1
 - name: DESK_NAME
   type: text
-  presence: required
+  presence: derived
   description: 'The name of the desk the book sits under (the desk''s NAME).'
   example: Commodities
+  note: 'the NAME of the book''s DESK, looked up by Drishti; a master file does not carry it'
 - name: TRADE_COUNT
   type: integer
-  presence: required
+  presence: derived
   description: 'How many trades are booked in the book.'
   example: 28
+  note: 'a roll-up Drishti computes from the book''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: MTM
   type: amount
-  presence: required
+  presence: derived
   unit: 'USD'
   description: 'The sum of the MTM of the book''s trades, in the bank''s reporting currency (USD in the demo).'
   example: 7760837
+  note: 'a roll-up Drishti computes from the book''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: DV01
   type: amount
-  presence: required
+  presence: derived
   unit: 'USD per bp'
   description: 'The sum of the DV01 of the book''s trades: the change in value for a one basis point rise in rates, in the bank''s reporting currency (USD in the demo) per bp; negative loses when rates rise.'
   example: 0
+  note: 'a roll-up Drishti computes from the book''s sensitivities; a master file does not carry it and an upstream value is ignored'
 - name: TOP_TRADES
   type: record list
-  presence: required
+  presence: derived
   description: 'The book''s largest trades by absolute MTM, at most ten: one object per trade, largest first.'
+  note: 'a roll-up Drishti computes from the book''s trade valuations; a master file does not carry it and an upstream value is ignored'
 - name: DESK
   type: id
   presence: required
@@ -84,17 +89,17 @@ fields:
   link: desk
 - name: ACCOUNTING_TREATMENT
   type: text
-  presence: required
+  presence: optional
   description: 'The accounting classification of the book''s positions, e.g. Fair value (FVTPL).'
   example: Fair value (FVTPL)
 - name: REGULATORY_BOOK
   type: text
-  presence: required
+  presence: optional
   description: 'Trading book or banking book, as the book is classified for regulatory capital.'
   example: Trading book
 - name: VOLCKER
   type: text
-  presence: required
+  presence: optional
   description: 'The book''s Volcker-rule permitted activity (e.g. Market making).'
   example: Market making
 nested:
@@ -104,18 +109,12 @@ nested:
     presence: required
     description: 'The trade: a TRADE_ID of the trading pack''s trade kind (text).'
     example: MX-20000340
-    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: STATUS
     type: text
     presence: required
     description: 'The trade''s life-cycle status (NEW, VALIDATED, AMENDED, ...), upper case.'
     example: LIVE
-    enum:
-    - AMENDED
-    - LIVE
-    - NEW
-    - VALIDATED
   - name: PRODUCT
     type: text
     presence: required
@@ -131,14 +130,6 @@ nested:
     presence: required
     description: 'The trade''s currency, ISO 4217.'
     example: USD
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
   - name: BOOK
     type: id
     presence: required
@@ -160,12 +151,6 @@ nested:
     presence: required
     description: 'The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+.'
     example: 0-1Y
-    enum:
-    - 0-1Y
-    - 1-2Y
-    - 10Y+
-    - 2-5Y
-    - 5-10Y
   - name: MTM
     type: amount
     presence: required
@@ -184,15 +169,7 @@ validation:
   fields:
   - BOOK_ID
   - NAME
-  - DESK_NAME
-  - TRADE_COUNT
-  - MTM
-  - DV01
-  - TOP_TRADES
   - DESK
-  - ACCOUNTING_TREATMENT
-  - REGULATORY_BOOK
-  - VOLCKER
 - rule: unique
   key:
   - BOOK_ID
@@ -212,31 +189,6 @@ validation:
 - rule: link
   field: TOP_TRADES[].TRADE_ID
   kind: trade
-- rule: enum
-  field: TOP_TRADES[].STATUS
-  values:
-  - AMENDED
-  - LIVE
-  - NEW
-  - VALIDATED
-- rule: enum
-  field: TOP_TRADES[].CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
-- rule: enum
-  field: TOP_TRADES[].MATURITY_BUCKET
-  values:
-  - 0-1Y
-  - 1-2Y
-  - 10Y+
-  - 2-5Y
-  - 5-10Y
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
