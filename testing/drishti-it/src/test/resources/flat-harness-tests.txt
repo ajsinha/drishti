@@ -30,6 +30,7 @@ modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/V
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarByAttributeApiTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarCurrencyAheadTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarCurrencyApiTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarDeletedDateTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarExplainApiTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarFormatEqualityTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarGoldenMatrixTest.java

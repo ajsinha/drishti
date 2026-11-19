@@ -102,6 +102,20 @@ public final class LoadService {
 
     private final java.util.List<java.util.function.Consumer<LoadRecord>> readyListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
 
+    private final java.util.List<java.util.function.Consumer<LoadRecord>> deletedListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /**
+     * Calls {@code listener} after a business date of a kind was deleted from the lake ({@code lake delete}, status {@code deleted}): an
+     * engine drops the date (the VaR engine: its book, hot file and cached answers), so nothing is answered from the deleted data. A
+     * listener's failure never fails the signal.
+     */
+    public void onDeleted(java.util.function.Consumer<LoadRecord> listener) {
+        if (deletedListeners.isEmpty()) {         // a module's listeners leave with it
+            com.ash.drishti.common.ModuleLoaders.onLeave(this, (s, loader) -> s.deletedListeners.removeIf(x -> com.ash.drishti.common.ModuleLoaders.of(x, loader)));
+        }
+        deletedListeners.add(listener);
+    }
+
     /** Calls {@code listener} after every load that finished ready (BI layers rebuild the date it names). A listener's failure never fails the load. */
     public void onReady(java.util.function.Consumer<LoadRecord> listener) {
         if (readyListeners.isEmpty()) {           // a module's listeners leave with it
@@ -143,8 +157,8 @@ public final class LoadService {
             throw new DrishtiException(ErrorCode.LOAD_KIND_UNKNOWN, "pack '" + packName + "' has no kind '" + kind + "'; its kinds are " + pack.kinds());
         }
         String status = a.status() == null || a.status().isBlank() ? LoadRecord.READY : a.status().trim().toLowerCase(Locale.ROOT);
-        if (!LoadRecord.READY.equals(status) && !LoadRecord.FAILED.equals(status)) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "status must be ready or failed");
+        if (!LoadRecord.READY.equals(status) && !LoadRecord.FAILED.equals(status) && !LoadRecord.DELETED.equals(status)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "status must be ready, failed or deleted");
         }
         LocalDate date = date(a);
         if (a.rows() != null && a.rows() < 0 || a.rejected() != null && a.rejected() < 0) {
@@ -196,6 +210,10 @@ public final class LoadService {
             if (store.clearLate(packName, kind, date)) {
                 steps.add(new LoadRecord.Step("late", "ok", "the late-data flag for " + kind + " " + date + " is cleared", 0));
             }
+        } else if (LoadRecord.DELETED.equals(status)) {
+            // the date was removed from the lake (lake delete): the caches of the kind go, the engines drop the date (deleted listeners)
+            steps.add(refresh(kind));
+            steps.add(new LoadRecord.Step("verify", "skipped", kind + " " + date + " was deleted from the lake: nothing to verify", 0));
         } else {
             steps.add(new LoadRecord.Step("late", "skipped", "a failed load does not clear a late-data flag", 0));
         }
@@ -207,8 +225,8 @@ public final class LoadService {
                 : told + " " + (told == 1 ? "person" : "people") + " told" + (cfg.email() ? " (email queued where an address is set)" : ""), 0));
         LoadRecord done = r.completed(verified, entities, fired, told, steps, ms(t0));
         store.update(done);
-        if (LoadRecord.READY.equals(status)) {
-            for (java.util.function.Consumer<LoadRecord> l : readyListeners) {
+        if (LoadRecord.READY.equals(status) || LoadRecord.DELETED.equals(status)) {
+            for (java.util.function.Consumer<LoadRecord> l : LoadRecord.READY.equals(status) ? readyListeners : deletedListeners) {
                 try {
                     l.accept(done);
                 } catch (RuntimeException e) {
@@ -223,6 +241,13 @@ public final class LoadService {
     /** The one-line notice: {@code trade for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts to look}. */
     public static String summary(LoadRecord r) {
         StringBuilder s = new StringBuilder(r.kind()).append(' ');
+        if (LoadRecord.DELETED.equals(r.status())) {
+            s.append("for ").append(r.businessDate()).append(" deleted from the lake");
+            if (r.rows() != null) {
+                s.append(String.format(Locale.ROOT, ": %,d rows", r.rows()));
+            }
+            return s.toString();
+        }
         if (LoadRecord.FAILED.equals(r.status())) {
             s.append("load for ").append(r.businessDate()).append(" FAILED");
             if (r.note() != null && !r.note().isBlank()) {

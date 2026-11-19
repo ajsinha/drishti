@@ -339,14 +339,31 @@ public final class VarService implements AutoCloseable {
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
         if (asked == null) {
-            return load(latest, 0);
+            return orBefore(latest);
         }
         // a date with no P&L load is never answered silently from an older one: the newest earlier date answers, and says so
         LocalDate held = asked.isAfter(latest) ? latest : loader.previous(asked.plusDays(1));
         if (held == null || held.equals(asked)) {
             return load(asked, 0);
         }
-        return load(held, 0).warned(carriedWarning(asked, held));
+        VarDate vd = orBefore(held);
+        return vd.warned(carriedWarning(asked, vd.date()));
+    }
+
+    /**
+     * A date answered in place of the one asked (the default, or a date with no P&amp;L): {@code d}, or when its scenario set is missing
+     * (deleted from the lake, not delivered) the date before it, with the reason as a warning. Asked for by its own date, such a date is
+     * refused ({@code DRS-1001}).
+     */
+    private VarDate orBefore(LocalDate d) {
+        try {
+            return load(d, 0);
+        } catch (DrishtiException e) {
+            if (e.errorCode() == ErrorCode.ENTITY_NOT_FOUND && String.valueOf(e.getMessage()).contains("no scenario set for " + d)) {
+                return previous(d, e.getMessage(), 0);
+            }
+            throw e;
+        }
     }
 
     /** The words of a VaR date answered from an earlier one (VAR_GUIDE.md, "A date with no data"): the page shows them prominently. */
@@ -489,8 +506,16 @@ public final class VarService implements AutoCloseable {
             buildAhead(vd);
             // O9: the lake moved on without a signal: reload in the background, answer from this one meanwhile (with a warning). A date with
             // an intraday layer is left to its signal (the PV stream announces each window, and its batches move the lake's version)
-            String w = watch.check(d, vd.version(), vd.intraday() != null && !vd.intraday().isEmpty(),
-                    () -> swap(d, () -> sharded() ? shards.assemble(d) : loader.load(d)));
+            String w = watch.check(d, vd.version(), vd.intraday() != null && !vd.intraday().isEmpty(), () -> {
+                try {
+                    swap(d, () -> sharded() ? shards.assemble(d) : loader.load(d));
+                } catch (DrishtiException e) {
+                    if (e.errorCode() == ErrorCode.ENTITY_NOT_FOUND) {
+                        reload(d);                                       // its inputs are gone (deleted from the lake): dropped, never kept
+                    }
+                    throw e;
+                }
+            });
             return w == null ? vd : vd.warned(w);
         } catch (java.util.concurrent.CompletionException e) {
             if (e.getCause() instanceof DrishtiException de && room.remembers(de)) {

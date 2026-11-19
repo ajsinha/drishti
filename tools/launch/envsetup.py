@@ -33,13 +33,25 @@ from procs import LaunchError, say
 import javacmd  # noqa: E402 - tools/ is on the path through procs
 
 #: the folders a data folder holds (docs/DEPLOYMENT_AND_QA_GUIDE.md, "Prepare your environment")
-DATA_LAYOUT = ("run", "logs", "tmp", "dumps", "delta")
+DATA_LAYOUT = ("run", "logs", "tmp", "dumps", "delta", "dataload/inbox", "dataload/inprocess", "dataload/outbox", "dataload/failed", "dataload/ledger")
 #: the variables setup reports (a secret's value is never shown)
 ENV_VARS = ("DRISHTI_HOME", "DRISHTI_DATA_DIR", "DRISHTI_MODULES_HOME", "DRISHTI_JAVA_HOME", "JAVA_HOME", "DRISHTI_PYTHON", "DRISHTI_PORT",
             "DRISHTI_CONSOLE_PORT", "DRISHTI_SERVER_URL", "DRISHTI_LIB_PATH", "DRISHTI_TMP_DIR", "DRISHTI_DISTRIBUTION", "DRISHTI_PACKS",
             "DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
 MIN_PYTHON = (3, 11)
 PLACEHOLDER = "/path/to/drishti"
+
+
+def copy_readmes(home: Path, data: Path) -> None:
+    """The data inbox folders' README.md files (kept in the clone's data/dataload/) into a data folder elsewhere, when missing."""
+    src = home / "data" / "dataload"
+    if src.resolve() == (data / "dataload").resolve() or not src.is_dir():
+        return
+    for rel in ("", "inbox", "inprocess", "outbox", "failed", "ledger"):
+        f, to = src / rel / "README.md", data / "dataload" / rel / "README.md"
+        if f.is_file() and not to.exists():
+            to.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(f, to)
 
 
 def envs_dir(env=None) -> Path:
@@ -95,6 +107,7 @@ def setup(a, env: dict | None = None) -> int:
     if missing and not check:
         for d in DATA_LAYOUT:
             (data / d).mkdir(parents=True, exist_ok=True)
+        copy_readmes(home, data)
         line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
     elif missing:
         line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): {', '.join(missing)} missing")

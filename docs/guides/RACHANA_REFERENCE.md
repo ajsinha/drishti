@@ -1428,6 +1428,7 @@ A line chart: one point per row.
 | `fmt` | | | Format of the mark's value. |
 | `unit` | | | Unit for the axis and the mark text; `%` is appended without a space, anything else after a space. |
 | `step` | | `false` | `true` draws the line as steps: a value holds until the next point (a leg's notional schedule, an amortising principal). |
+| `values`, `labels` | | | A vector instead of `rows`, `x` and `y`: `values` an expression giving a list of numbers (the y values), `labels` an expression giving a list of texts for the x axis (the position 0, 1, 2 … when left out): `values: $.RATES`, `labels: $src.SCENARIO_DATES`. |
 | `footer` | | | Accepted, no effect. |
 
 With a `source`, the linked entity is fetched (same sources, same business date) and `rows` is evaluated against **its** document. The

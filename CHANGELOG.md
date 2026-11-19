@@ -94,6 +94,36 @@
   instead of the retired scripts and Python instead of `openssl` for the keys, and `deploy/lake-maintenance.yaml` names its lake by an
   absolute path.
 
+- **The scenario set, FX scenario and scenario PV pages show their vectors.** `SSET HS-509`, `FXS FXS-EUR-HS-509` and `SPV <id>` had only a
+  strip (the market-risk pack had no Sutra for the three kinds). Now `scenario-set` lists every scenario day with its index *i* (paged),
+  `fx-scenario` charts and lists its rates by scenario day (the days read from its set) with the change against today's rate, and
+  `scenario-pv` charts and lists the PV and the P&L (PV minus base PV, in the position's currency) by scenario day. A `line` panel takes
+  `values` (a list of numbers) and `labels` (a list of texts) beside `rows`, `x` and `y`. Tests: the pack's Sutra cases;
+  screenshots of the three pages need a refresh.
+- **`drishti.py lake delete`: whole business dates out of one table, and the server drops them at once.** `lake delete --lake risklake
+  --kind scenario-pv --date 2026-11-16` (or `--table domain/table`, `--date` repeatable, `--from`/`--to`) removes the dates with the lake
+  loader's own writer (`LakeRetention --dates`, the machinery of row retention and undo): one Delta commit removing the dates' files, one
+  Iceberg partition delete, or a files store's day files (`DeleteDatesParityTest`: the same rows left in all three, delta-rs reads the Delta
+  result). It says first what it would delete (rows per date; `--dry-run` stops there), refuses a date the table does not hold in words, asks
+  for the table's name (`--yes` for scripts), holds the table's lock and logs a `lake-delete` line in `_drishti-lake/runs.log`. With
+  `--server` (or `DRISHTI_SERVER`; `--token-file`/`DRISHTI_TOKEN`) it sends the data-load signal with the new status **`deleted`**: the
+  server drops the kind's caches and calls its deleted listeners (no verify, alerts or capture; history *scenario-pv for 2026-11-16 deleted
+  from the lake: N rows*; audit `data-load-deleted`). The VaR engine drops the date (`VarOfficial.onDeleted`: book, hot file, currencies,
+  cached answers; never captured), so a request for it is answered by the newest earlier date with *scenario P&L for D not loaded — showing
+  D-1* and the default date moves back; the exposure engine and BI's layers drop it too. Without a signal the same state is reached by
+  itself (the connector's new version; the version watch). Official captures of the date stay as history. Loading the date again brings it
+  back. A normal scenario set is now used only for its own business date: a date whose set was deleted (or never delivered) is refused
+  (*no scenario set for D*, `DRS-1001`) instead of being computed with the day before's scenario days; when it is the newest date, the
+  default date is the date before with that reason as a warning. The version watch drops an open date whose inputs are gone instead of
+  keeping its old book. `lake undo` cannot restore a deleted date (it
+  works by load id on rows still in the table); the way back is a load. Docs: DATA_LAKE_GUIDE section 5.8, CLI_REFERENCE 7.15,
+  VAR_GUIDE 15.8, DATA_GUIDE (the `status` field), DEPLOYMENT_AND_QA_GUIDE 9.14 and checklist 20a.
+
+- **The data inbox's folders are in a fresh clone.** `data/dataload/` with `inbox/`, `inprocess/`, `outbox/`, `failed/` and `ledger/` is kept
+  in git, each with only a `README.md` (what a load writes there stays ignored, also `inbox.lock`). The inbox ignores every `README.md`
+  (`Inbox.ignored`, one rule for the scan, the status board, recovery and the failed list), so one is never claimed, reported as waiting
+  for a `.ready`, moved or counted. A cycle makes all five folders when missing, and `drishti.py setup` makes them (with the READMEs) in a
+  data folder outside the clone. Tests: `ReadmeFoldersTest`.
 - **IntelliJ's server launchers run the jar the modules are stamped for.** A server started from IntelliJ's compiled classes (the
   **Application** launchers, with *Make* before launch) had no `META-INF/build-info.properties` (Maven's `build-info` goal; IntelliJ's
   compile never runs it and clears `target/classes` when it rebuilds a module), so its kernel build was unknown (*dev* in Admin → Modules)

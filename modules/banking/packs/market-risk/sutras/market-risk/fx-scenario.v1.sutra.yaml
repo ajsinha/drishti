@@ -1,0 +1,72 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (docs/guides/VAR_GUIDE.md section 15.9): a currency's rate today and under each scenario day. Data: tools/packgen/var/scenario_fx.py.
+rachana: 1
+sutra: fx-scenario
+version: 1
+description: "A currency's USD rate today and under each scenario day of the date's scenario set."
+doc:
+  summary: "A currency's scenario FX: the rate today and under each scenario day, charted and listed against the day"
+  description: >-
+    The FX scenario of one currency on one business date: USD per one unit of the currency today (RATE) and under each scenario day
+    (RATES, oldest first). The VaR engine converts scenario PVs and reporting currencies with it. The chart and the grid read the rates
+    against the days of the scenario set (SCENARIO_SET_ID), which gives each rate's index and date; the grid also shows each rate's
+    change against today's rate.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fx-scenario/FXS-EUR-HS-509"
+    - "FXS FXS-EUR-HS-509"
+  since: "2.9.11"
+match: { kind: fx-scenario, priority: 10 }
+title: { pill: "Market risk · Scenario FX", id: $.FX_SCENARIO_ID, with: $.CURRENCY }
+strip:
+  - { label: Currency, bind: $.CURRENCY, emphasis: true }
+  - { label: Quote, bind: $.QUOTE }
+  - { label: Rate today, bind: $.RATE, emphasis: true }
+  - { label: Business date, bind: $.BUSINESS_DATE }
+  - { label: Scenario set, bind: "link($.SCENARIO_SET_ID, 'scenario-set')" }
+  - { label: Source, bind: $.SOURCE }
+panels:
+  - id: rates-chart
+    kind: line
+    title: "Rate under each scenario day (USD per unit)"
+    code: CHART
+    key: F2
+    source: { kind: scenario-set, id: $.SCENARIO_SET_ID }
+    values: $.RATES
+    labels: $src.SCENARIO_DATES
+  - id: rates
+    kind: table
+    title: "Rates by scenario day (change against today's rate)"
+    code: RATES
+    key: F3
+    source: { kind: scenario-set, id: $.SCENARIO_SET_ID }
+    rows: $.RATES
+    limit: 30
+    columns:
+      - { label: "Index i", bind: "#index" }
+      - { label: Scenario day, bind: "$src.SCENARIO_DATES[#index]" }
+      - { label: Rate, bind: "@" }
+      - { label: "Change vs today (%)", bind: "(@ - $.RATE) / $.RATE * 100", fmt: signed2, tone: sign }
+  - use: explainer-note@1
+    with:
+      title: How to read it
+      area: right
+      text: "Index i is the position of the rate in RATES and of the day in the scenario set ${$.SCENARIO_SET_ID}: the same position in every P&L vector and scenario PV of ${$.BUSINESS_DATE}. Change is in percent of today's rate."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.SCENARIO_SET_ID, 'scenario-set')", F9: raw }

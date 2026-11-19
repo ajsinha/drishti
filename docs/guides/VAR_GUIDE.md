@@ -2708,6 +2708,8 @@ when the batch sends a **stress set** for stressed VaR (`SET_TYPE: STRESS`, [sec
 is not loaded (`DRS-5203`), nor one whose `SCENARIO_DATES` are not strictly increasing or not all before the business date; two stress
 sets refuse the stress set alone.
 
+**The page.** `SSET HS-509` shows the set's facts (business date, number of days, window, horizon, revaluation, batch), a paged grid of every scenario day with its index *i* (0 is the oldest: the position in every vector of the date), a note that every vector of the date is in this order, and the FX scenarios of the set as links.
+
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-set.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-set.contract.yaml), published as [SSET: `scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-set).
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
@@ -2845,6 +2847,28 @@ hot file is built (its name is the digest of the new inputs, [section 26](#26-th
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
 day*) reads the table at that instant, within the 7 years kept.
 
+**A date deleted from the lake.** `drishti.py lake delete` removes whole business dates from a table
+([DATA_LAKE_GUIDE.md section 5.8](DATA_LAKE_GUIDE.md#58-delete-business-dates)) and sends the data-load signal with status `deleted`. For an
+input kind (`pnl-vector`, `scenario-pv`, `scenario-set`, `fx-scenario`, `var-limit`) or `trade`, the engine drops the date at once, as a
+reload does (its book, hot file, reporting currencies, cached answers; audited `var-reload`, *scenario-pv of the date was deleted from the
+lake*), and captures nothing. What a request then sees:
+
+| Deleted | A request for the date | The default date |
+|---|---|---|
+| its P&L (`pnl-vector` and `scenario-pv`, or the only form it had) | answered by the newest earlier date, with the notice *scenario P&L for 2026-11-16 not loaded — showing 2026-11-13* in the headline and the provenance; never the deleted figures | the newest date that still has P&L |
+| its scenario set | refused, `404 DRS-1001` *no scenario set for 2026-11-16* (a set written for an earlier date is never used for it: its scenario days would be a day off) | when it was the newest: the date before, with the warning *no scenario set for 2026-11-16 …; answered from 2026-11-13 instead* |
+| one form of two (`scenario-pv` deleted, `pnl-vector` kept) | the date with the trades that are left | unchanged |
+| its limits (`var-limit`) or scenario FX (`fx-scenario`) | the date, with the limits the newest earlier delivery set (limits are sent when they change) and the scenario FX derived from the FX history (section 15.9) | unchanged |
+
+Without the signal (`--no-signal`, or a delete made by other means) the same happens by itself, a few seconds later: each request asks
+the connector which dates hold P&L, and the connector sees the table's new version at its next refresh (seconds), so the deleted date is
+no longer answered from its old book; the version watch (`drishti.var.version-check`, 30 s) then finds the date's inputs gone and drops
+that book. **Official records stay**:
+the date's official captures and published rows ([section 19](#19-official-end-of-day-results)) are history and are kept as they were
+captured (the node history in `official` mode still shows them); they are never served as the date's live VaR. **Loading the date again**
+(`lake build`, the data inbox, a feed) with its signal makes it answer again at once (without a signal: as a new date, on the next
+request), and the official capture runs again: unchanged inputs are `unchanged`, new ones the next result version.
+
 ### 15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency
 
 A bank's batch may send a trade's scenario P&L in a second form (product owner, 2026-10-27): the trade **revalued under each scenario**
@@ -2872,6 +2896,8 @@ scopes, captures and the official record do not know which form it came in (the 
 `SPV`. **Table:** `risk/scenario-pv/`, the vector column `SCENARIO_PV` (`list<double>`), the same promoted trade columns as `pnl-vector`
 plus `CURRENCY`, `BASE_PV` and the valuation dates.
 
+**The page.** `SPV <id>` shows the position or trade (linked), its currency, base PV and scenario set, a chart of the P&L (PV minus base PV, in the position's own currency) and one of the PV under each scenario day, and a paged grid (index *i*, scenario day, PV, P&L); the links lead to the scenario set and the position.
+
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml), published as [SPV: `scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-pv).
 
 **What the load checks** (each a rejected row, counted and listed in `provenance.rejections`, never padded): a `null` or `NaN` in
@@ -2894,6 +2920,8 @@ neither, or whose history does not cover every scenario day and the day before t
 days, so the demo **supplies** its scenario FX (AUD, CAD, CHF, EUR, GBP, JPY); a bank with 510 days of FX history needs to send none.
 `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date, and they enter the hot file's digest); `fx-spot` is
 read when a date loads, not watched.
+
+**The page.** `FXS FXS-EUR-HS-509` shows the currency, quote and today's rate, a chart of the rate under each scenario day (the x axis is the scenario set's `SCENARIO_DATES`, read through the set's link), a paged grid (index *i*, scenario day, rate, change against today's rate in percent) and a link to its scenario set.
 
 **Fields and example of `fx-scenario`.** Every field is its data contract, [`fx-scenario.contract.yaml`](../../modules/banking/packs/market-risk/contracts/fx-scenario.contract.yaml), published as [FXS: `fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#fx-scenario).
 

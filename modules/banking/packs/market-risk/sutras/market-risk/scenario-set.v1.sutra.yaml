@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (docs/guides/VAR_GUIDE.md): the scenario days of a business date, in vector order. Data: tools/packgen/var/make_var_data.py.
+rachana: 1
+sutra: scenario-set
+version: 1
+description: "A scenario set: the historical days of a business date, oldest first; position i of every vector of the date is day i."
+doc:
+  summary: "A scenario set: its facts, and every scenario day with its position in the date's vectors"
+  description: >-
+    A scenario set orders the scenario days of one business date: index i of every P&L vector, scenario-PV vector and FX scenario of the
+    date is the set's day i. The strip gives the business date, the number of days, the window, the holding period, how the scenarios were
+    revalued and the batch. The grid lists every day with its index (0 is the oldest), paged; the FX scenarios of the set (one per
+    currency, each a rate per day) are listed with a link.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/scenario-set/HS-509"
+    - "SSET HS-509"
+  since: "2.9.11"
+match: { kind: scenario-set, priority: 10 }
+title: { pill: "Market risk · Scenario set", id: $.SCENARIO_SET_ID, with: $.DESCRIPTION }
+strip:
+  - { label: Business date, bind: $.BUSINESS_DATE }
+  - { label: Scenarios, bind: $.SCENARIO_COUNT, fmt: amount0, emphasis: true }
+  - { label: Window start, bind: $.WINDOW_START }
+  - { label: Window end, bind: $.WINDOW_END }
+  - { label: Horizon (days), bind: $.HORIZON_DAYS }
+  - { label: Revaluation, bind: $.REVALUATION }
+  - { label: Batch, bind: $.SOURCE_BATCH }
+panels:
+  - id: days
+    kind: table
+    title: "Scenario days (index i is the position in every vector of the date)"
+    code: DAYS
+    key: F2
+    rows: $.SCENARIO_DATES
+    limit: 30
+    empty: No scenario days
+    columns:
+      - { label: "Index i", bind: "#index" }
+      - { label: Scenario day, bind: "@" }
+  - use: explainer-note@1
+    with:
+      title: Every vector of the date is in this order
+      area: right
+      text: "Position i of every P&L vector, scenario PV vector and FX scenario (RATES) of ${$.BUSINESS_DATE} is the scenario day i of this set: 0 is the oldest (${$.WINDOW_START}), ${$.SCENARIO_COUNT} - 1 the newest (${$.WINDOW_END}). The VaR of the date: VAR <GO>, with its date set to ${$.BUSINESS_DATE}."
+  - id: fx
+    kind: table
+    title: "FX scenarios of this set (one rate per scenario day, per currency)"
+    code: FXS
+    area: right
+    source: { kind: fx-scenario, where: "@.SCENARIO_SET_ID == $.SCENARIO_SET_ID", limit: 50 }
+    rows: $src
+    empty: No FX scenarios for this set
+    columns:
+      - { label: FX scenario, bind: "@.FX_SCENARIO_ID", link: true }
+      - { label: Currency, bind: "@.CURRENCY" }
+      - { label: Rate today, bind: "@.RATE" }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

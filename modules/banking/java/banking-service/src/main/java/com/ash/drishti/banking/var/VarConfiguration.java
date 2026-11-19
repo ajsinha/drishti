@@ -245,6 +245,7 @@ public class VarConfiguration {
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it
+            l.onDeleted(r -> o.onDeleted(r.kind(), r.businessDate()));     // a date deleted from the lake: dropped, never captured
         }
         o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor("var-official")));   // the var-results connector
         return o;

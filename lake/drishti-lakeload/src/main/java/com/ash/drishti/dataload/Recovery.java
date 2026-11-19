@@ -169,7 +169,7 @@ public final class Recovery {
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
             for (Path p : ds) {
                 String n = p.getFileName().toString();
-                if (!n.endsWith(Inbox.READY) && !n.startsWith(LOAD) && !n.equals(SIGNALS) && !Files.isDirectory(p)) {
+                if (!Inbox.ignored(n) && !n.endsWith(Inbox.READY) && !n.startsWith(LOAD) && !n.equals(SIGNALS) && !Files.isDirectory(p)) {
                     out.add(p);
                 }
             }

@@ -207,6 +207,9 @@ kinds:
       Drishti derives it from the trades by the ${$.POSITION_RULE} rule; its VaR is the engine's, computed as the page opens.
     guide: market-risk
     glossary:
+      TRADES.DIRECTION: { term: "Trade direction", means: "LONG for a buy, SHORT for a sell: the sign of the trade's quantity." }
+      VAR_ENGINE.TRADES.DIRECTION: { term: "Trade direction", means: "LONG for a buy, SHORT for a sell: the sign of the trade's quantity." }
+      TRADE_CURRENCY: { term: "Trade currency", means: "The currency the trade is in; its PV and scenario PVs are in it before conversion to USD." }
       DIRECTION:
         term: "Direction"
         means: "LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net."
@@ -266,6 +269,9 @@ kinds:
       (P&L = PV under the scenario x the scenario's FX - base PV x today's FX), and into any reporting currency when asked.
     guide: market-risk
     glossary:
+      POSITION_ID: { term: "Position", means: "The position these scenario PVs belong to, at position grain." }
+      SCENARIO_SET_ID: { term: "Scenario set", means: "The scenario set whose days order SCENARIO_PV: index i is its day i." }
+      BUSINESS_DATE: { term: "Business date", means: "The close of business the scenario PVs belong to." }
       SCENARIO_PV: { term: "Scenario PVs", means: "The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero.", unit: "the trade's currency (CURRENCY)" }
       BASE_PV: { term: "Base PV", means: "The trade's present value on the business date, from the same run as the scenario PVs.", unit: "the trade's currency (CURRENCY)" }
       CURRENCY: { term: "Currency", means: "The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing)." }
@@ -280,6 +286,10 @@ kinds:
       Drishti derives the rates from the FX history (today's rate moved by each scenario day's 1-day move).
     guide: market-risk
     glossary:
+      QUOTE: { term: "Quote", means: "How the rates are quoted, in words: always USD per one unit of the currency." }
+      BUSINESS_DATE: { term: "Business date", means: "The close of business the rates belong to: the date of the scenario PVs they convert." }
+      SCENARIO_SET_ID: { term: "Scenario set", means: "The scenario set whose days order RATES: index i of RATES is its day i." }
+      SOURCE: { term: "Source", means: "The system or model that produced the rates." }
       RATE: { term: "Rate today", means: "USD per one unit of the currency on the business date.", unit: "USD per unit" }
       RATES: { term: "Scenario rates", means: "USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD.", unit: "USD per unit" }
       CURRENCY: { term: "Currency", means: "The currency the rates are for (ISO code)." }
@@ -290,6 +300,10 @@ kinds:
       day's market move applied to the business date's market, ${$.HORIZON_DAYS}-day horizon.
     guide: market-risk
     glossary:
+      BUSINESS_DATE: { term: "Business date", means: "The close of business whose vectors the set orders." }
+      SCENARIO_COUNT: { term: "Scenarios", means: "N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date." }
+      HORIZON_DAYS: { term: "Horizon", means: "The holding period of the scenario moves, in business days." }
+      SOURCE_BATCH: { term: "Batch", means: "The risk batch that produced the set and its vectors." }
       SCENARIO_DATES: { term: "Scenario days", means: "The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i." }
       WINDOW_START: { term: "Window start", means: "The oldest scenario day." }
       WINDOW_END: { term: "Window end", means: "The newest scenario day: the business day before the business date." }

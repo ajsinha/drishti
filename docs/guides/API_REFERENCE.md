@@ -1238,7 +1238,7 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 
 | Method | Path | Notes |
 |---|---|---|
-| `POST` | `/packs/{pack}/loads` | body `{kind, businessDate (or asOf), status: ready\|failed, rows?, rejected?, source?, batchId?, note?}`; an administrator, or a token with the `loads:write` scope whose user's roles open the kind. `201` with the load record (`steps`, `verified`, `alerts`, `notices`, `summary`), or `200` with `duplicate: true` for the same pack, kind, date and batch announced with the same outcome again. `404 DRS-5011` unknown pack, `422 DRS-5012` unknown kind, `400 DRS-4003` bad or future date, `400 DRS-5001` bad status, counts or batch id |
+| `POST` | `/packs/{pack}/loads` | body `{kind, businessDate (or asOf), status: ready\|failed\|deleted, rows?, rejected?, source?, batchId?, note?}`; an administrator, or a token with the `loads:write` scope whose user's roles open the kind. `201` with the load record (`steps`, `verified`, `alerts`, `notices`, `summary`), or `200` with `duplicate: true` for the same pack, kind, date and batch announced with the same outcome again. `404 DRS-5011` unknown pack, `422 DRS-5012` unknown kind, `400 DRS-4003` bad or future date, `400 DRS-5001` bad status, counts or batch id |
 | `GET` | `/packs/{pack}/loads?kind=&date=&status=&limit=`, also `/admin/loads/{pack}` | the pack's history, newest first (administrators, or users whose roles open a kind of the pack: only those kinds) |
 | `GET` | `/packs/{pack}/loads/{id}`, also `/admin/loads/{pack}/{id}` | one load |
 | `GET` | `/packs/{pack}/loads/expectations`, also `/admin/loads/{pack}/expectations` | what the pack expects and its state: `pending`, `on-time`, `landed-late`, `late`, `missing`, `failed` |

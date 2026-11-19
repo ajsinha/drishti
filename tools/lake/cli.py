@@ -18,6 +18,7 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py; --format delta|iceberg)
     scan       the fields of an export with their values, and the suggested --key and --partition-by (tools/lake/scan.py)
     publish    commit a table lake build wrote (a scratch lake) into a Delta table in S3, one commit (tools/lake/publish.py)
+    delete     remove whole business dates from one table (one commit), then tell the server (tools/lake/delete.py)
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
@@ -117,6 +118,10 @@ def cmd_undo(a, extra) -> int:
     return _mod("undo").run(a)
 
 
+def cmd_delete(a, extra) -> int:
+    return _mod("delete").run(a)
+
+
 def cmd_relocate(a, extra) -> int:
     deprecated("relocate")
     return _mod("relocate").run(a)
@@ -162,6 +167,14 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --dry-run\n"
             "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --yes\nGuide: docs/guides/DATA_LAKE_GUIDE.md section 5.5")
     _mod("undo").add_arguments(u)
+    dl = add(sub, "delete", cmd_delete, "lake delete: remove whole business dates from one table (by --kind or --table), one commit; asks to "
+             "confirm; then tells the server (status deleted) so it drops the dates", [srv],
+             "examples:\n  drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --dry-run\n"
+             "  drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-11-16 --server http://localhost:18480 --yes\n"
+             "  drishti.py lake delete --lake data/delta/demo --table risk/pnl-vector --from 2026-10-01 --to 2026-10-03 --no-signal\n"
+             "exit: 0 deleted (or a dry run), 1 refused or failed (nothing changed), 2 deleted but the signal failed, 3 another run holds the lock. "
+             "Guide: docs/guides/DATA_LAKE_GUIDE.md section 5.8")
+    _mod("delete").add_arguments(dl)
     rl = add(sub, "relocate", cmd_relocate, "lake relocate (deprecated, from an older release; retired in the next release): move a lake built "
              "in the older layout (<data>/delta/<domain>) into its own folder <data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
              "examples:\n  drishti.py lake relocate demo --dry-run\n  drishti.py lake relocate demo\n"

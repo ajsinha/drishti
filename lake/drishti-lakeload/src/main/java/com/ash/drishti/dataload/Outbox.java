@@ -148,7 +148,7 @@ public final class Outbox {
         try (Stream<Path> s = Files.walk(failed(), 3)) {
             s.filter(p -> failed().relativize(p).getNameCount() == 3 && Files.isRegularFile(p)).filter(p -> {
                 String n = p.getFileName().toString();
-                return !n.endsWith(Inbox.READY) && !n.endsWith(".failed.json");
+                return !Inbox.ignored(n) && !n.endsWith(Inbox.READY) && !n.endsWith(".failed.json");
             }).sorted(Comparator.comparing(p -> failed().relativize(p).toString())).forEach(out::add);
         }
         return out;
