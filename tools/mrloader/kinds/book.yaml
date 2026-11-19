@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's books (docs/plans/CSV_LOADERS.md sections 3.1 and 4.1): the canonical CSV. What a bank calls a booking portfolio is the
+# book: the names behind the book nodes; a full snapshot every day. The PVF source's own portfolio file: book.pvf.yaml.
+format: 1
+kind: book
+source: canonical
+about: "The bank's books (booking portfolios), one row each: name, desk and classification. The names behind the book nodes."
+after: [desk]
+on-reject: refuse
+
+inputs:
+  main: {option: --csv, required: [BOOK_ID, NAME, DESK]}
+
+fields:
+  BOOK_ID:              {from: BOOK_ID, slug: true, prefix: BOOK-}   # "PORT_100000" or "BOOK-PORT-100000": the id the PVs carry
+  NAME:                 {from: NAME}
+  DESK:                 {from: DESK, slug: true, prefix: DESK-}
+  ACCOUNTING_TREATMENT: {from: ACCOUNTING_TREATMENT}                 # optional: "Fair value (FVTPL)"
+  REGULATORY_BOOK:      {from: REGULATORY_BOOK}                      # optional: "Trading book"
+  VOLCKER:              {from: VOLCKER}                              # optional: "Market making"
+
+refuse-columns:
+  TRADE_COUNT: "a count of the book's trade valuations, derived"
+  MTM: "a roll-up of the book's trade valuations"
+  DV01: "a roll-up of the book's sensitivities"

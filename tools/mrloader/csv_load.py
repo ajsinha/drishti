@@ -264,7 +264,9 @@ def convert(c: LoadConfig) -> dict:
     stem = folder / f"{m.kind}.{c.business_date}"
     summary: dict = {"KIND": m.kind, "SOURCE": m.source, "MAPPING": str(m.path), "BUSINESS_DATE": c.business_date, "CSV": str(c.csv),
                      "DRY_RUN": c.dry_run, "DIALECT": m.dialect.describe(), "CONTRACT_GAPS": m.omit}
-    main = R.CsvFile(Path(c.csv), m.dialect)
+    _needs_run_values(m, ctx)
+    rename = {R.column_name(k): R.column_name(v) for k, v in (m.main.get("rename") or {}).items()}
+    main = R.CsvFile(Path(c.csv), m.dialect, rename)
     summary["DIALECT"]["DELIMITER"] = main.delimiter
     try:
         info = check_header(m, main)
@@ -349,6 +351,19 @@ def convert(c: LoadConfig) -> dict:
     _finish_summary(c, stem, summary)
     summary["_RECORDS"] = [r for _, _, r in records]
     return summary
+
+
+def _needs_run_values(m: KindMapping, ctx: dict) -> None:
+    """A required field built from a run value the run does not have (``{$source_system}`` with no --source-system) refuses the run
+    before a row is read, naming the option: the tool never invents it."""
+    import re
+    for name, rule in m.fields.items():
+        f = m.contract.field(name) or {}
+        if f.get("presence") != "required" or not isinstance(rule, dict):
+            continue
+        for ref in re.findall(r"\{\$([A-Za-z_][A-Za-z0-9_]*)\}", str(rule.get("template", ""))):
+            if ctx.get(ref) in (None, "") and "default" not in rule:
+                raise PvfError(f"{m.kind}: {name} is built from the run value {ref}, which this run does not have: give --{ref.replace('_', '-')}")
 
 
 def _valid_on(row: dict, valid: dict, date: str, m: KindMapping) -> bool:

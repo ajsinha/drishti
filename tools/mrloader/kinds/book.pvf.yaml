@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The PVF source's portfolio file (PORTFOLIO_D2, portfolio_d2.csv) as the book master (docs/plans/CSV_LOADERS.md section 4.1): one book
+# per portfolio valid on the date. The ids come from kinds/shared/ids.pvf.yaml, the rules the scenario-PV run uses, so a book here is
+# the book of its PV rows. The two columns the PVF join suffixes (_D2: the positions file has them too) are renamed the same way, so the
+# shared rules read them unchanged.
+format: 1
+kind: book
+source: pvf
+about: "The PVF extract's portfolio file (PORTFOLIO_D2) as the book master: one book per portfolio valid on the date, ids as the PV run builds them."
+after: [desk]
+on-reject: refuse
+use: [shared/ids.pvf]
+
+inputs:
+  main:
+    option: --csv
+    required: [PORTFOLIO_NM, VALID_DT, VALID_TO_DT]
+    valid: {from: VALID_DT, to: VALID_TO_DT}                 # only the rows valid on the date (VALID_DT <= date < VALID_TO_DT), as the join
+    rename: {PORTFOLIO_NM: PORTFOLIO_NM_D2, PORTFOLIO_ID: PORTFOLIO_ID_D2}
+
+fields:
+  BOOK_ID: {use: TT_BOOK}                                    # PORT_100000 -> BOOK-PORT-100000
+  NAME:    {from: [PORTFOLIO_DESC, PORTFOLIO_NM_D2]}         # the description, else the portfolio's name
+  DESK:    {use: DESK}                                       # DESK_NM, else PORTFOLIO_GROUP_NM; DESK-UNKNOWN when neither

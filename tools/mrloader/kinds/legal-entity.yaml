@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's legal entities (docs/plans/CSV_LOADERS.md section 3.1): the canonical CSV, its columns named as the contract's fields. The
+# names behind the LEGAL tree's nodes; a full snapshot every day. A site's own column names are a mapping of its own (--mapping FILE).
+format: 1
+kind: legal-entity
+source: canonical
+about: "The bank's own legal entities, one row each: name, LEI, jurisdiction and regulator. The names behind the LEGAL hierarchy's nodes."
+on-reject: refuse                        # a missing entity is a node without a name on every page: fix the file and run again
+
+inputs:
+  main: {option: --csv, required: [ENTITY_ID, NAME]}
+
+fields:
+  ENTITY_ID:    {from: ENTITY_ID, slug: true, prefix: LE-}     # "GMO_SPOG" or "LE-GMO-SPOG": both give LE-GMO-SPOG, the id the PVs carry
+  NAME:         {from: NAME}
+  LEI:          {from: LEI, upper: true}                       # 20 characters, ISO 17442: checked by the contract's pattern
+  JURISDICTION: {from: JURISDICTION, upper: true}              # ISO 3166-1 alpha-2 (DE, GB, US)
+  REGULATOR:    {from: REGULATOR}                              # optional: "PRA / FCA"
+
+refuse-columns:                          # figures and lists Drishti derives: a column of this name is reported, never loaded
+  DESKS: "the desks name their legal entity; the entity's list of desks is derived"
+  BOOKS: "the books, their P&L and MtM are rolled up by Drishti"
+  MTM: "a roll-up of the trade valuations"
+  PNL: "a roll-up of the trade valuations"

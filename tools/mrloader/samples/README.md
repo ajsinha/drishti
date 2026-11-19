@@ -22,7 +22,7 @@
 | `scenario_dates_2026-11-18.txt` | the 251 weekdays before 2026-11-18, oldest first, one per line (`pvf_scenario_set.py --dates`) |
 | `fx_2026-11-18.csv` | scenario FX, **wide** form: EUR, GBP, JPY, CAD, AUD, CHF; `RATE_TODAY` and one column per scenario day |
 | `fx_long_2026-11-18.csv` | the same rates in **long** form: `CURRENCY,SCENARIO_DATE,RATE`, today's rate on the row dated 2026-11-18 |
-| `var-limit.csv`, `var-limit.expected.jsonl` | four VaR limits (management, legal and a system basket) and the records `csv_load.py --kind var-limit` must make of them |
+| `<kind>.csv`, `<kind>.expected.jsonl` | **the sample day** of the CSV kinds (legal-entity, desk, book, risk-factor, var-limit, desk-pnl, position-sensitivity and its child file `position-sensitivity.SENSITIVITIES.csv`), written by `mr_gen.py --day tools/mrloader/samples`: four legal entities, six desks, twelve books and twenty positions that every file shares, so every link resolves; beside each, the records `csv_load.py` must make of it (`--computed-at 2026-11-18T22:00:00Z --source-system SYNTHETIC-RISK`). `tools/mrloader/days/sample.yaml` is its day file |
 
 ```bash
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates tools/mrloader/samples/scenario_dates_2026-11-18.txt

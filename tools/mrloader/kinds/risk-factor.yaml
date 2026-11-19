@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The risk-factor dictionary (docs/plans/CSV_LOADERS.md section 3.1): every factor the sensitivities use, its FRTB and SIMM mapping and
+# the names the source systems give it. Sent on change; the risk-store reads it as a snapshot table (within 10 days, section 18.1).
+format: 1
+kind: risk-factor
+source: canonical
+about: "The risk-factor dictionary: each factor's standard name, parts, FRTB and SIMM mapping, liquidity horizon and the source systems' names for it."
+on-reject: refuse                        # a factor missing from the dictionary is left out of every charge: fix the file and run again
+
+inputs:
+  main: {option: --csv, required: [RISK_FACTOR, FACTOR_TYPE, RISK_CLASS, SOURCE_NAMES]}
+
+fields:
+  RISK_FACTOR:       {from: RISK_FACTOR}                       # IR/CURVE/USD/SOFR/10Y: the standard name, kept as written
+  FACTOR_TYPE:       {from: FACTOR_TYPE, upper: true}
+  RISK_CLASS:        {from: RISK_CLASS, upper: true}
+  QUALIFIER:         {from: QUALIFIER}
+  CURVE:             {from: CURVE}
+  UNDERLYING:        {from: UNDERLYING}
+  TENOR:             {from: TENOR, upper: true}
+  UNDERLYING_TENOR:  {from: UNDERLYING_TENOR, upper: true}
+  FRTB_BUCKET:       {from: FRTB_BUCKET}
+  SIMM_RISK_CLASS:   {from: SIMM_RISK_CLASS}
+  SIMM_BUCKET:       {from: SIMM_BUCKET}                       # text: "1" stays "1"
+  SIMM_LABEL1:       {from: SIMM_LABEL1}
+  SIMM_LABEL2:       {from: SIMM_LABEL2}
+  SECTOR:            {from: SECTOR}
+  CREDIT_QUALITY:    {from: CREDIT_QUALITY, upper: true}
+  SENIORITY:         {from: SENIORITY, upper: true}
+  MARKET_CAP:        {from: MARKET_CAP, upper: true}
+  ECONOMY:           {from: ECONOMY, upper: true}
+  LIQUIDITY_HORIZON: {from: LIQUIDITY_HORIZON, type: integer} # 10, 20, 40, 60 or 120 days
+  MODELLABLE:        {from: MODELLABLE, type: boolean}
+  PROXY_OF:          {from: PROXY_OF}
+  MARKET_DATA_REF:   {from: MARKET_DATA_REF}
+  SOURCE_NAMES:      {from: SOURCE_NAMES, split: "|"}          # the systems' names for it, | between them: IR.CURVE.USD.SOFR.10Y|USD-SOFR-10Y
+  VALID_FROM:        {from: VALID_FROM, type: date, default: "{$business_date}"}
+  VALID_TO:          {from: VALID_TO, type: date}
+  BUSINESS_DATE:     {template: "{$business_date}", type: date}
+  SOURCE:            {from: SOURCE}                            # the factor master that sent it

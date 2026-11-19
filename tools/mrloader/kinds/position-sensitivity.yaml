@@ -1,0 +1,89 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The sensitivities of each position (or trade) to its risk factors (docs/plans/CSV_LOADERS.md section 8.3): two files, the parents (one
+# row a position: where it sits) and the sensitivities (one row a position, factor and measure), grouped into each record's list. Read by
+# the FRTB SA and SIMM engines. A large kind: bad rows are listed and the rest loads, up to max-rejects.
+format: 1
+kind: position-sensitivity
+source: canonical
+about: "The sensitivities of each position (or trade) to its risk factors, from the bank's risk run: one record a position, its sensitivities a list."
+after: [risk-factor, scenario-pv]        # the dictionary resolves the factor names; the positions are those of the PVs
+on-reject: skip                          # a large file: bad rows are listed, the rest loads
+max-rejects: 1%                          # more than this refuses the run
+
+run:
+  source_system: ""                      # --source-system: required (the tool never invents the system)
+  batch_id: "B-SENS-{$business_date}-01" # one full run per date and source; --batch-id for another
+  computed_at: "{$main_file_modified}"   # the file's last-modified time, UTC; --computed-at to give the run's own
+  restatement: 0                         # --restatement 1, 2 ... for a re-send of the date
+
+inputs:
+  main:                                  # one row a position (or trade): where it sits
+    option: --csv
+    required: [GRAIN, LEGAL_ENTITY, DESK, TT_BOOK, PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY]
+  children:
+    SENSITIVITIES:                       # one row a position, risk factor and measure
+      option: --child SENSITIVITIES
+      on: [POSITION_ID, TRADE_ID]        # the first the main row has
+      required: [RISK_FACTOR, MEASURE, VALUE]
+      empty: reject                      # a live position with no sensitivity is a failed row upstream, not an empty list
+      unique: [RISK_FACTOR, MEASURE]     # never the same factor and measure twice in one record
+
+fields:
+  GRAIN:          {from: GRAIN, upper: true}                    # POSITION or TRADE
+  POSITION_ID:    {from: POSITION_ID, prefix: POS-}             # needed when GRAIN is POSITION: the id of its scenario-PV row
+  TRADE_ID:       {from: TRADE_ID}                              # needed when GRAIN is TRADE
+  TRADE_IDS:      {from: TRADE_IDS, split: "|"}
+  SOURCE_SYSTEM:  {template: "{$source_system}"}
+  SENSITIVITY_ID: {template: "SENS-{@POSITION_ID}-{$batch_id}", default: "SENS-{@TRADE_ID}-{$batch_id}"}
+  BUSINESS_DATE:  {template: "{$business_date}", type: date}
+  BATCH_ID:       {template: "{$batch_id}"}
+  RUN_KIND:       {const: FULL}
+  COMPUTED_AT:    {template: "{$computed_at}", type: timestamp}
+  RESTATEMENT:    {template: "{$restatement}", type: integer}
+  STATUS:         {from: STATUS, lower: true, default: ok}      # ok, proxied, failed
+  PROXY_REASON:   {from: PROXY_REASON}
+  PRICER:         {from: PRICER}
+  MODEL_VERSION:  {from: MODEL_VERSION}
+  LEGAL_ENTITY:   {from: LEGAL_ENTITY, slug: true, prefix: LE-}
+  DIVISION:       {from: DIVISION, slug: true, prefix: DIV-, default: DIV-UNKNOWN}
+  DESK:           {from: DESK, slug: true, prefix: DESK-}
+  TT_BOOK:        {from: TT_BOOK, slug: true, prefix: BOOK-}
+  LIMIT_LETTER:   {from: LIMIT_LETTER}
+  FRTB_DESK:      {from: FRTB_DESK}
+  PRODUCT_GROUP:  {from: PRODUCT_GROUP}
+  PRODUCT_TYPE:   {from: PRODUCT_TYPE}
+  TRADE_STATUS:   {from: TRADE_STATUS, upper: true}
+  MATURITY_DATE:  {from: MATURITY_DATE, type: date}
+  CURRENCY:       {from: CURRENCY, upper: true}
+  VOL_CONVENTION: {from: VOL_CONVENTION, upper: true}
+  SENSITIVITIES[].RISK_FACTOR: {from: RISK_FACTOR}              # the standard name, or the bank's own: the dictionary's SOURCE_NAMES resolve it
+  SENSITIVITIES[].MEASURE:     {from: MEASURE, upper: true}     # DV01, CS01, IE01, DELTA, VEGA, CURVATURE_UP, CURVATURE_DOWN, GAMMA, BETA, BASE_CORR
+  SENSITIVITIES[].VALUE:       {from: VALUE, type: amount}      # signed, a gain positive; empty or not a number rejects the record: never zero
+  SENSITIVITIES[].CURRENCY:    {from: [VALUE_CURRENCY, CURRENCY], upper: true}
+  SENSITIVITIES[].TENOR:       {from: TENOR, upper: true}
+  SENSITIVITIES[].SHOCK_SIZE:  {from: SHOCK_SIZE, type: rate}   # needed on the two curvature measures
+  SENSITIVITIES[].IMPLIED_VOL: {from: IMPLIED_VOL, type: rate}
+
+checks:
+  unique: [SENSITIVITY_ID]
+  one-value: [BATCH_ID]
+  when:                                                         # the contract's conditional rules, stated once here
+    - {if: {GRAIN: POSITION}, need: [POSITION_ID]}
+    - {if: {GRAIN: TRADE}, need: [TRADE_ID]}
+    - {if: {"SENSITIVITIES[].MEASURE": [CURVATURE_UP, CURVATURE_DOWN]}, need: ["SENSITIVITIES[].SHOCK_SIZE"]}
+  links:
+    POSITION_ID: {to: scenario-pv, field: POSITION_ID, policy: warn}     # a sensitivity for a position the PVs do not have
+    "SENSITIVITIES[].RISK_FACTOR": {to: risk-factor, field: [RISK_FACTOR, SOURCE_NAMES], policy: warn}

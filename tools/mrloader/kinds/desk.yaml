@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's desks (docs/plans/CSV_LOADERS.md section 3.1): the canonical CSV. The names behind the desk nodes of the management and
+# legal trees; a full snapshot every day.
+format: 1
+kind: desk
+source: canonical
+about: "The bank's desks, one row each: name, head, the legal entity it books in and its asset classes. The names behind the desk nodes."
+after: [legal-entity]
+on-reject: refuse
+
+inputs:
+  main: {option: --csv, required: [DESK_ID, NAME, LEGAL_ENTITY]}
+
+fields:
+  DESK_ID:       {from: DESK_ID, slug: true, prefix: DESK-}    # "RATES TRADING-LON" or "DESK-RATES-TRADING-LON": the id the PVs carry
+  NAME:          {from: NAME}
+  HEAD:          {from: HEAD}                                  # optional
+  LEGAL_ENTITY:  {from: LEGAL_ENTITY, slug: true, prefix: LE-}
+  ASSET_CLASSES: {from: ASSET_CLASSES, split: "|"}             # optional: Rates|FX
+
+refuse-columns:
+  MTM: "a roll-up of the desk's trade valuations"
+  BOOKS: "the books name their desk; the desk's list of books is derived"
+  POSITIONS: "the desk's positions are derived from the trades and the scenario-PV rows"

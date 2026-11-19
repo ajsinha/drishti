@@ -1,0 +1,13 @@
+BOOK_ID,NAME,DESK,ACCOUNTING_TREATMENT,REGULATORY_BOOK,VOLCKER
+PORT_100000,Rates Trading-Lon book 1,RATES TRADING-LON,Fair value (FVTPL),Trading book,Market making
+PORT_100001,Rates Trading-Lon book 2,RATES TRADING-LON,Fair value (FVTPL),Trading book,Market making
+PORT_100002,Fx Options-Zrh book 1,FX OPTIONS-ZRH,Fair value (FVTPL),Trading book,Market making
+PORT_100003,Fx Options-Zrh book 2,FX OPTIONS-ZRH,Fair value (FVTPL),Trading book,Market making
+PORT_100004,Vol Positioning-Crchi-Tor book 1,VOL POSITIONING-CRCHI-TOR,Fair value (FVTPL),Trading book,Market making
+PORT_100005,Vol Positioning-Crchi-Tor book 2,VOL POSITIONING-CRCHI-TOR,Fair value (FVTPL),Trading book,Market making
+PORT_100006,Equity Swaps-Nyc book 1,EQUITY SWAPS-NYC,Fair value (FVTPL),Trading book,Market making
+PORT_100007,Equity Swaps-Nyc book 2,EQUITY SWAPS-NYC,Fair value (FVTPL),Trading book,Market making
+PORT_100008,Credit Flow-Hkg book 1,CREDIT FLOW-HKG,Fair value (FVTPL),Trading book,Market making
+PORT_100009,Credit Flow-Hkg book 2,CREDIT FLOW-HKG,Fair value (FVTPL),Trading book,Market making
+PORT_100010,Global Commodities-Sgp book 1,GLOBAL COMMODITIES-SGP,Fair value (FVTPL),Trading book,Market making
+PORT_100011,Global Commodities-Sgp book 2,GLOBAL COMMODITIES-SGP,Fair value (FVTPL),Trading book,Market making

@@ -141,18 +141,18 @@ def add_arguments(group, shared: bool = True) -> None:
         group.add_argument("--settings", help="with --load: the settings file drishti.py takes (--settings FILE)")
 
 
-def deliver(a, files: list) -> dict | None:
+def deliver(a, files: list, order: list[str] | tuple[str, ...] = DEFAULT_ORDER) -> dict | None:
     """The hook the run asked for (--inbox or --load); without either, the lines to do it by hand are logged. With --load the result
     carries lake build's exit code (EXIT)."""
     if getattr(a, "inbox", None) and getattr(a, "load", False):
         raise PvfError("--inbox and --load are two ways to the same end: give one")
     files = [Path(f) for f in files]
     if a.inbox:
-        return {"FOLDER": str(a.inbox), "DELIVERED": to_inbox(files, a.inbox)}
+        return {"FOLDER": str(a.inbox), "DELIVERED": to_inbox(files, a.inbox, order)}
     if a.load:
-        rc = load(files, a.lake, settings=getattr(a, "settings", None), server=getattr(a, "server", None),
+        rc = load(files, a.lake, order, settings=getattr(a, "settings", None), server=getattr(a, "server", None),
                   token_file=getattr(a, "token_file", None), plan=a.plan)
         return {"LAKE": a.lake, "EXIT": rc}
-    for line in hand_by_hand(files, getattr(a, "lake", None), DEFAULT_INBOX):
+    for line in hand_by_hand(files, getattr(a, "lake", None), DEFAULT_INBOX, order):
         log.info("to load: %s", line)
     return None

@@ -136,7 +136,7 @@ def test_var_limit_sample_gives_its_expected_records(tmp_path):
     assert got == (SAMPLES / "var-limit.expected.jsonl").read_text()
     gz = folder / f"var-limit.{D}.jsonl.gz"
     assert gzip.open(gz, "rt").read() == got
-    assert read_marker(Path(f"{gz}.ready")) == {"pack": "market-risk", "kind": "var-limit", "mode": "replace", "rows": 4, "sha256": sha256_of(gz)}
+    assert read_marker(Path(f"{gz}.ready")) == {"pack": "market-risk", "kind": "var-limit", "mode": "replace", "rows": len(got.splitlines()), "sha256": sha256_of(gz)}
     assert (folder / f"mr-{D}.sha256").read_text() == f"{sha256_of(gz)}  {gz.name}\n"
     first = gz.read_bytes()
     assert _run(tmp_path, "var-limit", (SAMPLES / "var-limit.csv").read_text())[0] == 0 and gz.read_bytes() == first   # the same bytes

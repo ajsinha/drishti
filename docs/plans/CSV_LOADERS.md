@@ -15,11 +15,11 @@
 -->
 # CSV loaders for the market-risk datasets: design (2026-11-18)
 
-**Design only: no code is written by this document.** The owner's request: scripts like `tools/pvf` to populate "portfolio, position,
+**Design only: no code is written by this document.** The owner's request: scripts like the PVF ones (then tools/pvf) to populate "portfolio, position,
 counterparty, netting set, limits, sensitivities: each dataset for market risk"; the input is always CSV; each dataset needs a document;
 the scripts run every day so that VaR and exposure are accurate.
 
-`tools/pvf` is being renamed `tools/mrloader` (market-risk loader). Every path below uses the new name; the PVF scripts keep their
+The former tools/pvf folder is being renamed `tools/mrloader` (market-risk loader). Every path below uses the new name; the PVF scripts keep their
 `pvf_` file names inside it, because PVF is one source format among others.
 
 ## Contents
@@ -70,7 +70,7 @@ the scripts run every day so that VaR and exposure are accurate.
 
 ## 2. What exists today, and what it already settles
 
-`tools/pvf` (to become `tools/mrloader`) turns three PVF CSV files into scenario-PV records. Its parts, and what the generic loader
+The former tools/pvf (now `tools/mrloader`) turns three PVF CSV files into scenario-PV records. Its parts, and what the generic loader
 takes from each unchanged:
 
 | Part | What it does | Reused as |
@@ -1093,7 +1093,7 @@ Sizes: **S** up to about 150 lines with tests, **M** about 150 to 500, **L** mor
 |---|---|---|---|
 | 0 | **Confirmations, no code:** how the reference connectors answer a date with no delivery of a master; which lake each kind's table is in on the owner's stack; the order in which one inbox run loads the tables of its batch; the shapes of the owner's real CSVs for limits, sensitivities and counterparties (their headers only) | S | the owner's files |
 | 1 | **Contract review** of the sixteen kinds ([section 5](#5-the-contracts-are-not-ready-for-a-banks-data)): presence, enumerations, links; the demo data still passes; contract pages regenerated | M | decision 2 |
-| 2 | **The rename and the split:** `tools/pvf` to `tools/mrloader`; `package.py` and `hooks.py` out of the PVF scripts, writing `<kind>.<date>.jsonl`, `.jsonl.gz` and `.ready` ([section 6.6](#66-what-the-pvf-scripts-should-change)) with `--inbox` and `--load`; `contract.py` general (any kind by name, every type, nested records, `derived` refused); PVF's tests follow the new layout | M | the rename landing |
+| 2 | **The rename and the split:** tools/pvf to `tools/mrloader`; `package.py` and `hooks.py` out of the PVF scripts, writing `<kind>.<date>.jsonl`, `.jsonl.gz` and `.ready` ([section 6.6](#66-what-the-pvf-scripts-should-change)) with `--inbox` and `--load`; `contract.py` general (any kind by name, every type, nested records, `derived` refused); PVF's tests follow the new layout | M | the rename landing |
 | 3 | **The generic loader:** `csvread.py`; the mapping additions (inputs, nested fields, lists, fragments, `after`, `on-reject`, `checks`); `csv_load.py`; the reject report and summary; `validate.py` | L (about 1,200 lines with tests) | 2 |
 | 4 | **Wave 1, flat kinds:** `var-limit`, `desk-pnl`, `legal-entity`, `desk`, `book` (+ `book.pvf`), `risk-factor`; `scenario-set` and `fx-scenario` moved onto mapping files from the parallel builder's scripts; `scenario-pv.pvf.yaml` including `shared/ids.pvf` | M (eight mapping files, samples) | 1, 3 |
 | 5 | **Pages and samples:** `kind_docs.py`, `mr_gen.py`, the committed sample day, the guards | M | 4 |
@@ -1179,5 +1179,5 @@ end, and prove the design before sixteen mapping files depend on it.
 | 9 | Exposure paths from CSV | **Wait for the extract's shape.** It is the largest table and needs a join of its own, like PVF's; ask the owner for the header and a sample of the simulator's file |
 | 10 | Trades from CSV, and the source modules' own `map:` grammar | **Trades stay with the source-system modules**; CSV trades only on request, through the same loader with the mapping kept in the source module. Do not merge the two grammars now |
 | 11 | Where a site's own mapping and day files live | the shipped canonical files in `tools/mrloader/kinds/`; a bank's own given by explicit path (`--mapping`, `--day`), kept with the site's settings, never in a hidden or implied place |
-| 12 | Where the pages live | **`tools/mrloader/docs/`**, generated, with one Help page and the guides linking to them. The alternative, `docs/guides/csv/`, puts them with the other guides but away from the mapping files they are generated from |
+| 12 | Where the pages live | **`tools/mrloader/docs/`**, generated, with one Help page and the guides linking to them. The alternative, a docs/guides/csv folder, puts them with the other guides but away from the mapping files they are generated from |
 | 13 | Masters every day or on change | **Every day, full snapshot**, as the contracts' grain says; `risk-factor` on change. Revisit after step 0 |

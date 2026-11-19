@@ -1,0 +1,7 @@
+DESK_ID,NAME,HEAD,LEGAL_ENTITY,ASSET_CLASSES
+RATES TRADING-LON,Rates Trading London,A. Moreau,GMO_SPOG,Rates
+FX OPTIONS-ZRH,FX Options Zurich,B. Keller,GMO_SPOG,FX
+VOL POSITIONING-CRCHI-TOR,Volatility Positioning Toronto,C. Tremblay,CDADMM_H4705,Equity|FX
+EQUITY SWAPS-NYC,Equity Swaps New York,D. Okafor,GLOBAL_EQ_FIN,Equity
+CREDIT FLOW-HKG,Credit Flow Hong Kong,E. Lam,MARKETS_INC,Credit
+GLOBAL COMMODITIES-SGP,Global Commodities Singapore,F. Tan,MARKETS_INC,Commodities

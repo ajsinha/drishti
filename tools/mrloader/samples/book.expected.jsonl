@@ -1,0 +1,12 @@
+{"BOOK_ID":"BOOK-PORT-100000","NAME":"Rates Trading-Lon book 1","DESK":"DESK-RATES-TRADING-LON","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100001","NAME":"Rates Trading-Lon book 2","DESK":"DESK-RATES-TRADING-LON","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100002","NAME":"Fx Options-Zrh book 1","DESK":"DESK-FX-OPTIONS-ZRH","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100003","NAME":"Fx Options-Zrh book 2","DESK":"DESK-FX-OPTIONS-ZRH","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100004","NAME":"Vol Positioning-Crchi-Tor book 1","DESK":"DESK-VOL-POSITIONING-CRCHI-TOR","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100005","NAME":"Vol Positioning-Crchi-Tor book 2","DESK":"DESK-VOL-POSITIONING-CRCHI-TOR","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100006","NAME":"Equity Swaps-Nyc book 1","DESK":"DESK-EQUITY-SWAPS-NYC","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100007","NAME":"Equity Swaps-Nyc book 2","DESK":"DESK-EQUITY-SWAPS-NYC","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100008","NAME":"Credit Flow-Hkg book 1","DESK":"DESK-CREDIT-FLOW-HKG","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100009","NAME":"Credit Flow-Hkg book 2","DESK":"DESK-CREDIT-FLOW-HKG","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100010","NAME":"Global Commodities-Sgp book 1","DESK":"DESK-GLOBAL-COMMODITIES-SGP","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
+{"BOOK_ID":"BOOK-PORT-100011","NAME":"Global Commodities-Sgp book 2","DESK":"DESK-GLOBAL-COMMODITIES-SGP","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}

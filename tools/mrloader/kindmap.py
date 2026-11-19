@@ -92,7 +92,7 @@ class KindMapping(Mapping):
         self.checks = dict(doc.get("checks") or {})
         inputs = dict(doc.get("inputs") or {})
         self.main = dict(inputs.get("main") or {})
-        self.children = {str(k): dict(v) for k, v in (inputs.get("children") or {}).items()}
+        self.children = {str(k): _on(dict(v)) for k, v in (inputs.get("children") or {}).items()}
         self.sources = {}
         self._check()
 
@@ -170,7 +170,8 @@ class KindMapping(Mapping):
     def columns_needed(self, child: str | None = None) -> list[str]:
         """The columns the main file (or the child file ``child``) must have: those the mapping's ``inputs`` list as required."""
         spec = self.children[child] if child else self.main
-        return [R.column_name(c) for c in spec.get("required") or []]
+        rename = {R.column_name(k): R.column_name(v) for k, v in (spec.get("rename") or {}).items()}
+        return [rename.get(R.column_name(c), R.column_name(c)) for c in spec.get("required") or []]
 
     def columns_read(self, child: str | None = None) -> set[str]:
         """Every column a rule of the main file (or of the child ``child``) names."""
@@ -289,6 +290,13 @@ class KindMapping(Mapping):
         if t == "id":
             return R.ident(s, col, name)
         return s
+
+
+def _on(spec: dict) -> dict:
+    """A child's spec with its ``on:`` key as written (YAML 1.1 reads a bare ``on`` as true)."""
+    if True in spec:
+        spec["on"] = spec.pop(True)
+    return spec
 
 
 def nest(flat: dict) -> dict:

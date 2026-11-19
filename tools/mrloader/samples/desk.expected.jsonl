@@ -1,0 +1,6 @@
+{"DESK_ID":"DESK-CREDIT-FLOW-HKG","NAME":"Credit Flow Hong Kong","HEAD":"E. Lam","LEGAL_ENTITY":"LE-MARKETS-INC","ASSET_CLASSES":["Credit"]}
+{"DESK_ID":"DESK-EQUITY-SWAPS-NYC","NAME":"Equity Swaps New York","HEAD":"D. Okafor","LEGAL_ENTITY":"LE-GLOBAL-EQ-FIN","ASSET_CLASSES":["Equity"]}
+{"DESK_ID":"DESK-FX-OPTIONS-ZRH","NAME":"FX Options Zurich","HEAD":"B. Keller","LEGAL_ENTITY":"LE-GMO-SPOG","ASSET_CLASSES":["FX"]}
+{"DESK_ID":"DESK-GLOBAL-COMMODITIES-SGP","NAME":"Global Commodities Singapore","HEAD":"F. Tan","LEGAL_ENTITY":"LE-MARKETS-INC","ASSET_CLASSES":["Commodities"]}
+{"DESK_ID":"DESK-RATES-TRADING-LON","NAME":"Rates Trading London","HEAD":"A. Moreau","LEGAL_ENTITY":"LE-GMO-SPOG","ASSET_CLASSES":["Rates"]}
+{"DESK_ID":"DESK-VOL-POSITIONING-CRCHI-TOR","NAME":"Volatility Positioning Toronto","HEAD":"C. Tremblay","LEGAL_ENTITY":"LE-CDADMM-H4705","ASSET_CLASSES":["Equity","FX"]}

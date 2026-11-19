@@ -19,7 +19,7 @@
 
 `tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
 them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
-generated page (`docs/<kind>.md`); the day's runbook is `docs/DAILY_RUNBOOK.md`.
+generated page (`tools/mrloader/docs/<kind>.md`); the day's runbook is `tools/mrloader/docs/DAILY_RUNBOOK.md`.
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
@@ -28,7 +28,19 @@ python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_202
 python3 tools/mrloader/csv_load.py --kind var-limit --template                                                          # the CSV's header and an example row
 python3 tools/mrloader/csv_load.py --kinds                                                                              # every kind with a mapping
 python3 tools/mrloader/validate.py data/mr/mr-2026-10-29                                                                # any kind's files against its contract
+python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox       # the whole day, in order
 ```
+
+| Script | Does |
+|---|---|
+| `tools/mrloader/csv_load.py` | **one kind**: its CSV (and child files) to checked records; `--inbox`, `--load` |
+| `tools/mrloader/mr_run.py` | **one day**: every kind of the day's folder (a day file says which file is which), in dependency order (the scenario PVs through `pvf_run.py`), checked against each other (`links.py`), then handed over or loaded in that order; `--delete-plan` |
+| `tools/mrloader/validate.py` | any kind's files against its contract |
+| `tools/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind, `docs/<kind>.md`, and the index `docs/README.md` |
+| `tools/mrloader/mr_gen.py` | a seeded synthetic day of every kind's CSV (the committed samples; `--with-pvf` adds the day's PVF extract) |
+
+The kinds shipped: wave 1 (`legal-entity`, `desk`, `book` and `book.pvf`, `risk-factor`, `var-limit`, `desk-pnl`,
+`position-sensitivity`; the scenario PVs, set and FX through the PVF scripts below). The pages: `tools/mrloader/docs/README.md`.
 
 It writes `<kind>.<date>.jsonl`, `<kind>.<date>.jsonl.gz` and its `.ready`, `<kind>.<date>.rejects.csv` and `<kind>.<date>.summary.json`
 under `<out>/mr-<date>/`. **The file's format is declared, never guessed**: the delimiter, encoding, decimal and thousands separators, the

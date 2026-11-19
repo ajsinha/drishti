@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The sample day (tools/mrloader/samples, written by mr_gen.py): which file feeds which kind. A site's own day file names its own
+# extracts and lives with its settings, given by explicit path (--day FILE). {YYYYMMDD} and {YYYY-MM-DD} are the run's --date.
+format: 1
+kinds:
+  legal-entity:         {csv: "legal-entity.csv"}
+  desk:                 {csv: "desk.csv"}
+  book:                 {csv: "book.csv"}
+  risk-factor:          {csv: "risk-factor.csv", optional: true}          # on change: absent on most days
+  scenario-pv:          {run: pvf, pv: "pvf_path_{YYYYMMDD}.csv", positions: "pos_{YYYYMMDD}.csv", portfolio: "portfolio_d2.csv", optional: true}
+  var-limit:            {csv: "var-limit.csv"}
+  desk-pnl:             {csv: "desk-pnl.csv"}
+  position-sensitivity: {csv: "position-sensitivity.csv", child: {SENSITIVITIES: "position-sensitivity.SENSITIVITIES.csv"}, source-system: SYNTHETIC-RISK}
+required: [var-limit]

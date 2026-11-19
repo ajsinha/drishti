@@ -1,0 +1,45 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The desks' daily P&L for backtesting (docs/plans/CSV_LOADERS.md section 3.1): finance's clean actual P&L and front office's
+# hypothetical P&L, per desk and legal entity, in USD. Without it there is no backtest.
+format: 1
+kind: desk-pnl
+source: canonical
+about: "Each desk's actual (clean) and hypothetical P&L of the day, in USD, for the VaR backtest: one row per desk and legal entity."
+after: [desk]
+on-reject: refuse                        # a desk missing on a date is named by the backtest: fix the file and run again
+
+run:
+  computed_at: "{$main_file_modified}"   # AS_OF when the file has none: its last-modified time, UTC (--computed-at to give it)
+
+inputs:
+  main: {option: --csv, required: [DESK_ID, ACTUAL_PNL, HYPOTHETICAL_PNL, SOURCE]}
+
+fields:
+  DESK_ID:              {from: DESK_ID, slug: true, prefix: DESK-}
+  LEGAL_ENTITY:         {from: LEGAL_ENTITY, slug: true, prefix: LE-}
+  DESK_PNL_ID:          {template: "DPNL-{@DESK_ID}-{$business_date}"}
+  BUSINESS_DATE:        {template: "{$business_date}", type: date}
+  ACTUAL_PNL:           {from: ACTUAL_PNL, type: amount}        # signed: a loss is negative; never zero for a missing value
+  HYPOTHETICAL_PNL:     {from: HYPOTHETICAL_PNL, type: amount}
+  FEES_AND_COMMISSIONS: {from: FEES_AND_COMMISSIONS, type: amount}
+  CURRENCY:             {from: CURRENCY, upper: true, default: USD}
+  SOURCE:               {from: SOURCE}
+  AS_OF:                {from: AS_OF, type: timestamp, default: "{$computed_at}"}
+
+checks:
+  unique: [DESK_PNL_ID]
+  links:
+    DESK_ID: {to: desk, policy: warn}                          # a desk the desk master does not have: its P&L sums into no node
