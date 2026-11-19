@@ -40,9 +40,9 @@ import settingsfile  # noqa: E402
 import javacmd  # noqa: E402
 
 TABLE = HERE / "launchers.yaml"
-GUIDE = Path("docs") / "guides" / "IDE_GUIDE.md"
+GUIDE = "docs/guides/IDE_GUIDE.md"   # under the install folder (home / GUIDE)
 BEGIN, END = "<!-- generated: launchers begin (python tools/drishti.py launchers) -->", "<!-- generated: launchers end -->"
-FOLDERS = {"intellij": Path("run-configs"), "pycharm": Path("drishti-console") / "run-configs"}
+FOLDERS = {"intellij": "run-configs", "pycharm": "drishti-console/run-configs"}   # under the install folder
 DEV_INI = "$USER_HOME$/drishti-envs/dev.ini"
 ENVS = "$USER_HOME$/drishti-envs"
 JAR = "$PROJECT_DIR$/lib/drishti-server-exec.jar"
@@ -201,7 +201,7 @@ def expected(home: Path) -> dict:
     out = {p: deploy_args(heap, why) for p, (why, heap) in DEPLOY.items()}
     for ide, folder in FOLDERS.items():
         for row in doc.get(ide) or []:
-            out[str(folder / f"{row['name']}.run.xml")] = render(home, ide, row)
+            out[f"{folder}/{row['name']}.run.xml"] = render(home, ide, row)
     text = (home / GUIDE).read_text(encoding="utf-8")
     if BEGIN not in text or END not in text:
         raise LauncherError(f"{GUIDE}: the markers of the generated section 4 are missing ({BEGIN} ... {END})")
@@ -217,8 +217,8 @@ def check(home: Path) -> list[str]:
                 for p, text in want.items() if not (home / p).is_file() or (home / p).read_text(encoding="utf-8") != text]
     for folder in FOLDERS.values():
         for f in sorted((home / folder).glob("*.run.xml")):
-            if str(folder / f.name) not in want:
-                problems.append(f"{folder / f.name}: a launcher the table does not name (add a row to tools/launch/launchers.yaml, or delete it)")
+            if f"{folder}/{f.name}" not in want:
+                problems.append(f"{folder}/{f.name}: a launcher the table does not name (add a row to tools/launch/launchers.yaml, or delete it)")
     return problems
 
 
@@ -234,9 +234,9 @@ def write(home: Path) -> list[str]:
             changed.append(p)
     for folder in FOLDERS.values():
         for f in sorted((home / folder).glob("*.run.xml")):
-            if str(folder / f.name) not in want:
+            if f"{folder}/{f.name}" not in want:
                 f.unlink()
-                changed.append(f"{folder / f.name} (removed)")
+                changed.append(f"{folder}/{f.name} (removed)")
     return changed
 
 
@@ -278,7 +278,8 @@ def argv(xml: Path, home: Path, user_home: Path) -> tuple[list[str], dict]:
     def expand(s: str) -> str:
         return (s or "").replace("$PROJECT_DIR$", project.as_posix()).replace("$USER_HOME$", user_home.as_posix())
     if conf.get("type") == "JarApplication":
-        return ["java", *shlex.split(expand(o.get("VM_PARAMETERS"))), "-jar", expand(o["JAR_PATH"]), *shlex.split(expand(o.get("PROGRAM_PARAMETERS")))], env
+        # the IDE's own java is the first word (a description of the line, never run from here)
+        return ["java"] + [*shlex.split(expand(o.get("VM_PARAMETERS"))), "-jar", expand(o["JAR_PATH"]), *shlex.split(expand(o.get("PROGRAM_PARAMETERS")))], env
     if conf.get("type") == "PythonConfigurationType":
         return ["python", expand(o["SCRIPT_NAME"]), *shlex.split(expand(o.get("PARAMETERS")))], env
     raise LauncherError(f"{xml.name}: a {conf.get('type')} has no command line of its own")

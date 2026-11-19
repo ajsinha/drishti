@@ -45,6 +45,7 @@ ALLOWED: list[tuple[str, str, str]] = [
     ("tools/packgen/module_from_jsonl.py", "${drishti.data.dir:./data}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
     ("tools/packgen/banking/make_packs.py", "${drishti.data.dir:./data}", "text of a generated server setting; the server resolves drishti.data.dir"),
     ("tools/lake/stage.py", 'pathlib.Path("")', "a placeholder for a staged part with no folder; never opened"),
+    ("tools/storeload.py", "cwd = Path.cwd()", "a path the operator typed on drishti.py data load resolves from where it was typed"),
     ("tools/api_docs.py", 'APIDOCS = Path("target")', "a suffix joined onto each Maven module's folder, never opened from the working folder"),
     ("tools/drillkit/affected.py", './/m:module', "an XPath, not a path"),
     ("tools/docs/shots/t05.py", "text.replace(\"./docs/tutorials", "the old text in a stored connector file, replaced by the absolute folder"),

@@ -2678,7 +2678,7 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 [exit 1]
 ```
 
-### `setup`, `build jar`, `start`, `stop`, `status` and `launchers`: install, build, run and stop Drishti
+### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
 
 One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
 cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\drishti.py ...` (or `python`) and backslash paths. The

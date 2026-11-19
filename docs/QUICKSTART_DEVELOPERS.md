@@ -125,7 +125,7 @@ module: what the drill, the page walk and the tutorials use.
 `python tools/drishti.py status` shows each process's distribution; Admin → White label shows them all side by side. The
 setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
 
-**In the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-finance-or-all). Every step, Linux, macOS and Windows:
+**In the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-or-finance). Every step, Linux, macOS and Windows:
 [DEPLOYMENT_AND_QA_GUIDE.md › 7.7](DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## 4. The repository map

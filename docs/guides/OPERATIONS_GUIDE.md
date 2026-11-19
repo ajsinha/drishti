@@ -375,7 +375,7 @@ The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-ope
 
 ### 3.5 The QA profile, end to end (no terminal)
 
-The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md › The QA profile, end to end](IDE_GUIDE.md#39-the-qa-profile-end-to-end-no-terminal).
+The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md › The QA profile, end to end](IDE_GUIDE.md#39-the-qa-profile-end-to-end).
 
 ## 4. Drishti on Windows
 

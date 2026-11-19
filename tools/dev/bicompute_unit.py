@@ -120,7 +120,7 @@ def run(tests: list[str], server: bool = False, java: str | None = None, m2: Pat
     except (UnitError, javacmd.JavaError) as e:
         say(f"bicompute-unit: {e}", file=sys.stderr)
         return 1
-    compile_ = [javac, f"-J{HEAP}", "-nowarn", "-encoding", "UTF-8", "--release", "21"]
+    compile_ = [javac] + [f"-J{HEAP}", "-nowarn", "-encoding", "UTF-8", "--release", "21"]   # javac compiles; it unpacks no native library
     with tempfile.TemporaryDirectory(prefix="drishti-bicompute-unit.") as tmp:
         work = Path(tmp)
         main_out, test_out = work / "main", work / "test"

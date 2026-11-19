@@ -99,13 +99,13 @@ The seven `drishti …` launchers have no `folderName`, so PyCharm shows them ou
 | `drishti.py start all`, `stop …`, `status` | both, in the background; stop by pid file over HTTP | none | keep; F20 |
 | `drishti.py start\|stop cluster`, `status --cluster` | the cluster of `deploy/stack/stack.yaml` | see next row | keep |
 | `deploy/stack/stack.yaml` | three nodes and a console | a Linux `java:` path, 11 settings, 4 pack lists, a fixed business day, heaps, ports | change (F8, F11, F12, F25) |
-| `deploy/stack/secrets.env.example`, `README.md` | the secrets' names; the stack's guide | names `openssl`, `bin/stop-cluster.sh` | change (F28, F29) |
+| `deploy/stack/secrets.env.example`, `README.md` | the secrets' names; the stack's guide | names `openssl`, bin/stop-cluster.sh | change (F28, F29) |
 | `drishti.py doctor`, `lake check\|status\|maintain`, `dataload`, `feed` | checks and maintenance | none | keep; help text stale (F18) |
-| `bin/drishti-node.sh` | drain before a stop, in the images and the systemd unit | none | keep, as the one documented shell exception (D8) |
+| bin/drishti-node.sh | drain before a stop, in the images and the systemd unit | none | keep, as the one documented shell exception (D8) |
 | `deploy/systemd/drishti-server.service` | the service unit | its own JVM flag line (ZGC) | change: flags from the one source (F9) |
 | `deploy/docker/server.Dockerfile`, `ecs/server-entrypoint.sh` | the images | their own JVM flag lines | change (F9) |
 | `deploy/lake-maintenance.yaml` | nightly maintenance example | `root: ./data/delta/demo`, a bare relative path | change (F19) |
-| `tools/load-*.sh` (9), `tools/feeds/feed.sh`, `tools/pvgen/*.sh` (4), `tools/fetch-pyodide.sh` | loaders and wrappers, bash only | — | decision D8 (they cannot run on the Windows laptop) |
+| `tools/load-*.sh` (9), tools/feeds/feed.sh, `tools/pvgen/*.sh` (4), tools/fetch-pyodide.sh | loaders and wrappers, bash only | — | decision D8 (they cannot run on the Windows laptop) |
 | `deploy/aws/**/*.sh` (24) | AWS set-up and nightly jobs | — | out of this review's fix plan; D8 |
 
 ## 3. Findings
@@ -152,17 +152,17 @@ traceback (`resolved.Unbuilt`, no jar) instead of the one-line "build the jar fi
 ### 3.2 Duplicated or stale settings
 
 **F6 (B). Pack lists are written by hand in 11 places besides their home.** The seven: five server launchers (`Drishti server.run.xml:27`, `(All):27`,
-`(QA profile):27`, `(debug-friendly):27`, `(dev switch):27`), equal to `config/packs/default-packs.yaml:19-23`, so they change nothing
+`(QA profile):27`, `(debug-friendly):27`, `(dev switch):27`), equal to config/packs/default-packs.yaml:19-23, so they change nothing
 today and will hide a new default pack tomorrow. The ten: `Drishti server (demo lakes).run.xml:36`, `serverstart.py:36`,
 `stack.yaml:82` (the console). Other lists: `stack.yaml:56` (twelve), `:64`, `:73`. The words "seven" and "ten" are also in
-`launchcli.py:68`, `tools/lake/cli.py:22,145`, IDE_GUIDE.md:247,358-363 and CLUSTER_GUIDE.md:460 (which says `drishti-main` serves
+`launchcli.py:68`, tools/lake/cli.py:22,145, IDE_GUIDE.md:247,358-363 and CLUSTER_GUIDE.md:460 (which says `drishti-main` serves
 "the seven default packs"; `stack.yaml:56` gives it twelve).
 *Fix:* decision D1. No launcher or tool holds a pack list; the demo profile is the one place the demo's set is named.
 
 **F7 (B). Values that only repeat the product default.** `DRISHTI_PORT=18480` (default at `application.yaml:104`),
 `DRISHTI_SEED_ADMIN=true`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` (defaults at `:1038-1043`) in all eight server launchers;
-`--server.port=17480 --backend.url=http://127.0.0.1:18480` in the consoles (defaults at `drishti-console/config/application.yaml:20,27`)
-and once more in `dev.ini` (`config/settings.examples/dev.ini:38-39`); `--server http://localhost:18480` in three tool launchers (the
+`--server.port=17480 --backend.url=http://127.0.0.1:18480` in the consoles (defaults at drishti-console/config/application.yaml:20,27)
+and once more in `dev.ini` (config/settings.examples/dev.ini:38-39); `--server http://localhost:18480` in three tool launchers (the
 tools' default). About 45 lines that say nothing and must be kept right.
 *Fix:* removed by rule 1.
 
@@ -240,7 +240,7 @@ things. They do not:
 | Console's server address | this machine's LAN address; loopback warned (`consolestart.py:98-108`) | `127.0.0.1` |
 
 **F20 (B). A server or console started from an IDE is invisible to `drishti.py status` and `stop`.** `status` prints "(no Drishti
-process started with drishti.py start in this data folder)" (`launchcli.py:202`) while the server runs, and `start server` then fails
+process started with drishti.py start, in this data folder)" (`launchcli.py:202`) while the server runs, and `start server` then fails
 only on "port in use".
 *Fix:* `status` also asks the profile's ports and shows "running (started elsewhere)"; small.
 
@@ -270,7 +270,7 @@ log.
 copy the jar for the IDE: the debugger needs the jar the sources were built into.
 
 **F26 (C). Bash-only operator scripts are still documented as the way.** `tools/load-*.sh` (CLI_REFERENCE.md:3922-3930, with a Windows
-note only for Delta), `tools/fetch-pyodide.sh` (CONFIGURATION.md:2964, CLI_REFERENCE.md:4020), `tools/feeds/feed.sh`,
+note only for Delta), tools/fetch-pyodide.sh (CONFIGURATION.md:2964, CLI_REFERENCE.md:4020), tools/feeds/feed.sh,
 `tools/pvgen/*.sh`. `test_launch.py:390` guards `bin/` only. Decision D8.
 
 ### 3.5 Docs
@@ -278,7 +278,7 @@ note only for Delta), `tools/fetch-pyodide.sh` (CONFIGURATION.md:2964, CLI_REFER
 **F27. IDE_GUIDE.md section 4 is a hand copy of the 29 files** (lines 345-410) and repeats their values (heap sizes, pack counts,
 ports, parameters). Generated from the launcher table it cannot drift.
 
-**F28. Retired scripts are still named.** `deploy/stack/README.md:131` (`bin/stop-cluster.sh`, `bin/start-cluster.sh`),
+**F28. Retired scripts are still named.** `deploy/stack/README.md:131` (bin/stop-cluster.sh, `bin/start-cluster.sh`),
 CLUSTER_GUIDE.md:465 and :468 (`start.sh`), IDE_GUIDE.md:417 (`drishti-stack/`).
 
 **F29. The secrets are said to be made with `openssl`** (`deploy/stack/README.md:113`, `secrets.env.example:16`); the code uses Python
@@ -405,5 +405,5 @@ quick-start (build, lakes, server, console, sign-in) from both IDEs' launchers a
 | D5 | The dev switch | Remove launcher and option now; remove the Java switch in the security release |
 | D6 | Development secrets: literals in git (today, 14 files) or random per machine | Random, written once by `setup` into `~/drishti-envs/dev-secrets.ini`, as the cluster does. The dev administrator's name and password stay the product default |
 | D7 | Should an IDE-started server show in `drishti.py status`, and should `build` refuse while a server holds the jar? | Yes to both (step 6) |
-| D8 | Bash-only scripts: `tools/load-*.sh`, `feed.sh`, `pvgen/*.sh`, `fetch-pyodide.sh`, `deploy/aws/**/*.sh` | Move the `tools/` ones behind `drishti.py` (they are thin wrappers already) and delete the `.sh`; AWS scripts in the AWS release; `bin/drishti-node.sh` stays as the one written exception (it runs inside images with no Python), with `drishti.py node drain|undrain|status` for Windows |
+| D8 | Bash-only scripts: `tools/load-*.sh`, `feed.sh`, `pvgen/*.sh`, `fetch-pyodide.sh`, `deploy/aws/**/*.sh` | Move the `tools/` ones behind `drishti.py` (they are thin wrappers already) and delete the `.sh`; AWS scripts in the AWS release; bin/drishti-node.sh stays as the one written exception (it runs inside images with no Python), with `drishti.py node drain|undrain|status` for Windows |
 | D9 | `lake relocate` and `lake migrate-config` (one-time moves from older layouts) | Retire both after one more release; until then under their own help heading |

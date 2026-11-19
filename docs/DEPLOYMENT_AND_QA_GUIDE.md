@@ -1009,7 +1009,7 @@ path to a site's own file (`DRISHTI_DISTRIBUTION=/etc/drishti/acme.yaml`; Window
 setting `drishti.distribution` (`--drishti.distribution=finance` as a server argument); on the console the setting `distribution`
 (`--distribution=finance` as a console argument). A console given its own keeps it whatever the server runs.
 
-**From the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-finance-or-all) (**Two consoles against one server**, Risk on 17480 and Finance on 17481).
+**From the IDEs:** [IDE_GUIDE.md › A distribution](guides/IDE_GUIDE.md#34-a-distribution-risk-or-finance) (**Two consoles against one server**, Risk on 17480 and Finance on 17481).
 **You should see** Drishti Risk at `http://localhost:17480` and
 Drishti Finance at `http://127.0.0.1:17481`, each with its own top bar, theme and Help. Open the second by another host name (or in
 another browser profile): browsers share sign-in cookies across the ports of one host.
@@ -1788,7 +1788,7 @@ antivirus scanning `data`).
 
 The business date comes from the file name; the pack's schema checks each trade; `--mode overwrite-dates` makes a repeat safe. The last
 line reads `lake-build ok exit=0 … kind=trade … rows=500 rejected=0 dates=1 …`; a non-zero `rejected` is explained, with the line, above
-it. Use full paths: a relative path is taken from the folder the command runs in. From the IDE: [IDE_GUIDE.md](guides/IDE_GUIDE.md#43-build-intellij-and-data-tools-pycharm). With the
+it. Use full paths: a relative path is taken from the folder the command runs in. From the IDE: [IDE_GUIDE.md](guides/IDE_GUIDE.md#43-build-intellij-and-tools-pycharm). With the
 Java loader (every core, bounded memory) add `--engine java`
 ([CLI_REFERENCE.md › The parallel lake loader](guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)).
 

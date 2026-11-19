@@ -104,7 +104,7 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
     monkeypatch.setattr(javacmd, "find_java", lambda *a, **k: "java")
     monkeypatch.setattr(javacmd, "locate_java", lambda *a, **k: ("java", "test"))
     monkeypatch.setattr(javacmd, "java_version", lambda j: 21)
-    monkeypatch.setattr(javacmd, "java_cmd", lambda java, args, **k: [java, *args])
+    monkeypatch.setattr(javacmd, "java_cmd", lambda java, args, **k: [java] + list(args))
     monkeypatch.setattr(serverstart, "find_jar", lambda given, home: ROOT / "lib" / "drishti-server-exec.jar")
     monkeypatch.setattr(serverstart, "check_modules", lambda a, m, j: "modules: test")
     monkeypatch.setattr(procs, "port_in_use", lambda p: False)
