@@ -15,6 +15,10 @@
 -->
 # Plan: release i7b (eventing, role Homes, K5) with Rachana R0 alongside
 
+**Scope change proposed, 2026-11-19:** the owner has directed that i7b become the two products (Elements, Rachana) and Drishti's
+migration onto them; see [I7B_PRODUCTS_PLAN.md](I7B_PRODUCTS_PLAN.md). Until its decisions are taken this document stands; after,
+its eventing sections (3.1, 4.2, 4.3) serve the new i7b and its role Homes, K5 and carry-over sections serve i8.
+
 **Owner decision, 2026-11-17: all 21 recommendations in section 7 are accepted** (decision 7 on the basis that no page outside this machine pins `render/1.2.0`, `render/2.4.0` or `/embed/v1/channel`).
 
 **Status: analysis and plan, written 2026-11-17 22:00. Nothing built, nothing run** (i7a was being released on this machine).
