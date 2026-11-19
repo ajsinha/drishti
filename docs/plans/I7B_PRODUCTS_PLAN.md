@@ -476,3 +476,16 @@ compatibility gate is fixed in code, never by re-recording.
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
 Proprietary and confidential. Unauthorised copying, use or distribution is prohibited.*
+
+## Owner's decisions (2026-11-19)
+
+| # | Decision |
+|---|---|
+| PD1 | **Accepted, with ONE drill only**: the final drill before the `v2.9.11.i_7b` tag. M1 and M7's intermediate steps are proven by the pre-merge gate, the evidence tooling and targeted suites, never by a full drill; no intermediate Drishti tags `i_7b1` / `i_7b2` (PD2 amended accordingly). |
+| PD3 | Explained to the owner; pending his answer (default: the checkpoints happen as status reports, the work continues unless he trims scope). |
+| PD6 | **Accepted**: XD1–XD22 and Q1–Q15 as recommended, on one shared level numbering 1.1 to 1.4. |
+| PD8 | **Changed**: the compatibility corpus MAY stay in the public `drishti-rachana` repository (synthetic demo data only, code-free), under `compat/customers/drishti/`. |
+| PD13 | Explained to the owner; pending his answer. |
+| PD15 | **Accepted**: the owner supplies model access and a spending cap by M3; outside review and screen-reader pass after M6, not blocking. |
+| PD21 | **Accepted**: M0 starts now. |
+| others | Proceed as recommended unless the owner objects. |
