@@ -489,3 +489,5 @@ Proprietary and confidential. Unauthorised copying, use or distribution is prohi
 | PD15 | **Accepted**: the owner supplies model access and a spending cap by M3; outside review and screen-reader pass after M6, not blocking. |
 | PD21 | **Accepted**: M0 starts now. |
 | others | Proceed as recommended unless the owner objects. |
+
+**Libraries (2026-11-19):** the catalogue sizes them at about 254 bd (the plan held 60), so i7b plans on about 1,700 bd. Owner: every library proprietary (L-11), all seven in a private companion repository (L-12), C1 + X42 pulled to directly after the split (L-19), each library 1.0 at its baseline wave (L-20). See drishti-rachana docs/design/DECISIONS.md.
