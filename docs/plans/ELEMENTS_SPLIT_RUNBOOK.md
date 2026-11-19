@@ -167,7 +167,7 @@ comm -12 $WORK/move-paths.txt $WORK/stay-paths.txt | wc -l
 ```
 
 **Expected.** `move-paths.txt` holds roughly 600 to 700 paths (about 285 sources, docs and tools, about 280 vendor files, about 25
-Node tests, about 20 Python tests); the vendor folders listed are `echarts` and `codemirror` (and `echarts-gl` if a chart kind now
+Node tests, about 20 Python tests); the vendor folders listed are `echarts`, `codemirror` and `apache-arrow` (drishti-data's Arrow client; owner 2026-11-16) and `echarts-gl` (once the 3D trace is in the chart: it is, after the showcase merge) (and `echarts-gl` if a chart kind now
 names it), plus the one file `VENDOR.md`; the last command prints `0`.
 
 **What moves, what stays, what is in both for a while**
@@ -182,7 +182,7 @@ names it), plus the one file `VENDOR.md`; the last command prints `0`.
 
 **STOP and ask the owner** (Stop A): send the numbers of 1c, the vendor folder list and choices R1 to R9. Go on only when the
 owner confirms R1 (which libraries move) and R3 (the home of the two tables). **STOP and ask the lead** if a vendor folder other than
-`echarts`, `echarts-gl` or `codemirror` is listed, or if the last command does not print `0`.
+`echarts`, `echarts-gl`, `codemirror` or `apache-arrow` is listed, or if the last command does not print `0`.
 
 ---
 
@@ -727,11 +727,11 @@ folders, or when `drishti-elements.json` inside says another version.
 
 ```bash
 grep -vE "/vendor/|world-regions.yaml|formats.yaml|^LICENSE$|^config/|tools/license_headers.py" $WORK/move-paths.txt | xargs git rm -q --ignore-unmatch
-git rm -rq --ignore-unmatch packaging/drishti-elements $S/vendor/echarts $S/vendor/echarts-gl $S/vendor/codemirror docs/architecture/ELEMENTS.md
+git rm -rq --ignore-unmatch packaging/drishti-elements $S/vendor/echarts $S/vendor/echarts-gl $S/vendor/apache-arrow $S/vendor/codemirror docs/architecture/ELEMENTS.md
 git rm -q compute/drishti-rachana/src/main/resources/world-regions.yaml compute/drishti-rachana/src/main/resources/formats.yaml
 ```
 
-(`echarts-gl` is removed only if the inventory listed it; Drishti's `LICENSE`, header file, header tool and `VENDOR.md` stay.)
+(`echarts-gl` and `apache-arrow` move with Elements (manifest `assets`: drishti-chart lists `vendor/echarts-gl/`, drishti-data lists `vendor/apache-arrow/`) and Drishti's staying code (drishti_table.js, drishti_charts.js, the renderer) loads them from the vendored copy: one copy; Drishti's `LICENSE`, header file, header tool and `VENDOR.md` stay.)
 
 | What | Change |
 |---|---|
