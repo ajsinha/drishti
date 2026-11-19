@@ -30,14 +30,16 @@ the days: --dates FILE (one YYYY-MM-DD a line, blank lines ignored; --order olde
 ordered and it is refused if it is not) or --weekdays N (the N weekdays before the date, no holiday calendar: say so in --description if
 that is not your calendar). Checked before anything is written: no repeated day, every day before the business date (a stress set may
 use any past days), SCENARIO_COUNT = the number of days, WINDOW_START/WINDOW_END the first and last, every field of the scenario-set
-contract. The PV vectors must be as long as the set: tools/mrloader/mapping.yaml scenario_set.count (251) is the PV export's count and a
+contract. The PV vectors must be as long as the set: tools/mrloader/kinds/scenario-pv.pvf.yaml scenario_set.count (251) is the PV export's count and a
 different length is warned about here.
 
-writes under <out>/pvf-<date>/ (default out: data/pvf): scenario-set/<date>/cob.jsonl.gz, scenario-set-<date>.tar and its .ready
-(--lake names the lake in it); --inbox copies the archive, then its .ready, to the data inbox the running server watches.
-The set id and batch default to tools/mrloader/mapping.yaml's run values (HS-PVF-251, B-<date>-PVF), so the PV export of the day names this
+writes under <out>/mr-<date>/ (default out: data/pvf): scenario-set.<date>.jsonl, scenario-set.<date>.jsonl.gz and its .ready (--lake
+names the lake in it), and mr-<date>.sha256; --inbox copies the file, then its .ready, to the data inbox the running server watches;
+--load --lake NAME loads it now with `drishti.py lake build --engine java`.
+The set id and batch default to tools/mrloader/kinds/scenario-pv.pvf.yaml's run values (HS-PVF-251, B-<date>-PVF), so the PV export of the day names this
 set; --scenario-set-id / --batch-id override. --set-type stress writes a stress set (SET_TYPE STRESS, id HS-STRESS-...) as
-scenario-set-<date>-stress.tar with mode append, so it sits beside the date's normal set; load the normal set first.
+scenario-set-stress.<date>.jsonl.gz with mode append (its marker routes it to the scenario-set kind), so it sits beside the date's
+normal set; load the normal set first.
 --remove deletes the date from the lake with `tools/drishti.py lake delete --kind scenario-set` (whole dates: the normal and the stress
 set of the date both go) and warns that the date's scenario-pv and fx-scenario rows are unusable without a set.
 Exit 0 done, 1 refused (one line saying why), 2 usage.
@@ -52,8 +54,10 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from mrloader.common import (DEFAULT_INBOX, DEFAULT_MAPPING, DEFAULT_OUT, PvfError, add_remove_arguments, lake_delete, log,  # noqa: E402
-                        read_dates_file, setup_logging, strict_date, to_inbox, write_kind)
+from mrloader import hooks  # noqa: E402
+from mrloader.common import (DEFAULT_MAPPING, DEFAULT_OUT, PACK, PvfError, add_remove_arguments, lake_delete, log,  # noqa: E402
+                             read_dates_file, setup_logging, strict_date)
+from mrloader.package import day_folder, write_records, write_sha256  # noqa: E402
 from mrloader.contract import DateCheck, scenario_set  # noqa: E402
 from mrloader.mapping import Mapping, weekdays_before  # noqa: E402
 
@@ -106,16 +110,15 @@ def parser() -> argparse.ArgumentParser:
     d.add_argument("--weekdays", type=int, metavar="N", help="instead: the N weekdays before the date (no holiday calendar)")
     r = p.add_argument_group("add: the record")
     r.add_argument("--set-type", choices=("normal", "stress"), default="normal", help="normal (default) or stress (stressed VaR)")
-    r.add_argument("--scenario-set-id", help="the set's id, ^HS- (default: mapping.yaml run.scenario_set_id; stress: HS-STRESS-<count>)")
-    r.add_argument("--batch-id", help="SOURCE_BATCH, the date's batch (default: mapping.yaml run.batch_id)")
+    r.add_argument("--scenario-set-id", help="the set's id, ^HS- (default: kinds/scenario-pv.pvf.yaml run.scenario_set_id; stress: HS-STRESS-<count>)")
+    r.add_argument("--batch-id", help="SOURCE_BATCH, the date's batch (default: kinds/scenario-pv.pvf.yaml run.batch_id)")
     r.add_argument("--horizon-days", type=int, default=1, help="the holding period in business days (default 1)")
     r.add_argument("--revaluation", default="full", help="full (default) or sensitivities, as the batch did it")
     r.add_argument("--description", help="the set in words (default: says how many days and from when to when)")
     r.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the PV mapping the id, batch and expected count come from")
     o = p.add_argument_group("add: output")
-    o.add_argument("--out", type=Path, help="the folder pvf-<date>/ is written in (default data/pvf)")
-    o.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
-                   help="copy the archive and then its .ready into the data inbox the running server watches")
+    o.add_argument("--out", type=Path, help="the folder mr-<date>/ is written in (default data/pvf)")
+    hooks.add_arguments(o, shared=False)
     p.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     add_remove_arguments(p)
     return p
@@ -143,12 +146,12 @@ def run(a: argparse.Namespace) -> dict:
     log.info("scenario set %s of %s: %d days, %s to %s%s", set_id, a.date, len(days), days[0], days[-1], " (dry run: nothing written)" if a.dry_run else "")
     if a.dry_run:
         return {"DRY_RUN": True, "RECORD": rec}
-    folder = (a.out or DEFAULT_OUT) / f"pvf-{a.date}"
-    tar = write_kind(folder, KIND, a.date, [rec], a.lake, "append" if stress else "replace", "stress" if stress else "cob")
-    log.info("wrote %s (+ .ready)", tar)
-    res = {"RECORD": rec, "TAR": str(tar)}
-    if a.inbox:
-        res["INBOX"] = {"FOLDER": str(a.inbox), "DELIVERED": to_inbox([str(tar)], a.inbox)}
+    folder = day_folder(a.out or DEFAULT_OUT, a.date)
+    f = write_records(folder, KIND, a.date, PACK, [rec], a.lake, "append" if stress else "replace", name=f"{KIND}-stress" if stress else None)
+    write_sha256(folder, a.date)
+    log.info("wrote %s (+ .ready)", f)
+    res = {"RECORD": rec, "FILE": str(f)}
+    res["INBOX" if a.inbox else "LOAD"] = hooks.deliver(a, [f])
     return res
 
 
@@ -156,11 +159,11 @@ def main(argv: list[str] | None = None) -> int:
     a = parser().parse_args(argv)
     setup_logging(a.verbose)
     try:
-        run(a)
+        res = run(a)
     except (PvfError, OSError) as e:
         log.error("pvf scenario set refused: %s", e)
         return 1
-    return 0
+    return (res.get("LOAD") or {}).get("EXIT") or 0
 
 
 if __name__ == "__main__":

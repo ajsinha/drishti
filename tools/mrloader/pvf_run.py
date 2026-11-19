@@ -14,7 +14,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The pvf driver: from a PVF extract (the per-path PV file, the portfolio file and the positions file) to Drishti scenario PVs in one
-go: join, map by mapping.yaml (UPPER_SNAKE names), check against the contract, write the plain .jsonl and the loadable .jsonl.gz layout.
+go: join, map by kinds/scenario-pv.pvf.yaml (UPPER_SNAKE names), check against the contract, write one file per kind and date with its
+.ready marker, and optionally hand them to the data inbox or load them.
 
 examples (from the repository root):
   python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \\
@@ -22,25 +23,27 @@ examples (from the repository root):
   python3 tools/mrloader/pvf_run.py ... --limit 2000             a quick trial on the first 2,000 positions
   python3 tools/mrloader/pvf_run.py ... --dry-run                check the inputs and the mapping; write nothing
   python3 tools/mrloader/pvf_run.py ... --fx data/pvf/fx_20261029.csv --inbox    the day in one go: set, FX, PVs, handed over in that order
-  python3 tools/mrloader/pvf_run.py ... --inbox                  also hand both archives to the data inbox (data/dataload/inbox):
+  python3 tools/mrloader/pvf_run.py ... --inbox                  also hand the files to the data inbox (data/dataload/inbox):
                                                             the running server loads them (the scenario set first)
+  python3 tools/mrloader/pvf_run.py ... --load --lake risklake   or load them now with drishti.py lake build --engine java, in order
 
 --positions is required: the PV file carries POSITION_ID only (no portfolio, currency, trade or amount), so the positions file is what
 links each position to its portfolio and gives the record its attributes; a PV file alone cannot be joined.
 --date is the business date (BUSINESS_DATE, VALUATION_DATE and BASE_VALUATION_DATE of every record): only PV rows whose VALID_DT is
 that date are read, and it names the output folder and files.
 
-writes, under <out>/pvf-<date>/ (--out defaults to the PV file's folder):
+writes, under <out>/mr-<date>/ (--out defaults to the PV file's folder; the folder every kind of the date shares):
   pvf_joined.<date>.jsonl          the join: one row per position, every source attribute (UPPER_SNAKE), BASE_PV, PATH_PV, PATHS_FILLED
   pvf_joined.<date>.audit.csv      positions the join excluded (MISSING_PORTFOLIO, MISSING_BASE_PV, ...), POSITION_ID, REASON, DETAIL
   pvf_joined.<date>.fills.csv      every position with a filled path (PATH0_FROM_BASE, PATHS_FILLED, PATHS_SUPPLIED), most filled first
-  scenario_pv.<date>.jsonl         the scenario-pv records with every other source attribute beside them (UPPER_SNAKE), one plain
-                                   JSON Lines file (loadable on its own: table and date in its name)
-  scenario-pv/<date>/cob.part-NNN.jsonl.gz, scenario-set/<date>/cob.jsonl.gz   the loadable layout, and one archive per kind:
-  scenario-pv-<date>.tar, scenario-set-<date>.tar (each with its .ready), pvf-<date>.sha256 (every part and archive)
-  pvf-<date>.export-audit.csv      rows the mapping or the contract refused
-  pvf-<date>.summary.json          the whole run: rows in and out at each step, audited by reason, seconds, peak memory
-Exit 0 done (the audits list what was left out), 1 refused (one line saying why), 2 usage.
+  scenario-pv.<date>.jsonl         the scenario-pv records with every other source attribute beside them (UPPER_SNAKE), plain JSON Lines
+  scenario-pv.<date>.jsonl.gz (+ .ready), scenario-set.<date>.jsonl.gz (+ .ready), with --fx fx-scenario.<date>.jsonl.gz (+ .ready):
+                                   the loadable files, named for their table and date (and each its plain .jsonl)
+  mr-<date>.sha256                 the SHA-256 of every loadable file
+  scenario-pv.<date>.rejects.csv   rows the mapping or the contract refused
+  scenario-pv.<date>.summary.json  the whole run: rows in and out at each step, rejected by reason, seconds, peak memory
+Exit 0 done (the audits list what was left out), 1 refused (one line saying why), 2 usage; with --load, lake build's exit code when it
+is not zero.
 """
 from __future__ import annotations
 
@@ -53,8 +56,9 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from mrloader.common import (DEFAULT_INBOX, INBOX_ORDER, PvfError, Timer, log, peak_memory_mb, setup_logging, strict_date,  # noqa: E402,F401
-                        to_inbox)
+from mrloader import hooks  # noqa: E402
+from mrloader.common import PvfError, Timer, log, peak_memory_mb, setup_logging, strict_date  # noqa: E402
+from mrloader.package import day_folder, write_sha256  # noqa: E402
 from mrloader.mapping import Mapping  # noqa: E402
 from mrloader.pvf_fx_scenario import FxConfig, build_fx, read_fx_file  # noqa: E402
 from mrloader.mapping import scenario_dates  # noqa: E402
@@ -74,7 +78,7 @@ def parser() -> argparse.ArgumentParser:
     i.add_argument("--positions", required=True, type=Path, help="the positions, CSV (pos_YYYYMMDD.csv): links each position to its portfolio")
     i.add_argument("--date", required=True, type=strict_date, help="the business date YYYY-MM-DD (the PV rows' VALID_DT)")
     o = p.add_argument_group("output and run")
-    o.add_argument("--out", type=Path, help="the folder pvf-<date>/ is written in (default: the PV file's folder)")
+    o.add_argument("--out", type=Path, help="the folder mr-<date>/ is written in (default: the PV file's folder)")
     o.add_argument("--limit", type=int, help="only the first N positions of the positions file: a quick trial")
     o.add_argument("--dry-run", action="store_true", help="check the inputs, the columns and the mapping; write nothing")
     o.add_argument("--max-path", type=int, default=250, help="the last path number: vectors of paths 0..N (default 250: 251 values)")
@@ -82,20 +86,22 @@ def parser() -> argparse.ArgumentParser:
                    help="a missing path: forward (default, the original rule: path 0 = BASE_PV, then the previous path), base (BASE_PV), "
                         "refuse (exclude the position); fills are listed in pvf_joined.<date>.fills.csv")
     o.add_argument("--chunk", type=int, default=50_000, help="positions joined per step (memory: about chunk x 2 KB; default 50,000)")
-    o.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
-                   help="after the export, copy each archive and then its .ready into the data inbox the running server watches "
-                        f"(default {DEFAULT_INBOX.relative_to(REPO)}); the scenario set goes first, so the PVs find their set")
+    hooks.add_arguments(o)
     o.add_argument("--fx", type=Path, metavar="FILE",
                    help="also build the date's scenario FX from this CSV (pvf_fx_scenario.py's long or wide form) against the set this run "
-                        "writes: fx-scenario-<date>.tar beside the others; with --inbox the order is set, FX, PVs")
+                        "writes: fx-scenario.<date>.jsonl.gz beside the others; with --inbox or --load the order is set, FX, PVs")
     o.add_argument("-v", "--verbose", action="store_true", help="debug logging")
-    add_mapping_arguments(p.add_argument_group("mapping (tools/mrloader/mapping.yaml)"))
+    add_mapping_arguments(p.add_argument_group("mapping (tools/mrloader/kinds/scenario-pv.pvf.yaml)"))
     return p
 
 
 def run(a: argparse.Namespace) -> dict:
     t = Timer()
-    folder = (a.out or a.pv.resolve().parent) / f"pvf-{a.date}"
+    if a.inbox and a.load:
+        raise PvfError("--inbox and --load are two ways to the same end: give one")
+    if a.load and not a.lake:
+        raise PvfError("--load needs --lake NAME (the lake of config/lakes/ the files go to)")
+    folder = day_folder(a.out or a.pv.resolve().parent, a.date)
     ctx = Mapping(a.mapping, run_overrides(a)).resolve_run(a.date, {"pv_file_modified": modified_utc(a.pv)})   # fail fast, before 4 GB are read
     fx_table = None
     if a.fx:                                                     # the FX file is checked against the set's days before the PV file is read
@@ -110,21 +116,19 @@ def run(a: argparse.Namespace) -> dict:
         log.info("dry run: the join and the mapping are ready; would write %s", folder)
         return {"DRY_RUN": True, "JOIN": j}
     e = export(ExportConfig(joined, folder, a.mapping, run_overrides(a), a.date, a.scenario_dates, a.rows_per_part,
-                            False if a.no_scenario_set else None, not a.no_tar, folder / f"scenario_pv.{a.date}.jsonl", a.lake))
+                            False if a.no_scenario_set else None, not a.no_plain, a.lake))
     fx = None
     if fx_table is not None:
         fx = build_fx(FxConfig(a.date, fx_table, ctx["scenario_set_id"], days, ctx["batch_id"], folder, a.lake))
-        e["TARS"] = [*(e.get("TARS") or []), fx["TAR"]]
+        e["FILES"] = [*(e.get("FILES") or []), fx["FILE"]]
+        write_sha256(folder, a.date)
     summary = {"BUSINESS_DATE": a.date, "FOLDER": str(folder), "POSITIONS_READ": j["POSITIONS_READ"],
                "JOIN_EXCLUDED": j["POSITIONS_EXCLUDED"], "JOIN_EXCLUDED_BY_REASON": j["EXCLUDED_BY_REASON"], "FILLS": j["FILLS"],
                "EXPORT_AUDITED": e["ROWS_AUDITED"], "EXPORT_AUDITED_BY_REASON": e["AUDITED_BY_REASON"], "RECORDS_WRITTEN": e["RECORDS_WRITTEN"],
-               "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "TARS": e.get("TARS"), "PLAIN_JSONL": e["PLAIN_JSONL"],
-               "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e, "FX": fx}
-    if a.inbox:
-        if not e.get("TARS"):
-            raise PvfError("--inbox needs the archives: run without --no-tar")
-        summary["INBOX"] = {"FOLDER": str(a.inbox), "DELIVERED": to_inbox(e["TARS"], a.inbox)}
-    (folder / f"pvf-{a.date}.summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+               "STATUS": e["STATUS"], "QUANTITY_NOTE": e["QUANTITY_NOTE"], "SCENARIO_SET_ID": e["SCENARIO_SET_ID"], "FILES": e.get("FILES"),
+               "PLAIN_JSONL": e["PLAIN_JSONL"], "SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb(), "JOIN": j, "EXPORT": e, "FX": fx}
+    summary["INBOX" if a.inbox else "LOAD"] = hooks.deliver(a, e.get("FILES") or [])
+    (folder / f"scenario-pv.{a.date}.summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     log.info("pvf run of %s: %s positions in, %s excluded by the join, %s by the mapping, %s records written; %ss, peak memory %s MB; %s",
              a.date, f"{j['POSITIONS_READ']:,}", f"{j['POSITIONS_EXCLUDED']:,}", e["ROWS_AUDITED"], f"{e['RECORDS_WRITTEN']:,}",
              summary["SECONDS"], summary["PEAK_MEMORY_MB"], folder)
@@ -146,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
         raise
     if not s.get("DRY_RUN") and (s["JOIN_EXCLUDED"] or s["EXPORT_AUDITED"]):
         log.info("left out: %s positions by the join, %s rows by the mapping: see the audit files", s["JOIN_EXCLUDED"], s["EXPORT_AUDITED"])
-    return 0
+    return (s.get("LOAD") or {}).get("EXIT") or 0
 
 
 if __name__ == "__main__":

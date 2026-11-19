@@ -19,13 +19,13 @@ direction and quantity, valuation dates) and each business date as a whole (uniq
 as the set's SCENARIO_DATES, the set's days in order and before the date).
 
 examples (from the repository root):
-    python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
-    python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl data/pvf/pvf-2026-10-29/scenario-set
-    python3 tools/mrloader/pvf_validate.py --strict data/pvf/pvf-2026-10-29/scenario-pv data/pvf/pvf-2026-10-29/scenario-set   to the letter
+    python3 tools/mrloader/pvf_validate.py data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
+    python3 tools/mrloader/pvf_validate.py data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl
+    python3 tools/mrloader/pvf_validate.py --strict data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz   to the letter
 
 A path is a .jsonl or .jsonl.gz file, a folder of them (recursively) or a .tar. A record is a scenario-set record when it has
-SCENARIO_DATES, else a scenario-pv record. The source attributes kept beside the contract's fields (mapping.yaml pass_through) and the
-required fields mapping.yaml omit_required leaves out are counted and listed as known gaps; --strict makes both errors (the contract to
+SCENARIO_DATES, else a scenario-pv record. The source attributes kept beside the contract's fields (the mapping's pass-through) and the
+required fields the mapping's omit-required leaves out are counted and listed as known gaps; --strict makes both errors (the contract to
 the letter). Exit 0 every record holds, 1 a problem (each listed, the first --show of each kind).
 """
 from __future__ import annotations
@@ -45,7 +45,7 @@ from mrloader.contract import DateCheck, record_rules, scenario_pv, scenario_set
 
 
 def known_gaps(mapping: Path | None) -> frozenset:
-    """The required fields mapping.yaml leaves out on purpose (omit_required); none without a mapping."""
+    """The required fields kinds/scenario-pv.pvf.yaml leaves out on purpose (omit-required); none without a mapping."""
     if mapping is None:
         return frozenset()
     from mrloader.mapping import Mapping
@@ -85,7 +85,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1],
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("paths", nargs="+", type=Path, help="files, folders or .tar archives of the export")
-    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping whose omit_required are known gaps (default tools/mrloader/mapping.yaml)")
+    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping whose omit-required are known gaps (default tools/mrloader/kinds/scenario-pv.pvf.yaml)")
     p.add_argument("--strict", action="store_true", help="the contract to the letter: extra attributes and omitted required fields are errors")
     p.add_argument("--show", type=int, default=5, help="examples listed per kind of problem (default 5)")
     p.add_argument("--json", action="store_true", help="the result as JSON")
@@ -103,7 +103,7 @@ def main(argv=None) -> int:
         if res["EXTRA_ATTRIBUTES"]:
             print(f"  source attributes beside the contract's fields: {len(res['EXTRA_ATTRIBUTES'])} ({', '.join(res['EXTRA_ATTRIBUTES'])})")
         if res["KNOWN_GAPS"]:
-            print(f"  required fields left out on purpose (mapping.yaml omit_required): {res['KNOWN_GAPS']}")
+            print(f"  required fields left out on purpose (the mapping's omit-required): {res['KNOWN_GAPS']}")
         for e in res["EXAMPLES"]:
             print(f"  {e}")
         for d in res["DATE_PROBLEMS"]:

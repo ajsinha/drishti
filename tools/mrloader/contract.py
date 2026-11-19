@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The scenario-pv and scenario-set data contracts, read from their YAML (never copied here), and the checks of one record and of one
-business date's records together: required fields, types, enums, patterns, the UPPER_SNAKE rule, no field the contract lacks, and the
-engine's own one-date rules (one scenario set and one batch, every vector as long as the set, unique ids, valuation dates)."""
+"""The data contract of any kind, read from its YAML (never copied here; found by kind under the packs), and the checks of one record and
+of one business date's records together: required fields, types, enums, patterns, nested records and lists of records, fields Drishti
+derives (never loaded), the UPPER_SNAKE rule, no field the contract lacks, and the VaR engine's own one-date rules (one scenario set and
+one batch, every vector as long as the set, unique ids, valuation dates)."""
 from __future__ import annotations
 
 import math
@@ -24,7 +25,7 @@ from pathlib import Path
 
 import yaml
 
-from mrloader.common import FX_SCENARIO_CONTRACT, SCENARIO_PV_CONTRACT, SCENARIO_SET_CONTRACT, PvfError, lower_keys
+from mrloader.common import FX_SCENARIO_CONTRACT, ROOT, SCENARIO_PV_CONTRACT, SCENARIO_SET_CONTRACT, PvfError, lower_keys
 
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
@@ -51,13 +52,38 @@ class Contract:
             if f.get("pattern"):
                 self.patterns.setdefault(n, f["pattern"])
         self.key = (doc.get("key") or [None])[0]
+        self.doc = doc
+        self.pack = doc.get("pack")
+        self.klass = doc.get("class")
+        self.derived = {n for n, f in self.fields.items() if f.get("presence") == "derived"}
+        self.nested: dict[str, dict] = {p: {f["name"]: f for f in fs} for p, fs in (doc.get("nested") or {}).items()}
+        self.links: dict[str, str] = {n: f["link"] for n, f in self.fields.items() if f.get("link")}
+        for p, fs in self.nested.items():
+            self.links.update({f"{p}.{n}": f["link"] for n, f in fs.items() if f.get("link")})
+        self.links.update({str(x["field"]): str(x["kind"]) for x in doc.get("links") or [] if x.get("field") and x.get("kind")})
+
+    @classmethod
+    def for_kind(cls, kind: str, pack: str | None = None) -> "Contract":
+        """The contract of ``kind`` (and ``pack`` when two packs have the kind), found under the packs: never a path written by hand."""
+        return cls(contract_path(kind, pack))
+
+    def field(self, dotted: str) -> dict | None:
+        """A field by its dotted name: ``NAME``, ``KYC.STATUS``, ``SENSITIVITIES[].VALUE``; None when the contract has no such field."""
+        if "." not in dotted:
+            return self.fields.get(dotted)
+        path, name = dotted.rsplit(".", 1)
+        return (self.nested.get(path) or {}).get(name)
+
+    def required_in(self, path: str) -> list[str]:
+        """The required fields of a nested path (``KYC``, ``SENSITIVITIES[]``)."""
+        return [n for n, f in (self.nested.get(path) or {}).items() if f.get("presence") == "required"]
 
     def type_of(self, name: str) -> str:
         return str(self.fields[name].get("type", "unknown"))
 
     def check(self, r: dict, extra_ok: bool = False, omitted: frozenset | set = frozenset()) -> list[str]:
         """What is wrong with one record (empty: nothing). ``extra_ok``: attributes the contract lacks are accepted (their names must
-        still be UPPER_SNAKE); ``omitted``: required fields known to be left out on purpose (mapping.yaml omit_required)."""
+        still be UPPER_SNAKE); ``omitted``: required fields known to be left out on purpose (the mapping's omit-required)."""
         bad = [f"attribute name not UPPER_SNAKE: {k}" for k in lower_keys(r)]
         if not extra_ok:
             bad += [f"{k}: not a field of the {self.kind} contract" for k in self.extras(r)]
@@ -78,6 +104,39 @@ class Contract:
                 bad.append(f"{name}: {v!r} is not one of {self.enums[name]}")
             if name in self.patterns and isinstance(v, str) and not re.search(self.patterns[name], v):
                 bad.append(f"{name}: {v!r} does not match {self.patterns[name]}")
+            if name in self.derived:
+                bad.append(f"{name}: derived (Drishti computes it from other kinds): never loaded")
+            t = self.type_of(name)
+            if t == "record" and isinstance(v, dict):
+                bad += self._check_nested(name, v)
+            elif t == "record list" and isinstance(v, list):
+                for i, x in enumerate(v):
+                    bad += self._check_nested(f"{name}[]", x, f"{name}[{i}]") if isinstance(x, dict) else [f"{name}[{i}]: not a record"]
+        return bad
+
+    def _check_nested(self, path: str, r: dict, shown: str | None = None) -> list[str]:
+        """One nested record against the contract's ``nested:`` fields of ``path``; a path the contract does not detail is accepted."""
+        fields = self.nested.get(path)
+        shown = shown or path
+        if fields is None:
+            return []
+        bad = [f"{shown}.{k}: not a field of the {self.kind} contract" for k in r if k not in fields]
+        for name, f in fields.items():
+            v = r.get(name)
+            if v is None or v == "":
+                if f.get("presence") == "required":
+                    bad.append(f"{shown}.{name}: required, missing")
+                continue
+            if f.get("presence") == "derived":
+                bad.append(f"{shown}.{name}: derived (Drishti computes it): never loaded")
+            why = _type_error(str(f.get("type", "unknown")), v)
+            if why:
+                bad.append(f"{shown}.{name}: {why}")
+                continue
+            if f.get("enum") and v not in f["enum"]:
+                bad.append(f"{shown}.{name}: {v!r} is not one of {f['enum']}")
+            if f.get("pattern") and isinstance(v, str) and not re.search(f["pattern"], v):
+                bad.append(f"{shown}.{name}: {v!r} does not match {f['pattern']}")
         return bad
 
 
@@ -102,8 +161,14 @@ def _number(v) -> bool:
 def _type_error(t: str, v) -> str | None:
     if t in ("text", "id"):
         return None if isinstance(v, str) else f"{v!r} is not text"
-    if t == "amount":
+    if t in ("amount", "rate"):
         return None if _number(v) else f"{v!r} is not a finite number"
+    if t == "record":
+        return None if isinstance(v, dict) else f"{v!r} is not a record"
+    if t == "record list":
+        return None if isinstance(v, list) else "not a list of records"
+    if t == "text list":
+        return None if isinstance(v, list) and all(isinstance(x, str) for x in v) else "not a list of text"
     if t == "integer":
         return None if isinstance(v, int) and not isinstance(v, bool) else f"{v!r} is not an integer"
     if t == "date":
@@ -122,6 +187,20 @@ def _type_error(t: str, v) -> str | None:
     if t == "date list":
         return None if isinstance(v, list) and all(isinstance(x, str) and _DATE.match(x) for x in v) else "not a list of dates (YYYY-MM-DD)"
     return None                                                   # unknown: anything
+
+
+def contract_path(kind: str, pack: str | None = None) -> Path:
+    """The contract file of ``kind``: ``<pack>/contracts/<kind>.contract.yaml`` under modules/*/packs/ or config/packs/*/; refused when
+    no pack has the kind, or two do and ``pack`` does not say which."""
+    found = sorted(ROOT.glob(f"modules/*/packs/*/contracts/{kind}.contract.yaml")) + sorted(
+        ROOT.glob(f"config/packs/*/*/contracts/{kind}.contract.yaml"))
+    if pack:
+        found = [f for f in found if f.parent.parent.name == pack]
+    if not found:
+        raise PvfError(f"no pack has a contract for the kind {kind!r}" + (f" in the pack {pack}" if pack else ""))
+    if len(found) > 1:
+        raise PvfError(f"the kind {kind!r} has contracts in {len(found)} packs ({', '.join(f.parent.parent.name for f in found)}): name the pack")
+    return found[0]
 
 
 def scenario_pv() -> Contract:

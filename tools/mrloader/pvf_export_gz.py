@@ -13,29 +13,30 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Maps joined PVF rows (pvf_join.py) to scenario-pv records by mapping.yaml and writes them in the layout Drishti's loaders take:
-gzipped JSON Lines parts per table and business date, the date's scenario set beside them, one .tar per kind with its .ready file, and
-(--jsonl) the same records as one plain .jsonl file.
+"""Maps joined PVF rows (pvf_join.py) to scenario-pv records by the mapping (kinds/scenario-pv.pvf.yaml) and writes them as the data inbox
+and `lake build` take them: one file per kind and business date, named for its table and date, with its .ready marker (and the plain
+JSON Lines beside it), the date's scenario set the same way.
 
 examples (from the repository root):
-  python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/pvf-2026-10-29
+  python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/mr-2026-10-29
   python3 tools/mrloader/pvf_export_gz.py ... --limit 100 --dry-run      map and check the first 100 rows; write nothing
 
 writes, under --out (the date from the rows' BUSINESS_DATE):
-  scenario-pv/<date>/cob.part-001.jsonl.gz ...   the records, --rows-per-part each (20,000), in POSITION_ID order
-  scenario-set/<date>/cob.jsonl.gz               the date's scenario set (mapping.yaml scenario_set; --no-scenario-set: none)
-  scenario-pv-<date>.tar, scenario-set-<date>.tar   one archive per kind, each with its .ready: `lake build --from` or the data inbox
-  pvf-<date>.sha256                              the SHA-256 of every part and archive (sha256sum -c reads it)
-  pvf-<date>.export-audit.csv                    rows that could not be mapped or break the contract: POSITION_ID, REASON, DETAIL
-  pvf-<date>.export-summary.json                 rows in and out, audited by reason, statuses, parts, seconds, peak memory
-Every record is checked against the contract as it is written (required fields but mapping.yaml omit_required, types, enums, patterns,
-UPPER_SNAKE names; the source attributes kept by pass_through ride beside the contract's fields) and the date as a whole (one set, one batch, every vector as long as the set: never padded). Exit 0 every row written, 2 written
-with rows audited, 1 refused (no archive).
+  scenario-pv.<date>.jsonl                 the records, plain JSON Lines, in POSITION_ID order (--no-plain: left out)
+  scenario-pv.<date>.jsonl.gz (+ .ready)   the same records, the file that is loaded (pack, kind, mode replace, rows, sha256, lake)
+  scenario-set.<date>.jsonl, .jsonl.gz (+ .ready)   the date's scenario set (the mapping's scenario-set; --no-scenario-set: none)
+  mr-<date>.sha256                         the SHA-256 of every loadable file of the folder (sha256sum -c reads it)
+  scenario-pv.<date>.rejects.csv           rows that could not be mapped or break the contract (the reject report: KEY is the position)
+  scenario-pv.<date>.summary.json          rows in and out, rejected by reason, statuses, seconds, peak memory
+--rows-per-part N splits the date into parts of N records packed as one scenario-pv-<date>.tar (loads completely or not at all) instead
+of the one .jsonl.gz: only for a date too large for one file.
+Every record is checked against the contract as it is written (required fields but the mapping's omit-required, types, enums, patterns,
+UPPER_SNAKE names; the source attributes kept by pass-through ride beside the contract's fields) and the date as a whole (one set, one
+batch, every vector as long as the set: never padded). Exit 0 every row written, 2 written with rows rejected, 1 refused (nothing loadable).
 """
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sys
 from collections import Counter
@@ -47,10 +48,12 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from mrloader.common import (DEFAULT_MAPPING, GzParts, PvfError, Timer, dumps, iso_date, log, lower_keys, make_tar, peak_memory_mb,  # noqa: E402
-                        read_jsonl, setup_logging, sha256_of, write_gz, write_ready)
+from mrloader.common import (DEFAULT_MAPPING, PACK, PvfError, Timer, iso_date, log, lower_keys, peak_memory_mb, read_jsonl,  # noqa: E402
+                             setup_logging)
 from mrloader.contract import DateCheck, record_rules, scenario_set  # noqa: E402
 from mrloader.mapping import Mapping, RowProblem, scenario_dates, scenario_set_record  # noqa: E402
+from mrloader.package import KindWriter, write_records, write_sha256  # noqa: E402
+from mrloader.rejects import Problem, Rejects  # noqa: E402
 
 CONTRACT_BREACH = "CONTRACT"
 WRONG_DATE = "WRONG_BUSINESS_DATE"
@@ -58,8 +61,9 @@ WRONG_DATE = "WRONG_BUSINESS_DATE"
 
 @dataclass
 class ExportConfig:
-    """What one export writes. ``run`` overrides mapping.yaml's run values (None: keep the file's); ``business_date``, when given,
-    must be every row's BUSINESS_DATE; ``with_set`` None follows mapping.yaml scenario_set.emit."""
+    """What one export writes. ``run`` overrides the mapping's run values (None: keep the file's); ``business_date``, when given,
+    must be every row's BUSINESS_DATE; ``with_set`` None follows the mapping's scenario-set.emit; ``rows_per_part`` (None: one file)
+    splits the date into parts packed as one tar; ``plain`` writes the plain .jsonl beside the loadable file."""
 
     joined: Path
     out: Path
@@ -67,10 +71,9 @@ class ExportConfig:
     run: dict = field(default_factory=dict)
     business_date: str | None = None
     dates: str | None = None
-    rows_per_part: int = 20_000
+    rows_per_part: int | None = None
     with_set: bool | None = None
-    tar: bool = True
-    jsonl: Path | None = None
+    plain: bool = True
     lake: str | None = None
     limit: int | None = None
     dry_run: bool = False
@@ -81,51 +84,44 @@ class ExportConfig:
             raise PvfError(f"--joined: {self.joined} is not a file")
         if self.business_date:
             self.business_date = iso_date(self.business_date)
-        if self.rows_per_part < 1 or (self.limit is not None and self.limit < 1):
+        if (self.rows_per_part is not None and self.rows_per_part < 1) or (self.limit is not None and self.limit < 1):
             raise PvfError("--rows-per-part and --limit must be 1 or more")
 
 
 class Outputs:
-    """The files of one export: the parts, the optional plain JSONL, the audit; closed together."""
+    """The files of one export: the scenario-pv writer (plain and loadable) and the reject report; closed together."""
 
     def __init__(self, c: ExportConfig, bd: str):
         self.dry = c.dry_run
-        self.stem = c.out / f"pvf-{bd}"
-        self.audit_path = Path(f"{self.stem}.export-audit.csv")
-        self.pv_dir, self.set_dir = c.out / "scenario-pv" / bd, c.out / "scenario-set" / bd
-        self.audit_rows: Counter = Counter()
-        self.parts = self.plain = self._audit = None
+        self.bd = bd
+        self.source = c.joined.name
+        self.rejects_path = c.out / f"scenario-pv.{bd}.rejects.csv"
+        self.summary_path = c.out / f"scenario-pv.{bd}.summary.json"
         self.written = 0
-        if self.dry:
-            return
-        for d in (self.pv_dir, self.set_dir):
-            for old in sorted(d.glob("*.jsonl.gz")) if d.is_dir() else []:
-                old.unlink()                                        # a re-run replaces the date's parts, never mixes with them
-        c.out.mkdir(parents=True, exist_ok=True)
-        self.parts = GzParts(self.pv_dir, "cob", c.rows_per_part)
-        self.plain = open(c.jsonl, "w", encoding="utf-8") if c.jsonl else None
-        self._audit = open(self.audit_path, "w", newline="", encoding="utf-8")
-        self._aw = csv.writer(self._audit)
-        self._aw.writerow(["POSITION_ID", "REASON", "DETAIL"])
+        self.writer = None
+        if not self.dry:
+            c.out.mkdir(parents=True, exist_ok=True)
+            self.writer = KindWriter(c.out, "scenario-pv", bd, PACK, c.plain, c.rows_per_part)
+        self.rejects = Rejects(None if self.dry else self.rejects_path)
+
+    @property
+    def audit_rows(self) -> Counter:
+        return self.rejects.by_reason
 
     def record(self, rec: dict) -> None:
         self.written += 1
         if not self.dry:
-            self.parts.write(rec)
-            if self.plain:
-                self.plain.write(dumps(rec) + "\n")
+            self.writer.write(rec)
 
-    def audit(self, position_id, reason: str, detail: str) -> None:
-        self.audit_rows[reason] += 1
+    def audit(self, row: int, position_id, reason: str, detail: str) -> None:
         if self.dry:
-            log.info("would audit %s %s: %s", position_id, reason, detail)
-        else:
-            self._aw.writerow([position_id, reason, detail])
+            log.info("would reject %s %s: %s", position_id, reason, detail)
+        self.rejects.add(self.source, row, position_id, Problem(reason, detail))
 
     def close(self) -> None:
-        for f in (self.parts, self.plain, self._audit):
-            if f is not None:
-                f.close()
+        if self.writer is not None:
+            self.writer.close()
+        self.rejects.close()
 
 
 def _rows(c: ExportConfig) -> tuple[dict, Iterator[dict]]:
@@ -166,16 +162,16 @@ def map_rows(c: ExportConfig, m: Mapping, ctx: dict, rows: Iterator[dict], out: 
     for n, row in enumerate(rows, 1):
         pid = row.get("POSITION_ID")
         if str(row.get("BUSINESS_DATE", ""))[:10] != ctx["business_date"]:
-            out.audit(pid, WRONG_DATE, f"BUSINESS_DATE {row.get('BUSINESS_DATE')} is not {ctx['business_date']}: one file is one business date")
+            out.audit(n, pid, WRONG_DATE, f"BUSINESS_DATE {row.get('BUSINESS_DATE')} is not {ctx['business_date']}: one file is one business date")
             continue
         try:
             rec = m.apply(row, ctx, order, count)
         except RowProblem as e:
-            out.audit(pid, e.reason, e.detail)
+            out.audit(n, pid, e.reason, e.detail)
             continue
         problems = m.contract.check(rec, extra_ok=True, omitted=omitted) + record_rules(rec)
         if problems:
-            out.audit(pid, CONTRACT_BREACH, "; ".join(problems))
+            out.audit(n, pid, CONTRACT_BREACH, "; ".join(problems))
             continue
         check.add_pv(rec)
         statuses[rec.get("STATUS")] += 1
@@ -208,31 +204,16 @@ def write_set(c: ExportConfig, m: Mapping, ctx: dict, out: Outputs, check: DateC
     if bad:
         raise PvfError("the scenario-set record breaks its contract: " + "; ".join(bad))
     check.add_set(rec)
-    if not c.dry_run:
-        write_gz(out.set_dir / "cob.jsonl.gz", [rec])
     return rec
 
 
 def package(c: ExportConfig, out: Outputs, set_rec: dict | None) -> dict:
-    """One .tar per kind (scenario-pv-<date>.tar, scenario-set-<date>.tar: the form of the repository's own test data, which
-    `lake build --from` loads one table at a time), each with its .ready file, and the .sha256 list of every part and archive."""
-    by_kind = {"scenario-pv": list(out.parts.paths)}
+    """The markers (each loadable file's .ready), the scenario set's files, and the day's .sha256 list."""
+    files = [str(out.writer.finish(c.lake))] if out.written else []
     if set_rec:
-        by_kind["scenario-set"] = [out.set_dir / "cob.jsonl.gz"]
-    sums = {f.relative_to(c.out).as_posix(): sha256_of(f) for files in by_kind.values() for f in files}
-    res: dict = {"PARTS": list(sums), "TARS": []}
-    bd = out.pv_dir.name
-    if c.tar and out.written:
-        for kind, files in by_kind.items():
-            tar = make_tar(c.out / f"{kind}-{bd}.tar", c.out, files)
-            sums[tar.name] = sha256_of(tar)
-            rows = out.written if kind == "scenario-pv" else 1
-            write_ready(tar, kind, rows, c.lake)
-            res["TARS"].append(str(tar))
-    sha = Path(f"{out.stem}.sha256")
-    sha.write_text("".join(f"{h}  {p}\n" for p, h in sums.items()), encoding="utf-8")
-    res["SHA256"] = str(sha)
-    return res
+        files.insert(0, str(write_records(c.out, "scenario-set", out.bd, PACK, [set_rec], c.lake, plain=c.plain)))
+    sha = write_sha256(c.out, out.bd)
+    return {"FILES": files, "SHA256": str(sha)}
 
 
 def export(c: ExportConfig) -> dict:
@@ -261,33 +242,36 @@ def export(c: ExportConfig) -> dict:
                "QUANTITY_NOTE": sign_note, "FIELD_SOURCES": {k: dict(v) for k, v in m.sources.items()},
                "SCENARIO_SET_ID": ctx["scenario_set_id"], "SCENARIO_COUNT": m.set.get("count"),
                "PATH_ORDER": m.set.get("path_order", "oldest-first"), "BATCH_ID": ctx["batch_id"], "SCENARIO_SET_WRITTEN": bool(set_rec),
-               "SCENARIO_DATES": (set_rec or {}).get("DESCRIPTION"), "AUDIT": str(out.audit_path), "DATE_PROBLEMS": problems,
-               "PLAIN_JSONL": str(c.jsonl) if c.jsonl else None, "CONTRACT_GAPS": m.omit,
+               "SCENARIO_DATES": (set_rec or {}).get("DESCRIPTION"), "REJECTS": str(out.rejects_path), "DATE_PROBLEMS": problems,
+               "PLAIN_JSONL": str(out.writer.plain_path) if out.writer is not None and out.writer.plain_path else None, "CONTRACT_GAPS": m.omit,
                "COMPUTED_AT": ctx["computed_at"]}
     if problems:
+        if out.writer is not None:
+            out.writer.discard()
         raise PvfError("the date's records do not hold together: " + "; ".join(problems))
     if not c.dry_run:
         summary.update(package(c, out, set_rec))
     summary.update({"SECONDS": t.seconds, "PEAK_MEMORY_MB": peak_memory_mb()})
     if not c.dry_run:
-        Path(f"{out.stem}.export-summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        out.summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     log.info("summary: %s rows in, %s records %s, %s audited; scenario set %s; %s; %ss, peak memory %s MB", f"{read:,}", f"{out.written:,}",
-             dict(statuses), summary["ROWS_AUDITED"], ctx["scenario_set_id"], ", ".join(summary.get("TARS") or ["no tar"]), summary["SECONDS"],
+             dict(statuses), summary["ROWS_AUDITED"], ctx["scenario_set_id"], ", ".join(Path(f).name for f in summary.get("FILES") or []) or "nothing written", summary["SECONDS"],
              summary["PEAK_MEMORY_MB"])
     return summary
 
 
 def add_mapping_arguments(p: argparse.ArgumentParser) -> None:
     """The options the export and the driver (pvf_run.py) share."""
-    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping file (default tools/mrloader/mapping.yaml)")
-    p.add_argument("--scenario-set-id", help="the scenario set's id (^HS-), instead of mapping.yaml run.scenario_set_id")
+    p.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING, help="the mapping file (default tools/mrloader/kinds/scenario-pv.pvf.yaml)")
+    p.add_argument("--scenario-set-id", help="the scenario set's id (^HS-), instead of kinds/scenario-pv.pvf.yaml run.scenario_set_id")
     p.add_argument("--batch-id", help="the batch id, instead of run.batch_id")
     p.add_argument("--computed-at", help="the run's ISO-8601 UTC time (2026-10-29T06:00:00Z), instead of run.computed_at")
     p.add_argument("--restatement", type=int, help="0 for the date's first run, then 1, 2 ... (instead of run.restatement)")
     p.add_argument("--scenario-dates", help="'weekdays' or a file of the set's dates, one YYYY-MM-DD a line, oldest first")
     p.add_argument("--no-scenario-set", action="store_true", help="no scenario-set record (the lake already holds the date's set)")
-    p.add_argument("--rows-per-part", type=int, default=20_000, help="records per .jsonl.gz part (default 20,000)")
-    p.add_argument("--no-tar", action="store_true", help="the folders only, no .tar")
+    p.add_argument("--rows-per-part", type=int, help="split the date into parts of N records packed as one tar (only for a date too large "
+                   "for one file; default: one .jsonl.gz)")
+    p.add_argument("--no-plain", action="store_true", help="leave out the plain .jsonl beside the loadable file (a very large date)")
     p.add_argument("--lake", help="the lake the .ready file names (default: the inbox's drishti.dataload.lake)")
 
 
@@ -301,7 +285,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--joined", required=True, type=Path, help="the joined JSON Lines file pvf_join.py wrote")
     p.add_argument("--out", required=True, type=Path, help="the folder the tables' folders, the .tar and the audit go to")
     p.add_argument("--date", help="the business date YYYY-MM-DD every row must carry (default: the first row's BUSINESS_DATE)")
-    p.add_argument("--jsonl", type=Path, help="also write the records as this one plain .jsonl file")
     p.add_argument("--limit", type=int, help="only the first N rows: a quick trial")
     p.add_argument("--dry-run", action="store_true", help="map and check every row, say what would be written; write nothing")
     add_mapping_arguments(p)
@@ -310,7 +293,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(a.verbose)
     try:
         s = export(ExportConfig(a.joined, a.out, a.mapping, run_overrides(a), a.date, a.scenario_dates, a.rows_per_part,
-                                False if a.no_scenario_set else None, not a.no_tar, a.jsonl, a.lake, a.limit, a.dry_run))
+                                False if a.no_scenario_set else None, not a.no_plain, a.lake, a.limit, a.dry_run))
     except (PvfError, OSError) as e:
         log.error("pvf export refused: %s", e)
         return 1

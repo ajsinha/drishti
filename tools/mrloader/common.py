@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""What the pvf scripts share: logging, the UPPER_SNAKE key rule, dates, JSONL readers and the deterministic .jsonl.gz and .tar writers."""
+"""What the mrloader scripts share: logging, the UPPER_SNAKE key rule, dates, JSONL readers and the deterministic .jsonl.gz and .tar writers
+(the files of a kind and date and their markers: package.py; the inbox and the load: hooks.py)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -21,9 +22,7 @@ import hashlib
 import io
 import json
 import logging
-import os
 import re
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -38,9 +37,7 @@ FX_SCENARIO_CONTRACT = CONTRACTS / "fx-scenario.contract.yaml"
 PACK = "market-risk"
 DEFAULT_INBOX = ROOT / "data" / "dataload" / "inbox"
 DEFAULT_OUT = ROOT / "data" / "pvf"
-#: the order the inbox must receive the kinds in: a date's scenario set, then its FX, then its PVs (the engine sizes a date's vectors from its set)
-INBOX_ORDER = ("scenario-set", "fx-scenario", "scenario-pv")
-DEFAULT_MAPPING = Path(__file__).resolve().parent / "mapping.yaml"
+DEFAULT_MAPPING = Path(__file__).resolve().parent / "kinds" / "scenario-pv.pvf.yaml"
 
 log = logging.getLogger("pvf")
 _UPPER = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -198,58 +195,6 @@ def dumps(record: dict) -> str:
     return json.dumps(record, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
 
 
-class GzParts:
-    """``<folder>/<stem>.part-NNN.jsonl.gz``, a new part every ``rows_per_part`` records; the same bytes on every run (gzip mtime 0)."""
-
-    def __init__(self, folder: Path, stem: str = "cob", rows_per_part: int = 20_000):
-        if rows_per_part < 1:
-            raise PvfError("rows per part must be 1 or more")
-        self.folder, self.stem, self.per = Path(folder), stem, rows_per_part
-        self.folder.mkdir(parents=True, exist_ok=True)
-        self.paths: list[Path] = []
-        self.rows = 0
-        self._f = None
-        self._in_part = 0
-
-    def write(self, record: dict) -> None:
-        if self._f is None or self._in_part >= self.per:
-            self._open()
-        self._f.write((dumps(record) + "\n").encode("utf-8"))
-        self._in_part += 1
-        self.rows += 1
-
-    def _open(self) -> None:
-        self.close()
-        p = self.folder / f"{self.stem}.part-{len(self.paths) + 1:03d}.jsonl.gz"
-        self._raw = open(p, "wb")
-        self._f = gzip.GzipFile(filename="", mode="wb", fileobj=self._raw, mtime=0, compresslevel=6)
-        self.paths.append(p)
-        self._in_part = 0
-
-    def close(self) -> None:
-        if self._f is not None:
-            self._f.close()
-            self._raw.close()
-            self._f = None
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        self.close()
-
-
-def write_gz(path: Path, records: Iterable[dict]) -> int:
-    """One .jsonl.gz file of ``records``, deterministic; the count written."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    n = 0
-    with open(path, "wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as f:
-        for r in records:
-            f.write((dumps(r) + "\n").encode("utf-8"))
-            n += 1
-    return n
-
-
 def make_tar(tar_path: Path, root: Path, files: Iterable[Path]) -> Path:
     """A plain .tar of ``files`` named relative to ``root`` (``scenario-pv/2026-10-29/cob.part-001.jsonl.gz``): sorted, mtime 0,
     owner 0, so the same inputs give the same bytes."""
@@ -263,27 +208,7 @@ def make_tar(tar_path: Path, root: Path, files: Iterable[Path]) -> Path:
     return tar_path
 
 
-# ---- ready markers, the data inbox, dates files, lake delete: shared by the export, the set, the FX and the driver ----------------------
-def write_ready(tar: Path, kind: str, rows: int, lake: str | None = None, mode: str = "replace") -> Path:
-    """The ``.ready`` marker beside an archive of one kind (``folders``, ``mode``, ``rows``, ``sha256``; ``lake`` when named)."""
-    ready = {**({"lake": lake} if lake else {}), "folders": {kind: PACK}, "mode": mode, "rows": rows, "sha256": sha256_of(tar)}
-    marker = Path(f"{tar}.ready")
-    marker.write_text("".join(f"{k}: {json.dumps(v)}\n" for k, v in ready.items()), encoding="utf-8")
-    return marker
-
-
-def write_kind(out: Path, kind: str, business_date: str, records: list[dict], lake: str | None = None, mode: str = "replace",
-               stem: str = "cob") -> Path:
-    """One kind of one date as the loadable layout: ``<out>/<kind>/<date>/<stem>.jsonl.gz`` plus ``<out>/<kind>-<date>.tar`` and its
-    ``.ready``; the tar's path."""
-    gz = out / kind / business_date / f"{stem}.jsonl.gz"
-    write_gz(gz, records)
-    name = f"{kind}-{business_date}" + ("" if stem == "cob" else f"-{stem}")
-    tar = make_tar(out / f"{name}.tar", out, [gz])
-    write_ready(tar, kind, len(records), lake, mode)
-    return tar
-
-
+# ---- dates files and lake delete: shared by the export, the set, the FX and the driver ------------------------------------------
 def strict_date(text: str) -> str:
     """exactly YYYY-MM-DD, a real day (an argparse type)."""
     import argparse
@@ -311,30 +236,6 @@ def read_dates_file(path: Path, order: str = "oldest-first") -> list[str]:
     if days != sorted(days, reverse=order == "newest-first"):
         raise PvfError(f"{path}: the dates are not {order} (--order says how the file is ordered)")
     return days[::-1] if order == "newest-first" else days
-
-
-def to_inbox(tars: list[str], inbox: Path) -> list[str]:
-    """Hand the archives to the data inbox: each archive is copied under a temporary name and renamed into place, and only then its
-    .ready marker, so the watcher never sees a half-written archive; the scenario set goes first, then the FX, then the PVs
-    (INBOX_ORDER). Returns the names delivered."""
-    if not inbox.is_dir():
-        raise PvfError(f"the data inbox {inbox} does not exist: is the server's data load on (DRISHTI_DATALOAD_ENABLED)?")
-
-    def rank(t: str) -> int:
-        name = Path(t).name
-        return next((i for i, kind in enumerate(INBOX_ORDER) if name.startswith(kind + "-")), len(INBOX_ORDER))
-    done = []
-    for tar in sorted(tars, key=rank):
-        src, ready = Path(tar), Path(f"{tar}.ready")
-        if not ready.is_file():
-            raise PvfError(f"{src.name} has no .ready marker: run without --no-tar")
-        part = inbox / f"{src.name}.copying"             # no hidden names; the watcher reads only .ready markers
-        shutil.copyfile(src, part)
-        os.replace(part, inbox / src.name)
-        shutil.copyfile(ready, inbox / ready.name)
-        done.append(src.name)
-        log.info("handed %s and its .ready to the data inbox %s", src.name, inbox)
-    return done
 
 
 def lake_delete(kind: str, business_date: str, lake: str, server: str | None = None, token_file: str | None = None,

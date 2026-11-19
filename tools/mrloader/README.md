@@ -29,9 +29,9 @@ python3 tools/mrloader/pvf_run.py \
     --date 2026-10-29
 ```
 
-That one command joins, maps (`tools/mrloader/mapping.yaml`), checks every record against the contract, and writes everything under
-`data/pvf/pvf-2026-10-29/` (`--out DIR` puts `pvf-<date>/` elsewhere; the default is the PV file's folder). Try it first on a slice and
-without writing:
+That one command joins, maps (`tools/mrloader/kinds/scenario-pv.pvf.yaml`), checks every record against the contract, and writes
+everything under `data/pvf/mr-2026-10-29/` (`--out DIR` puts `mr-<date>/` elsewhere; the default is the PV file's folder). Try it first on
+a slice and without writing:
 
 ```bash
 python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
@@ -43,7 +43,7 @@ python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfoli
 Then check the result and load it (section "Loading into Drishti"):
 
 ```bash
-python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
+python3 tools/mrloader/pvf_validate.py data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
 ```
 
 **Why three input files.** `--positions` is required: the PV file carries only `position_id` (with `valid_dt`, `risk_metric_cd`,
@@ -66,26 +66,27 @@ No Java, no server and no network are needed to convert; loading uses Drishti's 
 
 | Script | Does |
 |---|---|
-| `tools/mrloader/pvf_run.py` | **the driver**: join, map, check, write the plain JSONL and the loadable layout, one summary |
+| `tools/mrloader/pvf_run.py` | **the driver**: join, map, check, write one file per kind and date with its marker, one summary; `--inbox` or `--load` |
 | `tools/mrloader/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
-| `tools/mrloader/pvf_export_gz.py` | the mapping on its own: a joined file to scenario-pv records as `.jsonl.gz` parts, the scenario set, a `.tar` per kind |
+| `tools/mrloader/pvf_export_gz.py` | the mapping on its own: a joined file to `scenario-pv.<date>.jsonl.gz` (+ `.ready`) and the date's scenario set |
 | `tools/mrloader/pvf_scenario_set.py` | **add or remove** a date's scenario set (every day; section "Scenario set") |
 | `tools/mrloader/pvf_fx_scenario.py` | **add or remove** a date's scenario FX from a daily CSV (section "Scenario FX") |
 | `tools/mrloader/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
 | `tools/mrloader/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
 
 Each has `--help` with examples; `pvf_join.py`, `pvf_export_gz.py` and `pvf_run.py` have `--dry-run` and a limit (`--limit-positions`,
-`--limit`, `--limit`). The modules beside them: `common.py` (the UPPER_SNAKE rule, dates, deterministic `.gz` and `.tar` writers,
-checksums), `contract.py` (the contracts, read from `modules/banking/packs/market-risk/contracts/`, never copied), `mapping.py` (the
-mapping grammar and the scenario set). `test_pvf.py` tests them on small hand-made extracts (`pytest tools/mrloader`).
+`--limit`, `--limit`). The modules beside them: `common.py` (the UPPER_SNAKE rule, dates, checksums), `package.py` (the files of a kind
+and date and their markers), `hooks.py` (`--inbox` and `--load`), `rejects.py` (the reject report), `contract.py` (any kind's contract, found
+by the kind under the packs, never copied), `mapping.py` (the mapping grammar and the scenario set). The mapping is
+`kinds/scenario-pv.pvf.yaml`; its id rules (legal entity, division, desk, book, position) are in `kinds/shared/ids.pvf.yaml`, shared by
+every kind of the PVF source. `test_pvf.py` tests them on small hand-made extracts (`pytest tools/mrloader`).
 
 The separate steps, as the driver runs them:
 
 ```bash
 python3 tools/mrloader/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \
-    --paths data/pvf/pvf_path_20261029.csv --out data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl
-python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl \
-    --out data/pvf/pvf-2026-10-29 --jsonl data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl
+    --paths data/pvf/pvf_path_20261029.csv --out data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl
+python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/mr-2026-10-29
 ```
 
 ## The inputs
@@ -126,7 +127,7 @@ Types are explicit, never inferred: a value that is not a number where one is re
    | `DUPLICATE_POSITION` | its `position_id` is in the positions file more than once |
    | `INCOMPLETE_PATHS` | `--fill-policy refuse` and a path is missing |
 
-6. **Deterministic**: rows in `POSITION_ID` order; the same inputs give the same bytes (the `.gz` and `.tar` too).
+6. **Deterministic**: rows in `POSITION_ID` order; the same inputs give the same bytes (the `.jsonl.gz` too).
 7. **Names**: every attribute name the tools write is UPPER_SNAKE (`src_position_id` → `SRC_POSITION_ID`, `Fo_portfolio_nm` →
    `FO_PORTFOLIO_NM`), at every depth, enforced in code and by a test; a PORTFOLIO_D2 column whose name the positions already have gets
    `_D2` (`PORTFOLIO_NM_D2`). Values are never changed by the name rule.
@@ -136,9 +137,9 @@ original `pvf_join.py` (whose output was `path_pv_final.jsonl` and `bad_position
 
 ## The mapping, field by field
 
-`tools/mrloader/mapping.yaml` maps a joined row to a scenario-pv record
+`tools/mrloader/kinds/scenario-pv.pvf.yaml` maps a joined row to a scenario-pv record
 ([contract](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml)). The export refuses a mapping that names a
-field the contract does not have, leaves a required field without a rule (unless `omit_required` names it with its reason) or breaks the
+field the contract does not have, leaves a required field without a rule (unless `omit-required` names it with its reason) or breaks the
 grammar, before reading a row.
 
 | Field | Rule | From the extract | Decision |
@@ -163,16 +164,16 @@ grammar, before reading a row.
 | `QUANTITY` | first of `QUANTITY`, `QTY`, `POSITION_AMT`; number; optional `sign_from` | `position_amt` today | a priority list: a signed quantity column when the extract has one, else the amount. **The current extract has no quantity column, so QUANTITY is `position_amt` as given, and every `position_amt` is positive (an unsigned amount or notional; no buy/sell column).** The summary counts which column fed QUANTITY (`QUANTITY_SOURCE`) and says `position_amt unsigned: N of N positive`. `sign_from` (left unset) signs the amount by a buy/sell column when one arrives (a value in neither list is audited) |
 | `DIRECTION` | the sign of `QUANTITY` | | LONG when zero or more, SHORT negative (the contract's rule). With an unsigned amount every row is LONG: **not meaningful for this source**. VaR does not depend on QUANTITY or DIRECTION: it reads `BASE_PV` and `SCENARIO_PV`, which carry their own signs |
 | `BASE_PV` | number | path `-1` | |
-| `SCENARIO_PV` | the vector | paths `0..250` | in `scenario_set.path_order` |
+| `SCENARIO_PV` | the vector | paths `0..250` | in `scenario-set.path-order` |
 | `STATUS` | const `ok` | | the PVs are supplied; fills are reported (`PATHS_FILLED`), a real price is not relabelled `proxied` |
 | `COMPUTED_AT` | `{$computed_at}` | the PV file's last-modified time, UTC | the extract has no run time; `--computed-at` to give it |
 | `BATCH_ID` | `B-<date>-PVF` | | one batch per date (DRS-5203); `--batch-id` for another |
 | `RESTATEMENT` | `0` | | `--restatement 1` for a re-send of the date |
 | `RUN_KIND` | `FULL` | | the day's full run |
-| `MATURITY_DATE`, `TRADE_STATUS`, `PRICER`, `MODEL_VERSION` | **left out** (`omit_required`) | none in the extract | required by the contract, not needed by the engine (no maturity: not matured; no status: live; pricer and model: audit only); invented values would mislead |
+| `MATURITY_DATE`, `TRADE_STATUS`, `PRICER`, `MODEL_VERSION` | **left out** (`omit-required`) | none in the extract | required by the contract, not needed by the engine (no maturity: not matured; no status: live; pricer and model: audit only); invented values would mislead |
 | `SECURITY_ID`, `COUNTERPARTY`, `TAGS`, `TRADE_CURRENCY`, `TRADE_VERSIONS` | left out | none | optional |
 
-**Every other source attribute** rides beside the contract's fields, UPPER_SNAKE, values as they are (`pass_through: columns: "*"`):
+**Every other source attribute** rides beside the contract's fields, UPPER_SNAKE, values as they are (`pass-through: columns: "*"`):
 `SRC_POSITION_ID`, `PORTFOLIO_ID`, `CURRENCY_CD`, `PORTFOLIO_NM`, `TRANSIT_CD`, `POSITION_AMT`, `TV_PRODUCT_TYPE`, `MF1_PNL_TYPE`,
 `PATH0_FROM_BASE`, `PATHS_FILLED` and every PORTFOLIO_D2 column. A source column whose name is a contract field is kept as `PVF_<NAME>`
 (`PVF_POSITION_ID` the extract's own id, `PVF_TRADE_ID`, `PVF_LEGAL_ENTITY`, `PVF_STRATEGY`). `PATH_PV`, `BASE_PV` and `BUSINESS_DATE`
@@ -192,63 +193,61 @@ joined column, `{$name}` a run value, `{@FIELD}` a field mapped above; empty whe
 
 The engine indexes every vector of a date by that date's scenario set: index *i* is `SCENARIO_DATES[i]`, and a vector of another length
 is refused, never padded. The demo's set has 509 scenarios; this extract has 251 paths. So the export **declares the set**: it writes the
-date's scenario-set record (`scenario-set/<date>/cob.jsonl.gz`) with `SCENARIO_SET_ID` `HS-PVF-251`, `SCENARIO_COUNT` 251 and 251
+date's scenario-set record (`scenario-set.<date>.jsonl.gz`) with `SCENARIO_SET_ID` `HS-PVF-251`, `SCENARIO_COUNT` 251 and 251
 `SCENARIO_DATES`, and every record names it. A vector that is not 251 long is audited (`BAD_VALUE`), never padded or cut.
 
 - **Days**: the extract does not say which historical day each path is (`histo_valid_dt` is one date for every row). By default the
   days are the 251 weekdays before the business date, with no holiday calendar, and the set's `DESCRIPTION` says they are assumed. Give
   the real days with `--scenario-dates FILE` (one `YYYY-MM-DD` a line, oldest first, all before the date; exactly 251).
-- **Order**: in the PVF extract **path 0 is the latest scenario day** (owner, 2026-11-18), so `scenario_set.path_order` is `newest-first`: the
+- **Order**: in the PVF extract **path 0 is the latest scenario day** (owner, 2026-11-18), so `scenario-set.path-order` is `newest-first`: the
   vector is reversed to Drishti's order, where index i is SCENARIO_DATES[i], oldest first. (`oldest-first` would keep it as it is.)
 - **A lake that already has the date's set**: `--no-scenario-set`, and `--scenario-set-id` with its id. One date has one normal set, and
   the date's other scenario P&L (P&L vectors, other systems' scenario PVs) must use the same set and the same batch.
 
 ## The outputs
 
-Under `<out>/pvf-<date>/`:
+Under `<out>/mr-<date>/`, the folder every kind of the date shares (docs/plans/CSV_LOADERS.md section 6.4):
 
 | File | What |
 |---|---|
 | `pvf_joined.<date>.jsonl` | the join: one row per position, every source attribute, `BASE_PV`, `PATH_PV`, `PATH0_FROM_BASE`, `PATHS_FILLED` |
 | `pvf_joined.<date>.audit.csv`, `.fills.csv`, `.summary.json` | the join's exclusions, fills and counts |
-| `scenario_pv.<date>.jsonl` | the scenario-pv records with the source attributes, one plain JSON Lines file |
-| `scenario-pv/<date>/cob.part-NNN.jsonl.gz` | the same records, 20,000 a part (`--rows-per-part`), `POSITION_ID` order |
-| `scenario-set/<date>/cob.jsonl.gz` | the date's scenario set |
-| `scenario-pv-<date>.tar`, `scenario-set-<date>.tar` (+ `.ready`) | one archive per kind (the form of the repository's own test data), each with its marker for the data inbox (`folders`, `mode: replace`, `rows`, `sha256`) |
-| `pvf-<date>.sha256` | the SHA-256 of every part and archive (`sha256sum -c pvf-<date>.sha256`) |
-| `pvf-<date>.export-audit.csv`, `.export-summary.json` | rows the mapping or the contract refused; the export's counts |
-| `pvf-<date>.summary.json` | the whole run: rows in and out at each step, audited by reason, fills, seconds, peak memory |
+| `scenario-pv.<date>.jsonl` | the scenario-pv records with the source attributes, plain JSON Lines, `POSITION_ID` order (`--no-plain`: left out) |
+| `scenario-pv.<date>.jsonl.gz` (+ `.ready`) | the same records, gzipped: the file that is loaded. Its marker: `pack`, `kind`, `mode: replace`, `rows`, `sha256` (and `lake` with `--lake`) |
+| `scenario-set.<date>.jsonl`, `.jsonl.gz` (+ `.ready`) | the date's scenario set |
+| `fx-scenario.<date>.jsonl`, `.jsonl.gz` (+ `.ready`) | with `--fx`: the date's scenario FX |
+| `mr-<date>.sha256` | the SHA-256 of every loadable file (`sha256sum -c mr-<date>.sha256`) |
+| `scenario-pv.<date>.rejects.csv` | rows the mapping or the contract refused, in the reject format of every kind (`FILE,ROW,KEY,COLUMN,FIELD,VALUE,REASON,WHY,FIX`; `KEY` is the position, `ROW` the joined file's line) |
+| `scenario-pv.<date>.summary.json` | the whole run: rows in and out at each step, rejected by reason, fills, seconds, peak memory |
 
-A re-run replaces the date's parts. Exit codes: `0` done (the audits list what was left out), `1` refused (one line saying why), `2` usage.
+**The name is the routing**: the data inbox and `lake build` read the table and the business date from `<table>.<YYYY-MM-DD>.jsonl.gz`.
+There is no tar by default; `--rows-per-part N` splits a date too large for one file into parts packed as one
+`scenario-pv-<date>.tar` (`scenario-pv/<date>/part-NNNN.jsonl.gz`), which loads completely or not at all. A re-run replaces the date's
+files. Exit codes: `0` done (the audits list what was left out), `1` refused (one line saying why), `2` usage; with `--load`, the exit
+code of `lake build` when it is not zero.
 
 ## Loading into Drishti
 
-Each archive follows the load rules (`docs/guides/DATA_LAKE_GUIDE.md` section 4.4): its top folder is the kind (`scenario-pv`,
-`scenario-set`, both of the market-risk pack), its subfolder the business date; nothing overrides them. Load both with Drishti's loader,
-the scenario set too (the date has no set otherwise):
+The scripts convert and load nothing themselves. Two optional hooks end a run, after every file is written and checked:
 
 ```bash
-python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar --lake risklake --plan   # what would happen
-python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar --lake risklake
-python3 tools/drishti.py lake build --from data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar --lake risklake
-```
-
-**One command, from the CSVs to loaded data:** add `--inbox` to the driver and it hands both archives to the data inbox the
-running server watches (`data/dataload/inbox` by default, or `--inbox DIR`), the scenario set first and each archive before its
-`.ready` marker, so the server loads them by itself:
-
-```bash
+# hand the files to the data inbox the running server watches (data/dataload/inbox, or --inbox DIR)
 python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --inbox
+
+# or load them now: one `drishti.py lake build --engine java` per file, the scenario set first, stopping at the first failure
+python3 tools/mrloader/pvf_run.py ... --load --lake risklake            # --plan: what each load would do, nothing written
 ```
 
-The node that owns the data load (`DRISHTI_DATALOAD_ENABLED`, drishti-main in the stack) must be running; the summary lists what
-was delivered under `INBOX`.
+`--inbox` copies every data file first (each under a visible temporary name, renamed into place), the scenario set, then the FX, then
+the PVs, and only then writes the markers in the same order: the inbox loads one batch by the data files' modification times, so the
+date's set is loaded before its vectors. The node that owns the data load (`DRISHTI_DATALOAD_ENABLED`, drishti-main in the stack) must be
+running; the summary lists what was delivered under `INBOX`. Without either hook the run ends with the lines to do it by hand:
 
-or drop each `.tar` and then its `.tar.ready` into the data inbox (`<data>/dataload/inbox`; `--lake NAME` on the export writes `lake:`
-into the `.ready` files). One archive per kind because `lake build --from` loads one table per run: a single archive holding both
-folders is planned for both tables but refused at load (*folder scenario-set matches no configured dataset (scenario-pv)*). The 2,000-position
-slice loaded into a scratch copy of the `demo` lake's layout this way (`--lake demo --lake-root <scratch>`).
+```bash
+python3 tools/drishti.py lake build --engine java --from data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz --lake risklake --kind scenario-set --mode overwrite-dates
+python3 tools/drishti.py lake build --engine java --from data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz --lake risklake --kind scenario-pv --mode overwrite-dates
+```
 
 For VaR on the date the lake also needs what the engine reads beside the PVs: the currencies' scenario FX (all USD here: none needed),
 and no other scenario P&L of the date in another set or batch.
@@ -268,20 +267,23 @@ python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/sc
 py tools\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates FILE --order newest-first --dry-run             # check only
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --inbox --lake risklake                  # hand it to the inbox
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --load --lake risklake                   # or load it now
 ```
 
 It checks, before writing anything: no repeated day, every day before the business date, `SCENARIO_COUNT` = the number of days,
 `WINDOW_START`/`WINDOW_END` = the first and last day, and every field of the scenario-set contract (`SCENARIO_SET_ID`, `BUSINESS_DATE`,
 `SCENARIO_DATES`, `SCENARIO_COUNT`, `WINDOW_START`, `WINDOW_END`, `HORIZON_DAYS` (`--horizon-days`, 1), `REVALUATION` (`--revaluation`,
-`full`), `SOURCE_BATCH`, `DESCRIPTION`, `SET_TYPE`). It writes `data/pvf/pvf-<date>/scenario-set-<date>.tar` and its `.ready`
-(`--out DIR` elsewhere, `--lake NAME` names the lake in the `.ready`, `--inbox [DIR]` copies archive then `.ready` to the data inbox).
-The id and batch default to `mapping.yaml`'s run values (`HS-PVF-251`, `B-<date>-PVF`) so the date's PV export names this set;
-`--scenario-set-id` and `--batch-id` override. A length other than `mapping.yaml scenario_set.count` (251) is warned about: the PVs must
-have as many values as the set has days. PVF's path 0 is the **latest** day (`path_order: newest-first`): the PV export reverses its
+`full`), `SOURCE_BATCH`, `DESCRIPTION`, `SET_TYPE`). It writes `data/pvf/mr-<date>/scenario-set.<date>.jsonl.gz` and its `.ready`
+(and the plain `.jsonl`; `--out DIR` elsewhere, `--lake NAME` names the lake in the `.ready`, `--inbox [DIR]` copies the file then its
+`.ready` to the data inbox, `--load --lake NAME` loads it now). The id and batch default to the PV mapping's run values (`HS-PVF-251`,
+`B-<date>-PVF`) so the date's PV export names this set; `--scenario-set-id` and `--batch-id` override. A length other than the mapping's
+`scenario-set.count` (251) is warned about: the PVs must have as many values as the set has days. PVF's path 0 is the **latest** day
+(`path-order: newest-first`): the PV export reverses its
 vectors into this set's oldest-first order, so a dates file in either order gives the same set.
 
-`--set-type stress` writes a stress set (`SET_TYPE STRESS`, id `HS-STRESS-<count>`, any past days) as `scenario-set-<date>-stress.tar`
-with `mode: append`, beside the normal set (load the normal set first).
+`--set-type stress` writes a stress set (`SET_TYPE STRESS`, id `HS-STRESS-<count>`, any past days) as `scenario-set-stress.<date>.jsonl.gz`
+with `mode: append` (its marker names the kind `scenario-set`, so the name does not route it), beside the normal set (load the normal set
+first).
 
 **Remove.** Whole dates only, through Drishti's own `lake delete` (no second deleter):
 
@@ -315,16 +317,16 @@ Each rate is placed **by its day**, so `RATES` follow the set's `SCENARIO_DATES`
 a day the set does not have, no rate for today, a repeated row, or a rate that is not a positive number refuses the whole file, listing
 every problem (nothing is written).
 
-**Add.** It joins to the date's set: the one just made (`data/pvf/pvf-<date>/scenario-set/`), or `--scenario-set PATH` (a set `.tar`,
-`.jsonl[.gz]` or folder), or `--dates FILE [--order ...] --scenario-set-id ID`:
+**Add.** It joins to the date's set: the one just made (`data/pvf/mr-<date>/scenario-set.<date>.jsonl.gz`), or `--scenario-set PATH` (a set
+`.jsonl[.gz]`, `.tar` or folder), or `--dates FILE [--order ...] --scenario-set-id ID`:
 
 ```bash
 python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                  # Linux / macOS
 py tools\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
-python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set-2026-11-18.tar --inbox
+python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set.2026-11-18.jsonl.gz --inbox
 ```
 
-It writes `fx-scenario-<date>.tar` + `.ready` (`FX_SCENARIO_ID` `FXS-<CCY>-<set id>`, `RATE` today, `RATES` per day, `QUOTE`, `SOURCE`
+It writes `fx-scenario.<date>.jsonl.gz` + `.ready` and the plain `.jsonl` (`FX_SCENARIO_ID` `FXS-<CCY>-<set id>`, `RATE` today, `RATES` per day, `QUOTE`, `SOURCE`
 (`--source`), `BATCH_ID` = the set's batch). With `--inbox` the set must already be loaded.
 
 **Remove.** `lake delete` deletes whole dates only, so **removing a date's FX removes every currency of that date** (there is no
@@ -358,8 +360,8 @@ python3 tools/mrloader/pvf_run.py --pv ... --portfolio ... --positions ... --dat
 ```
 
 On Windows use `py tools\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
-in both forms) are in `tools/mrloader/samples/`. The drill: build set and FX from the samples, `python3 tools/drishti.py lake build --from
-<tar> --lake <scratch>` each, `lake status`, then remove with `--remove ... --yes --no-signal`.
+in both forms) are in `tools/mrloader/samples/`. To try a load: build set and FX from the samples with `--load --lake demo` and a settings file whose `[lake.demo] root=` is a
+scratch folder, `lake status`, then remove with `--remove ... --yes --no-signal`.
 
 ## Performance and memory
 

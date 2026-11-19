@@ -19,7 +19,7 @@ A one-off tool the owner runs by path from the repository root (README.md beside
     python3 tools/mrloader/pvf_run.py         the driver: join, map, check, write the loadable layout (start here)
     python3 tools/mrloader/pvf_gen.py         synthetic inputs (portfolio, positions, per-path PVs) in the extract's CSV shape
     python3 tools/mrloader/pvf_join.py        portfolio + positions + per-path PVs -> one JSONL row per position, an audit of bad positions
-    python3 tools/mrloader/pvf_export_gz.py   the joined JSONL -> scenario-pv records (mapping.yaml) as .jsonl.gz parts + a .tar per kind to load
+    python3 tools/mrloader/pvf_export_gz.py   the joined JSONL -> scenario-pv records (kinds/scenario-pv.pvf.yaml) as .jsonl.gz parts + a .tar per kind to load
     python3 tools/mrloader/pvf_validate.py    every record of an output checked against the scenario-pv (and scenario-set) contract
 
 Every attribute name these tools write is UPPER_SNAKE (common.upper_keys); values are never changed by that rule.

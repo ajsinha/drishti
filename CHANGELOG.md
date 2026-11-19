@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **tools/mrloader writes one file per kind and date (CSV loaders, step 2).** The PVF scripts write `<kind>.<date>.jsonl`, `.jsonl.gz` and its `.ready` (pack, kind, mode, rows, sha256) under `mr-<date>/`, no tar unless a date is split into parts; `--inbox` copies every file before any marker in dependency order, and `--load --lake NAME` runs `drishti.py lake build --engine java` per file; the mapping moved to `kinds/scenario-pv.pvf.yaml` with its id rules in `kinds/shared/ids.pvf.yaml`; the join, the mapping and the records are byte-identical.
 - **Contracts of the masters ready for a bank's CSV files (CSV loaders, step 1).** Roll-ups and usage (a book's MtM and trades, a netting set's figures, a limit's use, a group's members, collateral totals) are `derived`; demo-only enumerations (entity names and LEIs, governing law, margin type, eligible assets, seven currencies, source systems) are gone; links to other engines' results and reverse lists are optional or derived; the VaR and exposure numbers are unchanged.
 - **tools/mrloader: daily scenario set and scenario FX, add and remove.** `pvf_scenario_set.py` and `pvf_fx_scenario.py` build the date's set and FX
   (long or wide CSV, dates in either order, contract-checked, tar + `.ready`, `--inbox`), and `--remove` calls `drishti.py lake delete`; `pvf_run.py

@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The id rules of the PVF source, shared by every kind that reads its files (docs/plans/CSV_LOADERS.md section 7.4): the same source value
+# gives the same id in the scenario PVs, the sensitivities, the book master and a limit's node, or nothing links. A mapping includes this
+# file with `use: [shared/ids.pvf]` and a field says `{use: TT_BOOK}`. The columns are those of the joined PVF row: the positions file's
+# own (POSITION_ID ...) and PORTFOLIO_D2's, a name both files have suffixed _D2 (PORTFOLIO_NM_D2).
+# Changing a rule here changes every kind that uses it.
+
+LEGAL_ENTITY: {from: LEGAL_ENTITY, slug: true, prefix: LE-, default: LE-UNKNOWN}
+DIVISION:     {from: [BUSINESS_GROUP_NM, PNL_SHEET_NM], slug: true, prefix: DIV-, default: DIV-UNKNOWN}
+DESK:         {from: [DESK_NM, PORTFOLIO_GROUP_NM], slug: true, prefix: DESK-, default: DESK-UNKNOWN}
+TT_BOOK:      {from: PORTFOLIO_NM_D2, slug: true, prefix: BOOK-}
+POSITION_ID:  {template: "POS-PVF-{POSITION_ID}"}

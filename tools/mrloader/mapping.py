@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The config-driven mapping of a joined PVF row to a scenario-pv record (mapping.yaml; the grammar is in its header and README.md),
+"""The config-driven mapping of a joined PVF row to a scenario-pv record (kinds/scenario-pv.pvf.yaml; the grammar is in its header and README.md),
 checked against the contract when it loads, and the scenario-set record the vectors are indexed by."""
 from __future__ import annotations
 
@@ -45,6 +45,40 @@ class RowProblem(Exception):
         self.reason, self.detail = reason, detail
 
 
+def _key(doc: dict, name: str):
+    """A mapping key by its hyphenated name (``omit-required``), or its older underscore spelling (``omit_required``)."""
+    return doc[name] if name in doc else doc.get(name.replace("-", "_"))
+
+
+def _fragments(path: Path, names: list) -> dict[str, dict]:
+    """The rules of the shared fragments a mapping includes (``use: [shared/ids.pvf]``: kinds/shared/ids.pvf.yaml, beside the kinds)."""
+    kinds_dir = Path(__file__).resolve().parent / "kinds"
+    out: dict[str, dict] = {}
+    for name in names:
+        f = kinds_dir / f"{name}.yaml"
+        if not f.is_file():
+            f = path.parent / f"{name}.yaml"
+        try:
+            doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError) as e:
+            raise PvfError(f"{path}: cannot read the shared fragment {name} ({f}): {e}") from None
+        for k, v in doc.items():
+            if k in out:
+                raise PvfError(f"{path}: the rule {k} is in two shared fragments")
+            out[str(k)] = dict(v)
+    return out
+
+
+def _resolve(name: str, rule, fragments: dict[str, dict]):
+    """A field's rule with ``{use: RULE}`` replaced by the shared fragment's rule (the other keys of the field override it)."""
+    if not isinstance(rule, dict) or "use" not in rule:
+        return rule
+    ref = str(rule["use"])
+    if ref not in fragments:
+        raise PvfError(f"{name}: use: {ref} names no rule of the shared fragments ({sorted(fragments) or 'none included: use: [...]'})")
+    return {**fragments[ref], **{k: v for k, v in rule.items() if k != "use"}}
+
+
 def _empty(v) -> bool:
     return v is None or (isinstance(v, str) and v.strip() == "") or (isinstance(v, float) and math.isnan(v))
 
@@ -56,7 +90,7 @@ def _text(v) -> str:
 
 
 class Mapping:
-    """mapping.yaml, loaded and checked: every required contract field has a rule, every rule names a contract field, the grammar holds."""
+    """kinds/scenario-pv.pvf.yaml, loaded and checked: every required contract field has a rule, every rule names a contract field, the grammar holds."""
 
     def __init__(self, path: Path, run_overrides: dict | None = None, contract: Contract | None = None):
         self.path = Path(path)
@@ -64,18 +98,24 @@ class Mapping:
             doc = yaml.safe_load(self.path.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError) as e:
             raise PvfError(f"cannot read the mapping {self.path}: {e}") from None
-        self.contract = contract or Contract(ROOT / doc.get("contract", "modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml"))
+        self.doc = doc
+        self.kind = doc.get("kind")
+        if contract is None:
+            contract = Contract.for_kind(self.kind, doc.get("pack")) if self.kind else Contract(
+                ROOT / doc.get("contract", "modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml"))
+        self.contract = contract
         self.run = {k: v for k, v in (doc.get("run") or {}).items()}
         self.run.update({k: v for k, v in (run_overrides or {}).items() if v is not None})
-        self.set = dict(doc.get("scenario_set") or {})
-        self.fields: dict[str, dict] = dict(doc.get("fields") or {})
-        self.omit: dict[str, str] = {str(k): str(v) for k, v in (doc.get("omit_required") or {}).items()}
-        pt = doc.get("pass_through") or {}
+        self.set = {k.replace("-", "_"): v for k, v in dict(_key(doc, "scenario-set") or {}).items()}
+        self.fragments = _fragments(self.path, doc.get("use") or [])
+        self.fields: dict[str, dict] = {n: _resolve(n, r, self.fragments) for n, r in dict(doc.get("fields") or {}).items()}
+        self.omit: dict[str, str] = {str(k): str(v) for k, v in (_key(doc, "omit-required") or {}).items()}
+        pt = _key(doc, "pass-through") or {}
         if isinstance(pt, list):
             pt = {"columns": pt}
         self.pass_columns = pt.get("columns", [])
         self.pass_exclude = {str(x) for x in pt.get("exclude", [])}
-        self.pass_prefix = str(pt.get("collision_prefix", "PVF_"))
+        self.pass_prefix = str(_key(pt, "collision-prefix") or "PVF_")
         self.sources: dict[str, Counter] = {}                     # field -> which column of a `from` list fed it, counted per row
         self._check()
 
@@ -104,16 +144,16 @@ class Mapping:
                     problems.append(f"{name}: {{@{ref}}} must name a field mapped above it")
         missing = [f for f in self.contract.required if f not in self.fields and f not in self.omit]
         if missing:
-            problems.append(f"no rule for the required field(s) {missing} (map them, or name them in omit_required with the reason)")
+            problems.append(f"no rule for the required field(s) {missing} (map them, or name them in omit-required with the reason)")
         for f in self.omit:
             if f not in self.contract.required or f in self.fields:
-                problems.append(f"omit_required {f}: only a required contract field without a rule is omitted")
+                problems.append(f"omit-required {f}: only a required contract field without a rule is omitted")
         if self.pass_columns != "*" and not isinstance(self.pass_columns, list):
-            problems.append("pass_through.columns is \"*\" or a list of joined columns")
+            problems.append("pass-through.columns is \"*\" or a list of joined columns")
         if not re.match(r"^[A-Z][A-Z0-9_]*$", self.pass_prefix):
-            problems.append("pass_through.collision_prefix must be UPPER_SNAKE (PVF_)")
+            problems.append("pass-through.collision-prefix must be UPPER_SNAKE (PVF_)")
         if self.set.get("path_order", "oldest-first") not in ("oldest-first", "newest-first"):
-            problems.append("scenario_set.path_order is oldest-first or newest-first")
+            problems.append("scenario-set.path-order is oldest-first or newest-first")
         if problems:
             raise PvfError(f"{self.path}: " + "; ".join(problems))
         for k in ("scenario_set_id", "batch_id", "computed_at", "restatement"):
@@ -171,7 +211,7 @@ class Mapping:
         return out
 
     def extras(self, row: dict) -> dict:
-        """The source attributes kept beside the contract's fields (pass_through): names UPPER_SNAKE, a contract field's name prefixed
+        """The source attributes kept beside the contract's fields (pass-through): names UPPER_SNAKE, a contract field's name prefixed
         (PVF_POSITION_ID), values as they are; null values left out."""
         cols = list(row) if self.pass_columns == "*" else [str(c) for c in self.pass_columns]
         out = {}
@@ -182,6 +222,10 @@ class Mapping:
             out[self.pass_prefix + name if name in self.contract.fields else name] = row[col]
         return out
 
+    def _cell(self, row: dict, column: str, name: str):
+        """A source column's value (the CSV kinds' mapping cleans the cell: trimmed, null words, spreadsheet errors)."""
+        return row.get(column)
+
     def _value(self, name: str, rule: dict, row: dict, out: dict, ctx: dict):
         used = None
         if "const" in rule:
@@ -190,8 +234,8 @@ class Mapping:
             v = self._fill(str(rule["template"]), row, out, ctx)
         else:
             cols = rule["from"] if isinstance(rule["from"], list) else [rule["from"]]
-            used = next((c for c in cols if not _empty(row.get(c))), None)
-            v = row.get(used) if used else None
+            used = next((c for c in cols if not _empty(self._cell(row, c, name))), None)
+            v = self._cell(row, used, name) if used else None
             if len(cols) > 1:
                 self.sources.setdefault(name, Counter())[used or "(none)"] += 1
         if not _empty(v) and "regex" in rule:
@@ -222,6 +266,10 @@ class Mapping:
         sf = rule.get("sign_from")
         if not _empty(v) and sf and ("only_for" not in sf or ("from" in rule and used in sf["only_for"])):
             v = _signed(name, v, sf, row)
+        return self._type_value(name, rule, v, used)
+
+    def _type_value(self, name: str, rule: dict, v, used: str | None):
+        """The value typed as the rule or the contract says (the CSV kinds' mapping types cells by the file's declared format)."""
         return _typed(name, rule.get("type") or _contract_type(self.contract, name), v)
 
 
@@ -292,7 +340,7 @@ def scenario_dates(m: Mapping, business_date: str, override: str | None = None) 
     rule = str(override or m.set.get("dates", "weekdays"))
     n = int(m.set.get("count", 0))
     if n < 1:
-        raise PvfError("scenario_set.count must be 1 or more")
+        raise PvfError("scenario-set.count must be 1 or more")
     if rule == "weekdays":
         return weekdays_before(business_date, n), f"assumed: the {n} weekdays before {business_date}, no holiday calendar"
     p = Path(rule) if Path(rule).is_absolute() else ROOT / rule
@@ -303,7 +351,7 @@ def scenario_dates(m: Mapping, business_date: str, override: str | None = None) 
     except OSError as e:
         raise PvfError(f"cannot read the scenario dates {rule}: {e}") from None
     if len(days) != n:
-        raise PvfError(f"{rule} has {len(days)} dates, scenario_set.count is {n} (never padded)")
+        raise PvfError(f"{rule} has {len(days)} dates, scenario-set.count is {n} (never padded)")
     if days != sorted(set(days)) or days[-1] >= business_date:
         raise PvfError(f"{rule}: the dates must be distinct, oldest first, all before {business_date}")
     return days, f"from {p.name}"

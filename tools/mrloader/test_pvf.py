@@ -33,7 +33,7 @@ TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from mrloader import common, mapping as M, pvf_export_gz as E, pvf_join as J, pvf_validate as V  # noqa: E402
+from mrloader import common, hooks as H, mapping as M, package as P, pvf_export_gz as E, pvf_join as J, pvf_validate as V  # noqa: E402
 from mrloader.contract import DateCheck, scenario_pv  # noqa: E402
 
 BD = "2026-10-29"
@@ -86,8 +86,8 @@ def extract(tmp_path: Path) -> dict[str, Path]:
 @pytest.fixture()
 def small_mapping(tmp_path: Path) -> Path:
     doc = yaml.safe_load(common.DEFAULT_MAPPING.read_text())
-    doc["scenario_set"]["count"] = 4
-    p = tmp_path / "mapping.yaml"
+    doc["scenario-set"]["count"] = 4
+    p = tmp_path / "scenario-pv.pvf.yaml"
     p.write_text(yaml.safe_dump(doc, sort_keys=False))
     return p
 
@@ -183,30 +183,44 @@ def test_upper_keys():
 def test_export_layout_and_contract(extract, tmp_path, small_mapping):
     _join(extract, tmp_path)
     joined, out = tmp_path / "out" / "j.jsonl", tmp_path / "x"
-    s = E.export(E.ExportConfig(joined, out, small_mapping, jsonl=out / f"scenario_pv.{BD}.jsonl"))
+    s = E.export(E.ExportConfig(joined, out, small_mapping))
     assert s["RECORDS_WRITTEN"] == 2 and s["ROWS_AUDITED"] == 0
-    recs = [json.loads(x) for x in gzip.open(out / "scenario-pv" / BD / "cob.part-001.jsonl.gz", "rt")]
-    assert [json.loads(x) for x in (out / f"scenario_pv.{BD}.jsonl").read_text().splitlines()] == recs
+    gz = out / f"scenario-pv.{BD}.jsonl.gz"
+    recs = [json.loads(x) for x in gzip.open(gz, "rt")]
+    assert [json.loads(x) for x in (out / f"scenario-pv.{BD}.jsonl").read_text().splitlines()] == recs
     r = recs[1]
     assert r["POSITION_ID"] == "POS-PVF-2" and r["SCENARIO_PV_ID"] == "SPV-POS-PVF-2-HS-PVF-251" and r["SCENARIO_PV"] == [202.0, 202.0, 202.0, 200.0]   # path 0 is the latest day (newest-first): reversed to oldest first
     assert r["DIRECTION"] == "SHORT" and r["QUANTITY"] == -250.0 and r["SOURCE_SYSTEM"] == "CALYPSO" and r["LIMIT_LETTER"] == "LL-7"
     assert r["STATUS"] == "ok" and "MATURITY_DATE" not in r and "TRADE_STATUS" not in r and "TRADE_ID" not in r
     assert r["PVF_POSITION_ID"] == 2 and r["SRC_POSITION_ID"] == "CAL:22.CAL:22" and r["PVF_TRADE_ID"] == "22" and r["PATHS_FILLED"] == 3
     assert all(not common.lower_keys(x) for x in recs)
-    tars = [out / f"scenario-pv-{BD}.tar", out / f"scenario-set-{BD}.tar"]
-    with tarfile.open(tars[0]) as t:
-        assert t.getnames() == [f"scenario-pv/{BD}/cob.part-001.jsonl.gz"]
-    with tarfile.open(tars[1]) as t:
-        assert t.getnames() == [f"scenario-set/{BD}/cob.jsonl.gz"]
-    assert 'folders: {"scenario-pv": "market-risk"}' in Path(f"{tars[0]}.ready").read_text()
-    sums = dict(reversed(x.split("  ")) for x in (out / f"pvf-{BD}.sha256").read_text().splitlines())
-    assert sums[tars[0].name] == common.sha256_of(tars[0])
-    res = V.validate(tars, omitted=V.known_gaps(small_mapping))
+    files = [gz, out / f"scenario-set.{BD}.jsonl.gz"]
+    assert not list(out.glob("*.tar")) and not (out / "scenario-pv").exists()          # no tar, no part folders by default
+    ready = P.read_marker(Path(f"{gz}.ready"))
+    assert ready == {"pack": "market-risk", "kind": "scenario-pv", "mode": "replace", "rows": 2, "sha256": common.sha256_of(gz)}
+    assert P.read_marker(Path(f"{files[1]}.ready"))["kind"] == "scenario-set"
+    sums = dict(reversed(x.split("  ")) for x in (out / f"mr-{BD}.sha256").read_text().splitlines())
+    assert sums == {f.name: common.sha256_of(f) for f in files}
+    assert (out / f"scenario-pv.{BD}.rejects.csv").read_text().splitlines() == ["FILE,ROW,KEY,COLUMN,FIELD,VALUE,REASON,WHY,FIX"]
+    assert json.loads((out / f"scenario-pv.{BD}.summary.json").read_text())["RECORDS_WRITTEN"] == 2
+    res = V.validate(files, omitted=V.known_gaps(small_mapping))
     assert res["OK"], res
-    assert not V.validate(tars, strict=True)["OK"]                         # the extras and the gaps are errors to the letter
-    first = tars[0].read_bytes()
+    assert not V.validate(files, strict=True)["OK"]                        # the extras and the gaps are errors to the letter
+    first = gz.read_bytes()
     E.export(E.ExportConfig(joined, out, small_mapping))
-    assert tars[0].read_bytes() == first                                   # deterministic
+    assert gz.read_bytes() == first                                        # deterministic
+
+
+def test_export_parts_in_one_tar_only_when_asked(extract, tmp_path, small_mapping):
+    """--rows-per-part: the date split into parts, packed as one tar (loads completely or not at all), its marker naming its folder."""
+    _join(extract, tmp_path)
+    out = tmp_path / "parts"
+    E.export(E.ExportConfig(tmp_path / "out" / "j.jsonl", out, small_mapping, rows_per_part=1))
+    tar = out / f"scenario-pv-{BD}.tar"
+    with tarfile.open(tar) as t:
+        assert t.getnames() == [f"scenario-pv/{BD}/part-0001.jsonl.gz", f"scenario-pv/{BD}/part-0002.jsonl.gz"]
+    assert P.read_marker(Path(f"{tar}.ready"))["folders"] == {"scenario-pv": "market-risk"}
+    assert not (out / f"scenario-pv.{BD}.jsonl.gz").exists() and (out / f"scenario-pv.{BD}.jsonl").is_file()
 
 
 def test_export_refuses_a_wrong_length_and_newest_first(extract, tmp_path, small_mapping):
@@ -215,10 +229,10 @@ def test_export_refuses_a_wrong_length_and_newest_first(extract, tmp_path, small
     s = E.export(E.ExportConfig(joined, tmp_path / "y", common.DEFAULT_MAPPING))  # 251 expected, 4 given: audited, never padded
     assert s["RECORDS_WRITTEN"] == 0 and s["AUDITED_BY_REASON"] == {"BAD_VALUE": 2}
     doc = yaml.safe_load(small_mapping.read_text())
-    doc["scenario_set"]["path_order"] = "newest-first"
+    doc["scenario-set"]["path-order"] = "newest-first"
     small_mapping.write_text(yaml.safe_dump(doc, sort_keys=False))
     E.export(E.ExportConfig(joined, tmp_path / "z", small_mapping, dry_run=False))
-    r = json.loads(gzip.open(tmp_path / "z" / "scenario-pv" / BD / "cob.part-001.jsonl.gz", "rt").readline())
+    r = json.loads(gzip.open(tmp_path / "z" / f"scenario-pv.{BD}.jsonl.gz", "rt").readline())
     assert r["SCENARIO_PV"] == [104.0, 103.0, 102.0, 101.0]
 
 
@@ -241,13 +255,14 @@ def test_driver_by_path(extract, tmp_path, small_mapping):
            "--positions", str(extract["positions"]), "--date", BD, "--max-path", "3", "--mapping", str(small_mapping)]
     r = subprocess.run(run + ["--dry-run"], capture_output=True, text=True, timeout=120)
     assert r.returncode == 0, r.stderr
-    assert not (tmp_path / f"pvf-{BD}").exists()
+    assert not (tmp_path / f"mr-{BD}").exists()
     r = subprocess.run(run, capture_output=True, text=True, timeout=120)
     assert r.returncode == 0, r.stderr
-    folder = tmp_path / f"pvf-{BD}"
-    summary = json.loads((folder / f"pvf-{BD}.summary.json").read_text())
+    folder = tmp_path / f"mr-{BD}"
+    summary = json.loads((folder / f"scenario-pv.{BD}.summary.json").read_text())
     assert summary["RECORDS_WRITTEN"] == 2 and summary["JOIN_EXCLUDED"] == 4
-    assert (folder / f"scenario_pv.{BD}.jsonl").is_file() and (folder / f"pvf_joined.{BD}.fills.csv").is_file()
+    assert (folder / f"scenario-pv.{BD}.jsonl").is_file() and (folder / f"pvf_joined.{BD}.fills.csv").is_file()
+    assert "lake build --engine java" in r.stderr                         # without a hook, the lines to load by hand
     bad = subprocess.run(run[:-6] + ["--date", "2026-13-01"], capture_output=True, text=True, timeout=60)
     assert bad.returncode == 2 and "not a date" in bad.stderr
     for script in ("pvf_join.py", "pvf_export_gz.py", "pvf_validate.py", "pvf_gen.py", "pvf_scenario_set.py", "pvf_fx_scenario.py"):
@@ -278,19 +293,48 @@ def test_quantity_priority_list_and_sign_from(tmp_path):
     assert m._value("DIRECTION", doc["fields"]["DIRECTION"], {}, {"QUANTITY": -9.0}, {}) == "SHORT"
 
 
-def test_inbox_hand_over_puts_the_set_first_and_each_marker_after_its_archive(tmp_path):
-    """--inbox: the scenario set is delivered before the PVs, every archive before its .ready, nothing half-written left behind."""
-    from mrloader import pvf_run
+def _loadable(folder: Path, kind: str, body: str = "x") -> Path:
+    f = folder / f"{kind}.2026-10-29.jsonl.gz"
+    f.write_bytes(body.encode())
+    P.write_marker(f, kind, "market-risk", 1)
+    return f
+
+
+def test_inbox_hand_over_puts_the_set_first_and_every_file_before_any_marker(tmp_path, monkeypatch):
+    """--inbox: every data file in place before the first marker (one inbox cycle takes the day), the set before the FX and the PVs:
+    the inbox loads its batch by the data files' modification times, so the copy order is the load order."""
     out, inbox = tmp_path / "out", tmp_path / "inbox"
     out.mkdir(), inbox.mkdir()
-    tars = []
-    for kind in ("scenario-pv", "scenario-set"):                 # the export's order; the inbox wants the set first
-        t = out / f"{kind}-2026-10-29.tar"
-        t.write_bytes(kind.encode())
-        Path(f"{t}.ready").write_text("rows: 1\n", encoding="utf-8")
-        tars.append(str(t))
-    assert pvf_run.to_inbox(tars, inbox) == ["scenario-set-2026-10-29.tar", "scenario-pv-2026-10-29.tar"]
-    assert sorted(p.name for p in inbox.iterdir()) == ["scenario-pv-2026-10-29.tar", "scenario-pv-2026-10-29.tar.ready",
-                                                      "scenario-set-2026-10-29.tar", "scenario-set-2026-10-29.tar.ready"]
-    with pytest.raises(pvf_run.PvfError):
-        pvf_run.to_inbox(tars, tmp_path / "missing")
+    files = [_loadable(out, k) for k in ("scenario-pv", "fx-scenario", "scenario-set")]
+    seen = []
+    real = H.shutil.copyfile
+    monkeypatch.setattr(H.shutil, "copyfile", lambda a, b: (seen.append(Path(b).name), real(a, b))[1])
+    assert H.to_inbox(files, inbox) == [f"scenario-set.{BD}.jsonl.gz", f"fx-scenario.{BD}.jsonl.gz", f"scenario-pv.{BD}.jsonl.gz"]
+    assert seen == [f"scenario-set.{BD}.jsonl.gz.copying", f"fx-scenario.{BD}.jsonl.gz.copying", f"scenario-pv.{BD}.jsonl.gz.copying",
+                    f"scenario-set.{BD}.jsonl.gz.ready", f"fx-scenario.{BD}.jsonl.gz.ready", f"scenario-pv.{BD}.jsonl.gz.ready"]
+    assert not list(inbox.glob("*.copying"))
+    with pytest.raises(common.PvfError):
+        H.to_inbox(files, tmp_path / "missing")
+
+
+def test_load_runs_lake_build_in_order_and_stops_at_the_first_failure(tmp_path):
+    """--load: one `drishti.py lake build --engine java` per file, in dependency order, the first failure returned and the rest not run."""
+    out = tmp_path / "out"
+    out.mkdir()
+    files = [_loadable(out, k) for k in ("scenario-pv", "scenario-set", "var-limit")]
+    calls = []
+
+    class Done:
+        def __init__(self, rc):
+            self.returncode = rc
+
+    def recorder(cmd, check=False):
+        calls.append(cmd)
+        return Done(7 if "scenario-pv" in cmd[cmd.index("--kind") + 1] else 0)
+    assert H.load(files, "risklake", runner=recorder) == 7
+    kinds = [c[c.index("--kind") + 1] for c in calls]
+    assert kinds == ["scenario-set", "scenario-pv"]                          # var-limit after the PVs: never run
+    assert calls[0][2:] == ["lake", "build", "--engine", "java", "--from", str(files[1]), "--lake", "risklake", "--kind", "scenario-set",
+                            "--mode", "overwrite-dates"]
+    with pytest.raises(common.PvfError, match="--lake"):
+        H.load(files, "")

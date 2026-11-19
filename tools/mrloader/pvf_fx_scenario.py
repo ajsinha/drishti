@@ -19,9 +19,9 @@ the date's scenario set, in the set's SCENARIO_DATES order). The VaR engine conv
 P&L(s) = PV(s) x FX(s) - PV(base) x FX(base); without a currency here a trade priced in it is rejected (DRS-5207).
 
 examples (from the repository root):
-  python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                 add: builds fx-scenario-2026-11-18.tar
+  python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                 add: builds fx-scenario.2026-11-18.jsonl.gz
   python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv --inbox         ... and hands it to the data inbox
-  python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set-2026-11-18.tar
+  python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set.2026-11-18.jsonl.gz
   python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --dry-run            remove: what would go (all currencies of the date)
   python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --yes --no-signal
 
@@ -34,13 +34,13 @@ A currency with a missing or extra day, a day not in the set, a repeated row, or
 whole file, listing every problem (nothing is written).
 
 the scenario set the days come from (the date's one normal set), first found:
-  --scenario-set PATH      a scenario-set .tar, .jsonl[.gz] or folder (what pvf_scenario_set.py wrote)
+  --scenario-set PATH      a scenario-set .jsonl[.gz], .tar or folder (what pvf_scenario_set.py wrote)
   --dates FILE [--order]   with --scenario-set-id: the days of a dates file (one YYYY-MM-DD a line; --order says how it is ordered)
-  neither                  <out>/pvf-<date>/scenario-set/<date>/cob.jsonl.gz, the set just made (--out default data/pvf)
+  neither                  <out>/mr-<date>/scenario-set.<date>.jsonl.gz, the set just made (--out default data/pvf)
 
-writes under <out>/pvf-<date>/: fx-scenario/<date>/cob.jsonl.gz, fx-scenario-<date>.tar and its .ready (--lake names the lake in it).
---inbox copies the archive and then its .ready to the data inbox the running server watches (the date's scenario set must be loaded
-first; pvf_run.py --fx hands set, FX and PVs over in that order).
+writes under <out>/mr-<date>/: fx-scenario.<date>.jsonl, fx-scenario.<date>.jsonl.gz and its .ready (--lake names the lake in it), and
+mr-<date>.sha256. --inbox copies the file and then its .ready to the data inbox the running server watches (the date's scenario set must
+be loaded first; pvf_run.py --fx hands set, FX and PVs over in that order); --load --lake NAME loads it now with lake build.
 --remove deletes the date's fx-scenario rows with `tools/drishti.py lake delete --kind fx-scenario` (whole dates only: every currency
 of the date goes). Exit 0 done, 1 refused (one line saying why), 2 usage.
 """
@@ -58,8 +58,10 @@ _TOOLS = str(Path(__file__).resolve().parents[1])
 if _TOOLS not in sys.path:
     sys.path.insert(0, _TOOLS)
 
-from mrloader.common import (DEFAULT_INBOX, DEFAULT_OUT, PvfError, add_remove_arguments, iso_date, lake_delete, log, read_any, read_dates_file,  # noqa: E402
-                        setup_logging, strict_date, to_inbox, write_kind)
+from mrloader import hooks  # noqa: E402
+from mrloader.common import (DEFAULT_OUT, PACK, PvfError, add_remove_arguments, iso_date, lake_delete, log, read_any, read_dates_file,  # noqa: E402
+                             setup_logging, strict_date)
+from mrloader.package import day_folder, write_records, write_sha256  # noqa: E402
 from mrloader.contract import fx_scenario  # noqa: E402
 
 KIND = "fx-scenario"
@@ -222,8 +224,8 @@ def set_for(a: argparse.Namespace) -> dict:
         if not a.scenario_set_id:
             raise PvfError("--dates needs --scenario-set-id (the id of the date's set)")
         return {"SCENARIO_SET_ID": a.scenario_set_id, "SCENARIO_DATES": read_dates_file(a.dates, a.order), "SOURCE_BATCH": a.batch_id}
-    own = (a.out or DEFAULT_OUT) / f"pvf-{a.date}" / "scenario-set"
-    if not own.is_dir():
+    own = day_folder(a.out or DEFAULT_OUT, a.date) / f"scenario-set.{a.date}.jsonl.gz"
+    if not own.is_file():
         raise PvfError(f"no scenario set: give --scenario-set PATH, or --dates FILE with --scenario-set-id, or run pvf_scenario_set.py first ({own})")
     return load_set(own, a.date, a.scenario_set_id)
 
@@ -248,11 +250,12 @@ def fx_records(c: FxConfig) -> list[dict]:
 def build_fx(c: FxConfig) -> dict:
     """Write the date's FX (layout, tar, .ready); the summary."""
     recs = fx_records(c)
-    tar = write_kind(c.out, KIND, c.business_date, recs, c.lake)
+    f = write_records(c.out, KIND, c.business_date, PACK, recs, c.lake)
+    write_sha256(c.out, c.business_date)
     log.info("scenario FX of %s: %d currencies (%s), %d rates each, set %s, batch %s -> %s", c.business_date, len(recs),
-             ", ".join(r["CURRENCY"] for r in recs), len(c.days), c.scenario_set_id, c.batch_id, tar)
+             ", ".join(r["CURRENCY"] for r in recs), len(c.days), c.scenario_set_id, c.batch_id, f)
     return {"BUSINESS_DATE": c.business_date, "CURRENCIES": [r["CURRENCY"] for r in recs], "RATES_PER_CURRENCY": len(c.days),
-            "SCENARIO_SET_ID": c.scenario_set_id, "BATCH_ID": c.batch_id, "TAR": str(tar)}
+            "SCENARIO_SET_ID": c.scenario_set_id, "BATCH_ID": c.batch_id, "FILE": str(f)}
 
 
 def add_fx_options(p: argparse.ArgumentParser) -> None:
@@ -271,10 +274,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--date", required=True, type=strict_date, help="the business date YYYY-MM-DD")
     p.add_argument("--remove", action="store_true", help="remove the date's FX from the lake instead of adding it")
     p.add_argument("--fx", type=Path, metavar="FILE", help="add: the FX CSV, long or wide form (see below)")
-    p.add_argument("--out", type=Path, help=f"add: the folder pvf-<date>/ is written in (default {DEFAULT_OUT.name}/ under data/)")
+    p.add_argument("--out", type=Path, help=f"add: the folder mr-<date>/ is written in (default {DEFAULT_OUT.name}/ under data/)")
     p.add_argument("--source", default=SOURCE, help=f"add: the SOURCE of the rates (default {SOURCE})")
-    p.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
-                   help="add: copy the archive and then its .ready into the data inbox the running server watches")
+    hooks.add_arguments(p.add_argument_group("add: hand over or load"), shared=False)
     p.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     add_fx_options(p)
     add_remove_arguments(p)
@@ -296,15 +298,14 @@ def run(a: argparse.Namespace) -> dict:
     s = set_for(a)
     days = list(s["SCENARIO_DATES"])
     batch = a.batch_id or s.get("SOURCE_BATCH") or f"B-{a.date}-PVF"
-    folder = (a.out or DEFAULT_OUT) / f"pvf-{a.date}"
+    folder = day_folder(a.out or DEFAULT_OUT, a.date)
     table = read_fx_file(a.fx, a.date, days)
     if a.dry_run:
         fx_records(FxConfig(a.date, table, s["SCENARIO_SET_ID"], days, batch, folder, a.lake, a.source))
         log.info("dry run: %d currencies are complete for %d days; would write %s", len(table), len(days), folder)
         return {"DRY_RUN": True, "CURRENCIES": sorted(table)}
     res = build_fx(FxConfig(a.date, table, s["SCENARIO_SET_ID"], days, batch, folder, a.lake, a.source))
-    if a.inbox:
-        res["INBOX"] = {"FOLDER": str(a.inbox), "DELIVERED": to_inbox([res["TAR"]], a.inbox)}
+    res["INBOX" if a.inbox else "LOAD"] = hooks.deliver(a, [res["FILE"]])
     return res
 
 
@@ -312,11 +313,11 @@ def main(argv: list[str] | None = None) -> int:
     a = parser().parse_args(argv)
     setup_logging(a.verbose)
     try:
-        run(a)
+        res = run(a)
     except (PvfError, OSError) as e:
         log.error("pvf fx refused: %s", e)
         return 1
-    return 0
+    return (res.get("LOAD") or {}).get("EXIT") or 0
 
 
 if __name__ == "__main__":
