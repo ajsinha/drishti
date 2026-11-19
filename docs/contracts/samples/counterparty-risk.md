@@ -88,19 +88,19 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `AGREEMENT_ID` | string | required | The record's id (the business key) | pattern `^AGR-` | `"AGR-ALDERSHOT-ISDA"` |
 | `TYPE` | string | required | The master agreement form, for example the ISDA 2002 Master Agreement. | — | `"ISDA 2002 Master"` |
-| `COUNTERPARTY_NAME` | string | required | The legal entity that signed the agreement with the bank. | — | `"Aldershot Pension Trust"` |
-| `GOVERNING_LAW` | string | required | The law the agreement is read under, which decides how close-out netting is enforced. | one of `English`, `New York` | `"English"` |
-| `SIGNED` | date (YYYY-MM-DD) | required | The date the agreement was signed. | — | `"2015-12-10"` |
+| `COUNTERPARTY_NAME` | string | derived (filled in every row) | The legal entity that signed the agreement with the bank. *the NAME of the agreement's COUNTERPARTY, looked up by Drishti; a master file does not carry it* | — | `"Aldershot Pension Trust"` |
+| `GOVERNING_LAW` | string | required | The law the agreement is read under, which decides how close-out netting is enforced. | seen: `English`, `New York` | `"English"` |
+| `SIGNED` | date (YYYY-MM-DD) | optional (filled in every row) | The date the agreement was signed. | — | `"2015-12-10"` |
 | `CLOSE_OUT_NETTING` | string | required | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. | — | `"Enforceable"` |
-| `ELECTIONS` | object | required | The master agreement's elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text). | links to `election` | {…} |
-| `ELECTIONS.AUTOMATIC_EARLY_TERMINATION` | boolean | required | Whether the trades end by themselves on certain defaults, without a notice. | — | `false` |
-| `ELECTIONS.CROSS_DEFAULT` | string | required | The threshold above which a default on other debt is a default under this agreement. | — | `"3% of shareholders' equity"` |
-| `ELECTIONS.SET_OFF` | boolean | required | Whether amounts owed under other contracts may be set off against the close-out amount. | — | `true` |
-| `ELECTIONS.TERMINATION_CURRENCY` | string | required | The currency the close-out amount is paid in. | — | `"USD"` |
-| `ELECTIONS.ADDITIONAL_TERMINATION_EVENTS` | string | required | Further events, such as a downgrade, that let a party end the trades. | — | `"Rating downgrade below BBB-"` |
-| `ELECTIONS.PROTOCOLS` | string | required | The ISDA protocols both parties adhered to, which amend the agreement. | — | `"ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"` |
+| `ELECTIONS` | object | optional (filled in every row) | The master agreement's elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text). | links to `election` | {…} |
+| `ELECTIONS.AUTOMATIC_EARLY_TERMINATION` | boolean | optional (filled in every `ELECTIONS` entry) | Whether the trades end by themselves on certain defaults, without a notice. | — | `false` |
+| `ELECTIONS.CROSS_DEFAULT` | string | optional (filled in every `ELECTIONS` entry) | The threshold above which a default on other debt is a default under this agreement. | — | `"3% of shareholders' equity"` |
+| `ELECTIONS.SET_OFF` | boolean | optional (filled in every `ELECTIONS` entry) | Whether amounts owed under other contracts may be set off against the close-out amount. | — | `true` |
+| `ELECTIONS.TERMINATION_CURRENCY` | string | optional (filled in every `ELECTIONS` entry) | The currency the close-out amount is paid in. | — | `"USD"` |
+| `ELECTIONS.ADDITIONAL_TERMINATION_EVENTS` | string | optional (filled in every `ELECTIONS` entry) | Further events, such as a downgrade, that let a party end the trades. | — | `"Rating downgrade below BBB-"` |
+| `ELECTIONS.PROTOCOLS` | string | optional (filled in every `ELECTIONS` entry) | The ISDA protocols both parties adhered to, which amend the agreement. | — | `"ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"` |
 | `COUNTERPARTY` | string | required | The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
-| `CSAS` | array of strings | required | The credit support annexes under this agreement, one per bank legal entity it covers (decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. | links to `csa` | [4 values] |
+| `CSAS` | array of strings | derived (filled in every row) | The credit support annexes under this agreement, one per bank legal entity it covers (decision 9): CSA_IDs of the csa kind (CSA-<counterparty>-<legal entity>); empty when the agreement has none. *the reverse of the CSA's AGREEMENT link, derived by Drishti; a master file does not carry it* | links to `csa` | [4 values] |
 
 ### Fields in other rows
 
@@ -109,7 +109,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 ### For the production query
 
 - **Identity:** one record per `AGREEMENT_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `AGREEMENT_ID`, `TYPE`, `COUNTERPARTY_NAME`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`, `COUNTERPARTY`, `CSAS` (the contract's required fields).
+- **Never null:** `AGREEMENT_ID`, `TYPE`, `GOVERNING_LAW`, `CLOSE_OUT_NETTING`, `COUNTERPARTY` (the contract's required fields); every row of the test data also fills `COUNTERPARTY_NAME`, `SIGNED`, `ELECTIONS`, `CSAS`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -189,16 +189,16 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `BALANCE_ID` | string | required | The record's id (the business key) | pattern `^COLL-` | `"COLL-ALDERSHOT-FRA"` |
-| `HELD` | integer | required | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; F3). | unit: USD | `0` |
-| `POSTED` | integer | required | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (F3). | unit: USD | `15251373` |
-| `NET` | integer | required | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | unit: USD | `-15251373` |
+| `HELD` | integer | derived (filled in every row) | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; F3). *a roll-up Drishti computes from the balance's POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored* | unit: USD | `0` |
+| `POSTED` | integer | derived (filled in every row) | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (F3). *a roll-up Drishti computes from the balance's POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored* | unit: USD | `15251373` |
+| `NET` | integer | derived (filled in every row) | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. *a roll-up Drishti computes from the balance's POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored* | unit: USD | `-15251373` |
 | `AS_OF` | date (YYYY-MM-DD) | required | The date the balance is valued on: the business date of the file. | — | `"2026-07-08"` |
 | `POSITIONS` | array of objects | required | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. | — | [3 objects] |
 | `POSITIONS[].ASSET` | string | required | The cash or security that is held or posted. | — | `"Solaris Energy Corp. 2031"` |
 | `POSITIONS[].DIRECTION` | string | required | Whether the bank posted the asset or received it. | one of `Posted`, `Received`, `Held` | `"Posted"` |
 | `POSITIONS[].MARKET_VALUE` | integer | required | The current market value of the asset before the haircut. | unit: USD | `5109338` |
 | `POSITIONS[].HAIRCUT` | number | required | The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | unit: fraction of the market value (0.005 is 0.5%) | `0.005` |
-| `POSITIONS[].VALUE` | integer | required | The market value after the haircut, the amount that counts as collateral. | unit: USD | `5083791` |
+| `POSITIONS[].VALUE` | integer | derived (filled in every `POSITIONS[]` entry) | The market value after the haircut, the amount that counts as collateral. *MARKET_VALUE less the HAIRCUT, computed by Drishti; an upstream value is ignored* | unit: USD | `5083791` |
 | `CSA` | string | required | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-FRA"` |
 | `NETTING_SET` | string | required | The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | pattern `^NS-`; links to `netting-set` | `"NS-ALDERSHOT-FRA"` |
 
@@ -209,7 +209,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `BALANCE_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `BALANCE_ID`, `HELD`, `POSTED`, `NET`, `AS_OF`, `POSITIONS`, `CSA`, `NETTING_SET` (the contract's required fields).
+- **Never null:** `BALANCE_ID`, `AS_OF`, `POSITIONS`, `CSA`, `NETTING_SET` (the contract's required fields); every row of the test data also fills `HELD`, `POSTED`, `NET`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -284,20 +284,20 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `LIMIT_ID` | string | required | The record's id (the business key) | pattern `^LIM-` | `"LIM-ALDERSHOT"` |
-| `COUNTERPARTY_NAME` | string | required | The legal entity the limit applies to. | — | `"Aldershot Pension Trust"` |
+| `COUNTERPARTY_NAME` | string | derived (filled in every row) | The legal entity the limit applies to. *the NAME of the limit's COUNTERPARTY, looked up by Drishti; a limit file does not carry it* | — | `"Aldershot Pension Trust"` |
 | `MEASURE` | string | required | The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure. | — | `"PFE 95 peak"` |
 | `LIMIT` | number | required | The most exposure the bank accepts to the counterparty on this measure. | unit: USD | `7980000000.0` |
-| `USED` | integer | required | The exposure measured today against the limit. | unit: USD | `6001569387` |
-| `UTILISATION` | number | required | The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.6671 is 66.71%) | `0.666921` |
-| `STATUS` | string | required | The limit's state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%. | one of `Early warning`, `Within limit` | `"Within limit"` |
-| `BUCKETS` | array of objects | required | The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION. | — | [5 objects] |
-| `BUCKETS[].BUCKET` | string | required | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | one of `0-1Y`, `1-3Y`, `10Y+`, `3-5Y`, `5-10Y` | `"0-1Y"` |
+| `USED` | integer | derived (filled in every row) | The exposure measured today against the limit. *limit use, computed by the exposure engine; never loaded* | unit: USD | `6001569387` |
+| `UTILISATION` | number | derived (filled in every row) | The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. *limit use, computed by the exposure engine; never loaded* | unit: fraction of the limit (0.6671 is 66.71%) | `0.666921` |
+| `STATUS` | string | derived (filled in every row) | The limit's state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%. *limit use, computed by the exposure engine; never loaded* | seen: `Within limit`, `Early warning` | `"Within limit"` |
+| `BUCKETS` | array of objects | optional (filled in every row) | The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION. | — | [5 objects] |
+| `BUCKETS[].BUCKET` | string | required | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | seen: `0-1Y`, `1-3Y`, `10Y+`, `3-5Y`, `5-10Y` | `"0-1Y"` |
 | `BUCKETS[].LIMIT` | integer | required | The limit that applies to this tenor bucket. | unit: USD | `7980000000` |
-| `BUCKETS[].USED` | integer | required | The exposure in this tenor bucket. | unit: USD | `4733741826` |
-| `BUCKETS[].UTILISATION` | number | required | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.567 is 56.7%) | `0.567351` |
+| `BUCKETS[].USED` | integer | derived (filled in every `BUCKETS[]` entry) | The exposure in this tenor bucket. *limit use per bucket, computed by the exposure engine; never loaded* | unit: USD | `4733741826` |
+| `BUCKETS[].UTILISATION` | number | derived (filled in every `BUCKETS[]` entry) | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. *limit use per bucket, computed by the exposure engine; never loaded* | unit: fraction of the limit (0.567 is 56.7%) | `0.567351` |
 | `COUNTERPARTY` | string | required | The counterparty the limit is set for: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
-| `APPROVED_BY` | string | required | The committee or officer that approved the limit. | — | `"Credit Risk Committee"` |
-| `REVIEW_DUE` | date (YYYY-MM-DD) | required | The date the limit is next due for credit review (YYYY-MM-DD). | — | `"2027-03-19"` |
+| `APPROVED_BY` | string | optional (filled in every row) | The committee or officer that approved the limit. | — | `"Credit Risk Committee"` |
+| `REVIEW_DUE` | date (YYYY-MM-DD) | optional (filled in every row) | The date the limit is next due for credit review (YYYY-MM-DD). | — | `"2027-03-19"` |
 
 ### Fields in other rows
 
@@ -306,7 +306,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `LIMIT_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `LIMIT_ID`, `COUNTERPARTY_NAME`, `MEASURE`, `LIMIT`, `USED`, `UTILISATION`, `STATUS`, `BUCKETS`, `COUNTERPARTY`, `APPROVED_BY`, `REVIEW_DUE` (the contract's required fields).
+- **Never null:** `LIMIT_ID`, `MEASURE`, `LIMIT`, `COUNTERPARTY` (the contract's required fields); every row of the test data also fills `COUNTERPARTY_NAME`, `USED`, `UTILISATION`, `STATUS`, `BUCKETS`, `APPROVED_BY`, `REVIEW_DUE`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -388,7 +388,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `CSA_ID` | string | required | The record's id (the business key) | pattern `^CSA-` | `"CSA-ALDERSHOT-FRA"` |
-| `MARGIN_TYPE` | string | required | Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out. | one of `VM`, `VM + IM` | `"VM"` |
+| `MARGIN_TYPE` | string | required | Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out. | seen: `VM`, `VM + IM` | `"VM"` |
 | `CSA_CURRENCY` | string | required | The currency the CSA's amounts are in (thresholds, minimum transfer amounts, independent amount) and calls are made in. | — | `"USD"` |
 | `THRESHOLD_US` | number | required | The exposure the counterparty may have to the bank before the bank must post collateral. | unit: USD | `10000000.0` |
 | `THRESHOLD_THEM` | number | required | The exposure the bank accepts before the counterparty must post collateral. | unit: USD | `10000000.0` |
@@ -399,14 +399,14 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `FREQUENCY` | string | required | How often margin is called. | — | `"Daily"` |
 | `MARGIN_FREQUENCY_DAYS` | integer | required | How often a margin call may be made, in business days (1 for a daily CSA); FREQUENCY says it in words. | unit: business days | `1` |
 | `MPOR_DAYS` | integer | required | The margin period of risk, in business days, assumed between the last margin received and closing out a defaulted counterparty. | unit: business days | `10` |
-| `ELIGIBLE` | array of objects | required | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). | — | [4 objects] |
-| `ELIGIBLE[].ASSET` | string | required | An asset the counterparty may deliver as collateral. | one of `G7 government bonds 1-5Y`, `G7 government bonds 5-10Y`, `G7 government bonds < 1Y`, `USD, EUR, GBP cash` | `"USD, EUR, GBP cash"` |
+| `ELIGIBLE` | array of objects | optional (filled in every row) | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). | — | [4 objects] |
+| `ELIGIBLE[].ASSET` | string | required | An asset the counterparty may deliver as collateral. | seen: `G7 government bonds 1-5Y`, `G7 government bonds 5-10Y`, `G7 government bonds < 1Y`, `USD, EUR, GBP cash` | `"USD, EUR, GBP cash"` |
 | `ELIGIBLE[].HAIRCUT` | number | required | The share taken off the asset's value when it is counted as collateral. | — | `0.0` |
 | `AGREEMENT` | string | required | The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-ALDERSHOT-ISDA"` |
 | `COUNTERPARTY` | string | required | The counterparty of the CSA: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `LEGAL_ENTITY` | string | required | The bank legal entity the CSA is signed by (one CSA per agreement and legal entity, decision 9). | links to `legal-entity` | `"LE-FRA"` |
-| `NETTING_SETS` | array of strings | required | The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>). | links to `netting-set` | [1 values] |
-| `COLLATERAL_BALANCES` | array of strings | required | The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…). | links to `collateral-balance` | [1 values] |
+| `NETTING_SETS` | array of strings | derived (filled in every row) | The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>). *the reverse of the netting set's CSA link, derived by Drishti; a master file does not carry it* | links to `netting-set` | [1 values] |
+| `COLLATERAL_BALANCES` | array of strings | derived (filled in every row) | The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…). *the reverse of the collateral balance's CSA link, derived by Drishti; a master file does not carry it* | links to `collateral-balance` | [1 values] |
 
 ### Fields in other rows
 
@@ -415,7 +415,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 ### For the production query
 
 - **Identity:** one record per `CSA_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `CSA_ID`, `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`, `LEGAL_ENTITY`, `ELIGIBLE`, `AGREEMENT`, `COUNTERPARTY`, `NETTING_SETS`, `COLLATERAL_BALANCES` (the contract's required fields).
+- **Never null:** `CSA_ID`, `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`, `LEGAL_ENTITY`, `AGREEMENT`, `COUNTERPARTY` (the contract's required fields); every row of the test data also fills `ELIGIBLE`, `NETTING_SETS`, `COLLATERAL_BALANCES`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -725,33 +725,33 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `NETTING_SET_ID` | string | required | The record's id (the business key) | pattern `^NS-` | `"NS-ALDERSHOT-LDN"` |
-| `TRADE_COUNT` | integer | required | The number of trades that are netted together under the agreement. | — | `159` |
-| `NET_MTM` | number | required | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | unit: USD | `-135735441.598289` |
-| `COLLATERAL` | integer | required | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; F3). Equal to the collateral balance's NET. | unit: USD | `-111102172` |
-| `LIMIT` | number | required | The limit on the counterparty's peak potential future exposure approved for this netting set. | unit: USD | `3568000000.0` |
-| `CVA` | integer | required | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | unit: USD | `-1565490` |
-| `TRADES` | array of objects | required (filled in 94% of rows) | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. | — | [141 objects] |
-| `TRADES[].TRADE_ID` | string | required | The member trade: a TRADE_ID of the trading pack's trade kind, as text. | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"MX-30000832"` |
+| `TRADE_COUNT` | integer | derived (filled in every row) | The number of trades that are netted together under the agreement. *a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored* | — | `159` |
+| `NET_MTM` | number | derived (filled in every row) | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. *a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored* | unit: USD | `-135735441.598289` |
+| `COLLATERAL` | integer | derived (filled in every row) | The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its collateral value (market value less the CSA haircut; F3). Equal to the collateral balance's NET. *a roll-up Drishti computes from the set's collateral balance; a master file does not carry it and an upstream value is ignored* | unit: USD | `-111102172` |
+| `LIMIT` | number | derived (filled in every row) | The limit on the counterparty's peak potential future exposure approved for this netting set. *a roll-up Drishti computes from the counterparty's credit limit; a master file does not carry it and an upstream value is ignored* | unit: USD | `3568000000.0` |
+| `CVA` | integer | derived (filled in every row) | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. *a roll-up Drishti computes from the CVA engine's result; a master file does not carry it and an upstream value is ignored* | unit: USD | `-1565490` |
+| `TRADES` | array of objects | derived (filled in 94% of rows) | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. *a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored* | — | [141 objects] |
+| `TRADES[].TRADE_ID` | string | required | The member trade: a TRADE_ID of the trading pack's trade kind, as text. | links to `trade` | `"MX-30000832"` |
 | `TRADES[].STATUS` | string | required | The member trade's status on the date: NEW, VALIDATED or AMENDED as booked, or LIVE. | seen: `AMENDED`, `VALIDATED`, `LIVE`, `NEW` | `"AMENDED"` |
 | `TRADES[].PRODUCT` | string | required | The kind of instrument the trade is. | — | `"Year-on-year inflation swap"` |
 | `TRADES[].ASSET_CLASS` | string | required | The member trade's asset class. | — | `"Inflation"` |
-| `TRADES[].CURRENCY` | string | required | The member trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"JPY"` |
+| `TRADES[].CURRENCY` | string | required | The member trade's currency, ISO 4217. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"JPY"` |
 | `TRADES[].BOOK` | string | required | The book the member trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-INFL-3"` |
 | `TRADES[].NOTIONAL` | number | required | The reference amount of the trade, in the trade's own currency. | unit: trade currency | `1038030000.0` |
 | `TRADES[].MATURITY` | date (YYYY-MM-DD) | required | The date the trade ends. | — | `"2028-04-14"` |
-| `TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | one of `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` | `"1-2Y"` |
+| `TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | seen: `0-1Y`, `5-10Y`, `2-5Y`, `1-2Y`, `10Y+` | `"1-2Y"` |
 | `TRADES[].MTM` | number | required | The trade's current value, from the bank's side. | unit: USD | `-36717825.965122` |
-| `BY_ASSET` | array of objects | required | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. | — | [3 objects] |
+| `BY_ASSET` | array of objects | derived (filled in every row) | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. *a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored* | — | [3 objects] |
 | `BY_ASSET[].ASSET` | string | required | An asset class of the set's trades. | — | `"FX"` |
 | `BY_ASSET[].MTM` | integer | required | The net mark to market of the set's trades in that asset class, from the bank's side. | unit: USD | `-99756212` |
 | `COUNTERPARTY` | string | required | The counterparty of the netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `AGREEMENT` | string | required | The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-ALDERSHOT-ISDA"` |
-| `CSA` | string | required | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-LDN"` |
-| `CREDIT_LIMIT` | string | required | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-ALDERSHOT"` |
-| `CVA_RESULT` | string | required | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | pattern `^CVA-`; links to `cva` | `"CVA-ALDERSHOT-LDN"` |
-| `SACCR` | string | required | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | pattern `^SACCR-`; links to `sa-ccr` | `"SACCR-ALDERSHOT-LDN"` |
-| `SIMM` | string | required | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | pattern `^SIMM-`; links to `simm` | `"SIMM-ALDERSHOT"` |
-| `COLLATERAL_BALANCE` | string | required | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | pattern `^COLL-`; links to `collateral-balance` | `"COLL-ALDERSHOT-LDN"` |
+| `CSA` | string | optional (filled in every row) | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-LDN"` |
+| `CREDIT_LIMIT` | string | optional (filled in every row) | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-ALDERSHOT"` |
+| `CVA_RESULT` | string | optional (filled in every row) | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | pattern `^CVA-`; links to `cva` | `"CVA-ALDERSHOT-LDN"` |
+| `SACCR` | string | optional (filled in every row) | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | pattern `^SACCR-`; links to `sa-ccr` | `"SACCR-ALDERSHOT-LDN"` |
+| `SIMM` | string | optional (filled in every row) | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | pattern `^SIMM-`; links to `simm` | `"SIMM-ALDERSHOT"` |
+| `COLLATERAL_BALANCE` | string | optional (filled in every row) | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | pattern `^COLL-`; links to `collateral-balance` | `"COLL-ALDERSHOT-LDN"` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-LDN"` |
 | `NETTING_ENFORCEABLE` | boolean | required | true when a legal opinion confirms close-out netting is enforceable for the set; false treats the trades gross. | — | `true` |
 | `TRADE_IDS` | array of strings | optional (filled in 94% of rows) | The member trades' ids, the same trades as TRADES[].TRADE_ID, as text (ENDUR digits, CLY-…, MX-…); empty when the set has no live trade on the date. | links to `trade` | [141 values] |
@@ -763,7 +763,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `NETTING_SET_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields).
+- **Never null:** `NETTING_SET_ID`, `COUNTERPARTY`, `AGREEMENT`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields); every row of the test data also fills `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `BY_ASSET`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

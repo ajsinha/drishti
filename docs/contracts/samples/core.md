@@ -103,25 +103,25 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `BOOK_ID` | string | required | The record's id (the business key) | pattern `^BOOK-`; links to `path-book` | `"BOOK-COMM-1"` |
 | `NAME` | string | required | The book's display name: its desk's name and the book's number (Commodities · book 1). | — | `"Commodities · book 1"` |
-| `DESK_NAME` | string | required | The name of the desk the book sits under (the desk's NAME). | — | `"Commodities"` |
-| `TRADE_COUNT` | integer | required | How many trades are booked in the book. | — | `1000` |
-| `MTM` | integer | required | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-148106150` |
-| `DV01` | integer | required | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. | unit: USD per bp | `0` |
-| `TOP_TRADES` | array of objects | required | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. | — | [10 objects] |
-| `TOP_TRADES[].TRADE_ID` | string | required | The trade: a TRADE_ID of the trading pack's trade kind (text). | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"1003930"` |
-| `TOP_TRADES[].STATUS` | string | required | The trade's life-cycle status (NEW, VALIDATED, AMENDED,...), upper case. | one of `AMENDED`, `LIVE`, `NEW`, `VALIDATED` | `"AMENDED"` |
+| `DESK_NAME` | string | derived (filled in every row) | The name of the desk the book sits under (the desk's NAME). *the NAME of the book's DESK, looked up by Drishti; a master file does not carry it* | — | `"Commodities"` |
+| `TRADE_COUNT` | integer | derived (filled in every row) | How many trades are booked in the book. *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* | — | `1000` |
+| `MTM` | integer | derived (filled in every row) | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* | unit: USD | `-148106150` |
+| `DV01` | integer | derived (filled in every row) | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. *a roll-up Drishti computes from the book's sensitivities; a master file does not carry it and an upstream value is ignored* | unit: USD per bp | `0` |
+| `TOP_TRADES` | array of objects | derived (filled in every row) | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. *a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored* | — | [10 objects] |
+| `TOP_TRADES[].TRADE_ID` | string | required | The trade: a TRADE_ID of the trading pack's trade kind (text). | links to `trade` | `"1003930"` |
+| `TOP_TRADES[].STATUS` | string | required | The trade's life-cycle status (NEW, VALIDATED, AMENDED,...), upper case. | seen: `AMENDED`, `VALIDATED`, `LIVE`, `NEW` | `"AMENDED"` |
 | `TOP_TRADES[].PRODUCT` | string | required | The trade's product name (Calendar spread, Interest rate swap …). | — | `"ENGY-SWAP"` |
 | `TOP_TRADES[].ASSET_CLASS` | string | required | The trade's asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured). | — | `"Commodity"` |
-| `TOP_TRADES[].CURRENCY` | string | required | The trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
+| `TOP_TRADES[].CURRENCY` | string | required | The trade's currency, ISO 4217. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CHF`, `CAD`, `AUD` | `"USD"` |
 | `TOP_TRADES[].BOOK` | string | required | The book the trade is held in (a BOOK_ID of this pack). | — | `"BOOK-COMM-1"` |
 | `TOP_TRADES[].NOTIONAL` | number | required | The trade's notional, in the trade's own currency. | unit: trade currency | `10199198808.0` |
 | `TOP_TRADES[].MATURITY` | date (YYYY-MM-DD) | required | The trade's maturity date. | — | `"2028-03-31"` |
-| `TOP_TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | one of `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` | `"1-2Y"` |
+| `TOP_TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | seen: `5-10Y`, `0-1Y`, `2-5Y`, `1-2Y`, `10Y+` | `"1-2Y"` |
 | `TOP_TRADES[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-120455169` |
 | `DESK` | string | required | The desk the book sits under: a DESK_ID of the core pack's desk kind (DESK-…). | pattern `^DESK-`; links to `desk` | `"DESK-COMM"` |
-| `ACCOUNTING_TREATMENT` | string | required | The accounting classification of the book's positions, e.g. Fair value (FVTPL). | — | `"Fair value (FVTPL)"` |
-| `REGULATORY_BOOK` | string | required | Trading book or banking book, as the book is classified for regulatory capital. | — | `"Trading book"` |
-| `VOLCKER` | string | required | The book's Volcker-rule permitted activity (e.g. Market making). | — | `"Market making"` |
+| `ACCOUNTING_TREATMENT` | string | optional (filled in every row) | The accounting classification of the book's positions, e.g. Fair value (FVTPL). | — | `"Fair value (FVTPL)"` |
+| `REGULATORY_BOOK` | string | optional (filled in every row) | Trading book or banking book, as the book is classified for regulatory capital. | — | `"Trading book"` |
+| `VOLCKER` | string | optional (filled in every row) | The book's Volcker-rule permitted activity (e.g. Market making). | — | `"Market making"` |
 
 ### Fields in other rows
 
@@ -130,7 +130,7 @@ None: all 1,800 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `BOOK_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `BOOK_ID`, `NAME`, `DESK_NAME`, `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES`, `DESK`, `ACCOUNTING_TREATMENT`, `REGULATORY_BOOK`, `VOLCKER` (the contract's required fields).
+- **Never null:** `BOOK_ID`, `NAME`, `DESK` (the contract's required fields); every row of the test data also fills `DESK_NAME`, `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES`, `ACCOUNTING_TREATMENT`, `REGULATORY_BOOK`, `VOLCKER`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -524,30 +524,30 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `COUNTERPARTY_ID` | string | required | The record's id (the business key) | pattern `^CP-` | `"CP-CASCADIA"` |
 | `NAME` | string | required | The counterparty's legal name. | — | `"Cascadia Airlines Inc."` |
-| `LEI` | string | required | The counterparty's Legal Entity Identifier: 20 characters, ISO 17442. | — | `"5493005CUB4V16ZSQX54"` |
+| `LEI` | string | optional (filled in every row) | The counterparty's Legal Entity Identifier: 20 characters, ISO 17442. | — | `"5493005CUB4V16ZSQX54"` |
 | `RATING` | string | required | The counterparty's credit rating, S&P-style (AA-, BBB+ …). | — | `"BB"` |
-| `SECTOR` | string | required | The counterparty's industry sector (Pensions, Banking, Utilities …). | — | `"Airlines"` |
+| `SECTOR` | string | optional (filled in every row) | The counterparty's industry sector (Pensions, Banking, Utilities …). | — | `"Airlines"` |
 | `COUNTRY` | string | required | The counterparty's country, ISO 3166-1 alpha-2. | — | `"CA"` |
-| `TYPE` | string | required | The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …). | — | `"Corporate"` |
-| `COUNTRY_OF_RISK` | string | required | The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK. | — | `"CA"` |
-| `UEN` | string | required | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. | — | `"UEN0100148"` |
-| `ECONOMY` | string | required | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). | pattern `^ECON-`; links to `economy` | `"ECON-CAN"` |
-| `NEWS_ID` | string | required | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). | pattern `^NEWS-`; links to `news` | `"NEWS-Cascadia_Airlines_Inc."` |
-| `NET_MTM` | number | required | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `400541282.366474` |
-| `NETTING_SETS` | array of objects | required | The counterparty's netting sets: one object per netting set. | links to `netting-set` | [4 objects] |
+| `TYPE` | string | optional (filled in every row) | The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …). | — | `"Corporate"` |
+| `COUNTRY_OF_RISK` | string | optional (filled in every row) | The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK. | — | `"CA"` |
+| `UEN` | string | optional (filled in every row) | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. | — | `"UEN0100148"` |
+| `ECONOMY` | string | optional (filled in every row) | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). | pattern `^ECON-`; links to `economy` | `"ECON-CAN"` |
+| `NEWS_ID` | string | optional (filled in every row) | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). | pattern `^NEWS-`; links to `news` | `"NEWS-Cascadia_Airlines_Inc."` |
+| `NET_MTM` | number | derived (filled in every row) | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. *a roll-up Drishti computes from the netting sets' trade valuations; a master file does not carry it and an upstream value is ignored* | unit: USD | `400541282.366474` |
+| `NETTING_SETS` | array of objects | derived (filled in every row) | The counterparty's netting sets: one object per netting set. *the reverse of the netting set's COUNTERPARTY link, derived by Drishti; a master file does not carry it* | links to `netting-set` | [4 objects] |
 | `NETTING_SETS[].ID` | string | required | The netting set: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-…). | — | `"NS-CASCADIA-FRA"` |
 | `NETTING_SETS[].AGREEMENT` | string | required | The master agreement governing it: an AGREEMENT_ID of the counterparty-risk pack's agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-CASCADIA-ISDA"` |
 | `NETTING_SETS[].TRADES` | integer | required | How many trades the netting set holds. | — | `29` |
 | `NETTING_SETS[].NET_MTM` | number | required | The netting set's net MTM, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `12205330.366592` |
-| `KYC` | object | required | The counterparty's know-your-customer record: one object. | — | {…} |
+| `KYC` | object | optional (filled in every row) | The counterparty's know-your-customer record: one object. | — | {…} |
 | `KYC.STATUS` | string | required | The KYC review's outcome (Approved …). | — | `"Approved"` |
-| `KYC.RISK_RATING` | string | required | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. | one of `Enhanced`, `Standard` | `"Enhanced"` |
-| `KYC.LAST_REVIEW` | date (YYYY-MM-DD) | required | The date of the last KYC review. | — | `"2026-02-11"` |
-| `KYC.EMIR_CLASSIFICATION` | string | required | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). | one of `FC`, `NFC-` | `"NFC-"` |
-| `KYC.PD_1Y` | number | required | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). | unit: fraction | `0.0068` |
-| `GROUP` | string | required | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). | pattern `^GRP-`; links to `counterparty-group` | `"GRP-CASCADIA"` |
-| `CREDIT_LIMIT` | string | required | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-CASCADIA"` |
-| `HIERARCHY` | object | required | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. | — | {…} |
+| `KYC.RISK_RATING` | string | optional (filled in every `KYC` entry) | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. | seen: `Standard`, `Enhanced` | `"Enhanced"` |
+| `KYC.LAST_REVIEW` | date (YYYY-MM-DD) | optional (filled in every `KYC` entry) | The date of the last KYC review. | — | `"2026-02-11"` |
+| `KYC.EMIR_CLASSIFICATION` | string | optional (filled in every `KYC` entry) | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). | seen: `NFC-`, `FC` | `"NFC-"` |
+| `KYC.PD_1Y` | number | optional (filled in every `KYC` entry) | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). | unit: fraction | `0.0068` |
+| `GROUP` | string | optional (filled in every row) | The group it belongs to: a GROUP_ID of the core pack's counterparty-group kind (GRP-…). | pattern `^GRP-`; links to `counterparty-group` | `"GRP-CASCADIA"` |
+| `CREDIT_LIMIT` | string | optional (filled in every row) | Its credit limit: a LIMIT_ID of the counterparty-risk pack's credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-CASCADIA"` |
+| `HIERARCHY` | object | derived (filled in every row) | The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets. *the legal graph, derived by Drishti from the group, agreements, CSAs and netting sets* | — | {…} |
 | `HIERARCHY.NODES` | array of objects | required | The graph's nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets). | — | [11 objects] |
 | `HIERARCHY.NODES[].ID` | string | required | The node's entity id: a group (GRP-), counterparty (CP-), agreement (AGR-), CSA (CSA-) or netting set (NS-). | — | `"GRP-CASCADIA"` |
 | `HIERARCHY.NODES[].LABEL` | string | required | The node's display name (for a netting set its id and trade count). | — | `"Cascadia Airlines Inc."` |
@@ -566,7 +566,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `COUNTERPARTY_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY` (the contract's required fields); every row of the test data also fills `LEGAL_ENTITY`.
+- **Never null:** `COUNTERPARTY_ID`, `NAME`, `RATING`, `COUNTRY` (the contract's required fields); every row of the test data also fills `LEI`, `SECTOR`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`, `LEGAL_ENTITY`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -627,9 +627,9 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `GROUP_ID` | string | required | The record's id (the business key) | pattern `^GRP-` | `"GRP-ALDERSHOT"` |
 | `NAME` | string | required | The group's name: its ultimate parent's name. | — | `"Aldershot Pension Trust"` |
-| `LIMIT` | number | required | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | unit: USD | `7980000000.0` |
-| `UTILISATION` | number | required | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | unit: fraction | `0.666659` |
-| `MEMBERS` | array of objects | required | The counterparties in the group: one object per member. | — | [1 objects] |
+| `LIMIT` | number | optional (filled in every row) | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | unit: USD | `7980000000.0` |
+| `UTILISATION` | number | derived (filled in every row) | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). *limit use, computed by the exposure engine; never loaded* | unit: fraction | `0.666659` |
+| `MEMBERS` | array of objects | derived (filled in every row) | The counterparties in the group: one object per member. *the reverse of the counterparty's GROUP link, derived by Drishti; a master file does not carry it* | — | [1 objects] |
 | `MEMBERS[].ID` | string | required | The member: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | — | `"CP-ALDERSHOT"` |
 | `MEMBERS[].NAME` | string | required | The member's legal name (its counterparty NAME). | — | `"Aldershot Pension Trust"` |
 | `MEMBERS[].RATING` | string | required | The member's credit rating, S&P-style (AA-, BBB+ …). | — | `"AA-"` |
@@ -641,7 +641,7 @@ None: all 1,362 rows were read, and every field any of them has is in the record
 ### For the production query
 
 - **Identity:** one record per `GROUP_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `GROUP_ID`, `NAME`, `LIMIT`, `UTILISATION`, `MEMBERS` (the contract's required fields).
+- **Never null:** `GROUP_ID`, `NAME` (the contract's required fields); every row of the test data also fills `LIMIT`, `UTILISATION`, `MEMBERS`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -733,18 +733,18 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `DESK_ID` | string | required | The record's id (the business key) | pattern `^DESK-` | `"DESK-COMM"` |
 | `NAME` | string | required | The desk's name (Commodities, G10 and EM FX …). | — | `"Commodities"` |
-| `HEAD` | string | required | The desk head's name, initial and last name. | — | `"T. Brennan"` |
-| `BOOKS` | array of objects | required | The desk's books: one object per book. | — | [3 objects] |
+| `HEAD` | string | optional (filled in every row) | The desk head's name, initial and last name. | — | `"T. Brennan"` |
+| `BOOKS` | array of objects | derived (filled in every row) | The desk's books: one object per book. *the reverse of the book's DESK link, derived by Drishti; a master file does not carry it; its figures are a roll-up* | — | [3 objects] |
 | `BOOKS[].ID` | string | required | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | — | `"BOOK-COMM-1"` |
 | `BOOKS[].TRADES` | integer | required | How many trades the book holds. | — | `1000` |
 | `BOOKS[].MTM` | integer | required | The sum of the book's trades' MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-141181988` |
-| `MTM` | integer | required | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-360908138` |
+| `MTM` | integer | derived (filled in every row) | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). *a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored* | unit: USD | `-360908138` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity the desk books in: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-NY"` |
-| `ASSET_CLASSES` | array of strings | required | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market,...). | — | [1 values] |
-| `POSITIONS` | array of objects | required | Every trade of the desk's books, by book then trade id: one object per trade. | — | [2968 objects] |
-| `POSITIONS[].TRADE_ID` | string | required | The trade: a TRADE_ID of the trading pack's trade kind (text). | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"1000003"` |
+| `ASSET_CLASSES` | array of strings | optional (filled in every row) | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market,...). | — | [1 values] |
+| `POSITIONS` | array of objects | derived (filled in every row) | Every trade of the desk's books, by book then trade id: one object per trade. *a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored* | — | [2968 objects] |
+| `POSITIONS[].TRADE_ID` | string | required | The trade: a TRADE_ID of the trading pack's trade kind (text). | links to `trade` | `"1000003"` |
 | `POSITIONS[].BOOK` | string | required | The trade's book: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-COMM-1"` |
-| `POSITIONS[].CURRENCY` | string | required | The trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
+| `POSITIONS[].CURRENCY` | string | required | The trade's currency, ISO 4217. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"USD"` |
 | `POSITIONS[].FAMILY` | string | required | The trade's product family (swap, option, future, bond, linear, exotic, sft, money …). | — | `"swap"` |
 | `POSITIONS[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-4808984` |
 
@@ -755,7 +755,7 @@ None: all 600 rows were read, and every field any of them has is in the record a
 ### For the production query
 
 - **Identity:** one record per `DESK_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `MTM`, `LEGAL_ENTITY`, `ASSET_CLASSES`, `POSITIONS` (the contract's required fields).
+- **Never null:** `DESK_ID`, `NAME`, `LEGAL_ENTITY` (the contract's required fields); every row of the test data also fills `HEAD`, `BOOKS`, `MTM`, `ASSET_CLASSES`, `POSITIONS`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
@@ -926,14 +926,14 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `ENTITY_ID` | string | required | The record's id (the business key) | pattern `^LE-` | `"LE-FRA"` |
-| `NAME` | string | required | The legal entity's registered name. | one of `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` | `"Drishti Bank Europe AG"` |
-| `LEI` | string | required | The entity's Legal Entity Identifier: 20 characters, ISO 17442. | one of `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744` | `"549300Z9DXU4T18OK744"` |
+| `NAME` | string | required | The legal entity's registered name. | seen: `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` | `"Drishti Bank Europe AG"` |
+| `LEI` | string | required | The entity's Legal Entity Identifier: 20 characters, ISO 17442. | seen: `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744`; pattern `^[A-Z0-9]{18}[0-9]{2}$` | `"549300Z9DXU4T18OK744"` |
 | `JURISDICTION` | string | required | The country the entity is incorporated and regulated in, ISO 3166-1 alpha-2. | links to `jurisdiction` | `"DE"` |
-| `REGULATOR` | string | required | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). | one of `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` | `"ECB / BaFin"` |
-| `DESKS` | array of objects | required | The desks that book in the entity: one object per desk. | — | [1 objects] |
+| `REGULATOR` | string | optional (filled in every row) | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). | seen: `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` | `"ECB / BaFin"` |
+| `DESKS` | array of objects | derived (filled in every row) | The desks that book in the entity: one object per desk. *the reverse of the desk's LEGAL_ENTITY link, derived by Drishti; a master file does not carry it* | — | [1 objects] |
 | `DESKS[].ID` | string | required | The desk: a DESK_ID of the core pack's desk kind (DESK-…). | — | `"DESK-SFT"` |
 | `DESKS[].NAME` | string | required | The desk's name (its desk NAME). | — | `"Repo and securities lending"` |
-| `BOOKS` | array of objects | required | The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count. | — | [3 objects] |
+| `BOOKS` | array of objects | derived (filled in every row) | The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count. *a roll-up Drishti computes from the books, desks and trade valuations; a master file does not carry it and an upstream value is ignored* | — | [3 objects] |
 | `BOOKS[].BOOK` | string | required | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-SFT-1"` |
 | `BOOKS[].DESK` | string | required | The NAME of the book's desk (a name such as Repo and securities lending, not a DESK_ID, although the contract links it to desk). | links to `desk` | `"Repo and securities lending"` |
 | `BOOKS[].PNL` | integer | required | The book's one-day P&L: the sum of its trades' PNL_1D, gain positive. | unit: USD | `-11770547` |
@@ -947,7 +947,7 @@ None: all 240 rows were read, and every field any of them has is in the record a
 ### For the production query
 
 - **Identity:** one record per `ENTITY_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `ENTITY_ID`, `NAME`, `LEI`, `JURISDICTION`, `REGULATOR`, `DESKS`, `BOOKS` (the contract's required fields).
+- **Never null:** `ENTITY_ID`, `NAME`, `LEI`, `JURISDICTION` (the contract's required fields); every row of the test data also fills `REGULATOR`, `DESKS`, `BOOKS`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

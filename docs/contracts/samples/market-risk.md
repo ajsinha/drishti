@@ -450,22 +450,22 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `VALUATION_ID` | string | required | The record's id (the business key) | pattern `^TVAL-` | `"TVAL-1000001"` |
 | `TRADE_ID` | string | required | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | links to `trade` | `"1000001"` |
-| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | one of `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` | `"ENDUR"` |
+| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | seen: `ENDUR`, `MUREX`, `CALYPSO` | `"ENDUR"` |
 | `PRODUCT_TYPE` | string | required | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | — | `"ComSwap"` |
 | `PRODUCT_GROUP` | string | required | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | — | `"Commodity"` |
 | `PORTFOLIO` | string | required | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-COMM-2"` |
 | `DESK` | string | required | The desk of the trade's book: a DESK_ID of the core pack's desk kind (DESK-…). | pattern `^DESK-`; links to `desk` | `"DESK-COMM"` |
 | `COUNTERPARTY` | string | required | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-HARBORPT"` |
 | `NETTING_SET` | string | optional (filled in every row) | The netting set the trade belongs to: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-<counterparty>-<legal entity>). | pattern `^NS-`; links to `netting-set` | `"NS-HARBORPT-NY"` |
-| `TRADER_ID` | string | required | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). The VaR engine's VaR by trader joins it to the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked gets no VaR by trader. | pattern `^TRDR-`; links to `trader` | `"TRDR-FROSSI"` |
+| `TRADER_ID` | string | optional (filled in every row) | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). The VaR engine's VaR by trader joins it to the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked gets no VaR by trader. | pattern `^TRDR-`; links to `trader` | `"TRDR-FROSSI"` |
 | `BUY_SELL_CODE` | string | required | B when the bank bought (or receives), S when it sold. | one of `B`, `S` | `"S"` |
 | `TRADE_STATUS` | string | required | The trade's status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value. | one of `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` | `"VALIDATED"` |
-| `CURRENCY` | string | required | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
+| `CURRENCY` | string | required | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"USD"` |
 | `NOTIONAL` | number | required | The trade's current notional in USD, absolute (the first leg's). | unit: USD | `167969743.2` |
 | `MTM` | number | required | The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank. | unit: USD | `4041749` |
 | `MTM_CURRENCY` | string | required | The currency MTM, PNL_1D and DV01 are reported in (USD in the demo). | — | `"USD"` |
-| `PNL_1D` | number | required | The valuation engine's own one-day P&L of the trade in USD, gain positive. | unit: USD | `-277804` |
-| `DV01` | number | required | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | unit: USD per basis point | `0` |
+| `PNL_1D` | number | optional (filled in every row) | The valuation engine's own one-day P&L of the trade in USD, gain positive. | unit: USD | `-277804` |
+| `DV01` | number | optional (filled in every row) | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | unit: USD per basis point | `0` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was dealt (YYYY-MM-DD). | — | `"2025-06-20"` |
 | `MATURITY_DATE` | date (YYYY-MM-DD) | required | The trade's maturity date. | — | `"2028-07-31"` |
 | `VALUATION_DATE` | date (YYYY-MM-DD) | required | The date the trade is valued on: the business date of the file. | — | `"2026-07-08"` |
@@ -477,7 +477,7 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 ### For the production query
 
 - **Identity:** one record per `VALUATION_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` (the contract's required fields); every row of the test data also fills `NETTING_SET`.
+- **Never null:** `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` (the contract's required fields); every row of the test data also fills `NETTING_SET`, `TRADER_ID`, `PNL_1D`, `DV01`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.
