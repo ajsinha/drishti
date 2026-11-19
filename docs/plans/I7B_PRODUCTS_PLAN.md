@@ -491,3 +491,34 @@ Proprietary and confidential. Unauthorised copying, use or distribution is prohi
 | others | Proceed as recommended unless the owner objects. |
 
 **Libraries (2026-11-19):** the catalogue sizes them at about 254 bd (the plan held 60), so i7b plans on about 1,700 bd. Owner: every library proprietary (L-11), all seven in a private companion repository (L-12), C1 + X42 pulled to directly after the split (L-19), each library 1.0 at its baseline wave (L-20). See drishti-rachana docs/design/DECISIONS.md.
+
+---
+
+## Four milestones and their Fable gates (owner 2026-11-19)
+
+The seven milestones M0 to M7 of section 4 are grouped into **four milestones**, each ending in a Fable gate. The gate is a
+**point-in-time inspection and verification, not a drill**: nothing is released, tagged or merged to `main` by it, and Drishti
+`main` is untouched until G4.
+
+| Milestone | Gate | Contains (old numbering) | Size | What the gate inspects |
+|---|---|---|---|---|
+| **G1 Foundations and split** | G1 | M0 + M1: proofs, foundations, the split of Rachana and Elements, the compatibility regime's first gates | ~201 bd | the split is clean and proven against Drishti's reference; CG1 to CG6 exist and pass; the evidence tooling works |
+| **G2 Rachana 1.0 and first products** | G2 | M2 + M3 + M4: language 1.1 and 1.2, Rachana `v1.0.0`, Studio and the core library, first products | ~561 bd | conformance in all built runtimes; levels 1.0 to 1.2 replay; the first products run on the candidate |
+| **G3 Products complete** | G3 | M5 + M6: language 1.3 and 1.4, the depth group, finance and the remaining products | ~413 bd + libraries | every product complete; budgets hold; docs complete |
+| **G4 Drishti migrated** | G4 | M7: Drishti moves to the products | ~87 bd + evidence, then the ONE drill and the tag | evidence unchanged on the migrated Drishti; then the single drill (PD1) and the tag `v2.9.11.i_7b` |
+
+The checkpoints of PD3 (after the old M2 and M4) stay as status reports inside G2.
+
+**How a gate works.**
+
+1. At the end of the milestone the work is frozen on the integration branches and the builders stop.
+2. A **Fable review** runs the fixed checklist [I7B_GATE_CHECKLIST.md](I7B_GATE_CHECKLIST.md) (correctness, no side effects, quality,
+   completeness) and writes its report to `docs/plans/I7B_GATE_<n>_REVIEW.md` (n = 1 to 4), each finding with severity, evidence
+   and the command that shows it.
+3. **Findings are fixed before the next milestone starts.** A finding that cannot be fixed is listed with the owner's decision.
+4. The **owner gets a short summary** (pass or fail per checklist section, the findings, what was fixed).
+5. Gates are cheap on purpose: a gate runs the checks, it does not add work. A full drill is reserved for G4 (PD1).
+
+**Owner rule for G1.** No pushes to `main` in any repository and no tags. G1's work lands on `g1/integration` in `drishti-rachana`
+and in `drishti-elements`; merges to `main` and tags happen only on the owner's OK after the G1 review. Drishti `main` is untouched
+(Drishti side branches such as `wip/i7b-*` are fine); every commit is pushed.
