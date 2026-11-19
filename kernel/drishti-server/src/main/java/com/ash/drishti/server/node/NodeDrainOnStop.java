@@ -29,7 +29,7 @@ public final class NodeDrainOnStop implements SmartLifecycle {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeDrainOnStop.class);
     /** Above WebServerGracefulShutdownLifecycle (DEFAULT_PHASE - 1024): stopped first. */
-    static final int PHASE = SmartLifecycle.DEFAULT_PHASE - 512;
+    public static final int PHASE = SmartLifecycle.DEFAULT_PHASE - 512;
 
     private final NodeDrain drain;
     private final boolean enabled;

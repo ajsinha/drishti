@@ -18,6 +18,9 @@
 
 ## Unreleased
 
+- **A stop no longer waits for open live streams.** SIGTERM to a server with the built-in samples on (samples, qa) and a live view open left
+  the process up until the graceful shutdown's phase timeout ran out; `LiveStreamsOnStop` now ends every open server-sent-events stream
+  after the node drain and before the graceful shutdown, and the server exits in seconds.
 - **The operator scripts are Python commands on every system; their shell wrappers are gone.** `python tools/drishti.py data load --store
   <delta|files|postgres|duckdb|iceberg|mongodb|redis|aerospike|cassandra> [target ...] [--trades N --days D] [options]` (`tools/storeload.py`)
   generates the demo data and runs the store's loader as a main class of the server jar in `<home>/lib`, started through `javacmd` (the one
