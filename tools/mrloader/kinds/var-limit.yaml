@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The VaR limits of one business date (docs/plans/CSV_LOADERS.md section 8.2): the canonical CSV, its columns named as the contract's
+# fields. A site's own column names are a mapping of its own, given by explicit path (--mapping FILE). The page:
+# tools/mrloader/docs/var-limit.md (generated from this file and the contract).
+format: 1
+kind: var-limit
+source: canonical
+about: "The VaR limit of a hierarchy node or a system basket, for one business date: the full set of limits every day."
+after: [scenario-pv]                     # a limit's node exists only when the date's positions build it
+on-reject: refuse                        # a missing limit is a silent gap on every page: fix the file and run again
+
+inputs:
+  main: {option: --csv, required: [HIERARCHY, LIMIT_VAR]}
+
+fields:
+  HIERARCHY: {from: HIERARCHY, upper: true}                 # MGMT, LEGAL, LL ... or PORTFOLIO for a system basket
+  NODE_ID:                                                  # given whole (MGMT~DESK-RATES), or built from HIERARCHY and NODE
+    from: [NODE_ID]
+    default: "{@HIERARCHY}~{NODE}"                          # NODE: DESK-RATES, LE-NY/DESK-RATES, LL-0003; a basket gives NODE_ID (PF-...)
+  LIMIT_ID: {template: "VL-{@NODE_ID}"}
+  LIMIT_VAR: {from: LIMIT_VAR, type: amount}                # USD, positive
+  CURRENCY: {from: CURRENCY, upper: true, default: USD}
+  HORIZON: {from: HORIZON, upper: true, default: 1D}        # 1D or 10D
+  CONFIDENCE: {from: CONFIDENCE, type: rate}                # 0.99; 99 is read as 0.99 by the engine
+  BUSINESS_DATE: {template: "{$business_date}", type: date} # --date: the file is the date's whole set
+  VALID_FROM: {from: VALID_FROM, type: date, default: "{$business_date}"}
+  VALID_TO: {from: VALID_TO, type: date}                    # empty: open-ended
+
+refuse-columns:                          # figures Drishti computes: a CSV column of this name is reported, never loaded
+  VAR: "a node's VaR is computed by the engine as the page opens"
+  LIMIT_USE: "limit use is computed"
+  UTILISATION: "limit use is computed"
+
+checks:
+  unique: [LIMIT_ID]
+  links:
+    NODE_ID: {to: var-node, from-kind: scenario-pv, policy: warn}   # every node should be one the date's positions build

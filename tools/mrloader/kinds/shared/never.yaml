@@ -1,0 +1,24 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The kinds the CSV loader never loads, beyond those its contracts already refuse by their class (computed, drishti-owned): each is
+# another system's answer (a charge, an initial margin, an EAD, a CVA), which an engine of Drishti computes or will compute
+# (docs/plans/CSV_LOADERS.md section 3.5, decision 5). Each says why and what to load instead.
+frtb-sensitivity: "a book's FRTB charge, another system's answer: the FRTB SA engine computes it from position-sensitivity (load that)"
+simm: "an initial margin, another system's answer: the SIMM engine computes it from position-sensitivity (load that)"
+sa-ccr: "an exposure at default, another system's answer: computed from the trades, netting sets and collateral"
+cva: "a CVA, another system's answer: computed from the exposure paths and the credit curves"
+stress-result: "a stress P&L, another system's answer: computed from the stress scenarios and the positions"
+pnl-explain: "a P&L explain, another system's answer: computed from the sensitivities and the market moves"
+portfolio: "Drishti has no portfolio kind: a booking portfolio is the book (load book), a reporting tree is built from the scenario-PV rows, a watched set of positions is a system basket kept in Drishti"

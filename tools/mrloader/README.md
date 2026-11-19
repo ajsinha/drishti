@@ -13,7 +13,33 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# mrloader: market-risk loaders (PVF scenario PVs, scenario sets, scenario FX, and more to come)
+# mrloader: market-risk loaders (the CSV datasets of VaR and exposure, PVF scenario PVs, scenario sets, scenario FX)
+
+## The CSV loader: one kind at a time
+
+`tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
+them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
+generated page (`docs/<kind>.md`); the day's runbook is `docs/DAILY_RUNBOOK.md`.
+
+```bash
+python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
+python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --inbox     # ... and hand it to the data inbox
+python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --load --lake risklake
+python3 tools/mrloader/csv_load.py --kind var-limit --template                                                          # the CSV's header and an example row
+python3 tools/mrloader/csv_load.py --kinds                                                                              # every kind with a mapping
+python3 tools/mrloader/validate.py data/mr/mr-2026-10-29                                                                # any kind's files against its contract
+```
+
+It writes `<kind>.<date>.jsonl`, `<kind>.<date>.jsonl.gz` and its `.ready`, `<kind>.<date>.rejects.csv` and `<kind>.<date>.summary.json`
+under `<out>/mr-<date>/`. **The file's format is declared, never guessed**: the delimiter, encoding, decimal and thousands separators, the
+date format and the null words are set in the mapping's `csv:` block over `kinds/shared/csv.yaml`; a cell that does not fit rejects its
+row with a reason code (`BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `MISSING_REQUIRED` ...). A rejected row of a master or a limit file
+refuses the whole kind (`on-reject: refuse`: fix the file and run again); the large kinds skip the row up to `max-rejects`. The shipped
+mappings read canonical columns; **a bank's own column names are a mapping file of its own, given by explicit path** (`--mapping FILE`,
+kept with the site's settings), never edited into the shipped ones. Kinds that are computed or another system's answer (`var-result`,
+`frtb-sensitivity`, `simm`, `portfolio` ...) are refused with the reason and what to load instead (`kinds/shared/never.yaml`).
+
+## The PVF loader
 
 The loaders are run directly by path from the repository root (the `pvf_*.py` names are the PVF source format; the folder is `tools/mrloader`; the owner's files stay in `data/pvf/`). The PVF loader turns a PVF extract (per-path present values of every position under
 each historical-VaR path, with the positions and their portfolios) into the records of the market-risk pack's **scenario-pv** kind, the

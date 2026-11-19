@@ -1,0 +1,23 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The CSV dialect every kind's file is read with unless its mapping's `csv:` block says otherwise (docs/plans/CSV_LOADERS.md section 9).
+# The rule behind every line: the file's format is DECLARED, never guessed cell by cell. A value that does not fit rejects its row.
+delimiter: ","            # ; (European locales), \t, | or auto (chosen from the header among these four; reported in the summary); a first line sep=; is honoured
+encoding: utf-8           # a byte-order mark is removed; cp1252 for Excel's plain CSV on Windows
+decimal: "."              # a European file: decimal: ",", thousands: "." or " "
+thousands: ","
+dates: YYYY-MM-DD         # ISO and YYYYMMDD are always read; else one of DD/MM/YYYY, MM/DD/YYYY, DD-MMM-YYYY, DD.MM.YYYY, YYYY/MM/DD, excel-serial
+nulls: ["NULL", "null", "N/A", "#N/A", "NaN", "-"]   # with an empty cell: null. 0 is a value; #REF! and the other errors reject the row
+skip-rows: 0              # title lines above the header

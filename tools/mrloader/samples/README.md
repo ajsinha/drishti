@@ -22,6 +22,7 @@
 | `scenario_dates_2026-11-18.txt` | the 251 weekdays before 2026-11-18, oldest first, one per line (`pvf_scenario_set.py --dates`) |
 | `fx_2026-11-18.csv` | scenario FX, **wide** form: EUR, GBP, JPY, CAD, AUD, CHF; `RATE_TODAY` and one column per scenario day |
 | `fx_long_2026-11-18.csv` | the same rates in **long** form: `CURRENCY,SCENARIO_DATE,RATE`, today's rate on the row dated 2026-11-18 |
+| `var-limit.csv`, `var-limit.expected.jsonl` | four VaR limits (management, legal and a system basket) and the records `csv_load.py --kind var-limit` must make of them |
 
 ```bash
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates tools/mrloader/samples/scenario_dates_2026-11-18.txt

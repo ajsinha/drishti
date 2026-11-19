@@ -28,7 +28,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from mrloader import common, hooks as H, pvf_fx_scenario as F, pvf_scenario_set as S  # noqa: E402
-from mrloader.common import PvfError, read_any  # noqa: E402
+from mrloader.common import read_any  # noqa: E402
 from mrloader.contract import DateCheck, fx_scenario, scenario_set  # noqa: E402
 
 SAMPLES = Path(__file__).resolve().parent / "samples"
