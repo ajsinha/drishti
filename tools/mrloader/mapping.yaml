@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The logical mapping of a joined PVF row (tools/pvf/pvf_join.py) to one scenario-pv record (the market-risk pack's contract:
-# modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml). Read by tools/pvf/pvf_export_gz.py; every decision is explained
-# in tools/pvf/README.md, "The mapping, field by field".
+# The logical mapping of a joined PVF row (tools/mrloader/pvf_join.py) to one scenario-pv record (the market-risk pack's contract:
+# modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml). Read by tools/mrloader/pvf_export_gz.py; every decision is explained
+# in tools/mrloader/README.md, "The mapping, field by field".
 #
 # NAMES: every attribute name in the output is UPPER_SNAKE (the contract's names, and any pass_through column upper-cased); the joined
 # rows' columns are already UPPER_SNAKE (SRC_POSITION_ID, PORTFOLIO_NM_D2 ...), so `from:` and `{COLUMN}` name them that way. Values are

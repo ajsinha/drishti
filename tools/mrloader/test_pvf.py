@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""tools/pvf: the join rules, the fill policies, the audit, the mapping grammar, the UPPER_SNAKE rule, the export layout and the contract
+"""tools/mrloader: the join rules, the fill policies, the audit, the mapping grammar, the UPPER_SNAKE rule, the export layout and the contract
 validator, on small hand-made extracts (paths 0..3, so a vector has 4 values); and the scripts run by path as the owner runs them."""
 from __future__ import annotations
 
@@ -33,8 +33,8 @@ TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from pvf import common, mapping as M, pvf_export_gz as E, pvf_join as J, pvf_validate as V  # noqa: E402
-from pvf.contract import DateCheck, scenario_pv  # noqa: E402
+from mrloader import common, mapping as M, pvf_export_gz as E, pvf_join as J, pvf_validate as V  # noqa: E402
+from mrloader.contract import DateCheck, scenario_pv  # noqa: E402
 
 BD = "2026-10-29"
 PORTFOLIO = """portfolio_id,system_id,portfolio_nm,portfolio_group_nm,pnl_sheet_nm,desk_nm,limit_letter_nm,business_group_nm,strategy,valid_dt,valid_to_dt,legal_entity
@@ -237,7 +237,7 @@ def test_validator_catches_breaches():
 
 # ---- the scripts, by path, as the owner runs them -------------------------------------------------------------------------------------
 def test_driver_by_path(extract, tmp_path, small_mapping):
-    run = [sys.executable, str(TOOLS / "pvf" / "pvf_run.py"), "--pv", str(extract["paths"]), "--portfolio", str(extract["portfolio"]),
+    run = [sys.executable, str(TOOLS / "mrloader" / "pvf_run.py"), "--pv", str(extract["paths"]), "--portfolio", str(extract["portfolio"]),
            "--positions", str(extract["positions"]), "--date", BD, "--max-path", "3", "--mapping", str(small_mapping)]
     r = subprocess.run(run + ["--dry-run"], capture_output=True, text=True, timeout=120)
     assert r.returncode == 0, r.stderr
@@ -250,13 +250,13 @@ def test_driver_by_path(extract, tmp_path, small_mapping):
     assert (folder / f"scenario_pv.{BD}.jsonl").is_file() and (folder / f"pvf_joined.{BD}.fills.csv").is_file()
     bad = subprocess.run(run[:-6] + ["--date", "2026-13-01"], capture_output=True, text=True, timeout=60)
     assert bad.returncode == 2 and "not a date" in bad.stderr
-    for script in ("pvf_join.py", "pvf_export_gz.py", "pvf_validate.py", "pvf_gen.py"):
-        h = subprocess.run([sys.executable, str(TOOLS / "pvf" / script), "--help"], capture_output=True, text=True, timeout=60)
+    for script in ("pvf_join.py", "pvf_export_gz.py", "pvf_validate.py", "pvf_gen.py", "pvf_scenario_set.py", "pvf_fx_scenario.py"):
+        h = subprocess.run([sys.executable, str(TOOLS / "mrloader" / script), "--help"], capture_output=True, text=True, timeout=60)
         assert h.returncode == 0 and "example" in h.stdout.lower(), script
 
 
 def test_generator_feeds_the_join(tmp_path):
-    files = __import__("pvf.pvf_gen", fromlist=["generate"]).generate(tmp_path / "g", 40, 5, BD, seed=3, missing_portfolio=2)
+    files = __import__("mrloader.pvf_gen", fromlist=["generate"]).generate(tmp_path / "g", 40, 5, BD, seed=3, missing_portfolio=2)
     s = J.run(J.JoinConfig(files["portfolio"], files["positions"], files["paths"], tmp_path / "g" / "j.jsonl"))
     assert s["POSITIONS_READ"] == 40 and s["EXCLUDED_BY_REASON"].get("MISSING_PORTFOLIO") == 2
     assert s["POSITIONS_WRITTEN"] + s["POSITIONS_EXCLUDED"] == 40
@@ -280,7 +280,7 @@ def test_quantity_priority_list_and_sign_from(tmp_path):
 
 def test_inbox_hand_over_puts_the_set_first_and_each_marker_after_its_archive(tmp_path):
     """--inbox: the scenario set is delivered before the PVs, every archive before its .ready, nothing half-written left behind."""
-    from pvf import pvf_run
+    from mrloader import pvf_run
     out, inbox = tmp_path / "out", tmp_path / "inbox"
     out.mkdir(), inbox.mkdir()
     tars = []

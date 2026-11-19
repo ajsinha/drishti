@@ -24,7 +24,7 @@ from pathlib import Path
 
 import yaml
 
-from pvf.common import SCENARIO_PV_CONTRACT, SCENARIO_SET_CONTRACT, PvfError, lower_keys
+from mrloader.common import FX_SCENARIO_CONTRACT, SCENARIO_PV_CONTRACT, SCENARIO_SET_CONTRACT, PvfError, lower_keys
 
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
@@ -130,6 +130,10 @@ def scenario_pv() -> Contract:
 
 def scenario_set() -> Contract:
     return Contract(SCENARIO_SET_CONTRACT)
+
+
+def fx_scenario() -> Contract:
+    return Contract(FX_SCENARIO_CONTRACT)
 
 
 def record_rules(r: dict) -> list[str]:

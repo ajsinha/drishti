@@ -21,7 +21,11 @@ import hashlib
 import io
 import json
 import logging
+import os
 import re
+import shutil
+import subprocess
+import sys
 import tarfile
 from pathlib import Path
 from typing import Any, Iterable, Iterator
@@ -30,6 +34,12 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = ROOT / "modules" / "banking" / "packs" / "market-risk" / "contracts"
 SCENARIO_PV_CONTRACT = CONTRACTS / "scenario-pv.contract.yaml"
 SCENARIO_SET_CONTRACT = CONTRACTS / "scenario-set.contract.yaml"
+FX_SCENARIO_CONTRACT = CONTRACTS / "fx-scenario.contract.yaml"
+PACK = "market-risk"
+DEFAULT_INBOX = ROOT / "data" / "dataload" / "inbox"
+DEFAULT_OUT = ROOT / "data" / "pvf"
+#: the order the inbox must receive the kinds in: a date's scenario set, then its FX, then its PVs (the engine sizes a date's vectors from its set)
+INBOX_ORDER = ("scenario-set", "fx-scenario", "scenario-pv")
 DEFAULT_MAPPING = Path(__file__).resolve().parent / "mapping.yaml"
 
 log = logging.getLogger("pvf")
@@ -251,3 +261,106 @@ def make_tar(tar_path: Path, root: Path, files: Iterable[Path]) -> Path:
             with open(f, "rb") as fh:
                 t.addfile(info, fh)
     return tar_path
+
+
+# ---- ready markers, the data inbox, dates files, lake delete: shared by the export, the set, the FX and the driver ----------------------
+def write_ready(tar: Path, kind: str, rows: int, lake: str | None = None, mode: str = "replace") -> Path:
+    """The ``.ready`` marker beside an archive of one kind (``folders``, ``mode``, ``rows``, ``sha256``; ``lake`` when named)."""
+    ready = {**({"lake": lake} if lake else {}), "folders": {kind: PACK}, "mode": mode, "rows": rows, "sha256": sha256_of(tar)}
+    marker = Path(f"{tar}.ready")
+    marker.write_text("".join(f"{k}: {json.dumps(v)}\n" for k, v in ready.items()), encoding="utf-8")
+    return marker
+
+
+def write_kind(out: Path, kind: str, business_date: str, records: list[dict], lake: str | None = None, mode: str = "replace",
+               stem: str = "cob") -> Path:
+    """One kind of one date as the loadable layout: ``<out>/<kind>/<date>/<stem>.jsonl.gz`` plus ``<out>/<kind>-<date>.tar`` and its
+    ``.ready``; the tar's path."""
+    gz = out / kind / business_date / f"{stem}.jsonl.gz"
+    write_gz(gz, records)
+    name = f"{kind}-{business_date}" + ("" if stem == "cob" else f"-{stem}")
+    tar = make_tar(out / f"{name}.tar", out, [gz])
+    write_ready(tar, kind, len(records), lake, mode)
+    return tar
+
+
+def strict_date(text: str) -> str:
+    """exactly YYYY-MM-DD, a real day (an argparse type)."""
+    import argparse
+    try:
+        if len(text) == 10 and iso_date(text) == text:
+            return text
+    except PvfError:
+        pass
+    raise argparse.ArgumentTypeError(f"{text!r} is not a date YYYY-MM-DD")
+
+
+def read_dates_file(path: Path, order: str = "oldest-first") -> list[str]:
+    """The days of a dates file (one YYYY-MM-DD a line; blank lines ignored), returned oldest first. ``order`` says how the file is
+    ordered (``oldest-first`` or ``newest-first``): a file that is not in that order, or has a repeated day, is refused."""
+    if order not in ("oldest-first", "newest-first"):
+        raise PvfError("--order is oldest-first or newest-first")
+    try:
+        days = [iso_date(x) for x in Path(path).read_text(encoding="utf-8").split()]
+    except OSError as e:
+        raise PvfError(f"cannot read the dates file {path}: {e}") from None
+    if not days:
+        raise PvfError(f"{path} has no dates")
+    if len(set(days)) != len(days):
+        raise PvfError(f"{path}: a day appears more than once")
+    if days != sorted(days, reverse=order == "newest-first"):
+        raise PvfError(f"{path}: the dates are not {order} (--order says how the file is ordered)")
+    return days[::-1] if order == "newest-first" else days
+
+
+def to_inbox(tars: list[str], inbox: Path) -> list[str]:
+    """Hand the archives to the data inbox: each archive is copied under a temporary name and renamed into place, and only then its
+    .ready marker, so the watcher never sees a half-written archive; the scenario set goes first, then the FX, then the PVs
+    (INBOX_ORDER). Returns the names delivered."""
+    if not inbox.is_dir():
+        raise PvfError(f"the data inbox {inbox} does not exist: is the server's data load on (DRISHTI_DATALOAD_ENABLED)?")
+
+    def rank(t: str) -> int:
+        name = Path(t).name
+        return next((i for i, kind in enumerate(INBOX_ORDER) if name.startswith(kind + "-")), len(INBOX_ORDER))
+    done = []
+    for tar in sorted(tars, key=rank):
+        src, ready = Path(tar), Path(f"{tar}.ready")
+        if not ready.is_file():
+            raise PvfError(f"{src.name} has no .ready marker: run without --no-tar")
+        part = inbox / f"{src.name}.copying"             # no hidden names; the watcher reads only .ready markers
+        shutil.copyfile(src, part)
+        os.replace(part, inbox / src.name)
+        shutil.copyfile(ready, inbox / ready.name)
+        done.append(src.name)
+        log.info("handed %s and its .ready to the data inbox %s", src.name, inbox)
+    return done
+
+
+def lake_delete(kind: str, business_date: str, lake: str, server: str | None = None, token_file: str | None = None,
+                settings: str | None = None, dry_run: bool = False, yes: bool = False, no_signal: bool = False) -> int:
+    """Remove one business date of one kind: Drishti's own ``tools/drishti.py lake delete`` (never a second deleter). Whole dates only;
+    returns its exit code."""
+    cmd = [sys.executable, str(ROOT / "tools" / "drishti.py")]
+    if settings:
+        cmd += ["--settings", settings]
+    cmd += ["lake", "delete", "--lake", lake, "--kind", kind, "--date", business_date]
+    if server:
+        cmd += ["--server", server]
+    if token_file:
+        cmd += ["--token-file", token_file]
+    cmd += [f for f, on in (("--dry-run", dry_run), ("--yes", yes), ("--no-signal", no_signal)) if on]
+    log.info("running: %s", " ".join(cmd[1:]))
+    return subprocess.run(cmd, check=False).returncode
+
+
+def add_remove_arguments(p) -> None:
+    """The options of a --remove run, shared by the set and the FX scripts."""
+    g = p.add_argument_group("remove (with --remove: the date's rows leave the lake; whole dates only)")
+    g.add_argument("--lake", help="the lake by its name (risklake) or its folder; required to remove; with add it is named in the .ready")
+    g.add_argument("--settings", help="the settings file drishti.py takes before its command (--settings FILE)")
+    g.add_argument("--server", help="the server to tell (default DRISHTI_SERVER, then http://localhost:18480)")
+    g.add_argument("--token-file", help="a file holding the API token (loads:write); never printed")
+    g.add_argument("--dry-run", action="store_true", help="say what would be done (rows per date for a remove), change nothing")
+    g.add_argument("--yes", action="store_true", help="remove without asking you to type the table's name (scripts)")
+    g.add_argument("--no-signal", action="store_true", help="tell no server (a running server notices within its version check)")

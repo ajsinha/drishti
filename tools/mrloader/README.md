@@ -13,37 +13,37 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# pvf: a PVF extract to Drishti scenario PVs
+# mrloader: market-risk loaders (PVF scenario PVs, scenario sets, scenario FX, and more to come)
 
-A one-off tool, run directly by path from the repository root. It turns a PVF extract (per-path present values of every position under
+The loaders are run directly by path from the repository root (the `pvf_*.py` names are the PVF source format; the folder is `tools/mrloader`; the owner's files stay in `data/pvf/`). The PVF loader turns a PVF extract (per-path present values of every position under
 each historical-VaR path, with the positions and their portfolios) into the records of the market-risk pack's **scenario-pv** kind, the
 form of scenario P&L the VaR engine reads, in the layout Drishti's loaders take.
 
 ## The command
 
 ```bash
-python3 tools/pvf/pvf_run.py \
+python3 tools/mrloader/pvf_run.py \
     --pv data/pvf/pvf_path_20261029.csv \
     --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv \
     --date 2026-10-29
 ```
 
-That one command joins, maps (`tools/pvf/mapping.yaml`), checks every record against the contract, and writes everything under
+That one command joins, maps (`tools/mrloader/mapping.yaml`), checks every record against the contract, and writes everything under
 `data/pvf/pvf-2026-10-29/` (`--out DIR` puts `pvf-<date>/` elsewhere; the default is the PV file's folder). Try it first on a slice and
 without writing:
 
 ```bash
-python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --dry-run          # check inputs, columns and mapping; write nothing
-python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --limit 2000       # the first 2,000 positions only
 ```
 
 Then check the result and load it (section "Loading into Drishti"):
 
 ```bash
-python3 tools/pvf/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
+python3 tools/mrloader/pvf_validate.py data/pvf/pvf-2026-10-29/scenario-pv-2026-10-29.tar data/pvf/pvf-2026-10-29/scenario-set-2026-10-29.tar
 ```
 
 **Why three input files.** `--positions` is required: the PV file carries only `position_id` (with `valid_dt`, `risk_metric_cd`,
@@ -66,23 +66,25 @@ No Java, no server and no network are needed to convert; loading uses Drishti's 
 
 | Script | Does |
 |---|---|
-| `tools/pvf/pvf_run.py` | **the driver**: join, map, check, write the plain JSONL and the loadable layout, one summary |
-| `tools/pvf/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
-| `tools/pvf/pvf_export_gz.py` | the mapping on its own: a joined file to scenario-pv records as `.jsonl.gz` parts, the scenario set, a `.tar` per kind |
-| `tools/pvf/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
-| `tools/pvf/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
+| `tools/mrloader/pvf_run.py` | **the driver**: join, map, check, write the plain JSONL and the loadable layout, one summary |
+| `tools/mrloader/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
+| `tools/mrloader/pvf_export_gz.py` | the mapping on its own: a joined file to scenario-pv records as `.jsonl.gz` parts, the scenario set, a `.tar` per kind |
+| `tools/mrloader/pvf_scenario_set.py` | **add or remove** a date's scenario set (every day; section "Scenario set") |
+| `tools/mrloader/pvf_fx_scenario.py` | **add or remove** a date's scenario FX from a daily CSV (section "Scenario FX") |
+| `tools/mrloader/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
+| `tools/mrloader/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
 
 Each has `--help` with examples; `pvf_join.py`, `pvf_export_gz.py` and `pvf_run.py` have `--dry-run` and a limit (`--limit-positions`,
 `--limit`, `--limit`). The modules beside them: `common.py` (the UPPER_SNAKE rule, dates, deterministic `.gz` and `.tar` writers,
 checksums), `contract.py` (the contracts, read from `modules/banking/packs/market-risk/contracts/`, never copied), `mapping.py` (the
-mapping grammar and the scenario set). `test_pvf.py` tests them on small hand-made extracts (`pytest tools/pvf`).
+mapping grammar and the scenario set). `test_pvf.py` tests them on small hand-made extracts (`pytest tools/mrloader`).
 
 The separate steps, as the driver runs them:
 
 ```bash
-python3 tools/pvf/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \
+python3 tools/mrloader/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \
     --paths data/pvf/pvf_path_20261029.csv --out data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl
-python3 tools/pvf/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl \
+python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/pvf-2026-10-29/pvf_joined.2026-10-29.jsonl \
     --out data/pvf/pvf-2026-10-29 --jsonl data/pvf/pvf-2026-10-29/scenario_pv.2026-10-29.jsonl
 ```
 
@@ -134,7 +136,7 @@ original `pvf_join.py` (whose output was `path_pv_final.jsonl` and `bad_position
 
 ## The mapping, field by field
 
-`tools/pvf/mapping.yaml` maps a joined row to a scenario-pv record
+`tools/mrloader/mapping.yaml` maps a joined row to a scenario-pv record
 ([contract](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml)). The export refuses a mapping that names a
 field the contract does not have, leaves a required field without a rule (unless `omit_required` names it with its reason) or breaks the
 grammar, before reading a row.
@@ -236,7 +238,7 @@ running server watches (`data/dataload/inbox` by default, or `--inbox DIR`), the
 `.ready` marker, so the server loads them by itself:
 
 ```bash
-python3 tools/pvf/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --inbox
 ```
 
@@ -250,6 +252,114 @@ slice loaded into a scratch copy of the `demo` lake's layout this way (`--lake d
 
 For VaR on the date the lake also needs what the engine reads beside the PVs: the currencies' scenario FX (all USD here: none needed),
 and no other scenario P&L of the date in another set or batch.
+
+## Scenario set: add and remove
+
+The scenario set lists the historical days behind every scenario: index *i* of every scenario-PV vector, P&L vector and FX scenario of
+the date is `SCENARIO_DATES[i]`, **oldest first**. The engine holds **one normal set per business date, used only for that date**, and
+refuses a vector of another length (never padded). Make it every day, before the date's FX and PVs. These scripts are run by path
+(not a `drishti.py` command).
+
+**Add.** The days come from a file, one `YYYY-MM-DD` a line (`--order oldest-first` default, or `newest-first`; a file that is not in the
+order it says is refused), or `--weekdays N` (the N weekdays before the date, no holiday calendar):
+
+```bash
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt            # Linux / macOS
+py tools\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates FILE --order newest-first --dry-run             # check only
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --inbox --lake risklake                  # hand it to the inbox
+```
+
+It checks, before writing anything: no repeated day, every day before the business date, `SCENARIO_COUNT` = the number of days,
+`WINDOW_START`/`WINDOW_END` = the first and last day, and every field of the scenario-set contract (`SCENARIO_SET_ID`, `BUSINESS_DATE`,
+`SCENARIO_DATES`, `SCENARIO_COUNT`, `WINDOW_START`, `WINDOW_END`, `HORIZON_DAYS` (`--horizon-days`, 1), `REVALUATION` (`--revaluation`,
+`full`), `SOURCE_BATCH`, `DESCRIPTION`, `SET_TYPE`). It writes `data/pvf/pvf-<date>/scenario-set-<date>.tar` and its `.ready`
+(`--out DIR` elsewhere, `--lake NAME` names the lake in the `.ready`, `--inbox [DIR]` copies archive then `.ready` to the data inbox).
+The id and batch default to `mapping.yaml`'s run values (`HS-PVF-251`, `B-<date>-PVF`) so the date's PV export names this set;
+`--scenario-set-id` and `--batch-id` override. A length other than `mapping.yaml scenario_set.count` (251) is warned about: the PVs must
+have as many values as the set has days. PVF's path 0 is the **latest** day (`path_order: newest-first`): the PV export reverses its
+vectors into this set's oldest-first order, so a dates file in either order gives the same set.
+
+`--set-type stress` writes a stress set (`SET_TYPE STRESS`, id `HS-STRESS-<count>`, any past days) as `scenario-set-<date>-stress.tar`
+with `mode: append`, beside the normal set (load the normal set first).
+
+**Remove.** Whole dates only, through Drishti's own `lake delete` (no second deleter):
+
+```bash
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --dry-run      # what would go
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --server http://<host>:18480 --token-file ~/drishti-token
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --yes --no-signal    # scripts; tell no server
+```
+
+(`--settings FILE` is passed to `drishti.py`; the token needs the `loads:write` scope.) **What it does to VaR:** without the date's
+set the date's scenario-pv and fx-scenario rows cannot be used (the engine sizes every vector from the set), so VaR on that date answers
+*not loaded* until a set is added again; the stress set of the date goes too. See `docs/DEPLOYMENT_AND_QA_GUIDE.md` section 9.14.
+
+## Scenario FX: add and remove
+
+The VaR engine converts each scenario's PV with the currency's FX under that scenario: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
+One row per currency and date, `USD per 1 <CCY>`; a currency without a row is rejected on its trades (DRS-5207) and cannot be a reporting
+currency. **USD is never sent** (it is 1 by definition) and is refused.
+
+**The file you produce each day**, either form (header row; names in any case; `#` comment lines allowed; rows and columns in any order):
+
+```text
+long   CURRENCY,SCENARIO_DATE,RATE                one row per currency and day; the row dated the business date is today's rate
+       EUR,2026-11-18,1.0850
+       EUR,2026-11-17,1.0851
+wide   CURRENCY,RATE_TODAY,2025-12-02,2025-12-03,...      one row per currency, one column per scenario day (heading = the day)
+       EUR,1.0850,1.0871,1.0840,...
+```
+
+Each rate is placed **by its day**, so `RATES` follow the set's `SCENARIO_DATES` whatever the file's order. A currency with a missing day,
+a day the set does not have, no rate for today, a repeated row, or a rate that is not a positive number refuses the whole file, listing
+every problem (nothing is written).
+
+**Add.** It joins to the date's set: the one just made (`data/pvf/pvf-<date>/scenario-set/`), or `--scenario-set PATH` (a set `.tar`,
+`.jsonl[.gz]` or folder), or `--dates FILE [--order ...] --scenario-set-id ID`:
+
+```bash
+python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                  # Linux / macOS
+py tools\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
+python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set-2026-11-18.tar --inbox
+```
+
+It writes `fx-scenario-<date>.tar` + `.ready` (`FX_SCENARIO_ID` `FXS-<CCY>-<set id>`, `RATE` today, `RATES` per day, `QUOTE`, `SOURCE`
+(`--source`), `BATCH_ID` = the set's batch). With `--inbox` the set must already be loaded.
+
+**Remove.** `lake delete` deletes whole dates only, so **removing a date's FX removes every currency of that date** (there is no
+per-currency removal; add the date again with the full file):
+
+```bash
+python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --dry-run
+python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --yes --no-signal
+```
+
+Without the date's FX, trades priced in a non-USD currency are rejected and that currency cannot be asked as a reporting currency
+(section 9.14 of the deployment guide shows `lake delete` and its server signal).
+
+## Every day: set, FX, PVs in order
+
+Order matters: **set, then FX, then PVs** (the PVs and FX are sized from the set). Either one driver call:
+
+```bash
+python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261118.csv --portfolio data/pvf/portfolio_d2.csv \
+    --positions data/pvf/pos_20261118.csv --date 2026-11-18 --scenario-dates data/pvf/scenario_dates_20261118.txt \
+    --fx data/pvf/fx_20261118.csv --inbox
+```
+
+(set from `--scenario-dates` oldest first, or the weekday default; the FX is checked against its days before the PV file is read; the
+inbox gets set, FX, PVs in that order) or the three scripts, each with `--inbox`:
+
+```bash
+python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt --inbox
+python3 tools/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx data/pvf/fx_20261118.csv --inbox
+python3 tools/mrloader/pvf_run.py --pv ... --portfolio ... --positions ... --date 2026-11-18 --no-scenario-set --scenario-set-id HS-PVF-251 --inbox
+```
+
+On Windows use `py tools\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
+in both forms) are in `tools/mrloader/samples/`. The drill: build set and FX from the samples, `python3 tools/drishti.py lake build --from
+<tar> --lake <scratch>` each, `lake status`, then remove with `--remove ... --yes --no-signal`.
 
 ## Performance and memory
 

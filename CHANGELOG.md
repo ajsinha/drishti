@@ -18,6 +18,9 @@
 
 ## Unreleased
 
+- **tools/mrloader: daily scenario set and scenario FX, add and remove.** `pvf_scenario_set.py` and `pvf_fx_scenario.py` build the date's set and FX
+  (long or wide CSV, dates in either order, contract-checked, tar + `.ready`, `--inbox`), and `--remove` calls `drishti.py lake delete`; `pvf_run.py
+  --fx FILE` does set, FX and PVs in one go, handed to the inbox in that order; synthetic samples in `tools/mrloader/samples/`.
 - **A stop no longer waits for open live streams.** SIGTERM to a server with the built-in samples on (samples, qa) and a live view open left
   the process up until the graceful shutdown's phase timeout ran out; `LiveStreamsOnStop` now ends every open server-sent-events stream
   after the node drain and before the graceful shutdown, and the server exits in seconds.
@@ -161,17 +164,17 @@
   (`tools/test_run_configs.py` guards both). The packer's tests are JUnit (`ModulePackTest`, `@TempDir`). `IDE_GUIDE.md` is now three parts:
   build (IntelliJ, Java only), prepare the environment, run.
 
-- **tools/pvf: a PVF extract to scenario PVs.** The owner's per-path PV extract (the per-path PV file, the positions, PORTFOLIO_D2) becomes
-  scenario-pv records in one command, `python3 tools/pvf/pvf_run.py --pv … --portfolio … --positions … --date YYYY-MM-DD`: a streaming
+- **tools/mrloader: a PVF extract to scenario PVs.** The owner's per-path PV extract (the per-path PV file, the positions, PORTFOLIO_D2) becomes
+  scenario-pv records in one command, `python3 tools/mrloader/pvf_run.py --pv … --portfolio … --positions … --date YYYY-MM-DD`: a streaming
   Polars join (the PV file scanned, never loaded whole; explicit types; `POSITION_ID` order; the audit of excluded positions kept and
   widened; `--fill-policy forward|base|refuse` with every fill counted and listed, since a filled path understates risk), a
-  config-driven mapping to the contract (`tools/pvf/mapping.yaml`: const, columns, templates, lookups, signs; required fields checked
+  config-driven mapping to the contract (`tools/mrloader/mapping.yaml`: const, columns, templates, lookups, signs; required fields checked
   against the contract; four required fields the extract cannot give left out by name with the reason; the other source attributes kept
   beside the contract's fields, every name UPPER_SNAKE), the date's scenario set declared (251 paths, never padded), and the loadable
   layout (`scenario-pv/<date>/cob.part-NNN.jsonl.gz`, `scenario-set/<date>/cob.jsonl.gz`, one `.tar` per kind with its `.ready`, a SHA-256 list,
   a plain `.jsonl`). `pvf_validate.py` checks any output against the contracts; `pvf_join.py`, `pvf_export_gz.py`, `pvf_gen.py` run
   alone too; `test_pvf.py` tests it. Polars and NumPy in `drishti-console/requirements-polars.txt` and the drill's tool-test environment.
-  Guide: `tools/pvf/README.md`.
+  Guide: `tools/mrloader/README.md`.
 
 ## 2.9.11.i7a
 
