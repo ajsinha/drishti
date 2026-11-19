@@ -22,10 +22,18 @@
 | 1 | [`legal-entity`](legal-entity.md) | 1 | `core` | `--csv` | - | canonical |
 | 2 | [`desk`](desk.md) | 1 | `core` | `--csv` | `legal-entity` | canonical |
 | 3 | [`book`](book.md) | 1 | `core` | `--csv` | `desk` | canonical, pvf |
-| 4 | [`risk-factor`](risk-factor.md) | 1 | `market-risk` | `--csv` | - | canonical |
-| 5 | [`var-limit`](var-limit.md) | 1 | `market-risk` | `--csv` | `scenario-pv` | canonical |
-| 6 | [`position-sensitivity`](position-sensitivity.md) | 1 | `market-risk` | `--csv`, `--child SENSITIVITIES=` | `risk-factor`, `scenario-pv` | canonical |
-| 7 | [`desk-pnl`](desk-pnl.md) | 1 | `market-risk` | `--csv` | `desk` | canonical |
+| 4 | [`counterparty-group`](counterparty-group.md) | 2 | `core` | `--csv` | `legal-entity` | canonical |
+| 5 | [`counterparty`](counterparty.md) | 2 | `core` | `--csv` | `legal-entity`, `counterparty-group` | canonical |
+| 6 | [`agreement`](agreement.md) | 2 | `counterparty-risk` | `--csv` | `counterparty` | canonical |
+| 7 | [`csa`](csa.md) | 2 | `counterparty-risk` | `--csv`, `--child ELIGIBLE=` | `agreement` | canonical |
+| 8 | [`netting-set`](netting-set.md) | 2 | `counterparty-risk` | `--csv` | `csa`, `counterparty`, `legal-entity` | canonical |
+| 9 | [`collateral-balance`](collateral-balance.md) | 2 | `counterparty-risk` | `--csv`, `--child POSITIONS=` | `netting-set` | canonical |
+| 10 | [`credit-limit`](credit-limit.md) | 2 | `counterparty-risk` | `--csv`, `--child BUCKETS=` | `counterparty` | canonical |
+| 11 | [`risk-factor`](risk-factor.md) | 1 | `market-risk` | `--csv` | - | canonical |
+| 12 | [`var-limit`](var-limit.md) | 1 | `market-risk` | `--csv` | `scenario-pv` | canonical |
+| 13 | [`position-sensitivity`](position-sensitivity.md) | 1 | `market-risk` | `--csv`, `--child SENSITIVITIES=` | `risk-factor`, `scenario-pv` | canonical |
+| 14 | [`trade-valuation`](trade-valuation.md) | 2 | `market-risk` | `--csv` | `netting-set`, `book`, `desk` | canonical |
+| 15 | [`desk-pnl`](desk-pnl.md) | 1 | `market-risk` | `--csv` | `desk` | canonical |
 
 The scenario PVs, the scenario set and the scenario FX of the PVF source are written by `pvf_run.py`, `pvf_scenario_set.py` and `pvf_fx_scenario.py` (the [README](../README.md)).
 

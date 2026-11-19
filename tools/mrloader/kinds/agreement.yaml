@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The master agreements (docs/plans/CSV_LOADERS.md section 3.2): the canonical CSV. Whether close-out netting holds; the elections are a
+# nested record from their own columns. A CSA names its agreement: the agreement's list of CSAs is derived.
+format: 1
+kind: agreement
+source: canonical
+about: "The master agreements (ISDA and others), one row each: type, governing law, close-out netting and the elections."
+after: [counterparty]
+on-reject: refuse
+
+inputs:
+  main: {option: --csv, required: [AGREEMENT_ID, TYPE, GOVERNING_LAW, CLOSE_OUT_NETTING, COUNTERPARTY]}
+
+fields:
+  AGREEMENT_ID:      {from: AGREEMENT_ID, slug: true, prefix: AGR-}
+  TYPE:              {from: TYPE}                              # ISDA 2002 Master ...
+  GOVERNING_LAW:     {from: GOVERNING_LAW}                     # English, New York, ...
+  SIGNED:            {from: SIGNED, type: date}
+  CLOSE_OUT_NETTING: {from: CLOSE_OUT_NETTING}                 # Enforceable (the legal opinion's word)
+  COUNTERPARTY:      {from: COUNTERPARTY, slug: true, prefix: CP-}
+  ELECTIONS.AUTOMATIC_EARLY_TERMINATION:   {from: AUTOMATIC_EARLY_TERMINATION, type: boolean}
+  ELECTIONS.CROSS_DEFAULT:                 {from: CROSS_DEFAULT}
+  ELECTIONS.SET_OFF:                       {from: SET_OFF, type: boolean}
+  ELECTIONS.TERMINATION_CURRENCY:          {from: TERMINATION_CURRENCY, upper: true}
+  ELECTIONS.ADDITIONAL_TERMINATION_EVENTS: {from: ADDITIONAL_TERMINATION_EVENTS}
+  ELECTIONS.PROTOCOLS:                     {from: PROTOCOLS}
+
+refuse-columns:
+  CSAS: "the CSAs name their agreement; the reverse list is derived"

@@ -104,12 +104,16 @@ def day(tmp_path):
 def test_the_sample_day_runs_in_order_and_every_link_resolves(day, tmp_path, capsys):
     a = mr_run.parser().parse_args(["--date", D, "--from", str(day), "--day", str(HERE / "days" / "sample.yaml"), "--out", str(tmp_path / "o")])
     s = mr_run.run(a)
-    assert s["ORDER"] == ["legal-entity", "desk", "book", "risk-factor", "scenario-pv", "var-limit", "position-sensitivity", "desk-pnl"]
+    assert s["ORDER"] == ["legal-entity", "desk", "book", "counterparty-group", "counterparty", "agreement", "csa", "netting-set",
+                          "collateral-balance", "credit-limit", "risk-factor", "scenario-pv", "var-limit", "position-sensitivity",
+                          "trade-valuation", "desk-pnl"]
     assert not s["REFUSED"] and all(r["STATUS"] == "DONE" for r in s["KINDS"].values())
     checked = [r for r in s["LINKS"] if r["CHECKED"]]
     assert {(r["KIND"], r["FIELD"]) for r in checked} >= {("var-limit", "NODE_ID"), ("position-sensitivity", "POSITION_ID"),
                                                           ("position-sensitivity", "SENSITIVITIES[].RISK_FACTOR"), ("desk", "LEGAL_ENTITY"),
-                                                          ("book", "DESK"), ("desk-pnl", "DESK_ID")}
+                                                          ("book", "DESK"), ("desk-pnl", "DESK_ID"), ("netting-set", "CSA"),
+                                                          ("trade-valuation", "NETTING_SET"), ("collateral-balance", "NETTING_SET"),
+                                                          ("credit-limit", "COUNTERPARTY"), ("counterparty", "GROUP")}
     assert all(not r["UNRESOLVED"] for r in s["LINKS"]), [r for r in s["LINKS"] if r["UNRESOLVED"]]
     folder = tmp_path / "o" / f"mr-{D}"
     assert (folder / f"mr-{D}.summary.json").is_file() and (folder / f"links-{D}.csv").is_file()
@@ -137,6 +141,18 @@ def test_a_missing_required_kind_refuses_the_day_and_the_delete_plan_runs_nothin
     kinds = [x.split("--kind ")[1].split()[0] for x in plan]
     assert kinds[0] == "desk-pnl" and kinds[-1] == "legal-entity"                       # vectors first, masters last
     assert kinds.index("scenario-pv") < kinds.index("scenario-set")
+
+
+def test_a_refuse_link_refuses_the_day_and_nothing_is_delivered(day, tmp_path):
+    with open(day / "trade-valuation.csv", "a") as f:
+        f.write("7999999,ENDUR,Swap,Rates,PORT_100000,RATES TRADING-LON,CP-ALDERSHOT-FUND,NS-NOWHERE,B,VALIDATED,USD,1,1,2025-06-20,2030-07-31\n")
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    a = mr_run.parser().parse_args(["--date", D, "--from", str(day), "--day", str(HERE / "days" / "sample.yaml"), "--out", str(tmp_path / "o"),
+                                    "--inbox", str(inbox)])
+    with pytest.raises(mr_run.PvfError, match="trade-valuation"):
+        mr_run.run(a)
+    assert not list(inbox.iterdir())
 
 
 def test_var_nodes_follow_the_pack_hierarchies():

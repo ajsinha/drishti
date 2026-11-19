@@ -91,7 +91,7 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 ## 7. Before and after
 
 - **Load first:** `desk`.
-- **Then:** nothing depends on it.
+- **Then:** `trade-valuation`.
 
 ## 8. Repeat, restate, remove
 

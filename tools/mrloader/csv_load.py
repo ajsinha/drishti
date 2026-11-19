@@ -153,6 +153,9 @@ def read_children(m: KindMapping, c: LoadConfig, rejects: Rejects, summary: dict
     for name, spec in m.children.items():
         path = c.children.get(name)
         if path is None:
+            if spec.get("optional"):
+                summary.setdefault("CHILD_FILES", {})[name] = {"FILE": None, "NOTE": "not given: the records carry no list"}
+                continue
             raise PvfError(f"the kind {m.kind} reads its {name} from a second file: give --child {name}=FILE")
         f = R.CsvFile(Path(path), m.dialect)
         try:
@@ -217,6 +220,8 @@ def _children_of(m: KindMapping, kids: dict, row: dict, ctx: dict, used: set) ->
                                   f"{name}[]", "|".join(map(str, sig)), "keep one row per " + ", ".join(uniq))
                 seen[sig] = row_no
             recs.append(rec)
+        if not recs and k["spec"].get("empty", "reject") == "keep":
+            continue                                              # an optional list: a record without one carries none
         if not recs and k["spec"].get("empty", "reject") == "reject":
             raise Problem("NO_CHILDREN", f"no row in {k['file']} for this record ({', '.join(k['on'])} {key})", k["on"][0], f"{name}[]",
                           key, f"send its {name} rows, or leave the record out")

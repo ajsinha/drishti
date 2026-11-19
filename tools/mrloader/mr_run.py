@@ -22,7 +22,7 @@ examples (from the repository root):
   python3 tools/mrloader/mr_run.py --date 2026-11-18 --from tools/mrloader/samples --day tools/mrloader/days/sample.yaml --dry-run
   python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox
   python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day FILE --load --lake risklake
-  python3 tools/mrloader/mr_run.py --date 2026-10-29 --day FILE --delete-plan        the lake delete lines to remove the day (runs nothing)
+  python3 tools/mrloader/mr_run.py --date 2026-10-29 --from DIR --day FILE --delete-plan   the lake delete lines to remove the day (runs nothing)
 
 the day file (YAML) says which file of the day's folder feeds which kind; {YYYYMMDD} and {YYYY-MM-DD} are the run's --date:
   format: 1
@@ -237,7 +237,7 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1],
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--date", required=True, type=strict_date, help="the business date YYYY-MM-DD")
-    p.add_argument("--from", dest="source", default=".", help="the day's folder of CSV files")
+    p.add_argument("--from", dest="source", required=True, type=Path, help="the day's folder of CSV files (an explicit path)")
     p.add_argument("--day", required=True, type=Path, help="the day file: which file feeds which kind (an explicit path)")
     p.add_argument("--out", type=Path, help="the folder mr-<date>/ is written in (default: --from)")
     p.add_argument("--lake", help="the lake named in the markers and used by --load (default: the day file's lake:)")

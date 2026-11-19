@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's counterparties (docs/plans/CSV_LOADERS.md section 8.1): the canonical CSV, from the client master. Names, ratings and links
+# only: no exposure figure. KYC is a nested record from the KYC_ columns.
+format: 1
+kind: counterparty
+source: canonical
+about: "The bank's counterparties, one row each, from the client master: names, ratings, country, group and the legal entity facing it; no exposure figure."
+after: [legal-entity, counterparty-group]
+on-reject: refuse                        # a missing counterparty is a silent gap in every exposure answer: fix the file, run again
+
+inputs:
+  main: {option: --csv, required: [COUNTERPARTY_ID, NAME, RATING, COUNTRY]}
+
+fields:
+  COUNTERPARTY_ID: {from: COUNTERPARTY_ID, slug: true, prefix: CP-}    # "Aldershot Fund" or "CP-ALDERSHOT-FUND": both give CP-ALDERSHOT-FUND
+  NAME:            {from: NAME}
+  LEI:             {from: LEI, upper: true}                            # optional; 20 characters
+  RATING:          {from: RATING}                                      # AA-, BBB+ ... as the bank rates it
+  SECTOR:          {from: SECTOR}
+  COUNTRY:         {from: COUNTRY, upper: true}                        # ISO 3166-1 alpha-2
+  TYPE:            {from: TYPE}
+  COUNTRY_OF_RISK: {from: [COUNTRY_OF_RISK, COUNTRY], upper: true}     # the country when no country of risk is given
+  UEN:             {from: UEN}                                         # text: a leading zero is kept
+  GROUP:           {from: GROUP, slug: true, prefix: GRP-}             # optional: its ultimate parent
+  CREDIT_LIMIT:    {from: CREDIT_LIMIT, slug: true, prefix: LIM-}      # optional
+  LEGAL_ENTITY:    {from: LEGAL_ENTITY, slug: true, prefix: LE-}       # optional: the bank's entity that faces it
+  CREDIT_CURVE:    {from: CREDIT_CURVE, prefix: CDS-}                  # optional
+  KYC.STATUS:              {from: KYC_STATUS}
+  KYC.RISK_RATING:         {from: KYC_RISK_RATING}
+  KYC.LAST_REVIEW:         {from: KYC_LAST_REVIEW, type: date}
+  KYC.EMIR_CLASSIFICATION: {from: EMIR_CLASSIFICATION}
+  KYC.PD_1Y:               {from: PD_1Y, type: rate}                   # a fraction: 0.0004 is 0.04%
+
+refuse-columns:                          # figures Drishti computes: a CSV column of this name is reported, never loaded
+  NET_MTM: "the sum of the netting sets' MtM is computed from the trade valuations"
+  USED: "limit usage is computed by the exposure engine"
+  NETTING_SETS: "the netting sets name their counterparty; the reverse list is derived"

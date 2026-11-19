@@ -89,7 +89,7 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 ## 7. Before and after
 
 - **Load first:** nothing.
-- **Then:** `desk`.
+- **Then:** `counterparty`, `counterparty-group`, `desk`, `netting-set`.
 
 ## 8. Repeat, restate, remove
 

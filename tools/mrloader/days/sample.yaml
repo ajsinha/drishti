@@ -25,4 +25,12 @@ kinds:
   var-limit:            {csv: "var-limit.csv"}
   desk-pnl:             {csv: "desk-pnl.csv"}
   position-sensitivity: {csv: "position-sensitivity.csv", child: {SENSITIVITIES: "position-sensitivity.SENSITIVITIES.csv"}, source-system: SYNTHETIC-RISK}
+  counterparty-group:   {csv: "counterparty-group.csv"}
+  counterparty:         {csv: "counterparty.csv"}
+  agreement:            {csv: "agreement.csv"}
+  csa:                  {csv: "csa.csv", child: {ELIGIBLE: "csa.ELIGIBLE.csv"}}
+  netting-set:          {csv: "netting-set.csv"}
+  collateral-balance:   {csv: "collateral-balance.csv", child: {POSITIONS: "collateral-balance.POSITIONS.csv"}}
+  credit-limit:         {csv: "credit-limit.csv", child: {BUCKETS: "credit-limit.BUCKETS.csv"}}
+  trade-valuation:      {csv: "trade-valuation.csv"}
 required: [var-limit]

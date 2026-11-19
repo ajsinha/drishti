@@ -39,8 +39,10 @@ python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --d
 | `tools/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind, `docs/<kind>.md`, and the index `docs/README.md` |
 | `tools/mrloader/mr_gen.py` | a seeded synthetic day of every kind's CSV (the committed samples; `--with-pvf` adds the day's PVF extract) |
 
-The kinds shipped: wave 1 (`legal-entity`, `desk`, `book` and `book.pvf`, `risk-factor`, `var-limit`, `desk-pnl`,
-`position-sensitivity`; the scenario PVs, set and FX through the PVF scripts below). The pages: `tools/mrloader/docs/README.md`.
+The kinds shipped: wave 1 for VaR (`legal-entity`, `desk`, `book` and `book.pvf`, `risk-factor`, `var-limit`, `desk-pnl`,
+`position-sensitivity`; the scenario PVs, set and FX through the PVF scripts below) and wave 2 for exposure (`counterparty-group`,
+`counterparty`, `agreement`, `csa`, `netting-set`, `collateral-balance`, `credit-limit`, `trade-valuation`). Wave 3 (exposure paths,
+P&L vectors and history, trades from CSV) waits for the extracts' shapes. The pages: `tools/mrloader/docs/README.md`.
 
 It writes `<kind>.<date>.jsonl`, `<kind>.<date>.jsonl.gz` and its `.ready`, `<kind>.<date>.rejects.csv` and `<kind>.<date>.summary.json`
 under `<out>/mr-<date>/`. **The file's format is declared, never guessed**: the delimiter, encoding, decimal and thousands separators, the

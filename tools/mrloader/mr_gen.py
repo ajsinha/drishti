@@ -23,7 +23,9 @@ examples (from the repository root):
   python3 tools/mrloader/mr_gen.py --day data/mr/trial --positions 2000             a trial day of realistic size (never committed)
 
 writes, under --day: legal-entity.csv, desk.csv, book.csv, risk-factor.csv, var-limit.csv, desk-pnl.csv, position-sensitivity.csv and its
-child file position-sensitivity.SENSITIVITIES.csv; with --with-pvf the same day's PVF extract (portfolio_d2.csv, pos_<YYYYMMDD>.csv,
+child file position-sensitivity.SENSITIVITIES.csv; the exposure masters of wave 2 (counterparty-group, counterparty, agreement, csa
+and csa.ELIGIBLE, netting-set, collateral-balance and collateral-balance.POSITIONS, credit-limit and credit-limit.BUCKETS,
+trade-valuation); with --with-pvf the same day's PVF extract (portfolio_d2.csv, pos_<YYYYMMDD>.csv,
 pvf_path_<YYYYMMDD>.csv), whose scenario PVs build the nodes the limits name.
 The business date is --date (2026-11-18); the sample day file tools/mrloader/days/sample.yaml names each file's kind.
 """
@@ -143,6 +145,70 @@ def generate(day: Path, business_date: str, n_positions: int = 20, seed: int = 7
                                                                            "CURRENCY"], parents)
     out["position-sensitivity.SENSITIVITIES"] = _write(day / "position-sensitivity.SENSITIVITIES.csv",
                                                        ["POSITION_ID", "RISK_FACTOR", "MEASURE", "VALUE", "VALUE_CURRENCY", "TENOR", "SHOCK_SIZE"], kids)
+    out.update(generate_ccr(day, business_date, rng))
+    return out
+
+
+GROUPS = [("ALDERSHOT", "Aldershot Pension Group", "Pensions", "GB", "Pension fund"), ("BRAMBLE", "Bramble Holdings", "Banking", "US", "Bank"),
+          ("CASCADIA", "Cascadia Energy Group", "Utilities", "CA", "Corporate"), ("DUNMORE", "Dunmore Capital Group", "Asset management", "DE", "Fund")]
+RATINGS = ["AA-", "A+", "A", "BBB+", "BBB", "A-", "AA", "BBB-"]
+
+
+def generate_ccr(day: Path, business_date: str, rng: random.Random) -> dict[str, Path]:
+    """The exposure masters of the same day (wave 2): four groups, eight counterparties (two a group), each with its agreement, CSA,
+    netting set, credit limit and three trade valuations in the wave 1 books; six of the eight sets margined, with a collateral balance."""
+    out = {}
+    out["counterparty-group"] = _write(day / "counterparty-group.csv", ["GROUP_ID", "NAME", "LIMIT"],
+                                       [[f"GRP-{g}", n, rng.randrange(20, 60) * 10_000_000] for g, n, *_ in GROUPS])
+    cps = [(f"CP-{g}-{suffix}", f"{n.split(' Group')[0].split(' Holdings')[0]} {suffix.title()}", g, sector, country, kind, ENTITIES[i % 4][0])
+           for i, ((g, n, sector, country, kind), suffix) in enumerate((x, s) for x in GROUPS for s in ("FUND", "TRUST"))]
+    out["counterparty"] = _write(day / "counterparty.csv", ["COUNTERPARTY_ID", "NAME", "LEI", "RATING", "SECTOR", "COUNTRY", "TYPE", "GROUP",
+                                                           "CREDIT_LIMIT", "LEGAL_ENTITY", "KYC_STATUS", "KYC_RISK_RATING", "KYC_LAST_REVIEW",
+                                                           "EMIR_CLASSIFICATION", "PD_1Y"],
+                                 [[cp, n, lei(n), RATINGS[i], sec, ctry, kind, f"GRP-{g}", f"LIM-{cp[3:]}", f"LE-{slug(le)}", "Approved",
+                                   "Standard" if RATINGS[i].startswith("A") else "Enhanced", "2026-03-14", "FC", f"{0.0004 + i * 0.0003:.4f}"]
+                                  for i, (cp, n, g, sec, ctry, kind, le) in enumerate(cps)])
+    out["agreement"] = _write(day / "agreement.csv", ["AGREEMENT_ID", "TYPE", "GOVERNING_LAW", "SIGNED", "CLOSE_OUT_NETTING", "COUNTERPARTY",
+                                                     "AUTOMATIC_EARLY_TERMINATION", "SET_OFF", "TERMINATION_CURRENCY"],
+                              [[f"AGR-{cp[3:]}-ISDA", "ISDA 2002 Master", "English" if i % 2 == 0 else "New York", f"20{15 + i}-12-10",
+                                "Enforceable", cp, "N", "Y", "USD"] for i, (cp, *_) in enumerate(cps)])
+    margined = [c for i, c in enumerate(cps) if i not in (3, 6)]
+    out["csa"] = _write(day / "csa.csv", ["CSA_ID", "MARGIN_TYPE", "THRESHOLD_US", "THRESHOLD_THEM", "MTA", "INDEPENDENT_AMOUNT", "FREQUENCY",
+                                         "CSA_CURRENCY", "MTA_US", "MTA_THEM", "MARGIN_FREQUENCY_DAYS", "MPOR_DAYS", "LEGAL_ENTITY", "AGREEMENT",
+                                         "COUNTERPARTY"],
+                        [[f"CSA-{cp[3:]}", "VM", 10_000_000, 10_000_000, 500_000, 0, "Daily", "USD", 500_000, 500_000, 1, 10, f"LE-{slug(le)}",
+                          f"AGR-{cp[3:]}-ISDA", cp] for cp, _, _, _, _, _, le in margined])
+    out["csa.ELIGIBLE"] = _write(day / "csa.ELIGIBLE.csv", ["CSA_ID", "ASSET", "HAIRCUT"],
+                                 [[f"CSA-{cp[3:]}", a, h] for cp, *_ in margined for a, h in (("USD cash", "0"), ("UST 1-5Y", "0.02"))])
+    out["netting-set"] = _write(day / "netting-set.csv", ["NETTING_SET_ID", "COUNTERPARTY", "AGREEMENT", "CSA", "CREDIT_LIMIT",
+                                                         "COLLATERAL_BALANCE", "LEGAL_ENTITY", "NETTING_ENFORCEABLE"],
+                                [[f"NS-{cp[3:]}", cp, f"AGR-{cp[3:]}-ISDA", f"CSA-{cp[3:]}" if (cp, *r) in margined else "",
+                                  f"LIM-{cp[3:]}", f"COLL-{cp[3:]}" if (cp, *r) in margined else "", f"LE-{slug(le)}", "Y"]
+                                 for cp, *r in cps for le in [r[-1]]])
+    out["collateral-balance"] = _write(day / "collateral-balance.csv", ["BALANCE_ID", "AS_OF", "CSA", "NETTING_SET"],
+                                       [[f"COLL-{cp[3:]}", business_date, f"CSA-{cp[3:]}", f"NS-{cp[3:]}"] for cp, *_ in margined])
+    out["collateral-balance.POSITIONS"] = _write(day / "collateral-balance.POSITIONS.csv", ["BALANCE_ID", "ASSET", "DIRECTION", "MARKET_VALUE",
+                                                                                           "HAIRCUT"],
+                                                 [[f"COLL-{cp[3:]}", a, d, rng.randrange(1, 90) * 100_000, h] for cp, *_ in margined
+                                                  for a, d, h in (("USD cash", "Received", "0"), ("UST 1-5Y", "Posted", "0.02"))])
+    out["credit-limit"] = _write(day / "credit-limit.csv", ["LIMIT_ID", "MEASURE", "LIMIT", "COUNTERPARTY", "APPROVED_BY", "REVIEW_DUE"],
+                                 [[f"LIM-{cp[3:]}", "PFE 95 peak", rng.randrange(5, 40) * 10_000_000, cp, "Credit Risk Committee", "2027-03-19"]
+                                  for cp, *_ in cps])
+    out["credit-limit.BUCKETS"] = _write(day / "credit-limit.BUCKETS.csv", ["LIMIT_ID", "BUCKET", "LIMIT"],
+                                         [[f"LIM-{cp[3:]}", b, rng.randrange(5, 40) * 10_000_000] for cp, *_ in cps for b in ("0-1Y", "1-5Y", "5Y+")])
+    bk = books()
+    tv = []
+    for i, (cp, *_) in enumerate(cps):
+        for j in range(3):
+            n = 3 * i + j
+            book, desk = bk[n % len(bk)]
+            group, ptype = PRODUCTS[desk]
+            tv.append([7000001 + n, "ENDUR" if n % 2 else "MUREX", ptype, group, book, desk, cp, f"NS-{cp[3:]}", "S" if n % 3 == 0 else "B",
+                       "VALIDATED", "USD", rng.randrange(1, 200) * 1_000_000, rng.randrange(-5000, 5000) * 1000, "2025-06-20",
+                       f"{2027 + n % 8}-07-31"])
+    out["trade-valuation"] = _write(day / "trade-valuation.csv", ["TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_GROUP", "PORTFOLIO", "DESK",
+                                                                 "COUNTERPARTY", "NETTING_SET", "BUY_SELL_CODE", "TRADE_STATUS", "CURRENCY",
+                                                                 "NOTIONAL", "MTM", "TRADE_DATE", "MATURITY_DATE"], tv)
     return out
 
 

@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Each trade's valuation today (docs/plans/CSV_LOADERS.md section 3.2): its netting set, status and MtM, which is how the exposure
+# engine knows a set's members. Supplied figures only: Drishti never prices. A large kind: bad rows are listed and the rest loads.
+format: 1
+kind: trade-valuation
+source: canonical
+about: "Each trade's valuation of the day from the risk engine: its netting set, counterparty, book, status, notional and MtM."
+after: [netting-set, book, desk]
+on-reject: skip
+max-rejects: 1%
+
+inputs:
+  main: {option: --csv, required: [TRADE_ID, SOURCE_SYSTEM, PORTFOLIO, DESK, COUNTERPARTY, TRADE_STATUS, MTM]}
+
+fields:
+  TRADE_ID:       {from: TRADE_ID}                            # as the source system writes it: text
+  VALUATION_ID:   {from: VALUATION_ID, default: "TVAL-{@TRADE_ID}"}
+  SOURCE_SYSTEM:  {from: SOURCE_SYSTEM, upper: true}
+  PRODUCT_TYPE:   {from: PRODUCT_TYPE}
+  PRODUCT_GROUP:  {from: PRODUCT_GROUP}
+  PORTFOLIO:      {from: PORTFOLIO, slug: true, prefix: BOOK-}
+  DESK:           {from: DESK, slug: true, prefix: DESK-}
+  COUNTERPARTY:   {from: COUNTERPARTY, slug: true, prefix: CP-}
+  NETTING_SET:    {from: NETTING_SET, slug: true, prefix: NS-}       # empty: outside every set (stand-alone)
+  TRADER_ID:      {from: TRADER_ID, slug: true, prefix: TRDR-}
+  BUY_SELL_CODE:  {from: BUY_SELL_CODE, upper: true, map: {B: B, S: S, BUY: B, SELL: S}}
+  TRADE_STATUS:   {from: TRADE_STATUS, upper: true}                  # NEW, VALIDATED, AMENDED, CANCELLED, MATURED
+  CURRENCY:       {from: CURRENCY, upper: true}
+  NOTIONAL:       {from: NOTIONAL, type: amount}
+  MTM:            {from: MTM, type: amount}                          # signed: positive when the counterparty owes the bank
+  MTM_CURRENCY:   {from: MTM_CURRENCY, upper: true, default: USD}
+  PNL_1D:         {from: PNL_1D, type: amount}
+  DV01:           {from: DV01, type: amount}
+  TRADE_DATE:     {from: TRADE_DATE, type: date}
+  MATURITY_DATE:  {from: MATURITY_DATE, type: date}
+  VALUATION_DATE: {from: VALUATION_DATE, type: date, default: "{$business_date}"}
+
+checks:
+  unique: [TRADE_ID]
+  links:
+    NETTING_SET: {to: netting-set, policy: refuse}         # the trade's exposure would be outside every set

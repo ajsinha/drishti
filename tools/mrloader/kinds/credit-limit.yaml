@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The approved credit limits per counterparty (docs/plans/CSV_LOADERS.md section 3.2): the limit and its measure, with optional tenor
+# buckets from a child file. Usage, utilisation and status are computed by the exposure engine.
+format: 1
+kind: credit-limit
+source: canonical
+about: "The approved credit limit of each counterparty: the measure, the amount and optional tenor buckets. Use and status are computed."
+after: [counterparty]
+on-reject: refuse
+
+inputs:
+  main: {option: --csv, required: [LIMIT_ID, MEASURE, LIMIT, COUNTERPARTY]}
+  children:
+    BUCKETS:                             # one row a limit and tenor bucket (optional file)
+      option: --child BUCKETS
+      on: LIMIT_ID
+      required: [BUCKET, LIMIT]
+      optional: true
+      empty: keep
+      unique: [BUCKET]
+
+fields:
+  LIMIT_ID:          {from: LIMIT_ID, slug: true, prefix: LIM-}
+  MEASURE:           {from: MEASURE}                         # PFE 95 peak ...
+  LIMIT:             {from: LIMIT, type: amount}             # USD
+  COUNTERPARTY:      {from: COUNTERPARTY, slug: true, prefix: CP-}
+  APPROVED_BY:       {from: APPROVED_BY}
+  REVIEW_DUE:        {from: REVIEW_DUE, type: date}
+  BUCKETS[].BUCKET:  {from: BUCKET, upper: true}             # 0-1Y, 1-3Y ...
+  BUCKETS[].LIMIT:   {from: LIMIT, type: amount}
+
+refuse-columns:
+  USED: "limit usage is computed by the exposure engine"
+  UTILISATION: "limit use is computed"
+  STATUS: "the limit's status is computed from its use"
+
+checks:
+  links:
+    COUNTERPARTY: {to: counterparty, policy: refuse}       # a limit never compared

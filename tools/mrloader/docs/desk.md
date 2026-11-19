@@ -89,7 +89,7 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 ## 7. Before and after
 
 - **Load first:** `legal-entity`.
-- **Then:** `book`, `desk-pnl`.
+- **Then:** `book`, `desk-pnl`, `trade-valuation`.
 
 ## 8. Repeat, restate, remove
 

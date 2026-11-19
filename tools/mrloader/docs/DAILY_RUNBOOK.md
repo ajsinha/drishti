@@ -107,7 +107,7 @@ counterparty's page.
   `--restatement 1` (then 2 ...) in `csv_load.py`. To change one row, send the whole file again.
 - **One kind only:** `python3 tools/mrloader/csv_load.py --kind var-limit --csv FILE --date 2026-10-29 --inbox`.
 - **Remove a kind's date:** `python3 tools/drishti.py lake delete --lake risklake --kind var-limit --date 2026-10-29 --dry-run`, then
-  without `--dry-run`. **Remove a whole day:** `mr_run.py --date 2026-10-29 --day FILE --delete-plan` prints every line, vectors first.
+  without `--dry-run`. **Remove a whole day:** `mr_run.py --date 2026-10-29 --from DIR --day FILE --delete-plan` prints every line, vectors first.
 - **A master that skips a day** is answered from its last delivery (the reference tables are read as *effective*), and the page says
   *no load for the date, showing* the earlier one. A row left out of today's master file does **not** disappear from those tables:
   remove it with `lake delete` of its earlier dates, or keep sending it with its status.
