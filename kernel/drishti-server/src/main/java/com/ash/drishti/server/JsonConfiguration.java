@@ -76,6 +76,12 @@ public class JsonConfiguration {
         return m;
     }
 
+    /** A ViewModel answered with Rachana's writer, a raw JSON body (SPLIT_PLAN 8.3g); Spring Boot puts it before Jackson's converter. */
+    @Bean
+    public com.ash.drishti.server.api.ViewJsonConverter viewJsonConverter() {
+        return new com.ash.drishti.server.api.ViewJsonConverter();
+    }
+
     /**
      * Rachana's ViewModel records say which members a writer leaves out with Rachana's own {@code @Include} (Rachana has no Jackson);
      * this reads it as Jackson's {@code @JsonInclude} with the same rule, so the API writes the same bytes as before the move
