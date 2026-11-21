@@ -75,27 +75,27 @@ class XlsxChartsTest {
     void everyChartKindGetsDrawingAndChartPartsNextToTheData() throws Exception {
         for (String kind : List.of("bar", "column", "line", "area", "pie", "donut", "treemap")) {
             Map<String, String> parts = write(section(kind, List.of("Desk", "Notional", "Rate"), rows(), List.of()));
-            assertThat(parts).containsKeys("xl/worksheets/_rels/sheet2.xml.rels", "xl/drawings/drawing2.xml", "xl/drawings/_rels/drawing2.xml.rels", "xl/charts/chart2.xml");
+            assertThat(parts).containsKeys("xl/worksheets/_rels/sheet2.xml.rels", "xl/drawings/drawing2.xml", "xl/drawings/_rels/drawing2.xml.rels", "xl/charts/chart1.xml");
             assertThat(parts.get("[Content_Types].xml")).contains("drawingml.chart+xml").contains("officedocument.drawing+xml");
             assertThat(parts.get("xl/worksheets/sheet2.xml")).contains("<drawing r:id=\"rId1\"/>").contains("fitToPage=\"1\"").contains("fitToHeight=\"0\"");
-            String chart = parts.get("xl/charts/chart2.xml");
+            String chart = parts.get("xl/charts/chart1.xml");
             assertThat(chart).contains("<c:f>'Notional by desk'!$B$2:$B$3</c:f>").contains("<c:f>'Notional by desk'!$A$2:$A$3</c:f>").contains("Notional by desk");
         }
-        assertThat(write(section("bar", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart2.xml")).contains("<c:barDir val=\"bar\"/>");
-        assertThat(write(section("column", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart2.xml")).contains("<c:barDir val=\"col\"/>");
-        assertThat(write(section("line", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart2.xml")).contains("<c:lineChart>");
-        assertThat(write(section("pie", List.of("Desk", "Notional", "Rate"), rows(), List.of())).get("xl/charts/chart2.xml")).contains("<c:pieChart>").doesNotContain("$C$");
-        assertThat(write(section("treemap", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart2.xml")).contains("<c:barChart>");     // other kinds draw as columns
+        assertThat(write(section("bar", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart1.xml")).contains("<c:barDir val=\"bar\"/>");
+        assertThat(write(section("column", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart1.xml")).contains("<c:barDir val=\"col\"/>");
+        assertThat(write(section("line", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart1.xml")).contains("<c:lineChart>");
+        assertThat(write(section("pie", List.of("Desk", "Notional", "Rate"), rows(), List.of())).get("xl/charts/chart1.xml")).contains("<c:pieChart>").doesNotContain("$C$");
+        assertThat(write(section("treemap", List.of("Desk", "Notional"), rows(), List.of())).get("xl/charts/chart1.xml")).contains("<c:barChart>");     // other kinds draw as columns
     }
 
     @Test
     void severalMeasuresAreSeveralSeriesAndDatesAreNumericCategories() throws Exception {
-        String chart = write(section("column", List.of("Desk", "Notional", "Rate"), rows(), List.of())).get("xl/charts/chart2.xml");
+        String chart = write(section("column", List.of("Desk", "Notional", "Rate"), rows(), List.of())).get("xl/charts/chart1.xml");
         assertThat(chart).contains("$B$1</c:f>").contains("$C$1</c:f>").contains("<c:legend>");
         List<List<Object>> byDate = new ArrayList<>();
         byDate.add(java.util.Arrays.asList(LocalDate.of(2026, 10, 8), 10L));
         byDate.add(java.util.Arrays.asList(LocalDate.of(2026, 10, 9), 12L));
-        assertThat(write(section("line", List.of("Date", "Notional"), byDate, List.of())).get("xl/charts/chart2.xml")).contains("<c:cat><c:numRef>");
+        assertThat(write(section("line", List.of("Date", "Notional"), byDate, List.of())).get("xl/charts/chart1.xml")).contains("<c:cat><c:numRef>");
     }
 
     @Test
@@ -103,16 +103,16 @@ class XlsxChartsTest {
         List<List<Object>> r = new ArrayList<>();
         r.add(java.util.Arrays.asList("DESK-A", "•••", 4L));
         r.add(java.util.Arrays.asList("DESK-B", "•••", 6L));
-        String chart = write(section("column", List.of("Desk", "MTM", "Trades"), r, List.of("MTM"))).get("xl/charts/chart2.xml");
+        String chart = write(section("column", List.of("Desk", "MTM", "Trades"), r, List.of("MTM"))).get("xl/charts/chart1.xml");
         assertThat(chart).doesNotContain("$B$").contains("$C$1</c:f>");
         // nothing numeric left to plot: no chart parts at all, the data sheet is still there
         List<List<Object>> allMasked = new ArrayList<>();
         allMasked.add(java.util.Arrays.asList("DESK-A", "•••"));
         Map<String, String> parts = write(section("column", List.of("Desk", "MTM"), allMasked, List.of("MTM")));
-        assertThat(parts).containsKey("xl/worksheets/sheet2.xml").doesNotContainKey("xl/charts/chart2.xml");
+        assertThat(parts).containsKey("xl/worksheets/sheet2.xml").doesNotContainKey("xl/charts/chart1.xml");
         Map<String, String> table = unzip(ExportWorkbook.write(new ExportDoc("Risk", "", List.of(),
                 List.of(new ExportDoc.Section("t", "Trades", ExportDoc.TABLE, List.of("Desk", "N"), rows(), null, List.of(), "column")))));
-        assertThat(table).doesNotContainKey("xl/charts/chart2.xml");
+        assertThat(table).doesNotContainKey("xl/charts/chart1.xml");
     }
 
     @Test

@@ -27,7 +27,6 @@ import com.ash.drishti.banking.compute.frtb.Rrao;
 import com.ash.drishti.banking.compute.frtb.Sbm;
 import com.ash.drishti.banking.compute.frtb.SbmModel;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import Sheet;
 import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -790,9 +789,14 @@ final class FrtbPlaygroundBook {
             for (int j = 0; j < nb; j++) {
                 s.text(g0 + j, "γ with " + cc.buckets.get(j).bucket, "head");
             }
+            for (int sc = 0; sc < 3; sc++) {                                  // the cells of a row in column order, as the file format wants
+                s.text(pt + sc, "Term " + Sbm.SCENARIOS[sc], "head");
+            }
             for (int sc = 0; sc < 3; sc++) {
-                s.text(pt + sc, "Term " + Sbm.SCENARIOS[sc], "head").text(cs + sc, "Capped S " + Sbm.SCENARIOS[sc], "head").text(ct + sc,
-                        "Capped term " + Sbm.SCENARIOS[sc], "head");
+                s.text(cs + sc, "Capped S " + Sbm.SCENARIOS[sc], "head");
+            }
+            for (int sc = 0; sc < 3; sc++) {
+                s.text(ct + sc, "Capped term " + Sbm.SCENARIOS[sc], "head");
             }
             int first = top + 6;
             s.row(top + 2).text(0, "S across", "note");
@@ -1023,8 +1027,8 @@ final class FrtbPlaygroundBook {
         for (int j = 0; j < n; j++) {
             s.text(r0 + j, "ρ² with " + (j + 1), "head");
         }
-        for (int sc = 0; sc < 3; sc++) {
-            s.text(tc + sc, "+ term " + Sbm.SCENARIOS[sc], "head").text(tc + 3 + sc, "− term " + Sbm.SCENARIOS[sc], "head");
+        for (int sc = 0; sc < 6; sc++) {                           // the cells of a row in column order, as the file format wants
+            s.text(tc + sc, (sc < 3 ? "+ term " : "− term ") + Sbm.SCENARIOS[sc % 3], "head");
         }
         int first = top + 4;
         s.row(top + 2).text(0, "CVR+ across", "note");
@@ -1054,8 +1058,8 @@ final class FrtbPlaygroundBook {
                 }
             }
             String rr = "$" + col(r0) + "$" + row + ":$" + col(r0 + n - 1) + "$" + row;
-            for (int sc = 0; sc < 3; sc++) {
-                for (int side = 0; side < 2; side++) {
+            for (int side = 0; side < 2; side++) {
+                for (int sc = 0; sc < 3; sc++) {
                     String x = "$" + (side == 0 ? "B" : "C") + row;
                     String across = side == 0 ? upRow : dnRow;
                     String f = b.absSum ? "MAX(" + x + ",0)" : "MAX(" + x + ",0)^2+" + x + "*SUMPRODUCT(" + scen(sc, rr) + "," + across + ",1-(" + x + "<0)*(" + across

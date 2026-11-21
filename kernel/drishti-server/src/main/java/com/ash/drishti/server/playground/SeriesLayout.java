@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.playground;
 
-import com.ash.tools.xlsx.Cells;
 import com.ash.tools.xlsx.Sheet;
 import java.util.List;
 
@@ -125,11 +124,11 @@ public final class SeriesLayout {
     }
 
     public String cell(int item, int point) {
-        return Cells.col(itemCol(item, point)) + itemRow(item, point);
+        return com.ash.tools.xlsx.Cells.col(itemCol(item, point)) + itemRow(item, point);
     }
 
     public String seriesCell(String s, int point) {
-        return Cells.col(seriesCol(s, point)) + seriesRow(s, point);
+        return com.ash.tools.xlsx.Cells.col(seriesCol(s, point)) + seriesRow(s, point);
     }
 
     /** An item's values over points {@code from..to}, absolute ({@code $C$4:$C$512}). */
@@ -143,7 +142,7 @@ public final class SeriesLayout {
 
     /** One point's values across items {@code from..to} (relative: the cell's own row or column moves with it). */
     public String across(int point, int from, int to) {
-        return Cells.col(itemCol(from, point)) + itemRow(from, point) + ":" + Cells.col(itemCol(to, point)) + itemRow(to, point);
+        return com.ash.tools.xlsx.Cells.col(itemCol(from, point)) + itemRow(from, point) + ":" + com.ash.tools.xlsx.Cells.col(itemCol(to, point)) + itemRow(to, point);
     }
 
     /** A series over points {@code from..to}, absolute. */
@@ -157,7 +156,7 @@ public final class SeriesLayout {
 
     /** {@code $C$4}. */
     public static String abs(int col, int row) {
-        return "$" + Cells.col(col) + "$" + row;
+        return "$" + com.ash.tools.xlsx.Cells.col(col) + "$" + row;
     }
 
     /** Writes the sheet's cells in row order. */
