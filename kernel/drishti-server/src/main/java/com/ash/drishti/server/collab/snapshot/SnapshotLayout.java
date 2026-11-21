@@ -16,10 +16,10 @@
 package com.ash.drishti.server.collab.snapshot;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.engine.view.ViewModel.Cell;
-import com.ash.drishti.engine.view.ViewModel.PanelView;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
+import com.ash.rachana.view.ViewModel.Cell;
+import com.ash.rachana.view.ViewModel.PanelView;
 import java.util.ArrayList;
 import java.util.List;
 

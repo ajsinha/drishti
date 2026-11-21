@@ -17,8 +17,8 @@ package com.ash.drishti.engine.explain;
 
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.engine.view.ViewModel.PanelView;
+import com.ash.rachana.view.ViewModel;
+import com.ash.rachana.view.ViewModel.PanelView;
 import com.ash.drishti.rachana.about.AboutSource;
 import com.ash.drishti.rachana.about.AboutText;
 import com.ash.drishti.rachana.about.GlossaryEntry;

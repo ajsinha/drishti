@@ -17,6 +17,7 @@ package com.ash.drishti.rachana;
 
 import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
+import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +43,15 @@ public class RachanaConfiguration {
 
     @Bean
     public Formats formats(RachanaProperties props) {
-        return DrishtiRachana.current().formats();
+        return DrishtiRachana.formats();
+    }
+
+    /** Packs changed: the format tables read the bundled formats, each pack's formats now, then the site file (a bad file refuses the reload). */
+    @Bean
+    public com.ash.drishti.common.LiveSettings formatsReload() {
+        return candidate -> DrishtiRachana.prepareFormats(org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.rachana.pack-formats-files", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
+                .orElse(List.of()));
     }
 
     /**

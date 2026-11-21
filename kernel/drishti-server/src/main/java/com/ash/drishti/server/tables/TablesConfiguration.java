@@ -18,7 +18,7 @@ package com.ash.drishti.server.tables;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.wire.TableRows;
+import com.ash.rachana.wire.TableRows;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
 import com.ash.drishti.server.security.SecurityProperties;
@@ -67,10 +67,12 @@ public class TablesConfiguration {
     /** A Sutra panel's {@code source: { table }}: the table read for the page's viewer, its rows as objects of its columns. */
     @Bean
     public TableRows sutraTableRows(TablesService tables, ViewPipeline pipeline) {
-        TableRows rows = (who, table, date) -> {
+        TableRows rows = (masker, table, date) -> {
+            com.ash.drishti.engine.ViewerContext who = masker instanceof com.ash.drishti.engine.ViewerContext v ? v
+                    : com.ash.drishti.engine.ViewerContext.of(d -> DataNode.of(masker.mask(d)), masker::mayOpen);
             try {
                 TableReads.Read r = tables.read(tables.reads(who), who, table, date == null ? null : date.toString(), null, null);
-                List<DataNode> out = new ArrayList<>(r.rows().size());
+                List<com.ash.rachana.api.Node> out = new ArrayList<>(r.rows().size());
                 for (List<Object> row : r.rows()) {
                     Map<String, Object> m = new LinkedHashMap<>();
                     for (int i = 0; i < r.columns().size(); i++) {

@@ -17,7 +17,7 @@ package com.ash.drishti.server.dist;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotLayout;
 import com.ash.drishti.server.collab.snapshot.SnapshotModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotPainter;

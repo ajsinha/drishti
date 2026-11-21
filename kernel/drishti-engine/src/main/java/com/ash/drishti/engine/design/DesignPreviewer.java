@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.engine.design;
 
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /** Renders a Sutra against a pasted document: Studio's preview path. Supplied by the server; faked in unit tests. */

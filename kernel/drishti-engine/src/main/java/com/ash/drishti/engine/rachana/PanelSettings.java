@@ -13,13 +13,15 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.engine.bind;
+package com.ash.drishti.engine.rachana;
 
+import com.ash.rachana.bind.PanelLimits;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * How much of a document the chart and aggregate panel kinds read, so one very long list cannot make a view slow
- * or a page heavy. A panel that stops short says so ({@code more}, {@code dropped}).
+ * or a page heavy. A panel that stops short says so ({@code more}, {@code dropped}). Drishti's settings for Rachana's {@link PanelLimits}
+ * (which carries no Spring annotation): the same fields, defaults and names.
  *
  * @param maxValues numbers a {@code histogram} bins, and rows a {@code pivot} aggregates (default 100,000)
  * @param maxPoints points a {@code scatter} draws, and bars a {@code candlestick} or {@code waterfall} draws (default 5,000;
@@ -36,30 +38,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     but still counted in the row totals
  */
 @ConfigurationProperties("drishti.panels")
-public record PanelLimits(Integer maxValues, Integer maxPoints, Integer maxNodes, Integer maxEvents, Integer pivotRows,
+public record PanelSettings(Integer maxValues, Integer maxPoints, Integer maxNodes, Integer maxEvents, Integer pivotRows,
         Integer pivotColumns, Integer treeDepth, Integer treeRows, Integer mapEntities, Integer mapCacheSeconds, Integer mapBudgetMillis) {
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
-    public PanelLimits {
-        maxValues = positive(maxValues, 100_000);
-        maxPoints = positive(maxPoints, 5_000);
-        maxNodes = positive(maxNodes, 300);
-        maxEvents = positive(maxEvents, 500);
-        pivotRows = positive(pivotRows, 200);
-        pivotColumns = positive(pivotColumns, 40);
-        treeDepth = positive(treeDepth, 12);
-        treeRows = positive(treeRows, 10_000);
-        mapEntities = positive(mapEntities, 1_000);
-        mapCacheSeconds = positive(mapCacheSeconds, 60);
-        mapBudgetMillis = positive(mapBudgetMillis, 5_000);
+    public PanelSettings {
     }
 
-    /** The defaults. */
-    public static PanelLimits defaults() {
-        return new PanelLimits(null, null, null, null, null, null, null, null, null, null, null);
-    }
-
-    private static int positive(Integer v, int fallback) {
-        return v == null || v <= 0 ? fallback : v;
+    /** Rachana's limits (its defaults where a setting is absent or not positive). */
+    public PanelLimits limits() {
+        return new PanelLimits(maxValues, maxPoints, maxNodes, maxEvents, pivotRows, pivotColumns, treeDepth, treeRows, mapEntities,
+                mapCacheSeconds, mapBudgetMillis);
     }
 }

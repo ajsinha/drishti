@@ -263,9 +263,9 @@ public class ConsoleAnswers {
             out.put("builder", b);
         }
         Map<String, Object> ctl = new LinkedHashMap<>();                     // the ctl.<id>=value parameters a request carries (ControlValues)
-        ctl.put("maxControls", com.ash.drishti.engine.control.ControlValues.MAX_CONTROLS);
-        ctl.put("maxKey", com.ash.drishti.engine.control.ControlValues.MAX_KEY);
-        ctl.put("maxValue", com.ash.drishti.engine.control.ControlValues.MAX_VALUE);
+        ctl.put("maxControls", com.ash.rachana.control.ControlValues.MAX_CONTROLS);
+        ctl.put("maxKey", com.ash.rachana.control.ControlValues.MAX_KEY);
+        ctl.put("maxValue", com.ash.rachana.control.ControlValues.MAX_VALUE);
         out.put("controls", ctl);
         out.put("form", Map.of("maxRows", com.ash.drishti.engine.search.form.FormCompiler.MAX_ROWS));   // FORM's row choices stop here
         return out;

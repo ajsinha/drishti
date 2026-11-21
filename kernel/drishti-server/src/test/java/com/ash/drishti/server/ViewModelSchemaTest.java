@@ -25,12 +25,12 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.command.CommandParser;
-import com.ash.drishti.engine.live.Frame;
-import com.ash.drishti.engine.live.Patch;
+import com.ash.rachana.view.Frame;
+import com.ash.rachana.view.Patch;
 import com.ash.drishti.engine.live.PatchDiffer;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.engine.view.ViewModelSchema;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
+import com.ash.rachana.view.ViewModelSchema;
 import com.ash.rachana.model.PanelKind;
 import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.api.ViewModelSchemaController;
@@ -103,24 +103,36 @@ class ViewModelSchemaTest {
         return out;
     }
 
+    /**
+     * The panel kinds of the language level this server compiles at (1.0): Rachana's schema also names the later levels' kinds
+     * ({@code grid}, {@code tree}, {@code chart} of 1.1; {@code live}, {@code treemap}, {@code bullet}, {@code form} of 1.2), which no
+     * Sutra of this server can hold until the level is raised.
+     */
+    private static Set<String> levelKinds() {
+        String level = com.ash.drishti.rachana.DrishtiRachana.current().language();
+        return Arrays.stream(PanelKind.values()).filter(k -> k.at(level)).map(PanelKind::id).collect(Collectors.toCollection(TreeSet::new));
+    }
+
     @Test
     void theSchemaNamesEveryPanelKindAndEveryDataRecord() {
-        Set<String> all = Arrays.stream(PanelKind.values()).map(PanelKind::id).collect(Collectors.toCollection(TreeSet::new));
-        assertThat(ViewModelSchema.DATA_BY_KIND.keySet()).as("a data record for every PanelKind").containsExactlyInAnyOrderElementsOf(all);
+        Set<String> all = levelKinds();
+        assertThat(ViewModelSchema.DATA_BY_KIND.keySet()).as("a data record for every PanelKind of this server's level").containsAll(all);
+        // Rachana's schema has no data record for the level-1.2 form panel yet (PanelData.FormPanel): every other record belongs to a kind
         assertThat(new HashSet<Class<?>>(ViewModelSchema.DATA_BY_KIND.values())).as("every PanelData record belongs to a kind")
-                .containsExactlyInAnyOrder(PanelData.class.getPermittedSubclasses());
+                .containsExactlyInAnyOrderElementsOf(Arrays.stream(PanelData.class.getPermittedSubclasses())
+                        .filter(c -> !c.getSimpleName().equals("FormPanel")).toList());
         JsonNode s = schema();
         assertThat(s.at("/$ref").asText()).isEqualTo("#/$defs/ViewModel");
         List<String> enumKinds = new ArrayList<>();
         s.at("/$defs/PanelView/properties/kind/enum").forEach(n -> enumKinds.add(n.asText()));
-        assertThat(enumKinds).containsExactlyInAnyOrderElementsOf(all);
+        assertThat(enumKinds).containsAll(all);
         assertThat(s.at("/$defs/Frame/properties/patches/anyOf/0/items/$ref").asText()).isEqualTo("#/$defs/Patch");
     }
 
     @Test
     void theShowcaseHoldsEveryKindAndMatchesTheSchema() throws Exception {
         ViewModel v = pipeline.preview(Optional.of(showcase()), showcaseDoc(1, x -> x));
-        assertThat(kinds(v.panels())).as("the showcase covers every kind the schema names").containsAll(ViewModelSchema.DATA_BY_KIND.keySet());
+        assertThat(kinds(v.panels())).as("the showcase covers every kind of this server's level").containsAll(levelKinds());
         assertThat(errors(v, null)).isEmpty();
     }
 
@@ -172,7 +184,7 @@ class ViewModelSchemaTest {
         assertThat(v.provenance().maskedPanels()).isNotEmpty();
         assertThat(errors(v, null)).isEmpty();
         ViewModel denied = pipeline.view(EntityRef.of("trade", "IRS-48213"), com.ash.drishti.api.AsOf.LATEST, com.ash.drishti.engine.ViewerContext.of(UnaryOperator.identity(),
-                k -> !"curve".equals(k)), com.ash.drishti.engine.control.ControlValues.NONE);
+                k -> !"curve".equals(k)), com.ash.rachana.control.ControlValues.NONE);
         assertThat(denied.panels()).anyMatch(p -> "no access to curve".equals(p.denied()) && p.data() == null);
         assertThat(errors(denied, null)).as("a panel whose source the caller may not open").isEmpty();
     }

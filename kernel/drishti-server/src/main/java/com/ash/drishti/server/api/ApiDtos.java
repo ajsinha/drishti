@@ -17,7 +17,7 @@ package com.ash.drishti.server.api;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.Provenance;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

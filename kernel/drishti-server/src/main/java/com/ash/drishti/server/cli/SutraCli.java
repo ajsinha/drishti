@@ -26,7 +26,7 @@ import com.ash.drishti.engine.design.SampleChecker;
 import com.ash.drishti.engine.shape.Sample;
 import com.ash.drishti.engine.shape.Shape;
 import com.ash.drishti.engine.shape.ShapeService;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.rachana.SutraException;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.rachana.model.Panel;

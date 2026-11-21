@@ -20,11 +20,11 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.live.Frame;
+import com.ash.rachana.view.Frame;
 import com.ash.drishti.engine.live.LiveMetrics;
 import com.ash.drishti.engine.live.TopicHub;
 import com.ash.drishti.engine.live.ViewStream;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
@@ -208,7 +208,7 @@ public class MonitorController {
                 streams.add(new ViewStream(r, first, List.of(), hub, pipeline, executor, metrics, f -> {
                     box.offer(f);
                     signal.release();
-                }, entitlements.viewer(p), com.ash.drishti.engine.control.ControlValues.NONE));
+                }, entitlements.viewer(p), com.ash.rachana.control.ControlValues.NONE));
             } catch (DrishtiException ignored) {
                 // a missing entity simply does not tick
             }

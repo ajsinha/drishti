@@ -15,7 +15,9 @@
  */
 package com.ash.drishti.engine.live;
 
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.Patch;
+
+import com.ash.rachana.view.ViewModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +35,7 @@ public final class PatchDiffer {
         List<ViewModel.Cell> b = after.strip();
         for (int i = 0; i < b.size(); i++) {
             if (i >= a.size() || !a.get(i).equals(b.get(i))) {
-                out.add(Patch.strip(i, b.get(i)));
+                out.add(new Patch("strip", i, b.get(i), null, null));
             }
         }
         for (int i = 0; i < after.panels().size(); i++) {
@@ -41,12 +43,12 @@ public final class PatchDiffer {
             ViewModel.PanelView q = i < before.panels().size() ? before.panels().get(i) : null;
             if (q == null || !q.id().equals(p.id()) || !Objects.equals(q.data(), p.data()) || !Objects.equals(q.error(), p.error())
                     || !Objects.equals(q.title(), p.title())) {
-                out.add(Patch.panel(p));
+                out.add(new Patch("panel", null, null, p, null));
             }
         }
         if (before.provenance().generation() != after.provenance().generation()
                 || !before.provenance().layout().equals(after.provenance().layout())) {
-            out.add(Patch.provenance(after.provenance()));
+            out.add(new Patch("provenance", null, null, null, after.provenance()));
         }
         return out;
     }

@@ -19,8 +19,8 @@ import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.api.EntityRef;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

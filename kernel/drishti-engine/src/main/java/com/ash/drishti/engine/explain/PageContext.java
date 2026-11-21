@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.engine.explain;
 
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Map;
