@@ -858,3 +858,7 @@ ship with the sample engine and the analytics engines.
 | EN-26 | Risk design | **Amend as section 9.2 before K4**: ports are the engine API's; `ResultSink` and `PartitionTransport` go; `risk-tck` is the engine kit plus cases |
 | EN-27 | Freezing the API | **`0.x` through R1 and H2; `1.0.0` at R2 after market risk, CCR and one non-risk engine pass** |
 | EN-28 | Scope in combined i8 | **E0 to E12 (about 58 bd net)** with the cut lines E10, E11, E7 in that order; G3 and Flight later |
+
+## Decisions taken (owner, 2026-11-21)
+
+EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
