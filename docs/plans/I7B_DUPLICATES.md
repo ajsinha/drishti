@@ -381,3 +381,7 @@ A cut is a listed, dated exception in `PRODUCTS_MIGRATION_EVIDENCE.md`, never si
 - The plugin twins of K1 are matched by file name: 8,169 lines is an upper bound.
 - "About 90 callers" of `tools/lake` (LAKE_DESIGN D5) was not reproduced: 48 Python files import it (37 outside tests), 66
   files name it.
+
+## Decisions taken (2026-11-21)
+
+DD-7: **Jinja stays** (owner): the console's server-rendered pages remain, a documented exception to "one way to draw". DD-1 to DD-22 otherwise accepted as recommended (lead, under the owner's delegation); the three gated switch-overs (live tables, BI charts; Jinja dropped) keep their G3 entry checks and cut lines. Shims are removed after the owner's "last run" of the migrators on his two machines.
