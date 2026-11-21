@@ -87,7 +87,7 @@ class S3StorageTlsTest {
     void aPrivateCaAndAClientCertificateReachTheEndpoint() throws Exception {
         assertThat(length(settings("localhost", pki.clientSettings()))).isEqualTo(11);
         assertThat(S3Settings.from(settings("localhost", pki.clientSettings())).tls().expiryNote(java.time.Instant.now()))
-                .contains("TLS certificate CN=drishti (tls.cert-file) expires in");
+                .contains("TLS certificate CN=client (tls.cert-file) expires in");
     }
 
     @Test

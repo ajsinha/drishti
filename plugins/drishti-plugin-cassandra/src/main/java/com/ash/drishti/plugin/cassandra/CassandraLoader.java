@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.common.RowFeed;
 import com.ash.tools.time.LoadGuard;
@@ -162,7 +163,7 @@ public final class CassandraLoader implements AutoCloseable {
             System.exit(2);
         }
         Options o = parse(args);
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         long t0 = System.nanoTime();
         Result r;
         try (CassandraLoader loader = new CassandraLoader(o, guard);

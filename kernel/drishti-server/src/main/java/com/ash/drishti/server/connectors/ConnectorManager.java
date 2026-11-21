@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.connectors;
 
-import com.ash.drishti.api.DrishtiTools;
 import java.util.concurrent.locks.ReentrantLock;
 import com.ash.tools.settings.SettingSpec;
 import com.ash.drishti.common.ConnectorSecrets;
@@ -881,7 +880,7 @@ public final class ConnectorManager {
             if (!ts.enabled()) {
                 return out;
             }
-            var material = com.ash.tools.net.DrishtiTools.tls(ts);
+            var material = com.ash.drishti.api.DrishtiTools.tls(ts);
             Instant now = Instant.now();
             out.put("certificates", material.certificates().stream().map(c -> {
                 Map<String, Object> x = new LinkedHashMap<>();

@@ -23,6 +23,7 @@ import com.ash.tools.net.TlsSettings;
 import com.ash.tools.settings.Placeholders;
 import com.ash.tools.settings.SettingSpec;
 import com.ash.tools.settings.SettingsFile;
+import com.ash.tools.time.LoadGuard;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,15 @@ public final class DrishtiTools {
     /** How a message names the site's proxy settings. */
     public static final String SITE_PROXY_PREFIX = "drishti.http.proxy.";
 
+    /** The prefix of the environment variable that names the business zone of a load ({@code DRISHTI_BUSINESS_ZONE}). */
+    public static final String ENV_PREFIX = "DRISHTI_";
+
     private DrishtiTools() {}
+
+    /** The guard a loader's command line asks for ({@code --zone}, {@code --as-of}, ...); the business zone from {@code DRISHTI_BUSINESS_ZONE}. */
+    public static LoadGuard loadGuard(String[] args) {
+        return LoadGuard.fromArgs(args, ENV_PREFIX);
+    }
 
     /** Applies the settings files named by {@link #SETTINGS_FILE}; {@code ${drishti.home}} in a value is the install folder. */
     public static List<String> applySettingsFile() {

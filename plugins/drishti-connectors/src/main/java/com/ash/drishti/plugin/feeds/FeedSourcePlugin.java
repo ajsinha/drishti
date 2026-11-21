@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.plugin.feeds;
 
-import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
@@ -105,7 +104,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
         HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL));
         if (override.startsWith("http") || com.ash.tools.net.TlsSettings.anyGiven(ctx.settings(), "tls.")) {
             // an https mirror on a private CA: the shared tls.* settings; the built-in feeds use the JVM's authorities
-            this.tls = com.ash.tools.net.DrishtiTools.tlsMaterial(ctx.settings(), override.isEmpty() ? "https://(the built-in feed)" : override, "url");
+            this.tls = com.ash.drishti.api.DrishtiTools.tlsMaterial(ctx.settings(), override.isEmpty() ? "https://(the built-in feed)" : override, "url");
             if (tls != null) {
                 hb = com.ash.tools.net.TlsHttp.apply(hb, tls);
             }

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The settings files' format, read the one way for the console and the Python tools (tools/settingsfile.py loads this file): the same
-rules as the Java ``SettingsFile`` (kernel/drishti-settingsfile). One absolute path, or several joined by commas (a later file wins);
+rules as the Java ``SettingsFile`` (Drishti Tools, `tools-settings`). One absolute path, or several joined by commas (a later file wins);
 never searched for, never relative to the working folder. One ``key=value`` per line; blank lines and lines starting with ``#`` or ``;``
 are comments; a section whose name has a dot (``[lake.demo]``) is a namespace that prefixes its keys (``root=`` is ``lake.demo.root``),
 a section without a dot (``[roots]``) is a label whose keys are full names. Standard library only."""

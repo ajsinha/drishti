@@ -104,7 +104,7 @@ class RestTlsTest {
     void aPrivateCaAndAClientCertificateAreAccepted() throws Exception {
         RestSourcePlugin p = start("localhost", pki.clientSettings());
         assertThat(p.fetch(EntityRef.of("trade", "T1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(5);
-        assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+        assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
     }
 
     @Test

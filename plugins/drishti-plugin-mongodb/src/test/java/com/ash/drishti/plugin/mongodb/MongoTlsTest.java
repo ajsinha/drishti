@@ -160,7 +160,7 @@ class MongoTlsTest {
         p.start(DatedSourceContract.context(settings(tls)));
         try {
             assertThat(p.fetch(com.ash.drishti.api.EntityRef.of("trade", "T-1"))).isPresent();
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
         } finally {
             p.close();
         }
@@ -209,7 +209,7 @@ class MongoTlsTest {
         MongoClientSettings.Builder b = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri()));
         MongoTls.apply(b, MongoTls.plan(settings(tls), uri(), System::getenv));
         try (MongoClient c = MongoClients.create(b.build())) {
-            c.getDatabase("$external").runCommand(new Document("createUser", "CN=drishti").append("roles",
+            c.getDatabase("$external").runCommand(new Document("createUser", "CN=client").append("roles",
                     List.of(new Document("role", "readWrite").append("db", "drishti"))));
         }
         MongoSourcePlugin after = new MongoSourcePlugin();

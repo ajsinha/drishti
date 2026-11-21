@@ -116,6 +116,15 @@ class XlsxChartsTest {
     }
 
     @Test
+    void aSheetNameWithAnAmpersandOrAnInvalidCharacterKeepsEveryPartWellFormed() throws Exception {
+        // the old chart writer put the quoted sheet name into the chart's references without XML-escaping it: an "&" broke the part
+        ExportDoc.Section s = new ExportDoc.Section("t", "R&D <desk> / 'x'", ExportDoc.CHART, List.of("Desk", "Notional"), rows(), null, List.of(), "column");
+        Map<String, String> parts = write(s);                            // write() parses every part: not XML throws
+        assertThat(parts.get("xl/charts/chart1.xml")).contains("R&amp;D &lt;desk&gt;").doesNotContain("R&D");
+        assertThat(parts.get("xl/workbook.xml")).contains("name=\"R&amp;D &lt;desk&gt;   'x'\"");
+    }
+
+    @Test
     void chartsSurviveLibreOfficeWhenItIsInstalled() throws Exception {
         org.junit.jupiter.api.Assumptions.assumeTrue(Boolean.getBoolean("drishti.test.soffice") && Files.isExecutable(Path.of("/usr/bin/soffice")));
         Path dir = com.ash.drishti.common.TempFiles.root().resolve("xlsx-charts-test");

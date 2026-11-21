@@ -196,7 +196,7 @@ class RedisTlsTest {
         RedisSourcePlugin p = new RedisSourcePlugin();
         p.start(DatedSourceContract.context(s));
         try {
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
         } finally {
             p.close();
         }

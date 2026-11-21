@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.common.LoadLine;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -109,7 +110,7 @@ public final class PostgresLoader {
         // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections the load may hold at once, the admin connection included
         Map<String, String> pool = new HashMap<>();
         pool.put("pool-size", option(args, "--pool-size", env("DRISHTI_DB_POOL_SIZE", String.valueOf(PoolSettings.DEFAULT_SIZE))));
-        PostgresLoader loader = new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args), PoolSettings.resolve(pool));
+        PostgresLoader loader = new PostgresLoader(url, user, password, writers, batch, recreate, DrishtiTools.loadGuard(args), PoolSettings.resolve(pool));
         loader.asOf = RowFeed.asOf(args);
         loader.load(file, keepMonths);
     }

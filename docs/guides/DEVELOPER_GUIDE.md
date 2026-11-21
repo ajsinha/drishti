@@ -270,7 +270,7 @@ the install's Maven wrapper; it runs `package`, never `install`, so nothing reac
 
 | In `sdk/` | What it is |
 |---|---|
-| `repo/` | a Maven file repository: `drishti-kernel-api` and what it needs (`drishti-api`, `drishti-common`, `drishti-settingsfile`), the product's parent pom, `drishti-module-parent` and `drishti-module-archetype`, all at the product's version |
+| `repo/` | a Maven file repository: `drishti-kernel-api` and what it needs (`drishti-api`, `drishti-common`, and the Drishti Tools jars they use), the product's parent pom, `drishti-module-parent` and `drishti-module-archetype`, all at the product's version |
 | `settings.xml` | a Maven settings file naming `repo/` by its absolute path: `mvn -s <Drishti folder>/sdk/settings.xml ...` finds the parent and the kernel API in a project that names no path |
 | `drishti-module-parent/pom.xml` | the parent pom, for a project that names it by `relativePath` (the genomics sample does) |
 
@@ -2642,7 +2642,7 @@ form, and the validator checks the file, from a description of those settings. T
 default List<SettingSpec> settingSpecs()      // the default declares none
 ```
 
-returning one `com.ash.drishti.api.SettingSpec` per setting:
+returning one `com.ash.tools.settings.SettingSpec` per setting:
 
 ```java
 public record SettingSpec(String name, String type, boolean required, String defaultValue,
@@ -2766,7 +2766,7 @@ Rules worth knowing when you write a plugin:
 ### 10.8 TLS for a connector: the shared module
 
 A connector that connects to a server over the network gets TLS from one shared module in the plugin API,
-`com.ash.drishti.api.tls` in `drishti-api` (pure JDK; no Spring, no extra dependency), so that every connector offers the
+`com.ash.tools.net` (the Drishti Tools library, reached through `com.ash.drishti.api.DrishtiTools`; pure JDK, no Spring, no extra dependency), so that every connector offers the
 same settings, the same source forms and the same start-up messages. Operators learn the `tls.*` keys once:
 [DATA_GUIDE.md section 10](DATA_GUIDE.md#10-tls-and-the-outbound-proxy). A connector that opens a TLS connection should use it instead of the JVM-wide `javax.net.ssl.*` properties.
 
@@ -2844,7 +2844,7 @@ Other shapes the shipped connectors show, for a library that wants something oth
 
 A plugin that speaks HTTP should honour the site's forward proxy the same way every shipped one does. The settings (`proxy.url`, `proxy.username`, `proxy.password`,
 `proxy.password-file`, `proxy.no-proxy`, `proxy.enabled`, or the bare `proxy: none`), the site default `drishti.http.proxy.*` and the rules are in
-[DATA_GUIDE.md section 10 (proxy)](DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
+[DATA_GUIDE.md section 10 (proxy)](DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers); the code is `com.ash.tools.net.ProxySettings` in Drishti Tools (Spring-free, like the TLS module). In `start`:
 
 ```java
 ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);   // connector block, else site default, else environment, else none

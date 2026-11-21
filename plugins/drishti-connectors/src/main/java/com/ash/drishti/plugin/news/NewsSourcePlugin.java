@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.plugin.news;
 
-import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
@@ -102,7 +101,7 @@ public final class NewsSourcePlugin implements SourcePlugin {
         this.proxy = com.ash.tools.net.ProxySettings.resolve(ctx.settings(), settings.baseUrl());   // proxy.* or the site default
         HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL));
         if (com.ash.tools.net.TlsSettings.anyGiven(ctx.settings(), "tls.")) {          // a proxy or mirror on a private CA
-            var tls = com.ash.tools.net.DrishtiTools.tlsMaterial(ctx.settings(), settings.baseUrl(), "base-url");
+            var tls = com.ash.drishti.api.DrishtiTools.tlsMaterial(ctx.settings(), settings.baseUrl(), "base-url");
             if (tls != null) {
                 b = com.ash.tools.net.TlsHttp.apply(b, tls);
             }

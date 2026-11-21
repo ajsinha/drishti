@@ -193,7 +193,7 @@ tls.ca-file=/etc/drishti/tls/bank-ca.pem
 - **Origin.** The server knows which file each key came from (`SettingsFile.sourceOf`): the start's `resolved paths:` block names the file as
   the origin of each root and path setting it set, and Admin → Configuration → Resolved paths shows each with where it came from.
 - Java: `-Ddrishti.settings.file=/abs/a.ini[,/abs/b.ini]` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
-  `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
+  `com.ash.drishti.api.DrishtiTools.applySettingsFile()` (`com.ash.tools.settings.SettingsFile` of the Drishti Tools library, reached through `drishti-common`).
 - The server applies them first thing in `main`, before anything reads a setting. `python tools/drishti.py --settings /abs/drishti.ini start server` (and
   `start cluster` the same way, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
 - Python tools: `python tools/drishti.py --settings /abs/drishti.ini[,/abs/secrets.ini] ...` reads the same files (`tools/settingsfile.py`)
@@ -406,7 +406,7 @@ Each row was tried against a scratch server. Points to know:
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
 
 **Every other file the server reads: the one resolver.** The files Spring does not read itself are resolved by one resolver,
-`com.ash.drishti.settingsfile.Placeholders`, with the same syntax: `${key}`, `${key:default}`, `${key:-default}` (the shell's form), nested
+`com.ash.tools.settings.Placeholders` (Drishti Tools), with the same syntax: `${key}`, `${key:default}`, `${key:-default}` (the shell's form), nested
 in the default (`${lake.risk.root:${DRISHTI_DELTA_ROOT:/srv/lake}}`), inside a longer value. `key` is a settings key (`lake.risk.root`,
 `broker.kafka-eu.sasl.password`) or an environment variable's name (`DRISHTI_DELTA_ROOT`). The order, first found wins:
 

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.file;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.RowFeed;
 import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -51,7 +52,7 @@ public final class JsonlLoader {
     public static void main(String[] args) throws IOException {
         String file = args[0];
         Path root = Path.of(args.length > 1 && !args[1].startsWith("--") ? args[1] : com.ash.drishti.api.DataDir.under("files"));
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         JsonFactory json = new JsonFactory();
         Set<Path> written = new LinkedHashSet<>();
         Map<Path, BufferedWriter> open = new LinkedHashMap<>(OPEN, 0.75f, true);   // least recently written first

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.RowFeed;
 import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
@@ -213,7 +214,7 @@ public final class IcebergLoader {
             settings.put("root", com.ash.drishti.api.DataDir.under("iceberg"));   // a folder catalog with no root given: the data folder's
         }
         IcebergLoader.Run run = new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads,
-                spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), LoadGuard.fromArgs(args));
+                spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), DrishtiTools.loadGuard(args));
         run.asOf = RowFeed.asOf(args);
         run.load(file, keepDays);
     }

@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server;
 
-import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.engine.EngineConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -69,7 +68,7 @@ public class DrishtiApplication {
     public static void main(String[] args) throws InterruptedException {
         // the settings file (-Ddrishti.settings.file=/abs/drishti.ini), first of all: its entries become system properties (an explicit -D
         // wins); LaunchRoots names the file as the origin of each root it set
-        java.util.List<String> fromFile = com.ash.tools.settings.DrishtiTools.applySettingsFile();
+        java.util.List<String> fromFile = com.ash.drishti.api.DrishtiTools.applySettingsFile();
         if (!fromFile.isEmpty()) {
             System.setProperty(com.ash.drishti.packs.LaunchRoots.FROM_FILE, String.join(",", fromFile));
         }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
@@ -215,7 +216,7 @@ public final class IcebergMaintenance {
             System.exit(2);
         }
         RowRetention rowRetention = new RowRetention(ttl, on, maxRows);
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         LocalDate floor = floorDays > 0 ? guard.asOf().minusDays(floorDays - 1L) : null;
         if (floorDays > 0 && expireHours >= 0 && expireHours < floorDays * 24L) {
             expireHours = floorDays * 24L;                     // time travel is kept as long as the dates are

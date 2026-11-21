@@ -95,7 +95,7 @@ class S3TlsTest {
     void aPrivateCaAndAClientCertificateReachTheEndpoint() throws Exception {
         S3SourcePlugin p = plugin("localhost", pki.clientSettings());
         try {
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
             assertThat(p.fetch(com.ash.drishti.api.EntityRef.of("trade", "T-1"))).isPresent();
         } finally {
             p.close();

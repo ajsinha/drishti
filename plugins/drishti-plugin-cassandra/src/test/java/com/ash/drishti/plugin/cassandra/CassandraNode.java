@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.testkit.LoaderRows;
-import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -134,7 +134,7 @@ final class CassandraNode {
 
     /** Loads JSON lines as {@code python tools/drishti.py data load --store cassandra} would. */
     static CassandraLoader.Result load(String[] args, List<String> lines) throws Exception {
-        try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), LoadGuard.fromArgs(args))) {
+        try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), DrishtiTools.loadGuard(args))) {
             return loader.load(LoaderRows.feed(lines));
         }
     }

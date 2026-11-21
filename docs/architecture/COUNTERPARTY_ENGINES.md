@@ -437,7 +437,7 @@ with the tall explanation panel beside it, the formula bar, Export to Excel from
 check cells, the ALL CHECKS PASS band at the top of Main. Each playground below adds its model (the cached values), its generator (the tabs
 and formulas through `SeriesLayout`), its inputs as the person and its endpoints.
 
-**Functions.** The workbooks need, beyond today's common set (`XlsxFormulas.ALLOWED`): `EXP`, `LN`, `NORM.S.DIST` (supervisory delta),
+**Functions.** The workbooks need, beyond today's common set (`Formulas.ALLOWED` of `tools-xlsx`): `EXP`, `LN`, `NORM.S.DIST` (supervisory delta),
 `SUMIFS` and `COUNTIFS` (hedging-set sums). All four are in Excel, LibreOffice Calc and Google Sheets; they are added to the set with the
 first of these playgrounds, and the formula scanner keeps refusing anything else.
 
