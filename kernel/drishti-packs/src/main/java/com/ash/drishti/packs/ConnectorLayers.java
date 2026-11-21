@@ -209,17 +209,9 @@ public final class ConnectorLayers {
         Map<String, String> settings = new LinkedHashMap<>(t.settings());
         Map<String, String> origins = new LinkedHashMap<>();
         t.settings().keySet().forEach(k -> origins.put(k, TEMPLATE));
-        // one lake form: a file in the older form (root, domain, table.*, layout.*) does not get the template's lake keys, and a file naming
-        // a lake does not keep the template's older keys. A file that gives only root over a template naming a lake moves that lake's
-        // root (drishti.py lake demo --lake): it keeps the lake, and its root wins in ConnectorLake.expand
-        boolean movesRoot = settings.containsKey(ConnectorLake.LAKE) && o.settings().containsKey("root") && o.settings().keySet().stream()
-                .noneMatch(k -> k.equals("domain") || k.startsWith("table.") || k.startsWith("layout.") && !k.endsWith(".type-ahead"));
-        if (ConnectorLake.legacy(o.settings()) && !movesRoot) {
-            List.of(ConnectorLake.LAKE, ConnectorLake.TABLES).forEach(k -> {
-                settings.remove(k);
-                origins.remove(k);
-            });
-        } else if (o.settings().containsKey(ConnectorLake.LAKE)) {
+        // a file naming a lake does not keep the template's explicit-path keys; a file that gives only root over a template naming a
+        // lake moves that lake's root (drishti.py lake demo --lake): it keeps the lake, and its root wins in ConnectorLake.expand
+        if (o.settings().containsKey(ConnectorLake.LAKE)) {
             settings.keySet().removeIf(k -> k.equals("root") || k.startsWith("table.") || k.startsWith("layout."));
             origins.keySet().retainAll(settings.keySet());
         }
