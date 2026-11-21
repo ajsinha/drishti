@@ -198,6 +198,9 @@
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-memory</artifactId><version>${drishti.lake.version}</version></dependency>
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId><version>${drishti.lake.version}</version></dependency>
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId><version>${drishti.lake.version}</version></dependency>
+      <!-- test only: Rachana's conformance runner and its pinned cases, answered inside Drishti with the drishti profile (SPLIT_PLAN 8.8) -->
+      <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance</artifactId><version>${drishti.rachana.version}</version></dependency>
+      <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance-cases</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId><version>${project.version}</version></dependency>

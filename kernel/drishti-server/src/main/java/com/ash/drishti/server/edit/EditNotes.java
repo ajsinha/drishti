@@ -17,8 +17,8 @@ package com.ash.drishti.server.edit;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
 import java.util.ArrayList;
 import java.util.List;
 

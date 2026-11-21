@@ -16,7 +16,7 @@
 package com.ash.drishti.engine.design;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;

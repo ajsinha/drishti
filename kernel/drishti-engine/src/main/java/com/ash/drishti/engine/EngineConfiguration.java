@@ -18,7 +18,7 @@ package com.ash.drishti.engine;
 import com.ash.drishti.common.CommonConfiguration;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.common.ShapeFingerprinter;
-import com.ash.drishti.engine.bind.Binder;
+import com.ash.rachana.bind.Binder;
 import com.ash.drishti.engine.command.CommandParser;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
@@ -56,7 +56,7 @@ import org.springframework.context.annotation.Import;
 @Import({CommonConfiguration.class, RachanaConfiguration.class, InferenceConfiguration.class, GraphConfiguration.class})
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
         com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
-        com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class,
+        com.ash.drishti.engine.rachana.PanelSettings.class, com.ash.drishti.engine.pivot.PivotProperties.class,
         com.ash.drishti.engine.shape.BuilderProperties.class, com.ash.drishti.engine.explain.ExplainProperties.class,
         com.ash.drishti.engine.history.HistoryProperties.class})
 public class EngineConfiguration {
@@ -180,8 +180,8 @@ public class EngineConfiguration {
 
     @Bean
     public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics,
-            com.ash.drishti.engine.bind.PanelLimits panelLimits, com.ash.drishti.engine.pivot.PivotProperties pivot) {
-        return new Binder(el, formats, catalog, badges, mnemonics, panelLimits, pivot);
+            com.ash.drishti.engine.rachana.PanelSettings panels, com.ash.drishti.engine.pivot.PivotProperties pivot) {
+        return com.ash.drishti.engine.rachana.DrishtiBinder.binder(el, formats, catalog, badges, mnemonics, panels.limits(), pivot);
     }
 
     @Bean

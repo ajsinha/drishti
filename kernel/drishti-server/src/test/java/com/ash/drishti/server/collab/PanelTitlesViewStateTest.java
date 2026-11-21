@@ -18,7 +18,7 @@ package com.ash.drishti.server.collab;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.ash.drishti.engine.control.ViewState;
+import com.ash.rachana.control.ViewState;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;

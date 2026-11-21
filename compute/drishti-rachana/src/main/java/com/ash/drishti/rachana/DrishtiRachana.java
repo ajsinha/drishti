@@ -41,6 +41,7 @@ public final class DrishtiRachana {
     private static volatile RachanaOptions options = RachanaOptions.DEFAULTS;
     private static volatile Supplier<? extends Collection<String>> kinds = List::of;
     private static volatile Rachana current;
+    private static final List<com.ash.rachana.format.Formats> SERVED = new ArrayList<>();
 
     private DrishtiRachana() {
     }
@@ -72,6 +73,41 @@ public final class DrishtiRachana {
     /** The compiler of the instance now (engine and module functions included). */
     public static ElCompiler compiler() {
         return current().compiler();
+    }
+
+    /**
+     * The format table the server's readers hold (the Spring bean): the instance's live table ({@code Formats.live}). A pack reload swaps
+     * its contents in place ({@link #reloadFormats}), so every holder sees the new names at its next read.
+     */
+    public static com.ash.rachana.format.Formats formats() {
+        com.ash.rachana.format.Formats f = current().formats();
+        synchronized (LOCK) {
+            if (SERVED.stream().noneMatch(x -> x == f)) {
+                SERVED.add(f);
+            }
+        }
+        return f;
+    }
+
+    /**
+     * The packs' formats files changed ({@code drishti.rachana.pack-formats-files}): every table handed out and the instance's own read
+     * the bundled table, these files and the site file again; a later instance (a module started) reads the same files. Checked first: a
+     * file that does not read refuses the reload and nothing changes.
+     */
+    public static Runnable prepareFormats(List<String> packFiles) {
+        List<String> files = packFiles == null ? List.of() : List.copyOf(packFiles);
+        com.ash.rachana.format.Formats.load(options.formatsFile(), files);         // throws before anything changes
+        return () -> {
+            synchronized (LOCK) {
+                options = options.withFormats(options.formatsFile(), files);
+                List<com.ash.rachana.format.Formats> tables = new ArrayList<>(SERVED);
+                Rachana r = current;
+                if (r != null && tables.stream().noneMatch(x -> x == r.formats())) {
+                    tables.add(r.formats());
+                }
+                tables.forEach(t -> t.reload(files));
+            }
+        };
     }
 
     /** The settings (cache size, limits, the site's formats file, the packs' formats files), then a new instance. */
@@ -123,6 +159,7 @@ public final class DrishtiRachana {
     public static void reset() {
         synchronized (LOCK) {
             MODULES.clear();
+            SERVED.clear();
             options = RachanaOptions.DEFAULTS;
             kinds = List::of;
             level = LEVEL;
@@ -156,6 +193,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
                 .build();
-        return Rachana.with(options, Profile.core(), drishti).language(level);   // never the tools' default (1.2)
+        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call, never the tools' default (1.2)
     }
 }

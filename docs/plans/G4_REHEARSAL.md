@@ -183,6 +183,40 @@ engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the co
 | `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
 | VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
 
+## Pass 3 (2026-11-21): binder, ViewModel writer and aggregate kernel onto Rachana, on `g4/binder`
+
+Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Rachana rebuilt from `origin/g2/integration` `f7f4cd8f` (includes the G4-ready commit `35fdf00f`) into a scratch Maven repository; Elements pack unchanged from pass 2.
+
+### What was done
+
+| Step | Result |
+|---|---|
+| Rachana's "Drishti to act on" | `DataNode.nodes()` returns Drishti's `NodeFactory` (lists and records an expression builds are `DataNode`s); `SutraJsonMixin` deleted (the `Sutra` record's components are its JSON; a written Sutra now also carries `extensions`); the level is pinned with `Rachana.at(level, ...)` (guard extended to `Rachana.at`); the parity oracle `LegacyListAggregates` reads a list of any node type. **P4 closed**: the 0 was the oracle's; `SutraAggregateParityTest` passes (39 calls, 153,900 comparisons). |
+| 8.3e one binder | Drishti's `engine/{bind,view,control,wire}` and `live/{Frame,Patch}` deleted (5,398 lines, and the five unit tests Rachana holds); 69 files' imports rewritten to `com.ash.rachana.*`. Drishti keeps only profile hooks, in `engine/rachana`: `DrishtiBinder` (`LinkResolver` over `ReferenceCatalog` and `Mnemonics`; the `links` and `provenance` panels reading a `Host` record in `BindContext.host()`; `Semantics::humanize` labels; limits; `PivotCore` as the `PivotEngine`), `DrishtiTables` (`TableProvider` over `SourceRouter`, `ComputeRef` ids), `DrishtiDays`, `Hosted` (the Drishti and Rachana refs, as-of and documents), `PanelSettings` (`drishti.panels`, since Core's `PanelLimits` has no Spring annotation). `ViewerContext` is the `Masker`. Formats reload: `DrishtiRachana.prepareFormats` (a `LiveSettings` bean) reloads Rachana's live `Formats` in place (**P7 closed**). The seven new panel kinds come with Core's binder (**P8 closed**; the schema test is held to the server's level 1.0). Jackson reads Rachana's `@Include` and writes Rachana nodes; `RCH-` codes of Rachana records, of the expression check and of a panel's error are answered `DRS-` (**P9 closed**). |
+| 8.3g writer | `ViewJsonConverter`: the API answers a ViewModel with `ViewJson.write` as a raw body; `ViewJsonBytesTest` proves the bytes equal to the server's Jackson (reference trade, netting set, curve, all-panels showcase). There is no `Rachana.binder(hooks, engine)` in this Rachana: Drishti builds `new Binder(el, formats, hooks, engine)`. |
+| 8.3h aggregate kernel | Drishti's `functions/{Builtins,Moments,MoreAggregates,Holistics,Comoments}` and `rachana/{ListAggregates,ListAnalytics,ListGrouping}` deleted; `Functions.builtIn` takes Core's `Catalogue.of` behind `CoreAggregate` (a thin `AggFunction` shell; state bytes and SQL text Core's); `EngineFunctions` gives only the `_once` family (`OnceAggregates`), `measure`, `cell` and the measure-level functions, never a Core name (**P1 closed**, stopgap gone). `Final` stays in Drishti (Core's `Final` keeps `TAG`/`encode`/`decode` package-private). `AggregateStateCompatTest`: states recorded by the deleted classes decode with Core's kernel; same bytes, except `geomean` (state) and `skewness_pop` (figure) in the last place (CoreMath), as 8.3h expected. `FUNCTIONS.md` regenerated from the instance catalogue (Core's names: runs R, source Rachana Core; **P11 closed**). Net: 3,535 lines deleted, 392 added. |
+
+### Proof
+
+| Check | Result |
+|---|---|
+| All unit tests, every module but `packaging/*`, `drishti-it`, `drishti-modules-it`, `drishti-benchmarks` | **5,625 run, 8 failures, 1 error** (pass 2: 759 errors); two of them fixed after the run (test paths, panel error code), the rest below |
+| VaR/ES goldens `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | pass, unchanged. `PackagedVarGoldenTest` not run (needs a packaged build) |
+| ViewModel goldens (`ViewPipelineTest`, `DrillPanelTest`, `DeepTradeViewTest`, `ChartPanelsTest`, `CoreSutraNextEquivalenceTest`, `LiveTest`, `ViewModelSchemaTest`, `ViewJsonBytesTest`) | pass. `MetricPanelTest`, `MapPanelTest` are in `drishti-modules-it`: not run |
+| Rachana conformance inside Drishti with the profile loaded (`DrishtiProfileConformanceTest`: the pinned suite's expr, expr-error, check, grammar and format cases on `DrishtiRachana`'s instance over `DataNode`s, against the suite's reference instance) | **1,999 cases, 1,998 alike**; one known difference listed (below) |
+| `drishti-rachana` 70, `drishti-bicompute` 300, `drishti-engine` 700 tests | pass (but `AbandonedReadsTest`, timing) |
+
+### Remaining breakages
+
+| # | Symptom | Cause | Who |
+|---|---|---|---|
+| P10 | `PivotFormulaMigrationTest`: `sum(PNL, where=DESK == 'RATES' and PNL > 0)` is kept as written, the test expects the 1.0 text with `&&` | checked mode now reads Python's `and`, so the text is already a formula and is not migrated | owner decision (keep, or migrate to 1.0 text) |
+| P14 | `WindowFunctionsTest`: `rank(sum(trades.mtm), 'sideways')` no longer refused | Rachana's checked mode changed (CF fixes) | Rachana to confirm, or the test changes |
+| P15 | `el/limits#call-chain-past-the-depth`: `RCH-2101` on the reference instance, `StackOverflowError` on Drishti's | not found; the depth refusal comes too late on Drishti's instance | investigate (Drishti or Rachana) |
+| P2 | a compiler taken early never sees a module loaded later (`ElCompiler` bean, `RowPredicate`, `DocPath`) | per-instance function table | Drishti, unchanged |
+| P12, P13 | `AbandonedReadsTest`, `NetForwardTest`, `VarShardClusterTest` (timing); `PythonPathEqualityTest`, `DomainPacksTest` (demo data for the business day) | not the rehearsal | rerun quiet; triage |
+| R-1 | Rachana's ViewModel schema has no data record for the level-1.2 `form` kind (`PanelData.FormPanel`) | schema gap | Rachana |
+| R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
 ## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
 
 The switch of Drishti's LiveSet engine to Rachana's live tables (I7B_DUPLICATES L1, DD-6, LIVE_TABLES section 11), front-loaded into G4

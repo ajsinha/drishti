@@ -374,15 +374,15 @@ public class DesignController {
     @GetMapping("/{id}/preview")
     public Object preview(@PathVariable String id, @RequestParam(required = false) String sample,
             @RequestAttribute(Principal.ATTRIBUTE) Principal who, jakarta.servlet.http.HttpServletRequest request) throws IOException {
-        return preview(id, sample, who, com.ash.drishti.engine.control.ControlValues.of(request.getParameterMap()));
+        return preview(id, sample, who, com.ash.rachana.control.ControlValues.of(request.getParameterMap()));
     }
 
     /** As the endpoint, with the control values the workbench's preview was given ({@code ctl.leg=L2}). */
     Object preview(String id, String sample, Principal who) throws IOException {
-        return preview(id, sample, who, com.ash.drishti.engine.control.ControlValues.NONE);
+        return preview(id, sample, who, com.ash.rachana.control.ControlValues.NONE);
     }
 
-    private Object preview(String id, String sample, Principal who, com.ash.drishti.engine.control.ControlValues controls) throws IOException {
+    private Object preview(String id, String sample, Principal who, com.ash.rachana.control.ControlValues controls) throws IOException {
         StoredDesign d = designs.get(who.user(), id);
         if (d.sutra == null || d.sutra.isBlank()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "this design has no Sutra yet: start from auto-design, an existing Sutra or an empty one");

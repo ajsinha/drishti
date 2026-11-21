@@ -155,14 +155,18 @@ class RachanaAggregatesTest {
     }
 
     @Test
-    void theCatalogueNamesTheEngineAsTheSourceOfEveryAggregate() {
+    void theCatalogueNamesCoreAsTheSourceOfTheAggregatesAndTheEngineOfItsOwn() {
         Map<String, Functions.Entry> byName = new LinkedHashMap<>();
-        Functions.catalogue().forEach(e -> byName.put(e.name(), e));
-        for (String n : List.of("sum", "count", "avg", "min", "max", "median", "percentile", "distinct", "wavg", "variance", "stddev",
-                "sum_once", "count_once", "avg_once", "group", "measure", "cell")) {
+        com.ash.drishti.rachana.DrishtiRachana.current().functions().catalogue().forEach(e -> byName.put(e.name(), e));
+        for (String n : List.of("sum_once", "count_once", "avg_once", "measure", "cell")) {           // the engine's own
             assertThat(byName.get(n)).as(n).isNotNull();
             assertThat(byName.get(n).runs()).as(n).isEqualTo("E");
             assertThat(byName.get(n).source()).as(n).isEqualTo(EngineFunctions.SOURCE);
+        }
+        for (String n : List.of("sum", "count", "avg", "min", "max", "median", "percentile", "distinct", "wavg", "variance", "stddev",
+                "group")) {                                                                           // Core's one aggregate kernel (8.3h)
+            assertThat(byName.get(n)).as(n).isNotNull();
+            assertThat(byName.get(n).source()).as(n).isEqualTo(com.ash.rachana.agg.CoreAggregates.INSTANCE.source());
         }
         assertThat(byName.get("upper").runs()).isEqualTo("R");
     }

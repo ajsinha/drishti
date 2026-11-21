@@ -15,13 +15,17 @@
  */
 package com.ash.drishti.engine.live;
 
+import com.ash.rachana.view.Patch;
+
+import com.ash.rachana.view.Frame;
+
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.control.ControlValues;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.control.ControlValues;
+import com.ash.rachana.view.ViewModel;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -134,7 +138,7 @@ public final class ViewStream implements AutoCloseable {
                         gone = true;
                         double latency = Duration.between(at, Instant.now()).toNanos() / 1e6;
                         sink.accept(new Frame(seq.incrementAndGet(), main.provenance().generation(),
-                                List.of(Patch.deleted(main.provenance().fetchedAt())), latency, metrics.percentile(99)));
+                                List.of(new Patch("deleted", null, null, null, null, main.provenance().fetchedAt())), latency, metrics.percentile(99)));
                     }
                     continue;
                 }
@@ -145,7 +149,7 @@ public final class ViewStream implements AutoCloseable {
                 if (gone) {
                     gone = false;
                     List<Patch> back = new ArrayList<>(patches.size() + 1);
-                    back.add(Patch.restored());
+                    back.add(new Patch("restored", null, null, null, null));
                     back.addAll(patches);
                     patches = back;
                 }

@@ -23,7 +23,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.explain.AboutPreview;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
