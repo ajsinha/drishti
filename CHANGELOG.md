@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
+  snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
+  rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default
+  (`drishti.live-sets.engine: rachana` turns it on); the kernel's live result sets still serve the console.
+
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
   taken from `drishti-tools` (`tools-net`, `tools-settings`, `tools-concurrent`, `tools-time`, `tools-testkit`, pinned once as

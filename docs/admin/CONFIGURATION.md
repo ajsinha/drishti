@@ -3259,6 +3259,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.live-sets.store-timeout-seconds` | integer | `120` |  | server | how long a set paged from the lake may take to read the columns it orders by, and a page's records | restart |  | expert |
 | `drishti.live-sets.dir` | string | `<config>/blotters` |  | server | the site's own declarations (\*.blotter.yaml); a declaration with a problem is set aside (DRS-9307) and listed in Admin | restart |  | admin |
 | `drishti.live-sets.edits-off` | string | `""` |  | server | declaration ids whose edits the site switches off (comma-separated): their grids are read-only | restart |  | admin |
+| `drishti.live-sets.engine` | string | `liveset` |  | server | which engine serves live result sets: `liveset` (the kernel's own) or `rachana` (Rachana's live tables through Drishti's adapter, mounted at `/api/v1/rdp`; the console still reads the kernel's) | restart |  | expert |
 
 #### `drishti.index`
 

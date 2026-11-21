@@ -182,3 +182,54 @@ engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the co
 | Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
 | `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
 | VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
+
+## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
+
+The switch of Drishti's LiveSet engine to Rachana's live tables (I7B_DUPLICATES L1, DD-6, LIVE_TABLES section 11), front-loaded into G4
+with its entry check first. Rachana as pinned for the rehearsal: `0.11.0-SNAPSHOT` from the lake lane's scratch repository (`417f6af9`; its
+`rachana-live`, `rachana-data` and `conformance` are identical to drishti-rachana `develop` `86862e17`).
+
+### What was done (additive; nothing deleted)
+
+- `kernel/drishti-server` `com.ash.drishti.server.live`, the adapter (1,313 lines with headers and comments): `KindBindings` (what the bindings give one kind:
+  the columnar store, documents, records by id, the `live:` binding, its pause), `KindSnapshot` (`SnapshotSource`: tier `columns` when a lake
+  keeps the kind as columns, asked only for the columns it keeps, else `whole`), `KindStream` (`LiveStream` over `router.subscribeKind`),
+  `KindRows`, `DrishtiAuthoriser` (kind access as `unknown`, row rules as `rowTest`, the redactor as `redact` plus `maskedColumns`, editable
+  columns by `roles` / `editable-by`, read-only reasons), `DrishtiChangeSink` (the write-back's `EditService.submit` as the person, form
+  `live:<table>`, change id passed through, `awaiting` answered `held`), `DrishtiLiveTables` (configuration, `*.live.yaml` loading with
+  Drishti's profile keys, the extra checks, default declarations `kind-<kind>` with `narrow:` from a kind's `list: requires`, the write-back's
+  rules) and `LiveTablesController` (the Data Protocol at `/api/v1/rdp`, SSE changes, windows owned by their caller).
+- Switched off by default: `drishti.live-sets.engine: rachana` turns it on (CONFIGURATION.md row). No second wire runs in the product.
+- `LiveTablesAdapterTest`: the eleven scenarios of `LiveSetTest` (8) and `StorePagesTest` (3), each under its old name, on `rachana-live`
+  through the adapter fed with Drishti's `EntityDocument`s.
+
+### Entry check (DD-6, section 4) and the cut line
+
+| Entry fact | State |
+|---|---|
+| The 11 ported LiveSet scenarios on `rachana-live` with Drishti's adapter | **pass, 11 of 11** (the million-record case at 100,000 locally: first page 500 ms, half-way page 0 ms, first sorted page 712 ms, a page after a live change 2 ms, 399 records fetched) |
+| `rachana-live` in a tagged Rachana | **missing**: neither `v0.10.0` nor `v0.11.0` holds it; the branch pins `0.11.0-SNAPSHOT` |
+| The grid's live-mode edit UI (L8) | built in Elements 3.2.0 (`834ef87`); the console vendors the 3.1.0 tree, whose grid speaks `/api/live` (LiveSetGrid) |
+| `live/*`, `protocol/window`, `write`, `approve` suites verified | **missing**: all "unverified" (green on Rachana's reference host only) |
+| The scale run | 100,000 rows done in Rachana; 1.3 million not run |
+
+**Cut line DC1 applies**: two entry facts are missing, so nothing is deleted. `server/liveset/*`, `/api/v1/live/*`, `trade.blotter.yaml`, the
+console's `live_results.py`, `live_routes.py`, `drishti_live-page.js` and `drishti_records.js` stay, and the console keeps painting through
+them. Lines removed: 0.
+
+### Findings for the switch itself
+
+| # | Finding | Where it lands |
+|---|---|---|
+| LV1 | A FORM result is filled today from the **search API** (masks, edition, Drishti*net scatter across nodes, relevance order, `limit`, labels). LT-5 makes it "a query with a filter on the kind's table", but Drishti has **no search-grammar to filter-tree compiler**, and a live table is per node: fan-out and as-of dates must move into `KindSnapshot` (i8 steps 2 and 4). This is the largest piece and is not started | the switch-over lane |
+| LV2 | Rachana refuses an edit field bound to the key (`RCH-2081`); `trade.blotter.yaml` has `{ id: trade_id, bind: TRADE_ID, readonly: true }` and `key: trade_id`. The `.live.yaml` drops both (the table's key names the row) | declaration rewrite |
+| LV3 | Drishti's row rules read nested fields and `$user` attributes: they go as `rowTest` (not pushed down). On a `columns`-tier table the engine tests the rule on the scanned columns only, so a rule on a field that is not a column hides the row (fails closed) | the authoriser; or rules' fields added to the scan |
+| LV4 | `ChangeSink.accept` carries no caller; the write-back submits as a person, so the mount marks the request's person for the write (`DrishtiChangeSink.as`). Four eyes stays Drishti's approvals (`held`); the tray's release/reject is not wired (`holds()` false) | adapter; a Rachana SPI change would remove the mark |
+| LV5 | `ProtocolHost.keys` is package-private: the Spring mount copies it (10 lines) | Rachana: make it public |
+| LV6 | `bi/engine/LiveTable` (636, with `LiveTables` 330, `LiveAggregate` 393): **stays**. It keeps a kind's current state as a table *inside the analytic engine* so BI and MQ answer SQL (group, join, standing queries, `updateSeq`) over it; Rachana's live table holds rows in memory for pages and patches and answers no SQL. Different job, not a duplicate; only the name clashes (rename to `EngineLiveTable` when it is next touched) | closes I7B_DUPLICATES R13 |
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11) | pass |
+| `LiveSetTest` (8), `StorePagesTest` (3), `LiveIsolationTest` (3), `LiveQueryTest` (5), `LiveBlotterBrokerAbsentTest` (1): the engine that still serves | pass |
+| VaR/ES goldens | not affected (no engine or test-data file changed; not run) |
