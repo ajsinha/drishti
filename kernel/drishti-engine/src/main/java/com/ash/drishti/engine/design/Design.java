@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.engine.design;
 
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import java.util.List;
 import java.util.Map;
 

@@ -17,10 +17,10 @@ package com.ash.drishti.server.net;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.engine.live.Frame;
-import com.ash.drishti.engine.live.Patch;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.Frame;
+import com.ash.rachana.view.Patch;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

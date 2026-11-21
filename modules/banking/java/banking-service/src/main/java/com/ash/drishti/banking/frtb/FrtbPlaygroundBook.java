@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.tools.xlsx.Cells;
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.banking.PlaygroundSheets;
 import com.ash.drishti.banking.compute.frtb.Drc;
 import com.ash.drishti.banking.compute.frtb.FrtbChoices;
@@ -24,10 +26,8 @@ import com.ash.drishti.banking.compute.frtb.FrtbSa;
 import com.ash.drishti.banking.compute.frtb.Rrao;
 import com.ash.drishti.banking.compute.frtb.Sbm;
 import com.ash.drishti.banking.compute.frtb.SbmModel;
-import com.ash.drishti.server.dist.XlsxWriter;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.playground.SheetStream;
-import com.ash.drishti.server.playground.WorkbookStream;
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -101,7 +101,7 @@ final class FrtbPlaygroundBook {
     }
 
     private static String col(int c) {
-        return XlsxWriter.col(c);
+        return Cells.col(c);
     }
 
     private static String abs(String sheet, int c, int row) {
@@ -254,7 +254,7 @@ final class FrtbPlaygroundBook {
         r.sbm().charges.forEach(cc -> classCharge.put(cc.cls + "|" + cc.measure, planned.get(cc.cls + "|" + cc.measure)));
         planDrc();
         planRrao();
-        try (WorkbookStream w = new WorkbookStream(out, t, v)) {
+        try (PlaygroundWorkbook w = new PlaygroundWorkbook(out, t, v)) {
             main(w.sheet("Main", "1F3A5F"));
             config(w.sheet("Config", "B08A2E"));
             data(w.sheet("Data", "B08A2E"));
@@ -276,7 +276,7 @@ final class FrtbPlaygroundBook {
     private int sbmRow;
     private int totalRow;
 
-    private void main(SheetStream s) {
+    private void main(Sheet s) {
         s.width(0, 24).width(1, 16).widths(2, 7, 16).width(8, 10).width(9, 40).freeze(4, 0);
         s.row(1).text(0, com.ash.drishti.common.Branding.current().productOr("") + " · FRTB-SA Playground", "title");
         for (int i = 1; i < 10; i++) {
@@ -401,13 +401,13 @@ final class FrtbPlaygroundBook {
         }
     }
 
-    private void single(SheetStream s, int row, String same) {
+    private void single(Sheet s, int row, String same) {
         s.formulaText(8, "IF(" + same + ",IF(ABS(C" + row + "-F" + row + ")<0.005,\"" + PASS + "\",\"" + FAIL + "\"),\"changed\")", cached ? PASS : null, "check");
     }
 
     // ---- Config ----------------------------------------------------------------------------------------------------------------------
 
-    private void config(SheetStream s) {
+    private void config(Sheet s) {
         s.width(0, 34).width(1, 22).width(2, 22).width(3, 34).width(4, 18).width(5, 90);
         s.row(1).text(0, "Config: the switches and the parameters actually used", "title");
         PlaygroundSheets.switchHead(s);
@@ -482,7 +482,7 @@ final class FrtbPlaygroundBook {
         };
     }
 
-    private void data(SheetStream s) {
+    private void data(Sheet s) {
         s.width(0, 34).width(1, 34).width(2, 14).width(3, 16).widths(4, 6, 11).width(7, 40).width(8, 26).width(9, 11).width(10, 18).width(11, 9).freeze(3, 0);
         s.row(1).text(0, "Data: the scope's sensitivity elements in " + run.reporting() + " (converted at the date's FX; Provenance names the rates)", "title");
         s.row(3).text(0, "Position", "head").text(1, "Factor", "head").text(2, "Measure", "head").text(3, "Value", "head").text(4, "Shock size", "head")
@@ -523,7 +523,7 @@ final class FrtbPlaygroundBook {
 
     // ---- WS --------------------------------------------------------------------------------------------------------------------------
 
-    private void ws(SheetStream s) {
+    private void ws(Sheet s) {
         s.width(0, 9).width(1, 9).width(2, 9).width(3, 40).widths(4, 6, 14).widths(7, 8, 8).width(9, 18).width(10, 40).width(11, 8).width(12, 12)
                 .width(13, 18).width(14, 18).freeze(3, 0);
         s.row(1).text(0, "WS: each factor's netted sensitivity, its risk weight and its weighted sensitivity (MAR21.4(2), (3))", "title");
@@ -669,7 +669,7 @@ final class FrtbPlaygroundBook {
         }
     }
 
-    private void buckets(SheetStream s) {
+    private void buckets(Sheet s) {
         s.width(0, 40).width(1, 16).freeze(0, 2);
         s.row(1).text(0, "Buckets: K_b = √max(0, Σ_k Σ_l ρ_kl · WS_k · WS_l) per scenario (MAR21.4(4)); other-sector buckets Σ|WS| (MAR21.56, MAR21.79)", "title");
         for (Block bl : blocks) {
@@ -773,7 +773,7 @@ final class FrtbPlaygroundBook {
         };
     }
 
-    private void classes(SheetStream s) {
+    private void classes(Sheet s) {
         s.width(0, 12).widths(1, 4, 16);
         s.row(1).text(0, "Classes: Δ = √(Σ K_b² + Σ_{b≠c} γ_bc · S_b · S_c), with the alternative specification when the radicand is negative (MAR21.4(5))", "title");
         for (ClassBlock cb : classBlocks) {
@@ -789,9 +789,14 @@ final class FrtbPlaygroundBook {
             for (int j = 0; j < nb; j++) {
                 s.text(g0 + j, "γ with " + cc.buckets.get(j).bucket, "head");
             }
+            for (int sc = 0; sc < 3; sc++) {                                  // the cells of a row in column order, as the file format wants
+                s.text(pt + sc, "Term " + Sbm.SCENARIOS[sc], "head");
+            }
             for (int sc = 0; sc < 3; sc++) {
-                s.text(pt + sc, "Term " + Sbm.SCENARIOS[sc], "head").text(cs + sc, "Capped S " + Sbm.SCENARIOS[sc], "head").text(ct + sc,
-                        "Capped term " + Sbm.SCENARIOS[sc], "head");
+                s.text(cs + sc, "Capped S " + Sbm.SCENARIOS[sc], "head");
+            }
+            for (int sc = 0; sc < 3; sc++) {
+                s.text(ct + sc, "Capped term " + Sbm.SCENARIOS[sc], "head");
             }
             int first = top + 6;
             s.row(top + 2).text(0, "S across", "note");
@@ -937,7 +942,7 @@ final class FrtbPlaygroundBook {
         return "$" + col(c) + "$" + partFirst + ":$" + col(c) + "$" + (partFirst + Math.max(1, parts.size()) - 1);
     }
 
-    private void curvature(SheetStream s) {
+    private void curvature(Sheet s) {
         s.width(0, 30).width(1, 26).widths(2, 20, 15);
         s.row(1).text(0, "Curvature: CVR± per position and factor (MAR21.5(2)), K_b± and the side per bucket (MAR21.5(3)), the class across buckets (MAR21.5(4))",
                 "title");
@@ -1011,7 +1016,7 @@ final class FrtbPlaygroundBook {
         return "IF(" + na + "=" + nb + ",1," + other + ")^2";
     }
 
-    private void curvBucket(SheetStream s, CurvBlock cb) {
+    private void curvBucket(Sheet s, CurvBlock cb) {
         Sbm.Bucket b = cb.b();
         int n = b.members.length;
         int top = cb.top();
@@ -1022,8 +1027,8 @@ final class FrtbPlaygroundBook {
         for (int j = 0; j < n; j++) {
             s.text(r0 + j, "ρ² with " + (j + 1), "head");
         }
-        for (int sc = 0; sc < 3; sc++) {
-            s.text(tc + sc, "+ term " + Sbm.SCENARIOS[sc], "head").text(tc + 3 + sc, "− term " + Sbm.SCENARIOS[sc], "head");
+        for (int sc = 0; sc < 6; sc++) {                           // the cells of a row in column order, as the file format wants
+            s.text(tc + sc, (sc < 3 ? "+ term " : "− term ") + Sbm.SCENARIOS[sc % 3], "head");
         }
         int first = top + 4;
         s.row(top + 2).text(0, "CVR+ across", "note");
@@ -1053,8 +1058,8 @@ final class FrtbPlaygroundBook {
                 }
             }
             String rr = "$" + col(r0) + "$" + row + ":$" + col(r0 + n - 1) + "$" + row;
-            for (int sc = 0; sc < 3; sc++) {
-                for (int side = 0; side < 2; side++) {
+            for (int side = 0; side < 2; side++) {
+                for (int sc = 0; sc < 3; sc++) {
                     String x = "$" + (side == 0 ? "B" : "C") + row;
                     String across = side == 0 ? upRow : dnRow;
                     String f = b.absSum ? "MAX(" + x + ",0)" : "MAX(" + x + ",0)^2+" + x + "*SUMPRODUCT(" + scen(sc, rr) + "," + across + ",1-(" + x + "<0)*(" + across
@@ -1098,7 +1103,7 @@ final class FrtbPlaygroundBook {
         return "Curvature!$" + col(tc + sc) + "$" + (curvBucketSummary.get(cls + "|" + bucket) + line);
     }
 
-    private void curvClass(SheetStream s, CurvClass cl) {
+    private void curvClass(Sheet s, CurvClass cl) {
         Sbm.ClassCharge cc = cl.cc();
         int nb = cc.buckets.size();
         int top = cl.top();
@@ -1169,7 +1174,7 @@ final class FrtbPlaygroundBook {
         drcTotal = "DRC!$H$" + (drcBucketFirst + d.buckets().size());
     }
 
-    private void drc(SheetStream s) {
+    private void drc(Sheet s) {
         Drc.Result d = r.drc();
         s.width(0, 26).widths(1, 40, 14);
         s.row(1).text(0, "DRC: jump-to-default, maturity scaling, netting by seniority, the hedge benefit ratio and the bucket charges (MAR22)", "title");
@@ -1272,7 +1277,7 @@ final class FrtbPlaygroundBook {
         }
     }
 
-    private void rrao(SheetStream s) {
+    private void rrao(Sheet s) {
         Rrao.Result rr = r.rrao();
         s.width(0, 34).width(1, 22).widths(2, 7, 16);
         s.row(1).text(0, "RRAO: gross notional × 1.0% (exotic underlying) or × 0.1% (other residual risks), MAR23", "title");
@@ -1298,11 +1303,11 @@ final class FrtbPlaygroundBook {
 
     // ---- Explain, Provenance -----------------------------------------------------------------------------------------------------
 
-    private void explain(SheetStream s) {
+    private void explain(Sheet s) {
         PlaygroundSheets.explain(s, "FRTB-SA Playground", t.explain());
     }
 
-    private void provenance(SheetStream s) {
+    private void provenance(Sheet s) {
         Map<String, Object> prov = new LinkedHashMap<>(run.provenance());
         prov.put("Scope", run.scope() + " (" + run.canonical() + ")");
         prov.put("Reporting currency", run.reporting());

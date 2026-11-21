@@ -15,10 +15,11 @@
  */
 package com.ash.drishti.common;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.SettingsFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ class NamedResourcesTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
         System.clearProperty("drishti.home");
     }
 
@@ -60,8 +61,8 @@ class NamedResourcesTest {
             Files.writeString(f, files[i]);
             paths.add(f.toString());
         }
-        System.setProperty(SettingsFile.PROPERTY, String.join(",", paths));
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, String.join(",", paths));
+        set.addAll(DrishtiTools.applySettingsFile());
     }
 
     private static final String TWO_OF_EACH = """

@@ -579,7 +579,7 @@ public class RunsController {
         byte[] bytes = switch (format) {
             case "csv" -> com.ash.drishti.server.dist.CsvWriter.write(doc);
             case "jsonl" -> com.ash.drishti.server.dist.JsonlWriter.write(doc);                // one row a line, the CSV's column names
-            default -> com.ash.drishti.server.dist.XlsxWriter.write(doc);
+            default -> com.ash.drishti.server.dist.ExportWorkbook.write(doc);
         };
         String file = title.replaceAll("[^A-Za-z0-9._-]+", "-").replaceAll("^-+|-+$", "") + "." + format;
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id())

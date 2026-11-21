@@ -127,3 +127,115 @@ Python: the tests that cross-checked Java source or fixtures of the deleted modu
 (`tools/lake/testdata/childkinds`) or `LAKE_HOME` (the ready keys); `test_delta_interop` compiles its reader against `lake-delta`.
 Two failures are older than this branch (`test_memory_caps` run-config check, `test_lake_paths` clusterctl path): same result at `48f7b9931`.
 
+
+## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
+
+### What was done
+
+Drishti Tools (`github.com/ajsinha/drishti-tools`, `main` at `b3a451d`, no tag yet: `1.0.0-SNAPSHOT`) built into a scratch Maven repository, pinned once as
+`drishti.tools.version` and imported through `tools-bom`. Taken from it, with the copies deleted:
+
+| Tools module | What Drishti no longer carries | Where Drishti's names go |
+|---|---|---|
+| `tools-net` | TLS (`TlsContexts`, `TlsSettings`, `TlsMaterial`, `PemReader`, `Der`, `CertInfo`, `TlsHttp`), the proxy (`ProxySettings`, `NoProxy`, `SiteProxy`) | `DrishtiTools`: the variable `DRISHTI_ALLOW_INSECURE_TLS`, the site proxy's `drishti.http.proxy.` |
+| `tools-settings` | `Placeholders`, `SettingsFile`, `SettingSpec`, `Secrets`, the module `drishti-settingsfile`; `Roots.anchorValue` is `PathAnchors` | `DrishtiTools.applySettingsFile()`: `drishti.settings.file`, `${drishti.home}` |
+| `tools-concurrent`, `tools-time` | `SingleFlight`, `LoadGuard` | `DrishtiTools.loadGuard(args)`: business zone from `LAKE_BUSINESS_ZONE` (the lake pass's variable) |
+| `tools-testkit` | `FakeProxy`, `TlsFixture`, `TestPki` | the TLS test identity is `CN=client` and key alias `client` (was `drishti`) |
+| `tools-xlsx` | the four writers: `XlsxWriter` + `XlsxCharts` + `XlsxFormulas`, the pivot export's `Xlsx`, the playgrounds' `SheetStream` + `WorkbookStream`, `CapacityWorkbook`'s own zip | `ExportWorkbook` (an `ExportDoc` laid out on the writer), `PlaygroundWorkbook` (template look, properties, branding footer), `CapacityWorkbook` (cells of a `WorkbookTemplate`), `PivotExport` |
+
+Lines: 26 main files and 7 test files deleted (4,065 and 1,077 lines); the branch adds 1,455 (the adapters, `DrishtiTools`, the comparison tool, the guard);
+net -4,392. `SharedToolsGuardTest` holds it: no main source carries a copy or writes workbook parts.
+
+### The xlsx proof
+
+Every workbook Drishti's tests make was written on the parent commit and on the new code (60 workbooks: the exports with every chart kind, the statement with
+its print set-up, the pivot export, the capacity workbook, the VaR, Parametric VaR, Explain, FRTB and SIMM playground books, the VaR basket and the
+regulatory sign-off), read with Apache POI and compared cell by cell and formula by formula, then by sheet and by style (`tools/xlsx_before_after/XlsxCompare.java`;
+the capture is a temporary patch of the tests, `capture_patch.py` and `capture_unpatch.py` in the same folder, never committed in the tests). Cell values, cell types, formulas (text and cached result), merges, freeze panes, column widths,
+outline levels, drop-downs, conditional formats, print set-up, defined names, charts (kind and references) are **equal in all 60**. Every difference:
+
+| Difference | Count | Reason |
+|---|---|---|
+| Default row height written (15) where there was none; playgrounds 14 to 15 | 337 sheets | the shared writer's default (Excel's own) |
+| The first sheet is the selected tab (the playgrounds selected the sheet called `Main`, the exports none) | 30 sheets | no sheet name in the writer |
+| Print-titles defined name `'MTM'!$1:$1` written `MTM!$1:$1` | 2 | the quotes are written only where a name needs them; the same reference |
+| Pivot export's header fill `DCE6F1` and title 14 pt are the exports' `EEF1F5` and 16 pt | 24 cells | one standard look for the four writers |
+| Provenance rows: a run's timing (`computeMs`), the order of the data-version lines (a set) | 6 cells | the runs, not the writer (the same on two runs of the old code) |
+
+Noise the comparison removes, each shown to come from the run and not from the writer: timestamps and run ids; the product name the tests install into a JVM-wide
+global; the capacity workbook's live figures; and the order of the FRTB Config rows, which is a set's iteration order and differs between two runs of the *same* code
+(the comparison matches those rows by parameter name and writes each formula's `Config!$B$n` by the name).
+
+The three bugs the tools fixed did not occur in the 60 (no sheet name with an `&`, no invalid name, no pivot formula outside the common set): a test now holds
+the `&` (`XlsxChartsTest`), the other two are the tools' own tests. **The `SCATTER` chart type the tools dropped is used by no caller**: Drishti's chart kinds are
+bar, column, line, area, pie and doughnut (any other visual is columns), as before.
+
+### Findings
+
+| # | Finding | Action |
+|---|---|---|
+| T1 | The FRTB playground wrote some cells of a row out of column order (the Classes header row's term cells, the Curvature bucket header and term cells): invalid for the file format, accepted by the old writer | fixed in `FrtbPlaygroundBook`; the shared writer refuses it, so any new book is caught |
+| T2 | The FRTB Config sheet's row order changes from run to run (a set's iteration order; the workbook is right either way) | not changed; a book's bytes are not reproducible for FRTB; worth an ordered set |
+| T3 | Tests that assert the old writer's raw XML (`s="3"`, `<v>92000.0</v>`, `chart2.xml`) | made independent of style indexes and part numbers (`DistApiTest`, `PivotExportTest`, `XlsxChartsTest`) |
+| T4 | The settings catalogue (`tools/settings_catalogue.py`) read `TlsSettings.java` and `ProxySettings.java` from `drishti-api`; they are in the tools now | reads a checkout of Drishti Tools (`DRISHTI_TOOLS_HOME`, else the folder next to this repository); the two texts the tools parametrise are filled with Drishti's names. `--check` was not run: it needs the kernel jar |
+| T5 | The SDK's `repo/` (a file repository of `drishti-api` and what it needs) must now carry the tools jars | **open**: `tools/launch/sdkbuild.py` lost its `drishti-settingsfile` entry; copying `com/ash/tools/*` from the build's repository into `repo/` needs a decision on how the tools are distributed |
+| T6 | `Secrets` outside TLS throws the tools' `SettingException`, not `TlsException` | no caller catches the old type (the build and the tests show it) |
+| T7 | Tools has no tag: `1.0.0-SNAPSHOT` from a scratch repository, as Rachana and Lake | pin to the tag when it exists |
+| T8 | `SimmPlaygroundWorkbookTest` fails in `setUp` alone (the banking module is not among the modules the boot gave the process); `TestPathsGuardTest` (`LanguageLevelGuardTest` builds a path from `..`) and `PivotFormulaMigrationTest` (the printer writes `and` for `&&`) fail | unrelated to this pass (they name `LanguageLevelGuardTest` and the Rachana printer, P10 above); `SimmPlaygroundWorkbookTest` failed the same way before it; none touched |
+
+Green: the TLS and proxy tests of the connectors, lake storage and AI, the settings and placeholder tests, the loaders, `NamedResources`, the settings catalogue,
+the pivot and export tests, the capacity workbook, the VaR, FRTB, SIMM playground and API tests, `SharedToolsGuardTest`; the VaR and ES goldens are untouched (no
+engine or test-data file changed). Build: `mvn` with a scratch `-Dmaven.repo.local` holding Drishti Tools, Rachana and Lake snapshots; nothing installed in `~/.m2`.
+
+## Pass 3: compute engine (2026-11-21), on `g4/compute-engine` merged into `wip/g4-rehearsal-rx`
+
+Front-loaded from the engine integration design (EN-25, owner: fix known duplicates now). The two interfaces named `ComputeEngine` are one:
+`com.ash.drishti.api.compute.ComputeEngine` (drishti-api) with the union of their real uses, each method with a default: the switch
+(`id`, `start`, `changing`, `stop`, `memoryBytes`, `datesOpen`, `threadPrefixes`, `running`, `threadsNamed`) and the reactive computation
+(`manifest`, `compute`, `incremental`, `affected`, `close`). `id()` defaults to the manifest's name; `manifest()` of a switch-only engine
+refuses. `kernel.api.engines.ComputeEngine` is deleted (the package is gone): kernel API **0.6**, surface baseline regenerated. The registry,
+Admin controller, configuration, module bridge, `BasicEngine`, `OpenBlasEngine` and the registry test import the one type; the reactive
+engines (`VectorSumEngine`, `BetaEngine`, `CorrelationEngine`, `VarResultEngine`, `ExposureResultEngine`, test engines) are unchanged. Engine
+ids and the catalogues (`engines/catalogue.yaml`, modules' `META-INF/drishti/engines.yaml`) are unchanged, so they stay consistent. The new
+engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the combined i8.
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
+| `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
+
+## Pass 3 (2026-11-21): binder, ViewModel writer and aggregate kernel onto Rachana, on `g4/binder`
+
+Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Rachana rebuilt from `origin/g2/integration` `f7f4cd8f` (includes the G4-ready commit `35fdf00f`) into a scratch Maven repository; Elements pack unchanged from pass 2.
+
+### What was done
+
+| Step | Result |
+|---|---|
+| Rachana's "Drishti to act on" | `DataNode.nodes()` returns Drishti's `NodeFactory` (lists and records an expression builds are `DataNode`s); `SutraJsonMixin` deleted (the `Sutra` record's components are its JSON; a written Sutra now also carries `extensions`); the level is pinned with `Rachana.at(level, ...)` (guard extended to `Rachana.at`); the parity oracle `LegacyListAggregates` reads a list of any node type. **P4 closed**: the 0 was the oracle's; `SutraAggregateParityTest` passes (39 calls, 153,900 comparisons). |
+| 8.3e one binder | Drishti's `engine/{bind,view,control,wire}` and `live/{Frame,Patch}` deleted (5,398 lines, and the five unit tests Rachana holds); 69 files' imports rewritten to `com.ash.rachana.*`. Drishti keeps only profile hooks, in `engine/rachana`: `DrishtiBinder` (`LinkResolver` over `ReferenceCatalog` and `Mnemonics`; the `links` and `provenance` panels reading a `Host` record in `BindContext.host()`; `Semantics::humanize` labels; limits; `PivotCore` as the `PivotEngine`), `DrishtiTables` (`TableProvider` over `SourceRouter`, `ComputeRef` ids), `DrishtiDays`, `Hosted` (the Drishti and Rachana refs, as-of and documents), `PanelSettings` (`drishti.panels`, since Core's `PanelLimits` has no Spring annotation). `ViewerContext` is the `Masker`. Formats reload: `DrishtiRachana.prepareFormats` (a `LiveSettings` bean) reloads Rachana's live `Formats` in place (**P7 closed**). The seven new panel kinds come with Core's binder (**P8 closed**; the schema test is held to the server's level 1.0). Jackson reads Rachana's `@Include` and writes Rachana nodes; `RCH-` codes of Rachana records, of the expression check and of a panel's error are answered `DRS-` (**P9 closed**). |
+| 8.3g writer | `ViewJsonConverter`: the API answers a ViewModel with `ViewJson.write` as a raw body; `ViewJsonBytesTest` proves the bytes equal to the server's Jackson (reference trade, netting set, curve, all-panels showcase). There is no `Rachana.binder(hooks, engine)` in this Rachana: Drishti builds `new Binder(el, formats, hooks, engine)`. |
+| 8.3h aggregate kernel | Drishti's `functions/{Builtins,Moments,MoreAggregates,Holistics,Comoments}` and `rachana/{ListAggregates,ListAnalytics,ListGrouping}` deleted; `Functions.builtIn` takes Core's `Catalogue.of` behind `CoreAggregate` (a thin `AggFunction` shell; state bytes and SQL text Core's); `EngineFunctions` gives only the `_once` family (`OnceAggregates`), `measure`, `cell` and the measure-level functions, never a Core name (**P1 closed**, stopgap gone). `Final` stays in Drishti (Core's `Final` keeps `TAG`/`encode`/`decode` package-private). `AggregateStateCompatTest`: states recorded by the deleted classes decode with Core's kernel; same bytes, except `geomean` (state) and `skewness_pop` (figure) in the last place (CoreMath), as 8.3h expected. `FUNCTIONS.md` regenerated from the instance catalogue (Core's names: runs R, source Rachana Core; **P11 closed**). Net: 3,535 lines deleted, 392 added. |
+
+### Proof
+
+| Check | Result |
+|---|---|
+| All unit tests, every module but `packaging/*`, `drishti-it`, `drishti-modules-it`, `drishti-benchmarks` | **5,625 run, 8 failures, 1 error** (pass 2: 759 errors); two of them fixed after the run (test paths, panel error code), the rest below |
+| VaR/ES goldens `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | pass, unchanged. `PackagedVarGoldenTest` not run (needs a packaged build) |
+| ViewModel goldens (`ViewPipelineTest`, `DrillPanelTest`, `DeepTradeViewTest`, `ChartPanelsTest`, `CoreSutraNextEquivalenceTest`, `LiveTest`, `ViewModelSchemaTest`, `ViewJsonBytesTest`) | pass. `MetricPanelTest`, `MapPanelTest` are in `drishti-modules-it`: not run |
+| Rachana conformance inside Drishti with the profile loaded (`DrishtiProfileConformanceTest`: the pinned suite's expr, expr-error, check, grammar and format cases on `DrishtiRachana`'s instance over `DataNode`s, against the suite's reference instance) | **1,999 cases, 1,998 alike**; one known difference listed (below) |
+| `drishti-rachana` 70, `drishti-bicompute` 300, `drishti-engine` 700 tests | pass (but `AbandonedReadsTest`, timing) |
+
+### Remaining breakages
+
+| # | Symptom | Cause | Who |
+|---|---|---|---|
+| P10 | `PivotFormulaMigrationTest`: `sum(PNL, where=DESK == 'RATES' and PNL > 0)` is kept as written, the test expects the 1.0 text with `&&` | checked mode now reads Python's `and`, so the text is already a formula and is not migrated | owner decision (keep, or migrate to 1.0 text) |
+| P14 | `WindowFunctionsTest`: `rank(sum(trades.mtm), 'sideways')` no longer refused | Rachana's checked mode changed (CF fixes) | Rachana to confirm, or the test changes |
+| P15 | `el/limits#call-chain-past-the-depth`: `RCH-2101` on the reference instance, `StackOverflowError` on Drishti's | not found; the depth refusal comes too late on Drishti's instance | investigate (Drishti or Rachana) |
+| P2 | a compiler taken early never sees a module loaded later (`ElCompiler` bean, `RowPredicate`, `DocPath`) | per-instance function table | Drishti, unchanged |
+| P12, P13 | `AbandonedReadsTest`, `NetForwardTest`, `VarShardClusterTest` (timing); `PythonPathEqualityTest`, `DomainPacksTest` (demo data for the business day) | not the rehearsal | rerun quiet; triage |
+| R-1 | Rachana's ViewModel schema has no data record for the level-1.2 `form` kind (`PanelData.FormPanel`) | schema gap | Rachana |
+| R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |

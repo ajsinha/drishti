@@ -38,9 +38,22 @@ final class LegacyListAggregates {
 
     static final int MAX_GROUPS = 500;
 
+    /**
+     * The list an argument holds, whatever node type carries it: a Drishti list as it is, any other node list (Rachana's own, which an
+     * expression built before the host's node factory existed) converted. The old code read only Drishti's type and so summed any other
+     * list as 0: the oracle's own error (G4 rehearsal P4), not the engine's.
+     */
+    static DataNode.Arr list(Object v) {
+        if (v instanceof DataNode.Arr arr) {
+            return arr;
+        }
+        return v instanceof com.ash.rachana.api.Node n && n.kind() == com.ash.rachana.api.Node.Kind.ARRAY ? (DataNode.Arr) DataNode.of(n) : null;
+    }
+
     /** The old {@code sum(list, [field])}. */
     static Object sum(List<Object> a) {
-        if (!(a.get(0) instanceof DataNode.Arr arr)) {
+        DataNode.Arr arr = list(a.get(0));
+        if (arr == null) {
             return 0L;
         }
         String field = a.size() > 1 ? Values.text(a.get(1)) : null;
@@ -60,7 +73,8 @@ final class LegacyListAggregates {
 
     /** The old {@code min}/{@code max} (one list, or several arguments). */
     static Object lenient(List<Object> a, boolean min) {
-        Iterable<?> items = a.size() == 1 && a.get(0) instanceof DataNode.Arr arr ? arr.elements() : a;
+        DataNode.Arr one = a.size() == 1 ? list(a.get(0)) : null;
+        Iterable<?> items = one != null ? one.elements() : a;
         Double best = null;
         for (Object o : items) {
             if (Values.masked(o)) {
@@ -76,7 +90,8 @@ final class LegacyListAggregates {
 
     /** The old {@code group(list, 'key', 'value'?, 'by'?)}. */
     static Object group(List<Object> a) {
-        if (!(Values.simplify(a.get(0)) instanceof DataNode.Arr arr)) {
+        DataNode.Arr arr = list(Values.simplify(a.get(0)));
+        if (arr == null) {
             return null;
         }
         String key = Values.text(a.get(1));

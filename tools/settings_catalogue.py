@@ -34,6 +34,7 @@ environment variable, applies to, meaning, restart or live, since):
 from __future__ import annotations
 
 import argparse
+import os
 import glob
 import re
 import sys
@@ -52,8 +53,13 @@ import settings_sources as S  # noqa: E402
 DOC = ROOT / "docs" / "admin" / "CONFIGURATION.md"
 SCHEMAS = ROOT / "tools" / "settings_schemas.yaml"
 CATALOGUE = ROOT / "kernel/drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
-TLS = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "tls" / "TlsSettings.java"
-PROXY = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
+# the shared tls.* and proxy.* settings are declared in Drishti Tools (github.com/ajsinha/drishti-tools): a checkout of it, named by
+# DRISHTI_TOOLS_HOME, else the folder next to this repository
+TOOLS = Path(os.environ.get("DRISHTI_TOOLS_HOME") or ROOT.parent / "drishti-tools")
+TLS = TOOLS / "java" / "tools-net" / "src" / "main" / "java" / "com" / "ash" / "tools" / "net" / "TlsSettings.java"
+PROXY = TOOLS / "java" / "tools-net" / "src" / "main" / "java" / "com" / "ash" / "tools" / "net" / "ProxySettings.java"
+#: the opt-in variable Drishti hands the tools (DrishtiTools.ALLOW_INSECURE_TLS); the tools' text names it by a parameter
+ALLOW_INSECURE_TLS = "DRISHTI_ALLOW_INSECURE_TLS"
 BEGIN = "<!-- generated: settings begin (tools/settings_catalogue.py writes everything down to the end marker; edit the sources, not this) -->"
 END = "<!-- generated: settings end -->"
 COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since", "Tier")
@@ -191,6 +197,14 @@ def is_secret(key: str) -> bool:
                                                             r"header|refresh|mode|limit|tokens|scopes|never|read|chars)", last, re.I)
 
 
+def _tools_source(path: Path) -> Path:
+    """A source file of Drishti Tools: the checkout is named by DRISHTI_TOOLS_HOME (default: the folder next to this repository)."""
+    if not path.is_file():
+        raise SystemExit(f"{path} is not there: the shared tls.* and proxy.* settings are declared in Drishti Tools "
+                         "(github.com/ajsinha/drishti-tools); check it out next to this repository or set DRISHTI_TOOLS_HOME")
+    return path
+
+
 def _rel(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -291,10 +305,12 @@ def connector_rows() -> list[Row]:
 
     for s in cat.get("common") or []:
         add("Every plugin", s, "every connector")
-    for s in S.read_java_specs(TLS):
-        add("Shared: `tls.*`", s, "every plugin marked TLS", _rel(TLS))
-    for s in S.read_java_specs(PROXY):
-        add("Shared: `proxy.*`", s, "every plugin marked proxy", _rel(PROXY))
+    for s in S.read_java_specs(_tools_source(TLS)):
+        s = dict(s, desc=s["desc"].replace("unless =true", f"unless {ALLOW_INSECURE_TLS}=true"))
+        add("Shared: `tls.*`", s, "every plugin marked TLS", "drishti-tools: tools-net/TlsSettings.java")
+    for s in S.read_java_specs(_tools_source(PROXY)):
+        s = dict(s, desc=s["desc"].replace("(the site proxy)", "(drishti.http.proxy.*)"))
+        add("Shared: `proxy.*`", s, "every plugin marked proxy", "drishti-tools: tools-net/ProxySettings.java")
     for name, spec in sorted((cat.get("plugins") or {}).items()):
         marks = [m for m in ("tls", "proxy") if spec.get(m)]
         title = f"`{name}`" + (f" ({', '.join(m.upper() if m == 'tls' else m for m in marks)})" if marks else "")

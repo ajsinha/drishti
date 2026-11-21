@@ -21,7 +21,7 @@ import com.ash.drishti.engine.design.Design.Pruned;
 import com.ash.drishti.engine.shape.BuilderProperties;
 import com.ash.drishti.engine.shape.Sample;
 import com.ash.drishti.engine.shape.Shape;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.inference.Candidate;
 import com.ash.drishti.inference.LayoutPacker;
 import com.ash.drishti.inference.Role;

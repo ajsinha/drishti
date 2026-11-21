@@ -26,7 +26,7 @@ import java.util.Map;
 
 /**
  * The one function catalogue page (Help → Functions; docs/architecture/ARCHITECTURE.md section 5), generated from the two registries: Rachana's function
- * table ({@link Functions#catalogue()}) and the pivot engine's functions registered into it ({@link EngineFunctions}). Written to
+ * table (the instance catalogue of {@code DrishtiRachana}: Core and every provider) and the pivot engine's functions registered into it ({@link EngineFunctions}). Written to
  * {@code docs/guides/FUNCTIONS.md}; {@code FunctionCataloguePageTest} fails when the committed page differs from what the registries
  * give (regenerate it with {@code -Ddrishti.functions.write=true} on that test, or by running this class with the file's path), and
  * when a function is missing from FUNCTION_CATALOGUE.md, the reviewed catalogue with each function's example and Excel and SAS names.
@@ -54,7 +54,7 @@ public final class FunctionCataloguePage {
 
     /** The page's text, under {@code header} (the repository's licence header, as the reviewed catalogue carries it: {@link #header}). */
     public static String markdown(String header) {
-        List<Functions.Entry> all = Functions.catalogue();
+        List<Functions.Entry> all = com.ash.drishti.rachana.DrishtiRachana.current().functions().catalogue();
         StringBuilder b = new StringBuilder();
         b.append(header);
         b.append("# Functions\n\n");

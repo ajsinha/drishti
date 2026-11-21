@@ -2474,6 +2474,10 @@ public interface ComputeEngine extends AutoCloseable {
 `ComputeInputs` hands the engine Arrow batches already read as the user; the engine never sees a connector, a credential or the
 router.
 
+The built interface is the platform's one `ComputeEngine`: the same type also carries an engine's switch (`id`, `start`, `stop`,
+`memoryBytes`, `threadPrefixes`, `running`) for the engine registry (ADMIN_GUIDE section 21); a reactive engine uses only the
+computation methods, a switched engine only the switch.
+
 #### 16.2 HTTP API (planned)
 
 Panels and BI read reactive kinds through the existing view and source paths; nothing new is needed for them. For programs:

@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.var.ScopeExpr;
 import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.server.dist.ExportDoc;
-import com.ash.drishti.server.dist.XlsxWriter;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
@@ -200,7 +200,7 @@ public class VarBasketController {
                 new ExportDoc.Section("basket", "Basket", ExportDoc.TABLE, heads, rows, null, List.of()),
                 new ExportDoc.Section("checks", "Checks", ExportDoc.TABLE, List.of("Row", "Column", "Cell", "Status", "Reason"), flagged,
                         flagged.isEmpty() ? "every cell found" : null, List.of())));
-        byte[] bytes = XlsxWriter.write(doc);
+        byte[] bytes = ExportWorkbook.write(doc);
         String file = VarSaved.slug(name.isBlank() ? "basket" : name.replaceAll("[^A-Za-z0-9._-]+", "-")) + ".xlsx";
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file + "\"")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")).body(bytes);

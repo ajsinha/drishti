@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.server.notify;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
@@ -232,7 +233,7 @@ public final class NotifyChannels {
         try {
             ProxySettings proxy = ProxySettings.resolve(http, uri.toString());
             HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout).followRedirects(HttpClient.Redirect.NEVER).version(HttpClient.Version.HTTP_1_1));
-            TlsMaterial tls = TlsHttp.material(http, uri.toString(), "the URL");
+            TlsMaterial tls = DrishtiTools.tlsMaterial(http, uri.toString(), "the URL");
             return (tls == null ? b : TlsHttp.apply(b, tls)).build();
         } catch (RuntimeException e) {
             throw new NotifyException("the TLS or proxy settings are not usable: " + e.getMessage(), true);

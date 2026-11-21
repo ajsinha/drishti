@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.engine.live.Frame;
-import com.ash.drishti.engine.live.Patch;
+import com.ash.rachana.view.Frame;
+import com.ash.rachana.view.Patch;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;

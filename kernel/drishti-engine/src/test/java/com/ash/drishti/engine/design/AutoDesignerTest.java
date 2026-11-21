@@ -23,7 +23,7 @@ import com.ash.drishti.engine.shape.BuilderProperties;
 import com.ash.drishti.engine.shape.Sample;
 import com.ash.drishti.engine.shape.Shape;
 import com.ash.drishti.engine.shape.ShapeService;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.Semantics;

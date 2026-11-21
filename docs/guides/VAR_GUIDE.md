@@ -1167,7 +1167,7 @@ properties, **only from the branding configuration** (`drishti.branding.*`). The
 
 **Excel, LibreOffice and Google Sheets: one file.** Formulas use only the functions the three share: `SUM`, `SUMPRODUCT`, `SMALL`,
 `LARGE`, `AVERAGE`, `COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER`,
-`EXP`, `SUMIF`, `SUMIFS`, `NORM.S.INV`, `PI` (the list is `XlsxFormulas.ALLOWED`; a formula naming anything else is refused when it is written). Never
+`EXP`, `SUMIF`, `SUMIFS`, `NORM.S.INV`, `PI` (the list is `Formulas.ALLOWED` of the Drishti Tools workbook writer, `tools-xlsx`; a formula naming anything else is refused when it is written). Never
 Excel-365-only dynamic arrays (`FILTER`, `SORT`, `SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured references, volatile `INDIRECT` or
 `OFFSET`, or macros. Cached values ride with every formula, so a viewer that never recalculates (a browser preview, a mail client) shows
 the right numbers.
@@ -1198,10 +1198,10 @@ and SIMM playgrounds use them ([FRTB_SA_GUIDE.md section 8](FRTB_SA_GUIDE.md#8-t
 | Piece | Where | What a metric does with it |
 |---|---|---|
 | `PlaygroundTemplate` | `server/playground` | `PlaygroundTemplate.builtIn("<metric>", STYLES)` reads `playground/<metric>/template/` (copy VaR's folder) and refuses a bank's folder missing a style |
-| `WorkbookStream`, `SheetStream` | `server/playground` | the zip written onto the response, sheet by sheet and row by row: `sheet`, `row`, `text`, `number`, `formula(col, f, cached, style)`, `formulaText`, `freeze`, `width`, `merge`, `checks`, the branding footer, `name(...)` for the named cells |
+| `PlaygroundWorkbook`, then `Workbook` and `Sheet` of `tools-xlsx` | `server/playground` | the zip written onto the response, sheet by sheet and row by row, cells of a row in column order: `sheet`, `row`, `text`, `number`, `formula(col, f, cached, style)`, `formulaText`, `freeze`, `width`, `merge`, `checks`, `name(...)` for the named cells; `PlaygroundWorkbook` hands the writer the template's look, the document properties and the branding footer |
 | `SeriesLayout` | `server/playground` | items (positions, netting sets, trades) by points (scenarios, time steps) as columns or as rows: every formula reference comes from it, so one generator serves both orientations |
 | `ExportSizing` | `server/playground` | the estimate of a count: columns, rows, cells, size, recalculation time, the applications that open it, or why not |
-| `XlsxFormulas`, `XlsxWriter.formula` | `server/dist` | the common function set, the check of every formula written, the scan of a finished file |
+| `Formulas` of `tools-xlsx` | Drishti Tools | the common function set, the check of every formula written, the scan of a finished file |
 | `LibreOfficeRecalc` | the tests' `server/playground` | `recalc(xlsx, work)` and `cells(file, sheet)`: the headless recalculation, one LibreOffice at a time |
 | The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `drishti_var-playground.js`, `drishti_var-playground.css` | `PLAY <METRIC>` (the word added to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
 

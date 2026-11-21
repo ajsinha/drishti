@@ -27,7 +27,6 @@
   <dependencies>
     <!-- G4 rehearsal: the pinned Drishti Lake jars -->
     <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId><version>0.9.0-SNAPSHOT</version></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-settingsfile</artifactId><version>${project.version}</version></dependency>
   </dependencies>
   <!-- standalone (Spring Boot's parent, not drishti-parent): the same Spotless check as every module (ADR-007), so the gate's
        `spotless:check` finds the plugin here too -->

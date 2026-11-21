@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourceContext;
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.net.TlsException;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.tools.testkit.TlsFixture;
 import com.sun.net.httpserver.HttpsConfigurator;
@@ -104,7 +104,7 @@ class RestTlsTest {
     void aPrivateCaAndAClientCertificateAreAccepted() throws Exception {
         RestSourcePlugin p = start("localhost", pki.clientSettings());
         assertThat(p.fetch(EntityRef.of("trade", "T1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(5);
-        assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+        assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
     }
 
     @Test

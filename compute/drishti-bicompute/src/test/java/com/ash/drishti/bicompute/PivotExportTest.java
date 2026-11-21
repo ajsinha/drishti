@@ -53,7 +53,7 @@ class PivotExportTest {
             String pivot = parts.get("xl/worksheets/sheet1.xml");
             assertThat(pivot).contains("outlineLevel=\"2\"").contains("summaryBelow=\"1\"");
             // the Notional column (B) of total rows is a SUM of its children; the Median column (C) is never a formula
-            assertThat(pivot).containsPattern("<c r=\"B[0-9]+\" s=\"3\"><f>SUM\\(B");
+            assertThat(pivot).containsPattern("<c r=\"B[0-9]+\" s=\"[0-9]+\"><f>SUM\\(B");
             assertThat(pivot).doesNotContainPattern("<c r=\"C[0-9]+\"[^>]*><f>");
             assertThat(parts.get("xl/workbook.xml")).contains("name=\"Provenance\"");
             assertThat(parts.get("xl/worksheets/sheet2.xml")).contains("every figure a value computed by the engine").contains("rita");

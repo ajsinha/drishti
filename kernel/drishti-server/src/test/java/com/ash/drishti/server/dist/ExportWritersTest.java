@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
+import com.ash.tools.xlsx.Cells;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.collab.snapshot.SnapshotModel;
@@ -59,7 +61,7 @@ class ExportWritersTest {
 
     @Test
     void excelHasAnAboutSheetAndOneTypedSheetPerSection() throws IOException {
-        Map<String, String> parts = unzip(XlsxWriter.write(doc(3)));
+        Map<String, String> parts = unzip(ExportWorkbook.write(doc(3)));
         assertThat(parts).containsKeys("[Content_Types].xml", "xl/workbook.xml", "xl/styles.xml", "xl/worksheets/sheet1.xml", "xl/worksheets/sheet2.xml", "xl/worksheets/sheet3.xml");
         assertThat(parts.get("xl/workbook.xml")).contains("name=\"About\"").contains("name=\"Trades  by desk   1\"").contains("name=\"Total\"");
         String sheet = parts.get("xl/worksheets/sheet2.xml");
@@ -76,12 +78,12 @@ class ExportWritersTest {
     @Test
     void sheetNamesAreValidAndUnique() {
         java.util.Set<String> used = new java.util.HashSet<>();
-        assertThat(XlsxWriter.unique("A/B:C*D?[E]", used)).isEqualTo("A B C D  E");
-        assertThat(XlsxWriter.unique("a b c d  e", used)).isEqualTo("a b c d  e (2)");
-        assertThat(XlsxWriter.unique("x".repeat(40), used)).hasSize(31);
-        assertThat(XlsxWriter.unique("", used)).isEqualTo("Sheet");
-        assertThat(XlsxWriter.col(0)).isEqualTo("A");
-        assertThat(XlsxWriter.col(26)).isEqualTo("AA");
+        assertThat(Cells.uniqueSheetName("A/B:C*D?[E]", used)).isEqualTo("A B C D  E");
+        assertThat(Cells.uniqueSheetName("a b c d  e", used)).isEqualTo("a b c d  e (2)");
+        assertThat(Cells.uniqueSheetName("x".repeat(40), used)).hasSize(31);
+        assertThat(Cells.uniqueSheetName("", used)).isEqualTo("Sheet");
+        assertThat(Cells.col(0)).isEqualTo("A");
+        assertThat(Cells.col(26)).isEqualTo("AA");
     }
 
     @Test

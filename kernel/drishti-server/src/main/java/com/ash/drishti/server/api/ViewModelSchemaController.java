@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.engine.view.ViewModelSchema;
+import com.ash.rachana.view.ViewModelSchema;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

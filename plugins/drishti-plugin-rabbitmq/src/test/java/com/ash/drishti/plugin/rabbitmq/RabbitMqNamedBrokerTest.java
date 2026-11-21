@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.plugin.rabbitmq;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.common.NamedResources;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.SettingsFile;
 import com.ash.tools.testkit.TestPki;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultSaslConfig;
@@ -54,7 +54,7 @@ class RabbitMqNamedBrokerTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
     }
 
     private void ini(String... files) throws Exception {
@@ -64,8 +64,8 @@ class RabbitMqNamedBrokerTest {
             Files.writeString(f, files[i]);
             paths.add(f.toString());
         }
-        System.setProperty(SettingsFile.PROPERTY, String.join(",", paths));
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, String.join(",", paths));
+        set.addAll(DrishtiTools.applySettingsFile());
     }
 
     /** The factory as the plugin sets it up for these settings: the uri, then the TLS material and the log-in mechanism. */
@@ -73,7 +73,7 @@ class RabbitMqNamedBrokerTest {
         ConnectionFactory f = new ConnectionFactory();
         f.setUri(s.get("uri"));
         boolean amqps = s.get("uri").startsWith("amqps:");
-        TlsMaterial m = amqps ? TlsContexts.build(TlsSettings.from(s)) : null;
+        TlsMaterial m = amqps ? DrishtiTools.tls(TlsSettings.from(s)) : null;
         RabbitMqSourcePlugin.secure(f, m, "external".equalsIgnoreCase(s.getOrDefault("auth-mechanism", "plain")));
         return f;
     }
@@ -110,7 +110,7 @@ class RabbitMqNamedBrokerTest {
         ini("[broker.rabbit-cert]\ntype=rabbitmq\nuri=amqps://rabbit.bank.internal:5671/risk\nauth-mechanism=external\ntls.ca-file=" + caPem
                 + "\ntls.cert-file=" + cert + "\ntls.key-file=" + key + "\n");
         Map<String, String> s = NamedResources.connector("rabbit-cert", "rabbitmq", Map.of("broker", "rabbit-cert", "queues", "trades"));
-        assertThat(TlsContexts.build(TlsSettings.from(s)).clientKey()).isNotNull();
+        assertThat(DrishtiTools.tls(TlsSettings.from(s)).clientKey()).isNotNull();
         ConnectionFactory f = factory(s);
         assertThat(f.isSSL()).isTrue();
         assertThat(f.getSaslConfig()).isSameAs(DefaultSaslConfig.EXTERNAL);

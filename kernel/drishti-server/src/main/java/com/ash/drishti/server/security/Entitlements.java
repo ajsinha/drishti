@@ -20,8 +20,8 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.Suggestion;
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -517,7 +517,7 @@ public final class Entitlements {
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
             if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (RACHANA_REFERENCE.md 10)
-                pv = pv.withForm(com.ash.drishti.engine.wire.FormViews.forRoles(pv.form(), formRoles(p)));
+                pv = pv.withForm(com.ash.rachana.wire.FormViews.forRoles(pv.form(), formRoles(p)));
             }
             if (pv.denied() != null && pv.denied().startsWith("no access to ") && packs.commandOff(pv.denied().substring("no access to ".length()))) {
                 pv = new ViewModel.PanelView(pv.id(), pv.kind(), pv.title(), pv.code(), pv.key(), pv.area(), pv.inferred(), pv.explanation(), pv.data(),

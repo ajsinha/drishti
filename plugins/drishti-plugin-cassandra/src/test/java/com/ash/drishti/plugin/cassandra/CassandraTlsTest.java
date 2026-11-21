@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.tools.testkit.TlsFixture;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;

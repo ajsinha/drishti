@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
-import com.ash.drishti.kernel.api.engines.ComputeEngine;
+import com.ash.drishti.api.compute.ComputeEngine;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.net.DigestService;
 import com.ash.drishti.server.net.NetService;

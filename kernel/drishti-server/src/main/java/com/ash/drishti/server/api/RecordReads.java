@@ -23,7 +23,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.history.HistoryService;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.api.HistoryController.Point;
 import com.ash.drishti.server.api.HistoryController.Series;

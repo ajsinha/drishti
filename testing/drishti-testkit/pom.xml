@@ -40,6 +40,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId><optional>true</optional></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>compile</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter-api</artifactId><scope>compile</scope></dependency>
+    <!-- the fakes and the test PKI every connector's TLS and proxy tests use (Drishti Tools) -->
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-testkit</artifactId></dependency>
     <!-- the S3 simulators (com.ash.drishti.testkit.s3): optional, a test that uses them adds these itself -->
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version><optional>true</optional></dependency>
     <dependency><groupId>com.adobe.testing</groupId><artifactId>s3mock</artifactId><version>${s3mock.version}</version><optional>true</optional></dependency>

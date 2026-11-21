@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.bicompute.functions.Holistics;
 import com.ash.drishti.bicompute.harness.FunctionHarness;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
@@ -104,7 +103,7 @@ class StatisticsFunctionsTest {
         assertThat(num("range", N, 2, N, 9)).isEqualTo(7.0);
         assertThat(num("geomean", N, 4, 5, 8, 7, 11, 4, 3)).isCloseTo(5.476986970, within(1e-9));
         assertThat(num("iqr", N, 1, 2, 4, 7, 8, 9, 10, 12, N)).isEqualTo(5.75);
-        assertThat(text(new Holistics.StringAgg(", ", false), "EUR", null, "USD", "EUR")).isEqualTo("EUR, EUR, USD");
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(", ", false)), "EUR", null, "USD", "EUR")).isEqualTo("EUR, EUR, USD");
         assertThat(num("nmiss", N, N)).isEqualTo(2.0);
     }
 
@@ -118,7 +117,7 @@ class StatisticsFunctionsTest {
         assertThat(run(fn("corr"), new double[0], new double[0])).isNull();
         assertThat(run(fn("trimmean", 0.1), new double[0])).isNull();
         assertThat(run(fn("kth_largest", 1), new double[0])).isNull();
-        assertThat(text(new Holistics.StringAgg(", ", true))).isNull();
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(", ", true)))).isNull();
         // too few values or no spread: no figure, as Excel's #DIV/0!, #NUM!, #N/A
         assertThat(num("skewness", 1, 2)).isNull();
         assertThat(num("kurtosis", 1, 2, 3)).isNull();
@@ -149,18 +148,18 @@ class StatisticsFunctionsTest {
 
     @Test
     void modeAndStringAggReadNamesAndGiveText() {
-        assertThat(text(new Holistics.Mode(), "USD", "EUR", "USD", "GBP", "EUR")).isEqualTo("EUR");          // a tie goes to the smallest
-        assertThat(text(new Holistics.Mode(), "4", "4.0", "5")).isEqualTo(4.0);                             // all numbers: a number
-        assertThat(new Holistics.Mode().finish(new Holistics.Mode().add(new Holistics.Mode().start(),
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode()), "USD", "EUR", "USD", "GBP", "EUR")).isEqualTo("EUR");          // a tie goes to the smallest
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode()), "4", "4.0", "5")).isEqualTo(4.0);                             // all numbers: a number
+        assertThat(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode()).finish(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode()).add(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode()).start(),
                 new Batch(2, new Object[] {new String[] {"USD", "USD"}})))).isNull();                            // no number to finish
-        assertThat(text(new Holistics.StringAgg(" | ", true), "USD", "EUR", "USD", "AUD")).isEqualTo("AUD | EUR | USD");
-        assertThat(text(new Holistics.StringAgg(", ", false), "242000000.0", "1.6E7")).isEqualTo("16000000, 242000000");
-        String[] many = new String[Holistics.STRING_AGG_MAX + 1];
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(" | ", true)), "USD", "EUR", "USD", "AUD")).isEqualTo("AUD | EUR | USD");
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(", ", false)), "242000000.0", "1.6E7")).isEqualTo("16000000, 242000000");
+        String[] many = new String[com.ash.rachana.agg.Holistics.STRING_AGG_MAX + 1];
         for (int i = 0; i < many.length; i++) {
             many[i] = "CP-" + i;
         }
-        assertThat(text(new Holistics.StringAgg(", ", true), many)).isNull();                               // bounded: refused, never cut
-        assertThat(new Holistics.StringAgg(", ", true).emptyNote()).contains("at most 1000");
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(", ", true)), many)).isNull();                               // bounded: refused, never cut
+        assertThat(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(", ", true)).emptyNote()).contains("at most 1000");
         AggFunction<Object> s = Functions.builtIn("string_agg", List.of("x"), List.of(1.0), List.of("; ")).orElseThrow();
         assertThat(text(s, "B", "A", "B")).isEqualTo("A; B");
     }
@@ -210,8 +209,8 @@ class StatisticsFunctionsTest {
             t[i] = i % 50 == 0 ? null : "CCY-" + r.nextInt(30);
         }
         Batch tb = new Batch(t.length, new Object[] {t});
-        AggFunction<Object> mode = new Holistics.Mode();
-        AggFunction<Object> agg = new Holistics.StringAgg(",", true);
+        AggFunction<Object> mode = com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.Mode());
+        AggFunction<Object> agg = com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.Holistics.StringAgg(",", true));
         for (AggFunction<Object> f : List.of(mode, agg)) {
             Object one = f.result(f.add(f.start(), tb));
             Object merged = f.start();

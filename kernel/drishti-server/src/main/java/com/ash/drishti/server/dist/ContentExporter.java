@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotLayout;
 import com.ash.drishti.server.collab.snapshot.SnapshotModel;
 import com.ash.drishti.server.collab.snapshot.SnapshotPainter;
@@ -191,7 +192,7 @@ public final class ContentExporter implements AutoCloseable {
             doc = view.doc();
         }
         bytes = switch (f) {
-            case XLSX -> XlsxWriter.write(doc);
+            case XLSX -> ExportWorkbook.write(doc);
             case CSV -> CsvWriter.write(doc);
             case JSONL -> JsonlWriter.write(doc);           // one row a line, the CSV's column names as keys
             case HTML -> new byte[0];                       // the table form (Output.doc) is the result; the caller writes the HTML it wants

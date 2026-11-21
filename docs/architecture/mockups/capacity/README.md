@@ -87,7 +87,7 @@ Excel formula over the **Inputs** and **Coefficients** sheets.
   `kernel/drishti-server/src/main/resources/capacity/template/` (the parts of the xlsx: Results, Coefficients, Explain, Calibration check, the
   styles from `playground/var/template/xl/styles.xml`), written by `tools/sizing_planner.py --template`.
 - **The fill.** The server writes only the Inputs sheet (and, when asked, a **Live** column of the server's measured figures, with the
-  time they were measured) and streams the zip with `SheetStream` (`server/playground/SheetStream.java`, as `VarPlaygroundBook` does).
+  time they were measured) and streams the zip with the template of `tools-xlsx` (`WorkbookTemplate`; the playgrounds use the same package's `Workbook`).
   Results and Coefficients are copied from the template untouched, so every formula stays live: change an input in Excel and the heap, RAM,
   disk and cores recompute.
 - **The dialog** asks which inputs: *what is on the screen*, *this server's live figures*, or *both, as two Inputs columns* (Plan and

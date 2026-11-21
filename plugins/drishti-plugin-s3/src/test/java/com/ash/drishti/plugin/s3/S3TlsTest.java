@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.s3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.net.TlsException;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.tools.testkit.TlsFixture;
 import com.sun.net.httpserver.HttpsConfigurator;
@@ -95,7 +95,7 @@ class S3TlsTest {
     void aPrivateCaAndAClientCertificateReachTheEndpoint() throws Exception {
         S3SourcePlugin p = plugin("localhost", pki.clientSettings());
         try {
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
             assertThat(p.fetch(com.ash.drishti.api.EntityRef.of("trade", "T-1"))).isPresent();
         } finally {
             p.close();

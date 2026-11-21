@@ -19,7 +19,7 @@ import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.ConnectionProbe;

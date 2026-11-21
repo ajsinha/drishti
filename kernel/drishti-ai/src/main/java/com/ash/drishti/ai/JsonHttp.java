@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.ai;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public final class JsonHttp implements AutoCloseable {
         this.proxy = ProxySettings.resolve(c.settings(), probe);
         HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
                 .version(HttpClient.Version.HTTP_1_1));
-        this.tls = TlsHttp.material(c.settings(), probe, "base-url");
+        this.tls = DrishtiTools.tlsMaterial(c.settings(), probe, "base-url");
         this.client = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
 

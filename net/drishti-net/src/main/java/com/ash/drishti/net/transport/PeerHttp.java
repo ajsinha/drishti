@@ -163,9 +163,9 @@ public final class PeerHttp implements GossipTransport {
         if (executor != null) {
             b.executor(executor);
         }
-        var material = com.ash.drishti.api.tls.TlsHttp.material(tls, baseUrl, "the peer's url");
+        var material = com.ash.drishti.api.DrishtiTools.tlsMaterial(tls, baseUrl, "the peer's url");
         if (material != null) {
-            com.ash.drishti.api.tls.TlsHttp.apply(b, material);
+            com.ash.tools.net.TlsHttp.apply(b, material);
         }
         return b.build();
     }

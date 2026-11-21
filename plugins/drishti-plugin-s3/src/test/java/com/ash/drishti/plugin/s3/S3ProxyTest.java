@@ -17,7 +17,7 @@ package com.ash.drishti.plugin.s3;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.tools.testkit.FakeProxy;
 import com.ash.tools.testkit.TlsFixture;

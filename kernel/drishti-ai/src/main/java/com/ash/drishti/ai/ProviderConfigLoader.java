@@ -177,7 +177,7 @@ public final class ProviderConfigLoader {
             throw new LlmException(LlmException.Kind.CONFIG,
                     "api-key must be an ${ENV_NAME} placeholder; keys are never written into a file");
         }
-        String v = com.ash.drishti.settingsfile.Placeholders.lookup(m.group(1), env);   // the one resolver's order, through this view
+        String v = com.ash.tools.settings.Placeholders.lookup(m.group(1), env);   // the one resolver's order, through this view
         return v == null || v.isBlank() ? (m.group(2) == null ? "" : m.group(2)) : v.strip();
     }
 

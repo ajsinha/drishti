@@ -32,6 +32,7 @@
     provider, and the exports (xlsx with outline levels and formulas only where a measure adds up, CSV). Every component that aggregates
     calls this module; none re-implements aggregation.</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-xlsx</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
@@ -44,6 +45,8 @@
         <exclusion><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></exclusion>
       </exclusions>
     </dependency>
+    <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance-cases</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId></dependency>

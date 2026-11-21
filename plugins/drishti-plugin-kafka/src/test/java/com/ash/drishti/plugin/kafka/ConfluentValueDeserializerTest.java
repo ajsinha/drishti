@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.plugin.kafka;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.tools.testkit.TestPki;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -226,7 +226,7 @@ class ConfluentValueDeserializerTest {
         srv.writeCertPem(cert);
         srv.writeKeyPem(key, TestPki.KeyFormat.PKCS8, null);
         ca.writeCertPem(caFile);
-        TlsMaterial tls = TlsContexts.build(TlsSettings.from(Map.of("tls.cert-file", cert.toString(), "tls.key-file", key.toString())));
+        TlsMaterial tls = DrishtiTools.tls(TlsSettings.from(Map.of("tls.cert-file", cert.toString(), "tls.key-file", key.toString())));
         HttpsServer https = HttpsServer.create(new InetSocketAddress(0), 0);
         https.setHttpsConfigurator(new HttpsConfigurator(tls.sslContext()));
         registry(https, null);

@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.yfinance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.tools.testkit.FakeProxy;
 import java.util.HashMap;

@@ -18,7 +18,7 @@ package com.ash.drishti.ai;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.tools.testkit.FakeProxy;
 import java.nio.file.Files;
 import java.nio.file.Path;

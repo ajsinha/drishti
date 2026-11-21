@@ -15,8 +15,9 @@
  */
 package com.ash.drishti.common;
 
-import com.ash.drishti.settingsfile.Placeholders;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.settings.Placeholders;
+import com.ash.tools.settings.SettingsFile;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -214,7 +215,7 @@ public final class NamedResources {
             base.putAll(section(kind, name, own.keySet()));
             if (base.isEmpty()) {
                 throw new IllegalArgumentException("connector " + connector + " names " + kind + " " + name + ", which nothing configures: write a ["
-                        + kind + "." + name + "] section in the settings file (" + SettingsFile.PROPERTY + "), or set " + kind + "." + name + ".* keys");
+                        + kind + "." + name + "] section in the settings file (" + DrishtiTools.SETTINGS_FILE + "), or set " + kind + "." + name + ".* keys");
             }
             String type = base.remove("type");
             if (kind.equals(BROKER) && type != null && plugin != null && BROKER_TYPES.contains(plugin) && !type.equalsIgnoreCase(plugin)) {

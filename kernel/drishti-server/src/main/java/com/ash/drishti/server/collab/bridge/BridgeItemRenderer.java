@@ -117,11 +117,11 @@ public final class BridgeItemRenderer {
         String text = MailContentPolicy.COMMENT.equals(mode) ? note(t.kind(), t.entityId(), c.pin(), c.body(), c.maskedSpans(), reader) : null;
         String verb = BridgeRegistry.MENTION.equals(item.template()) ? " mentioned a colleague in a comment" : " commented on a view";
         return message(item.template(), c.id(), name(c.author()) + verb, mode, t.kind(), t.entityId(), t.panelId(), c.pin(), text,
-                links.view(t.kind(), t.entityId(), c.pin(), t.panelId()), reader, c.createdAt(), com.ash.drishti.engine.control.ViewState.NONE);
+                links.view(t.kind(), t.entityId(), c.pin(), t.panelId()), reader, c.createdAt(), com.ash.rachana.control.ViewState.NONE);
     }
 
     private BridgeMessage message(String event, String id, String headline, String mode, String kind, String entityId, String panel, Pin pin,
-            String note, String link, Principal reader, java.time.Instant at, com.ash.drishti.engine.control.ViewState view) {
+            String note, String link, Principal reader, java.time.Instant at, com.ash.rachana.control.ViewState view) {
         boolean linkOnly = MailContentPolicy.LINK_ONLY.equals(mode);
         String when = linkOnly || pin == null ? null : pin.live() || pin.businessDate() == null ? "live when shared" : pin.businessDate().toString();
         return new BridgeMessage(event, id, product, line(headline), linkOnly ? null : label(kind), linkOnly ? null : entityId,

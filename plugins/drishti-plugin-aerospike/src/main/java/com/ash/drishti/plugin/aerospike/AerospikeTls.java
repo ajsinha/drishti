@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.TlsPolicy;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -62,7 +62,7 @@ final class AerospikeTls {
             }
             return new Plan(null, null, false);
         }
-        TlsMaterial m = TlsContexts.build(ts, env, java.time.Clock.systemUTC());
+        TlsMaterial m = DrishtiTools.tls(ts, env, java.time.Clock.systemUTC());
         if (pki && m.clientKey() == null) {
             throw new TlsException("auth-mode: pki logs in with a client certificate: set tls.cert-file and tls.key-file, or tls.keystore");
         }

@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.ai;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -59,7 +60,7 @@ public final class AnthropicProvider extends BaseProvider {
         this.proxy = ProxySettings.resolve(c.settings(), uri.toString());          // proxy.* or the site default; https is tunnelled with CONNECT
         HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
                 .version(HttpClient.Version.HTTP_1_1));
-        TlsMaterial tls = TlsHttp.material(c.settings(), uri.toString(), "base-url");
+        TlsMaterial tls = DrishtiTools.tlsMaterial(c.settings(), uri.toString(), "base-url");
         this.client = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
 

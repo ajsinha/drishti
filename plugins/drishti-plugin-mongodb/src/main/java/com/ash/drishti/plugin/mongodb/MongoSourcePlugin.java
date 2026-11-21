@@ -114,7 +114,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
     private final AtomicLong dayReads = new AtomicLong();
     private MongoClient client;
     private MongoPool pool;
-    private com.ash.drishti.api.tls.TlsMaterial tls;
+    private com.ash.tools.net.TlsMaterial tls;
     private MongoCollection<RawBsonDocument> docs;
     private MongoCollection<BsonDocument> rows;
     private MongoDatabase database;
@@ -167,7 +167,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
         });
         int timeout = Integer.parseInt(ctx.setting("connect-timeout-ms", "3000"));
         String uri = ctx.setting("uri", "mongodb://localhost:27017");
-        MongoTls.Plan tlsPlan = MongoTls.plan(ctx.settings(), uri, com.ash.drishti.settingsfile.Placeholders::process);   // fails the start, naming the setting and the file
+        MongoTls.Plan tlsPlan = MongoTls.plan(ctx.settings(), uri, com.ash.tools.settings.Placeholders::process);   // fails the start, naming the setting and the file
         this.tls = tlsPlan.tls();
         MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
                 .readPreference(ReadPreference.valueOf(ctx.setting("read-preference", "primary")))

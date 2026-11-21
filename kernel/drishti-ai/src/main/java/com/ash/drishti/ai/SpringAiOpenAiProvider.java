@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.ai;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +61,7 @@ public final class SpringAiOpenAiProvider extends BaseProvider {
         ProxySettings proxy = ProxySettings.resolve(c.settings(), base);               // proxy.* or the site default; https is tunnelled with CONNECT
         HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NEVER));
-        TlsMaterial tls = TlsHttp.material(c.settings(), base, "base-url");
+        TlsMaterial tls = DrishtiTools.tlsMaterial(c.settings(), base, "base-url");
         JdkClientHttpRequestFactory rf = new JdkClientHttpRequestFactory((tls == null ? hb : TlsHttp.apply(hb, tls)).build());
         rf.setReadTimeout(c.timeout());
         var headers = new LinkedMultiValueMap<String, String>();

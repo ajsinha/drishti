@@ -23,56 +23,56 @@
 
 | Function | Arguments | Form | Means | Runs | Source |
 |---|---|---|---|---|---|
-| `avedev` | list, [field] | holistic | the mean absolute deviation from the mean (Excel's AVEDEV) | E | the pivot engine (drishti-bicompute) |
-| `avg` | list, [field] | mergeable | the mean, Σx / n from the list's own sum and count | E | the pivot engine (drishti-bicompute) |
+| `avedev` | list, [field] | holistic | the mean absolute deviation from the mean (Excel's AVEDEV) | R | Rachana Core |
+| `avg` | list, [field] | mergeable | the mean, Σx / n from the list's own sum and count | R | Rachana Core |
 | `avg_once` | list, field, parentField \| xs, parents | holistic | the mean over the parents, each once | E | the pivot engine (drishti-bicompute) |
 | `cell` | view, [field, member] ... | measure | a cell of a saved pivot view, as the view computes it | E | the pivot engine (drishti-bicompute) |
-| `corr` | list, xField, yField \| xs, ys | mergeable | Pearson's correlation over the pairs where both are numbers | E | the pivot engine (drishti-bicompute) |
-| `count` | [list, [field]] | mergeable | the elements (or the field's values) that are not empty; count() with no argument is the rows of a pivot cell (a pivot formula) or of a measure's table | E | the pivot engine (drishti-bicompute) |
+| `corr` | list, xField, yField \| xs, ys | mergeable | Pearson's correlation over the pairs where both are numbers | R | Rachana Core |
+| `count` | [list, [field]] | mergeable | the elements (or the field's values) that are not empty; count() with no argument is the rows of a pivot cell (a pivot formula) or of a measure's table | R | Rachana Core |
 | `count_once` | list, field, parentField \| xs, parents | holistic | the parents with a value, each once | E | the pivot engine (drishti-bicompute) |
-| `covar` | list, xField, yField \| xs, ys | mergeable | the sample covariance (Excel's COVARIANCE.S) | E | the pivot engine (drishti-bicompute) |
-| `covar_pop` | list, aField, bField \| as, bs | mergeable | the population covariance (Excel's COVARIANCE.P) | E | the pivot engine (drishti-bicompute) |
-| `cv` | list, [field] | mergeable | the coefficient of variation, s / mean; empty under two numbers or a mean of 0 | E | the pivot engine (drishti-bicompute) |
-| `devsq` | list, [field] | mergeable | Σ(x − mean)² (Excel's DEVSQ, SAS's CSS) | E | the pivot engine (drishti-bicompute) |
-| `distinct` | list, [field] | holistic | how many different values (exact) | E | the pivot engine (drishti-bicompute) |
-| `geomean` | list, [field] | mergeable | the geometric mean; empty when a number is 0 or less (Excel's #NUM!) | E | the pivot engine (drishti-bicompute) |
-| `group` | list, key, [aggregate], [by] | the engine's grouping | one row {label, value, count} per key, the aggregate over each group (sum of a quoted field, or any aggregate over @) | E | the pivot engine (drishti-bicompute) |
-| `harmean` | list, [field] | mergeable | the harmonic mean; empty when a number is 0 or less (Excel's #NUM!) | E | the pivot engine (drishti-bicompute) |
-| `intercept` | list, yField, xField \| ys, xs | mergeable | the least-squares intercept of y on x (Excel's INTERCEPT) | E | the pivot engine (drishti-bicompute) |
-| `iqr` | list, [field] | holistic | p75 − p25 (Excel's QUARTILE.INC) | E | the pivot engine (drishti-bicompute) |
-| `kth_largest` | list, [field], k | holistic | the k-th largest number (Excel's LARGE); empty when fewer than k | E | the pivot engine (drishti-bicompute) |
-| `kth_smallest` | list, [field], k | holistic | the k-th smallest number (Excel's SMALL); empty when fewer than k | E | the pivot engine (drishti-bicompute) |
-| `kurtosis` | list, [field] | mergeable | the sample excess kurtosis (Excel's KURT); empty under four numbers or no spread | E | the pivot engine (drishti-bicompute) |
-| `max` | list, [field] | mergeable | the largest number (several arguments: greatest) | E | the pivot engine (drishti-bicompute) |
+| `covar` | list, xField, yField \| xs, ys | mergeable | the sample covariance (Excel's COVARIANCE.S) | R | Rachana Core |
+| `covar_pop` | list, aField, bField \| as, bs | mergeable | the population covariance (Excel's COVARIANCE.P) | R | Rachana Core |
+| `cv` | list, [field] | mergeable | the coefficient of variation, s / mean; empty under two numbers or a mean of 0 | R | Rachana Core |
+| `devsq` | list, [field] | mergeable | Σ(x − mean)² (Excel's DEVSQ, SAS's CSS) | R | Rachana Core |
+| `distinct` | list, [field] | holistic | how many different values (exact) | R | Rachana Core |
+| `geomean` | list, [field] | mergeable | the geometric mean; empty when a number is 0 or less (Excel's #NUM!) | R | Rachana Core |
+| `group` | list, key, [aggregate], [by] | the engine's grouping | one row {label, value, count} per key, the aggregate over each group (sum of a quoted field, or any aggregate over @) | R | Rachana Core |
+| `harmean` | list, [field] | mergeable | the harmonic mean; empty when a number is 0 or less (Excel's #NUM!) | R | Rachana Core |
+| `intercept` | list, yField, xField \| ys, xs | mergeable | the least-squares intercept of y on x (Excel's INTERCEPT) | R | Rachana Core |
+| `iqr` | list, [field] | holistic | p75 − p25 (Excel's QUARTILE.INC) | R | Rachana Core |
+| `kth_largest` | list, [field], k | holistic | the k-th largest number (Excel's LARGE); empty when fewer than k | R | Rachana Core |
+| `kth_smallest` | list, [field], k | holistic | the k-th smallest number (Excel's SMALL); empty when fewer than k | R | Rachana Core |
+| `kurtosis` | list, [field] | mergeable | the sample excess kurtosis (Excel's KURT); empty under four numbers or no spread | R | Rachana Core |
+| `max` | list, [field] | mergeable | the largest number (several arguments: greatest) | R | Rachana Core |
 | `measure` | name, [scope], [options] | measure | a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed | E | the pivot engine (drishti-bicompute) |
-| `median` | list, [field] | holistic | the exact middle value | E | the pivot engine (drishti-bicompute) |
-| `min` | list, [field] | mergeable | the smallest number (several arguments: least) | E | the pivot engine (drishti-bicompute) |
-| `mode` | list, [field] | holistic | the most frequent value, a number or a name; ties to the smallest; empty when no value repeats | E | the pivot engine (drishti-bicompute) |
-| `mode_multi` | list, [field] | holistic | every most frequent value, ascending, as a list (Excel's MODE.MULT) | E | the pivot engine (drishti-bicompute) |
-| `nmiss` | list, [field] | mergeable | how many values are missing (null or absent); 0 for an empty list | E | the pivot engine (drishti-bicompute) |
-| `percent_rank_of` | list, [field], value, [digits] | holistic | the value's rank as a fraction 0..1, cut to 3 significant digits (Excel's PERCENTRANK.INC) | E | the pivot engine (drishti-bicompute) |
-| `percentile` | list, [field], p | holistic | the exact p-quantile (linear interpolation), p in 0..1 | E | the pivot engine (drishti-bicompute) |
-| `percentile_exc` | list, [field], p | holistic | the p-quantile at rank p·(n + 1) (Excel's PERCENTILE.EXC; QUARTILE.EXC at k/4); empty outside 1..n | E | the pivot engine (drishti-bicompute) |
-| `product` | list, [field] | mergeable | Π x (Excel's PRODUCT); empty for no number | E | the pivot engine (drishti-bicompute) |
-| `range` | list, [field] | mergeable | max − min; empty when there is no number | E | the pivot engine (drishti-bicompute) |
-| `rank_avg` | list, [field], value, [ascending] | holistic | the value's rank among the list's, ties averaged, largest first unless ascending is 1 (Excel's RANK.AVG) | E | the pivot engine (drishti-bicompute) |
-| `rsq` | list, yField, xField \| ys, xs | mergeable | r², the square of the correlation (Excel's RSQ) | E | the pivot engine (drishti-bicompute) |
-| `skewness` | list, [field] | mergeable | the sample skewness (Excel's SKEW); empty under three numbers or no spread | E | the pivot engine (drishti-bicompute) |
-| `skewness_pop` | list, [field] | mergeable | the population skewness (Excel's SKEW.P); empty without spread | E | the pivot engine (drishti-bicompute) |
-| `slope` | list, yField, xField \| ys, xs | mergeable | the least-squares slope of y on x (Excel's SLOPE, y first) | E | the pivot engine (drishti-bicompute) |
-| `stddev` | list, [field] | mergeable | the sample standard deviation | E | the pivot engine (drishti-bicompute) |
-| `stddev_pop` | list, [field] | mergeable | the population standard deviation | E | the pivot engine (drishti-bicompute) |
-| `stderr` | list, [field] | mergeable | the standard error of the mean, s / √n; empty under two numbers | E | the pivot engine (drishti-bicompute) |
-| `steyx` | list, yField, xField \| ys, xs | mergeable | the standard error of y predicted from x (Excel's STEYX); empty under three pairs | E | the pivot engine (drishti-bicompute) |
-| `string_agg` | list, [field], sep, [distinct] | holistic | the values joined by sep in text order (distinct true: each once); empty past 1,000 values | E | the pivot engine (drishti-bicompute) |
-| `sum` | list, [field] | mergeable | the total (compensated); 0 when there is no number | E | the pivot engine (drishti-bicompute) |
+| `median` | list, [field] | holistic | the exact middle value | R | Rachana Core |
+| `min` | list, [field] | mergeable | the smallest number (several arguments: least) | R | Rachana Core |
+| `mode` | list, [field] | holistic | the most frequent value, a number or a name; ties to the smallest; empty when no value repeats | R | Rachana Core |
+| `mode_multi` | list, [field] | holistic | every most frequent value, ascending, as a list (Excel's MODE.MULT) | R | Rachana Core |
+| `nmiss` | list, [field] | mergeable | how many values are missing (null or absent); 0 for an empty list | R | Rachana Core |
+| `percent_rank_of` | list, [field], value, [digits] | holistic | the value's rank as a fraction 0..1, cut to 3 significant digits (Excel's PERCENTRANK.INC) | R | Rachana Core |
+| `percentile` | list, [field], p | holistic | the exact p-quantile (linear interpolation), p in 0..1 | R | Rachana Core |
+| `percentile_exc` | list, [field], p | holistic | the p-quantile at rank p·(n + 1) (Excel's PERCENTILE.EXC; QUARTILE.EXC at k/4); empty outside 1..n | R | Rachana Core |
+| `product` | list, [field] | mergeable | Π x (Excel's PRODUCT); empty for no number | R | Rachana Core |
+| `range` | list, [field] | mergeable | max − min; empty when there is no number | R | Rachana Core |
+| `rank_avg` | list, [field], value, [ascending] | holistic | the value's rank among the list's, ties averaged, largest first unless ascending is 1 (Excel's RANK.AVG) | R | Rachana Core |
+| `rsq` | list, yField, xField \| ys, xs | mergeable | r², the square of the correlation (Excel's RSQ) | R | Rachana Core |
+| `skewness` | list, [field] | mergeable | the sample skewness (Excel's SKEW); empty under three numbers or no spread | R | Rachana Core |
+| `skewness_pop` | list, [field] | mergeable | the population skewness (Excel's SKEW.P); empty without spread | R | Rachana Core |
+| `slope` | list, yField, xField \| ys, xs | mergeable | the least-squares slope of y on x (Excel's SLOPE, y first) | R | Rachana Core |
+| `stddev` | list, [field] | mergeable | the sample standard deviation | R | Rachana Core |
+| `stddev_pop` | list, [field] | mergeable | the population standard deviation | R | Rachana Core |
+| `stderr` | list, [field] | mergeable | the standard error of the mean, s / √n; empty under two numbers | R | Rachana Core |
+| `steyx` | list, yField, xField \| ys, xs | mergeable | the standard error of y predicted from x (Excel's STEYX); empty under three pairs | R | Rachana Core |
+| `string_agg` | list, [field], sep, [distinct] | holistic | the values joined by sep in text order (distinct true: each once); empty past 1,000 values | R | Rachana Core |
+| `sum` | list, [field] | mergeable | the total (compensated); 0 when there is no number | R | Rachana Core |
 | `sum_once` | list, field, parentField \| xs, parents | holistic | Σx counting each parent once | E | the pivot engine (drishti-bicompute) |
-| `sumproduct` | list, aField, bField \| as, bs | mergeable | Σ a·b over the pairs both present (Excel's SUMPRODUCT) | E | the pivot engine (drishti-bicompute) |
-| `sumsq` | list, [field] | mergeable | Σ x² (Excel's SUMSQ, SAS's USS) | E | the pivot engine (drishti-bicompute) |
-| `trimmean` | list, [field], pct | holistic | the mean without ⌊n·pct/2⌋ values at each end (Excel's TRIMMEAN) | E | the pivot engine (drishti-bicompute) |
-| `variance` | list, [field] | mergeable | the sample variance (Welford) | E | the pivot engine (drishti-bicompute) |
-| `variance_pop` | list, [field] | mergeable | the population variance | E | the pivot engine (drishti-bicompute) |
-| `wavg` | list, xField, wField \| xs, ws | mergeable | Σwx / Σw, the weighted mean | E | the pivot engine (drishti-bicompute) |
+| `sumproduct` | list, aField, bField \| as, bs | mergeable | Σ a·b over the pairs both present (Excel's SUMPRODUCT) | R | Rachana Core |
+| `sumsq` | list, [field] | mergeable | Σ x² (Excel's SUMSQ, SAS's USS) | R | Rachana Core |
+| `trimmean` | list, [field], pct | holistic | the mean without ⌊n·pct/2⌋ values at each end (Excel's TRIMMEAN) | R | Rachana Core |
+| `variance` | list, [field] | mergeable | the sample variance (Welford) | R | Rachana Core |
+| `variance_pop` | list, [field] | mergeable | the population variance | R | Rachana Core |
+| `wavg` | list, xField, wField \| xs, ws | mergeable | Σwx / Σw, the weighted mean | R | Rachana Core |
 
 ## Measures: the pivot engine's functions of a measure (filter context, time, windows, balances, currency)
 
@@ -253,11 +253,11 @@
 
 | Function | Runs | Source |
 |---|---|---|
-| `bounds` | E | the pivot engine (drishti-bicompute) |
-| `cummax` | E | the pivot engine (drishti-bicompute) |
-| `cummin` | E | the pivot engine (drishti-bicompute) |
-| `cumprod` | E | the pivot engine (drishti-bicompute) |
-| `cumsum` | E | the pivot engine (drishti-bicompute) |
+| `bounds` | R | Rachana Core |
+| `cummax` | R | Rachana Core |
+| `cummin` | R | Rachana Core |
+| `cumprod` | R | Rachana Core |
+| `cumsum` | R | Rachana Core |
 | `cumtrapz` | R | Rachana |
 | `difference` | R | Rachana |
 | `drop` | R | Rachana |
@@ -267,19 +267,19 @@
 | `interp1` | R | Rachana |
 | `intersect` | R | Rachana |
 | `is_member` | R | Rachana |
-| `isoutlier` | E | the pivot engine (drishti-bicompute) |
+| `isoutlier` | R | Rachana Core |
 | `last` | R | Rachana |
 | `map` | R | Rachana |
-| `maxk` | E | the pivot engine (drishti-bicompute) |
-| `mink` | E | the pivot engine (drishti-bicompute) |
-| `movmean` | E | the pivot engine (drishti-bicompute) |
-| `movmedian` | E | the pivot engine (drishti-bicompute) |
-| `movstd` | E | the pivot engine (drishti-bicompute) |
-| `movsum` | E | the pivot engine (drishti-bicompute) |
-| `polyfit` | E | the pivot engine (drishti-bicompute) |
+| `maxk` | R | Rachana Core |
+| `mink` | R | Rachana Core |
+| `movmean` | R | Rachana Core |
+| `movmedian` | R | Rachana Core |
+| `movstd` | R | Rachana Core |
+| `movsum` | R | Rachana Core |
+| `polyfit` | R | Rachana Core |
 | `polyval` | R | Rachana |
 | `reduce` | R | Rachana |
-| `rescale` | E | the pivot engine (drishti-bicompute) |
+| `rescale` | R | Rachana Core |
 | `sequence` | R | Rachana |
 | `size` | R | Rachana |
 | `sort` | R | Rachana |
@@ -287,7 +287,7 @@
 | `trapz` | R | Rachana |
 | `union` | R | Rachana |
 | `unique` | R | Rachana |
-| `zscore` | E | the pivot engine (drishti-bicompute) |
+| `zscore` | R | Rachana Core |
 
 ## Distributions and test statistics (scalars)
 

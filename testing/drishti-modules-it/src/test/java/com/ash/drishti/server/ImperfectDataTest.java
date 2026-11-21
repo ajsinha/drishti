@@ -24,7 +24,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Provenance;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.rachana.model.Sutra;

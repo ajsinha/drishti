@@ -25,20 +25,22 @@ import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.Fingerprint;
 import com.ash.drishti.common.ShapeFingerprinter;
-import com.ash.drishti.engine.bind.BindContext;
-import com.ash.drishti.engine.bind.Binder;
-import com.ash.drishti.engine.control.ControlResolver;
-import com.ash.drishti.engine.control.ControlValues;
+import com.ash.rachana.bind.BindContext;
+import com.ash.rachana.bind.Binder;
+import com.ash.rachana.control.ControlResolver;
+import com.ash.rachana.control.ControlValues;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.engine.view.ViewModel.Cell;
-import com.ash.drishti.engine.view.ViewModel.KeyView;
-import com.ash.drishti.engine.view.ViewModel.PanelView;
-import com.ash.drishti.engine.wire.ScreenWire;
+import com.ash.rachana.view.ViewModel;
+import com.ash.rachana.view.ViewModel.Cell;
+import com.ash.rachana.view.ViewModel.KeyView;
+import com.ash.rachana.view.ViewModel.PanelView;
+import com.ash.rachana.wire.ScreenWire;
 import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.LinkRef;
+import com.ash.drishti.engine.rachana.DrishtiBinder;
+import com.ash.drishti.engine.rachana.Hosted;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.EffectiveLayout;
 import com.ash.drishti.inference.LayoutMerger;
@@ -120,7 +122,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     private final ReferenceCatalog catalog;
     private final GraphProperties graph;
     private final Binder binder;
-    private final com.ash.drishti.engine.bind.MapSupport mapSupport;
+    private final com.ash.rachana.bind.MapSupport mapSupport;
     private final ElCompiler el;
     private final Formats formats;
     private final Mnemonics mnemonics;
@@ -130,6 +132,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     private final BusinessDates dates;
     private final ControlResolver controls;
     private final ScreenWire wire;
+    private final com.ash.drishti.engine.rachana.DrishtiTables tables;
 
     /** The zone business dates and "known at" times are read in (what the console's top bar shows times in). */
     public java.time.ZoneId businessZone() {
@@ -141,28 +144,30 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props, BusinessDates dates) {
         this.router = router;
         this.dates = dates;
-        this.controls = new ControlResolver(el, dates, router, graph.linkBudget());
+        this.tables = new com.ash.drishti.engine.rachana.DrishtiTables(router);
+        this.controls = new ControlResolver(el, new com.ash.drishti.engine.rachana.DrishtiDays(dates), tables, graph.linkBudget());
         this.matcher = matcher;
         this.merger = merger;
         this.fingerprinter = fingerprinter;
         this.catalog = catalog;
         this.graph = graph;
         this.binder = binder;
-        this.mapSupport = new com.ash.drishti.engine.bind.MapSupport(router, el, formats, binder.limits());
+        this.mapSupport = new com.ash.rachana.bind.MapSupport(tables, el, formats, binder.limits());
         this.el = el;
         this.formats = formats;
         this.mnemonics = mnemonics;
         this.bindPool = bindPool;
         // a panel's own source is that panel's data, read as the page's record is (within the sources' fetch timeout), not a linked entity's
         // label (the link budget, 40 ms): past that budget it drew its empty text as if the source held nothing
-        this.wire = new ScreenWire(router, binder, el, router.fetchTimeout(), this::augmented);
+        this.wire = new ScreenWire(tables, binder, el, router.fetchTimeout(),
+                (e, at) -> Hosted.entity(augmented(Hosted.doc(e), Hosted.asOf(at))));
         this.layouts = Caffeine.newBuilder().maximumSize(props.layoutCacheSize()).recordStats().build();
         this.fingerprints = Caffeine.newBuilder().maximumSize(props.fingerprintCacheSize()).build();
         registry.onChange(changed -> layouts.invalidateAll());
     }
 
     /** The table layer's reads for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13); the server sets it once at start. */
-    public void tables(com.ash.drishti.engine.wire.TableRows rows) {
+    public void tables(com.ash.rachana.wire.TableRows rows) {
         wire.tables(rows);
     }
 
@@ -318,12 +323,12 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
      *
      * @throws DrishtiException {@code DRS-1001} when the view has no such panel or the panel offers no pivot
      */
-    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId) {
+    public com.ash.rachana.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId) {
         return records(ref, asOf, panelId, UnaryOperator.identity());
     }
 
     /** A panel's rows as the caller may see them: masked fields read {@link DataNode#MASK}. */
-    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact) {
+    public com.ash.rachana.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact) {
         return records(ref, asOf, panelId, ViewerContext.of(redact, ANY));
     }
 
@@ -332,7 +337,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
      *
      * @throws DrishtiException {@code DRS-5002} when the panel's source is of a kind the caller may not open
      */
-    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, ViewerContext who) {
+    public com.ash.rachana.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, ViewerContext who) {
         UnaryOperator<DataNode> redact = who.redact();
         Predicate<String> mayOpen = who.mayOpen();
         EntityDocument doc = fetch(ref, asOf);
@@ -346,15 +351,16 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         + "' that offers a pivot"));
         EntityDocument seen = seen(doc, redact);
         EvalContext eval = EvalContext.of(seen.data(), formats);
-        Map<EntityRef, EntityDocument> linked = new LinkedHashMap<>();
+        Map<com.ash.rachana.bind.EntityRef, com.ash.rachana.bind.Entity> linked = new LinkedHashMap<>();
         binder.chartSource(panel, eval).ifPresent(src -> {
             if (!mayOpen.test(src.kind())) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "no access to " + src.kind());
             }
-            router.fetchAll(Set.of(src), graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf)
-                    .forEach((r, d) -> linked.put(r, seen(d, redact)));
+            router.fetchAll(Set.of(Hosted.ref(src)), graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf)
+                    .forEach((r, d) -> linked.put(Hosted.ref(r), Hosted.entity(seen(d, redact))));
         });
-        BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), linked, Set.of());
+        BindContext ctx = new BindContext(Hosted.entity(seen), layout(layout), eval, linked, Set.of(), Set.of(), null,
+                new DrishtiBinder.Host(seen, fp, List.of()));
         return binder.records(panel, ctx);
     }
 
@@ -386,7 +392,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
                 k -> merger.merge(sutra, doc.data(), ref.kind()));
         EntityDocument seen = seen(doc, redact);
-        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, asOf, mayOpen);
+        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
         java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
                 : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
         EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);
@@ -399,9 +405,10 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             }
             byPanel.computeIfAbsent(f.panel(), k -> new LinkedHashMap<>()).put(f.event(), f);
         }
-        BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), Map.of(), Set.of());
-        return new ScreenWire.Screen(layout.sutra(), nodes, ctx, eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf,
-                who, byPanel, null);
+        BindContext ctx = new BindContext(Hosted.entity(seen), layout(layout), eval, Map.of(), Set.of(), Set.of(), null,
+                new DrishtiBinder.Host(seen, fp, List.of()));
+        return new ScreenWire.Screen(layout.sutra(), nodes, ctx, eval.withRoot(doc.data()),
+                Hosted.asOf(asOf.businessDate() == null ? dates.resolve(asOf) : asOf), who, byPanel, null);
     }
 
     /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
@@ -464,7 +471,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         long tLayout = System.nanoTime();
 
         EntityDocument seen = seen(doc, redact);                      // values: as the caller may see them
-        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, asOf, mayOpen);
+        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
         java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
                 : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
         EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);   // ctl.<id>: the controls' values; today(): the date
@@ -478,7 +485,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         });
         for (Panel p : layout.sutra().panels()) {
             if (p.kind().readsData() && values.builds(p.id())) {
-                binder.chartSource(p, eval).ifPresent(src -> {
+                binder.chartSource(p, eval).map(Hosted::ref).ifPresent(src -> {
                     if (mayOpen.test(src.kind())) {
                         wanted.add(src);
                     } else {
@@ -489,23 +496,25 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         }
         denied.removeAll(wanted);
         Set<EntityRef> missing = java.util.concurrent.ConcurrentHashMap.newKeySet();
-        Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of()
+        Map<EntityRef, EntityDocument> fetched = wanted.isEmpty() ? Map.of()
                 : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, new SourceFailures(), missing);
-        if (!linked.isEmpty()) {
-            Map<EntityRef, EntityDocument> masked = new LinkedHashMap<>();
-            linked.forEach((r, d) -> masked.put(r, seen(d, redact)));
-            linked = masked;
+        Map<com.ash.rachana.bind.EntityRef, com.ash.rachana.bind.Entity> linked = new LinkedHashMap<>();
+        fetched.forEach((r, d) -> linked.put(Hosted.ref(r), Hosted.entity(seen(d, redact))));
+        Set<com.ash.rachana.bind.EntityRef> pending = new HashSet<>();
+        for (EntityRef r : wanted) {
+            if (!fetched.containsKey(r) && !missing.contains(r)) {     // held by no source: not waiting, simply not found
+                pending.add(Hosted.ref(r));
+            }
         }
-        Set<EntityRef> pending = new HashSet<>(wanted);
-        pending.removeAll(linked.keySet());
-        pending.removeAll(missing);                      // held by no source: not waiting, simply not found
+        Set<com.ash.rachana.bind.EntityRef> refused = new HashSet<>();
+        denied.forEach(r -> refused.add(Hosted.ref(r)));
         long tLinks = System.nanoTime();
 
-        Map<String, com.ash.drishti.engine.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
-                asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen);   // what a map's link and shade read across a kind
-        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
+        Map<String, com.ash.rachana.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
+                Hosted.asOf(asOf.businessDate() == null ? dates.resolve(asOf) : asOf), who);   // what a map's link and shade read across a kind
+        BindContext ctx = new BindContext(Hosted.entity(seen), layout(layout), eval, linked, pending, refused, maps, new DrishtiBinder.Host(seen, fp, links));
         ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.rachana.SutraWiring.nodes(layout.sutra()), ctx,
-                eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, who, Map.of(), null);
+                eval.withRoot(doc.data()), Hosted.asOf(asOf.businessDate() == null ? dates.resolve(asOf) : asOf), who, Map.of(), null);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (RACHANA_REFERENCE.md 6 to 8)
@@ -514,7 +523,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         : linkedSource(p, ctx, wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx)))), bindPool));
             }
         }
-        List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();
+        List<PanelView> panels = futures.stream().map(CompletableFuture::join).map(DrishtiBinder::edge).toList();
         Sutra s = layout.sutra();
         List<Cell> strip = new ArrayList<>();
         for (StripItem i : s.strip()) {
@@ -538,8 +547,8 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         var pv = doc.provenance();
         var fresh = router.freshness(ref.kind(), pv.source());
         // what the caller's masks hid: counted on the built view, only when a mask changed the document at all
-        com.ash.drishti.engine.view.MaskCount.Result hidden = seen == doc ? new com.ash.drishti.engine.view.MaskCount.Result(0, List.of())
-                : com.ash.drishti.engine.view.MaskCount.of(title, strip, panels);
+        com.ash.rachana.view.MaskCount.Result hidden = seen == doc ? new com.ash.rachana.view.MaskCount.Result(0, List.of())
+                : com.ash.rachana.view.MaskCount.of(title, strip, panels);
         ViewModel view = new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
                 keys(s, panels, eval), new ViewModel.Provenance(layout.label(), fp.shortForm(), pv.source(), pv.generation(),
                         pv.fetchedAt().toString(), (pv.live() || router.pushes(ref)) && current,   // a ticks-only stream makes a stored entity live
@@ -547,8 +556,8 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
                         s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s))
-                .withLayout(com.ash.drishti.engine.view.ScreenGrid.of(layout.sutra()))
-                .withPhone(com.ash.drishti.engine.view.PhoneView.of(s, s.phone() == null || s.phone().summary() == null ? null
+                .withLayout(com.ash.rachana.view.ScreenGrid.of(layout.sutra()))
+                .withPhone(com.ash.rachana.view.PhoneView.of(s, s.phone() == null || s.phone().summary() == null ? null
                         : soft(() -> el.template(s.phone().summary()).render(eval))));   // docs/guides/BUILD_GUIDE.md 5: tiers, order, summary line
         if (doc.data().get("partial").asBoolean()) {               // some of what makes the document did not answer: the page says so
             List<String> what = new ArrayList<>();
@@ -559,7 +568,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             view = view.withProvenance(view.provenance().withPartial(what));
         }
         return new Built(view, doc, seen, sutra, layout, current,
-                new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
+                new LinkCounts(linked.size(), pending.size(), refused.size(), graph.linkBudget().toMillis()));
     }
 
     /**
@@ -570,7 +579,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         if (v == null || v.denied() != null || !(p.options().get("source") instanceof String)) {
             return v;
         }
-        Optional<EntityRef> ref;
+        Optional<com.ash.rachana.bind.EntityRef> ref;
         try {
             ref = binder.chartSource(p, ctx.eval());
         } catch (RuntimeException | StackOverflowError e) {
@@ -579,8 +588,13 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         if (ref.isEmpty()) {
             return v;
         }
-        EntityDocument d = ctx.linked().get(ref.get());
-        return v.withProvenance(ScreenWire.provenance(router, ref.get().kind(), d == null ? null : d.provenance()));
+        com.ash.rachana.bind.Entity d = ctx.linked().get(ref.get());
+        return v.withProvenance(ScreenWire.provenance(tables, ref.get().kind(), d == null ? null : d.origin()));
+    }
+
+    /** An effective layout as the binder reads it (its label, whether inferred, why inference added what it did). */
+    private static com.ash.rachana.bind.Layout layout(EffectiveLayout l) {
+        return new com.ash.rachana.bind.Layout(l.label(), l.inferred(), l.explanations());
     }
 
     /** The panels of {@code s} whose rows or bars set a control when clicked. */

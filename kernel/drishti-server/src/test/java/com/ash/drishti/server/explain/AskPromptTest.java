@@ -18,7 +18,7 @@ package com.ash.drishti.server.explain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.engine.explain.PageContext;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;

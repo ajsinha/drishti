@@ -71,7 +71,7 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
     private volatile HttpFetcher fetcher;
     private volatile SourceContext context;
     private volatile String health = "UP";
-    private com.ash.drishti.api.proxy.ProxySettings proxy = com.ash.drishti.api.proxy.ProxySettings.none();
+    private com.ash.tools.net.ProxySettings proxy = com.ash.tools.net.ProxySettings.none();
     private volatile Instant lastUpdate;
     /** The symbol beta and correlation are measured against (setting {@code benchmark}); empty: none. */
     private volatile String benchmark = "";
@@ -86,12 +86,12 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.settings = YFinanceSettings.of(ctx.settings());
         this.cache = new BoundedCache<>(settings.cacheMax());
-        this.proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(ctx.settings(), settings.baseUrl());   // proxy.* or the site default
+        this.proxy = com.ash.tools.net.ProxySettings.resolve(ctx.settings(), settings.baseUrl());   // proxy.* or the site default
         HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL));
-        if (com.ash.drishti.api.tls.TlsSettings.anyGiven(ctx.settings(), "tls.")) {          // a proxy or mirror on a private CA
-            var tls = com.ash.drishti.api.tls.TlsHttp.material(ctx.settings(), settings.baseUrl(), "base-url");
+        if (com.ash.tools.net.TlsSettings.anyGiven(ctx.settings(), "tls.")) {          // a proxy or mirror on a private CA
+            var tls = com.ash.drishti.api.DrishtiTools.tlsMaterial(ctx.settings(), settings.baseUrl(), "base-url");
             if (tls != null) {
-                b = com.ash.drishti.api.tls.TlsHttp.apply(b, tls);
+                b = com.ash.tools.net.TlsHttp.apply(b, tls);
             }
         }
         this.fetcher = new HttpFetcher(b.build(), settings, proxy, "application/json");

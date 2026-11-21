@@ -2523,7 +2523,7 @@ description to set `root` (or the `DRISHTI_FILES_ROOT` environment variable); it
 ## 10. TLS and the outbound proxy
 
 Every connector that talks to a server over the network reads its TLS configuration from the same keys, under the
-prefix `tls.`, and builds its secure connection with the same code (`com.ash.drishti.api.tls` in the plugin API). You
+prefix `tls.`, and builds its secure connection with the same code (`com.ash.tools.net`, the Drishti Tools library, reached through `DrishtiTools` in the plugin API). You
 learn the settings once: a private CA, a PKCS12 or JKS store, a PEM file pair for mutual TLS, hostname verification and
 the rest work the same for Kafka, ActiveMQ and RabbitMQ, and for each connector that has taken the module on since.
 
@@ -2884,8 +2884,9 @@ The JVM can log the whole handshake: start the server with `-Djavax.net.debug=ss
 not leave it on).
 
 
-For plugin authors: the module is `com.ash.drishti.api.tls` (`TlsSettings`, `TlsContexts`, `TlsMaterial`, `Secrets`) in
-`drishti-api`; no Spring, no dependencies beyond the JDK. See
+For plugin authors: the module is `com.ash.tools.net` (`TlsSettings`, `TlsContexts`, `TlsMaterial`) with `com.ash.tools.settings.Secrets`, from the
+Drishti Tools library (`tools-net`, `tools-settings`; no Spring, no dependencies beyond the JDK). `com.ash.drishti.api.DrishtiTools` gives
+them Drishti's names: the variable that allows an insecure trust, the site proxy's keys, the settings file. See
 [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#108-tls-for-a-connector-the-shared-module).
 
 ### Outbound HTTP proxy for connectors, AI providers and MCP servers
@@ -2893,7 +2894,7 @@ For plugin authors: the module is `com.ash.drishti.api.tls` (`TlsSettings`, `Tls
 Some sites let a server reach the internet (or a vendor's API) only through a forward proxy. Drishti has **one mechanism** for that,
 shared by every HTTP-based connector (REST, feeds, news, yfinance, S3, Delta and Iceberg over S3, the Kafka schema registry), by the AI
 providers and by the MCP clients. It is configured the same way everywhere, under the prefix `proxy.`, next to the shared `tls.*`
-settings ([DATA_GUIDE.md section 10](#10-tls-and-the-outbound-proxy)). The code is `com.ash.drishti.api.proxy` in the plugin API (Spring-free, like the TLS module); the console's
+settings ([DATA_GUIDE.md section 10](#10-tls-and-the-outbound-proxy)). The code is `com.ash.tools.net` (`ProxySettings`, `SiteProxy`; the Drishti Tools library, Spring-free, like the TLS module); the console's
 AI and MCP clients, which are Python, follow the same rules in `core/ai/proxy.py`.
 
 Contents: [1](#proxy-1-the-settings) the settings · [2](#proxy-2-where-the-effective-proxy-comes-from) where the effective proxy comes from ·

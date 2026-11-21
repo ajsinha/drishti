@@ -80,7 +80,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     private volatile Map<String, NavigableSet<LocalDate>> kindDates = Map.of();
     private AerospikeClient client;
     private int poolSize = 20;
-    private com.ash.drishti.api.tls.TlsMaterial tls;
+    private com.ash.tools.net.TlsMaterial tls;
     private SourceContext context;
     private String namespace;
     private String set;
@@ -142,7 +142,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
             policy.readPolicyDefault.totalTimeout = ms;
             policy.writePolicyDefault.totalTimeout = ms;
         }
-        AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), com.ash.drishti.settingsfile.Placeholders::process);   // fails the start, naming the setting and the file
+        AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), com.ash.tools.settings.Placeholders::process);   // fails the start, naming the setting and the file
         this.tls = tlsPlan.tls();
         AerospikeTls.apply(policy, tlsPlan);
         AerospikeTls.applyAuthMode(policy, ctx.settings(), tlsPlan);

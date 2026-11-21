@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.plugin.kafka;
 
-import com.ash.drishti.api.tls.Secrets;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.settings.Secrets;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -57,12 +57,12 @@ final class SchemaRegistryClient {
     private final URI base;
     private final String authorization;
     private final TlsMaterial tls;
-    private final com.ash.drishti.api.proxy.ProxySettings proxy;
+    private final com.ash.tools.net.ProxySettings proxy;
     private final int timeoutMs;
     private final Map<Integer, Registered> cache = new ConcurrentHashMap<>();
 
     SchemaRegistryClient(Map<String, String> settings) {
-        this(settings, com.ash.drishti.settingsfile.Placeholders::process);
+        this(settings, com.ash.tools.settings.Placeholders::process);
     }
 
     SchemaRegistryClient(Map<String, String> settings, Function<String, String> env) {
@@ -86,15 +86,15 @@ final class SchemaRegistryClient {
                 : bearer != null ? "Bearer " + bearer : null;
         this.timeoutMs = Integer.parseInt(Secrets.get(settings, "schema-registry.timeout-ms", env) == null ? "10000"
                 : Secrets.get(settings, "schema-registry.timeout-ms", env));
-        this.proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(settings, url, env);   // proxy.* or the site default (the registry is the one HTTP part of the connector)
+        this.proxy = com.ash.tools.net.ProxySettings.resolve(settings, url, env);   // proxy.* or the site default (the registry is the one HTTP part of the connector)
         TlsSettings ts = TlsSettings.parse(settings, "schema-registry.tls.", env);
-        this.tls = "https".equals(base.getScheme()) ? TlsContexts.build(ts, env, java.time.Clock.systemUTC()) : null;
+        this.tls = "https".equals(base.getScheme()) ? DrishtiTools.tls(ts, env, java.time.Clock.systemUTC()) : null;
         if (tls == null && TlsSettings.anyGiven(settings, "schema-registry.tls.")) {
             throw new TlsException("schema-registry.tls.* is set but schema-registry.url is http://; use https://");
         }
     }
 
-    com.ash.drishti.api.proxy.ProxySettings proxy() {
+    com.ash.tools.net.ProxySettings proxy() {
         return proxy;
     }
 
@@ -133,7 +133,7 @@ final class SchemaRegistryClient {
         HttpURLConnection c = (HttpURLConnection) (viaProxy ? url.openConnection(new java.net.Proxy(java.net.Proxy.Type.HTTP,
                 java.net.InetSocketAddress.createUnresolved(proxy.host(), proxy.port()))) : url.openConnection());
         if (viaProxy && proxy.hasCredentials()) {
-            com.ash.drishti.api.proxy.ProxySettings.allowBasicThroughTunnels();
+            com.ash.tools.net.ProxySettings.allowBasicThroughTunnels();
             c.setAuthenticator(proxy.authenticator());
         }
         try {

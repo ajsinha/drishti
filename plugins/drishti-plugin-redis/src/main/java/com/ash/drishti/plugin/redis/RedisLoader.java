@@ -15,11 +15,12 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
 import com.ash.lake.common.RowFeed;
 import com.ash.drishti.api.ColumnSet;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisFuture;
@@ -123,7 +124,7 @@ public final class RedisLoader {
                     Integer.parseInt(flags.getOrDefault("threads", String.valueOf(Math.max(2, Runtime.getRuntime().availableProcessors() - 2)))),
                     flags.containsKey("publish"), flags.containsKey("retrain"), Integer.parseInt(flags.getOrDefault("dict-samples", "2000")),
                     Integer.parseInt(flags.getOrDefault("dict-kb", "112")), System.getenv("DRISHTI_REDIS_USER"), System.getenv("DRISHTI_REDIS_PASSWORD"),
-                    replace(flags), Integer.parseInt(flags.getOrDefault("keep-replaced-seconds", "120")), LoadGuard.fromArgs(args));
+                    replace(flags), Integer.parseInt(flags.getOrDefault("keep-replaced-seconds", "120")), DrishtiTools.loadGuard(args));
         }
 
         /** Replacing each day is the default; {@code --merge} opts into merging (both at once is a mistake). */
