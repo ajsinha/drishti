@@ -594,12 +594,7 @@ Every jar sits under the install folder, every piece of data under the data fold
 `<home>/lib` only; the start refuses when `<home>/lib` holds more than one Drishti server jar. A Drishti server jar found in the site's
 folder is skipped with a warning.
 
-The lib folder is **the one way** to add a jar. The older places are gone: the launcher's `external_lib/java` (once on the class path),
-`drishti.sources.plugin-dir` (`DRISHTI_PLUGIN_DIR`, a class loader per jar) and `<data>/lib` (the previous default). At the first start
-that finds jars in any of them, the server **moves them into the lib folder**, writes `moved-<date-time>.bak` there listing what moved
-from where, and Admin → Health says so (a jar of the same name already in the lib folder is left where it was and named). `<data>/lib` is
-moved only while the lib folder is the default; a `drishti.lib.path` that names `<data>/lib` is the site's choice and nothing moves.
-`drishti.sources.plugin-dir` is read for that one release only, and Health marks it deprecated while it is set.
+The lib folder is **the one way** to add a jar. The older places (the launcher's `external_lib/java`, `drishti.sources.plugin-dir`, `<data>/lib`) are not read; a setting that still names one logs a line at start saying so.
 
 Restart a process after adding or removing a library. Admin, Health lists the jars and the Python items each process
 found. Only administrators should be able to write to the folder: what is in it runs inside the server and the console.
@@ -621,7 +616,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_DISTRIBUTION` | `drishti.distribution` | empty | The distribution the server runs ([DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)): `risk`, `finance`, `genomics` or `all`, or the path of a site's own file; empty is Drishti All. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
 | `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `<config>/distributions` | The folder of the distribution files (`drishti.<name>.yaml`) and `kernel.yaml` (the kernel's packs, words and feature presets). |
 | `DRISHTI_LENSES` | `drishti.lenses` | `default` | The lenses a person may open; `default`: every lens of the modules that are on (`risk`, `world`, `market`, `trading`, and `research` while genomics is on); a list names them; empty: no lens link. A lens arranges Home and the menus and hides nothing; a name that cannot be offered is left out with an ERROR and a red line on Health. |
-| `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | Deprecated: its jars are moved once into the lib folder (`drishti.lib.path`). |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | The proxy's Basic-authentication user. |
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | The proxy's password: an environment variable, never a literal in a file. |
@@ -744,7 +738,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `<config>/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `<config>/runs/runs.yaml` | The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, moves stored items once: every stored dataset and model into the table layer, then 2.3 boards into reports (each change audited, the text before kept in the item's history). `false`: the items stay unread until they are moved ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `<data>/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `<config>/packs` | The packs directory. If it does not exist and the old `<home>/packs` does, that one is used with a warning (one release). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#311-the-packs-that-ship)). |
@@ -1128,7 +1121,6 @@ drishti:
 | Key | Default | Meaning |
 |---|---|---|
 | `fetch-timeout` | `10s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view; a panel's own `source:` read past it, or failing, shows the panel's failed state (connector and why), never its empty text. Keep the console's `backend.timeout_seconds` (15) longer. |
-| `plugin-dir` | empty (`DRISHTI_PLUGIN_DIR`) | Deprecated (one release): its jars are moved once into the lib folder (`drishti.lib.path`), then it is ignored. |
 | `default-route` | `demo` | The plugin or connector tried first for a kind that has no route. |
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trade-endur`). |
 | `plugins.<name>.enabled` | `true` for any plugin not listed | Whether the plugin runs as itself (one instance). A plugin used only through `connectors` does not also run as itself unless it is listed here. |
@@ -2225,28 +2217,11 @@ Read-only SQL over models ([API_REFERENCE.md › Drishti SQL](../guides/API_REFE
 
 ### `drishti.bi.expr` — the expression language
 
-The Drishti expression language (DEL v2, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)): how the old expression syntax is treated, and the parse cache.
+Rachana, BI's expression language ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)): the parse cache. A text in another syntax is refused where it is read.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `legacy` | `refuse` | The old expression syntax (`[Measure]`, `&&`, `c ? a : b`): `refuse` (the default) refuses it with `DRS-9100`, the DEL v2 text as the fix; `warn` reads it with a `DRS-9100` warning in Check, for a site converting its own items (`drishti.py bi migrate --expressions`). An item with `expressions: 2` refuses it whatever this says. A rule written as a YAML boolean (`where: true`) is DEL's `True`. |
 | `parse-cache` | `10000` | Parsed expressions kept in memory (keyed by text); `0` turns the cache off. |
-
-Items **saved before** the old syntax was refused are not left broken: at start the server converts them (`drishti.bi.migrate`, below).
-
-### `drishti.bi.migrate` — migrations of stored BI items
-
-What the server does at start with BI items it **stores** (drafts, proposals and the published text of every workspace item; shipped files in
-`drishti.bi.dir` are converted with the CLI instead, [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#bi-expr-bi-migrate-bi-sql-the-bi-languages)). Every
-migration is **idempotent** (a converted item has nothing left to convert, so the second start changes nothing), **audited** (`bi-expressions-migrated`
-per item, `bi-migration-run` per run), keeps **the text before as a saved state** of the item's history (*History*, *Restore*), and **never changes an
-item silently**: an item it cannot convert keeps its text and is listed in Admin, BI settings (`migrationProblems`), on the item's page and at
-`GET /api/v1/bi/migrate/problems` ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2110-bi-after-an-upgrade)).
-
-| Key | Default | Meaning |
-|---|---|---|
-| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([ARCHITECTURE.md §28 8.3.1](../architecture/ARCHITECTURE.md#2813-migrations-of-old-bi-files)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
-| `actor` | `system` | The name the saved states, the item's governance events and the audit log give the start-up run (a run from the API or CLI names the bi-admin who ran it). |
 
 ### `drishti.distribution`: export and subscriptions
 
@@ -2981,7 +2956,6 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 | `DRISHTI_PACKS_EXTRA_DIRS` | S, C | `drishti.packs.extra-dirs`, `packs.extra_dirs` |
 | `DRISHTI_PACKS_INSTALLED` | S, C | `drishti.packs.installed-dir`, `packs.installed_dir` |
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |
-| `DRISHTI_PLUGIN_DIR` | S | `drishti.sources.plugin-dir` |
 | `DRISHTI_DEMO_ENABLED` | S | `drishti.sources.plugins.demo.enabled` |
 | `DRISHTI_OFFLINE` | S | `drishti.offline.enabled` |
 | `DRISHTI_FEEDS` | S | `drishti.sources.plugins.file.settings.root` |
@@ -3014,13 +2988,13 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,199 settings in 21 areas, and 353 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,195 settings in 21 areas, and 350 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,774, **expert** 407. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,770, **expert** 407. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 573 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 569 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 329 |
 | [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 5 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 157 |
@@ -3041,7 +3015,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 353 |
+| [Environment variable index](#environment-variable-index) | 350 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3307,7 +3281,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `drishti.sources.fetch-timeout` | duration | `10s` |  | server | Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing. | restart |  | expert |
-| `drishti.sources.plugin-dir` | string | empty | `DRISHTI_PLUGIN_DIR` | server | DEPRECATED (one release): its jars are moved once into the lib folder (drishti.lib.path), then it is ignored; Health says so. | restart |  | admin |
 | `drishti.sources.default-route` | string | `demo` |  | server | kind -&gt; plugin. Kinds without a route try default-route first, then any plugin that serves them. | restart |  | admin |
 | `drishti.sources.routes` | map | `{}` |  | server | kind -&gt; plugin or connector that serves it (packs add theirs: trade: trade-endur) | restart |  | admin |
 | `drishti.sources.connectors-dir` | string | `<config>/connectors` | `DRISHTI_CONNECTORS_DIR` | server | Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector: &lt;connectors-dir&gt;/&lt;name&gt;.yaml the file name is the connector's logical name; packs refer to it by that name. The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it. See docs/guides/DATA\_GUIDE.md section 9 and Admin -&gt; Connectors. Ready-made files: config/connectors.examples/. created on first write | live |  | admin |
@@ -3775,15 +3748,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.bi.expr.legacy` | string | `refuse` |  | server | the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100) | restart |  | admin |
 | `drishti.bi.expr.parse-cache` | integer | `10000` |  | server | parsed expressions kept (0: off) | restart |  | expert |
-
-#### `drishti.bi.migrate`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.bi.migrate.on-start` | boolean | `true` | `DRISHTI_BI_MIGRATE_ON_START` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent | restart |  | admin |
-| `drishti.bi.migrate.actor` | string | `system` |  | server | the name the history, the item's events and the audit log give the start-up run | restart |  | admin |
 
 #### `drishti.layouts`
 
@@ -6526,7 +6491,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | console | false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate) |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | console | a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000 |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | console | no tick or status from the server for this long: the report says "Stale"; 5 to 600 |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
 | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `<config>/runs/runs.yaml` | server | BI runs (docs/architecture/ARCHITECTURE.md §28); ready-made in config/runs.examples/ |
@@ -6646,7 +6610,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KERNEL_JAR` | the server jar `module run` starts | `lib/drishti-server-*-exec.jar` | tools | The server jar `drishti.py module run` starts, before the one in &lt;home&gt;/lib (tools/modulecli.py) |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
-| `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |
 | `DRISHTI_LAKE_CACHE` | the cached demo lakes' folder | `<data>/tmp/lake-cache` | tools | Where tools/drillkit/lake\_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code; an absolute folder shared by every checkout, worktree and drill keeps ONE copy of the shared test lake (the drill honours it when set) |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |
 | `DRISHTI_LAKE_HEAP` | lake build | none | tools | The Java lake writer's heap |
@@ -6717,7 +6680,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | server | the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere |
 | `DRISHTI_PIVOT_ENGINE_ENABLED` | `drishti.engines.pivot.enabled` (engine) | `true` | engine | run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -&gt; Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works |
 | `DRISHTI_PLACEMENT_FILE` | `drishti.placement.file` | empty | server | where config/placement.yaml is; empty: placement.yaml beside the connectors' folder |
-| `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | server | DEPRECATED (one release): its jars are moved once into the lib folder (drishti.lib.path), then it is ignored; Health says so. |
 | `DRISHTI_PORT` | `server.port` | `18480` | server | the server's HTTP port |
 | `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | server | the iss of embed tokens: this server's public URL |
 | `DRISHTI_PYTHON` | `compute.python` (compute) | empty | compute | the interpreter workers and environments use; empty: python3 (python on Windows) |
