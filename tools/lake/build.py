@@ -67,7 +67,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import archives  # noqa: E402
 import feedroute  # noqa: E402
-import filedate  # noqa: E402
+from drishti_lake import filedate
+import hostdates  # noqa: E402
 import jsonstream  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
@@ -643,7 +644,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         for f in files:
             r = jsonstream.Reader(f)
             given = (getattr(a, "_markers", {}).get(str(getattr(f, "archive", f))) or {}).get("business-date")
-            st.file(r.label, filedate.of_input(f), getattr(f, "date", None), given, str(getattr(f, "archive", f)),
+            st.file(r.label, hostdates.of_input(f), getattr(f, "date", None), given, str(getattr(f, "archive", f)),
                     dated=getattr(getattr(f, "archive", None), "name", None) or getattr(f, "name", None))
             for doc, where in r:
                 st.add(doc, where)

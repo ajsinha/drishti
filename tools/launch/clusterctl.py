@@ -363,7 +363,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env.update(DRISHTI_NODE_DATA=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
     # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/DATA_LAKE_GUIDE.md): the same tables, partitions
     # and promoted columns as every node; its root, the demo lake's (config/lakes/demo.yaml), is the node's synthetic lake (stack.yaml lakes)
-    env["DRISHTI_LAKES_DIR"] = str(ROOT / "config" / "lakes")
+    env["LAKE_LAKES_DIR"] = str(ROOT / "config" / "lakes")
     if node.get("lake"):
         env[_lakeconfig().DEMO_ROOT_ENV] = str(lake_dir(node["lake"]))
     return env, home

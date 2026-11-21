@@ -107,8 +107,6 @@ plugins:
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id)", group: mapping }
       - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur)", group: mapping }
-      - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
-      - { name: engine, default: "native", desc: "Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI_DELTA_ENGINE, else native", group: tuning }
       - { name: date-column, default: "business_date", desc: "Business date column", group: mapping }
       - { name: id-column, default: "id", desc: "Entity id column", group: mapping }
       - { name: doc-column, default: "doc", desc: "Document column", group: mapping }
@@ -133,11 +131,10 @@ plugins:
       - { name: id-map-disk.idle-release, type: duration, default: "30m", desc: "A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS_GUIDE.md section 12.3)", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: id-map-mb, type: int, desc: "Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
-      - { name: lz4-via-native, type: boolean, default: "true", desc: "hadoop engine only: read LZ4 files through the native engine's decoder", group: tuning }
       - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available)", group: tuning }
       - { name: s3.endpoint, desc: "An S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always", group: s3, default: "true" }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: used only with s3.endpoint", group: s3, default: "true" }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }

@@ -122,7 +122,7 @@ def test_lake_demo_runs_the_java_of_drishti_java_home(tmp_path, monkeypatch):
     monkeypatch.setenv("JAVA_HOME", str(other))
     monkeypatch.delenv("DRISHTI_LAKE_CLASSPATH", raising=False)
     java, args = javaload.command(str(jar), None)
-    assert java == str(mine / "bin" / "java") and args[-1] == str(jar)
+    assert java == str(mine / "bin" / "java") and args[-2:] == [str(jar), "load"]
 
 
 def test_every_java_finder_is_the_one_in_javacmd():

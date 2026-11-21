@@ -26,7 +26,7 @@ import org.springframework.mock.env.MockEnvironment;
 
 /**
  * The move at start (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"): the demo lake's folders found directly in {@code <data>/delta} are
- * moved into {@code <data>/delta/demo} once, with the server's own settings ({@code drishti.data.dir}, {@code drishti.lakes.dir}); with
+ * moved into {@code <data>/delta/demo} once, with the server's own settings ({@code drishti.data.dir}, {@code lake.lakes.dir}); with
  * {@code drishti.lakes.relocate-on-start: false} nothing moves. No connector file is written (the server reads them, never writes them).
  * The moving itself is LakeRelocateTest's (drishti-lakeload).
  */
@@ -53,7 +53,7 @@ class LakeRelocateOnStartTest {
         Files.writeString(conns.resolve("vendor-store.yaml"), VENDOR_STORE);
         return new MockEnvironment().withProperty("drishti.data.dir", tmp.resolve("data").toString())
                 .withProperty("drishti.sources.connectors-dir", conns.toString())
-                .withProperty("drishti.lakes.dir", lakes.toString()).withProperty(LakeRelocateOnStart.SWITCH, String.valueOf(on));
+                .withProperty("lake.lakes.dir", lakes.toString()).withProperty(LakeRelocateOnStart.SWITCH, String.valueOf(on));
     }
 
     @Test
@@ -103,7 +103,7 @@ class LakeRelocateOnStartTest {
             Files.createDirectories(tmp.resolve("data/delta").resolve(d));
         }
         MockEnvironment env = new MockEnvironment().withProperty("drishti.data.dir", tmp.resolve("data").toString())
-                .withProperty("drishti.sources.connectors-dir", conns.toString()).withProperty("drishti.lakes.dir", lakes.toString());
+                .withProperty("drishti.sources.connectors-dir", conns.toString()).withProperty("lake.lakes.dir", lakes.toString());
         new LakeRelocateOnStart().postProcessEnvironment(env, null);
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
         for (var e : generated.entrySet()) {                     // the connector files are read, never written: as the 2.9.4 server left them

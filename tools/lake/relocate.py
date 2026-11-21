@@ -36,7 +36,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 
-MAIN = "com.ash.drishti.lakeload.LakeRelocate"
+MAIN = "com.ash.lake.load.LakeRelocate"
 
 
 def plan(lake: str, dry_run: bool, jar=None, java=None, lakes_dir=None, runner=None) -> tuple[int, dict]:
@@ -45,7 +45,7 @@ def plan(lake: str, dry_run: bool, jar=None, java=None, lakes_dir=None, runner=N
     data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
     cmd = stores.loader_command(data, jar, java, main=MAIN) + ["--lake", lake] + (["--dry-run"] if dry_run else [])
     env = dict(os.environ)
-    env["DRISHTI_LAKES_DIR"] = str(pathlib.Path(lakes_dir or os.environ.get("DRISHTI_LAKES_DIR") or (ROOT / "config" / "lakes")).resolve())
+    env["LAKE_LAKES_DIR"] = str(pathlib.Path(lakes_dir or os.environ.get("LAKE_LAKES_DIR") or (ROOT / "config" / "lakes")).resolve())
 
     def default(c, e):
         p = subprocess.run(c, capture_output=True, text=True, encoding="utf-8", errors="replace", env=e, cwd=str(ROOT))
@@ -82,7 +82,7 @@ def run(a, say=print) -> int:
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("lake_name", metavar="LAKE", help="the lake to move into <data>/delta/<lake> (demo)")
     p.add_argument("--dry-run", action="store_true", help="say what would move and measure the tables; move nothing")
-    p.add_argument("--lakes-dir", help="the lake files' folder (default DRISHTI_LAKES_DIR, else config/lakes)")
+    p.add_argument("--lakes-dir", help="the lake files' folder (default LAKE_LAKES_DIR, else config/lakes)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib)")
     p.add_argument("--java", help="the java binary")

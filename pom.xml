@@ -247,6 +247,8 @@
       <dependency><groupId>com.icegreen</groupId><artifactId>greenmail-junit5</artifactId><version>${greenmail.version}</version></dependency>
       <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version></dependency>
       <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>${springdoc.version}</version></dependency>
+      <!-- one AWS SDK version for every module (the S3 clients of Drishti Lake, the S3 plugin, S3Mock): its modules never mix -->
+      <dependency><groupId>software.amazon.awssdk</groupId><artifactId>bom</artifactId><version>${awssdk.version}</version><type>pom</type><scope>import</scope></dependency>
       <!-- the product's own pins (Drishti Lake and, through it, Drishti Tools); after Drishti's, so Drishti's versions win where both name one -->
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-bom</artifactId><version>${drishti.lake.version}</version><type>pom</type><scope>import</scope></dependency>
     </dependencies>

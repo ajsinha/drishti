@@ -428,7 +428,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
         problems.append(f"config/engines/{name}: no engine of the catalogue (kernel/drishti-server/src/main/resources/engines/catalogue.yaml) names it")
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
-        module = ROOT / ("lake/drishti-lakeio" if lake.parent == lakes else f"drishti-{lake.parent.name}")
+        module = ROOT / ("lake/drishti-lake-host" if lake.parent == lakes else f"drishti-{lake.parent.name}")
         if not (module / "src").is_dir():                                          # a domain module's Maven projects: modules/<domain>/java/<project>/ (a folder left with only an old build's target/ is not a module)
             module = next((m for m in sorted((ROOT / "modules" / lake.parent.name / "java").glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
         jar = module / "src/main/resources/drishti/lakes" / lake.name
@@ -506,7 +506,7 @@ def code_env() -> dict[str, str]:
     """``DRISHTI_*`` variables the main code reads by name (Java, Python, shell), with the first file that reads each."""
     out: dict[str, str] = {}
     roots = ["kernel/drishti-server", "kernel/drishti-engine", "kernel/drishti-api", "kernel/drishti-common", "kernel/drishti-packs", "drishti-console", "net/drishti-net",
-             "compute/drishti-compute", "compute/drishti-bicompute", "compute/drishti-tables", "kernel/drishti-identity", "kernel/drishti-ai", "lake/drishti-lakeio", "lake/drishti-deltalake", "lake/drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
+             "compute/drishti-compute", "compute/drishti-bicompute", "compute/drishti-tables", "kernel/drishti-identity", "kernel/drishti-ai", "lake/drishti-lake-host", "plugins", "tools"]
     for r in roots:
         for p in sorted((ROOT / r).rglob("*")):
             if p.suffix not in (".java", ".py") or not p.is_file():

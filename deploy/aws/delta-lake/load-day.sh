@@ -63,7 +63,7 @@ if [[ "$DRY_RUN" == 0 ]]; then
   mkdir -p "$SCRATCH" "$LAKE_LOCK_DIR"
   trap 'rm -rf "$SCRATCH"' EXIT
 fi
-export DRISHTI_LAKE_ROW_GROUP_KB="$LAKE_ROW_GROUP_KB"
+export LAKE_PARQUET_ROW_GROUP_KB="$LAKE_ROW_GROUP_KB"
 
 token_file=""
 if [[ -n "${DRISHTI_SIGNAL_URL:-}" && -n "${DRISHTI_TOKEN_SECRET_ID:-}" ]]; then

@@ -1011,7 +1011,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return dataVersion(kind);
         }
         try {
-            return layout(kind, null).map(l -> l.day(date).map(DayFiles::stamp).orElse(DayFiles.stamp(List.of())));
+            return layout(kind, null).map(l -> l.day(date).map(DayFiles::stamp).orElse("none"));
         } catch (RuntimeException e) {
             return Optional.empty();
         }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """tools/lake/feedroute.py: the .ready file as the command-line loaders read it, with the same keys as the data inbox (DATA_LOAD_RULES.md
-section 5): one list of keys, compared with drishti-lakeload's ReadyNote.KEYS; ``lake:`` read and checked; a command-line --lake wins."""
+section 5): one list of keys, compared with Drishti Lake's ReadyNote.KEYS; ``lake:`` read and checked; a command-line --lake wins."""
 import argparse
 import pathlib
 import re
@@ -53,7 +53,7 @@ def test_lake_build_takes_the_ready_lake_and_the_command_line_wins(tmp_path, mon
     lakes = tmp_path / "lakes"
     lakes.mkdir()
     (lakes / "risklake.yaml").write_text("lake: risklake\nformat: delta\n", encoding="utf-8")
-    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(lakes))
+    monkeypatch.setenv("LAKE_LAKES_DIR", str(lakes))
     src = tmp_path / "in"
     src.mkdir()
     f = src / "trades.2026-11-03.jsonl"

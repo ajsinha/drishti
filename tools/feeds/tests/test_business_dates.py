@@ -31,7 +31,8 @@ import pytest
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
-import filedate  # noqa: E402
+from drishti_lake import filedate
+import hostdates  # noqa: E402
 
 EVENING_UTC = "2026-11-08T04:00:00Z"                     # 23:00 on 2026-11-07 in New York
 EVENING = datetime(2026, 11, 8, 4, 0, tzinfo=timezone.utc).timestamp()
@@ -48,11 +49,11 @@ def new_york(monkeypatch):
 
 
 def test_a_moment_is_dated_by_the_local_calendar(new_york):
-    assert filedate.local_day(EVENING_UTC) == LOCAL_DAY                      # a cache's "fetched" stamp
-    assert filedate.local_day(EVENING) == LOCAL_DAY                          # a file time
-    assert filedate.local_day("2026-11-08T04:00:00") == LOCAL_DAY            # no offset: UTC, as the caches write
-    assert filedate.local_day("2026-11-07") == LOCAL_DAY                     # a calendar date stays as it is
-    assert filedate.parse(f"fund.{filedate.local_day(EVENING)}.jsonl.gz", today=LOCAL_DAY).error is None
+    assert hostdates.local_day(EVENING_UTC) == LOCAL_DAY                      # a cache's "fetched" stamp
+    assert hostdates.local_day(EVENING) == LOCAL_DAY                          # a file time
+    assert hostdates.local_day("2026-11-08T04:00:00") == LOCAL_DAY            # no offset: UTC, as the caches write
+    assert hostdates.local_day("2026-11-07") == LOCAL_DAY                     # a calendar date stays as it is
+    assert filedate.parse(f"fund.{hostdates.local_day(EVENING)}.jsonl.gz", today=LOCAL_DAY).error is None
     assert "in the future" in filedate.parse("fund.2026-11-08.jsonl.gz", today=LOCAL_DAY).error   # what the UTC day was refused for
 
 

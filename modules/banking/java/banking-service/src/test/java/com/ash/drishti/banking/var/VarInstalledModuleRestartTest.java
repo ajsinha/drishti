@@ -64,7 +64,7 @@ class VarInstalledModuleRestartTest {
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("server.port", "0");
         props.put("drishti.data.dir", data.toString());
-        props.put("drishti.lakes.dir", repo.resolve("config/lakes").toString());
+        props.put("lake.lakes.dir", repo.resolve("config/lakes").toString());
         props.put("drishti.modules.home", modules.toString());             // where the installer put the package; the runtime finds no class in its stand-in jars: banking's are here
         props.put("drishti.modules.sources", "false");
         props.put("drishti.packs.enabled", "market-data,market-risk");

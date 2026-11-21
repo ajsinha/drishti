@@ -41,7 +41,7 @@ class LoadGuardTest {
         assertThat(g.today()).isEqualTo(LocalDate.of(2026, 9, 30));
         assertThat(g.latestAllowed()).isEqualTo(LocalDate.of(2026, 10, 1));
         assertThat(guard("--zone", "Asia/Tokyo").today()).isEqualTo(LocalDate.of(2026, 10, 1));
-        assertThat(LoadGuard.fromArgs(new String[0], Map.of("DRISHTI_BUSINESS_ZONE", "Asia/Tokyo"), CLOCK).today()).isEqualTo(LocalDate.of(2026, 10, 1));
+        assertThat(LoadGuard.fromArgs(new String[0], Map.of("LAKE_BUSINESS_ZONE", "Asia/Tokyo"), CLOCK).today()).isEqualTo(LocalDate.of(2026, 10, 1));
     }
 
     @Test

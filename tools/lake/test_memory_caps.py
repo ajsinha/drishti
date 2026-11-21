@@ -35,7 +35,7 @@ def flight_file(folder: pathlib.Path, enabled: str, total: str = "${DRISHTI_FLIG
 
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch, tmp_path):
-    for k in ("DRISHTI_FLIGHT_ENABLED", "DRISHTI_FLIGHT_MEMORY_MB", "DRISHTI_ARROW_EXCHANGE_MB", "DRISHTI_LAKE_MEMORY_MB", "DRISHTI_LAKES_DIR"):
+    for k in ("DRISHTI_FLIGHT_ENABLED", "DRISHTI_FLIGHT_MEMORY_MB", "DRISHTI_ARROW_EXCHANGE_MB", "DRISHTI_LAKE_MEMORY_MB", "LAKE_LAKES_DIR"):
         monkeypatch.delenv(k, raising=False)
     monkeypatch.setenv("DRISHTI_ENGINES_DIR", str(tmp_path / "engines"))
     monkeypatch.chdir(tmp_path)

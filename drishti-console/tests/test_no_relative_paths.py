@@ -46,13 +46,12 @@ ROOT = Path(__file__).resolve().parents[2]
 ALLOWED: dict[str, list[tuple[str, str]]] = {
     # the lake files' default root is matched as this exact text by the Python lake builders (tools/lake/demo.py, stores.py, lakeconfig.py),
     # which substitute their own data folder for it; the server always has drishti.data.dir (LaunchRoots), so the default is never used there
-    "lake/drishti-lakeio/src/main/java/com/ash/drishti/lakeconfig/Lakes.java": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "config/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "config/connectors.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     "config/lakes.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     "config/store.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     # the lake files shipped in the jars: the same text the lake builders substitute (above)
-    "lake/drishti-lakeio/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
+    "lake/drishti-lake-host/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "modules/banking/java/banking-service/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     # a pack's own files (formats:, semantics:, help:) are relative to the pack folder (PackResolver), not the working folder
     "config/packs/": [(": config/", "relative to the pack folder")],

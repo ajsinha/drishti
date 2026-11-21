@@ -43,7 +43,9 @@ from typing import Iterable, Iterator
 HERE = pathlib.Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
-import filedate  # noqa: E402
+from drishti_lake import filedate
+import re as _re
+_JSONL_MEMBER = _re.compile(r"\.(jsonl|ndjson|json)(\.gz|\.zst)?$", _re.IGNORECASE)  # noqa: E402
 
 SUFFIX = ".jsonl.gz"
 TAR = ".tar"
@@ -148,7 +150,7 @@ def tar_bytes(table: str, days: dict[str, list[tuple[str, bytes]]]) -> bytes:
     for d, files in days.items():
         seen = set()
         for name, data in files:
-            if "/" in name or not filedate._JSONL_MEMBER.search(name):
+            if "/" in name or not _JSONL_MEMBER.search(name):
                 raise ValueError(f"{name!r}: a member is a JSON Lines file name (.jsonl, .jsonl.gz), no folders")
             if name in seen:
                 raise ValueError(f"{table}/{d}/{name}: twice")

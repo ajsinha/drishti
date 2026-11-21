@@ -46,7 +46,7 @@ from datetime import date, datetime
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-RETENTION = "com.ash.drishti.lakeload.LakeRetention"
+RETENTION = "com.ash.lake.load.LakeRetention"
 NAME = re.compile(r"[a-z0-9][a-z0-9_-]*")
 
 

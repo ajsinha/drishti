@@ -37,7 +37,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         String dir = PackPaths.packsDir(env);
-        // the lake files' references (${DRISHTI_DELTA_ROOT:...}, drishti.lakes.dir) resolved with the server's settings, as a connector
+        // the lake files' references (${DRISHTI_DELTA_ROOT:...}, lake.lakes.dir) resolved with the server's settings, as a connector
         // file's are (docs/guides/DATA_LAKE_GUIDE.md): an environment variable, a system property, a --setting or a test's property
         // the named lakes, databases and brokers ([lake.<name>], [db.<name>], [broker.<name>], [connector.<name>], [pack.<name>]) read
         // through the same settings: the settings files' entries, -D, the environment, a --setting or a test's property

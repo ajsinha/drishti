@@ -331,7 +331,7 @@ python tools/drishti.py data load --store iceberg s3a://risk-lake/iceberg --set 
   A large day is one overwrite of its partition; small days of a table are committed together. Loading a day again replaces it.
 - **Retention and guards**: `--keep-days N` drops days older than the table's newest N and expires week-old snapshots; dropping more
   than `--max-drop-share` (0.5) needs `--force-drop`. A row dated after tomorrow is not loaded. A failed load ends with one line
-  naming the cause (`-Ddrishti.loader.trace=true` adds the stack trace). The loader's heap is `DRISHTI_LOADER_HEAP` (4g).
+  naming the cause (`-Dlake.loader.trace=true` adds the stack trace). The loader's heap is `DRISHTI_LOADER_HEAP` (4g).
 
 Other options: `--engine`, `--future-days N` (1), `--zone Z`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`,
 `--set key=value`. For millions of rows, `drishti.py lake build --format iceberg --engine java` (the parallel lake loader,
@@ -425,8 +425,8 @@ written, never percent-decoded (a partition folder `g=a%2Fb` another writer made
 partitioned by `business_date` alone and refuses one another engine re-partitioned. The full feature table, both directions:
 [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
-**Caches.** The native engine reads each Parquet footer once and keeps it (`-Ddrishti.parquet.footer-cache-mb`, 64, shared with Delta),
-plus parsed manifests and delete files (`drishti.iceberg.delete-cache-rows`); the library
+**Caches.** The native engine reads each Parquet footer once and keeps it (`-Dlake.parquet.footer-cache-mb`, 64, shared with Delta),
+plus parsed manifests and delete files (`lake.iceberg.delete-cache-rows`); the library
 engine reads the footer on every single read. On the 10,000-trade test lake the native engine started in 637 ms against 1,848 ms and read
 a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
 

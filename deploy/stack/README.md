@@ -87,7 +87,7 @@ The modules are pinned the same way. A module is a package (`modules/<id>-<versi
 
 The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)):
 `trades.py` writes through it (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file
-(`DRISHTI_LAKES_DIR`) with its root, `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only
+(`LAKE_LAKES_DIR`) with its root, `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only
 the root differs.
 
 A synthetic lake **ends on the cluster's business today**: the lake entry's `end:`, else `DRISHTI_BUSINESS_TODAY` (the environment's,

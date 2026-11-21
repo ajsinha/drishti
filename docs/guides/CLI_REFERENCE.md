@@ -1871,7 +1871,7 @@ loader, for Delta and Iceberg alike, only when you ask for it: the Python path s
 | Commits | **one** per table per run: the replaced files are removed and the new ones added in the same version, so a reader sees all of the load or none of it | one per batch; the first batch of a replaced date replaces it |
 | Where | local disk (Windows paths too, no `winutils.exe`) | local disk and object storage |
 | Heap / memory | `DRISHTI_LAKE_HEAP` (default `1g`) | the batch (`--batch-mb`) plus Arrow's copy |
-| Row groups and pages | `DRISHTI_LAKE_ROW_GROUP_KB` (default `256`; `DRISHTI_LAKE_ROW_GROUP_MB` also read) and `DRISHTI_LAKE_PAGE_KB` (default `64`): a single entity's read decodes its row group, so small groups make first reads cheap (256 KB: 13 % more reads a second than 1 MB on 362,804 trades, 2026-10-18) | delta-rs defaults |
+| Row groups and pages | `LAKE_PARQUET_ROW_GROUP_KB` (default `256`; `LAKE_PARQUET_ROW_GROUP_MB` also read) and `LAKE_PARQUET_PAGE_KB` (default `64`): a single entity's read decodes its row group, so small groups make first reads cheap (256 KB: 13 % more reads a second than 1 MB on 362,804 trades, 2026-10-18) | delta-rs defaults |
 | Flattened fields | the pack's `ingest.<kind>.flatten` (`NAME: LEGS[0].FIELD`): each a plain field of the document (an existing field is kept) and a promoted column. An existing table keeps its columns: delete it and load again to add them | the same (staged before either engine writes) |
 
 The same day through `deltalake`, into a second lake; then the table Drishti's writer made (one commit per run: versions 0 to 2 for
@@ -2213,7 +2213,7 @@ sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`);
 
 **Through a lake file**: `target.lake: <name>` and `target.kind` (and `target.table` where a kind has several tables) take the table's
 location, partitions, promoted columns, vectors, id, date, latest-by, file layout and load mode from `config/lakes/<name>.yaml` (the
-folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
+folder: `-Dlake.lakes.dir` or `LAKE_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
 `load-mode: append` in the lake file (or `target.mode: append`) adds the rows instead of replacing the dates, and needs
 `target.batch-id`: the batch is recorded in each date's commit and a batch already committed for a date is skipped, never appended twice
 ([DATA_LAKE_GUIDE.md section 5.3](DATA_LAKE_GUIDE.md#53-modes-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
@@ -2243,7 +2243,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 |---|---|---|
 | `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
 | `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
-| `source.archive.max-mb`, `max-ratio`, `max-members` | `DRISHTI_ARCHIVE_MAX_MB` (102,400), `_MAX_RATIO` (200), `_MAX_MEMBERS` (100,000) | the zip-bomb caps: an archive's declared and expanded sizes at most this many MB and this many times its own size (1 MB always allowed), at most this many entries |
+| `source.archive.max-mb`, `max-ratio`, `max-members` | `LAKE_ARCHIVE_MAX_MB` (102,400), `_MAX_RATIO` (200), `_MAX_MEMBERS` (100,000) | the zip-bomb caps: an archive's declared and expanded sizes at most this many MB and this many times its own size (1 MB always allowed), at most this many entries |
 | `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
 | `datasets` | none | the datasets an archive's folders may hold, each loaded into its own table `<lake>/<domain>/<name>` (its `target.kind` the name): a list (`[trade, position]`) or a mapping of name to its own `source:`, `target:` and `rejects:` keys over the file's. A folder (or a folderless archive's name) not listed is refused, every one named; without `datasets:` an archive's folders must all be the one table's. Each dataset's summary, manifest, progress and rejects files get its name (`summary-trade.json`); `report.summary` is the run's, every dataset in it; the run prints each dataset's rows, files and version |
 | `source.recursive` | `false` | a folder's subfolders too |
@@ -2270,7 +2270,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `target.layout.sort-by` | the pack's `layout.<kind>.sort-by`, else `[LEGAL_ENTITY, DESK, id]` | the order of each date's rows (those of the fields the rows promote; `id` the row id); `[id]` is lake build's order |
 | `target.layout.file-size-mb` | `256` | Parquet files of about this size |
 | `target.layout.shard-aligned` | `true` | also a new file where `LEGAL_ENTITY`/`DESK` (the sort fields before the id) change, once a file holds a quarter of its size |
-| `target.layout.row-group-mb` | the format's | Parquet row groups (Delta: `DRISHTI_LAKE_ROW_GROUP_KB`, 256 KB; Iceberg: the table's, 1 MB) |
+| `target.layout.row-group-mb` | the format's | Parquet row groups (Delta: `LAKE_PARQUET_ROW_GROUP_KB`, 256 KB; Iceberg: the table's, 1 MB) |
 | `target.layout.compression` | the format's | `snappy` (Delta), `zstd` (Iceberg) |
 | `target.layout.vector-compression` | `zstd` | the vector column's codec |
 | `target.layout.byte-stream-split` | `true` | the vector column BYTE_STREAM_SPLIT encoded (ZSTD packs it far better) |

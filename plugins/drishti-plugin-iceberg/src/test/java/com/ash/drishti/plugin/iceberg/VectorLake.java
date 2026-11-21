@@ -116,11 +116,21 @@ final class VectorLake {
         for (String l : lines) {
             String d;
             try {
-                d = JSON.readTree(l).path("date").asText("");
+                com.fasterxml.jackson.databind.JsonNode n = JSON.readTree(l);
+                d = n.path("date").asText("");
+                // the one loader takes a vector from the document (where its marker stands), not from the row's columns
+                if (n instanceof ObjectNode o && o.path("columns").has("PNL") && o.path("doc").isTextual()) {
+                    ObjectNode doc = (ObjectNode) JSON.readTree(o.path("doc").asText());
+                    doc.set("PNL", o.path("columns").get("PNL"));
+                    o.put("doc", doc.toString());
+                    ((ObjectNode) o.get("columns")).remove("PNL");
+                    l = o.toString();
+                }
             } catch (java.io.IOException e) {
                 d = "";
             }
-            byDate.computeIfAbsent(d.matches("\\d{4}-\\d{2}-\\d{2}.*") ? d.substring(0, 10) : "rows", k -> new ArrayList<>()).add(l);
+            String row = l;
+            byDate.computeIfAbsent(d.matches("\\d{4}-\\d{2}-\\d{2}.*") ? d.substring(0, 10) : "rows", k -> new ArrayList<>()).add(row);
         }
         for (Map.Entry<String, List<String>> e : byDate.entrySet()) {
             Files.write(in.resolve(KIND + "." + e.getKey() + ".jsonl"), e.getValue(), StandardCharsets.UTF_8);

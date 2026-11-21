@@ -436,7 +436,7 @@ def explain() -> list:
          "drishti.var.hot-dates: the dates in memory. drishti.var.open-heap-mb: the byte safety net over every open date's heap; when the dates open "
          "exceed it, the least recently used dates' currency books, then stress books, then whole dates close (never a protected one, never one read in "
          "the last 120 seconds). Its automatic value (0.4 × heap − 512 MB − load-threads × 1.6 GB) is often smaller than ten dates need, so the planner "
-         "gives an explicit value. drishti.var.memory-budget-mb bounds the heap tier only and stays 0 on the mapped tier. -Ddrishti.parquet.footer-cache-mb "
+         "gives an explicit value. drishti.var.memory-budget-mb bounds the heap tier only and stays 0 on the mapped tier. -Dlake.parquet.footer-cache-mb "
          "is a JVM property. drishti.var.load-threads, drishti.var.tier.max-disk-gb, disk-dates, currencies, stress and the exposure dates follow. "
          "Each setting is given in its three forms with its exact key, as CONFIGURATION.md names it: YAML for ./application.local.yaml in the "
          "server's working directory (the recommended form), the environment variable (CONFIGURATION.md's name, or Spring's relaxed binding of the "

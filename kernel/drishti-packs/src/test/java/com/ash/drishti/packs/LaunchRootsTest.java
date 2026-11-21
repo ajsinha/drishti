@@ -52,7 +52,7 @@ class LaunchRootsTest {
                 .containsEntry("drishti.kernel.packs-dir", home.resolve("config/packs/core").toString())
                 .containsEntry("drishti.data.dir", home.resolve("data").toString())
                 .containsEntry("drishti.dataload.dir", home.resolve("data/dataload").toString())
-                .containsEntry("drishti.lakes.dir", home.resolve("config/lakes").toString())
+                .containsEntry("lake.lakes.dir", home.resolve("config/lakes").toString())
                 .containsEntry("drishti.sources.connectors-dir", home.resolve("config/connectors").toString());
         assertThat(r.values().values()).allSatisfy(v -> assertThat(Path.of(v.toString())).isAbsolute());
         assertThat(r.report()).startsWith("resolved paths:").contains("modules").contains("default under drishti.home");

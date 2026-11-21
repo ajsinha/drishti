@@ -299,7 +299,7 @@ python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5
 
 Options: `--user`, `--password` (default `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch`
 (2,000), `--pool-size N` (20, or `DRISHTI_DB_POOL_SIZE`; `--writers` is capped at one less), `--recreate`, `--keep-months N`,
-`--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`,
+`--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`LAKE_BUSINESS_ZONE`,
 else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`.
 
 **Your own loader** (an ETL job, a Kafka consumer) writes the same rows. For one business day:

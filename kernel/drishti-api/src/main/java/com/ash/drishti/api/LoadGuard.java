@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <ul>
  *   <li><b>No business date in the future.</b> A row dated after today plus {@code --future-days} (1: tomorrow) in the
- *       business zone ({@code --zone}, else {@code DRISHTI_BUSINESS_ZONE}, else {@code America/New_York}) is quarantined:
+ *       business zone ({@code --zone}, else {@code LAKE_BUSINESS_ZONE}, else {@code America/New_York}) is quarantined:
  *       it is not written, the first few are named on standard error, and the load ends with an error once the rows
  *       that are good are in ({@link #finish()}).</li>
  *   <li><b>Retention counts back from the newest business date of the load.</b> A retention cut-off ({@code --keep-days},
@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class LoadGuard {
 
-    /** The business zone when neither {@code --zone} nor {@code DRISHTI_BUSINESS_ZONE} names one. */
+    /** The business zone when neither {@code --zone} nor {@code LAKE_BUSINESS_ZONE} names one. */
     public static final String DEFAULT_ZONE = "America/New_York";
     /** Rows named on standard error before the rest are only counted. */
     private static final int EXAMPLES = 10;
@@ -97,7 +97,7 @@ public final class LoadGuard {
     }
 
     static LoadGuard fromArgs(String[] args, Map<String, String> env, Clock clock) {
-        String zone = value(args, "--zone", env.getOrDefault("DRISHTI_BUSINESS_ZONE", ""));
+        String zone = value(args, "--zone", env.getOrDefault("LAKE_BUSINESS_ZONE", ""));
         String asOf = value(args, "--as-of", "");
         return new LoadGuard(ZoneId.of(zone.isBlank() ? DEFAULT_ZONE : zone), clock, asOf.isBlank() ? null : LocalDate.parse(asOf),
                 Integer.parseInt(value(args, "--future-days", "1")), Double.parseDouble(value(args, "--max-drop-share", "0.5")),

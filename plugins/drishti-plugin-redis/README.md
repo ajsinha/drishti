@@ -283,7 +283,7 @@ redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,0
 | `--replace` / `--merge` | replace | each day holds exactly the stream's entities, switched atomically / add to each day in place |
 | `--keep-replaced-seconds N` | `120` | how long a replaced generation stays readable (0: deleted at once) |
 | `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar) |
-| `--future-days N`, `--zone Z` | `1`, `DRISHTI_BUSINESS_ZONE` else `America/New_York` | how far after today a business date may be, in which zone |
+| `--future-days N`, `--zone Z` | `1`, `LAKE_BUSINESS_ZONE` else `America/New_York` | how far after today a business date may be, in which zone |
 | `--max-drop-share F`, `--force-drop` | `0.5`, off | the largest share of a kind's days, or of a day's entities, one run may drop; drop more anyway |
 | `--codec`, `--level N` | `zstd-dict`, `3` | `zstd-dict`, `zstd`, `deflate` or `none`; the compression level |
 | `--chunk-rows N`, `--in-flight N`, `--threads N` | `10000`, `2000`, cores less two | values per column chunk; lines unanswered; worker threads |

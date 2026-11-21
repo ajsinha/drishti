@@ -45,7 +45,6 @@ loader with an `s3://` target).
 | `DRISHTI_DELTA_S3_PREFIX` | `delta` | The lake's prefix in the bucket (in `root`) |
 | `AWS_REGION` (`s3.region`) | `us-east-1` | The bucket's region |
 | `domain` | `risk`, `trading` | The domain folder under the prefix |
-| `engine` | `native` | The AWS SDK; `hadoop` (S3A) also reads `s3://` |
 | `layout.<kind>.*`, `table.<kind>` | the packs' promoted columns, vectors, file layout and table names | As for every Delta connector |
 
 Credentials come from the AWS default chain: on ECS the task role, else a profile or `AWS_ACCESS_KEY_ID`. No key is in the files; an

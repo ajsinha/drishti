@@ -77,7 +77,7 @@ def stores_of(files: list[Path]) -> dict[str, int]:
 def lake_stores() -> dict[str, int]:
     """The memory stores the lake files describe: each lake whose root is mem://<store>, its memory.max-mb."""
     import yaml
-    folder = Path(os.environ.get("DRISHTI_LAKES_DIR") or "config/lakes")
+    folder = Path(os.environ.get("LAKE_LAKES_DIR") or "config/lakes")
     out: dict[str, int] = {}
     if not folder.is_dir():
         return out

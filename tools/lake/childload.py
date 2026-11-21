@@ -32,7 +32,9 @@ import sys
 import tempfile
 from datetime import date
 
-import filedate
+from drishti_lake import filedate
+
+import hostdates
 import jsonstream
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "packgen"))
@@ -57,7 +59,7 @@ def _day(a, f):
     given = (getattr(a, "_markers", {}).get(str(getattr(f, "archive", f))) or {}).get("business-date")
     as_of = date.fromisoformat(a.as_of) if getattr(a, "as_of", None) else None
     dated = getattr(getattr(f, "archive", None), "name", None) or getattr(f, "name", None)
-    return filedate.decide(as_of or given, filedate.of_input(f), getattr(a, "date_from", None) or "auto", None, dated or str(f)).date
+    return filedate.decide(as_of or given, hostdates.of_input(f), getattr(a, "date_from", None) or "auto", None, dated or str(f)).date
 
 
 def split(a, kind: str, table: str | None, children: list, scratch: pathlib.Path) -> dict[str, int]:

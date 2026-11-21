@@ -64,7 +64,6 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--jar", metavar="FILE", help="a server jar for a one-off run (default the newest in <home>/lib: drishti.py build jar)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
         p.add_argument("--packs", metavar="LIST", help="the packs to load, beating any settings file (default drishti.packs.enabled of the settings files, else DRISHTI_PACKS, else the packs of the modules that are on)")
-        p.add_argument("--engine", help="the Delta engine: native, hadoop or auto (DRISHTI_DELTA_ENGINE)")
         p.add_argument("--lake-root", metavar="DIR", help="the Delta lake root (DRISHTI_DELTA_ROOT)")
         p.add_argument("--iceberg", action="store_true", help="serve the stores from Iceberg tables: the connectors folder is config/connectors.examples/iceberg (settings only; nothing is written)")
         p.add_argument("--iceberg-root", metavar="DIR", help="the Iceberg tables' root (DRISHTI_ICEBERG_ROOT, default <data>/iceberg), with --iceberg")

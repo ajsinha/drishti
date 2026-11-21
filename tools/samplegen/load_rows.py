@@ -52,7 +52,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "lake"))
 import archives  # noqa: E402  (tools/lake/archives.py: the archive rule every loader shares)
 import feedroute  # noqa: E402  (a file's .ready file)
-import filedate  # noqa: E402  (the load rules: a name's table and date, a tar's layout)
+from drishti_lake import filedate  # noqa: E402  (the load rules: a name's table and date, a tar's layout)
 from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
 
 SEND_A_TAR = "a file is one table and one business date (docs/guides/DATA_LAKE_GUIDE.md): send a tar of <table>/<YYYY-MM-DD>/ folders"
