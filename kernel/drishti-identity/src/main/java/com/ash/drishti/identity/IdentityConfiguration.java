@@ -148,34 +148,15 @@ public class IdentityConfiguration {
         return tx;
     }
 
-    /**
-     * Collaboration in the content store ({@code drishti.collab.store=content}, the default): the stores, after the one-time import
-     * of the identity database's collaboration tables and of the {@code <data>/collab} files. Empty for {@code jpa} and {@code file}.
-     */
+    /** Collaboration in the content store ({@code drishti.collab.store=content}, the default). Empty for {@code jpa} and {@code file}. */
     @Bean
-    public com.ash.drishti.identity.collab.CollabImport.Content collabContent(com.ash.drishti.identity.collab.CollabProperties props,
-            com.ash.drishti.identity.content.TxContentStore content, IdentityRepositories.Threads threads, IdentityRepositories.Comments comments,
-            IdentityRepositories.Revisions revisions, IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
-            IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients,
-            IdentityRepositories.Inbox inbox, IdentityRepositories.Outbox outbox, IdentityRepositories.Holds holds,
-            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions) {
+    public com.ash.drishti.identity.collab.CollabContent.Content collabContent(com.ash.drishti.identity.collab.CollabProperties props,
+            com.ash.drishti.identity.content.TxContentStore content) {
         if (!props.content()) {
-            return new com.ash.drishti.identity.collab.CollabImport.Content(null);
+            return new com.ash.drishti.identity.collab.CollabContent.Content(null);
         }
-        com.ash.drishti.identity.collab.CollabImport.Target target = com.ash.drishti.identity.collab.CollabImport.Target.of(content);
-        com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("jpa", new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows,
-                identityTransactions), new com.ash.drishti.identity.collab.JpaShareStore(shares, recipients, identityTransactions), new com.ash.drishti.identity.collab.JpaInboxStore(inbox,
-                identityTransactions), new com.ash.drishti.identity.collab.JpaOutboxStore(outbox, identityTransactions), new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions),
-                new com.ash.drishti.identity.collab.JpaSealStore(seals, identityTransactions)), target);
-        java.nio.file.Path dir = java.nio.file.Path.of(props.dir());
-        if (java.nio.file.Files.isDirectory(dir.resolve("threads")) || java.nio.file.Files.isDirectory(dir.resolve("shares"))
-                || java.nio.file.Files.isDirectory(dir.resolve("inbox")) || java.nio.file.Files.isDirectory(dir.resolve("outbox"))
-                || java.nio.file.Files.isRegularFile(dir.resolve("seals.log")) || java.nio.file.Files.isRegularFile(dir.resolve("seals.jsonl"))) {
-            com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("file", new com.ash.drishti.identity.collab.FileThreadStore(dir), new com.ash.drishti.identity.collab.FileShareStore(dir),
-                    new com.ash.drishti.identity.collab.FileInboxStore(dir, Integer.MAX_VALUE), new com.ash.drishti.identity.collab.FileOutboxStore(dir), new com.ash.drishti.identity.collab.FileHoldStore(dir), new com.ash.drishti.identity.collab.FileSealStore(dir)),
-                    target);
-        }
-        return new com.ash.drishti.identity.collab.CollabImport.Content(new com.ash.drishti.identity.collab.CollabImport.Target(content, target.threads(), target.shares(),
+        com.ash.drishti.identity.collab.CollabContent.Target target = com.ash.drishti.identity.collab.CollabContent.Target.of(content);
+        return new com.ash.drishti.identity.collab.CollabContent.Content(new com.ash.drishti.identity.collab.CollabContent.Target(content, target.threads(), target.shares(),
                 new com.ash.drishti.identity.collab.ContentInboxStore(content, props.inbox().keep()), target.outbox(), target.holds(), target.seals()));
     }
 
@@ -185,7 +166,7 @@ public class IdentityConfiguration {
      */
     @Bean
     public com.ash.drishti.identity.collab.CollabTx collabTx(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id,
-            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         requireSingleServerForFiles(props, id);
         if (collabContent.isPresent()) {
             return com.ash.drishti.identity.collab.CollabTx.of(collabContent.get().store());
@@ -196,7 +177,7 @@ public class IdentityConfiguration {
     /** Tamper-evidence seals for threads, comment rows, holds and the audit trail, next to the rows they cover. */
     @Bean
     public com.ash.drishti.identity.collab.Seal.Store sealStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         if (collabContent.isPresent()) {
             return collabContent.get().seals();
         }
@@ -207,7 +188,7 @@ public class IdentityConfiguration {
     @Bean
     public com.ash.drishti.identity.collab.ShareStore shareStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients, TransactionTemplate identityTransactions,
-            com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         if (collabContent.isPresent()) {
             return collabContent.get().shares();
         }
@@ -217,7 +198,7 @@ public class IdentityConfiguration {
 
     @Bean
     public com.ash.drishti.identity.collab.InboxStore inboxStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Inbox inbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            IdentityRepositories.Inbox inbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         if (collabContent.isPresent()) {
             return collabContent.get().inbox();
         }
@@ -227,7 +208,7 @@ public class IdentityConfiguration {
 
     @Bean
     public com.ash.drishti.identity.collab.OutboxStore outboxStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Outbox outbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            IdentityRepositories.Outbox outbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         if (collabContent.isPresent()) {
             return collabContent.get().outbox();
         }
@@ -239,7 +220,7 @@ public class IdentityConfiguration {
     public com.ash.drishti.identity.collab.ThreadStore threadStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
             IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
-            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals, com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         com.ash.drishti.identity.collab.ThreadStore inner = collabContent.isPresent() ? collabContent.get().threads()
                 : props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
@@ -249,7 +230,7 @@ public class IdentityConfiguration {
     @Bean
     public com.ash.drishti.identity.collab.HoldStore holdStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Holds holds, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals,
-            com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+            com.ash.drishti.identity.collab.CollabContent.Content collabContent) {
         com.ash.drishti.identity.collab.HoldStore inner = collabContent.isPresent() ? collabContent.get().holds()
                 : props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions) : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir()));
         return com.ash.drishti.identity.collab.Seals.sealing(inner, seals);

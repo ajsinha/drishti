@@ -2213,7 +2213,7 @@ location, partitions, promoted columns, vectors, id, date, latest-by, file layou
 folder: `-Dlake.lakes.dir` or `LAKE_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
 `load-mode: append` in the lake file (or `target.mode: append`) adds the rows instead of replacing the dates, and needs
 `target.batch-id`: the batch is recorded in each date's commit and a batch already committed for a date is skipped, never appended twice
-([DATA_LAKE_GUIDE.md section 5.3](DATA_LAKE_GUIDE.md#53-modes-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
+([DATA_LAKE_GUIDE.md section 5.3](DATA_LAKE_GUIDE.md#53-modes-replace-and-append)).
 
 **On its own** (a scheduler, a container, a machine without the console's Python):
 
@@ -2258,7 +2258,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.partition-by` | none | Delta partition folders after `business_date` (Iceberg: keep them as `promote`) |
 | `source.latest-by` | `COMPUTED_AT` (or the pack's `ingest.<kind>.latest-by`) | duplicates (one id twice on one date): the copy with the latest of this ISO timestamp is kept, else the last read (files sorted by path, then line order); the others dropped and counted (`duplicates`, `duplicateExamples`), never a failure; `''` keeps the last read. The same rule as lake build's Python path (section 7.3) |
 | `target.format` | `delta` | `delta` or `iceberg` (Iceberg written by Drishti Lake's loader: no Hadoop) |
-| `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<lake>/<domain>/<table or kind>`; `lake` a folder or `s3://bucket/prefix` |
+| `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<domain>/<table or kind>` under the root of lake file `<lake>`; `lake` is the name of a lake file |
 | `target.path` | none | the table's location instead of the four above |
 | `target.storage-options` | `source.storage-options` | the target's S3 options |
 | `target.mode` | `replace-date` | each business date of the input replaced in one commit (`overwrite-dates` is the same word) |

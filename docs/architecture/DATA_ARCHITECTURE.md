@@ -2915,8 +2915,7 @@ number is a create of `collab/note-links/<number>`: two nodes adding a note at o
 | `collab/seals/<seal key>-<hash>.json` | tamper-evidence seals (thread heads, comment rows, holds) |
 | `collab/counters/inbox`, `outbox`, `holds` | the sequences |
 
-The import reads the identity database's collaboration tables (marker `system/imports/collab-jpa.json`) and, when present, the files
-under `drishti.collab.dir` (`collab-file.json`). The revision chains keep their hashes, so `GET /admin/collab/verify` still holds.
+The revision chains keep their hashes, so `GET /admin/collab/verify` verifies them.
 
 #### 10.4 Admin data in the identity database
 

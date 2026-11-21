@@ -22,7 +22,6 @@ import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.content.FileContentStore;
 import com.ash.drishti.identity.content.TxContentStore;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -254,48 +253,5 @@ class ContentCollabStoreTest {
         Hold h = ha.place(new Hold(0, Hold.ALL, null, null, null, null, null, null, "audit", "admin", Instant.now(), null, null));
         assertThat(hb.release(h.id(), "admin", Instant.now())).isTrue();
         assertThat(ha.release(h.id(), "admin", Instant.now())).isFalse();
-    }
-
-    @Test
-    void theImportBringsTheOldFilesInOnceAndKeepsTheChain() throws Exception {
-        Path old = dir.resolve("collab");
-        FileThreadStore ft = new FileThreadStore(old);
-        Instant t0 = Instant.now().minusSeconds(120);
-        CommentThread t = thread("MX-7", t0);
-        ft.saveThread(t);
-        Comment c = comment(t.id(), "ann", "old note", t0);
-        append(ft, c);
-        ft.follow(new Follow(t.id(), "ann", false, t0));
-        FileShareStore fs = new FileShareStore(old);
-        Share s = new Share(Ulid.next("sh_"), "ann", Instant.now(), "trade", "MX-7", null, null, new Pin(null, true, Instant.now(), 5, null),
-                "hello", List.of(), "in-app", null, null).signed();
-        fs.save(s, List.of(new Recipient("user:ravi", "ravi", Recipient.NOTIFIED, null)));
-        FileInboxStore fi = new FileInboxStore(old, 1000);
-        Notice n = fi.add(new Notice(0, "ravi", Instant.now(), "share", "trade", "MX-7", null, s.id(), null, null, "ann", null));
-        FileOutboxStore fo = new FileOutboxStore(old);
-        OutboxItem o = fo.add(OutboxItem.pending("email", "ravi", "share", s.id(), Instant.now()));
-        FileHoldStore fh = new FileHoldStore(old);
-        Hold h = fh.place(new Hold(0, Hold.ALL, null, null, null, null, null, null, "audit", "admin", Instant.now(), null, null));
-        FileSealStore seals = new FileSealStore(old);
-        seals.put("thread:" + t.id(), new Seal(1, "abc"));
-        CollabImport.Source src = new CollabImport.Source("file", new FileThreadStore(old), new FileShareStore(old), new FileInboxStore(old, 1000),
-                new FileOutboxStore(old), new FileHoldStore(old), new FileSealStore(old));
-
-        CollabImport.Target to = CollabImport.Target.of(node());
-        assertThat(CollabImport.run(src, to)).isEqualTo(5);
-        assertThat(CollabImport.run(src, to)).as("the marker: once").isZero();
-        assertThat(CollabImport.run(src, CollabImport.Target.of(node()))).isZero();
-        ContentThreadStore threads = new ContentThreadStore(node());
-        assertThat(threads.chain(t.id())).isEqualTo(ft.chain(t.id()));
-        assertThat(HashChain.verify(t.id(), threads.chain(t.id()))).isNull();
-        assertThat(threads.followers(t.id())).hasSize(1);
-        assertThat(new ContentShareStore(node()).recipients(s.id())).hasSize(1);
-        assertThat(new ContentInboxStore(node(), 1000).list("ravi", null, false, 10, 0)).extracting(Notice::seq).containsExactly(n.seq());
-        assertThat(new ContentInboxStore(node(), 1000).add(new Notice(0, "ravi", Instant.now(), "share", "trade", "MX-7", null, null, null, null,
-                "ann", null)).seq()).isGreaterThan(n.seq());
-        assertThat(new ContentOutboxStore(node()).find(o.seq())).isPresent();
-        assertThat(new ContentHoldStore(node()).place(h).id()).isGreaterThan(h.id());
-        assertThat(new ContentSealStore(node()).get("thread:" + t.id())).contains(new Seal(1, "abc"));
-        assertThat(Files.isDirectory(old.resolve("threads"))).as("the old files are kept").isTrue();
     }
 }
