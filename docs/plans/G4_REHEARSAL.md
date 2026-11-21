@@ -286,6 +286,6 @@ them. Lines removed: 0.
 
 | Check | Result |
 |---|---|
-| `LiveTablesAdapterTest` (11) | pass |
+| `LiveTablesAdapterTest` (11) | pass on Rachana `417f6af9` and again on drishti-rachana `develop` `6ae430bc` (api, core, data, live built into the lane's scratch repository `~/.cache/drishti-lanes/g4-live/m2`), on the tree merged with the lake and binder passes |
 | `LiveSetTest` (8), `StorePagesTest` (3), `LiveIsolationTest` (3), `LiveQueryTest` (5), `LiveBlotterBrokerAbsentTest` (1): the engine that still serves | pass |
 | VaR/ES goldens | not affected (no engine or test-data file changed; not run) |
