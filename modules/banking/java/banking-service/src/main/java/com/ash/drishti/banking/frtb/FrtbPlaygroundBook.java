@@ -177,19 +177,23 @@ final class FrtbPlaygroundBook {
         param("FxDivisor", p.fxDivisor, "MAR21.88: the specified pairs' divisor");
         param("FxCurvDivisor", p.fxCurvatureDivisor, "MAR21.98: the FX curvature divisor");
         param("FxVegaAlpha", p.fxVegaAlpha, "MAR21.94");
+        // The risk-weight rows follow the data (which factors the book holds), so they are written in sorted key order after the
+        // fixed parameters: the same book gives the same Config sheet on every run, whatever order the elements arrived in.
+        java.util.SortedSet<String> rwKeys = new java.util.TreeSet<>();
         for (SbmModel.Risk k : m.risks) {
-            rwParam(base(k.rwSource));
+            rwKeys.add(base(k.rwSource));
         }
         for (SbmModel.Curv cv : m.curvs) {
             switch (cv.cls) {
-                case "CSR_NS" -> rwParam("CSR_NS.delta.risk-weights." + cv.bucket);
-                case "EQ" -> rwParam("EQ.delta.spot-risk-weights." + cv.bucket);
-                case "COMM" -> rwParam("COMM.delta.risk-weights." + cv.bucket);
-                case "FX" -> rwParam("FX.delta.risk-weight");
+                case "CSR_NS" -> rwKeys.add("CSR_NS.delta.risk-weights." + cv.bucket);
+                case "EQ" -> rwKeys.add("EQ.delta.spot-risk-weights." + cv.bucket);
+                case "COMM" -> rwKeys.add("COMM.delta.risk-weights." + cv.bucket);
+                case "FX" -> rwKeys.add("FX.delta.risk-weight");
                 default -> {
                 }
             }
         }
+        rwKeys.forEach(this::rwParam);
         p.drcLgd.forEach((k, v) -> param("LGD." + k, v, "MAR22.12: LGD of " + k));
         p.drcRw.forEach((k, v) -> param("DrcRw." + k, v, "MAR22.24: risk weight of " + k));
         param("DrcFloor", p.drcMaturityFloor, "MAR22.17: the maturity floor (years)");

@@ -95,50 +95,7 @@ public class XlsxCompare {
         d.computeIfAbsent(kind, k -> new ArrayList<>()).add(what);
     }
 
-    /** The parameter rows of a playground's Config sheet: key (column A) to row; their order is the run's (a set's iteration order), not the file's. */
-    static Map<String, Integer> kx = Map.of();
-    static Map<String, Integer> ky = Map.of();
-    static Map<Integer, String> rx = Map.of();
-    static Map<Integer, String> ry = Map.of();
-
-    static Map<String, Integer> configKeys(XSSFWorkbook w) {
-        Map<String, Integer> out = new TreeMap<>();
-        XSSFSheet s = w.getSheet("Config");
-        if (s == null || s.getRow(10) == null || s.getRow(10).getCell(0) == null || !"Parameter".equals(s.getRow(10).getCell(0).toString())) {
-            return out;
-        }
-        for (int r = 11; s.getRow(r) != null && s.getRow(r).getCell(1) != null && s.getRow(r).getCell(1).getCellType() == CellType.NUMERIC; r++) {
-            out.put(s.getRow(r).getCell(0).getStringCellValue(), r);
-        }
-        return out;
-    }
-
-    static Map<Integer, String> inverse(Map<String, Integer> m) {
-        Map<Integer, String> out = new TreeMap<>();
-        m.forEach((k, v) -> out.put(v, k));
-        return out;
-    }
-
-    /** A formula with each reference to a parameter's value cell written by the parameter's name. */
-    static String formula(String f, Map<Integer, String> rows) {
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("Config!\\$B\\$(\\d+)").matcher(f);
-        StringBuilder b = new StringBuilder();
-        while (m.find()) {
-            String k = rows.get(Integer.parseInt(m.group(1)) - 1);
-            m.appendReplacement(b, java.util.regex.Matcher.quoteReplacement(k == null ? m.group() : "Config!$B$[" + k + "]"));
-        }
-        m.appendTail(b);
-        return b.toString();
-    }
-
     static void compare(XSSFWorkbook x, XSSFWorkbook y, Map<String, List<String>> d) {
-        kx = configKeys(x);
-        ky = configKeys(y);
-        rx = inverse(kx);
-        ry = inverse(ky);
-        if (!kx.keySet().equals(ky.keySet())) {
-            add(d, "CONFIG_KEYS", kx.keySet() + " -> " + ky.keySet());
-        }
         List<String> nx = names(x);
         List<String> ny = names(y);
         if (!nx.equals(ny)) {
@@ -188,11 +145,6 @@ public class XlsxCompare {
         for (int r = 0; r <= last; r++) {
             Row rx = x.getRow(r);
             Row ry = y.getRow(r);
-            if (name.equals("Config") && XlsxCompare.rx.containsKey(r) && ky.containsKey(XlsxCompare.rx.get(r))) {
-                ry = y.getRow(ky.get(XlsxCompare.rx.get(r)));              // the same parameter, wherever the run put it
-            } else if (name.equals("Config") && XlsxCompare.ry.containsKey(r)) {
-                continue;                                                   // a row of the other file's parameters: done with its partner
-            }
             if (rx != null && ry != null && rx.getOutlineLevel() != ry.getOutlineLevel()) {
                 add(d, "ROW_OUTLINE", at + (r + 1) + " " + rx.getOutlineLevel() + " -> " + ry.getOutlineLevel());
             }
@@ -344,7 +296,7 @@ public class XlsxCompare {
         }
         switch (x.getCellType()) {
             case FORMULA -> {
-                if (!formula(x.getCellFormula(), rx).equals(formula(y.getCellFormula(), ry))) {
+                if (!x.getCellFormula().equals(y.getCellFormula())) {
                     add(d, "FORMULA_TEXT", at + " " + x.getCellFormula() + " -> " + y.getCellFormula());
                 }
                 if (x.getCachedFormulaResultType() != y.getCachedFormulaResultType()) {

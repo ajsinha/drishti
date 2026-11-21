@@ -103,7 +103,8 @@ final class SimmTestData {
     }
 
     static SimmService service(SimmProperties props) {
-        FrtbData sens = new FrtbData(reader(), FrtbProperties.defaults());
+        FrtbData sens = new FrtbData(reader(), new FrtbProperties(null, root().resolve("modules/banking/packs/market-risk/capital").toString(), null, null, null, null, null,
+                null, null, null, null));   // the parameters folder named, not left to the module boot (these tests run without one)
         return new SimmService(new SimmData(reader(), sens, props), null, props, Path.of(props.parametersDir()));
     }
 }

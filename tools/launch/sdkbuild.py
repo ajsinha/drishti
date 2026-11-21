@@ -18,6 +18,9 @@ A third party builds a module from this folder alone, with no kernel source::
 
     <home>/sdk/repo/                     a Maven file repository: the kernel API (drishti-kernel-api and what it needs), the product's
                                          parent pom, drishti-module-parent and the archetype
+    <home>/sdk/repo/com/ash/{rachana,lake,tools}/   the pinned Drishti products (drishti-rachana, drishti-lake, drishti-tools): every jar and pom of
+                                         the version the product's pom pins, copied from the local Maven repository (the owner installs a
+                                         released product there from its tag) - one rule for all three, never a build of them here
     <home>/sdk/settings.xml              a Maven settings file naming that repository by its absolute path (``mvn -s``)
     <home>/sdk/drishti-module-parent/    the parent pom a module project names as its parent (relativePath), beside its repository
     <home>/sdk/kernel-libraries.txt      the libraries the kernel ships (META-INF/drishti/kernel-libraries.txt of the server jar in <home>/lib); the
@@ -56,6 +59,12 @@ MANAGED_MARKER = "<!-- drishti-kernel-libraries -->"
 #: the typings and schemas of the repository that go into the SDK: (source folder or file, SDK folder)
 TYPINGS_ELEMENTS = "drishti-console/web/static/vendor/drishti-elements"
 TYPINGS_RENDER = "drishti-console/web/static/render"
+#: the pinned products carried in repo/: (the property of the root pom that pins the version, the Maven group path; every artifact of the group)
+PINNED_PRODUCTS = (("drishti.rachana.version", "com.ash.rachana"),
+                   ("drishti.lake.version", "com.ash.lake"),
+                   ("drishti.tools.version", "com.ash.tools"))
+#: the files of a version folder that are not part of the repository (Maven's bookkeeping)
+_SKIP = re.compile(r"(_remote\.repositories|maven-metadata.*\.xml.*|.*\.lastUpdated|resolver-status\.properties|.*-(sources|javadoc|tests)\.jar.*)$")
 SCHEMAS = (("tools/contracts.schema.json", "contract.schema.json"),)
 
 
@@ -76,6 +85,48 @@ def _version(root: Path) -> str:
     if not m:
         raise LaunchError(f"{root}/.mvn/maven.config names no -Drevision: the SDK has no version")
     return m.group(1)
+
+
+def local_maven_repository(env: dict | None = None) -> Path:
+    """The local Maven repository the pinned products are taken from: ``DRISHTI_LOCAL_MAVEN_REPO``, else the ``-Dmaven.repo.local`` in
+    ``MAVEN_ARGS``, else ``~/.m2/repository``."""
+    import os
+    env = os.environ if env is None else env
+    if env.get("DRISHTI_LOCAL_MAVEN_REPO"):
+        return Path(env["DRISHTI_LOCAL_MAVEN_REPO"]).expanduser()
+    m = re.search(r"-Dmaven\.repo\.local=(\S+)", env.get("MAVEN_ARGS", ""))
+    return Path(m.group(1)).expanduser() if m else Path.home() / ".m2" / "repository"
+
+
+def pinned_versions(root: Path) -> dict[str, str]:
+    """The group path to the version the root pom pins, for each of the pinned products."""
+    text = (root / "pom.xml").read_text(encoding="utf-8")
+    out = {}
+    for prop, group in PINNED_PRODUCTS:
+        m = re.search(rf"<{re.escape(prop)}>([^<]+)</{re.escape(prop)}>", text)
+        if not m:
+            raise LaunchError(f"{root}/pom.xml does not pin {prop}: the SDK cannot name the version of {group}")
+        out[group] = m.group(1).strip()
+    return out
+
+
+def copy_pinned_products(root: Path, repo: Path, local: Path) -> list[str]:
+    """Copies every artifact (jar and pom) of the three pinned products, at the pinned version, from the local Maven repository into the SDK's
+    ``repo/`` in the same layout; the files written, repository-relative. A product not installed there is refused by name."""
+    written = []
+    for group, version in pinned_versions(root).items():
+        base = local.joinpath(*group.split("."))
+        folders = sorted(d / version for d in base.iterdir() if (d / version).is_dir()) if base.is_dir() else []
+        if not folders:
+            raise LaunchError(f"{group} {version} is not in the local Maven repository {local}: install the product's release there from its tag "
+                              f"(or set DRISHTI_LOCAL_MAVEN_REPO) and build the SDK again")
+        for folder in folders:
+            for src in sorted(p for p in folder.iterdir() if p.is_file() and not _SKIP.match(p.name)):
+                rel = src.relative_to(local)
+                (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, repo / rel)
+                written.append(rel.as_posix())
+    return written
 
 
 def kernel_libraries(jar: Path | None) -> str | None:
@@ -146,7 +197,7 @@ def copy_typings_and_schemas(root: Path, sdk: Path) -> list[str]:
     return written
 
 
-def assemble(root: Path, sdk: Path, server_jar: Path | None = None, lenient: bool = False) -> list[str]:
+def assemble(root: Path, sdk: Path, server_jar: Path | None = None, lenient: bool = False, local_repo: Path | None = None) -> list[str]:
     """Writes ``sdk`` (repo and parent folder) from the artifacts Maven built under ``root``; the files written, repository-relative."""
     version = _version(root)
     repo = sdk / "repo"
@@ -167,6 +218,7 @@ def assemble(root: Path, sdk: Path, server_jar: Path | None = None, lenient: boo
                 raise LaunchError(f"Maven finished but {jar} is not there")
             shutil.copy2(jar, out / jar.name)
             written.append(jar.name)
+    written.extend(copy_pinned_products(root, repo, local_repo if local_repo is not None else local_maven_repository()))
     parent = sdk / "drishti-module-parent"
     parent.mkdir(parents=True)
     # the folder's copy keeps ${revision} (a project that names it by relativePath says ${revision} too); the property gives it the SDK's version
