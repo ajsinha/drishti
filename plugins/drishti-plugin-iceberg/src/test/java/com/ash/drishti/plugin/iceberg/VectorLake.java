@@ -15,10 +15,11 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.deltalake.write.LakeCli;
+import com.ash.lake.delta.write.LakeCli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,7 +38,7 @@ import java.util.Random;
 /**
  * P&amp;L-vector rows for the Iceberg tests (VAR_GUIDE.md section 29.3): positions with a desk, a book, a quantity (a number, read as
  * text the way the Delta connector gives it) and a 509-value vector with a few missing elements, loaded into Iceberg by
- * {@link IcebergLoader} (either engine) and into Delta by Drishti's Delta writer, from the same rows.
+ * Drishti Lake's loader (either engine) and into Delta by Drishti's Delta writer, from the same rows.
  */
 final class VectorLake {
 
@@ -101,17 +102,38 @@ final class VectorLake {
         return l.toString();
     }
 
-    /** Loads the positions for each day into {@code <root>/risk/pnl-vector} with {@link IcebergLoader} on {@code engine}. */
+    /** Loads the positions for each day into {@code <root>/risk/pnl-vector} with Drishti Lake's loader on {@code engine}. */
     static void loadIceberg(Path tmp, Path root, String engine, Map<LocalDate, List<Pos>> days) throws Exception {
         List<String> lines = new ArrayList<>();
         days.forEach((day, ps) -> ps.forEach(p -> lines.add(line(p, day, null))));
         loadLines(tmp, root, engine, lines);
     }
 
+    /** The lines loaded into {@code <root>/risk/pnl-vector} by Drishti Lake's one loader ({@code source.format: loader-rows}), each date replaced. */
     static void loadLines(Path tmp, Path root, String engine, List<String> lines) throws Exception {
-        Path file = Files.createTempFile(tmp, "rows", ".jsonl");
-        Files.write(file, lines, StandardCharsets.UTF_8);
-        IcebergLoader.load(new String[] {LoaderRows.rewrite(file).toString(), root.toString(), "--engine", engine, "--spill-dir", tmp.toString(), "--file-rows", "7"});
+        Path in = Files.createTempDirectory(tmp, "rows");
+        Map<String, List<String>> byDate = new java.util.TreeMap<>();
+        for (String l : lines) {
+            String d;
+            try {
+                d = JSON.readTree(l).path("date").asText("");
+            } catch (java.io.IOException e) {
+                d = "";
+            }
+            byDate.computeIfAbsent(d.matches("\\d{4}-\\d{2}-\\d{2}.*") ? d.substring(0, 10) : "rows", k -> new ArrayList<>()).add(l);
+        }
+        for (Map.Entry<String, List<String>> e : byDate.entrySet()) {
+            Files.write(in.resolve(KIND + "." + e.getKey() + ".jsonl"), e.getValue(), StandardCharsets.UTF_8);
+        }
+        Path config = tmp.resolve("load-" + System.nanoTime() + ".yaml");
+        Files.writeString(config, "source:\n  files: '" + in + "/*'\n  format: loader-rows\n  promote: [DESK, TT_BOOK, QUANTITY]\n"
+                + "  vectors: [PNL]\ntarget:\n  format: iceberg\n  lake: '" + root + "'\n  domain: risk\n  kind: " + KIND + "\n  mode: replace-date\n");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
+                new PrintStream(out, true, StandardCharsets.UTF_8));
+        if (code != 0) {
+            throw new IllegalStateException("the loader failed (" + code + "): " + out.toString(StandardCharsets.UTF_8));
+        }
     }
 
     /** The same positions into a Delta table at {@code table} with Drishti's Delta writer (one overwrite of each date). */

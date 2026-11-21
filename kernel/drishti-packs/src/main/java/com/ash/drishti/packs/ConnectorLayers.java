@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.packs;
 
-import com.ash.drishti.lakeconfig.ConnectorLake;
+import com.ash.lake.config.ConnectorLake;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

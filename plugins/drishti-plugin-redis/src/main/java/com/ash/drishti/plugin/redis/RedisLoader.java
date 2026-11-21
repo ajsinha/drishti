@@ -16,7 +16,8 @@
 package com.ash.drishti.plugin.redis;
 
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -180,7 +181,7 @@ public final class RedisLoader {
         }
         Options o = Options.parse(args);
         try (RedisConnection c = RedisConnection.open(o.uri(), o.cluster(), o.user(), o.password(), Duration.ofSeconds(60));
-             RowFeed in = RowFeed.open(args[0], RowFeed.asOf(args))) {    // the load rules: each row's business date (RowFeed)
+             RowFeed in = DrishtiLake.rowFeed(args[0], RowFeed.asOf(args))) {    // the load rules: each row's business date (RowFeed)
             RedisLoader loader = new RedisLoader(o, c);
             loader.load(in);
             loader.report(System.out);

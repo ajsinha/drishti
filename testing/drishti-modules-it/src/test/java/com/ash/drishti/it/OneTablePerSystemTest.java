@@ -23,7 +23,7 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourceSystems;
 import com.ash.drishti.engine.source.SourcesProperties;
-import com.ash.drishti.lakeload.LakeLoad;
+import com.ash.lake.load.LakeLoad;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -59,7 +59,7 @@ class OneTablePerSystemTest {
     Path tmp;
 
     private static Path repo() {
-        Path p = Path.of(com.ash.drishti.testroots.TestRoots.repo());   // the repository, absolute, never the working folder
+        Path p = Path.of(com.ash.lake.tck.TestRoots.repo());   // the repository, absolute, never the working folder
         assertThat(p.resolve("modules/source-swapone")).as("the repository root").isDirectory();
         return p;
     }
@@ -101,7 +101,7 @@ class OneTablePerSystemTest {
             Path file = root.resolve("data/testdata/trades/" + s + "/trade_" + s + "." + DAY + ".jsonl.gz");
             Path cfg = tmp.resolve("load-" + s + ".yaml");
             // the table as the inbox takes it (LoaderProcess): the connector's, from its module's template
-            String table = com.ash.drishti.lakeconfig.PackEntry.read(pack, "trade", connector).table();
+            String table = com.ash.lake.config.PackEntry.read(pack, "trade", connector).table();
             assertThat(table).as(s + ": the table its connector names").isEqualTo("trade_" + s);
             Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack
                     + "'\n  connector: " + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n  table: " + table + "\n");

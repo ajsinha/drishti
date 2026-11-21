@@ -23,8 +23,8 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.BusinessCalendar;
 import com.ash.drishti.common.JsonCodec;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.engine.history.HistoryAnswer;
 import com.ash.drishti.engine.history.HistoryProperties;
 import com.ash.drishti.engine.history.HistoryService;
@@ -270,7 +270,7 @@ public final class HistoryBench {
                 List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"), new LakeManifest.Column("business_date", "date"),
                         new LakeManifest.Column("QUANTITY", "double"), new LakeManifest.Column("TRADE_STATUS", "string")),
                 List.of("QUANTITY", "TRADE_STATUS"), "overwrite-dates", 50_000, List.of("id", "business_date", "QUANTITY", "TRADE_STATUS"), parts);
-        new LakeWriter().write(m, n -> { });
+        new LakeWriter(com.ash.drishti.lakehost.DrishtiLake.runtime()).write(m, n -> { });
         delete(staged);
     }
 

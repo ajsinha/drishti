@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.net.URI;

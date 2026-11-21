@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.testkit;
 
+import com.ash.tools.testkit.TestPki;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

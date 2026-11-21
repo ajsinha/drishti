@@ -15,6 +15,19 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.lakehost.LakeReads;
+import com.ash.lake.read.ColumnAsk;
+import com.ash.lake.read.ColumnBlock;
+import com.ash.lake.read.DataFile;
+import com.ash.lake.read.DayFiles;
+import com.ash.lake.read.IdMap;
+import com.ash.lake.read.LakeHealth;
+import com.ash.lake.read.LakeReader;
+import com.ash.lake.read.TableReader;
+import com.ash.lake.read.TableSnapshot;
+import com.ash.lake.read.VectorRequest;
+import com.ash.lake.spi.ColumnType;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.DataNode;
@@ -29,10 +42,6 @@ import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.ReferenceScanner;
-import com.ash.drishti.iceberg.catalog.S3Tables;
-import com.ash.drishti.plugin.iceberg.KindTable.Day;
-import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
-import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -61,8 +70,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Serves entities from Apache Iceberg tables, one table per kind ({@link IcebergLayout}): path-based tables at
- * {@code <root>/<domain>/<kind>} or tables in a REST catalog's namespace ({@link IcebergLake}), partitioned by
+ * Serves entities from Apache Iceberg tables, one table per kind, read through Drishti Lake's read API ({@code com.ash.lake.read}):
+ * path-based tables at {@code <root>/<domain>/<kind>} or tables in a REST catalog's namespace, partitioned by
  * {@code business_date}, rows {@code (id, doc)} with the pack's promoted fields beside them.
  *
  * <p>A read for a business date takes the entity from the newest date on or before it: within {@code lookback-days}
@@ -82,29 +91,25 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@code uri}, {@code warehouse}, {@code credential}, {@code token}, {@code namespace}, {@code kinds} (default: every
  * table found), {@code mode.<kind>}, {@code table.<kind>} (the table a kind is read from, default the kind: {@code trade_calypso} for kind
  * {@code trade}), {@code lookback-days} (10), {@code max-load-rows} (200000), {@code reverse-index}
- * (true), {@code cache-mb} (512), {@code source-name} ({@code iceberg}); object storage as {@link IcebergLake} says.
+ * (true), {@code cache-mb} (512), {@code source-name} ({@code iceberg}); object storage as Drishti Lake says.
  *
  * <p>Vector columns ({@code layout.<kind>.vectors}, a {@code list<double>} such as a trade's P&amp;L vector) are read in bulk by
- * {@link #vectors} and put back into a fetched document in place of their markers ({@link IcebergVectors}); {@link #documents} reads
+ * {@link #vectors} and put back into a fetched document in place of their markers ; {@link #documents} reads
  * a date in one pass. Id maps are written to disk and memory-mapped, and documents read are kept in a disk cache, both across restarts
  * ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}, default true: {@link IcebergDiskCaches}). Delta is Drishti's default
  * lake format; this connector serves the same kinds when a deployment chooses Iceberg by configuration.
  */
 public final class IcebergSourcePlugin implements SourcePlugin {
 
-    // The storage providers loaded with this class, on the thread that discovers the plugins, so no connector's start waits on
-    // their holder's initialisation while the connectors start side by side.
-    private static final int PROVIDERS = com.ash.drishti.lakeio.StorageProviders.load();
-
     private record SnapKey(String kind, long snapshotId) {}
 
     /** A business date's files of a kind: the key of everything read from them. */
-    private record DayKey(String kind, LocalDate date, long fingerprint) {}
+    private record DayKey(String kind, LocalDate date, String stamp) {}
 
     /** A whole day of a small table, for reverse lookups without promoted columns: its ids and who refers to what. */
     private record Part(Set<String> ids, Map<String, Set<String>> refs) {}
 
-    private final Map<String, KindTable> tables = new ConcurrentHashMap<>();
+    private final Map<String, TableReader> tables = new ConcurrentHashMap<>();
     private final Map<String, String> modes = new ConcurrentHashMap<>();
     private final Map<String, Long> current = new ConcurrentHashMap<>();
     private final Map<String, List<String>> promoted = new ConcurrentHashMap<>();
@@ -122,13 +127,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     // loads run on virtual threads and callers of the same key wait on its future without holding a lock
     private final ExecutorService loaders = Executors.newVirtualThreadPerTaskExecutor();
     private final ReentrantLock refreshing = new ReentrantLock();
-    private AsyncCache<SnapKey, Layout> layouts;
+    private AsyncCache<SnapKey, TableSnapshot> layouts;
     private AsyncCache<DayKey, IdMap> idMaps;
     private AsyncCache<DayKey, ColumnSet> columnSets;
     private AsyncCache<DayKey, Part> parts;
     private Cache<String, String> docs;
     private com.ash.drishti.api.ReadSlots docReads;   // bounded queue; a read whose caller has gone leaves it (QA3A-01)
-    private LakeTables lake;
+    private LakeReader lake;
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -137,48 +142,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     /** True when no {@code kinds} are configured: every table in the domain is served, including new ones. */
     private boolean discover;
     private volatile Instant lastUpdate;
-    private TableProblems problems = new TableProblems("iceberg", k -> null);
+    /** The kinds whose ids the last reindex could not list (the reads' own problems are the lake reader's). */
+    private final LakeReads.Listings listings = new LakeReads.Listings();
     private volatile java.util.concurrent.ScheduledFuture<?> refreshTask;
 
     @Override
     public PluginManifest manifest() {
         return new PluginManifest(sourceName == null ? "iceberg" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
-    }
-
-    /**
-     * The context with {@code catalog: s3tables} turned into the REST settings it stands for ({@link S3Tables#expand}), so the rest of the
-     * start reads one kind of REST catalog; a context without it unchanged. A table bucket not named yet leaves the connector idle.
-     */
-    static SourceContext s3Tables(SourceContext ctx) {
-        if (!S3Tables.named(ctx.settings())) {
-            return ctx;
-        }
-        if (S3Tables.arnOf(ctx.settings()).isEmpty()) {
-            throw new com.ash.drishti.api.PluginNotConfigured("iceberg with catalog: s3tables needs settings.table-bucket-arn "
-                    + "(arn:aws:s3tables:<region>:<account>:bucket/<name>)");
-        }
-        Map<String, String> expanded = java.util.Collections.unmodifiableMap(S3Tables.expand(ctx.settings()));
-        return new SourceContext() {
-            @Override
-            public Map<String, String> settings() {
-                return expanded;
-            }
-
-            @Override
-            public com.ash.drishti.api.DataNode parseJson(java.io.InputStream in) throws IOException {
-                return ctx.parseJson(in);
-            }
-
-            @Override
-            public java.util.concurrent.ScheduledExecutorService scheduler() {
-                return ctx.scheduler();
-            }
-
-            @Override
-            public com.ash.drishti.api.EntityReader reader() {
-                return ctx.reader();
-            }
-        };
     }
 
     /** A table's snapshots answer {@code knownAt}. */
@@ -189,8 +159,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext given) throws IOException {
-        SourceContext ctx = s3Tables(given);
-        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank()) {
+        SourceContext ctx = given;
+        // catalog: s3tables (a table bucket's ARN) and relocate pairs are settings of the lake's address: Drishti Lake expands and checks them
+        if ("s3tables".equalsIgnoreCase(ctx.setting("catalog", "")) && ctx.setting("table-bucket-arn", "").isBlank()) {
+            throw new com.ash.drishti.api.PluginNotConfigured("iceberg with catalog: s3tables needs settings.table-bucket-arn "
+                    + "(arn:aws:s3tables:<region>:<account>:bucket/<name>)");
+        }
+        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && ctx.setting("table-bucket-arn", "").isBlank()) {
             // installed but not configured (the plugin running as itself): idle, rather than DOWN on a lake nobody named
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg needs settings.root (a folder or s3a://…) or settings.uri (a REST catalog)");
         }
@@ -201,13 +176,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
-        this.lake = LakeTables.open(ctx.settings());
+        this.lake = LakeReads.open("iceberg", ctx.settings());
         String root = ctx.setting("root", "").replaceAll("/+$", "");
-        String domain = ctx.setting("domain", "");
-        this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
-                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + (lake instanceof LakeTables.Named n ? n.tableOf(kind) : kind),
-                relocation(ctx.setting("relocate", "")));
-        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root) || com.ash.drishti.lakeio.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
+        com.ash.lake.LakeRuntime runtime = com.ash.drishti.lakehost.DrishtiLake.runtime();
+        this.memoryOnly = runtime.memoryOnly(root) || runtime.memoryOnly(ctx.setting("warehouse", ""));
         this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
@@ -255,18 +227,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         refreshTask = ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
     }
 
-    /** The {@code relocate} pairs tables are read through. */
-    private com.ash.drishti.iceberg.io.Relocation relocation(String spec) {
-        return com.ash.drishti.iceberg.io.Relocation.parse(spec);   // read already by the catalog: a pair that cannot be read failed the start there
-    }
-
     private static long mb(SourceContext ctx, String key, String fallback) {
         return Long.parseLong(ctx.setting(key, fallback)) * 1024 * 1024;
     }
 
     private void add(String kind) {
         modes.put(kind, context.setting("mode." + kind, "snapshot"));
-        tables.putIfAbsent(kind, lake.table(kind, loaders));
+        tables.putIfAbsent(kind, lake.table(kind));
     }
 
     /**
@@ -280,23 +247,20 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         try {
             if (discover) {
                 try {
-                    lake.kinds().forEach(k -> {
-                        if (!tables.containsKey(k)) {
-                            add(k);                            // shows in /api/v1/sources and Admin → Health
-                        }
-                    });
+                    lake.newTables(tables.keySet()).forEach(this::add);   // shows in /api/v1/sources and Admin → Health
                 } catch (IOException | RuntimeException e) {
                     // the lake is unreachable for now: health says so, and the next refresh tries again
                 }
             }
             boolean changed = false;
-            for (Map.Entry<String, KindTable> e : tables.entrySet()) {
+            lake.refresh();                                    // each table's current snapshot is read again at its next snapshot()
+            for (Map.Entry<String, TableReader> e : tables.entrySet()) {
                 try {
-                    Optional<Long> id = e.getValue().refresh();
+                    Optional<Long> id = currentSnapshot(e.getValue());
                     if (id.isPresent() && !id.get().equals(current.get(e.getKey()))) {
                         current.put(e.getKey(), id.get());
                         changed = true;
-                        Instant committed = Instant.ofEpochMilli(layout(e.getKey(), null).map(Layout::timestamp).orElse(0L));
+                        Instant committed = layout(e.getKey(), null).map(TableSnapshot::committed).orElse(Instant.EPOCH);
                         Instant before = lastUpdate;
                         if (before == null || committed.isAfter(before)) {
                             lastUpdate = committed;
@@ -321,14 +285,14 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         for (String kind : tables.keySet()) {
             try {
                 layout(kind, null).ifPresent(l -> {
-                    if (l.days().isEmpty()) {
+                    if (l.dates().isEmpty()) {
                         return;
                     }
                     String subtitle = kind + " · " + sourceName;
-                    Collection<Day> days = effective(kind) ? l.days().values() : List.of(l.days().lastEntry().getValue());
+                    Collection<DayFiles> days = effective(kind) ? days(l, l.dates()) : days(l, List.of(l.dates().last()));
                     Set<String> seen = new HashSet<>();
                     int before = hits.size();
-                    for (Day d : days) {
+                    for (DayFiles d : days) {
                         for (String id : idMap(kind, l, d).ids()) {
                             if (seen.add(id)) {
                                 hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
@@ -336,10 +300,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                         }
                     }
                     if (!effective(kind) && dated.enabled()) {
-                        dated.putDay(kind, l.days().lastKey(), hits.subList(before, hits.size()));
-                        dated.plan(kind, l.days().navigableKeySet());
-                        Long was = datedSnapshots.put(kind, l.snapshotId());
-                        if (was != null && was != l.snapshotId()) {
+                        dated.putDay(kind, l.dates().last(), hits.subList(before, hits.size()));
+                        dated.plan(kind, l.dates());
+                        Long was = datedSnapshots.put(kind, l.version());
+                        if (was != null && was != l.version()) {
                             dated.restatedAll(kind);            // a new snapshot: a past day may have been restated
                         }
                     }
@@ -347,7 +311,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                     if (!cols.isEmpty() && !effective(kind)) {   // the newest day's columns, ready before the first search
                         loaders.execute(() -> {
                             try {
-                                columnSet(kind, l, l.days().lastEntry().getValue(), cols);
+                                columnSet(kind, l, l.day(l.dates().last()).orElseThrow(), cols);
                             } catch (RuntimeException e) {
                                 // the first search loads them instead
                             }
@@ -374,34 +338,70 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** The table's snapshot (the current one, or as known at {@code knownAt}) planned by business date. */
-    private Optional<Layout> layout(String kind, Instant knownAt) {
-        KindTable t = tables.get(kind);
+    private Optional<TableSnapshot> layout(String kind, Instant knownAt) {
+        TableReader t = tables.get(kind);
         if (t == null) {
             return Optional.empty();
         }
         Optional<Long> snapshot;
         if (knownAt == null) {
             Long id = current.get(kind);
-            snapshot = id != null ? Optional.of(id) : t.current();
+            snapshot = id != null ? Optional.of(id) : currentSnapshot(t);
         } else {
-            snapshot = t.snapshotAt(knownAt);
+            snapshot = read(t, com.ash.lake.spi.AsOf.time(knownAt)).map(TableSnapshot::version);
         }
-        return snapshot.map(id -> load(kind, layouts, new SnapKey(kind, id), k -> t.layout(id)));
+        return snapshot.map(id -> load(kind, layouts, new SnapKey(kind, id), k -> read(t, com.ash.lake.spi.AsOf.version(id)).orElseThrow(
+                () -> new IllegalStateException("snapshot " + id + " of " + kind + " is gone"))));
+    }
+
+    /** The table's current snapshot id, if it has one. */
+    private static Optional<Long> currentSnapshot(TableReader t) {
+        return read(t, com.ash.lake.spi.AsOf.LATEST).map(TableSnapshot::version);
+    }
+
+    private static Optional<TableSnapshot> read(TableReader t, com.ash.lake.spi.AsOf asOf) {
+        try {
+            return t.snapshot(asOf);
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    /** The files of each of the dates (those the snapshot holds). */
+    private static List<DayFiles> days(TableSnapshot l, Collection<LocalDate> dates) {
+        List<DayFiles> out = new ArrayList<>();
+        for (LocalDate d : dates) {
+            l.day(d).ifPresent(out::add);
+        }
+        return out;
+    }
+
+    private static <T> T io(IoRead<T> r) {
+        try {
+            return r.run();
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    @FunctionalInterface
+    private interface IoRead<T> {
+        T run() throws IOException;
     }
 
     /** The day's id map: from the heap, else mapped from disk (written by this run or an earlier one), else read from the id column. */
-    private IdMap idMap(String kind, Layout l, Day d) {
-        DayKey key = new DayKey(kind, d.date(), d.fingerprint());
-        IdMap m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+    private IdMap idMap(String kind, TableSnapshot l, DayFiles d) {
+        DayKey key = new DayKey(kind, d.date(), d.stamp());
+        IdMap m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> io(() -> l.ids(d.date()))));
         if (m instanceof MappedIdMap mm && mm.closed()) {               // its file was pruned or trimmed meanwhile: mapped or read again
             idMaps.synchronous().asMap().remove(key, m);
-            m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
+            m = load(kind, idMaps, key, k -> disk.idMap(kind, d, () -> io(() -> l.ids(d.date()))));
         }
         return m;
     }
 
     /** The index of the file holding {@code id} on day {@code d}, or -1; a map released meanwhile (replaced, dropped) is asked again. */
-    private int fileOf(String kind, Layout l, Day d, String id) {
+    private int fileOf(String kind, TableSnapshot l, DayFiles d, String id) {
         for (int tries = 0;; tries++) {
             try {
                 return idMap(kind, l, d).file(id);
@@ -418,7 +418,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         java.util.Set<LocalDate> out = new java.util.HashSet<>();
         for (String kind : tables.keySet()) {
             layout(kind, null).ifPresent(l -> {
-                java.util.NavigableSet<LocalDate> ds = l.days().navigableKeySet();
+                java.util.NavigableSet<LocalDate> ds = l.dates();
                 if (!ds.isEmpty()) {
                     out.add(ds.last());
                     LocalDate prev = ds.lower(ds.last());
@@ -432,11 +432,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
-    private Map<String, String> promotedColumns(String kind, Layout l) {
+    private Map<String, String> promotedColumns(String kind, TableSnapshot l) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
-            String column = IcebergLayout.column(path);
-            if (l.hasColumn(column)) {
+            String column = path.replace(".", "__");              // a promoted path's column (Drishti Lake's layout rule)
+            if (l.columns().indexOf(column) >= 0) {
                 out.put(path, column);
             }
         }
@@ -444,17 +444,31 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
-    private ColumnSet columnSet(String kind, Layout l, Day d, Map<String, String> cols) {
-        return load(kind, columnSets, new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).columns(l, d, cols));
+    private ColumnSet columnSet(String kind, TableSnapshot l, DayFiles d, Map<String, String> cols) {
+        return load(kind, columnSets, new DayKey(kind, d.date(), d.stamp()), k -> {
+            Map<String, ColumnType> types = l.columns().types();
+            List<ColumnAsk> asks = new ArrayList<>();
+            cols.forEach((path, column) -> asks.add(new ColumnAsk(path, column, numeric(types.get(column)) && !com.ash.drishti.api.IdText.isIdField(path))));
+            ColumnBlock b = io(() -> l.columns(d.date(), asks));
+            return new ColumnSet(b.ids(), b.numbers(), b.texts(), LocalDate.MIN.equals(d.date()) ? null : d.date());
+        });
     }
 
-    private Part part(String kind, Layout l, Day d) {
-        return load(kind, parts, new DayKey(kind, d.date(), d.fingerprint()), k -> {
+    /** A column read as numbers: Iceberg's double, float, long and int columns (as the table layer read them before). */
+    private static boolean numeric(ColumnType t) {
+        return t == ColumnType.DOUBLE || t == ColumnType.LONG || t == ColumnType.INT;
+    }
+
+    private Part part(String kind, TableSnapshot l, DayFiles d) {
+        return load(kind, parts, new DayKey(kind, d.date(), d.stamp()), k -> {
             Map<String, Set<String>> refs = new HashMap<>();
             Set<String> ids = new HashSet<>();
-            tables.get(kind).read(l, d).forEach((id, json) -> {
-                ids.add(id);
-                ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id));
+            io(() -> {
+                l.documents(d.date(), (id, json) -> {
+                    ids.add(id);
+                    ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id));
+                });
+                return null;
             });
             return new Part(ids, refs);
         });
@@ -462,8 +476,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     /**
      * A load that fails without Caffeine's own WARN and stack trace, which a table moved after it was written gave at every refresh
-     * (QA2-22): the failure reaches its caller as before and is kept, one per kind, for Health ({@link TableProblems}), which logs one
-     * short line when it is new or changes. A load that succeeds ends the kind's problem.
+     * (QA2-22): the failure reaches its caller as before; Drishti Lake's reader records it for Health and logs one short line when it is
+     * new or changes.
      */
     private <K, V> V load(String kind, AsyncCache<K, V> cache, K key, java.util.function.Function<K, V> fn) {
         CompletableFuture<V> f = cache.get(key, (k, executor) -> {
@@ -485,16 +499,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             if (q == null) {
                 throw e;
             }
-            Throwable given = problems.failed(kind, q.getCause());
-            if (given instanceof RuntimeException re) {
-                throw re;
-            }
-            if (given instanceof Error err) {
+            if (q.getCause() instanceof Error err) {
                 throw err;
             }
-            throw new CompletionException(given);
+            throw LakeReads.failure(kind, "log", q.getCause());
         }
-        problems.ok(kind);
         return v;
     }
 
@@ -539,10 +548,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** The days to look in for {@code date}, newest first: one for a snapshot kind, every earlier one for an effective kind. */
-    private List<Day> candidates(String kind, Layout l, LocalDate date) {
-        var head = date == null ? l.days().descendingMap() : l.days().headMap(date, true).descendingMap();
-        List<Day> out = new ArrayList<>();
-        for (Day d : head.values()) {
+    private List<DayFiles> candidates(String kind, TableSnapshot l, LocalDate date) {
+        var head = date == null ? l.dates().descendingSet() : l.dates().headSet(date, true).descendingSet();
+        List<DayFiles> out = new ArrayList<>();
+        for (DayFiles d : days(l, head)) {
             if (!effective(kind) && date != null && d.date().isBefore(date.minusDays(lookbackDays))) {
                 break;
             }
@@ -561,17 +570,17 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws IOException {
-        Optional<Layout> l = layout(ref.kind(), asOf.knownAt());
+        Optional<TableSnapshot> l = layout(ref.kind(), asOf.knownAt());
         if (l.isEmpty()) {
             return Optional.empty();
         }
-        for (Day d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
+        for (DayFiles d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
             // the id map names the file holding the entity; only that file's matching row group is read
             int file = fileOf(ref.kind(), l.get(), d, ref.id());
             if (file < 0) {
                 continue;
             }
-            String key = ref.kind() + "\u001f" + d.fingerprint() + "\u001f" + d.date() + "\u001f" + ref.id();
+            String key = ref.kind() + "\u001f" + d.stamp() + "\u001f" + d.date() + "\u001f" + ref.id();
             String json = docs.getIfPresent(key);
             if (json == null) {
                 json = disk.doc(key);                          // second tier: read before, on disk (also by an earlier run)
@@ -582,7 +591,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             if (json == null) {
                 docReads.acquire();
                 try {
-                    json = tables.get(ref.kind()).doc(l.get(), d, file, ref.id()).orElse(null);
+                    json = io(() -> l.get().document(d.date(), file, ref.id())).orElse(null);
                     if (json != null && json.contains("\"$vector\"")) {
                         json = withVectors(ref, l.get(), d, file, json);   // kept with its vectors: a hit reads no data file
                     }
@@ -596,7 +605,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
             if (json != null) {
                 DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
-                long generation = tables.get(ref.kind()).sequenceNumber(l.get().snapshotId());
+                long generation = l.get().sequence();
                 return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, generation, Instant.now(), false,
                         LocalDate.MIN.equals(d.date()) ? null : d.date())));
             }
@@ -615,11 +624,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (!tables.containsKey(ref.kind())) {
             return Optional.of(out);
         }
-        Optional<Layout> l = layout(ref.kind(), null);
+        Optional<TableSnapshot> l = layout(ref.kind(), null);
         if (l.isEmpty()) {
             return Optional.of(out);
         }
-        for (Day d : l.get().days().subMap(from, true, to, true).values()) {
+        for (DayFiles d : days(l.get(), l.get().dates().subSet(from, true, to, true))) {
             if (!LocalDate.MIN.equals(d.date()) && fileOf(ref.kind(), l.get(), d, ref.id()) >= 0) {
                 out.add(d.date());
             }
@@ -651,7 +660,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 Map<String, String> cols = promotedColumns(k, l);
                 Set<String> seen = new HashSet<>();
                 Set<String> found = new TreeSet<>();
-                for (Day d : candidates(k, l, asOf.businessDate())) {
+                for (DayFiles d : candidates(k, l, asOf.businessDate())) {
                     if (!cols.isEmpty()) {
                         ColumnSet c = columnSet(k, l, d, cols);
                         for (int i = 0; i < c.size(); i++) {
@@ -700,10 +709,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     /** A day's ids from the id column alone, for the multi-day type-ahead. */
     private List<EntityHit> dayHits(String kind, java.time.LocalDate day) {
         List<EntityHit> out = new ArrayList<>();
-        Optional<Layout> l = layout(kind, null);
-        if (l.isPresent() && l.get().days().containsKey(day)) {
+        Optional<TableSnapshot> l = layout(kind, null);
+        if (l.isPresent() && l.get().dates().contains(day)) {
             String subtitle = kind + " · " + sourceName;
-            for (String id : idMap(kind, l.get(), l.get().days().get(day)).ids()) {
+            for (String id : idMap(kind, l.get(), l.get().day(day).orElseThrow()).ids()) {
                 out.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
             }
         }
@@ -716,13 +725,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** A document whose vector columns were kept out of it ({@code {"$vector": "PNL"}} markers) with the vectors put back. */
-    private String withVectors(EntityRef ref, Layout l, Day d, int file, String json) {
-        List<String> cols = vectorCols.getOrDefault(ref.kind(), List.of()).stream().filter(l::hasColumn).toList();
+    private String withVectors(EntityRef ref, TableSnapshot l, DayFiles d, int file, String json) {
+        List<String> cols = vectorCols.getOrDefault(ref.kind(), List.of()).stream().filter(c -> l.columns().indexOf(c) >= 0).toList();
         if (cols.isEmpty()) {
             return json;
         }
-        Map<String, double[]> vecs = IcebergVectors.vectorsOf(tables.get(ref.kind()), l, d, file, ref.id(), cols);
-        return vecs.isEmpty() ? json : IcebergVectors.withVectors(json, vecs);
+        Map<String, double[]> vecs = io(() -> l.vectorsOf(d.date(), file, Set.of(ref.id()), cols)).getOrDefault(ref.id(), Map.of());
+        return vecs.isEmpty() ? json : com.ash.lake.read.Documents.withVectors(json, vecs);
     }
 
     /**
@@ -735,19 +744,19 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (!tables.containsKey(kind) || effective(kind)) {
             return false;
         }
-        Optional<Layout> l = layout(kind, asOf.knownAt());
+        Optional<TableSnapshot> l = layout(kind, asOf.knownAt());
         if (l.isEmpty()) {
             return true;                                       // no such table yet: it holds nothing
         }
-        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        List<DayFiles> days = candidates(kind, l.get(), asOf.businessDate());
         if (days.isEmpty()) {
             return true;
         }
-        Day d = days.get(0);
-        long generation = tables.get(kind).sequenceNumber(l.get().snapshotId());
+        DayFiles d = days.get(0);
+        long generation = l.get().sequence();
         LocalDate date = LocalDate.MIN.equals(d.date()) ? null : d.date();
         try {
-            IcebergVectors.documents(tables.get(kind), l.get(), d, (id, json) -> {
+            l.get().documents(d.date(), (id, json) -> {
                 try {
                     sink.accept(new EntityDocument(EntityRef.of(kind, id), context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))),
                             new Provenance(sourceName, generation, Instant.now(), false, date)));
@@ -755,17 +764,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                     throw new java.io.UncheckedIOException(e);
                 }
             });
-        } catch (RuntimeException e) {
-            throw failed(kind, e);
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, d.date().toString(), e);
         }
-        problems.ok(kind);
         return true;
-    }
-
-    /** A read's failure recorded for Health (one per kind) and given back as an unchecked exception. */
-    private RuntimeException failed(String kind, RuntimeException e) {
-        Throwable given = problems.failed(kind, e);
-        return given instanceof RuntimeException re ? re : new CompletionException(given);
     }
 
     @Override
@@ -777,7 +779,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         try {
             return layout(kind, null).map(l -> {
                 Set<String> have = new java.util.LinkedHashSet<>();
-                v.stream().filter(l::hasColumn).forEach(have::add);
+                v.stream().filter(c -> l.columns().indexOf(c) >= 0).forEach(have::add);
                 return have;
             }).orElse(Set.of());
         } catch (RuntimeException e) {
@@ -805,7 +807,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (!vectorColumns(kind).contains(column)) {
             return false;
         }
-        Optional<Layout> l = layout(kind, asOf.knownAt());
+        Optional<TableSnapshot> l = layout(kind, asOf.knownAt());
         if (l.isEmpty()) {
             return true;
         }
@@ -818,23 +820,25 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
             physical.add(c);
         }
-        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        List<DayFiles> days = candidates(kind, l.get(), asOf.businessDate());
         if (days.isEmpty()) {
             return true;
         }
-        KindTable kt = tables.get(kind);
-        Day day = days.get(0);
+        DayFiles day = days.get(0);
         String keyColumn = range == null || range.columns().isEmpty() ? null : cols.get(range.columns().get(0));
-        java.util.function.IntPredicate keep = keyColumn == null ? f -> true : f -> {
-            String[] b = kt.textBounds(l.get(), day, f, keyColumn);
-            return range.mayHold(b[0], b[1], b[2] == null || !"0".equals(b[2]));
+        java.util.function.Predicate<DataFile> keep = keyColumn == null ? f -> true : f -> {
+            com.ash.lake.read.Bounds b = f.bounds().get(keyColumn);      // the manifest's bounds, by the column's logical name
+            return b == null || range.mayHold(b.min(), b.max(), b.nulls() == null || b.nulls() != 0);
         };
-        try {
-            IcebergVectors.vectors(kt, l.get(), day, column, physical, keep, sink);
-        } catch (RuntimeException e) {
-            throw failed(kind, e);
+        VectorRequest request = VectorRequest.of(day.date(), column, physical).keep(keep);
+        if (sink instanceof com.ash.drishti.api.VectorReads.Parallel p) {   // the reader allowed several decoders (VectorReads.parallel)
+            request = request.parallel(p.options().threads(), p.options().bufferBytes());
         }
-        problems.ok(kind);
+        try {
+            l.get().vectors(request, sink::row);
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, day.date().toString(), e);
+        }
         return true;
     }
 
@@ -846,7 +850,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
         Map<LocalDate, Long> out = new LinkedHashMap<>();
         layout(kind, null).ifPresent(l -> {
-            for (Day d : l.days().descendingMap().values()) {
+            for (DayFiles d : days(l, l.dates().descendingSet())) {
                 if (out.size() >= maxDates) {
                     break;
                 }
@@ -862,20 +866,19 @@ public final class IcebergSourcePlugin implements SourcePlugin {
      */
     @Override
     public Optional<String> tableIdentity(String kind) {
-        KindTable t = tables.get(kind);
+        TableReader t = tables.get(kind);
         if (t == null) {
             return Optional.empty();
         }
         try {
-            return t.uuidAndLocation().map(u -> {
-                if (u[0] != null && !u[0].isBlank()) {
-                    return "iceberg:" + u[0];
-                }
-                String where = u[1] == null ? "" : u[1].replaceAll("/+$", "");
-                boolean remote = where.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") && !where.startsWith("file:");
-                return "location:" + (remote ? "" : host() + ":") + where;
-            });
-        } catch (RuntimeException e) {
+            com.ash.lake.read.TableIdentity u = t.identity();
+            if ("iceberg".equals(u.kind()) && u.id() != null && !u.id().isBlank()) {
+                return Optional.of("iceberg:" + u.id());
+            }
+            String where = u.location() == null ? "" : u.location().replaceAll("/+$", "");
+            boolean remote = where.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") && !where.startsWith("file:");
+            return Optional.of("location:" + (remote ? "" : host() + ":") + where);
+        } catch (IOException | RuntimeException e) {
             return Optional.empty();                           // unreachable now: it cannot say
         }
     }
@@ -908,9 +911,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     @Override
     public void refreshVersions() {
         boolean changed = false;
-        for (Map.Entry<String, KindTable> e : tables.entrySet()) {
+        lake.refresh();
+        for (Map.Entry<String, TableReader> e : tables.entrySet()) {
             try {
-                Optional<Long> id = e.getValue().refresh();
+                Optional<Long> id = currentSnapshot(e.getValue());
                 if (id.isPresent() && !id.get().equals(current.put(e.getKey(), id.get()))) {
                     changed = true;
                 }
@@ -938,7 +942,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     @Override
     public Optional<String> dataVersion(String kind) {
         try {
-            return safeLayout(kind).map(l -> l.snapshotId() + "@" + l.timestamp());
+            return safeLayout(kind).map(l -> l.version() + "@" + l.committed().toEpochMilli());
         } catch (RuntimeException e) {
             return Optional.empty();                           // unreadable now: the caller keeps what it has
         }
@@ -951,10 +955,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             return dataVersion(kind);
         }
         try {
-            return safeLayout(kind).map(l -> {
-                Day d = l.days().get(date);
-                return d == null ? "none" : Long.toHexString(d.fingerprint());
-            });
+            return safeLayout(kind).map(l -> l.day(date).map(DayFiles::stamp).orElse("none"));
         } catch (RuntimeException e) {
             return Optional.empty();
         }
@@ -970,10 +971,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (date == null) {
             return Optional.empty();
         }
-        return safeLayout(kind).map(l -> {
-            Day d = l.days().get(date);
-            return new com.ash.drishti.api.RowEstimate(d == null ? 0 : d.rows(), com.ash.drishti.api.RowEstimate.ICEBERG_MANIFESTS);
-        });
+        return safeLayout(kind).map(l -> new com.ash.drishti.api.RowEstimate(l.day(date).map(DayFiles::rows).orElse(0L),
+                com.ash.drishti.api.RowEstimate.ICEBERG_MANIFESTS));
     }
 
     /**
@@ -986,71 +985,56 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (effective(kind) || asOf.knownAt() != null) {
             return Optional.empty();
         }
-        Optional<Layout> l = safeLayout(kind);
-        if (l.isEmpty() || l.get().days().isEmpty()) {
+        Optional<TableSnapshot> l = safeLayout(kind);
+        if (l.isEmpty() || l.get().dates().isEmpty()) {
             return Optional.empty();
         }
-        LocalDate date = asOf.businessDate() == null ? l.get().days().lastKey() : l.get().days().floorKey(asOf.businessDate());
-        KindTable.Day day = date == null ? null : l.get().days().get(date);
+        LocalDate date = asOf.businessDate() == null ? l.get().dates().last() : l.get().dates().floor(asOf.businessDate());
+        DayFiles day = date == null ? null : l.get().day(date).orElse(null);
         if (day == null || day.deletes() || day.files().isEmpty()) {
             return Optional.empty();
         }
         List<String> files = new ArrayList<>();
         long bytes = 0;
-        for (Object o : day.files()) {
-            String loc;
-            long size;
-            String format;
-            if (o instanceof org.apache.iceberg.FileScanTask t) {
-                loc = t.file().location();
-                size = t.file().fileSizeInBytes();
-                format = String.valueOf(t.file().format());
-            } else if (o instanceof com.ash.drishti.iceberg.scan.FileTask t) {
-                loc = t.file().path();
-                size = t.file().fileSizeInBytes();
-                format = String.valueOf(t.file().format());
-            } else {
+        for (DataFile f : day.files()) {
+            if (f.format() != com.ash.lake.read.FileFormat.PARQUET) {
                 return Optional.empty();
             }
-            if (!"PARQUET".equalsIgnoreCase(format)) {
-                return Optional.empty();
-            }
-            if (loc.startsWith("file:")) {
-                loc = java.nio.file.Path.of(java.net.URI.create(loc)).toString();
-            } else if (loc.contains("://")) {
+            Optional<java.nio.file.Path> local = f.local();
+            if (local.isEmpty()) {
                 return Optional.empty();                       // an object store: the connector reads it
             }
-            files.add(loc);
-            bytes += size;
+            files.add(local.get().toString());
+            bytes += f.size();
         }
         Map<String, String> columns = new java.util.LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
-            String c = IcebergLayout.column(path);
-            if (l.get().columns().containsKey(c)) {
+            String c = path.replace(".", "__");
+            if (l.get().columns().indexOf(c) >= 0) {
                 columns.put(path, c);
             }
         }
-        return Optional.of(new com.ash.drishti.api.LakeFiles("iceberg", files, columns, IcebergLayout.ID, date == LocalDate.MIN ? null : date,
+        return Optional.of(new com.ash.drishti.api.LakeFiles("iceberg", files, columns, l.get().idColumn(), date == LocalDate.MIN ? null : date,
                 bytes, day.rows()));
     }
 
     /** The newest business date of the kind's table, from its current snapshot's plan (cached; no data read). */
     @Override
     public Optional<LocalDate> latestDate(String kind) {
-        return safeLayout(kind).filter(l -> !l.days().isEmpty()).map(l -> l.days().lastKey());
+        return safeLayout(kind).filter(l -> !l.dates().isEmpty()).map(l -> l.dates().last());
     }
 
     @Override
     public Optional<LocalDate> earliestDate(String kind) {
-        return safeLayout(kind).filter(l -> !l.days().isEmpty()).map(l -> l.days().firstKey());
+        return safeLayout(kind).filter(l -> !l.dates().isEmpty()).map(l -> l.dates().first());
     }
 
     @Override
     public Optional<java.util.NavigableSet<LocalDate>> heldDates(String kind) {
-        return safeLayout(kind).map(l -> java.util.Collections.unmodifiableNavigableSet(new TreeSet<>(l.days().keySet())));
+        return safeLayout(kind).map(l -> java.util.Collections.unmodifiableNavigableSet(new TreeSet<>(l.dates())));
     }
 
-    private Optional<Layout> safeLayout(String kind) {
+    private Optional<TableSnapshot> safeLayout(String kind) {
         if (!tables.containsKey(kind)) {
             return Optional.empty();
         }
@@ -1078,7 +1062,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (effective(kind)) {
             return Optional.empty();
         }
-        Optional<Layout> l = layout(kind, asOf.knownAt());
+        Optional<TableSnapshot> l = layout(kind, asOf.knownAt());
         if (l.isEmpty()) {
             return Optional.empty();
         }
@@ -1086,7 +1070,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (!cols.keySet().containsAll(paths)) {
             return Optional.empty();
         }
-        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        List<DayFiles> days = candidates(kind, l.get(), asOf.businessDate());
         if (days.isEmpty()) {
             return Optional.empty();                           // a date this table does not hold: another source may
         }
@@ -1113,7 +1097,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         long deletes = 0;
         for (String kind : tables.keySet()) {
             try {
-                deletes += layout(kind, null).map(l -> l.days().values().stream().filter(Day::deletes).count()).orElse(0L);
+                deletes += layout(kind, null).map(l -> days(l, l.dates()).stream().filter(DayFiles::deletes).count()).orElse(0L);
             } catch (RuntimeException e) {
                 // not readable now
             }
@@ -1141,9 +1125,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         parts.synchronous().invalidateAll();
         docs.invalidateAll();
         disk.purge();
-        com.ash.drishti.lakeio.ParquetFooters.purge();         // the per-file caches (footers, manifests, delete files)
-        com.ash.drishti.iceberg.scan.Planner.purge();
-        com.ash.drishti.iceberg.read.Deletes.purge();
+        lake.purge();                                   // the lake reader's per-file caches (footers, manifests, delete files)
     }
 
     /** One date's id maps, column sets and day parts go, in memory and its id-map files on disk (2.9.7); documents by their key. */
@@ -1160,12 +1142,15 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     /** A table that cannot be read lists none of its entities: searches and the connector's Test say why (QA4-01). */
     @Override
     public Optional<String> listingProblem(String kind) {
-        return problems.forReaders(kind);
+        if (problem(kind).isEmpty()) {
+            return listings.listing(kind);
+        }
+        return Optional.of("the table " + kind + " cannot be read now; Admin → Health says why");
     }
 
     /** Why the kind's table cannot be read now (Health's words), or empty. */
     Optional<String> problem(String kind) {
-        return problems.of(kind);
+        return lake.problems().all().stream().filter(p -> p.table().equals(kind)).reduce((a, b) -> b).map(com.ash.lake.read.ReadProblem::reason);
     }
 
     @Override
@@ -1185,11 +1170,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (lake == null) {
             return;                          // the start failed before the lake was opened (a relocate it cannot read: QA4-05)
         }
-        try {
-            lake.close();
-        } catch (IOException e) {
-            // closing a REST client: nothing to do
-        }
+        lake.close();
     }
 
     @Override
@@ -1199,11 +1180,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        if (!lake.reachable()) {
-            return "DOWN: cannot reach " + lake.describe();
+        LakeHealth h = lake.health(Instant.now());
+        if (!h.reachable()) {
+            return "DOWN: cannot reach " + h.describe();
         }
         if (tables.isEmpty()) {
-            return "DOWN: no Iceberg tables under " + lake.describe();
+            return "DOWN: no Iceberg tables under " + h.describe();
         }
         // a pack declared a layout the table does not have: it works, but searches over it read documents
         List<String> notLaidOut = new ArrayList<>();
@@ -1219,13 +1201,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 // reported by reads
             }
         });
-        if (!problems.isEmpty()) {
-            return "DEGRADED: cannot read " + problems.summary();
+        if (!listings.isEmpty(lake.problems())) {
+            return "DEGRADED: cannot read " + listings.summary(lake.problems(), 5);
         }
         String indexNote = dated.enabled() ? dated.summary() : null;
         String up = notLaidOut.isEmpty() ? (indexNote == null ? "UP" : "UP (" + indexNote + ")")
                 : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents"
                         + (indexNote == null ? "" : "; " + indexNote) + ")";
-        return lake.proxy().annotate(lake.tls() == null ? up : lake.tls().annotate(up, java.time.Instant.now()));
+        return h.notes().isEmpty() ? up : up + " (" + String.join("; ", h.notes()) + ")";
     }
 }

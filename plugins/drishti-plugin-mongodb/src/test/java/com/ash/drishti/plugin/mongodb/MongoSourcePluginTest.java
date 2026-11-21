@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -210,7 +211,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
                     first.close();
                 }
             };
-            assertThatThrownBy(() -> new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(RowFeed.stream(broken, LocalDate.of(2026, 9, 30)))).hasMessageContaining("broke");
+            assertThatThrownBy(() -> new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(DrishtiLake.rowStream(broken, LocalDate.of(2026, 9, 30)))).hasMessageContaining("broke");
             assertThat(db.getCollection("halves").countDocuments(Filters.eq("date", 20260930))).as("the dead load wrote part of the day").isEqualTo(10);
             MongoSourcePlugin p = new MongoSourcePlugin();
             p.start(context(Map.of("uri", uri(), "database", "halves", "collection", "halves", "layout.trade.columns", "mtm", "refresh-seconds", "3600")));

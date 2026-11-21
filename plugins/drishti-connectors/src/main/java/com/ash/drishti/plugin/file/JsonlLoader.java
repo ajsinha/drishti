@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.plugin.file;
 
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -57,7 +58,7 @@ public final class JsonlLoader {
         Map<Path, BufferedWriter> open = new LinkedHashMap<>(OPEN, 0.75f, true);   // least recently written first
         long n = 0;
         long t0 = System.nanoTime();
-        try (RowFeed in = RowFeed.open(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
+        try (RowFeed in = DrishtiLake.rowFeed(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
             String line;
             while ((line = in.next()) != null) {
                 if (line.isBlank()) {

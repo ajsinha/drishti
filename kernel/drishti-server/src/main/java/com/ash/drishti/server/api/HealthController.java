@@ -97,10 +97,10 @@ public class HealthController {
     }
 
     /** The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
-    private com.ash.drishti.memlake.MemoryLake memoryLake;
+    private com.ash.lake.memory.MemoryLake memoryLake;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void memoryLake(com.ash.drishti.memlake.MemoryLake m) {
+    void memoryLake(com.ash.lake.memory.MemoryLake m) {
         this.memoryLake = m;
     }
 
@@ -376,7 +376,7 @@ public class HealthController {
         Map<String, List<String>> out = new java.util.TreeMap<>();
         for (String c : refs) {
             String lake = registry.lakeOf(c);
-            if (lake != null && (!com.ash.drishti.lakeconfig.Lakes.shipped().contains(lake) || SourceRouter.DEMO_LAKE.equals(lake))) {
+            if (lake != null && (!com.ash.lake.config.Lakes.shipped(com.ash.drishti.lakehost.DrishtiLake.runtime()).contains(lake) || SourceRouter.DEMO_LAKE.equals(lake))) {
                 out.computeIfAbsent(lake, k -> new ArrayList<>()).add(c);
             }
         }

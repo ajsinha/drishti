@@ -16,7 +16,8 @@
 package com.ash.drishti.plugin.duckdb;
 
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;
@@ -210,7 +211,7 @@ public final class DuckDbLoader {
         List<Row> end = List.of();
         Parsed poison = new Parsed(CompletableFuture.completedFuture(end), List.of());
         ExecutorService pool = Executors.newFixedThreadPool(parsers);
-        RowFeed feed = RowFeed.open(input, asOf);                          // the load rules: each line's file and business date
+        RowFeed feed = DrishtiLake.rowFeed(input, asOf);                          // the load rules: each line's file and business date
         Thread reader = Thread.ofPlatform().name("duckdb-loader-reader").start(() -> {
             JsonFactory json = new JsonFactory();
             try (RowFeed in = feed) {

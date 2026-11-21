@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -44,24 +45,47 @@ class IcebergSourcePluginTest extends DatedSourceContract {
     private static final Map<String, IcebergSourcePlugin> PLUGINS = new java.util.concurrent.ConcurrentHashMap<>();
     static Path root;
 
-    /** Writes rows (any order) as the layout does: a table per kind, each business day sorted by id, one commit a day. */
-    static void write(OracleLake lake, List<Row> rows, Map<String, Map<String, Boolean>> promotedByKind) {
+    /**
+     * Writes rows (any order) with Drishti Lake's one loader ({@code source.format: loader-rows}): a table per kind under
+     * {@code <root>/<domain>}, the kind's promoted paths as columns (numbers where {@code true}), each business day replaced.
+     */
+    static void write(Path root, String domain, List<Row> rows, Map<String, Map<String, Boolean>> promotedByKind) throws Exception {
         JsonCodec codec = new JsonCodec();
-        Map<String, Map<LocalDate, TreeMap<String, IcebergLayout.Row>>> byKind = new LinkedHashMap<>();
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        Map<String, Map<LocalDate, List<String>>> byKind = new LinkedHashMap<>();
         for (Row r : rows) {
-            Map<String, Object> cols = new LinkedHashMap<>();
+            var line = json.createObjectNode().put("domain", domain).put("kind", r.kind()).put("id", r.id()).put("date", r.date().toString())
+                    .put("doc", r.json());
+            var cols = line.putObject("columns");
             var doc = codec.read(r.json());
             promotedByKind.getOrDefault(r.kind(), Map.of()).forEach((path, numeric) -> {
                 var v = doc.get(path);
-                cols.put(path, v.isMissing() || v.isNull() ? null : numeric ? (Object) v.asDouble() : v.asText());
+                if (v.isMissing() || v.isNull()) {
+                    cols.putNull(path);
+                } else if (numeric) {
+                    cols.put(path, v.asDouble());
+                } else {
+                    cols.put(path, v.asText());
+                }
             });
-            byKind.computeIfAbsent(r.kind(), k -> new TreeMap<>()).computeIfAbsent(r.date(), d -> new TreeMap<>())
-                    .put(r.id(), new IcebergLayout.Row(r.id(), r.json(), cols));
+            byKind.computeIfAbsent(r.kind(), k -> new TreeMap<>()).computeIfAbsent(r.date(), d -> new java.util.ArrayList<>()).add(line.toString());
         }
-        byKind.forEach((kind, days) -> {
-            Table t = OracleLayout.open(lake, kind, promotedByKind.getOrDefault(kind, Map.of()), IcebergLayout.DEFAULT_ROW_GROUP_BYTES, 1000);
-            days.forEach((date, sorted) -> OracleLayout.commitDay(t, date, OracleLayout.writeDay(t, date, sorted.values().iterator(), 1000)));
-        });
+        for (var k : byKind.entrySet()) {
+            Path in = Files.createTempDirectory("rows-" + k.getKey());
+            for (var d : k.getValue().entrySet()) {
+                Files.write(in.resolve(k.getKey() + "." + d.getKey() + ".jsonl"), d.getValue());
+            }
+            String promote = String.join(", ", promotedByKind.getOrDefault(k.getKey(), Map.of()).keySet());
+            Path config = in.resolveSibling(in.getFileName() + ".yaml");
+            Files.writeString(config, "source:\n  files: '" + in + "/*.jsonl'\n  format: loader-rows\n" + (promote.isEmpty() ? "" : "  promote: [" + promote + "]\n")
+                    + "target:\n  format: iceberg\n  lake: '" + root + "'\n  domain: " + domain + "\n  kind: " + k.getKey() + "\n  mode: replace-date\n");
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
+                    new java.io.PrintStream(out, true, java.nio.charset.StandardCharsets.UTF_8));
+            if (code != 0) {
+                throw new IllegalStateException("the loader failed (" + code + "): " + out);
+            }
+        }
     }
 
     /** The engine the connector reads with; {@code IcebergSourcePluginNativeTest} runs every test on the other one. */
@@ -79,9 +103,7 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         Map<String, Boolean> trade = new LinkedHashMap<>();
         trade.put("mtm", true);
         trade.put("nettingSet", false);
-        try (OracleLake lake = OracleLake.of(Map.of("root", root.toString(), "domain", "desk"))) {
-            write(lake, ROWS, Map.of("trade", trade));
-        }
+        write(root, "desk", ROWS, Map.of("trade", trade));
         IcebergSourcePlugin p = new IcebergSourcePlugin();
         p.start(context(new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective",
                 "source-name", "desk-iceberg", "layout.trade.columns", "mtm,nettingSet", "engine", engine()))));

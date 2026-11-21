@@ -25,7 +25,7 @@ import com.ash.drishti.api.tls.TlsMaterial;
 import com.ash.drishti.api.tls.TlsSettings;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.drishti.testkit.MessageSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import jakarta.jms.Connection;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;

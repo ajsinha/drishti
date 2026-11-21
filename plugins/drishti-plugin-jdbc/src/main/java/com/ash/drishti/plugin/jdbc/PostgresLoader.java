@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.postgresql.PGConnection;
 import com.ash.drishti.api.pool.PoolSettings;
 import com.ash.drishti.api.pool.ResourcePool;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 
 /**
  * Loads rows into PostgreSQL in {@link PostgresLayout}: {@code java -cp <plugin classpath>
@@ -160,7 +161,7 @@ public final class PostgresLoader {
     private void stage(Connection admin, ResourcePool<Connection> pool, String file) throws Exception {
         Semaphore inFlight = new Semaphore(writers * 2);
         JsonFactory json = new JsonFactory();
-        try (RowFeed in = RowFeed.open(file, asOf);
+        try (RowFeed in = DrishtiLake.rowFeed(file, asOf);
              ExecutorService copy = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Row> batch = new ArrayList<>(batchSize);
             String line;

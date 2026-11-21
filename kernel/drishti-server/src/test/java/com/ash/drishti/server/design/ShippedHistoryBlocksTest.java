@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.design;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.engine.history.HistorySpec;

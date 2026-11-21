@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.it;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.dataload.Routes;
+import com.ash.lake.inbox.Routes;
 import com.ash.drishti.api.resolution.ModuleHomes;
 import com.ash.drishti.module.runtime.Dmod;
 import com.ash.drishti.module.runtime.KernelFacts;

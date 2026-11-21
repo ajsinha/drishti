@@ -17,11 +17,10 @@ package com.ash.drishti.server.memlake;
 
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRegistry;
-import com.ash.drishti.memlake.MemoryBinding;
-import com.ash.drishti.memlake.MemoryLake;
-import com.ash.drishti.memlake.MemoryLakeSettings;
-import com.ash.drishti.memlake.ReplenishSource;
-import com.ash.drishti.memlake.Retention;
+import com.ash.lake.memory.MemoryLake;
+import com.ash.lake.memory.MemoryLakeSettings;
+import com.ash.lake.memory.ReplenishSource;
+import com.ash.lake.memory.Retention;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +35,7 @@ import org.springframework.scheduling.support.CronExpression;
 
 /**
  * The server's wiring of the in-memory lake (docs/architecture/DATA_ARCHITECTURE.md; the lake itself is the plain-Java module
- * {@code drishti-lakeload}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
+ * Drishti Lake's {@code lake-memory}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
  * that keeps memory-only data off every disk, the cron parser, and the joins to the memory budget (an off-heap pool) and busy protection.
  * The stores are defined when the bean is made, before the connectors read them; the warm-up starts when the server is ready.
  */
@@ -49,7 +48,7 @@ public class MemoryLakeConfiguration {
         MemoryLakeSettings bound = Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
         // the stores are lakes (config/lakes/<store>.yaml, root: mem://<store>, docs/guides/DATA_LAKE_GUIDE.md); the engine file keeps the switch,
         // the replenish jobs and the compaction policy (the engine's work, not the lake's description)
-        return bound.withLakeStores(com.ash.drishti.lakeconfig.Lakes.current(),
+        return bound.withLakeStores(com.ash.lake.config.Lakes.current(com.ash.drishti.lakehost.DrishtiLake.runtime()),
                 m -> org.slf4j.LoggerFactory.getLogger(MemoryLakeConfiguration.class).warn(m));
     }
 
@@ -63,7 +62,7 @@ public class MemoryLakeConfiguration {
         MemoryLakeSettings props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeSettings.none();
         Set<String> owned = ownedHere(net.getIfAvailable());
         com.ash.drishti.server.admission.RequestsInFlight f = inFlight.getIfAvailable();
-        MemoryLake lake = new MemoryLake(props, new ReplenishSource(registry), owned, () -> f == null || f.counter().get() <= 1,
+        MemoryLake lake = new MemoryLake(com.ash.drishti.lakehost.DrishtiLake.runtime(), props, new ReplenishSource(new ConnectorRows(registry)), owned, () -> f == null || f.counter().get() <= 1,
                 (line, after) -> CronExpression.parse(line).next(after));
         MemoryBinding.install(lake, registry);
         lake.onChange(() -> registry.plugins().stream().filter(com.ash.drishti.api.SourcePlugin::memoryOnly)
@@ -93,9 +92,9 @@ public class MemoryLakeConfiguration {
     @Bean
     public Retention retention(SourceRegistry registry, ObjectProvider<Mnemonics> mnemonics, MemoryLakeSettings props) {
         Mnemonics m = mnemonics.getIfAvailable();
-        Retention r = new Retention(registry, m == null ? k -> null : m::codeFor,
+        Retention r = new Retention(new ConnectorRows(registry), m == null ? k -> null : m::codeFor,
                 store -> props.stores().containsKey(store) ? props.stores().get(store).contract() : "");
-        Retention.install(r);
+        RetentionHolder.install(r);
         return r;
     }
 
@@ -118,8 +117,8 @@ public class MemoryLakeConfiguration {
         ctx.getBeanProvider(com.ash.drishti.server.admission.AdmissionGate.class).ifAvailable(g -> {
             for (String store : lake.stores().keySet()) {
                 if (lake.owns(store)) {
-                    g.memoryStore(store, () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().allocatedBytes(),
-                            () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().capBytes());
+                    var stores = com.ash.lake.memory.store.MemoryStores.of(com.ash.drishti.lakehost.DrishtiLake.runtime());
+                    g.memoryStore(store, () -> stores.store(store).pool().allocatedBytes(), () -> stores.store(store).pool().capBytes());
                 }
             }
         });

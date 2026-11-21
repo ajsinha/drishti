@@ -25,7 +25,7 @@ import com.ash.drishti.api.tls.TlsMaterial;
 import com.ash.drishti.api.tls.TlsSettings;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.drishti.testkit.MessageSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

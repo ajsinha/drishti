@@ -23,7 +23,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.common.JsonCodec;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;

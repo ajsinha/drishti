@@ -113,7 +113,7 @@ public class VarConfiguration {
     /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
     /** The VaR intake's rules, for the checks of a file before it is pushed (DATA_LAKE_GUIDE.md section 3.5). */
     @Bean
-    com.ash.drishti.dataload.ReadyRule varReadyRule(VarProperties props, ObjectProvider<PackRegistry> packs) {
+    com.ash.lake.inbox.ReadyRule varReadyRule(VarProperties props, ObjectProvider<PackRegistry> packs) {
         return new VarReadyRule(props::input, Hierarchies.of(props, packs::getIfAvailable));
     }
 
@@ -262,8 +262,8 @@ public class VarConfiguration {
      */
     static String pvLake(String lake) {
         String ref = lake == null || lake.isBlank() ? "demo" : lake.strip();
-        if (com.ash.drishti.lakeconfig.Lakes.validName(ref)) {
-            return com.ash.drishti.lakeconfig.Lakes.current().get(ref).root();
+        if (com.ash.lake.config.Lakes.validName(ref)) {
+            return com.ash.lake.config.Lakes.current(com.ash.drishti.lakehost.DrishtiLake.runtime()).get(ref).root();
         }
         return ref;
     }

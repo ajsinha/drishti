@@ -19,10 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.lakeload.LakeRetention;
+import com.ash.lake.load.LakeRetention;
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.ash.drishti.server.security.TokenVerifier;
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
@@ -131,7 +131,7 @@ class VarDeletedDateTest {
 
         String before = svc.loader().version(D2);
         var official0 = svc.official().index(D2, VarDate.USD);            // a capture the other test's load may have made: kept as history
-        Map<String, Object> done = LakeRetention.dropDates(lake.toString(), "delta", "risk/pnl-vector", LakeRetention.dates(D2.toString()), false);
+        Map<String, Object> done = LakeRetention.dropDates(com.ash.drishti.lakehost.DrishtiLake.runtime(), lake.toString(), "delta", "risk/pnl-vector", LakeRetention.dates(D2.toString()), false);
         assertThat(done.get("dropped")).isNotEqualTo(0L);
         signal(true, before);
 
@@ -161,7 +161,7 @@ class VarDeletedDateTest {
     void aDeletedScenarioSetRefusesItsDateAndTheDefaultIsTheDateBefore() throws Exception {
         assertThat(bank(D2).get("businessDate").asText()).isEqualTo(D2.toString());
         String before = svc.loader().version(D2);
-        LakeRetention.dropDates(lake.toString(), "delta", "risk/scenario-set", LakeRetention.dates(D2.toString()), false);
+        LakeRetention.dropDates(com.ash.drishti.lakehost.DrishtiLake.runtime(), lake.toString(), "delta", "risk/scenario-set", LakeRetention.dates(D2.toString()), false);
         Thread.sleep(1500);                                              // the connector's refresh (1 s): the set's table is read again
         official.onDeleted("scenario-set", D2);
         JsonNode refused = bank(D2, 404);

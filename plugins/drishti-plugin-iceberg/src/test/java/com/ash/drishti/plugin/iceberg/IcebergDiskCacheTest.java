@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -82,8 +83,9 @@ class IcebergDiskCacheTest {
             }
         }
         assertThat(removed).isGreaterThan(2);
-        com.ash.drishti.lakeio.ParquetFooters.purge();          // nothing of the files is left in this process either
-        com.ash.drishti.iceberg.read.Deletes.purge();
+        try (var r = com.ash.drishti.lakehost.LakeReads.open("iceberg", Map.of("root", root.toString(), "domain", "risk"))) {
+            r.purge();                                   // nothing of the files is left in this process either
+        }
 
         IcebergSourcePlugin second = plugin(root, cache, Map.of());
         try {
@@ -140,7 +142,7 @@ class IcebergDiskCacheTest {
      */
     @Test
     void anEarlierMapOfADateIsUnmappedThenDeleted() throws Exception {
-        KindTable.IdMap heap = new KindTable.IdMap() {
+        com.ash.lake.read.IdMap heap = new com.ash.lake.read.IdMap() {
             public int size() {
                 return 2;
             }

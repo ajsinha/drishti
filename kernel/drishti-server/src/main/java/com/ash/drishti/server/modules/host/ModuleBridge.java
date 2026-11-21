@@ -84,7 +84,7 @@ final class ModuleBridge {
         live(com.ash.drishti.server.node.ReadinessGate.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.node.Drainable.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.caches.CacheReport.Owner.class, Contributions.Surface.SPI);
-        live(com.ash.drishti.dataload.ReadyRule.class, Contributions.Surface.SPI);
+        live(com.ash.lake.inbox.ReadyRule.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.flight.FlightForm.class, Contributions.Surface.SPI);
         live(ApprovalSource.class, Contributions.Surface.SPI);
         live(HealthFigures.class, Contributions.Surface.SPI);           // objects of the module: withdrawn before its loader is checked (step 4, not 9)

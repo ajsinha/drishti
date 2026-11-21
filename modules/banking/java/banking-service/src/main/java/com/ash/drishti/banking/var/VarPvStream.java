@@ -18,8 +18,8 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.TempFiles;
 import com.ash.drishti.banking.compute.var.VarBook;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -299,7 +299,7 @@ final class VarPvStream {
         List<String> promoted = columns.apply(kind, "columns");
         Path staged = TempFiles.createFile("var-pv-", ".rows");
         boolean iceberg = com.ash.drishti.banking.official.LakeAppends.iceberg(lake, "risk", kind);   // 2.9.5: an Iceberg risk lake
-        List<com.ash.drishti.plugin.iceberg.IcebergAppender.Row> appends = new ArrayList<>();
+        List<com.ash.lake.iceberg.table.IcebergAppender.Row> appends = new ArrayList<>();
         try {
             Map<String, String> types = new LinkedHashMap<>();
             try (BufferedWriter out = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
@@ -321,7 +321,7 @@ final class VarPvStream {
                     if (iceberg) {
                         Map<String, Object> ic = new LinkedHashMap<>(cols);
                         ic.put(vector, cols.get(vector) == null ? null : java.util.Arrays.stream((double[]) cols.get(vector)).boxed().toList());
-                        appends.add(new com.ash.drishti.plugin.iceberg.IcebergAppender.Row(r.get(key).asText(), JSON.writeValueAsString(doc), ic));
+                        appends.add(new com.ash.lake.iceberg.table.IcebergAppender.Row(r.get(key).asText(), JSON.writeValueAsString(doc), ic));
                     }
                 }
             }
@@ -337,7 +337,7 @@ final class VarPvStream {
             cs.add(new LakeManifest.Column(vector, "vector"));
             LakeManifest m = new LakeManifest(lake.resolve("risk").resolve(kind).toString(), List.of("business_date"), cs, promoted, "append", 10_000,
                     List.of("id", "business_date"), List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", day.toString()))), Map.of());
-            new LakeWriter().write(m, x -> { });
+            new LakeWriter(com.ash.drishti.lakehost.DrishtiLake.runtime()).write(m, x -> { });
         } finally {
             Files.deleteIfExists(staged);
         }

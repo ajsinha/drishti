@@ -22,7 +22,7 @@ import com.ash.drishti.api.tls.TlsSettings;
 import com.ash.drishti.common.NamedResources;
 import com.ash.drishti.settingsfile.SettingsFile;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;

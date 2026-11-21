@@ -18,8 +18,8 @@ package com.ash.drishti.plugin.iceberg;
 import com.ash.drishti.api.DataDir;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.diskcache.DiskCache;
-import com.ash.drishti.plugin.iceberg.KindTable.Day;
-import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
+import com.ash.lake.read.DayFiles;
+import com.ash.lake.read.IdMap;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -139,8 +139,8 @@ final class IcebergDiskCaches implements AutoCloseable {
      * The day's id map: mapped from its file when one was written before (by this run or an earlier one), else {@code read} and
      * written (the same date's maps of other files go), else kept in the heap when it cannot be written.
      */
-    IdMap idMap(String kind, Day d, Supplier<IdMap> read) {
-        Path file = idMapDir == null ? null : idMapDir.resolve(safeName(kind)).resolve(dayName(d.date()) + "@" + Long.toHexString(d.fingerprint()) + ".idmap");
+    IdMap idMap(String kind, DayFiles d, Supplier<IdMap> read) {
+        Path file = idMapDir == null ? null : idMapDir.resolve(safeName(kind)).resolve(dayName(d.date()) + "@" + d.stamp() + ".idmap");
         IdMap m = file == null ? null : MappedIdMap.open(file);
         if (m != null) {
             idMapsMapped.increment();

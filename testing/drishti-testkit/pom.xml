@@ -28,6 +28,12 @@
   <name>drishti-testkit</name>
   <description>Fixtures and contract tests every source plugin must pass</description>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId></dependency>
+    <!-- the TLS and proxy fixtures (TestPki, TlsFixture, FakeProxy): Drishti Tools' -->
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-testkit</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <!-- the one packager (ModuleFixtures.pack): optional, a test that packs modules has the module runtime on its class path -->

@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.testroots;
 
+import com.ash.lake.tck.TestRoots;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;

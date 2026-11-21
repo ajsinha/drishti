@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
  */
 class AdminModulesRecordTest {
 
-    static final Path REPO = Path.of(com.ash.drishti.testroots.TestRoots.repo());
+    static final Path REPO = Path.of(com.ash.lake.tck.TestRoots.repo());
     static final String KERNEL = "2.9.11.i9";
 
     @Test

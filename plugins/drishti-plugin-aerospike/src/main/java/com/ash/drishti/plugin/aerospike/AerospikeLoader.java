@@ -16,7 +16,8 @@
 package com.ash.drishti.plugin.aerospike;
 
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;
@@ -74,7 +75,7 @@ public final class AerospikeLoader {
         ClientPolicy client = new ClientPolicy();
         client.maxConnsPerNode = poolSize;                                  // never fewer than the writes in flight
         try (AerospikeClient c = new AerospikeClient(client, Host.parseHosts(hosts, 3000));
-             RowFeed in = RowFeed.open(file, RowFeed.asOf(args));          // the load rules: each row's business date (RowFeed)
+             RowFeed in = DrishtiLake.rowFeed(file, RowFeed.asOf(args));          // the load rules: each row's business date (RowFeed)
              ExecutorService writers = Executors.newVirtualThreadPerTaskExecutor()) {
             String line;
             while ((line = in.next()) != null && failed.get() == null) {

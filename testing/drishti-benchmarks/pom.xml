@@ -31,7 +31,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
     <!-- HistoryBench: a Delta table written with Drishti's writer, read through the engine's history service -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-delta</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId></dependency>
     <!-- ManyScopeBenchmark: VaR scope sums, one set at a time against MultiSums on Java and on OpenBLAS -->
