@@ -23,6 +23,9 @@ are green and Drishti is untouched. Three things keep the gate open:
    commits reviewed here. The gate needs the short re-check of [section 7](#7-re-check-when-the-datasets-work-lands) when they land.
 3. The major findings F2 to F7 are fixed before G2 starts.
 
+**Re-check of 2026-11-21 ([section 8](#8-re-check-2026-11-21)): FAIL on one blocker.** F1 to F7 and F9 to F12 are fixed and the
+datasets work passes, but the runtime JavaScript bundle is broken at `52e112f` (R1).
+
 ## Owner summary
 
 1. Conformance: JVM, JavaScript (Node) and Python on V8 give **the same 2,123 result lines, byte for byte**; 0 verified failing.
@@ -238,7 +241,66 @@ Short, on the new heads of both `g1/integration` branches:
   `chart` and datasets have vectors, browser tests, budget lines and their part of `USING.md` and `VIEWS_DESIGN.md`.
 - **Docs:** both CHANGELOGs, `spec/1/VIEWMODEL.md`, DECISIONS.
 
-## 8. How this review was run
+## 8. Re-check (2026-11-21)
+
+Re-check of section 7 and of the findings, in fresh clones from `origin` (JDK 21, Node 22, Python 3.12; `./mvnw clean verify`
+only, nothing installed; Drishti read-only). Heads: `drishti-rachana` `g1/integration` `52e112f`, `drishti-elements`
+`g1/integration` `db1dc55`.
+
+**Verdict: FAIL, on one blocker (R1). Everything else passes.** The fix is expected to be small; the re-run is R1's two commands.
+
+**R1 (blocker). The runtime bundle is broken at `52e112f`.** `rachana_conformance.py --node --bundle
+js/packages/rachana/dist/rachana.runtime.js`: Node stops on `TypeError: Cannot read properties of null` (1,826 errors, 1,463
+verified failing). With a runner that catches the exception per case: **10 errors and 27 verified failing** against the tools
+bundle (`el/dates` 4 and `el/logic` 5 null reads, e.g. `round(2.675, 2)`, `shift_date`; `problem/coverage-valid#panel-refresh-mapping`
+`b.ni is not a function`; 27 cases where a named format is not applied: `amount2` of 1234.5 gives `1234.5`). Both parents are
+clean on the same command: `7332c54` (gate fixes) and `3796973` (contract 1.1) give 0 errors, 0 verified failing; so the merge
+commit itself brought it. Reproduced on two clean builds (runtime SHA-256 `4df91f42…`). The tools bundle, the JVM and Python on V8
+are not affected, which is why the merge's own check ("JVM and JavaScript agree") did not see it: no test or gate runs the
+runtime bundle. Fix the bundle, and add the runtime-bundle run to the build (the result equal to the tools bundle's apart from the
+43 `edit` cases), so that it cannot regress unseen.
+
+| Check | Result | Evidence |
+|---|---|---|
+| F1 corpus on Core | **fixed** | `CustomerCorpusTest` 6 run, 0 skipped; Core with the `drishti` profile is the default; 478 compared (asserted against `VERSION.json`), byte-identical; the recordings are unchanged since `7c33edd`. Proven to fail: one byte changed in a recorded document gives `1 differences`; `-Drachana.compat.runtime=bridge` with no class path is an error, not a skip. |
+| F2 regex budget | **fixed** | The three 8 KB cases of the review stop at one budget per call: `RCH-4011` after 316, 354 and 359 ms (cold JVM); `SafeRegexBudgetTest`. |
+| F3 form pattern | **fixed** | No `Pattern.compile` of a Sutra's text remains in Core (only fixed patterns of Core's own); `RegexText` deleted; O10, G1-1 in DECISIONS. |
+| F4 block library | **fixed** | `SutraBlocks` has no mutable static; `BlockLibrary` per instance through the profile; no mutable static collection in Core. 25 API members removed for it, all in `DRISHTI_MIGRATION_TODO` 8.3i. |
+| F5 migration lists | **fixed** | `liveSource`, `timeoutNanos` in the list; Elements `docs/MIGRATING_TO_3.md` names every removed member of section 2. |
+| F6 docs | **fixed, one leftover** | README, ARCHITECTURE, OVERVIEW, ROADMAP text say V8 (W-1 in DECISIONS). ROADMAP's diagram still reads `R2 WASM, server, editor` (line 33). |
+| F7 local-only | **fixed** | The tool's default is `tools/conformance/profile/drishti-formats.yaml`; no `/home/` path in the repository; `tools/split/make_reference.py` rebuilds the reference results (not run here). |
+| F9 `d-m01-a` | **fixed** | The probe expects `2.7182818284590455`; the level result is `pass`. |
+| F10 V8 engine | **fixed** | Heap limit, call timeout, SHA-256 check before the bundle runs; `test_engine.py` green. |
+| F11 versions | **partly** | `0.11.0` in pom, `package.json`, `pyproject`; `__pycache__` ignored. Still 7 worktrees and 35 remote branches in `drishti-rachana`, 5 and 7 in `drishti-elements` (all clean, none ahead). |
+| F12 checklist | **fixed** | Checklist commit `8756ecfd6` (C1, C3, C9 run as written). |
+| Contract append-only | **pass** | `spec/1/released/viewmodel-1.0.schema.json` is byte-identical to the schema reviewed at `7c33edd`; against it the current schema removes nothing, makes nothing newly required, adds 13 definitions (`Dataset`, `DataField`, `ArrowRef`, `PagesRef`, `ServerRef`, `Grid`, `GridColumn`, `SortKey`, `GridPivot`, `Measure`, `Tree`, `DataChart`, `GeoPoint`); `ContractAppendOnlyTest` 3 green. |
+| Stamp | **pass** | Every existing `sutra` case still stamps `1.0` at both levels; the datasets cases stamp `1.1` (one without a dataset stays `1.0`); no answered case differs between a run at level 1.0 and one at 1.1. |
+| Conformance (tools bundle) | **pass** | 2,130 cases. Level 1.0: pass 1,939, unverified failing 58, **verified failing 0**. Level 1.1: pass 1,945, unverified failing 104 (the 46 more are the unbuilt 1.1 suites, 43 of them `el/messages-level-1-1`), **verified failing 0**. JVM = Node byte-identical at both levels; Python on V8 = JVM at 1.1. |
+| Conformance (runtime bundle) | **fail** | R1. |
+| Level replay | **pass** | `levels.py check`: `level 1.0: identical (2109 identical, 3 newly answered, 18 cases added since)`; `LevelReplayTest` green. Two lines of `compat/levels/1.0` re-recorded (G1-2, accepted). No `compat/levels/1.1` yet: record it when 1.1 is released. |
+| API surface | **pass** | Since `7c33edd`: the gate fixes remove 25 lines (all F4) and add 31; contract 1.1 and the merge add 174 and **remove 0**. `ApiSurfaceTest` green. |
+| Unit tests, guards | **pass** | `./mvnw clean verify`: 912 tests, 0 failures, 0 skipped. |
+| Elements gates | **pass** | `build.py --check`, `elements_api.py --check`, `license_headers.py`: 0. Node 341 pass, 0 skipped. pytest with `DRISHTI_RACHANA` at `52e112f`: **160 passed, 0 skipped** (datasets 5, maps 3 browser tests). The pin names `52e112f`, contract 1.1, and its SHA-256 equals Rachana's schema. |
+| Docs | **pass with notes** | Rachana CHANGELOG, `VIEWMODEL.md`, `SPEC.md`; Elements CHANGELOG 3.1.0, USING, CONTRACTS, VIEWS_DESIGN, MIGRATING_TO_3. Notes: R3. |
+| Nothing on `main`, no tags, nothing local-only | **pass** | Rachana `main` `d90176e`, tag `v0.9.0`; Elements `main` `39ca755`, tags `v2.4.0`, `v3.0.0-rc.1`; Drishti `main` `9ce7c3170`: all as at the review. Every worktree clean and on `origin`. |
+
+Remaining, not blocking:
+
+- **R2. Bundle sizes are over the budgets restated today (O1).** Runtime 366,439 bytes Brotli (budget 365 KB), tools 387,663
+  (385 KB); contract 1.1 added about 6 KB to each. No test holds the budget. Trim, or the owner restates again; either way put the
+  budget in a check.
+- **R3. Docs.** DECISIONS has no line for O3 (datasets and the three kinds in G1 as contract 1.1 and level 1.1) or O4 (the geo
+  helper ships in Elements); ROADMAP and README do not mention level 1.1; ROADMAP's diagram (F6); the CHANGELOG still records the
+  bundle hashes of `28d01bf` only (rule P1-3 applies at the release).
+- **R4. `python/tests/test_protocol.py::test_schema_roundtrip_keeps_order_and_drops_absent` fails** (a column's `to_json` writes
+  `fmt, unit, scale`, the test expects `scale, unit, fmt`). Not from this work (the file is unchanged since the package skeleton)
+  and outside C3's smoke test, but it is a red test on the branch: 15 passed, 1 failed.
+- **F11**: the merged worktrees and branches. **F8, F13** stay planned for G2 as before.
+
+To close G1: fix R1, then run `build_js.py` and the conformance tool on both bundles (the runtime bundle with `--bundle`), with
+C4's comparison. No other part of this re-check needs repeating if the fix touches nothing else.
+
+## 9. How this review was run
 
 Fresh clones of both product repositories from `origin` in a scratch folder (removed afterwards); JDK 21 at
 `/usr/lib/jvm/java-21-openjdk-amd64`; Maven `package` and `verify` only; the reference bridge on the existing i7a jars of the
