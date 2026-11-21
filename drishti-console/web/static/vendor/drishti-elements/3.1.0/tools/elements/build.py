@@ -422,11 +422,13 @@ def gen_formats() -> str:
         f = raw[name] or {}
         table[name] = {"type": f.get("type", "number"), "decimals": int(f.get("decimals", 0)), "grouping": bool(f.get("grouping", True)),
                        "sign": f.get("sign", "auto"), "scale": float(f.get("scale", 1)), "suffix": f.get("suffix"), "pattern": f.get("pattern")}
+        if f.get("since"):
+            table[name]["since"] = str(f["since"])              # the Rachana language level that brought the name (a painter draws it from any view)
     body = json.dumps(table, indent=2, ensure_ascii=False)
     return (gen_header("The server's named formats (fmt: amount0, pct2, compact, dmy, ...)", "data/formats.yaml")
             + "\n/** The bundled named formats, exactly as the server reads them (Formats.java): a pack's or a site's formats are added at run\n"
             " *  time with defineFormats().\n"
-            " *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}>} */\n"
+            " *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string, since: (string|undefined)}>} */\n"
             f"export const SERVER_FORMATS = Object.freeze({body});\n")
 
 

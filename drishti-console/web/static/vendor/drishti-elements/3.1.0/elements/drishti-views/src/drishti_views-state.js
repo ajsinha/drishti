@@ -28,7 +28,7 @@ export function triggerOf(kind) {
 }
 
 /** The kinds whose marks fire point-click (a chart's points, steps, events or candles, a line or area's x positions, a figure or record). */
-export const POINT_KINDS = Object.freeze(['line', 'area', 'scatter', 'waterfall', 'timeline', 'candlestick', 'metric', 'gauge', 'kv', 'status', 'treemap']);
+export const POINT_KINDS = Object.freeze(['line', 'area', 'scatter', 'waterfall', 'timeline', 'candlestick', 'metric', 'gauge', 'kv', 'status', 'treemap', 'pivot', 'surface']);
 
 /**
  * The trigger a kind's marks fire.
@@ -58,11 +58,25 @@ export function marksOf(panel) {
   if (k === 'timeline') { return list(d.events).filter(isObj); }
   if (k === 'candlestick') { return list(d.candles).filter(isObj); }
   if (k === 'treemap') { return list(d.cells).filter(isObj); }
+  if (k === 'pivot') { const out = []; list(d.rows).forEach((r) => list(r && r.cells).forEach((c) => out.push(isObj(c) ? c : {}))); return out; }   // row by row
+  if (k === 'surface') { return surfaceMarks(d); }
   if (k === 'line' || k === 'area') {
     return list(d.x).map((x, i) => ({ set: list(d.set)[i] || null, on: list(d.on)[i] || null, ev: list(d.ev)[i] }));
   }
   if (k === 'metric' || k === 'gauge' || k === 'kv' || k === 'status') { return [d]; }
   return [];
+}
+
+/**
+ * A surface's marks, row by row (z[row][column]): each point's ev, set and on from the matrices beside z (contract 1.2).
+ * @param {Object} d the surface's data
+ * @returns {Object[]}
+ */
+export function surfaceMarks(d) {
+  const at = (m, j, i) => { const r = list(m)[j]; return Array.isArray(r) && r[i] !== undefined ? r[i] : null; };
+  const out = [];
+  list(d && d.z).forEach((row, j) => list(row).forEach((v, i) => out.push({ set: at(d.set, j, i), on: at(d.on, j, i), ev: at(d.ev, j, i) })));
+  return out;
 }
 
 /**

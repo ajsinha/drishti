@@ -44,6 +44,14 @@ export function pointOf(kind, d, p) {
     if (Array.isArray(d.set) && d.set[i]) { out.set = d.set[i]; }
     return out;
   }
+  if (kind === 'surface') {                                           // a heatmap cell: the engine's datum is [column, row, value]
+    const v = Array.isArray(p.data) ? p.data : p.data && p.data.value, row = Array.isArray(v) && Array.isArray(d.ev) ? d.ev[v[1]] : null;
+    const ev = Array.isArray(row) ? row[v[0]] : null;
+    if (ev === null || ev === undefined) { return null; }
+    const out = { ev: String(ev) }, sets = Array.isArray(d.set) ? d.set[v[1]] : null;
+    if (Array.isArray(sets) && sets[v[0]]) { out.set = sets[v[0]]; }
+    return out;
+  }
   const rec = p.data && (p.data.point || p.data.step || p.data.candle || p.data.event || p.data.cell || p.data.rec);
   if (rec && rec.ev !== undefined && rec.ev !== null) { return Object.assign({ ev: String(rec.ev) }, rec.set ? { set: rec.set } : {}); }
   return null;
@@ -241,6 +249,7 @@ export class PanelCharts {
       const c = E.init(el, null, { renderer: mode === '3d' ? 'canvas' : 'svg' });
       c.setOption(panelOption('surface', d, t, null, mode), true);
       this.all.push(c);
+      c.on('click', (p) => { const mark = pointOf('surface', d, p); if (mark && this.o.onPoint) { this.o.onPoint(mark, el); } });   // contract 1.2
     };
     let mode = view;
     if (view === '3d') { try { if (!this.o.gl) { throw new Error('no GL'); } await this.o.gl(); } catch (e) { mode = 'heatmap'; } }

@@ -26,3 +26,9 @@ formats:
   compact:  { type: compact, decimals: 1 }
   date:     { type: date, pattern: yyyy-MM-dd }
   dmy:      { type: date, pattern: dd MMM yyyy }
+  # Language level 1.2 (Rachana): four names Drishti's packs declared first, promoted into Core with Drishti's own definitions (compat/promotions.yaml
+  # in drishti-rachana). Below 1.2 Rachana's runtime does not know them (they print as text, as any unknown name); a painter draws them from any view.
+  pct4:     { type: number, decimals: 4, scale: 100, suffix: "%", since: "1.2" }
+  bp1:      { type: number, decimals: 1, sign: always, suffix: " bp", since: "1.2" }
+  df4:      { type: number, decimals: 4, since: "1.2" }
+  price4:   { type: number, decimals: 4, since: "1.2" }

@@ -19,6 +19,14 @@ Each release lists what changed, by library. One version for every library: the 
 
 ## Unreleased
 
+- **Pivot cells and surface points are marks** (drishti-views, drishti-chart; ViewModel contract 1.2: `Cell.ev`, `set`, `on`,
+  `Surface.ev`, `set`, `on`): a pivot cell with a figure is clickable (keyboard too), runs its effects as `point-click` and hands its
+  `ev` to the host as the `point` event; a surface point (heatmap and 3D) does the same through the chart. `marksOf` counts a pivot's
+  cells and a surface's points row by row; the schema copy synced with drishti-rachana 19b16da; fire fixture regenerated.
+- **Formats `pct4`, `bp1`, `df4`, `price4` bundled** (drishti-core, `data/formats.yaml`): Rachana's language level 1.2 promotes these four
+  names from Drishti's packs into Core with Drishti's definitions, so the shared table carries them (`since: "1.2"`, kept in
+  `SERVER_FORMATS`); a painter draws them from any view. **`pack --data`** puts `data/formats.yaml` and `data/world-regions.yaml` in the
+  pack (hashed in its manifest), so a host pins the painter and the tables it formats with in one folder.
 - **Forms, actions and control changes** (drishti-views, drishti-inputs; ViewModel contract 1.2): the `form` panel drawn by drishti-inputs' Form (types, options, required, min and max, starting values, Submit and Cancel; a refused submit shows the messages the host's `check` hook answers, nothing is evaluated in the browser); panel `actions:` buttons in the header (confirm in a dialog, `requires` through `host.allowed`); `handle.change(control, value)` for a control's `on.change`; effects read `event` (a submitted value, the new control value). `Form` option `cancelLabel` and `onCancel`. The `fire/forms`, `fire/actions` and `fire/change` cases of drishti-rachana run through the painter in Chromium and on the store under Node.
 
 - **Charts, views**: a chart drawn before its box had a height (the engine at 0 px high) now follows its own box: each chart container is observed, not only the view, so the chart-point click is steady under parallel load (the browser test waits for the chart to be sized to its box).

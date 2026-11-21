@@ -1297,6 +1297,16 @@
         "suffix": null,
         "pattern": null
       },
+      "bp1": {
+        "type": "number",
+        "decimals": 1,
+        "grouping": true,
+        "sign": "always",
+        "scale": 1.0,
+        "suffix": " bp",
+        "pattern": null,
+        "since": "1.2"
+      },
       "compact": {
         "type": "compact",
         "decimals": 1,
@@ -1314,6 +1324,16 @@
         "scale": 1.0,
         "suffix": null,
         "pattern": "yyyy-MM-dd"
+      },
+      "df4": {
+        "type": "number",
+        "decimals": 4,
+        "grouping": true,
+        "sign": "auto",
+        "scale": 1.0,
+        "suffix": null,
+        "pattern": null,
+        "since": "1.2"
       },
       "dmy": {
         "type": "date",
@@ -1342,6 +1362,16 @@
         "suffix": "%",
         "pattern": null
       },
+      "pct4": {
+        "type": "number",
+        "decimals": 4,
+        "grouping": true,
+        "sign": "auto",
+        "scale": 100.0,
+        "suffix": "%",
+        "pattern": null,
+        "since": "1.2"
+      },
       "price2": {
         "type": "number",
         "decimals": 2,
@@ -1350,6 +1380,16 @@
         "scale": 1.0,
         "suffix": null,
         "pattern": null
+      },
+      "price4": {
+        "type": "number",
+        "decimals": 4,
+        "grouping": true,
+        "sign": "auto",
+        "scale": 1.0,
+        "suffix": null,
+        "pattern": null,
+        "since": "1.2"
       },
       "signed0": {
         "type": "number",

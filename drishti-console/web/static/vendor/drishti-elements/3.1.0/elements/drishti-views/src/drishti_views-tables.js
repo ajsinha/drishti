@@ -21,7 +21,7 @@
 import { h } from '../../drishti-core/src/drishti_index.js';
 import { defineKind } from './drishti_views-kinds.js';
 import { drawCell, say } from './drishti_views-cells.js';
-import { marksOf, hasEffects } from './drishti_views-state.js';
+import { marksOf, hasEffects, clickable } from './drishti_views-state.js';
 
 /** Rows drawn at first, and added by each "Show more". */
 export const PAGE_ROWS = 100;
@@ -248,6 +248,7 @@ class PivotView {
       const cells = list(r.cells), values = list(r.values);
       for (let c = 0; c < cols.length; c++) {
         const td = h(doc, 'td', { cls: 'dv-num' }, [drawCell(ctx, cells[c], 'span')]);
+        this.markCell(td, cells[c], i * cols.length + c);                      // contract 1.2: a cell with a figure is a point-click mark
         const v = values[c];
         if (d.heat === true && typeof v === 'number' && isFinite(v) && hi > lo) {
           td.classList.add('dv-heat');
@@ -266,6 +267,21 @@ class PivotView {
     while (this.box.firstChild) { this.box.removeChild(this.box.firstChild); }
     this.box.appendChild(h(doc, 'div', { cls: 'dv-tbl-scroll', attrs: { tabindex: '0', role: 'region', 'aria-label': this.panel.title || this.panel.id } }, [table]));
     if (Number.isInteger(d.more) && d.more > 0) { this.box.appendChild(h(doc, 'p', { cls: 'dv-more', text: say(m, 'moreRows', { count: d.more.toLocaleString('en-US') }) })); }
+  }
+
+  /** @private a cell that is a mark (contract 1.2): its effects run on a click (state), its ev handed to the host (the panel's event) */
+  markCell(td, cell, ix) {
+    const ev = cell && typeof cell.ev === 'string' ? cell.ev : null;
+    const acts = clickable(this.ctx, td, this.panel, 'point-click', ix, cell);
+    if (ev === null) { return; }
+    if (!acts) {
+      td.classList.add('dv-pick');
+      td.setAttribute('tabindex', '0');
+      td.setAttribute('role', 'button');
+    }
+    const send = () => this.ctx.emit('point', { panel: this.panel.id, ev: ev });
+    td.addEventListener('click', send);
+    td.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); send(); } });
   }
 
   dispose() { this.box.remove(); }

@@ -27,10 +27,12 @@ import { marksOf, hasEffects, clickable } from './drishti_views-state.js';
 export const CHART_KINDS = Object.freeze(['line', 'area', 'waterfall', 'histogram', 'scatter', 'candlestick', 'surface', 'graph', 'map', 'treemap']);
 
 const list = (x) => (Array.isArray(x) ? x : []);
+/* a surface point's place among its marks, row by row: the engine's datum is [column, row, value] (contract 1.2) */
+const surfaceIndex = (datum, d) => { const v = Array.isArray(datum) ? datum : datum && datum.value; return Array.isArray(v) ? v[1] * list(d && d.x).length + v[0] : -1; };
 const str = (v) => (v === null || v === undefined ? '' : String(v));
 const LIMIT_ROWS = 500;
 /** The chart kinds whose marks fire point-click (a point, a step, a candle, an x position). */
-const POINT_CHARTS = { line: true, area: true, scatter: true, waterfall: true, candlestick: true, treemap: true };
+const POINT_CHARTS = { line: true, area: true, scatter: true, waterfall: true, candlestick: true, treemap: true, surface: true };
 
 /**
  * The rows of a chart's data table: its column heads and rows of text (at most 500 rows).
@@ -134,7 +136,7 @@ function engineKind(kind) {
           const d = e && e.data ? e.data : null;
           const find = (m) => { let i = marks.indexOf(m); if (i < 0 && m) { const t = JSON.stringify(m); i = marks.findIndex((x) => JSON.stringify(x) === t); } return i; };   // the engine may hold a copy
           const trig = kind === 'hbar' ? 'bar-click' : 'point-click';                // the donut's slices are the bars (contract 1.2)
-          let ix = kind === 'hbar' ? find(d && d.bar) : kind === 'scatter' ? find(d && d.point) : kind === 'waterfall' ? find(d && d.step) : kind === 'treemap' ? find(d && d.cell) : e.dataIndex;
+          let ix = kind === 'hbar' ? find(d && d.bar) : kind === 'scatter' ? find(d && d.point) : kind === 'waterfall' ? find(d && d.step) : kind === 'treemap' ? find(d && d.cell) : kind === 'surface' ? surfaceIndex(d, cur.data) : e.dataIndex;
           if (kind === 'candlestick' && e.seriesIndex > 0) { ix = -1; }
           if (Number.isInteger(ix) && ix >= 0) { ctx.fire(String(cur.id), trig, ix); }
         });

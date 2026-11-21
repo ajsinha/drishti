@@ -17,7 +17,7 @@
 
 /** The bundled named formats, exactly as the server reads them (Formats.java): a pack's or a site's formats are added at run
  *  time with defineFormats().
- *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}>} */
+ *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string, since: (string|undefined)}>} */
 export const SERVER_FORMATS = Object.freeze({
   "amount0": {
     "type": "number",
@@ -37,6 +37,16 @@ export const SERVER_FORMATS = Object.freeze({
     "suffix": null,
     "pattern": null
   },
+  "bp1": {
+    "type": "number",
+    "decimals": 1,
+    "grouping": true,
+    "sign": "always",
+    "scale": 1.0,
+    "suffix": " bp",
+    "pattern": null,
+    "since": "1.2"
+  },
   "compact": {
     "type": "compact",
     "decimals": 1,
@@ -54,6 +64,16 @@ export const SERVER_FORMATS = Object.freeze({
     "scale": 1.0,
     "suffix": null,
     "pattern": "yyyy-MM-dd"
+  },
+  "df4": {
+    "type": "number",
+    "decimals": 4,
+    "grouping": true,
+    "sign": "auto",
+    "scale": 1.0,
+    "suffix": null,
+    "pattern": null,
+    "since": "1.2"
   },
   "dmy": {
     "type": "date",
@@ -82,6 +102,16 @@ export const SERVER_FORMATS = Object.freeze({
     "suffix": "%",
     "pattern": null
   },
+  "pct4": {
+    "type": "number",
+    "decimals": 4,
+    "grouping": true,
+    "sign": "auto",
+    "scale": 100.0,
+    "suffix": "%",
+    "pattern": null,
+    "since": "1.2"
+  },
   "price2": {
     "type": "number",
     "decimals": 2,
@@ -90,6 +120,16 @@ export const SERVER_FORMATS = Object.freeze({
     "scale": 1.0,
     "suffix": null,
     "pattern": null
+  },
+  "price4": {
+    "type": "number",
+    "decimals": 4,
+    "grouping": true,
+    "sign": "auto",
+    "scale": 1.0,
+    "suffix": null,
+    "pattern": null,
+    "since": "1.2"
   },
   "signed0": {
     "type": "number",
