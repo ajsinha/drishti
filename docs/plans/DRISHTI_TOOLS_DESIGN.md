@@ -355,3 +355,7 @@ not T4: if xlsx is not finished when Lake needs its pin, tag `v1.0.0` without it
 | TL-12 | Versions across consumers | **Additive-only API; the highest pinned version wins; guard in Drishti** |
 | TL-13 | Where `LoadGuard` lives | **`tools-time`**: nine connector plug-ins of Drishti need it and must not pull `lake-io` for it |
 | TL-14 | Entry rule for a new module | **Two consumers, or the owner's word; domain-free; the standard library first, a thin wrapper second, own code last and with an oracle test** |
+
+## 10. Decisions taken (lead, under the owner's delegation, 2026-11-21)
+
+TL-1 to TL-14 are **accepted as recommended**. TL-2 is a stated exception to "standard library first": our own JDK-only xlsx writer (one writer replacing Drishti's four), with Apache POI as the test-scope oracle that proves every workbook opens and reads back identically; a reader (TL-3) wraps POI in its own artifact later. Repository `github.com/ajsinha/drishti-tools` (private) created 2026-11-21. Owner objective governing it: reduce duplicates, fix bugs in one place, less code, modular and reusable.
