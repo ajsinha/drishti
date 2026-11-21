@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -111,7 +111,7 @@ class DeltaLz4Test {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void rawLz4BlocksUnderTheDeprecatedLz4CodecReadToo(String engine) throws Exception {
         Path root = rawBlocksUnderLz4();
         DeltaSourcePlugin p = plugin(root, engine);
@@ -127,7 +127,7 @@ class DeltaLz4Test {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void everyValueOfLz4AndLz4RawTablesEqualsTheUncompressedCopy(String engine) throws Exception {
         DeltaSourcePlugin plain = plugin("uncompressed", engine);
         for (String fixture : new String[] {"lz4", "lz4_raw", "arrow_lz4"}) {

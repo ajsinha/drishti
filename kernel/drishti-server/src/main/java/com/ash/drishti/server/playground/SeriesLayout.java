@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.playground;
 
-import com.ash.drishti.server.dist.XlsxWriter;
+import com.ash.tools.xlsx.Sheet;
 import java.util.List;
 
 /**
@@ -40,19 +40,19 @@ public final class SeriesLayout {
     /** What a sheet holds at each place; the layout calls these in row order, left to right. */
     public interface Cells {
         /** The title of head line {@code line} (Position, Currency, Input form). */
-        void headTitle(SheetStream s, int col, int line);
+        void headTitle(Sheet s, int col, int line);
 
         /** Item {@code item}'s head line {@code line}. */
-        void itemHead(SheetStream s, int col, int item, int line);
+        void itemHead(Sheet s, int col, int item, int line);
 
         /** Point {@code point}'s label (its index and date). */
-        void pointLabel(SheetStream s, int col, int point);
+        void pointLabel(Sheet s, int col, int point);
 
-        void seriesTitle(SheetStream s, int col, String series);
+        void seriesTitle(Sheet s, int col, String series);
 
-        void item(SheetStream s, int col, int item, int point);
+        void item(Sheet s, int col, int item, int point);
 
-        void series(SheetStream s, int col, String series, int point);
+        void series(Sheet s, int col, String series, int point);
     }
 
     private final Orientation o;
@@ -124,11 +124,11 @@ public final class SeriesLayout {
     }
 
     public String cell(int item, int point) {
-        return XlsxWriter.col(itemCol(item, point)) + itemRow(item, point);
+        return com.ash.tools.xlsx.Cells.col(itemCol(item, point)) + itemRow(item, point);
     }
 
     public String seriesCell(String s, int point) {
-        return XlsxWriter.col(seriesCol(s, point)) + seriesRow(s, point);
+        return com.ash.tools.xlsx.Cells.col(seriesCol(s, point)) + seriesRow(s, point);
     }
 
     /** An item's values over points {@code from..to}, absolute ({@code $C$4:$C$512}). */
@@ -142,7 +142,7 @@ public final class SeriesLayout {
 
     /** One point's values across items {@code from..to} (relative: the cell's own row or column moves with it). */
     public String across(int point, int from, int to) {
-        return XlsxWriter.col(itemCol(from, point)) + itemRow(from, point) + ":" + XlsxWriter.col(itemCol(to, point)) + itemRow(to, point);
+        return com.ash.tools.xlsx.Cells.col(itemCol(from, point)) + itemRow(from, point) + ":" + com.ash.tools.xlsx.Cells.col(itemCol(to, point)) + itemRow(to, point);
     }
 
     /** A series over points {@code from..to}, absolute. */
@@ -156,11 +156,11 @@ public final class SeriesLayout {
 
     /** {@code $C$4}. */
     public static String abs(int col, int row) {
-        return "$" + XlsxWriter.col(col) + "$" + row;
+        return "$" + com.ash.tools.xlsx.Cells.col(col) + "$" + row;
     }
 
     /** Writes the sheet's cells in row order. */
-    public void emit(SheetStream s, Cells c) {
+    public void emit(Sheet s, Cells c) {
         if (itemsAsColumns()) {
             for (int line = 0; line < heads; line++) {
                 s.row(line + 1);

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.deltalake.write.LakeCli;
+import com.ash.lake.delta.write.LakeCli;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

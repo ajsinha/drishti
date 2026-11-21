@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.plugin.kafka;
 
-import com.ash.drishti.api.tls.PemReader;
-import com.ash.drishti.api.tls.Secrets;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.PemReader;
+import com.ash.tools.settings.Secrets;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
@@ -59,7 +59,7 @@ final class KafkaSecurity {
     private KafkaSecurity() {}
 
     static Result translate(Map<String, String> settings) {
-        return translate(settings, com.ash.drishti.settingsfile.Placeholders::process, Clock.systemUTC());
+        return translate(settings, com.ash.tools.settings.Placeholders::process, Clock.systemUTC());
     }
 
     static Result translate(Map<String, String> settings, Function<String, String> env, Clock clock) {
@@ -108,7 +108,7 @@ final class KafkaSecurity {
                 throw new TlsException("tls.insecure-trust-all is not supported for Kafka (the client builds its own TLS); trust the "
                         + "broker's CA with tls.ca-file instead, and use tls.verify-hostname: false if the names do not match");
             }
-            material = TlsContexts.build(tls, env, clock);
+            material = DrishtiTools.tls(tls, env, clock);
             tlsProperties(out, tls, material);
         }
         if (sasl) {

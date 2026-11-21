@@ -222,7 +222,7 @@ public final class NetSchema {
         if (raw == null) {
             return "";
         }
-        return com.ash.drishti.settingsfile.Placeholders.resolveOr(raw, env, "");   // the one resolver, through this view; unset: empty
+        return com.ash.tools.settings.Placeholders.resolveOr(raw, env, "");   // the one resolver, through this view; unset: empty
     }
 
     /** {@code 150ms}, {@code 5s}, {@code 10m}, {@code 24h}, {@code 1d}, or an ISO-8601 duration ({@code PT5S}). */

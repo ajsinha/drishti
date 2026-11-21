@@ -32,8 +32,11 @@
     <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
-    <!-- the settings files and the one placeholder resolver (pure Java, no dependencies) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-settingsfile</artifactId><version>${project.version}</version></dependency>
+    <!-- Drishti Tools (pure Java): the settings files and the one placeholder resolver, TLS and the outbound proxy, single-flight, the load guard -->
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-settings</artifactId></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-net</artifactId></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-concurrent</artifactId></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-time</artifactId></dependency>
   </dependencies>
   <properties>
     <!-- the API reference (the parent's profile api-docs): all of the plugin SPI -->

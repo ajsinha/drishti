@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.notify;
 
-import com.ash.drishti.api.tls.Secrets;
+import com.ash.tools.settings.Secrets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

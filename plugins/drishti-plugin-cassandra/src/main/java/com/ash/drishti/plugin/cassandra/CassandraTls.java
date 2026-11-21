@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.ssl.SslEngineFactory;
 import java.net.InetSocketAddress;
@@ -47,7 +47,7 @@ final class CassandraTls {
             }
             return null;
         }
-        return TlsContexts.build(ts, env, java.time.Clock.systemUTC());
+        return DrishtiTools.tls(ts, env, java.time.Clock.systemUTC());
     }
 
     /** The driver's engine factory over the material. */

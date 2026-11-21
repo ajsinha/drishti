@@ -17,6 +17,9 @@ package com.ash.drishti.bicompute.export;
 
 import com.ash.drishti.kernel.api.pivot.CellKey;
 import com.ash.drishti.kernel.api.pivot.PivotProvider;
+import com.ash.tools.xlsx.Cells;
+import com.ash.tools.xlsx.Sheet;
+import com.ash.tools.xlsx.Workbook;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
@@ -98,26 +101,21 @@ public final class PivotExport {
         }
         boolean below = !"above".equals(((Map<?, ?>) answer.getOrDefault("view", Map.of())).get("subtotals"));
         int width = cols.size() * measures.size();
-        double[] widths = new double[width + 1];
-        widths[0] = 36;
-        for (int i = 1; i <= width; i++) {
-            widths[i] = 16;
-        }
-        try (Xlsx x = new Xlsx(out)) {
-            x.sheet("Pivot", below, widths);
-            x.row(0).text(0, "Pivot · " + answer.get("title") + (answer.get("date") == null ? "" : " · " + answer.get("date")), Xlsx.TITLE);
-            x.row(0).text(0, String.join(" › ", (List<String>) answer.getOrDefault("rowDimensions", List.of())), Xlsx.HEAD);
+        try (Workbook wb = Workbook.to(out)) {
+            Sheet x = wb.sheet("Pivot").outline(below).width(0, 36).widths(1, width, 16);
+            x.next().text(0, "Pivot · " + answer.get("title") + (answer.get("date") == null ? "" : " · " + answer.get("date")), "title");
+            x.next().text(0, String.join(" › ", (List<String>) answer.getOrDefault("rowDimensions", List.of())), "header");
             int c = 1;
             for (Map<String, Object> col : cols) {
                 for (Map<String, Object> m : measures) {
-                    x.text(c++, label(col), Xlsx.HEAD);
+                    x.text(c++, label(col), "header");
                 }
             }
-            x.row(0).text(0, "", Xlsx.HEAD);
+            x.next().text(0, "", "header");
             c = 1;
             for (int i = 0; i < cols.size(); i++) {
                 for (Map<String, Object> m : measures) {
-                    x.text(c++, String.valueOf(m.get("label")) + ("holistic".equals(m.get("kind")) ? " (each cell from its own members)" : ""), Xlsx.HEAD);
+                    x.text(c++, String.valueOf(m.get("label")) + ("holistic".equals(m.get("kind")) ? " (each cell from its own members)" : ""), "header");
                 }
             }
             Map<Integer, Integer> sheetRow = new HashMap<>();
@@ -130,7 +128,7 @@ public final class PivotExport {
                 int depth = ((Number) r.getOrDefault("depth", 0)).intValue();
                 int level = "grand".equals(kind) ? 0 : depth;
                 boolean strong = "total".equals(kind) || "grand".equals(kind) || "header".equals(kind);
-                x.row(level).text(0, "  ".repeat(Math.max(0, depth - 1)) + label(r), strong ? Xlsx.BOLD : Xlsx.PLAIN);
+                x.next(level).text(0, "  ".repeat(Math.max(0, depth - 1)) + label(r), strong ? "bold" : null);
                 if ("header".equals(kind)) {
                     continue;
                 }
@@ -150,46 +148,48 @@ public final class PivotExport {
                         Double v = value(cell, lab);
                         boolean formula = Boolean.TRUE.equals(m.get("plainSum")) && m.get("showAs") == null && !children.isEmpty()
                                 && children.size() < 400;
-                        int style = m.get("showAs") != null && String.valueOf(m.get("showAs")).startsWith("pct") ? Xlsx.PCT
-                                : strong ? Xlsx.NUM_BOLD : Xlsx.NUM;
+                        String style = m.get("showAs") != null && String.valueOf(m.get("showAs")).startsWith("pct") ? "percent"
+                                : strong ? "number-bold" : "number";
                         if (formula && cell != null) {
-                            String col0 = Xlsx.col(c);
+                            String col0 = Cells.col(c);
                             List<String> refs = children.stream().map(n -> col0 + n).toList();
                             x.formula(c, "SUM(" + String.join(",", refs) + ")", v, style);
                         } else {
-                            x.number(c, v, style);
+                            if (v != null && !v.isNaN() && !v.isInfinite()) {
+                                x.number(c, (double) v, style);
+                            }
                         }
                         c++;
                     }
                 }
             }
-            x.row(0);
-            x.row(0).text(0, "SUM formulas only where a total is the plain sum of its parts (sum, count); every other figure is the engine's "
-                    + "value, each total computed from its own members.", Xlsx.NOTE);
-            x.sheet("Provenance", true, new double[] {28, 110});
-            x.row(0).text(0, "Provenance", Xlsx.TITLE);
-            x.row(0).text(0, "Exported by", Xlsx.BOLD).text(1, user == null ? "" : user, Xlsx.PLAIN);
-            x.row(0).text(0, "Exported at", Xlsx.BOLD).text(1, now, Xlsx.PLAIN);
-            x.row(0).text(0, "Provenance id", Xlsx.BOLD).text(1, String.valueOf(answer.get("provenance")), Xlsx.PLAIN);
+            x.next();
+            x.next().text(0, "SUM formulas only where a total is the plain sum of its parts (sum, count); every other figure is the engine's "
+                    + "value, each total computed from its own members.", "note");
+            x = wb.sheet("Provenance").outline(true).width(0, 28).width(1, 110);
+            x.next().text(0, "Provenance", "title");
+            x.next().text(0, "Exported by", "bold").text(1, user == null ? "" : user, null);
+            x.next().text(0, "Exported at", "bold").text(1, now, null);
+            x.next().text(0, "Provenance id", "bold").text(1, String.valueOf(answer.get("provenance")), null);
             if (answer.get("provenanceShared") instanceof Map<?, ?> p) {
                 for (Map.Entry<?, ?> e : p.entrySet()) {
                     if (!"functions".equals(e.getKey()) && !"statements".equals(e.getKey())) {
-                        x.row(0).text(0, String.valueOf(e.getKey()), Xlsx.BOLD).text(1, String.valueOf(e.getValue()), Xlsx.PLAIN);
+                        x.next().text(0, String.valueOf(e.getKey()), "bold").text(1, String.valueOf(e.getValue()), null);
                     }
                 }
             }
-            x.row(0);
-            x.row(0).text(0, "Measure", Xlsx.HEAD).text(1, "Function, kind, exactness and how its totals are made", Xlsx.HEAD);
+            x.next();
+            x.next().text(0, "Measure", "header").text(1, "Function, kind, exactness and how its totals are made", "header");
             for (Map<String, Object> m : measures) {
                 boolean plain = Boolean.TRUE.equals(m.get("plainSum"));
-                x.row(0).text(0, String.valueOf(m.get("label")), Xlsx.BOLD).text(1, m.get("id") + " · " + m.get("kind") + " · "
+                x.next().text(0, String.valueOf(m.get("label")), "bold").text(1, m.get("id") + " · " + m.get("kind") + " · "
                         + (Boolean.FALSE.equals(m.get("exact")) ? "≈ (approximate, with its error)" : "exact") + " · "
                         + (plain && m.get("showAs") == null ? "totals written as SUM formulas of their parts" : "every figure a value computed by the engine")
-                        + (m.get("showAs") != null ? " · shown as " + m.get("showAs") : ""), Xlsx.PLAIN);
+                        + (m.get("showAs") != null ? " · shown as " + m.get("showAs") : ""), null);
             }
-            x.row(0);
-            x.row(0).text(0, "Masks and entitlements were applied before aggregation: this file holds what the screen showed to its exporter.",
-                    Xlsx.NOTE);
+            x.next();
+            x.next().text(0, "Masks and entitlements were applied before aggregation: this file holds what the screen showed to its exporter.",
+                    "note");
         }
     }
 
@@ -222,7 +222,7 @@ public final class PivotExport {
                     Map<String, Object> cell = cells.get(r.get("key") + "|" + col.get("key"));
                     for (Map<String, Object> m : measures) {
                         Double v = value(cell, String.valueOf(m.get("label")));
-                        line.add(v == null ? "" : Xlsx.num(v));
+                        line.add(v == null ? "" : Cells.num(v));
                     }
                 }
                 w.write(String.join(d, line) + "\r\n");
@@ -250,7 +250,7 @@ public final class PivotExport {
                     }
                     Double v = value(cell, String.valueOf(m.get("label")));
                     line.add(q(String.valueOf(m.get("label")), delimiter));
-                    line.add(v == null ? "" : Xlsx.num(v));
+                    line.add(v == null ? "" : Cells.num(v));
                     line.add(Boolean.FALSE.equals(m.get("exact")) ? "approx" : "exact");
                     line.add(String.valueOf(cell.getOrDefault("members", "")));
                     line.add(String.valueOf(m.get("kind")));
@@ -272,7 +272,7 @@ public final class PivotExport {
         for (List<Object> r : rows.rows()) {
             List<String> line = new ArrayList<>();
             for (Object v : r) {
-                line.add(v == null ? "" : v instanceof Number n ? Xlsx.num(n.doubleValue()) : q(String.valueOf(v), delimiter));
+                line.add(v == null ? "" : v instanceof Number n ? Cells.num(n.doubleValue()) : q(String.valueOf(v), delimiter));
             }
             w.write(String.join(d, line) + "\r\n");
         }

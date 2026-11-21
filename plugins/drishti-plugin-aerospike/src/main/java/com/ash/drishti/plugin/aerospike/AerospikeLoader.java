@@ -15,13 +15,15 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.WritePolicy;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.time.LocalDate;
 import java.util.Map;
@@ -54,7 +56,7 @@ public final class AerospikeLoader {
         String hosts = args.length > 1 && !args[1].startsWith("--") ? args[1] : "localhost:3000";
         String namespace = args.length > 2 && !args[2].startsWith("--") ? args[2] : "test";
         int ttlDays = 0;
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         for (int i = 0; i < args.length - 1; i++) {
             if (args[i].equals("--ttl-days")) {
                 ttlDays = Integer.parseInt(args[i + 1]);
@@ -74,7 +76,7 @@ public final class AerospikeLoader {
         ClientPolicy client = new ClientPolicy();
         client.maxConnsPerNode = poolSize;                                  // never fewer than the writes in flight
         try (AerospikeClient c = new AerospikeClient(client, Host.parseHosts(hosts, 3000));
-             RowFeed in = RowFeed.open(file, RowFeed.asOf(args));          // the load rules: each row's business date (RowFeed)
+             RowFeed in = DrishtiLake.rowFeed(file, RowFeed.asOf(args));          // the load rules: each row's business date (RowFeed)
              ExecutorService writers = Executors.newVirtualThreadPerTaskExecutor()) {
             String line;
             while ((line = in.next()) != null && failed.get() == null) {

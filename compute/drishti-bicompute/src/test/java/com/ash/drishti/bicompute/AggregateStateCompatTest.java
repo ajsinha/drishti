@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
  */
 class AggregateStateCompatTest {
 
-    static final Path RECORD = Path.of(com.ash.drishti.testroots.TestRoots.repo(), "compute", "drishti-bicompute", "src", "test", "resources",
+    static final Path RECORD = Path.of(com.ash.lake.tck.TestRoots.repo(), "compute", "drishti-bicompute", "src", "test", "resources",
             "aggregate-states.txt");
 
     /** Name, fields (inputs), numbers, texts. */

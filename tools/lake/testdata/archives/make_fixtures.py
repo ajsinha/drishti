@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The shared archive fixtures: the archives beside this file and ``expected.json``, the cases both test suites run (Python:
-tools/lake/test_archives.py; Java: drishti-lakeload's ArchivesTest). The rule they test is DATA_GUIDE.md section 2.7 ("Archives").
+tools/lake/test_archives.py; Java: Drishti Lake's ArchivesTest). The rule they test is DATA_GUIDE.md section 2.7 ("Archives").
 
     python3 tools/lake/testdata/archives/make_fixtures.py          rewrite them (byte for byte the same: fixed times, sorted entries)
 

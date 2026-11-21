@@ -465,7 +465,7 @@ every node's members as a bit set and the aggregates on the heap; the current ru
 | `int[]` | +73 MB | +368 MB | +376 MB | column codes, the nodes' runs |
 
 At the start, before any date is open, the heap already grows with the lake: 324 MB at 200,000 positions, 1,106 MB at 1,000,000 in the
-earlier run, 769 MB in the current one (the footer cache now weighed in bytes, `-Ddrishti.parquet.footer-cache-mb`, 64). The
+earlier run, 769 MB in the current one (the footer cache now weighed in bytes, `-Dlake.parquet.footer-cache-mb`, 64). The
 connectors keep the Parquet footers of the P&L table (560,497 `IntColumnChunkMetaData` with their statistics and index references) and an
 entity index of its rows (1.1 million `EntityHit`, `EntityRef` and `HitIndex$Entry`): about 980 bytes a position.
 
@@ -509,7 +509,7 @@ at `-Xmx6g` with the default settings:
 What sets the current heap, as designed ([VAR_GUIDE.md sections 26.8, 27.1 and 27a](../guides/VAR_GUIDE.md#271-bytes-per-date)): each
 node's members are runs of positions, not a bit set as long as the date; the aggregates are mapped from the hot file, not copied to the
 heap; a scope's parts are summed run by run, not position by position (the walk that took 89% of the CPU in the earlier run, 4.9); the
-Parquet footer cache is weighed in bytes (`-Ddrishti.parquet.footer-cache-mb`, 64); and the byte safety net leaves a date read in the
+Parquet footer cache is weighed in bytes (`-Dlake.parquet.footer-cache-mb`, 64); and the byte safety net leaves a date read in the
 last 120 seconds open (`-Ddrishti.open-dates.net-grace-seconds`). At 6 GB the automatic net is a tenth of the heap, 614 MB, less than one
 date: the dates in use stay open over it, so two dates asked in turn by 200 users never close and reload each other, and idle dates still
 leave. The mapped tier's rows are bounded by the disk, not by `memory-budget-mb`, so the date's float32 rows (2,036 MB) need no heap.

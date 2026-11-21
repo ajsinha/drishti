@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The optional settings file, Python side: the same file and rules as the Java ``SettingsFile`` (kernel/drishti-settingsfile).
+"""The optional settings file, Python side: the same file and rules as the Java ``SettingsFile`` (Drishti Tools, `tools-settings`).
 
 ``--settings /absolute/path/drishti.ini[,/absolute/path/secrets.ini]`` on a tool's command line (``-Ddrishti.settings.file=`` for a JVM).
 The paths are never discovered: no environment search, no home folder, no working folder; a relative path is refused and a missing file is

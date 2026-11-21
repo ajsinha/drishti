@@ -32,7 +32,7 @@ import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsMaterial;
 import com.ash.drishti.api.pool.PoolSettings;
 import com.ash.drishti.api.pool.PoolStats;
 import java.lang.reflect.InvocationTargetException;

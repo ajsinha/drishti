@@ -46,19 +46,17 @@ ROOT = Path(__file__).resolve().parents[2]
 ALLOWED: dict[str, list[tuple[str, str]]] = {
     # the lake files' default root is matched as this exact text by the Python lake builders (tools/lake/demo.py, stores.py, lakeconfig.py),
     # which substitute their own data folder for it; the server always has drishti.data.dir (LaunchRoots), so the default is never used there
-    "lake/drishti-lakeio/src/main/java/com/ash/drishti/lakeconfig/Lakes.java": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "config/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "config/connectors.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     "config/lakes.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     "config/store.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
     # the lake files shipped in the jars: the same text the lake builders substitute (above)
-    "lake/drishti-lakeio/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
+    "lake/drishti-lake-host/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "modules/banking/java/banking-service/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     # a pack's own files (formats:, semantics:, help:) are relative to the pack folder (PackResolver), not the working folder
     "config/packs/": [(": config/", "relative to the pack folder")],
     # not paths of the server: a check that refuses '../' in an uploaded zip, and an xlsx part's relationship target
     "kernel/drishti-server/src/main/java/com/ash/drishti/server/design/PackFragment.java": [('contains("../")', "a zip-slip check")],
-    "kernel/drishti-server/src/main/java/com/ash/drishti/server/dist/XlsxWriter.java": [('Target=\\"../', "an xlsx part's relative target")],
     "testing/drishti-testkit/src/main/java/com/ash/drishti/testkit/s3/MinioServer.java": [('Path.of("")', "the test kit looks for the repository from its Maven module")],
     "config/store/store.yaml": [("${drishti.data.dir:./data}", "the store file is also read by tools/storecli; the server resolves drishti.data.dir")],
     # benchmarks and the test kit run under Maven in their own module folder: their scratch is target/ there by design

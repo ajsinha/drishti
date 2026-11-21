@@ -16,13 +16,13 @@
 package com.ash.drishti.server.dataload;
 
 import com.ash.drishti.api.error.DrishtiException;
-import com.ash.drishti.dataload.DataInbox;
-import com.ash.drishti.dataload.DataLoadSettings;
-import com.ash.drishti.dataload.LoaderProcess;
-import com.ash.drishti.dataload.ReadyDesk;
-import com.ash.drishti.dataload.ReadyRule;
-import com.ash.drishti.dataload.Routes;
-import com.ash.drishti.dataload.Signal;
+import com.ash.lake.inbox.DataInbox;
+import com.ash.lake.inbox.DataLoadSettings;
+import com.ash.lake.inbox.LoaderProcess;
+import com.ash.lake.inbox.ReadyDesk;
+import com.ash.lake.inbox.ReadyRule;
+import com.ash.lake.inbox.Routes;
+import com.ash.lake.inbox.Signal;
 import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.packs.Pack;
@@ -62,7 +62,17 @@ public class DataLoadConfiguration {
 
     @Bean
     public DataLoadSettings dataLoadSettings(Environment env) {
-        return Binder.get(env).bind("drishti.dataload", DataLoadSettings.class).orElseGet(DataLoadSettings::defaults);
+        // bound key by key: the settings record also holds the process's LakeRuntime, which is not a setting
+        Binder b = Binder.get(env);
+        java.util.function.BiFunction<String, Class<?>, Object> v = (k, t) -> b.bind("drishti.dataload." + k, t).orElse(null);
+        return new DataLoadSettings((Boolean) v.apply("owner", Boolean.class), (String) v.apply("dir", String.class),
+                (java.time.Duration) v.apply("interval", java.time.Duration.class), (Integer) v.apply("stable-seconds", Integer.class),
+                (Integer) v.apply("max-files", Integer.class), (Double) v.apply("max-gb", Double.class), (String) v.apply("loader-heap", String.class),
+                (java.time.Duration) v.apply("load-timeout", java.time.Duration.class), (Double) v.apply("reject-max-percent", Double.class),
+                (Boolean) v.apply("reload-duplicates", Boolean.class), (Integer) v.apply("keep-outbox-days", Integer.class),
+                (String) v.apply("lake", String.class), (String) v.apply("rules-file", String.class), (Boolean) v.apply("nice", Boolean.class),
+                (String) v.apply("default-mode", String.class), (Boolean) v.apply("new-tables", Boolean.class),
+                com.ash.drishti.lakehost.DrishtiLake.runtime());
     }
 
     @Bean(destroyMethod = "stop")

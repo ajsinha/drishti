@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.testkit.s3;
 
+import com.ash.lake.tck.s3.S3Endpoint;
+import com.ash.lake.tck.s3.S3MockServer;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

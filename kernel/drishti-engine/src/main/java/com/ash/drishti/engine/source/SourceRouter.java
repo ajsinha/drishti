@@ -280,7 +280,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /** A Delta or Iceberg connector: its lake's tables are its kinds by convention. */
     private boolean lakeConnector(String name) {
-        return registry.applied(name).map(c -> com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin())).orElse(false);
+        return registry.applied(name).map(c -> com.ash.lake.config.ConnectorLake.PLUGINS.contains(c.plugin())).orElse(false);
     }
 
     /** The demo lake's name: the lake the packs' demo data is built into (docs/guides/DATA_LAKE_GUIDE.md section 6). */

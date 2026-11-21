@@ -21,7 +21,7 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourcesProperties;
-import com.ash.drishti.lakeload.LakeLoad;
+import com.ash.lake.load.LakeLoad;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.ash.drishti.plugin.file.FileSourcePlugin;
 import com.ash.drishti.plugin.iceberg.IcebergSourcePlugin;

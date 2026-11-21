@@ -639,7 +639,7 @@ product type), and the second refused with both values named and nothing written
 
 ## Step 12 · An append table: each batch once
 
-**The YAML.** A lake of your own in a scratch lake folder (`DRISHTI_LAKES_DIR`), with one append table:
+**The YAML.** A lake of your own in a scratch lake folder (`LAKE_LAKES_DIR`), with one append table:
 
 ```bash
 mkdir -p $SCRATCH/lakes && cp config/lakes/demo.yaml $SCRATCH/lakes/
@@ -654,7 +654,7 @@ tables:
     promote: [POSITION_ID, DESK, CURRENCY]
     vectors: [SCENARIO_PV]
 EOF
-export DRISHTI_LAKES_DIR=$SCRATCH/lakes
+export LAKE_LAKES_DIR=$SCRATCH/lakes
 ```
 
 **The command line.** The parallel loader appends and records the batch; the Python path refuses an append (it does not record batches):
@@ -682,9 +682,9 @@ append per business date, each recorded as `drishti-batch:intraday-0915:<date>` 
   ...
 ```
 
-**The UI.** Admin → Lakes lists the lake files the server reads (`config/lakes/`, or the server's own `DRISHTI_LAKES_DIR`); a table whose file says `load-mode: append` shows it in its row. The scratch lake of this step is read by the command line only.
+**The UI.** Admin → Lakes lists the lake files the server reads (`config/lakes/`, or the server's own `LAKE_LAKES_DIR`); a table whose file says `load-mode: append` shows it in its row. The scratch lake of this step is read by the command line only.
 
-![Admin → Lakes: a table's load mode in its row (a server whose DRISHTI_LAKES_DIR is $SCRATCH/lakes)](img/t34/05-append-table.jpg)
+![Admin → Lakes: a table's load mode in its row (a server whose LAKE_LAKES_DIR is $SCRATCH/lakes)](img/t34/05-append-table.jpg)
 
 **You should see** the same batch never appended twice; a new `--batch-id` adds its rows, the earlier ones kept.
 
@@ -738,14 +738,14 @@ lake migrate-config: wrote 1 lake files and rewrote 1 connector files; restart t
 ```
 **The UI.** Admin → Lakes shows the same lake once the server reads the written lake file (`config/lakes/`); on a real installation the dry run is the place to read what `--write` will do.
 
-![Admin → Lakes: a lake written by the migration (a server whose DRISHTI_LAKES_DIR is $SCRATCH/lakes)](img/t34/06-migrated-lake.jpg)
+![Admin → Lakes: a lake written by the migration (a server whose LAKE_LAKES_DIR is $SCRATCH/lakes)](img/t34/06-migrated-lake.jpg)
 
 **You should see** the connector file keep only `lake:` (and its own reading settings); nothing in the lake's folder changed.
 
 #### Clean up
 
 ```bash
-unset DRISHTI_LAKES_DIR
+unset LAKE_LAKES_DIR
 rm -rf "$SCRATCH"
 ```
 

@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.dist.CsvWriter;
 import com.ash.drishti.server.dist.DocLayout;
 import com.ash.drishti.server.dist.ExportDoc;
 import com.ash.drishti.server.dist.PdfWriter;
-import com.ash.drishti.server.dist.XlsxWriter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -178,7 +178,7 @@ final class VarReportSignoff {
         }
         ExportDoc doc = doc(run, rec, !signed);
         return switch (format) {
-            case "xlsx" -> XlsxWriter.write(doc);
+            case "xlsx" -> ExportWorkbook.write(doc);
             case "csv" -> CsvWriter.write(doc);
             case "pdf" -> {
                 PdfWriter.Geometry g = PdfWriter.Geometry.of(true, 1400);

@@ -18,10 +18,10 @@ package com.ash.drishti.plugin.redis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -196,7 +196,7 @@ class RedisTlsTest {
         RedisSourcePlugin p = new RedisSourcePlugin();
         p.start(DatedSourceContract.context(s));
         try {
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
         } finally {
             p.close();
         }

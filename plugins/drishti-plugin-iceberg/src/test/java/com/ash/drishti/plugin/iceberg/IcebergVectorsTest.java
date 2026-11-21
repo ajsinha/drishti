@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,7 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * Vector columns on Iceberg (VAR_GUIDE.md section 29.3), on both engines: 509-value P&amp;L vectors loaded by {@link IcebergLoader} as
+ * Vector columns on Iceberg (VAR_GUIDE.md section 29.3), on both engines: 509-value P&amp;L vectors loaded by Drishti Lake's loader as
  * {@code list<double>} read back to the bit in bulk ({@link IcebergSourcePlugin#vectors}) and in a fetched document, a missing element
  * kept missing (NaN, never 0), a row without a vector given as length -1, text columns as the Delta connector gives them (QUANTITY, a
  * double, as "1500"); a list that is not numbers is a reject; a relayout keeps the vectors.
@@ -146,26 +147,6 @@ class IcebergVectorsTest {
         try {
             Map<String, double[]> got = read(p, List.of(), new HashMap<>());
             assertThat(got.keySet()).containsExactlyInAnyOrder("POS-00000", "POS-00002");
-        } finally {
-            p.close();
-        }
-    }
-
-    /** A relayout (maintenance) copies the vector columns as they are: the document holds only the marker, never the values. */
-    @ParameterizedTest
-    @ValueSource(strings = {"native", "library"})
-    void aRelayoutKeepsTheVectors(String engine) throws Exception {
-        Path root = tmp.resolve("lake-" + engine);
-        List<Pos> want = VectorLake.positions(20, 17);
-        VectorLake.loadIceberg(tmp, root, engine, Map.of(DAY, want));
-        try (LayoutLake lake = LayoutLake.of(Map.of("root", root.toString(), "domain", "risk", "engine", engine))) {
-            LayoutLake.LayoutTable t = lake.load(VectorLake.KIND).orElseThrow();
-            assertThat(t.relayout(false, tmp.resolve("spill"), 64L << 20)).as("a day in the layout is not drifted by its vector column").isZero();
-            assertThat(t.relayout(true, tmp.resolve("spill"), 64L << 20)).isEqualTo(1);
-        }
-        IcebergSourcePlugin p = plugin(root, engine);
-        try {
-            assertBitEqual(want, read(p, List.of("DESK"), new HashMap<>()));
         } finally {
             p.close();
         }

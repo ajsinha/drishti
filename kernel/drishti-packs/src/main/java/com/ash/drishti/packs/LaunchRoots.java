@@ -67,7 +67,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             new Root("modules", List.of(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING), HOME, "modules", true),
             new Root("module switches", List.of("drishti.modules.dir"), "config", "modules", false),
             new Root("access", List.of("drishti.access.dir"), "config", "access", false),
-            new Root("lakes", List.of("drishti.lakes.dir"), "config", "lakes", false),
+            new Root("lakes", List.of("lake.lakes.dir"), "config", "lakes", false),
             new Root("connectors", List.of("drishti.sources.connectors-dir"), "config", "connectors", false),
             new Root("inbox", List.of("drishti.dataload.dir"), "data", "dataload", false));
     /** The keys the settings file set (server main, before Spring): their origin is the file. */
@@ -514,7 +514,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
 
     /** The source that set a key, in words (an environment variable, a system property, the command line, a configuration file). */
     private static String origin(ConfigurableEnvironment env, String key) {
-        String file = com.ash.drishti.settingsfile.SettingsFile.sourceOf(key);   // the settings file that set it (one of several)
+        String file = com.ash.tools.settings.SettingsFile.sourceOf(key);   // the settings file that set it (one of several)
         if (file != null && System.getProperty(key) != null) {
             return "(" + file + ")";
         }

@@ -347,7 +347,7 @@ column, so small groups make single reads cheap; column scans barely notice.
 
 | Writer | Row group | Set by |
 |---|---|---|
-| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (the Java writer) | **256 KB**, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_GUIDE.md section 7.1](../../docs/guides/CLUSTER_GUIDE.md#133-the-layout-buckets-tables-partitions-files)) |
+| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (the Java writer) | **256 KB**, pages of 64 KB | `LAKE_PARQUET_ROW_GROUP_KB`, `LAKE_PARQUET_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_GUIDE.md section 7.1](../../docs/guides/CLUSTER_GUIDE.md#133-the-layout-buckets-tables-partitions-files)) |
 | the parallel loader into **Iceberg** | 1 MB, unless the layout sets `rowGroupBytes` | the loader's configuration ([DATA_LAKE_GUIDE.md section 3.3](../../docs/guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader)) |
 | the Python writers on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** | the pack's layout |
 
@@ -430,8 +430,8 @@ deleted through a deletion vector are not in the map.
 
 `TRD MX-20000017` on 2026-09-30: the file list gives the day's files (for a past date, the newest day on or before it within
 `lookback-days`); the id map gives the file (a binary search); the file is read with `id = 'MX-20000017'`, so Parquet decodes only the
-one row group whose id range can hold it, and only `id` and `doc` (the page index, `-Ddrishti.parquet.page-index`, narrows it to pages).
-Each file's footer is parsed once and kept (`-Ddrishti.parquet.footer-cache-mb`, 64). The document goes to the heap cache
+one row group whose id range can hold it, and only `id` and `doc` (the page index, `-Dlake.parquet.page-index`, narrows it to pages).
+Each file's footer is parsed once and kept (`-Dlake.parquet.footer-cache-mb`, 64). The document goes to the heap cache
 (`doc-cache-mb`) and the **document cache on disk** (`doc-disk-cache.*`, a RocksDB per connector): a document read once is answered
 without decompressing Parquet, also after a restart. Its entries are keyed by table version, so never stale; it is bounded by size
 (`max-gb`, 1), age (`ttl`, 12h) and a daily clearing (`reset-at`, 02:00). If its folder is locked (the previous process still stopping)

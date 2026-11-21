@@ -28,7 +28,7 @@ import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.JsonCodec;
-import com.ash.drishti.lakeconfig.Lakes;
+import com.ash.lake.config.Lakes;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -125,13 +125,13 @@ class DemoAndRealNeverMixTest {
                     + "\ntables:\n  trading.trade_endur:\n    kind: trade\n");
         }
         System.setProperty(Lakes.PROPERTY, dir.toString());
-        Lakes.useProperties(k -> null);
+        com.ash.drishti.lakehost.DrishtiLake.use(null);
     }
 
     @AfterEach
     void reset() {
         System.clearProperty(Lakes.PROPERTY);
-        Lakes.useProperties(null);
+        com.ash.drishti.lakehost.DrishtiLake.use(null);
     }
 
     private static SourceRouter router(String lake, String ids) {

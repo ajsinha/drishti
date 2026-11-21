@@ -261,14 +261,14 @@ class DistApiTest {
         assertThat(rita.get("xl/worksheets/sheet1.xml")).contains("Distribution report").contains("Data as of 2026-10-08").contains("Dates: 2026-10-08 to 2026-10-08");
         String ritaBars = rita.get("xl/worksheets/sheet3.xml");
         assertThat(ritaBars).contains("DESK-A").contains("DESK-B").contains("DESK-C");
-        assertThat(ritaBars).contains("<v>92000.0</v>");                      // DESK-A's notional, typed as a number
+        assertThat(ritaBars).contains("<v>92000</v>");                        // DESK-A's notional, typed as a number
         Map<String, String> hana = unzip(file("xlsx", as("hana", "desk-head"), body));
         assertThat(hana.get("xl/worksheets/sheet3.xml")).as("a desk head's export holds her desk only").contains("DESK-A").doesNotContain("DESK-B").doesNotContain("DESK-C");
         Map<String, String> ann = unzip(file("xlsx", as("ann", "bi-analyst"), body));
         String annRows = ann.get("xl/worksheets/sheet4.xml");
         String ritaRows = rita.get("xl/worksheets/sheet4.xml");
-        assertThat(ritaRows).as("rita may see MTM").containsPattern("<c r=\"C\\d+\" s=\"3\"><v>-?\\d+(\\.\\d+)?</v></c>");
-        assertThat(annRows).as("ann's MTM is masked: no number in that column").doesNotContainPattern("<c r=\"C\\d+\" s=\"[23]\">");
+        assertThat(ritaRows).as("rita may see MTM").containsPattern("<c r=\"C\\d+\" s=\"\\d+\"><v>-?\\d+(\\.\\d+)?</v></c>");
+        assertThat(annRows).as("ann's MTM is masked: no number in that column").doesNotContainPattern("<c r=\"C\\d+\" s=\"\\d+\"><v>");
     }
 
     @Test @Order(4)

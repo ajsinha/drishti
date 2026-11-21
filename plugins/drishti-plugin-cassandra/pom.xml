@@ -32,6 +32,8 @@
     <drishti.test.forks>1</drishti.test.forks>
   </properties>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency>
       <groupId>org.apache.cassandra</groupId><artifactId>java-driver-core</artifactId><version>${cassandra-driver.version}</version>

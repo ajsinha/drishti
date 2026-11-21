@@ -28,6 +28,8 @@
   <name>drishti-plugin-duckdb</name>
   <description>DuckDB source: one embedded columnar file, a table per data domain, promoted columns for searches</description>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>

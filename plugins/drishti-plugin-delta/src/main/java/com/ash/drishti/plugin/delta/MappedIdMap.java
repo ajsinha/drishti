@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.read.IdMap;
+
 import com.ash.drishti.api.MappedIdFile;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,7 +27,7 @@ import java.nio.file.Path;
  * pages that are used. Written once per table version and date (the folder is named by the version), so it is never stale and outlives a restart.
  * Since 2.9.7 the mapping is released when the map leaves the connector's cache or its file is pruned (never left to the collector).
  */
-final class MappedIdMap implements DeltaTable.IdMap {
+final class MappedIdMap implements IdMap {
 
     /** Mapped again when its mapping was released for being idle ({@code id-map-disk.idle-release}, 2.9.7). */
     private final MappedIdFile.Handle f;
@@ -41,7 +43,7 @@ final class MappedIdMap implements DeltaTable.IdMap {
     }
 
     /** Writes {@code m} to {@code file} (through a temporary file, so a reader never sees half of it) and maps it. */
-    static MappedIdMap write(DeltaTable.IdMap m, Path file) throws IOException {
+    static MappedIdMap write(IdMap m, Path file) throws IOException {
         return new MappedIdMap(MappedIdFile.write(m.size(), m::id, m::file, file));
     }
 

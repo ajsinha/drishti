@@ -61,16 +61,6 @@
   data.KindProvider public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.data.KindProvider.stats()
   data.KindProvider public default java.util.Optional<java.lang.String> com.ash.drishti.kernel.api.data.KindProvider.dataVersion(java.lang.String,java.time.LocalDate)
   data.KindProvider public default java.util.Optional<java.time.LocalDate> com.ash.drishti.kernel.api.data.KindProvider.latestDate(java.lang.String)
-  engines.ComputeEngine public abstract java.lang.Boolean com.ash.drishti.kernel.api.engines.ComputeEngine.running()
-  engines.ComputeEngine public abstract java.lang.String com.ash.drishti.kernel.api.engines.ComputeEngine.id()
-  engines.ComputeEngine public abstract void com.ash.drishti.kernel.api.engines.ComputeEngine.running(boolean)
-  engines.ComputeEngine public default int com.ash.drishti.kernel.api.engines.ComputeEngine.datesOpen()
-  engines.ComputeEngine public default java.util.List<java.lang.String> com.ash.drishti.kernel.api.engines.ComputeEngine.threadPrefixes()
-  engines.ComputeEngine public default long com.ash.drishti.kernel.api.engines.ComputeEngine.memoryBytes()
-  engines.ComputeEngine public default void com.ash.drishti.kernel.api.engines.ComputeEngine.changing(java.lang.String,java.lang.String,java.lang.String)
-  engines.ComputeEngine public default void com.ash.drishti.kernel.api.engines.ComputeEngine.start()
-  engines.ComputeEngine public default void com.ash.drishti.kernel.api.engines.ComputeEngine.stop()
-  engines.ComputeEngine public static int com.ash.drishti.kernel.api.engines.ComputeEngine.threadsNamed(java.util.List<java.lang.String>)
   explain.ExplainRequest public boolean com.ash.drishti.kernel.api.explain.ExplainRequest.wants(java.lang.String)
   explain.ExplainRequest public final boolean com.ash.drishti.kernel.api.explain.ExplainRequest.equals(java.lang.Object)
   explain.ExplainRequest public final int com.ash.drishti.kernel.api.explain.ExplainRequest.hashCode()
@@ -646,7 +636,6 @@ approvals.ApprovalSource$Item
 capacity.CapacityFigures
 data.BindingState
 data.KindProvider
-engines.ComputeEngine
 explain.ExplainRequest
 explain.Explainer
 explain.Explanation

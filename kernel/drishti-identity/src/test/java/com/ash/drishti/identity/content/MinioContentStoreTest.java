@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.identity.content;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.testkit.s3.MinioServer;
-import com.ash.drishti.testkit.s3.S3Endpoint;
+import com.ash.lake.tck.s3.S3Endpoint;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

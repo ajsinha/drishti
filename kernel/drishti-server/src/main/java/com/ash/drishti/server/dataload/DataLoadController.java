@@ -17,7 +17,7 @@ package com.ash.drishti.server.dataload;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.dataload.DataInbox;
+import com.ash.lake.inbox.DataInbox;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
@@ -133,7 +133,7 @@ public class DataLoadController {
         }
         boolean confirmed = id.equals(body.get("confirm") == null ? null : String.valueOf(body.get("confirm")).trim());
         String given = body.get("lake") == null ? null : String.valueOf(body.get("lake")).trim();
-        if (given != null && !given.isEmpty() && !com.ash.drishti.lakeconfig.Lakes.validName(given)) {
+        if (given != null && !given.isEmpty() && !com.ash.lake.config.Lakes.validName(given)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give a lake of config/lakes/ by its name: {\"lake\": \"risklake\"}");
         }
         try {

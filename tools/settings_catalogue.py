@@ -34,6 +34,7 @@ environment variable, applies to, meaning, restart or live, since):
 from __future__ import annotations
 
 import argparse
+import os
 import glob
 import re
 import sys
@@ -52,8 +53,13 @@ import settings_sources as S  # noqa: E402
 DOC = ROOT / "docs" / "admin" / "CONFIGURATION.md"
 SCHEMAS = ROOT / "tools" / "settings_schemas.yaml"
 CATALOGUE = ROOT / "kernel/drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
-TLS = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "tls" / "TlsSettings.java"
-PROXY = ROOT / "kernel/drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
+# the shared tls.* and proxy.* settings are declared in Drishti Tools (github.com/ajsinha/drishti-tools): a checkout of it, named by
+# DRISHTI_TOOLS_HOME, else the folder next to this repository
+TOOLS = Path(os.environ.get("DRISHTI_TOOLS_HOME") or ROOT.parent / "drishti-tools")
+TLS = TOOLS / "java" / "tools-net" / "src" / "main" / "java" / "com" / "ash" / "tools" / "net" / "TlsSettings.java"
+PROXY = TOOLS / "java" / "tools-net" / "src" / "main" / "java" / "com" / "ash" / "tools" / "net" / "ProxySettings.java"
+#: the opt-in variable Drishti hands the tools (DrishtiTools.ALLOW_INSECURE_TLS); the tools' text names it by a parameter
+ALLOW_INSECURE_TLS = "DRISHTI_ALLOW_INSECURE_TLS"
 BEGIN = "<!-- generated: settings begin (tools/settings_catalogue.py writes everything down to the end marker; edit the sources, not this) -->"
 END = "<!-- generated: settings end -->"
 COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since", "Tier")
@@ -191,6 +197,14 @@ def is_secret(key: str) -> bool:
                                                             r"header|refresh|mode|limit|tokens|scopes|never|read|chars)", last, re.I)
 
 
+def _tools_source(path: Path) -> Path:
+    """A source file of Drishti Tools: the checkout is named by DRISHTI_TOOLS_HOME (default: the folder next to this repository)."""
+    if not path.is_file():
+        raise SystemExit(f"{path} is not there: the shared tls.* and proxy.* settings are declared in Drishti Tools "
+                         "(github.com/ajsinha/drishti-tools); check it out next to this repository or set DRISHTI_TOOLS_HOME")
+    return path
+
+
 def _rel(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -291,10 +305,12 @@ def connector_rows() -> list[Row]:
 
     for s in cat.get("common") or []:
         add("Every plugin", s, "every connector")
-    for s in S.read_java_specs(TLS):
-        add("Shared: `tls.*`", s, "every plugin marked TLS", _rel(TLS))
-    for s in S.read_java_specs(PROXY):
-        add("Shared: `proxy.*`", s, "every plugin marked proxy", _rel(PROXY))
+    for s in S.read_java_specs(_tools_source(TLS)):
+        s = dict(s, desc=s["desc"].replace("unless =true", f"unless {ALLOW_INSECURE_TLS}=true"))
+        add("Shared: `tls.*`", s, "every plugin marked TLS", "drishti-tools: tools-net/TlsSettings.java")
+    for s in S.read_java_specs(_tools_source(PROXY)):
+        s = dict(s, desc=s["desc"].replace("(the site proxy)", "(drishti.http.proxy.*)"))
+        add("Shared: `proxy.*`", s, "every plugin marked proxy", "drishti-tools: tools-net/ProxySettings.java")
     for name, spec in sorted((cat.get("plugins") or {}).items()):
         marks = [m for m in ("tls", "proxy") if spec.get(m)]
         title = f"`{name}`" + (f" ({', '.join(m.upper() if m == 'tls' else m for m in marks)})" if marks else "")
@@ -428,7 +444,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
         problems.append(f"config/engines/{name}: no engine of the catalogue (kernel/drishti-server/src/main/resources/engines/catalogue.yaml) names it")
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
-        module = ROOT / ("lake/drishti-lakeio" if lake.parent == lakes else f"drishti-{lake.parent.name}")
+        module = ROOT / ("lake/drishti-lake-host" if lake.parent == lakes else f"drishti-{lake.parent.name}")
         if not (module / "src").is_dir():                                          # a domain module's Maven projects: modules/<domain>/java/<project>/ (a folder left with only an old build's target/ is not a module)
             module = next((m for m in sorted((ROOT / "modules" / lake.parent.name / "java").glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
         jar = module / "src/main/resources/drishti/lakes" / lake.name
@@ -506,7 +522,7 @@ def code_env() -> dict[str, str]:
     """``DRISHTI_*`` variables the main code reads by name (Java, Python, shell), with the first file that reads each."""
     out: dict[str, str] = {}
     roots = ["kernel/drishti-server", "kernel/drishti-engine", "kernel/drishti-api", "kernel/drishti-common", "kernel/drishti-packs", "drishti-console", "net/drishti-net",
-             "compute/drishti-compute", "compute/drishti-bicompute", "compute/drishti-tables", "kernel/drishti-identity", "kernel/drishti-ai", "lake/drishti-lakeio", "lake/drishti-deltalake", "lake/drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
+             "compute/drishti-compute", "compute/drishti-bicompute", "compute/drishti-tables", "kernel/drishti-identity", "kernel/drishti-ai", "lake/drishti-lake-host", "plugins", "tools"]
     for r in roots:
         for p in sorted((ROOT / r).rglob("*")):
             if p.suffix not in (".java", ".py") or not p.is_file():

@@ -115,7 +115,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private volatile boolean caughtUp;
     private volatile boolean running = true;
     private volatile boolean closed;
-    private com.ash.drishti.api.tls.TlsMaterial tls;
+    private com.ash.tools.net.TlsMaterial tls;
     private org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer = new StringDeserializer();
     private String defaultKind;
     private String defaultIdField = "id";

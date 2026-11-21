@@ -28,41 +28,20 @@
   <name>drishti-plugin-delta</name>
   <description>Delta Lake source: dated entity tables read with Delta Kernel (no Spark), with time travel</description>
   <dependencies>
+    <!-- Drishti Lake: the Delta table layer, read through its public read API (com.ash.lake.read) -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-delta</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
-    <!-- the Hadoop-free engine (engine: native, the default); Hadoop's stays for engine: hadoop and abfs:// or gs:// lakes -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
-    <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
-    <dependency>
-      <groupId>io.delta</groupId><artifactId>delta-kernel-defaults</artifactId><version>${delta-kernel.version}</version>
-      <exclusions>
-        <!-- Unity Catalog's client pulls a log4j binding that fights Spring Boot's logback; the server logs through slf4j/logback. -->
-        <exclusion><groupId>io.unitycatalog</groupId><artifactId>unitycatalog-client</artifactId></exclusion>
-        <exclusion><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-slf4j2-impl</artifactId></exclusion>
-        <exclusion><groupId>org.apache.logging.log4j</groupId><artifactId>log4j-core</artifactId></exclusion>
-      </exclusions>
-    </dependency>
-    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-api</artifactId><version>${hadoop.version}</version></dependency>
-    <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version></dependency>
-    <!-- lakes in S3 (s3a://): Hadoop's S3 file system with the AWS SDK modules it uses, not the whole 600 MB SDK bundle -->
-    <dependency>
-      <groupId>org.apache.hadoop</groupId><artifactId>hadoop-aws</artifactId><version>${hadoop.version}</version>
-      <exclusions>
-        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>bundle</artifactId></exclusion>
-        <exclusion><groupId>org.apache.hadoop</groupId><artifactId>hadoop-common</artifactId></exclusion>
-        <exclusion><groupId>org.wildfly.openssl</groupId><artifactId>wildfly-openssl</artifactId></exclusion>
-      </exclusions>
-    </dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3-transfer-manager</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>sts</artifactId><version>${awssdk.version}</version></dependency>
-    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>   <!-- ReferenceScanner -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
-    <!-- DeltaOnAwsS3Test expands the shipped delta-s3 example (a connector naming a lake) as the server does: the lake core (drishti-lakeio), through drishti-deltalake -->
+    <!-- the loader writes the tests' tables; the product's test roots and the TLS and proxy fixtures -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-files</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-testkit</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <!-- S3Mock in the test JVM (no Docker): the Delta Lake on S3 connector's test, DeltaOnAwsS3Test -->
     <dependency><groupId>com.adobe.testing</groupId><artifactId>s3mock</artifactId><version>${s3mock.version}</version><scope>test</scope></dependency>
   </dependencies>

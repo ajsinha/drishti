@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.compute;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.compute.approval.ApprovalStore;
 import com.ash.drishti.compute.approval.Approvals;
 import com.ash.drishti.compute.cluster.PeerTransport;

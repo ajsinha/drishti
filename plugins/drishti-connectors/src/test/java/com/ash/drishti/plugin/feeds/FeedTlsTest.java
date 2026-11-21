@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.plugin.feeds;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.net.TlsException;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 import java.net.InetSocketAddress;

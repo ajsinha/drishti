@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """How the Python tools read a Delta table's rows (docs/guides/DATA_LAKE_GUIDE.md section 14): always through Delta Kernel, the
-standard reader and the one the server uses (``com.ash.drishti.deltalake.read.DeltaRowsCli`` in the server's exec jar), so Python reads
+standard reader and the one the server uses (``com.ash.lake.delta.read.DeltaRowsCli`` in the server's exec jar), so Python reads
 exactly what the server reads: deleted rows left out, columns by their physical names, checkpoints of any kind, timestamps without a
 time zone. delta-rs stays for writing tables and for listing their files, and is not used to read rows.
 
@@ -34,7 +34,7 @@ for p in (str(HERE), str(ROOT / "tools")):
     if p not in sys.path:
         sys.path.append(p)
 
-MAIN = "com.ash.drishti.deltalake.read.DeltaRowsCli"
+MAIN = "com.ash.lake.delta.read.DeltaRowsCli"
 
 class ReadError(RuntimeError):
     pass

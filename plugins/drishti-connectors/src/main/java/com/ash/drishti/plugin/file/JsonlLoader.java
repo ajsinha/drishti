@@ -15,8 +15,10 @@
  */
 package com.ash.drishti.plugin.file;
 
-import com.ash.drishti.common.RowFeed;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -51,13 +53,13 @@ public final class JsonlLoader {
     public static void main(String[] args) throws IOException {
         String file = args[0];
         Path root = Path.of(args.length > 1 && !args[1].startsWith("--") ? args[1] : com.ash.drishti.api.DataDir.under("files"));
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         JsonFactory json = new JsonFactory();
         Set<Path> written = new LinkedHashSet<>();
         Map<Path, BufferedWriter> open = new LinkedHashMap<>(OPEN, 0.75f, true);   // least recently written first
         long n = 0;
         long t0 = System.nanoTime();
-        try (RowFeed in = RowFeed.open(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
+        try (RowFeed in = DrishtiLake.rowFeed(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
             String line;
             while ((line = in.next()) != null) {
                 if (line.isBlank()) {

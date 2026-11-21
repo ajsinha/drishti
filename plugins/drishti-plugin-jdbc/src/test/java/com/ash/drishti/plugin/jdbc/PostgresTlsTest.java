@@ -19,9 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.net.TlsException;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -58,7 +58,7 @@ class PostgresTlsTest {
         Files.writeString(pki.path("pg_hba.conf"), """
                 local all all trust
                 hostssl all pwuser all scram-sha-256
-                hostssl all drishti all cert
+                hostssl all client all cert
                 """);
         GenericContainer<?> c = new GenericContainer<>("postgres:18-alpine").withExposedPorts(5432)
                 .withEnv("POSTGRES_PASSWORD", "unused")
@@ -73,8 +73,8 @@ class PostgresTlsTest {
         pg.start();
         psql("create table entities(kind text, id text, business_date date, doc jsonb)",
                 "insert into entities values ('trade','T-1','2026-09-29','{\"tradeId\":\"T-1\",\"mtm\":5}')",
-                "create role pwuser login password 'pw'", "create role drishti login",
-                "grant select on entities to pwuser, drishti");
+                "create role pwuser login password 'pw'", "create role client login",
+                "grant select on entities to pwuser, client");
     }
 
     private static void psql(String... statements) throws Exception {
@@ -176,10 +176,10 @@ class PostgresTlsTest {
     @Test
     void theClientCertificateIsTheLoginAndHealthCarriesItsExpiry() throws Exception {
         assumePg();
-        JdbcSourcePlugin p = open(settings("localhost", "drishti", "", enabled(pki.clientSettings())));
+        JdbcSourcePlugin p = open(settings("localhost", "client", "", enabled(pki.clientSettings())));
         try {
             assertThat(p.fetch(EntityRef.of("trade", "T-1"))).isPresent();
-            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=drishti \\(tls.cert-file\\) expires in \\d+ days");
+            assertThat(p.health()).startsWith("UP").containsPattern("TLS certificate CN=client \\(tls.cert-file\\) expires in \\d+ days");
         } finally {
             p.close();
         }
@@ -188,7 +188,7 @@ class PostgresTlsTest {
     @Test
     void aCertificateUserWithoutACertificateIsRefused() throws Exception {
         assumePg();
-        JdbcSourcePlugin p = open(settings("localhost", "drishti", "whatever", enabled(pki.trustOnlySettings())));
+        JdbcSourcePlugin p = open(settings("localhost", "client", "whatever", enabled(pki.trustOnlySettings())));
         try {
             assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-1"))).hasMessageContaining("requires a valid client certificate");
             assertThat(p.health()).startsWith("DOWN");

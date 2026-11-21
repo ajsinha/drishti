@@ -36,7 +36,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-UNDO = "com.ash.drishti.lakeload.LakeUndo"
+UNDO = "com.ash.lake.load.LakeUndo"
 MAINT = "com.ash.drishti.plugin.iceberg.IcebergMaintenance"
 
 

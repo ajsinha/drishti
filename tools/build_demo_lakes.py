@@ -92,7 +92,7 @@ STORES_PY = ROOT / "tools" / "lake" / "stores.py"
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
 import feedroute  # noqa: E402  (tools/lake/feedroute.py: the data files' extensions)
-import filedate  # noqa: E402  (tools/lake/filedate.py: the load rules' names and tar layout)
+from drishti_lake import filedate  # noqa: E402  (tools/lake/filedate.py: the load rules' names and tar layout)
 REPLACE = "overwrite-dates"                      # the load rules' mode replace (lake build --mode): each date loaded replaced
 
 

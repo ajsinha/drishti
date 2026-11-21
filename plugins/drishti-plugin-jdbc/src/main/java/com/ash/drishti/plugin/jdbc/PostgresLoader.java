@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
-import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.common.LoadLine;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.io.StringReader;
@@ -37,7 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.postgresql.PGConnection;
 import com.ash.drishti.api.pool.PoolSettings;
 import com.ash.drishti.api.pool.ResourcePool;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 
 /**
  * Loads rows into PostgreSQL in {@link PostgresLayout}: {@code java -cp <plugin classpath>
@@ -109,7 +111,7 @@ public final class PostgresLoader {
         // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections the load may hold at once, the admin connection included
         Map<String, String> pool = new HashMap<>();
         pool.put("pool-size", option(args, "--pool-size", env("DRISHTI_DB_POOL_SIZE", String.valueOf(PoolSettings.DEFAULT_SIZE))));
-        PostgresLoader loader = new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args), PoolSettings.resolve(pool));
+        PostgresLoader loader = new PostgresLoader(url, user, password, writers, batch, recreate, DrishtiTools.loadGuard(args), PoolSettings.resolve(pool));
         loader.asOf = RowFeed.asOf(args);
         loader.load(file, keepMonths);
     }
@@ -160,7 +162,7 @@ public final class PostgresLoader {
     private void stage(Connection admin, ResourcePool<Connection> pool, String file) throws Exception {
         Semaphore inFlight = new Semaphore(writers * 2);
         JsonFactory json = new JsonFactory();
-        try (RowFeed in = RowFeed.open(file, asOf);
+        try (RowFeed in = DrishtiLake.rowFeed(file, asOf);
              ExecutorService copy = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Row> batch = new ArrayList<>(batchSize);
             String line;

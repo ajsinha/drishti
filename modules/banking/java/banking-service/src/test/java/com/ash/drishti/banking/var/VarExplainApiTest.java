@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.tools.xlsx.Formulas;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -25,7 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.server.PinnedBusinessDate;
-import com.ash.drishti.server.dist.XlsxFormulas;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -372,7 +372,7 @@ class VarExplainApiTest {
         MvcResult started = mvc.perform(req("/api/v1/risk/var/explain.xlsx", "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString()))
                 .andExpect(request().asyncStarted()).andReturn();
         byte[] xlsx = mvc.perform(asyncDispatch(started)).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, "explain.xlsx", xlsx), work);
         Map<String, Object> main = LibreOfficeRecalc.cells(saved, "Main");

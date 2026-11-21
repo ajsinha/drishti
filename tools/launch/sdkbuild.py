@@ -41,7 +41,6 @@ from procs import LaunchError, say
 
 #: the artifacts of the SDK: (module folder under the repository root, artifactId, packaging); the pom of the product's parent comes with them
 ARTIFACTS = (("", "drishti-parent", "pom"),
-             ("kernel/drishti-settingsfile", "drishti-settingsfile", "jar"),
              ("kernel/drishti-api", "drishti-api", "jar"),
              ("kernel/drishti-common", "drishti-common", "jar"),
              ("kernel/drishti-kernel-api", "drishti-kernel-api", "jar"),

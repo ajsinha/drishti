@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.ash.drishti.marketdata.MarketStandIn.Person;
 import com.ash.drishti.testroots.RecordedAnswers;
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.nio.file.Path;

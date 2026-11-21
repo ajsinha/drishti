@@ -16,7 +16,7 @@
 package com.ash.drishti.server.connectors;
 
 import java.util.concurrent.locks.ReentrantLock;
-import com.ash.drishti.api.SettingSpec;
+import com.ash.tools.settings.SettingSpec;
 import com.ash.drishti.common.ConnectorSecrets;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -486,7 +486,7 @@ public final class ConnectorManager {
     public record Template(String pack, Map<String, Object> definition) {
         /** Where the template comes from: {@code pack trading}, or {@code module source-endur} for a source module's connector. */
         public String owner() {
-            Object m = definition.get(com.ash.drishti.lakeconfig.ModuleConnectors.FROM_MODULE);
+            Object m = definition.get(com.ash.lake.config.ModuleConnectors.FROM_MODULE);
             return m == null ? "pack " + pack : "module " + m;
         }
     }
@@ -868,19 +868,19 @@ public final class ConnectorManager {
 
     /** The TLS the settings ask for and when each configured certificate expires; {@code null} when no {@code tls.*} setting is given. */
     public static Map<String, Object> tlsSummary(Map<String, String> settings) {
-        if (!com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
+        if (!com.ash.tools.net.TlsSettings.anyGiven(settings, "tls.")) {
             return null;
         }
         Map<String, Object> out = new LinkedHashMap<>();
         try {
-            var ts = com.ash.drishti.api.tls.TlsSettings.from(settings);
+            var ts = com.ash.tools.net.TlsSettings.from(settings);
             out.put("enabled", ts.enabled());
             out.put("verifyHostname", ts.verifyHostname());
             out.put("protocols", ts.protocols());
             if (!ts.enabled()) {
                 return out;
             }
-            var material = com.ash.drishti.api.tls.TlsContexts.build(ts);
+            var material = com.ash.drishti.api.DrishtiTools.tls(ts);
             Instant now = Instant.now();
             out.put("certificates", material.certificates().stream().map(c -> {
                 Map<String, Object> x = new LinkedHashMap<>();
@@ -975,10 +975,10 @@ public final class ConnectorManager {
                 out.add(new Problem("warning", "kinds", "kind '" + k + "' is not owned by a loaded pack (loaded: " + String.join(", ", known.stream().limit(8).toList()) + (known.size() > 8 ? ", and " + (known.size() - 8) + " more" : "") + ")"));
             }
         }
-        List<String> own = com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(d.plugin())
-                ? com.ash.drishti.lakeconfig.ConnectorLake.overridden(d.settings()) : List.of();
+        List<String> own = com.ash.lake.config.ConnectorLake.PLUGINS.contains(d.plugin())
+                ? com.ash.lake.config.ConnectorLake.overridden(d.settings()) : List.of();
         for (String k : own) {                                  // both forms: the explicit path wins (DATA_LAKE_GUIDE.md section 6)
-            out.add(new Problem("warning", "settings." + k, "the connector names lake " + d.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE)
+            out.add(new Problem("warning", "settings." + k, "the connector names lake " + d.settings().get(com.ash.lake.config.ConnectorLake.LAKE)
                     + " and gives " + k + " itself: its own value wins over the lake file's"));
         }
         boolean on = shownEnabled(d);

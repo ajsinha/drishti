@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.ai;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -65,7 +66,7 @@ public final class StreamableHttpMcpClient implements McpClient {
         this.proxy = ProxySettings.resolve(cfg.settings(), cfg.url());             // proxy.* or the site default; https is tunnelled with CONNECT
         HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(cfg.timeout()).version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NEVER));
-        TlsMaterial tls = TlsHttp.material(cfg.settings(), cfg.url(), "url");
+        TlsMaterial tls = DrishtiTools.tlsMaterial(cfg.settings(), cfg.url(), "url");
         this.http = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
 

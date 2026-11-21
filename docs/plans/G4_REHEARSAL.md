@@ -55,6 +55,134 @@ Branch `wip/g4-rehearsal-rx`, cut from `wip/g4-rehearsal` before its Lake step (
 
 Rachana: a node factory hook so a host's tree types come out of expressions (P3); a live view of `Formats` (P7); a decision on the printer's text (P10) and a note that the `Sutra` record's JSON no longer holds `domain` and `match` (P5); a default language level that a host can pin without calling `language(...)` after the fact (the 1.2 default is a trap). Elements: a distinct dev version name (E8); the two parity differences in the changelog (E7). P4 (a wrong answer) needs an owner for investigation before the aggregate kernel is trusted.
 
+## Pass 3 (2026-11-21): lake, on `g4/lake`
+
+Branch `g4/lake` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Products from fresh worktrees into a scratch Maven
+repository: drishti-lake `origin/main` `a3c6b2a` (`0.9.0-SNAPSHOT`), drishti-tools `origin/main` `b3a451d` (`1.0.0-SNAPSHOT`),
+drishti-rachana `origin/g2/integration` `417f6af9` (`0.11.0-SNAPSHOT`). Pass 1's lake step (`9de17833d`: the 275 moved files deleted, the
+hadoop engine retired) cherry-picked first, then finished. About 61,000 lines leave Drishti, about 2,000 come in.
+
+### What was done
+
+| Item | Result |
+|---|---|
+| Modules | `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` deleted; `drishti-lakeio` is `lake/drishti-lake-host` (the shipped lake files and Drishti's side of the product). `lake-bom` and the AWS SDK bill imported in the parent (Drishti's own pins first). |
+| Catalog and runtime | `DrishtiLakeCatalog`: shipped lakes from every jar's and live module's `drishti/lakes/shipped.txt`, pack files from the one resolution, connector templates, named lake writers, `ReadyRule` extensions, the module boot's child-process settings. `DrishtiLake`: the one `LakeRuntime` of the process, built once by `PackEnvironmentPostProcessor` from the server's settings with the catalog and the `mem://` storage, and installed; a tool or a unit test without one gets one of the process's settings (rebuilt when they change). `DrishtiLakeCli load|check`: the loader and `LakeCheck` with that runtime. |
+| Settings | The product's options under its names (`lake.*`, `LAKE_*`): archive caps, business zone, Parquet row group and page, lakes dir, footer and Iceberg caches, loader trace. `drishti.home`, `drishti.data.dir`, `drishti.config.dir`, `drishti.tmp-dir` stand for the lake's folders when those are not set. |
+| Source plugins | Delta and Iceberg on `com.ash.lake.read` only (`LakeReader`, `TableReader`, `TableSnapshot`, `DayFiles`, `DataFile`, `IdMap`, `ColumnBlock`, `VectorRequest`, `Documents.withVectors`): no Kernel or Iceberg type, no package-private class. `VectorBatches` back in the Delta adapter (RA-7). `LakeReads` (lake-host) opens a connector's lake, maps a failed read to `UnreadableData` and keeps the connector's own listings. |
+| Memory lake | `ConnectorRows`: the connectors as the product's `RowSource`; `Retention` held by the server (`RetentionHolder`); `MemoryBinding` in `server.memlake`; `MemoryStores.of(runtime)` everywhere. |
+| Duplicates gone | Drishti's `RowFeed` (the product's, in the runtime's business zone, for every store loader); the hadoop engine's leftovers: the `engine`, `hadoop.*` and `lz4-via-native` settings, `DRISHTI_DELTA_ENGINE`, the launcher's `--engine`, the Windows workflow line, the delta-s3 example's row, the hadoop jars of `plugin-delta`. |
+| Python | `tools/lake/filedate.py` deleted: 15 callers on `drishti_lake.filedate`; `hostdates.py` keeps `local_day` and `of_input` (host). The loader starts as `DrishtiLakeCli load`; `lakeconfig`, `undo`, `relocate`, `delete`, `deltaread` start the product's mains. |
+| Tests | Tests of the table layer's internals deleted (their cases are the TCK's: `NamedTables`, `NewTables`, Iceberg layout, orphan files, REST and S3 catalogs, S3 natives, pyiceberg, `AppendNewestLoadTest`, `PythonPathEqualityTest`). Iceberg fixtures (contract rows, vector lakes, the server's mirror) written by the one loader (`format: loader-rows`). TLS and proxy fixtures from `tools-testkit`. |
+
+### Results
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/dist` and `drishti-modules-it` (needs the module packaging) | green; the server exec jar builds |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical**. `PackagedVarGoldenTest` not run (`drishti-modules-it`) |
+| Demo lake: `lake demo --engine java --only trades/endur,market-risk/{risk-factor,scenario-pv,desk-pnl}` (4,407 trades a day, 60 days), built by this branch's jar (`DrishtiLakeCli load`) and by `wip/g4-rehearsal-rx`'s (Drishti's own loader) | **identical**: `compare_lakes.py` 4 of 4 tables, 565 of 565 partitions, 318,180 rows; every column of every row equal (all but `_load_id` and `_source_file`); table properties equal |
+| Delta plugin tests | 93 run, 90 pass, 3 fail (R1, R2) |
+| Iceberg plugin tests | 49 run, 44 pass, 5 fail (R6) |
+| `drishti-lake-host`, `drishti-packs` | 6 and 69 pass |
+| `drishti-engine` | 711 run, 2 fail, none lake: `AbandonedReadsTest` (timing, P12), `DerivedPageTest` (Rachana, P3) |
+| Python (`test_feedfiles`, `test_business_dates`, `test_archives`, `test_javaload`, `test_launch`, `test_build`) with `drishti_lake` on the path | 126 pass after one expectation changed (the loader's `load` word) |
+
+### Breakages left
+
+| # | Symptom | Cause | Who fixes | Size |
+|---|---|---|---|---|
+| R1 | `TableReader.snapshot(AsOf.time(t))` before the first commit throws `no version committed at or before` and records a problem (health DEGRADED) instead of empty (`DeltaSourcePluginTest`: knownAt, health) | the read API's own contract says "empty: no table then" | Lake | S |
+| R2 | `DeltaAfterMaintenanceTest`: the maintenance job does not run | `tools/lake/maintain.py` without `drishti_lake` and the Delta writer's new main | Drishti (D5) | S |
+| R3 | The data inbox's loader child is the product's `LakeLoad` (runtime from the process: no catalog, so no shipped lake or pack template in the child) | `LoaderProcess` launches its own main | Lake: a host-named main for the child; then Drishti passes `DrishtiLakeCli load` | S |
+| R4 | `lakeconfig.py` reads lake files through `LakesCli` without Drishti's catalog (a shipped lake the folder lacks is not seen) | `LakesCli.run(runtime, ..)` is not public | Lake (public `run(runtime, args, out)`), then Drishti (`DrishtiLakeCli lakes`) | S |
+| R5 | `drishti-plugin-iceberg-external` is out of the build | the shaped read of a foreign table (READ_API RA-S8) is not built; `ExternalTable`, `KindConfig`, `Shape` are package-private | Lake (RA-S8), then Drishti rewrites the plugin as Delta and Iceberg here | M |
+| R6 | 5 Iceberg tests: vector-lake fixtures through the one loader (reject words, file counts, a null vector's document) | tests written for `IcebergLoader`'s shape | Drishti | S |
+| R7 | Id-map files keep Drishti's `MappedIdFile` format beside the product's `IdMaps`; Iceberg's maps are now keyed by the files stamp (rebuilt once) | RA-5: the folder's lifecycle is the host's, the format the product's | Drishti (adopt `IdMaps` under `IdMapFolder`) | S |
+| R8 | `jsonstream`, `archives`, `lakeconfig`, `laketables`, `maintain*`, `delete`, `undo`, `relocate`, `scan`, `deltaread`, `ownership`, `compare_lakes`, `memory_*` stay in `tools/lake` | the wheel has no `inputs`-compatible stream (JSON arrays, archive guards) and no lake-cli parts yet (SPLIT_STATUS L10 "not yet") | Lake (L10 parts), then Drishti | M |
+| R9 | `drishti_lake` must be on the tools' path (here `PYTHONPATH` to the product's `python/`) | the wheel is not in the console's environment | Drishti (D1, D5: install the pinned wheel) | S |
+| R10 | `testing/drishti-testroots` is still a shim; Drishti's tests use `lake-tck`'s `TestRoots` | L6 | Drishti | S |
+| R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name `DRISHTI_DELTA_ENGINE`; the capacity workbook's setting names | D7 | Drishti | M |
+| R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
+| R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |
+
+## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
+
+### What was done
+
+Drishti Tools (`github.com/ajsinha/drishti-tools`, `main` at `b3a451d`, no tag yet: `1.0.0-SNAPSHOT`) built into a scratch Maven repository, pinned once as
+`drishti.tools.version` and imported through `tools-bom`. Taken from it, with the copies deleted:
+
+| Tools module | What Drishti no longer carries | Where Drishti's names go |
+|---|---|---|
+| `tools-net` | TLS (`TlsContexts`, `TlsSettings`, `TlsMaterial`, `PemReader`, `Der`, `CertInfo`, `TlsHttp`), the proxy (`ProxySettings`, `NoProxy`, `SiteProxy`) | `DrishtiTools`: the variable `DRISHTI_ALLOW_INSECURE_TLS`, the site proxy's `drishti.http.proxy.` |
+| `tools-settings` | `Placeholders`, `SettingsFile`, `SettingSpec`, `Secrets`, the module `drishti-settingsfile`; `Roots.anchorValue` is `PathAnchors` | `DrishtiTools.applySettingsFile()`: `drishti.settings.file`, `${drishti.home}` |
+| `tools-concurrent`, `tools-time` | `SingleFlight`, `LoadGuard` | `DrishtiTools.loadGuard(args)`: business zone from `LAKE_BUSINESS_ZONE` (the lake pass's variable) |
+| `tools-testkit` | `FakeProxy`, `TlsFixture`, `TestPki` | the TLS test identity is `CN=client` and key alias `client` (was `drishti`) |
+| `tools-xlsx` | the four writers: `XlsxWriter` + `XlsxCharts` + `XlsxFormulas`, the pivot export's `Xlsx`, the playgrounds' `SheetStream` + `WorkbookStream`, `CapacityWorkbook`'s own zip | `ExportWorkbook` (an `ExportDoc` laid out on the writer), `PlaygroundWorkbook` (template look, properties, branding footer), `CapacityWorkbook` (cells of a `WorkbookTemplate`), `PivotExport` |
+
+Lines: 26 main files and 7 test files deleted (4,065 and 1,077 lines); the branch adds 1,455 (the adapters, `DrishtiTools`, the comparison tool, the guard);
+net -4,392. `SharedToolsGuardTest` holds it: no main source carries a copy or writes workbook parts.
+
+### The xlsx proof
+
+Every workbook Drishti's tests make was written on the parent commit and on the new code (60 workbooks: the exports with every chart kind, the statement with
+its print set-up, the pivot export, the capacity workbook, the VaR, Parametric VaR, Explain, FRTB and SIMM playground books, the VaR basket and the
+regulatory sign-off), read with Apache POI and compared cell by cell and formula by formula, then by sheet and by style (`tools/xlsx_before_after/XlsxCompare.java`;
+the capture is a temporary patch of the tests, `capture_patch.py` and `capture_unpatch.py` in the same folder, never committed in the tests). Cell values, cell types, formulas (text and cached result), merges, freeze panes, column widths,
+outline levels, drop-downs, conditional formats, print set-up, defined names, charts (kind and references) are **equal in all 60**. Every difference:
+
+| Difference | Count | Reason |
+|---|---|---|
+| Default row height written (15) where there was none; playgrounds 14 to 15 | 337 sheets | the shared writer's default (Excel's own) |
+| The first sheet is the selected tab (the playgrounds selected the sheet called `Main`, the exports none) | 30 sheets | no sheet name in the writer |
+| Print-titles defined name `'MTM'!$1:$1` written `MTM!$1:$1` | 2 | the quotes are written only where a name needs them; the same reference |
+| Pivot export's header fill `DCE6F1` and title 14 pt are the exports' `EEF1F5` and 16 pt | 24 cells | one standard look for the four writers |
+| Provenance rows: a run's timing (`computeMs`), the order of the data-version lines (a set) | 6 cells | the runs, not the writer (the same on two runs of the old code) |
+
+Noise the comparison removes, each shown to come from the run and not from the writer: timestamps and run ids; the product name the tests install into a JVM-wide
+global; the capacity workbook's live figures; and the order of the FRTB Config rows, which is a set's iteration order and differs between two runs of the *same* code
+(the comparison matches those rows by parameter name and writes each formula's `Config!$B$n` by the name).
+
+The three bugs the tools fixed did not occur in the 60 (no sheet name with an `&`, no invalid name, no pivot formula outside the common set): a test now holds
+the `&` (`XlsxChartsTest`), the other two are the tools' own tests. **The `SCATTER` chart type the tools dropped is used by no caller**: Drishti's chart kinds are
+bar, column, line, area, pie and doughnut (any other visual is columns), as before.
+
+### Findings
+
+| # | Finding | Action |
+|---|---|---|
+| T1 | The FRTB playground wrote some cells of a row out of column order (the Classes header row's term cells, the Curvature bucket header and term cells): invalid for the file format, accepted by the old writer | fixed in `FrtbPlaygroundBook`; the shared writer refuses it, so any new book is caught |
+| T2 | The FRTB Config sheet's row order changes from run to run (a set's iteration order; the workbook is right either way) | not changed; a book's bytes are not reproducible for FRTB; worth an ordered set |
+| T3 | Tests that assert the old writer's raw XML (`s="3"`, `<v>92000.0</v>`, `chart2.xml`) | made independent of style indexes and part numbers (`DistApiTest`, `PivotExportTest`, `XlsxChartsTest`) |
+| T4 | The settings catalogue (`tools/settings_catalogue.py`) read `TlsSettings.java` and `ProxySettings.java` from `drishti-api`; they are in the tools now | reads a checkout of Drishti Tools (`DRISHTI_TOOLS_HOME`, else the folder next to this repository); the two texts the tools parametrise are filled with Drishti's names. `--check` was not run: it needs the kernel jar |
+| T5 | The SDK's `repo/` (a file repository of `drishti-api` and what it needs) must now carry the tools jars | **open**: `tools/launch/sdkbuild.py` lost its `drishti-settingsfile` entry; copying `com/ash/tools/*` from the build's repository into `repo/` needs a decision on how the tools are distributed |
+| T6 | `Secrets` outside TLS throws the tools' `SettingException`, not `TlsException` | no caller catches the old type (the build and the tests show it) |
+| T7 | Tools has no tag: `1.0.0-SNAPSHOT` from a scratch repository, as Rachana and Lake | pin to the tag when it exists |
+| T8 | `SimmPlaygroundWorkbookTest` fails in `setUp` alone (the banking module is not among the modules the boot gave the process); `TestPathsGuardTest` (`LanguageLevelGuardTest` builds a path from `..`) and `PivotFormulaMigrationTest` (the printer writes `and` for `&&`) fail | unrelated to this pass (they name `LanguageLevelGuardTest` and the Rachana printer, P10 above); `SimmPlaygroundWorkbookTest` failed the same way before it; none touched |
+
+Green: the TLS and proxy tests of the connectors, lake storage and AI, the settings and placeholder tests, the loaders, `NamedResources`, the settings catalogue,
+the pivot and export tests, the capacity workbook, the VaR, FRTB, SIMM playground and API tests, `SharedToolsGuardTest`; the VaR and ES goldens are untouched (no
+engine or test-data file changed). Build: `mvn` with a scratch `-Dmaven.repo.local` holding Drishti Tools, Rachana and Lake snapshots; nothing installed in `~/.m2`.
+
+## Pass 3: compute engine (2026-11-21), on `g4/compute-engine` merged into `wip/g4-rehearsal-rx`
+
+Front-loaded from the engine integration design (EN-25, owner: fix known duplicates now). The two interfaces named `ComputeEngine` are one:
+`com.ash.drishti.api.compute.ComputeEngine` (drishti-api) with the union of their real uses, each method with a default: the switch
+(`id`, `start`, `changing`, `stop`, `memoryBytes`, `datesOpen`, `threadPrefixes`, `running`, `threadsNamed`) and the reactive computation
+(`manifest`, `compute`, `incremental`, `affected`, `close`). `id()` defaults to the manifest's name; `manifest()` of a switch-only engine
+refuses. `kernel.api.engines.ComputeEngine` is deleted (the package is gone): kernel API **0.6**, surface baseline regenerated. The registry,
+Admin controller, configuration, module bridge, `BasicEngine`, `OpenBlasEngine` and the registry test import the one type; the reactive
+engines (`VectorSumEngine`, `BetaEngine`, `CorrelationEngine`, `VarResultEngine`, `ExposureResultEngine`, test engines) are unchanged. Engine
+ids and the catalogues (`engines/catalogue.yaml`, modules' `META-INF/drishti/engines.yaml`) are unchanged, so they stay consistent. The new
+engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the combined i8.
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
+| `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
+
 ## Pass 3 (2026-11-21): binder, ViewModel writer and aggregate kernel onto Rachana, on `g4/binder`
 
 Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Rachana rebuilt from `origin/g2/integration` `f7f4cd8f` (includes the G4-ready commit `35fdf00f`) into a scratch Maven repository; Elements pack unchanged from pass 2.

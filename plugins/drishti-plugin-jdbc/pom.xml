@@ -28,6 +28,8 @@
   <name>drishti-plugin-jdbc</name>
   <description>JDBC source (driver supplied by the site)</description>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>

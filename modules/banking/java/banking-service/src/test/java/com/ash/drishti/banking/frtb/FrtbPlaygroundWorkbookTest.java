@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
+import com.ash.tools.xlsx.Formulas;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.Branding;
@@ -24,7 +26,6 @@ import com.ash.drishti.banking.compute.frtb.FrtbExamples;
 import com.ash.drishti.banking.compute.frtb.FrtbInput;
 import com.ash.drishti.banking.compute.frtb.FrtbSa;
 import com.ash.drishti.banking.compute.frtb.Sbm;
-import com.ash.drishti.server.dist.XlsxFormulas;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
 import java.io.ByteArrayOutputStream;
@@ -88,7 +89,7 @@ class FrtbPlaygroundWorkbookTest {
     /** Recalculates the workbook and checks Main against the engine, row by row, to the cent. */
     void recalculatedEqualsEngine(FrtbService.Run run, List<FrtbPlaygroundBook.Alternative> alts, String name) throws Exception {
         byte[] xlsx = write(run, alts, false);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         long t0 = System.nanoTime();
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, name, xlsx), work);
@@ -167,7 +168,7 @@ class FrtbPlaygroundWorkbookTest {
     void cachedWorkbookHasTheTabsTheSwitchListsAndTheBranding() throws Exception {
         FrtbService.Run run = example(cases(), FrtbChoices.defaults());
         byte[] xlsx = write(run, List.of(), true);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Map<String, String> parts = new LinkedHashMap<>();
         try (var z = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(xlsx))) {
             for (var e = z.getNextEntry(); e != null; e = z.getNextEntry()) {

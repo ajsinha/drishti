@@ -119,7 +119,7 @@ public final class ReportService implements AutoCloseable {
             throw bad("the query does not parse: " + e.getMessage());
         }
         // a scheduled report delivers rows: never of data held in memory only (docs/architecture/DATA_ARCHITECTURE.md section 8; only downloads leave)
-        com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.REPORT,
+        com.ash.drishti.server.memlake.RetentionHolder.current().require(com.ash.lake.memory.Retention.Sink.REPORT,
                 java.util.List.of(picked.head()), "This report");
         String schedule = body.path("schedule").asText("");
         try {
@@ -174,7 +174,7 @@ public final class ReportService implements AutoCloseable {
         }
         ObjectNode run = json.createObjectNode().put("at", Instant.now().toString()).put("trigger", trigger);
         try {
-            com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.REPORT,
+            com.ash.drishti.server.memlake.RetentionHolder.current().require(com.ash.lake.memory.Retention.Sink.REPORT,
                     java.util.List.of(SearchQuery.pick(r.path("query").asText()).head()), "This report");
             Principal who = principal(owner);
             LocalDate day = r.path("date").asText().equals("previous") ? dates.calendar().previous(dates.current()) : dates.current();

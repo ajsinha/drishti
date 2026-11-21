@@ -18,9 +18,9 @@ package com.ash.drishti.server.http;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.proxy.ProxyException;
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.ProxyException;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.SiteProxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;

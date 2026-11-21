@@ -108,7 +108,7 @@ class ConsoleAnswersServerTest {
         ok(get("/api/v1/me/console").header("Authorization", person(who)));            // a person asked first: nothing of them may stay
         String text = call(get("/api/v1/console/bootstrap").header("Authorization", service())).getResponse().getContentAsString();
         assertThat(text).doesNotContain(who).doesNotContain("Bearer").doesNotContain("test-secret");
-        String repo = com.ash.drishti.testroots.TestRoots.repo();
+        String repo = com.ash.lake.tck.TestRoots.repo();
         assertThat(text).as("no folder of the server").doesNotContain(repo).doesNotContain("\"dir\"");
         assertThat(text.length()).as("decisions, not a configuration dump").isLessThan(400_000);
     }

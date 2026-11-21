@@ -16,8 +16,8 @@
 package com.ash.drishti.banking.official;
 
 import com.ash.drishti.common.TempFiles;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -104,7 +104,7 @@ final class DeltaSink implements OfficialSink {
             String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
             LakeManifest m = new LakeManifest(path, List.of("business_date"), cols, List.copyOf(columns.keySet()), "append", 10_000, stats,
                     List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", date.toString()))), properties());
-            return LakeWriter.forTable(path, settings).write(m, x -> { }).version();
+            return LakeWriter.forTable(com.ash.drishti.lakehost.DrishtiLake.runtime(), path, settings).write(m, x -> { }).version();
         } finally {
             Files.deleteIfExists(staged);
         }

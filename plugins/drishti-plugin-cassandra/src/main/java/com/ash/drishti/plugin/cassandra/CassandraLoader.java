@@ -15,9 +15,11 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
+import com.ash.tools.time.LoadGuard;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.BatchType;
@@ -147,8 +149,8 @@ public final class CassandraLoader implements AutoCloseable {
     public CassandraLoader(Options options, LoadGuard guard) {
         this.options = options;
         this.guard = guard;
-        CassandraSessions.Plan plan = CassandraSessions.plan(options.settings(), com.ash.drishti.settingsfile.Placeholders::process);
-        this.store = new CassandraStore(CassandraSessions.open(options.settings(), plan, com.ash.drishti.settingsfile.Placeholders::process), 1,
+        CassandraSessions.Plan plan = CassandraSessions.plan(options.settings(), com.ash.tools.settings.Placeholders::process);
+        this.store = new CassandraStore(CassandraSessions.open(options.settings(), plan, com.ash.tools.settings.Placeholders::process), 1,
                 Duration.ofSeconds(Math.max(5, Long.parseLong(options.settings().getOrDefault("connect-timeout-ms", "30000")) / 1000)));
         this.permits = Math.max(1, options.inFlight());
         this.inFlight = new Semaphore(permits);
@@ -162,11 +164,11 @@ public final class CassandraLoader implements AutoCloseable {
             System.exit(2);
         }
         Options o = parse(args);
-        LoadGuard guard = LoadGuard.fromArgs(args);
+        LoadGuard guard = DrishtiTools.loadGuard(args);
         long t0 = System.nanoTime();
         Result r;
         try (CassandraLoader loader = new CassandraLoader(o, guard);
-             RowFeed in = RowFeed.open(args[0], RowFeed.asOf(args))) {
+             RowFeed in = DrishtiLake.rowFeed(args[0], RowFeed.asOf(args))) {
             r = loader.load(in);
         }
         double s = (System.nanoTime() - t0) / 1e9;

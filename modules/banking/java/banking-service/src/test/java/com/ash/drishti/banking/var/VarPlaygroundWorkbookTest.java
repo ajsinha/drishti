@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
+import com.ash.tools.xlsx.Formulas;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -23,7 +25,6 @@ import com.ash.drishti.banking.compute.var.ScenarioFx;
 import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.banking.compute.var.VarMath;
-import com.ash.drishti.server.dist.XlsxFormulas;
 import com.ash.drishti.server.playground.ExportSizing;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
@@ -191,7 +192,7 @@ class VarPlaygroundWorkbookTest {
     void recalculatedEqualsEngine(Case c, String name) throws Exception {
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         byte[] xlsx = write(c, false);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         long t0 = System.nanoTime();
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, name, xlsx), work);
         long ms = (System.nanoTime() - t0) / 1_000_000;
@@ -263,7 +264,7 @@ class VarPlaygroundWorkbookTest {
     void cachedValuesAreTheModelsAndEveryFormulaIsInTheCommonSet() throws Exception {
         Case c = build(8, 12, "EUR", VarMath.RankRule.KTH_WORST, "1D", "SQRT10");
         byte[] xlsx = write(c, true);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Map<String, String> parts = unzip(xlsx);
         assertThat(parts.keySet()).contains("xl/worksheets/sheet1.xml", "xl/worksheets/sheet7.xml", "docProps/core.xml", "xl/styles.xml");
         assertThat(parts.get("xl/workbook.xml")).contains("name=\"Main\"", "name=\"Config\"", "name=\"Data\"", "name=\"FX\"", "name=\"PnL\"",
@@ -285,12 +286,12 @@ class VarPlaygroundWorkbookTest {
 
     @Test
     void theFormulaScannerRefusesFunctionsOutsideTheCommonSet() {
-        assertThat(XlsxFormulas.functions("SUMPRODUCT((A1:A9<B1)*1)+IF(C1=\"FILTER(\",1,0)")).containsExactly("SUMPRODUCT", "IF");
-        assertThatThrownBy(() -> XlsxFormulas.check("FILTER(A1:A9,A1:A9>0)")).hasMessageContaining("FILTER");
-        assertThatThrownBy(() -> XlsxFormulas.check("XLOOKUP(1,A:A,B:B)")).hasMessageContaining("XLOOKUP");
-        assertThatThrownBy(() -> XlsxFormulas.check("INDIRECT(\"A1\")")).hasMessageContaining("INDIRECT");
-        assertThatThrownBy(() -> XlsxFormulas.check("=SUM(A1)")).hasMessageContaining("leading");
-        assertThat(XlsxFormulas.check("'Rest of scope'!A1+SUM(B1:B2)")).isNotNull();
+        assertThat(Formulas.functions("SUMPRODUCT((A1:A9<B1)*1)+IF(C1=\"FILTER(\",1,0)")).containsExactly("SUMPRODUCT", "IF");
+        assertThatThrownBy(() -> Formulas.check("FILTER(A1:A9,A1:A9>0)")).hasMessageContaining("FILTER");
+        assertThatThrownBy(() -> Formulas.check("XLOOKUP(1,A:A,B:B)")).hasMessageContaining("XLOOKUP");
+        assertThatThrownBy(() -> Formulas.check("INDIRECT(\"A1\")")).hasMessageContaining("INDIRECT");
+        assertThatThrownBy(() -> Formulas.check("=SUM(A1)")).hasMessageContaining("leading");
+        assertThat(Formulas.check("'Rest of scope'!A1+SUM(B1:B2)")).isNotNull();
     }
 
     @Test

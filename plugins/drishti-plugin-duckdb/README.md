@@ -175,7 +175,7 @@ python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --ke
 
 Loader options (`DuckDbLoader FILE|- DATABASE`, through `python tools/drishti.py data load --store duckdb [database]`): `--recreate` (drop the existing rows of
 each domain the stream reaches; other domains are copied unchanged), `--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (a plain
-file's business date; refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`),
+file's business date; refused for a tar), `--future-days N` (1), `--zone Z` (`LAKE_BUSINESS_ZONE`, else `America/New_York`),
 `--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`), `--threads N` (every
 core); the script adds `--trades N --days D` for a generated book. Input rows are `{"domain", "kind", "id", "date", "doc", "columns"}`,
 filed by the [load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo): a tar of

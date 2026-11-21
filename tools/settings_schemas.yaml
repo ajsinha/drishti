@@ -486,9 +486,8 @@ env:
   # the packs' connectors (modules/<module>/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "<data>/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
-  - { name: DRISHTI_LAKES_DIR, by: server, default: "<config>/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
+  - { name: LAKE_LAKES_DIR, by: server, default: "<config>/lakes", sets: "lake.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
-  - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
   - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_GUIDE.md section 9.4)" }
   - { name: DRISHTI_CONSOLE_RELAY_KEY_MADE, by: console, default: ~, sets: "(set by the launcher)", meaning: "Set by run_drishti_web.py when it made the relay key itself: the relay then stays on this host" }
@@ -538,7 +537,7 @@ env:
   - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile: postgres, aerospike, duckdb, files, iceberg, mongodb or redis (deprecated: connector files replace them)" }
   # read by the code
   - { name: DRISHTI_TMP_DIR, by: "server, console, tools", default: "<data dir>/tmp", sets: "java.io.tmpdir, the console's tmp_dir", meaning: "The base of every temporary folder Drishti makes" }
-  - { name: DRISHTI_LAKE_ROW_GROUP_MB, by: tools, default: ~, sets: "lake writer", meaning: "Row-group size of the Java lake writer, in MB" }
+  - { name: LAKE_PARQUET_ROW_GROUP_MB, by: tools, default: ~, sets: "lake writer", meaning: "Row-group size of the Java lake writer, in MB" }
   - { name: DRISHTI_REDIS_USER, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's user" }
   - { name: DRISHTI_REDIS_PASSWORD, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's password (secret)" }
   - { name: DRISHTI_SERVER, by: tools, default: ~, sets: "drishti.py", meaning: "The server the command line talks to" }
@@ -556,9 +555,9 @@ env:
   - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
   - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }
   - { name: DRISHTI_LAKE_HEAP, by: tools, default: ~, sets: "lake build", meaning: "The Java lake writer's heap" }
-  - { name: DRISHTI_ARCHIVE_MAX_MB, by: tools, default: "102400", sets: "the loaders' archives (lake build, lake load, load_rows.py, convert; the Java loader's source.archive.max-mb)", meaning: "The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA_GUIDE.md section 2.7)" }
-  - { name: DRISHTI_ARCHIVE_MAX_RATIO, by: tools, default: "200", sets: "the loaders' archives (source.archive.max-ratio)", meaning: "The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard" }
-  - { name: DRISHTI_ARCHIVE_MAX_MEMBERS, by: tools, default: "100000", sets: "the loaders' archives (source.archive.max-members)", meaning: "The most entries an archive may hold" }
+  - { name: LAKE_ARCHIVE_MAX_MB, by: tools, default: "102400", sets: "the loaders' archives (lake build, lake load, load_rows.py, convert; the Java loader's source.archive.max-mb)", meaning: "The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA_GUIDE.md section 2.7)" }
+  - { name: LAKE_ARCHIVE_MAX_RATIO, by: tools, default: "200", sets: "the loaders' archives (source.archive.max-ratio)", meaning: "The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard" }
+  - { name: LAKE_ARCHIVE_MAX_MEMBERS, by: tools, default: "100000", sets: "the loaders' archives (source.archive.max-members)", meaning: "The most entries an archive may hold" }
   - { name: DRISHTI_LOADER_HEAP, by: tools, default: 4g, sets: "drishti.py data load (the store loaders)", meaning: "The heap of the Java store loaders (Iceberg, PostgreSQL, ...)" }
   - { name: DRISHTI_M2_VERSION, by: tools, default: ~, sets: "drishti.py dev bicompute-unit", meaning: "The installed release in ~/.m2 the pivot engine's quick check compiles against (default: the newest drishti-common there)" }
   - { name: DRISHTI_ICEBERG_CLASSPATH, by: tools, default: ~, sets: "Iceberg loader", meaning: "The class path of the Iceberg loader" }

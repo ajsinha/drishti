@@ -44,7 +44,7 @@ def _verifier_built() -> bool:
         return False
 
 
-_GATE_JARS = (("kernel/drishti-settingsfile", "drishti-settingsfile"), ("kernel/drishti-api", "drishti-api"), ("kernel/drishti-common", "drishti-common"),
+_GATE_JARS = (("kernel/drishti-api", "drishti-api"), ("kernel/drishti-common", "drishti-common"),
               ("kernel/drishti-kernel-api", "drishti-kernel-api"), ("testing/drishti-testkit", "drishti-testkit"))
 
 

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
-import com.ash.drishti.kernel.api.engines.ComputeEngine;
+import com.ash.drishti.api.compute.ComputeEngine;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;

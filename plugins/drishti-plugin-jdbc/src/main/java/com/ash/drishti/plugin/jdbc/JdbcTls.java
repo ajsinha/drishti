@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -61,7 +61,7 @@ final class JdbcTls {
         if (!ts.enabled()) {
             throw new TlsException("tls.* is set but tls.enabled is not true: set tls.enabled: true to connect over TLS");
         }
-        TlsMaterial m = TlsContexts.build(ts, env, java.time.Clock.systemUTC());
+        TlsMaterial m = DrishtiTools.tls(ts, env, java.time.Clock.systemUTC());
         String id = PgSslFactory.register(m);
         Properties p = new Properties();
         p.setProperty("ssl", "true");

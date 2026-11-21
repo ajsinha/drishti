@@ -49,14 +49,10 @@
     <module>kernel/drishti-identity</module>
     <module>kernel/drishti-packs</module>
     <module>kernel/drishti-ai</module>
-    <module>kernel/drishti-settingsfile</module>
     <module>testing/drishti-testroots</module>
     <module>testing/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
-    <module>lake/drishti-lakeio</module>
-    <module>lake/drishti-deltalake</module>
-    <module>lake/drishti-iceberg</module>
-    <module>lake/drishti-lakeload</module>
+    <module>lake/drishti-lake-host</module>
     <module>net/drishti-net</module>
     <module>compute/drishti-compute</module>
     <module>compute/drishti-bicompute</module>
@@ -70,7 +66,7 @@
     <module>plugins/drishti-plugin-redis</module>
     <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-iceberg</module>
-    <module>plugins/drishti-plugin-iceberg-external</module>
+    <!-- G4 lake: drishti-plugin-iceberg-external waits for Drishti Lake's shaped read of a foreign table (READ_API RA-S8); out of the build until then -->
     <module>plugins/drishti-plugin-duckdb</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
@@ -107,6 +103,11 @@
     <drishti.elements.version>3.1.0</drishti.elements.version>
     <!-- G4 rehearsal: the pinned Rachana release (SPLIT_PLAN step 11). A SNAPSHOT from a scratch repository only; the real pin is a tag. -->
     <drishti.rachana.version>0.11.0-SNAPSHOT</drishti.rachana.version>
+    <!-- Drishti Tools (github.com/ajsinha/drishti-tools): the shared, domain-free utilities (settings and placeholders, TLS and proxy, single-flight,
+         the load guard, the xlsx writer, test fixtures); one version for every module, through tools-bom. A SNAPSHOT until the repository's first tag. -->
+    <drishti.tools.version>1.0.0-SNAPSHOT</drishti.tools.version>
+    <!-- G4 rehearsal: the pinned Drishti Lake release (DRISHTI_LAKE_DESIGN D1); a SNAPSHOT from a scratch repository only -->
+    <drishti.lake.version>0.9.0-SNAPSHOT</drishti.lake.version>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -166,6 +167,7 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency><groupId>com.ash.tools</groupId><artifactId>tools-bom</artifactId><version>${drishti.tools.version}</version><type>pom</type><scope>import</scope></dependency>
       <!-- one Parquet version everywhere: Delta Kernel brings parquet-hadoop 1.16, Iceberg parquet-column 1.18; mixed, the page index fails -->
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-hadoop</artifactId><version>${parquet.version}</version></dependency>
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version></dependency>
@@ -186,6 +188,15 @@
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-core</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-tools</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-data</artifactId><version>${drishti.rachana.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-api</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-io</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-config</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-delta</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-iceberg</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-files</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-memory</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId><version>${drishti.lake.version}</version></dependency>
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId><version>${drishti.lake.version}</version></dependency>
       <!-- test only: Rachana's conformance runner and its pinned cases, answered inside Drishti with the drishti profile (SPLIT_PLAN 8.8) -->
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance-cases</artifactId><version>${drishti.rachana.version}</version></dependency>
@@ -224,11 +235,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
-      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId><version>${project.version}</version></dependency>
@@ -245,6 +253,10 @@
       <dependency><groupId>com.icegreen</groupId><artifactId>greenmail-junit5</artifactId><version>${greenmail.version}</version></dependency>
       <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version></dependency>
       <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>${springdoc.version}</version></dependency>
+      <!-- one AWS SDK version for every module (the S3 clients of Drishti Lake, the S3 plugin, S3Mock): its modules never mix -->
+      <dependency><groupId>software.amazon.awssdk</groupId><artifactId>bom</artifactId><version>${awssdk.version}</version><type>pom</type><scope>import</scope></dependency>
+      <!-- the product's own pins (Drishti Lake and, through it, Drishti Tools); after Drishti's, so Drishti's versions win where both name one -->
+      <dependency><groupId>com.ash.lake</groupId><artifactId>lake-bom</artifactId><version>${drishti.lake.version}</version><type>pom</type><scope>import</scope></dependency>
     </dependencies>
   </dependencyManagement>
 

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules.host;
 
+import com.ash.drishti.api.compute.ComputeEngine;
 import com.ash.drishti.common.Extensions;
 import com.ash.drishti.engine.source.ComputedKindSource;
 import com.ash.drishti.engine.source.SourceRegistry;
@@ -22,7 +23,6 @@ import com.ash.drishti.kernel.api.ai.AiToolProvider;
 import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.capacity.CapacityFigures;
 import com.ash.drishti.kernel.api.data.KindProvider;
-import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import com.ash.drishti.kernel.api.explain.Explainer;
 import com.ash.drishti.kernel.api.function.FunctionProvider;
 import com.ash.drishti.kernel.api.health.HealthFigures;
@@ -84,7 +84,7 @@ final class ModuleBridge {
         live(com.ash.drishti.server.node.ReadinessGate.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.node.Drainable.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.caches.CacheReport.Owner.class, Contributions.Surface.SPI);
-        live(com.ash.drishti.dataload.ReadyRule.class, Contributions.Surface.SPI);
+        live(com.ash.lake.inbox.ReadyRule.class, Contributions.Surface.SPI);
         live(com.ash.drishti.server.flight.FlightForm.class, Contributions.Surface.SPI);
         live(ApprovalSource.class, Contributions.Surface.SPI);
         live(HealthFigures.class, Contributions.Surface.SPI);           // objects of the module: withdrawn before its loader is checked (step 4, not 9)

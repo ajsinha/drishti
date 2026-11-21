@@ -15,8 +15,9 @@
  */
 package com.ash.drishti.server.http;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.SiteProxy;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public final class SiteProxyEnvironmentPostProcessor implements EnvironmentPostP
             s.put("proxy.no-proxy", String.join(",", skip));
         }
         boolean fromEnv = Boolean.parseBoolean(env.getProperty(PREFIX + "from-environment", "false"));
-        SiteProxy.configure(s, fromEnv);
+        DrishtiTools.siteProxy(s, fromEnv);
         if (!s.isEmpty() || fromEnv) {
             ProxySettings p = ProxySettings.resolve(Map.of(), "https://site-default.invalid");   // fails the start on a malformed setting
             System.getLogger(SiteProxyEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,

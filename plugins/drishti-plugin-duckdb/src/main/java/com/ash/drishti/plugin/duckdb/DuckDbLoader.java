@@ -15,9 +15,11 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -136,7 +138,7 @@ public final class DuckDbLoader {
         }
         List<String> a = List.of(args);
         DuckDbLoader loader = new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")),
-                LoadGuard.fromArgs(args), Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
+                DrishtiTools.loadGuard(args), Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
                 option(args, "--memory-limit", "2GB"), Integer.parseInt(option(args, "--threads", "0")));
         loader.asOf = RowFeed.asOf(args);
         loader.load(args[0]);
@@ -210,7 +212,7 @@ public final class DuckDbLoader {
         List<Row> end = List.of();
         Parsed poison = new Parsed(CompletableFuture.completedFuture(end), List.of());
         ExecutorService pool = Executors.newFixedThreadPool(parsers);
-        RowFeed feed = RowFeed.open(input, asOf);                          // the load rules: each line's file and business date
+        RowFeed feed = DrishtiLake.rowFeed(input, asOf);                          // the load rules: each line's file and business date
         Thread reader = Thread.ofPlatform().name("duckdb-loader-reader").start(() -> {
             JsonFactory json = new JsonFactory();
             try (RowFeed in = feed) {

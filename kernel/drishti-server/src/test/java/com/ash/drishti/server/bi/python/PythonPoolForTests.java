@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.python;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

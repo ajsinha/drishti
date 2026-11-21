@@ -64,8 +64,6 @@ def roots_line(roots: dict, java: str | None = None, why: str = "") -> list:
 
 
 def check_options(a) -> None:
-    if a.engine and a.engine not in ("native", "hadoop", "auto"):
-        raise LaunchError("--engine is native, hadoop or auto", 2)
     if a.node and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", a.node):
         raise LaunchError(f"--node {a.node}: lower-case letters, digits and dashes", 2)
     if a.advertise and procs.loopback_or_wildcard(a.advertise):
@@ -245,8 +243,6 @@ def start(a, env: dict | None = None) -> int:
     dev, heap = [], a.heap or (keys.get(HEAP_KEY) or "").strip() or "2g"   # --heap, else the profile's drishti.launch.heap
     if a.demo:   # everything else of the demo is config/profiles/demo.ini (profiled); only the development secrets come from here
         dev = dev_secrets(env, ["DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"] + (["DRISHTI_NET_SECRET"] if a.node else []))
-    if a.engine:
-        env["DRISHTI_DELTA_ENGINE"] = a.engine
     if a.lake_root:
         env[lakeconfig.DEMO_ROOT_ENV] = a.lake_root
     if a.iceberg:

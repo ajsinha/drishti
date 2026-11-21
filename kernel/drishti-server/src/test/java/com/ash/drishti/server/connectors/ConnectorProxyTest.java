@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.server.connectors;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.ConnectionProbe;
@@ -29,7 +29,7 @@ import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.plugin.feeds.FeedSourcePlugin;
-import com.ash.drishti.testkit.FakeProxy;
+import com.ash.tools.testkit.FakeProxy;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;

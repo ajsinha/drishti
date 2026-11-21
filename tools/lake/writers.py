@@ -37,7 +37,7 @@ import zipfile
 
 from stage import Part, list_texts, read_rows, row_line
 
-LAKE_CLASS = "com/ash/drishti/deltalake/write/LakeWriter.class"
+LAKE_CLASS = "com/ash/lake/delta/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
@@ -65,7 +65,7 @@ def jar_has_writer(jar: str) -> bool:
             if LAKE_CLASS in names:
                 return True
             # a Spring Boot exec jar keeps the modules as nested jars
-            nested = [n for n in names if n.startswith("BOOT-INF/lib/drishti-deltalake-") and n.endswith(".jar")]
+            nested = [n for n in names if n.startswith("BOOT-INF/lib/lake-delta-") and n.endswith(".jar")]
             for n in nested:
                 with z.open(n) as inner, zipfile.ZipFile(inner) as zi:
                     if LAKE_CLASS in zi.namelist():
@@ -109,14 +109,14 @@ def deltalake_available() -> bool:
 
 def java_command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
     """How to start Drishti's writer, as (java, arguments): the server's exec jar (``java -jar J lake ...``), or for development a class
-    path in DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.drishti.deltalake.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
+    path in DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.lake.delta.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
     java_bin = find_java(java)
     if not java_bin:
         return None
     heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_HEAP", "1g")
     cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
     if cp and not jar:
-        return java_bin, [heap, "-cp", cp, "com.ash.drishti.deltalake.write.LakeCli"]
+        return java_bin, [heap, "-cp", cp, "com.ash.lake.delta.write.LakeCli"]
     j = find_jar(jar)
     if j and jar_has_writer(j):
         return java_bin, [heap, "-jar", j]

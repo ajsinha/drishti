@@ -1761,7 +1761,7 @@ removes table files). Standard-IA keeps an object at least 30 days, Glacier IR 9
 | Cache | Where | After a restart |
 |---|---|---|
 | file list of each table | heap | re-read from the checkpoint |
-| Parquet footers | heap (`-Ddrishti.parquet.footer-cache-mb`, 64) | re-read on first use (one ranged GET) |
+| Parquet footers | heap (`-Dlake.parquet.footer-cache-mb`, 64) | re-read on first use (one ranged GET) |
 | id maps of days | heap and disk (`id-map-disk.dir`) | memory-mapped from disk: no scan |
 | column sets of days | heap | re-read (the newest day in the background) |
 | documents | heap and RocksDB on disk (`doc-disk-cache.dir`) | warm from disk |

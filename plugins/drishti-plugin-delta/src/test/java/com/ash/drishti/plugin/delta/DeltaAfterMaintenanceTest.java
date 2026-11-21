@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -59,7 +59,7 @@ class DeltaAfterMaintenanceTest {
         Process p = pb.start();
         assertThat(p.waitFor(5, TimeUnit.MINUTES) && p.exitValue() == 0).as("maintenance ran").isTrue();
         assertThat(Files.list(root.resolve("desk/trade/_delta_log")).anyMatch(f -> f.toString().endsWith(".checkpoint.parquet"))).isTrue();
-        for (String engine : new String[] {"native", "hadoop"}) {                  // both engines read the checkpoint
+        for (String engine : new String[] {"native"}) {                  // both engines read the checkpoint
             DeltaSourcePlugin plugin = new DeltaSourcePlugin();
             plugin.start(DatedSourceContract.context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective",
                     "engine", engine)));

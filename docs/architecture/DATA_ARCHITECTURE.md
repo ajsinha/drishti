@@ -2474,6 +2474,10 @@ public interface ComputeEngine extends AutoCloseable {
 `ComputeInputs` hands the engine Arrow batches already read as the user; the engine never sees a connector, a credential or the
 router.
 
+The built interface is the platform's one `ComputeEngine`: the same type also carries an engine's switch (`id`, `start`, `stop`,
+`memoryBytes`, `threadPrefixes`, `running`) for the engine registry (ADMIN_GUIDE section 21); a reactive engine uses only the
+computation methods, a switched engine only the switch.
+
 #### 16.2 HTTP API (planned)
 
 Panels and BI read reactive kinds through the existing view and source paths; nothing new is needed for them. For programs:
@@ -3628,7 +3632,7 @@ Exactly the layout the existing readers expect.
 | Text of a number in a text column | Python's (`json.dumps`: `42`, `1.5`, `1e-05`) | the Iceberg loader's (`42` for a whole number) |
 | An existing table | keeps its schema and partitioning: a load column it lacks is left out (`columns.leftOut`), a column the load lacks is null; another partitioning is refused | its columns kept; the missing ones added (one schema commit), as `NativeLayout.open` |
 | New table | created by the first date's commit, with `target.properties` | created with the layout's properties (zstd, 1 MB row groups, metrics: `doc` none, `id` full), sort order by id |
-| Parquet | `LakeWriter`'s row groups and pages (`DRISHTI_LAKE_ROW_GROUP_KB` 256, `DRISHTI_LAKE_PAGE_KB` 64), Snappy; exact statistics for every scalar column, none for `doc` | the table's properties |
+| Parquet | `LakeWriter`'s row groups and pages (`LAKE_PARQUET_ROW_GROUP_KB` 256, `LAKE_PARQUET_PAGE_KB` 64), Snappy; exact statistics for every scalar column, none for `doc` | the table's properties |
 | The vector column | BYTE_STREAM_SPLIT (a double's 8 bytes as 8 streams), ZSTD, no dictionary, no statistics | the same |
 | Partition folders and paths | the Delta protocol's: Kernel's write context hands the folder as a URI (`DataWriteContext.getTargetDirectory`), `LakeWriter.targetDirectory` decodes it once, so the folder is the Hive-escaped value Spark writes and `add.path` is that path encoded once; an empty value is null (`__HIVE_DEFAULT_PARTITION__`). Every path Kernel hands a reader is plain and is never decoded again (`LocalPaths.decodeUri` decodes only a `java.nio` `file://` URI). Examples: [DATA_LAKE_GUIDE.md section 14.2](../guides/DATA_LAKE_GUIDE.md#142-partition-paths-values-folders-addpath) | Iceberg's own (`identity` partition paths) |
 
@@ -3706,7 +3710,7 @@ libraries inside their jars, no `.exe`).
 - Too many rejects (`rejects.max-pct`) stop the load after the read, before anything is written.
 - The spill folder is removed on success, on failure, and when the JVM is stopped (a shutdown hook: Ctrl-C, SIGTERM, a stopped task).
 - A reader or parser that fails stops the others at once (the queue never leaves a thread blocked); exit code 1 with the reason in one
-  line (`-Ddrishti.loader.trace=true` prints the stack).
+  line (`-Dlake.loader.trace=true` prints the stack).
 - **The lock:** a local lake gets `lake build`'s lock (shared on `<lake>/_drishti-lake/lock`, exclusive on
   `locks/<domain>/<table>.lock`; the whole lake on Windows). `lake build` takes a POSIX lock (`lockf`) beside its `flock` on the same
   files, because Java cannot take `flock`; so a direct loader run and a Python build or `lake maintain` exclude each other (exit 3 for the

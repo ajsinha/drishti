@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.redis;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.SslOptions;
 import io.lettuce.core.SslVerifyMode;
@@ -68,7 +68,7 @@ final class RedisTls {
             LOG.log(System.Logger.Level.WARNING,
                     "redis: 'verifyPeer' in the uri is deprecated; use tls.verify-hostname: false (or tls.insecure-trust-all for development)");
         }
-        return TlsContexts.build(ts, env, java.time.Clock.systemUTC());
+        return DrishtiTools.tls(ts, env, java.time.Clock.systemUTC());
     }
 
     /** Lettuce's SSL options carrying the module's trust, identity, protocols and cipher suites. */

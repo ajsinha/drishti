@@ -37,15 +37,8 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         String dir = PackPaths.packsDir(env);
-        // the lake files' references (${DRISHTI_DELTA_ROOT:...}, drishti.lakes.dir) resolved with the server's settings, as a connector
+        // the lake files' references (${DRISHTI_DELTA_ROOT:...}, lake.lakes.dir) resolved with the server's settings, as a connector
         // file's are (docs/guides/DATA_LAKE_GUIDE.md): an environment variable, a system property, a --setting or a test's property
-        com.ash.drishti.lakeconfig.Lakes.useProperties(k -> {
-            try {
-                return env.getProperty(k);
-            } catch (IllegalArgumentException e) {
-                return null;
-            }
-        });
         // the named lakes, databases and brokers ([lake.<name>], [db.<name>], [broker.<name>], [connector.<name>], [pack.<name>]) read
         // through the same settings: the settings files' entries, -D, the environment, a --setting or a test's property
         com.ash.drishti.common.NamedResources.useView(k -> {
@@ -66,6 +59,24 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         if (System.getProperty(com.ash.drishti.api.DataDir.PROPERTY) == null) {           // plugins have no Spring environment: hand them the umbrella
             System.setProperty(com.ash.drishti.api.DataDir.PROPERTY, PackPaths.dataDir(env));
         }
+        // the one LakeRuntime of the server (Drishti's catalog, the mem:// storage): its options and the lake files' references read through
+        // the same settings
+        com.ash.drishti.lakehost.DrishtiLake.use(com.ash.drishti.lakehost.DrishtiLake.build(k -> {
+            try {
+                String v = env.getProperty(k);
+                return v != null ? v : System.getProperty(k);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }, () -> {
+            java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+            for (org.springframework.core.env.PropertySource<?> ps : env.getPropertySources()) {
+                if (ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties")) {
+                    keys.addAll(Arrays.asList(e.getPropertyNames()));
+                }
+            }
+            return keys;
+        }));
         if (System.getProperty("drishti.index.dir") == null) {                              // the type-ahead segment folder, for the same reason
             String idx = env.getProperty("drishti.index.dir", "");
             if (!idx.isBlank()) {

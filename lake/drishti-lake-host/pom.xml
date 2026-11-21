@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-lake-host</artifactId>
+  <name>drishti-lake-host</name>
+  <description>Drishti's side of Drishti Lake: the lake files Drishti ships (drishti/lakes/*.yaml, shipped.txt) and the host's catalog
+    (DrishtiLakeCatalog: shipped lakes, pack files, connector templates, named lake writers, extensions) that the one LakeRuntime of a
+    process is built with</description>
+  <dependencies>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-api</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-io</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-config</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
+    <!-- the loader, the check and the in-memory lake: DrishtiLakeCli starts them with Drishti's runtime -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-memory</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+  </dependencies>
+</project>

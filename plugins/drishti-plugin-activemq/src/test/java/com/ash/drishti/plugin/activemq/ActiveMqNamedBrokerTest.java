@@ -15,14 +15,14 @@
  */
 package com.ash.drishti.plugin.activemq;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.common.NamedResources;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.SettingsFile;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +56,7 @@ class ActiveMqNamedBrokerTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
     }
 
     private void ini(String... files) throws Exception {
@@ -66,8 +66,8 @@ class ActiveMqNamedBrokerTest {
             Files.writeString(f, files[i]);
             paths.add(f.toString());
         }
-        System.setProperty(SettingsFile.PROPERTY, String.join(",", paths));
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, String.join(",", paths));
+        set.addAll(DrishtiTools.applySettingsFile());
     }
 
     static int closedPort() throws Exception {
@@ -135,7 +135,7 @@ class ActiveMqNamedBrokerTest {
         ini("[broker.amq-mtls]\ntype=activemq\nbroker-url=ssl://127.0.0.1:" + port + "\ntls.ca-file=" + caPem + "\ntls.keystore=" + ks
                 + "\ntls.keystore-type=PKCS12\n", "[broker.amq-mtls]\ntls.keystore-password=kspw\n");
         Map<String, String> settings = connector("amq-mtls");
-        assertThat(TlsContexts.build(TlsSettings.from(settings)).clientKey()).as("the client certificate is loaded").isNotNull();
+        assertThat(DrishtiTools.tls(TlsSettings.from(settings)).clientKey()).as("the client certificate is loaded").isNotNull();
         ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
         try {
             p.start(DatedSourceContract.context(settings));

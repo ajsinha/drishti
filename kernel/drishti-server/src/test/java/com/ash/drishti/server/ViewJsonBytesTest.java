@@ -23,7 +23,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.command.CommandParser;
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.rachana.view.ViewJson;
 import com.ash.rachana.view.ViewModel;
 import com.fasterxml.jackson.databind.ObjectMapper;

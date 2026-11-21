@@ -17,9 +17,9 @@ package com.ash.drishti.server.dataload;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.dataload.DataInbox;
-import com.ash.drishti.dataload.ReadyDesk;
-import com.ash.drishti.dataload.ReadyForm;
+import com.ash.lake.inbox.DataInbox;
+import com.ash.lake.inbox.ReadyDesk;
+import com.ash.lake.inbox.ReadyForm;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.engines.EngineGateFilter;

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsMaterial;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;

@@ -193,7 +193,7 @@ tls.ca-file=/etc/drishti/tls/bank-ca.pem
 - **Origin.** The server knows which file each key came from (`SettingsFile.sourceOf`): the start's `resolved paths:` block names the file as
   the origin of each root and path setting it set, and Admin → Configuration → Resolved paths shows each with where it came from.
 - Java: `-Ddrishti.settings.file=/abs/a.ini[,/abs/b.ini]` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
-  `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
+  `com.ash.drishti.api.DrishtiTools.applySettingsFile()` (`com.ash.tools.settings.SettingsFile` of the Drishti Tools library, reached through `drishti-common`).
 - The server applies them first thing in `main`, before anything reads a setting. `python tools/drishti.py --settings /abs/drishti.ini start server` (and
   `start cluster` the same way, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
 - Python tools: `python tools/drishti.py --settings /abs/drishti.ini[,/abs/secrets.ini] ...` reads the same files (`tools/settingsfile.py`)
@@ -406,7 +406,7 @@ Each row was tried against a scratch server. Points to know:
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
 
 **Every other file the server reads: the one resolver.** The files Spring does not read itself are resolved by one resolver,
-`com.ash.drishti.settingsfile.Placeholders`, with the same syntax: `${key}`, `${key:default}`, `${key:-default}` (the shell's form), nested
+`com.ash.tools.settings.Placeholders` (Drishti Tools), with the same syntax: `${key}`, `${key:default}`, `${key:-default}` (the shell's form), nested
 in the default (`${lake.risk.root:${DRISHTI_DELTA_ROOT:/srv/lake}}`), inside a longer value. `key` is a settings key (`lake.risk.root`,
 `broker.kafka-eu.sasl.password`) or an environment variable's name (`DRISHTI_DELTA_ROOT`). The order, first found wins:
 
@@ -445,7 +445,7 @@ from its own setting or from one anchor, the install folder:
 | JDK of the Python tools | `drishti.java.home` (`DRISHTI_JAVA_HOME`) | `JAVA_HOME`, then `java` on the PATH. The JDK the Python tools run Java from (lake demo, lake build --engine java, start); the server in the IDE uses the project's JDK. The key beats the variable |
 | modules | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<home>/modules`; required (`none`: a server with no shipped module folders) |
 | module switches, access | `drishti.modules.dir`, `drishti.access.dir` | `<config>/modules`, `<config>/access` |
-| lakes, connectors | `drishti.lakes.dir`, `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `<config>/lakes`, `<config>/connectors` |
+| lakes, connectors | `lake.lakes.dir`, `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `<config>/lakes`, `<config>/connectors` |
 | inbox | `drishti.dataload.dir` | `<data>/dataload` |
 | extra pack folders | `drishti.packs.extra-dirs` | none; each named one must exist |
 
@@ -577,7 +577,7 @@ the command line or in `JAVA_TOOL_OPTIONS`):
 | `-XX:NativeMemoryTracking=summary` | `jcmd <pid> VM.native_memory summary` |
 | `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<data dir>/dumps` | a heap dump when the heap runs out |
 | `-Xlog:gc*:file=<data dir>/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a rotated GC log (100 MB at most); make the folder first, or the JVM does not start |
-| `-Ddrishti.open-dates.net-grace-seconds=120` (the default; no launcher passes it) | the byte safety net (`drishti.var.open-heap-mb`, `drishti.ccr.exposure.open-heap-mb`) never closes a date, nor its currency and stress books, read in the last this many seconds, so two dates asked in turn by many users do not close and reload each other at a small heap; idle dates still leave, a new load without room is still refused (`DRS-5204`); `0` turns it off ([VAR_GUIDE.md 26.8](../guides/VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)). Likewise `-Ddrishti.parquet.footer-cache-mb=64`: the parsed Parquet footers kept, weighed at about 700 bytes a column chunk |
+| `-Ddrishti.open-dates.net-grace-seconds=120` (the default; no launcher passes it) | the byte safety net (`drishti.var.open-heap-mb`, `drishti.ccr.exposure.open-heap-mb`) never closes a date, nor its currency and stress books, read in the last this many seconds, so two dates asked in turn by many users do not close and reload each other at a small heap; idle dates still leave, a new load without room is still refused (`DRS-5204`); `0` turns it off ([VAR_GUIDE.md 26.8](../guides/VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)). Likewise `-Dlake.parquet.footer-cache-mb=64`: the parsed Parquet footers kept, weighed at about 700 bytes a column chunk |
 
 Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#143-direct-memory-and-the-diagnostics-of-a-long-run).
 Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file change that.
@@ -6515,9 +6515,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ALLOW_INSECURE_TLS` | tls.insecure-trust-all | none | server | Must be true for a connector to run with tls.insecure-trust-all: true (development only) |
 | `DRISHTI_API_DOCS` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | `true` | server | set explicitly, so a start does not warn that they are on by default |
 | `DRISHTI_API_DOCS_DIR` | `help.api_docs_dir` | `web/apidocs` | console | Help -&gt; Developer (IMPLEMENTATION\_PLAN row 2g): the Java and Python API references tools/api\_docs.py build writes here, one folder per version (generated at build time, never committed); relative to the console folder. Missing: the page says how to build them. |
-| `DRISHTI_ARCHIVE_MAX_MB` | the loaders' archives (lake build, lake load, load\_rows.py, convert; the Java loader's source.archive.max-mb) | `102400` | tools | The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA\_GUIDE.md section 2.7) |
-| `DRISHTI_ARCHIVE_MAX_MEMBERS` | the loaders' archives (source.archive.max-members) | `100000` | tools | The most entries an archive may hold |
-| `DRISHTI_ARCHIVE_MAX_RATIO` | the loaders' archives (source.archive.max-ratio) | `200` | tools | The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard |
+| `LAKE_ARCHIVE_MAX_MB` | the loaders' archives (lake build, lake load, load\_rows.py, convert; the Java loader's source.archive.max-mb) | `102400` | tools | The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA\_GUIDE.md section 2.7) |
+| `LAKE_ARCHIVE_MAX_MEMBERS` | the loaders' archives (source.archive.max-members) | `100000` | tools | The most entries an archive may hold |
+| `LAKE_ARCHIVE_MAX_RATIO` | the loaders' archives (source.archive.max-ratio) | `200` | tools | The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard |
 | `DRISHTI_ARROW_EXCHANGE_MB` | the launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes | `512` | tools | Arrow's budget in MB beyond Arrow Flight: the compute workers' exchange and BI answers sent as Arrow (the official Arrow library's buffers are direct memory); added to the direct-memory limit with Flight's memory.total-mb when its engine is on (tools/lake/memory\_caps.py) |
 | `DRISHTI_ARROW_MB` | the Windows and ECS launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes | `512` | tools | Arrow's whole budget in MB, used as it is (an ECS task has no Python: set it to what tools/lake/memory\_caps.py --arrow-only prints); unset, the Windows launcher asks memory\_caps.py and the ECS entrypoint uses 512 |
 | `DRISHTI_ARTIFACTS_CONSOLE_PORT` | screenshot tools | none | tools | The console port of the artifacts screenshots |
@@ -6658,7 +6658,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KERNEL_JAR` | the server jar `module run` starts | `lib/drishti-server-*-exec.jar` | tools | The server jar `drishti.py module run` starts, before the one in &lt;home&gt;/lib (tools/modulecli.py) |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
-| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
+| `LAKE_LAKES_DIR` | lake.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |
 | `DRISHTI_LAKE_CACHE` | the cached demo lakes' folder | `<data>/tmp/lake-cache` | tools | Where tools/drillkit/lake\_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code; an absolute folder shared by every checkout, worktree and drill keeps ONE copy of the shared test lake (the drill honours it when set) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
@@ -6669,7 +6669,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_LAKE_MEMORY_` | one store's cap for the launchers | empty | tools | Prefix: DRISHTI\_LAKE\_MEMORY\_&lt;STORE&gt;\_MAX\_MB overrides one in-memory lake store's max-mb when the launchers compute the direct-memory limit (tools/lake/memory\_caps.py) |
 | `DRISHTI_LAKE_MEMORY_MB` | the launchers' -XX:MaxDirectMemorySize | empty | tools | The in-memory lake stores' caps in MB, summed; when set, the launchers raise the JVM's direct-memory limit by it instead of reading the stores from the configuration (tools/lake/memory\_caps.py) |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | console | the lake roots this console may write, comma-separated (the Delta connectors' root); empty: &lt;data dir&gt;/delta, as the server |
-| `DRISHTI_LAKE_ROW_GROUP_MB` | lake writer | none | tools | Row-group size of the Java lake writer, in MB |
+| `LAKE_PARQUET_ROW_GROUP_MB` | lake writer | none | tools | Row-group size of the Java lake writer, in MB |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled`, `layouts.enabled` | `true` | console, server | also needs a role with layout (every role but viewer, unless configured) |
 | `DRISHTI_LENSES` | `drishti.lenses` | `default` | server | Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a role and never hides anything (what exists is the distribution's). default: every lens of the modules that are on (a lens file under config/lenses not marked offered-by-default: false); a list names them (it may hold the word default); DRISHTI\_LENSES= (empty) offers none. A lens named that cannot be offered is left out, with an ERROR in the log and a red line on Admin -&gt; Health; the start goes on. |
 | `DRISHTI_LIB_PATH` | `drishti.lib.path` | `<home>/lib/ext` | server | the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; &lt;home&gt;/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in &lt;data&gt;/lib (the previous default) are moved here once |

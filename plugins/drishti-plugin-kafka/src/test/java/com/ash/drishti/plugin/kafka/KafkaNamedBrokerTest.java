@@ -15,11 +15,12 @@
  */
 package com.ash.drishti.plugin.kafka;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.NamedResources;
-import com.ash.drishti.settingsfile.SettingsFile;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.settings.SettingsFile;
+import com.ash.tools.testkit.TestPki;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ class KafkaNamedBrokerTest {
     @AfterEach
     void after() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
         restore("org.apache.kafka.sasl.oauthbearer.allowed.urls", allowedUrls);
         restore("java.security.krb5.conf", krb5);
     }
@@ -88,8 +89,8 @@ class KafkaNamedBrokerTest {
             Files.writeString(f, files[i]);
             paths.add(f.toString());
         }
-        System.setProperty(SettingsFile.PROPERTY, String.join(",", paths));
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, String.join(",", paths));
+        set.addAll(DrishtiTools.applySettingsFile());
     }
 
     /** The consumer properties of a kafka connector named {@code orders} that says {@code broker: <name>}. */

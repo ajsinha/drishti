@@ -39,7 +39,7 @@ if str(ROOT / "tools") not in sys.path:
 from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 import schema as TS  # noqa: E402
 import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LAKE_GUIDE.md section 5.2)
-import filedate  # noqa: E402
+from drishti_lake import filedate  # noqa: E402
 
 UPPER = re.compile(r"^[A-Z][A-Z0-9_]*$")
 REAL = [Path.home() / "Downloads" / "endur.json", Path.home() / "Downloads" / "ComSwap.json"]

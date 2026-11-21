@@ -16,7 +16,8 @@
 package com.ash.drishti.server.playground;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.server.dist.XlsxWriter;
+import com.ash.tools.xlsx.Styles;
+import com.ash.tools.xlsx.WorkbookTemplate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -31,21 +32,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 /**
  * A playground's workbook template (docs/guides/VAR_GUIDE.md section 5), kept in the repository as text: {@code template.properties}
  * (its name, version and the cell formats by name), {@code xl/styles.xml} (the look), {@code docProps/core.xml} and {@code docProps/app.xml}
  * (the document's properties, with {@code {{PRODUCT}}}, {@code {{COPYRIGHT}}}, {@code {{OWNER}}} placeholders filled from the branding
  * configuration) and {@code explain.txt} (the words of the Explain tab). The sheets and their formulas are generated for the count asked
- * ({@link WorkbookStream}); a template holds the look and the words only.
+ * ({@link PlaygroundWorkbook}); a template holds the look and the words only.
  *
  * <p>Read from the classpath (the built-in one, {@code playground/<metric>/template/}) or from a folder (a bank's own house style,
  * {@code drishti.var.playground.template}); either must name every style the metric uses, or it is refused with the list of the missing.
  */
 public final class PlaygroundTemplate {
 
-    private static final Pattern COMMENT = Pattern.compile("<!--.*?-->\\s*", Pattern.DOTALL);
     static final List<String> PARTS = List.of("template.properties", "xl/styles.xml", "docProps/core.xml", "docProps/app.xml", "explain.txt");
 
     private final String name;
@@ -151,27 +150,14 @@ public final class PlaygroundTemplate {
         return origin;
     }
 
-    /** A cell format's index by name. */
-    public int style(String n) {
-        Integer s = styles.get(n);
-        if (s == null) {
-            throw new IllegalArgumentException("no style " + n + " in the playground template " + origin);
-        }
-        return s;
-    }
-
-    /** A differential format's index ({@code pass}, {@code fail}). */
-    public int dxf(String n) {
-        return dxfs.get(n);
+    /** The template's look for a workbook: its {@code xl/styles.xml} with the placeholders filled, and the names of its cell and differential formats. */
+    public Styles styles(Map<String, String> values) {
+        return Styles.of(part("xl/styles.xml", values), styles, dxfs);
     }
 
     /** A part as written into the workbook: comments dropped, placeholders filled ({@code {{KEY}}} from {@code values}, XML-escaped). */
     public String part(String part, Map<String, String> values) {
-        String s = COMMENT.matcher(parts.get(part)).replaceAll("");
-        for (Map.Entry<String, String> e : values.entrySet()) {
-            s = s.replace("{{" + e.getKey() + "}}", XlsxWriter.esc(e.getValue() == null ? "" : e.getValue()));
-        }
-        return s;
+        return WorkbookTemplate.fill(parts.get(part), values);
     }
 
     /** The Explain tab's steps: each {@code [title, text]} ({@code #} lines dropped). */
