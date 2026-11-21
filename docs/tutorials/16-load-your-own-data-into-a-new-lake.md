@@ -34,7 +34,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 
 - The server built (`./mvnw clean package -DskipTests`) and the demo lake in place (`drishti.py lake demo`,
   [tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)). The demo lake sits in its own folder, `data/delta/demo/`
-  ([the guide, section 7](../guides/DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)).
+  ([the guide, section 7](../guides/DATA_LAKE_GUIDE.md#7-the-demo-lakes-folder)).
 - Signed in as an administrator, with a personal token in `DRISHTI_TOKEN` (Admin → Engines, Admin → Data loads → Inbox and the
   `dataload` commands are for administrators).
 - Run the commands from the server's working folder (the repository): the lake files are in `config/lakes/`, the inbox in

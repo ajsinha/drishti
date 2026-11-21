@@ -1458,7 +1458,7 @@ command output below was captured on a fresh clone with the demo lakes (`drishti
 
 ### 9.2 The folder
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console); the Delta plugin's own settings: [CONFIGURATION.md, `delta`](../admin/CONFIGURATION.md#delta--delta-lake).
 
 The folder holds the connector files and nothing else. A connector plugin that is not shipped (a vendor's, a JDBC driver for
 `jdbc`) is a jar in the server's **lib folder** (`drishti.lib.path`, default `<home>/lib/ext`), loaded at start; that is the only

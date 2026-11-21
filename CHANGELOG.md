@@ -2557,7 +2557,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (`drishti_catalogue.js`) from the same parse as ELEMENTS_API.md, `--check` covering both; ELEMENTS_API.md now lists every library's
   types (a `@typedef` was read as `@type` and dropped). 9 Node tests (`gallery.test.mjs`), the routes' tests and one browser file
   (`test_elements_gallery_browser.py`, 5 tests, about 18 s).
-- **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/ARCHITECTURE.md#302-the-renderer-as-an-elements-library),
+- **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/ARCHITECTURE.md#302-the-renderer-on-drishti-elements-painter),
   [ELEMENTS.md section 8.5](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). The product owner's rule: no renderer-private
   grid, chart, format, live or input code; the console and the renderer draw panels with the same components. Tables, trees, drills, the
   pivot kind and every chart's Data table are **drishti-grid's document table** (the server's table, element for element 1.2.0's markup,
@@ -5772,7 +5772,7 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/DATA
   sorted by `LEGAL_ENTITY`, `DESK`, id by default (shard-aligned files, statistics a reader can prune by) and a **load manifest** listing
   each file's first and last keys for the cluster's VaR shards. The vector column BYTE_STREAM_SPLIT + ZSTD. Folder or `s3://` in, folder
   or `s3://` out, credentials only from the AWS chain; Windows with Java only. Design, decisions and the 2.3M estimate:
-  [PARALLEL_LOADER.md](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload); every key: [TOOLS.md section 4.13](docs/guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
+  [PARALLEL_LOADER.md](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load); every key: [TOOLS.md section 4.13](docs/guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
 - **`drishti.py lake build --engine java`** runs the build in the loader (`tools/lake/javaload.py`; `--loader-set KEY=VALUE`; Delta or
   Iceberg; `--from s3://` and a Delta `--lake s3://`); the Python path stays the default: the loader runs only when asked (`--engine java`,
   or `--java-above-mb N` for `--engine auto` to pick it for at least N MB of JSON Lines in `overwrite-dates` mode). `lake build` also takes a POSIX lock beside its `flock`, so it
@@ -8338,7 +8338,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
   refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
-  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)).
 - **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
   read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
   from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
@@ -8346,7 +8346,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
   ([ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
-  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
   (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
   an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
   Every Delta test passes as before; the tests of the moved classes moved with them.

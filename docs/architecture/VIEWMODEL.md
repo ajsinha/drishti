@@ -813,7 +813,7 @@ Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by th
 ([EMBED_GUIDE.md](ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
 ViewModel itself and draw it with Drishti Render ([EMBED_GUIDE.md › Drishti Elements: the design, section 19](../guides/EMBED_GUIDE.md#52-elements-2x-drawn-by-the-renderer)).
 
-The client-side renderer ([EMBED_GUIDE.md section 7](ARCHITECTURE.md#302-the-renderer-as-an-elements-library)) ports every row of this
+The client-side renderer ([EMBED_GUIDE.md section 7](ARCHITECTURE.md#302-the-renderer-on-drishti-elements-painter)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
 a client mode (since retired) is on, and Elements 2.0 do; the macros stay as the `server` path and are retired later

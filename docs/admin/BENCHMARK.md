@@ -816,7 +816,7 @@ set `DRISHTI_LAKE_HEAP` (4g here) for loads of 200,000 positions and more: the w
 `ThroughputTest`, 10,000 positions × 510 scenarios, 53.7 MB of JSON Lines in eight gzip files (22.3 MB), into Delta on local disk. The
 first load in a JVM is cold (1.3 s, 7,700 rows/s); a warm one (what a long load runs at after its first seconds): **0.19 to 0.29 s, 34,000
 to 52,000 rows/s, 180 to 280 MB/s of JSON** end to end. Iceberg warm: 0.25 to 0.27 s (37,000 to 40,000 rows/s). With a 24 MB budget the
-same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
+same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load).
 
 | Stage | Per thread, warm | Note |
 |---|---|---|

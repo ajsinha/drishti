@@ -3585,6 +3585,7 @@ drishti.py tables preview TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]
 drishti.py tables lineage NAME                                      who uses a table or a model
 drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
                                                                     the flat virtual table offered for a new table, columns from a sample
+```
 
 ## 13. The risk engines: `var`, `exposure`, `sens`, `frtb`, `simm`, `pivot`
 

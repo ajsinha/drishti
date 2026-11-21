@@ -35,7 +35,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 4. [The `.ready` file, every key](#4-the-ready-file-every-key)
 5. [Routing, business dates, modes, repeats and undo](#5-routing-business-dates-modes-repeats-and-undo)
 6. [Pointing Drishti at a lake](#6-pointing-drishti-at-a-lake) (6.2: [several source systems](#62-several-source-systems-shared-or-separate-tables))
-7. [The demo lake's one-time move](#7-the-demo-lakes-one-time-move)
+7. [The demo lake's one-time move](#7-the-demo-lakes-folder)
 8. [Checking a load, and troubleshooting](#8-checking-a-load-and-troubleshooting)
 9. [Sizing: a day of 1M trades and 50K positions × 509 scenarios](#9-sizing-a-day-of-1m-trades-and-50k-positions--509-scenarios)
 10. [Connecting to an existing lakehouse (Databricks, Unity Catalog)](#10-connecting-to-an-existing-lakehouse-databricks-unity-catalog)
