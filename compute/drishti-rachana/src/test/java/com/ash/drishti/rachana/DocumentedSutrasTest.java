@@ -15,11 +15,13 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.rachana.SutraExpressions;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.parse.SutraParser;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.parse.SutraParser;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

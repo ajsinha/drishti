@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.format.Formats;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.format.Formats;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +55,7 @@ public class RachanaConfiguration {
             org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
                     + "DRISHTI_UI_KIT_DIR): screens that use its fragments do not draw", kit);
         }
-        com.ash.drishti.rachana.parse.SutraBlocks.kit(kit);
+        DrishtiBlocks.LIBRARY.kit(kit);
         return new SutraRegistry(props, elCompiler);
     }
 

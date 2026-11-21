@@ -19,7 +19,7 @@ import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.common.PackSamples;
 import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

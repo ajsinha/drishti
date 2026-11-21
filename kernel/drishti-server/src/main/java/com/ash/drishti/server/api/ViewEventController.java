@@ -37,7 +37,7 @@ import java.util.Optional;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

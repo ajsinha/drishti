@@ -17,7 +17,7 @@ package com.ash.drishti.rachana.about;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.rachana.el.ElCompiler;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

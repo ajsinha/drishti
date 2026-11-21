@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.rachana.el.check.ElType;
-import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.rachana.el.check.ElType;
+import com.ash.rachana.el.check.Fields;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.SqlCompiler;

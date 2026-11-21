@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.SutraProblem;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.Template;
-import com.ash.drishti.rachana.model.SourceLocation;
-import com.ash.drishti.rachana.parse.PNode;
-import com.ash.drishti.rachana.parse.PositionalYamlReader;
+import com.ash.rachana.SutraProblem;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.Template;
+import com.ash.rachana.model.SourceLocation;
+import com.ash.rachana.parse.PNode;
+import com.ash.rachana.parse.PositionalYamlReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -81,7 +81,7 @@ public final class AboutParser {
             PNode root = new PositionalYamlReader().read(text, issues);
             issues.forEach(i -> r.problem(BAD_FILE, i.message(), i.line(), i.column()));
             r.file(root);
-        } catch (IOException | RuntimeException e) {
+        } catch (RuntimeException e) {
             r.problem(BAD_FILE, "the file is not valid YAML: " + String.valueOf(e.getMessage()).lines().findFirst().orElse(""), 1, 1);
         }
         return new Parsed(r.vocabulary, r.kinds, r.problems);

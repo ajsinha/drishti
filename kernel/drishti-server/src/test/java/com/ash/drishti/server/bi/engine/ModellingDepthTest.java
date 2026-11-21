@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.error.DrishtiException;
-import com.ash.drishti.rachana.el.MeasureFunctions;
+import com.ash.rachana.el.MeasureFunctions;
 import com.ash.drishti.server.bi.Layered;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.tables.check.FilterPaths;

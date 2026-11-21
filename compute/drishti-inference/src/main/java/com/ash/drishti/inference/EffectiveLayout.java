@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import java.util.Map;
 
 /**

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.expr;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.ElException;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.ElException;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.NodeLowering;
 import com.ash.drishti.server.bi.dataset.NodeText;

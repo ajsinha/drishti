@@ -15,13 +15,17 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.rachana.SutraException;
+import com.ash.rachana.SutraExpressions;
+import com.ash.rachana.SutraProblem;
+
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.SharedWatchService;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.SourceLocation;
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.parse.SutraParser;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.SourceLocation;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.parse.SutraParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -193,7 +197,7 @@ public final class SutraRegistry implements AutoCloseable {
                 out = out.replace(root + java.io.File.separator, "").replace(root, ".");
             }
         }
-        java.util.Optional<Path> kit = com.ash.drishti.rachana.parse.SutraBlocks.kit();   // the Drishti UI kit: ui-kit/fragments/x
+        java.util.Optional<Path> kit = DrishtiBlocks.LIBRARY.kit();   // the Drishti UI kit: ui-kit/fragments/x
         if (kit.isPresent() && kit.get().getParent() != null) {
             out = out.replace(kit.get().getParent().toString() + java.io.File.separator, "");
         }
@@ -203,7 +207,7 @@ public final class SutraRegistry implements AutoCloseable {
     /** The problems with their file names made relative (see {@link #relative(String)}). */
     public List<SutraProblem> relative(List<SutraProblem> in) {
         return in.stream().map(x -> new SutraProblem(x.code(), relative(x.message()),
-                new com.ash.drishti.rachana.model.SourceLocation(relative(x.location().file()), x.location().line(), x.location().column()))).toList();
+                new com.ash.rachana.model.SourceLocation(relative(x.location().file()), x.location().line(), x.location().column()))).toList();
     }
 
     /** Problems per file from the last reload; empty when every file is valid. */
@@ -255,15 +259,15 @@ public final class SutraRegistry implements AutoCloseable {
         List<Path> files = files();
         lastGood.keySet().retainAll(files);
         // the shared panel blocks first (<name>.v<N>.block.yaml): a Sutra's { use: <block> } reads them while it is parsed
-        for (SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
+        for (SutraProblem p : DrishtiBlocks.LIBRARY.load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
             problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(p);
         }
         // a pack (or site) block named like a Drishti UI kit fragment: the kit's wins, the pack's answers only to pack/name
-        com.ash.drishti.rachana.parse.SutraBlocks.clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
+        DrishtiBlocks.LIBRARY.clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
         for (Path f : files) {
             Sutra s;
             String fname = f.getFileName().toString();
-            if (com.ash.drishti.rachana.parse.SutraBlocks.isBlockFile(f)) {
+            if (com.ash.rachana.parse.SutraBlocks.isBlockFile(f)) {
                 continue;                                              // a block, read above
             }
             if (!fname.endsWith(".sutra.yaml")) {                     // a file in a Sutra folder that is not a Sutra file

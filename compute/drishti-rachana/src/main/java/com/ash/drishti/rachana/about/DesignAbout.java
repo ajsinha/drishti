@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.Template;
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.Template;
+import com.ash.rachana.SutraProblem;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

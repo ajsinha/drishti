@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.drishti.rachana.el.ElLimits;
+import com.ash.rachana.el.ElLimits;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;

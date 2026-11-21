@@ -20,10 +20,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.format.Formats;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.format.Formats;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

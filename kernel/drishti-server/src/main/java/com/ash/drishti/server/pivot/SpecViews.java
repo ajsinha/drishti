@@ -154,7 +154,7 @@ public final class SpecViews {
             });
         }
         a.put("filters", filters);
-        if (view.get("mode") != null && com.ash.drishti.rachana.model.PivotSpec.MODES.contains(String.valueOf(view.get("mode")))) {
+        if (view.get("mode") != null && com.ash.rachana.model.PivotSpec.MODES.contains(String.valueOf(view.get("mode")))) {
             a.put("mode", String.valueOf(view.get("mode")));
         }
         return a;

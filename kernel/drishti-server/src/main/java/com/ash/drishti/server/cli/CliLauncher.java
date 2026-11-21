@@ -72,7 +72,7 @@ public final class CliLauncher {
             SutraCli.Services s = new SutraCli.Services(ctx.getBean(SutraRegistry.class), ctx.getBean(ViewPipeline.class),
                     ctx.getBean(ShapeService.class), ctx.getBean(AutoDesigner.class), ctx.getBean(JsonCodec.class),
                     new HelpChecks(ctx.getBean(com.ash.drishti.rachana.about.AboutCatalog.class), glossaryLookup(ctx),
-                            ctx.getBean(com.ash.drishti.rachana.format.Formats.class), ctx.getBean(JsonCodec.class)));
+                            ctx.getBean(com.ash.rachana.format.Formats.class), ctx.getBean(JsonCodec.class)));
             return new SutraCli(s, out, err).run(rest);
         } catch (RuntimeException | OutOfMemoryError e) {
             Throwable root = e;

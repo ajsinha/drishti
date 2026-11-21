@@ -27,16 +27,16 @@ import com.ash.drishti.graph.BadgeRenderer;
 import com.ash.drishti.graph.LinkRef;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Link;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.format.Tones;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Link;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.format.Tones;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -127,6 +127,7 @@ public final class Binder {
                 case PIVOT -> charts.pivot(p, c);
                 case METRIC -> metric(p, c);
                 case MAP -> maps.map(p, c);
+                default -> throw new IllegalStateException("G4 rehearsal: Core panel kind " + p.kind() + " is not drawn by the pre-A13 binder");
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
@@ -154,7 +155,7 @@ public final class Binder {
     }
 
     /** The expression compiled by Rachana (cached): the one parser every caller uses. */
-    com.ash.drishti.rachana.el.Expr compile(String expr) {
+    com.ash.rachana.el.Expr compile(String expr) {
         return el.compile(expr);
     }
 

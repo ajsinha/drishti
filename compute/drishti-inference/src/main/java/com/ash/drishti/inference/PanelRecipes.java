@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.drishti.rachana.model.Column;
+import com.ash.rachana.model.Column;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.expr;
 
-import com.ash.drishti.rachana.el.check.Problem;
+import com.ash.rachana.el.check.Problem;
 
 /**
  * An expression BI refuses: the problem code ({@code DRS-9127} for the language, {@code DRS-9129} for a function of a later wave,

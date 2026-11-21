@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.tables.check;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.check.Checker;
-import com.ash.drishti.rachana.el.check.ElType;
-import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.check.Checker;
+import com.ash.rachana.el.check.ElType;
+import com.ash.rachana.el.check.Fields;
 import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.TableCodes;
 import com.ash.drishti.tables.lang.Trees;
@@ -41,14 +41,14 @@ public final class LayerExpressionChecker implements ExpressionChecker {
     @Override
     public List<Problem> check(String text, Scope scope, Env env, String path) {
         boolean model = scope == Scope.AGGREGATE || scope == Scope.MODEL_RULE;
-        com.ash.drishti.rachana.el.check.Scope rachana = switch (scope) {
-            case ROW -> com.ash.drishti.rachana.el.check.Scope.ROW;
-            case RULE, MODEL_RULE -> com.ash.drishti.rachana.el.check.Scope.RULE;
-            case AGGREGATE -> com.ash.drishti.rachana.el.check.Scope.AGGREGATE;
+        com.ash.rachana.el.check.Scope rachana = switch (scope) {
+            case ROW -> com.ash.rachana.el.check.Scope.ROW;
+            case RULE, MODEL_RULE -> com.ash.rachana.el.check.Scope.RULE;
+            case AGGREGATE -> com.ash.rachana.el.check.Scope.AGGREGATE;
         };
         Checker.Checked c = CheckedMode.check(text, rachana, model ? modelFields(env) : tableFields(env));
         List<Problem> out = new ArrayList<>();
-        for (com.ash.drishti.rachana.el.check.Problem p : c.problems()) {
+        for (com.ash.rachana.el.check.Problem p : c.problems()) {
             String words = p.message() + (p.fix() == null ? "" : " (" + p.fix() + ")");
             out.add(p.error() ? Problem.error(p.code(), path, words) : Problem.warning(p.code(), path, words));
         }

@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.server.bi.layer;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.ElException;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Printer;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.ElException;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Printer;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.def.TableDef;

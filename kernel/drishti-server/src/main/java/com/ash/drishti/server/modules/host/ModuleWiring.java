@@ -210,7 +210,7 @@ public final class ModuleWiring {
             gate.withdrawNeeds(module.id());
         }
         folders.remove(module.id());
-        com.ash.drishti.rachana.parse.SutraBlocks.withdraw(module.id());
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.withdraw(module.id());
         reread();
         List<DrishtiModule> started = entries.remove(module.id());
         if (started != null) {
@@ -250,7 +250,7 @@ public final class ModuleWiring {
                 if (o instanceof Map<?, ?> m && m.get("kind") != null && m.get("fragment") != null) {
                     java.nio.file.Path f = c.dir().resolve(String.valueOf(m.get("fragment"))).normalize();
                     if (f.startsWith(c.dir().normalize()) && java.nio.file.Files.isRegularFile(f)) {
-                        com.ash.drishti.rachana.parse.SutraBlocks.contribute(module.id(), String.valueOf(m.get("kind")),
+                        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.contribute(module.id(), String.valueOf(m.get("kind")),
                                 java.nio.file.Files.readString(f, java.nio.charset.StandardCharsets.UTF_8), f.getFileName().toString());
                     }
                 }

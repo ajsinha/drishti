@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;

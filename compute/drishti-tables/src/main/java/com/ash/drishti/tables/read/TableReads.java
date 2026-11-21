@@ -16,9 +16,9 @@
 package com.ash.drishti.tables.read;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Values;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Values;
 import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.TableCodes;
 import com.ash.drishti.tables.answer.ModelAnswers;

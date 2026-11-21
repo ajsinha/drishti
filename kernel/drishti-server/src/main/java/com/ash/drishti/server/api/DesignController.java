@@ -36,11 +36,11 @@ import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.design.ops.Op;
-import com.ash.drishti.rachana.design.ops.OpApplier;
-import com.ash.drishti.rachana.design.ops.OpResult;
-import com.ash.drishti.rachana.design.ops.Ops;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.design.ops.Op;
+import com.ash.rachana.design.ops.OpApplier;
+import com.ash.rachana.design.ops.OpResult;
+import com.ash.rachana.design.ops.Ops;
+import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.design.DesignRebase;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
@@ -288,7 +288,7 @@ public class DesignController {
         StoredDesign d = designs.get(who.user(), id);
         ObjectNode out = mapper.createObjectNode();
         ArrayNode uses = out.putArray("uses");
-        for (var u : com.ash.drishti.rachana.parse.BlockUses.of(d.sutra)) {
+        for (var u : com.ash.rachana.parse.BlockUses.of(d.sutra, com.ash.drishti.rachana.DrishtiBlocks.LIBRARY)) {
             ObjectNode n = uses.addObject().put("item", u.item()).put("at", u.at()).put("line", u.line()).put("column", u.column())
                     .put("ref", u.ref()).put("name", u.name()).put("description", u.description());
             if (u.version() != null) {
@@ -449,7 +449,7 @@ public class DesignController {
                     done.add(ops.get(i));
                 }
             }
-            return new DesignService.Applied(r.yaml(), Ops.toJson(done));
+            return new DesignService.Applied(r.yaml(), mapper.valueToTree(Ops.toJson(done)));
         });
         return outcome(d, result[0], text(b, "sample"), who);
     }

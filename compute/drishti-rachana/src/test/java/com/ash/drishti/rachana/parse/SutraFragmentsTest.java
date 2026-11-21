@@ -13,15 +13,15 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.rachana.parse;
+package com.ash.rachana.parse;
 
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.SutraProblem;
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.SutraProblem;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ class SutraFragmentsTest {
 
     @AfterEach
     void empty() {
-        SutraBlocks.load(List.of());
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
     }
 
     static String sutra(String panels) {
@@ -54,8 +54,8 @@ class SutraFragmentsTest {
 
     @Test
     void theLibraryLoadsAndEveryFragmentAndEveryExampleOfItsDocExpandsIntoPanels() throws Exception {
-        assertThat(SutraBlocks.load(List.of(LIBRARY))).isEmpty();
-        var fragments = SutraBlocks.library().values().stream().flatMap(v -> v.values().stream()).toList();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(LIBRARY))).isEmpty();
+        var fragments = com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.library().values().stream().flatMap(v -> v.values().stream()).toList();
         assertThat(fragments).hasSizeBetween(8, 30).allMatch(SutraBlocks.Block::fragment);
         assertThat(fragments).extracting(SutraBlocks.Block::name).contains("series-line", "curve-table", "field-list", "ranked-bars",
                 "cashflow-ladder", "linked-entities", "data-provenance", "key-figure", "measure-table", "region-map", "source-footer");
@@ -78,7 +78,7 @@ class SutraFragmentsTest {
 
     @Test
     void parametersAreFilledAndEmptyOptionalOnesLeaveTheKeyOut() {
-        SutraBlocks.load(List.of(LIBRARY));
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(LIBRARY));
         Sutra s = new SutraParser().parse(sutra("""
                   - { use: series-line@1, with: { id: curve, title: "Zero rates (%)", code: CRV, key: F2, rows: $.POINTS, x: TENOR, y: ZERO_RATE } }
                   - { use: series-line@1, with: { id: fwd, area: right, rows: $.FORWARDS, y: RATE, fmt: pct4 } }
@@ -103,7 +103,7 @@ class SutraFragmentsTest {
 
     @Test
     void theMigratedIrCurveSutraIsBuiltFromTheLibraryInItsOrder() throws Exception {
-        SutraBlocks.load(List.of(LIBRARY));
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(LIBRARY));
         String text = Files.readString(MARKET.resolve("market-data/ir-curve.v1.sutra.yaml"));
         Sutra s = new SutraParser().parse(text, "ir-curve.v1.sutra.yaml", "market-data");
         assertThat(s.panels()).extracting(Panel::id).containsExactly("curve", "points", "forwards", "built", "refs");
@@ -136,8 +136,8 @@ class SutraFragmentsTest {
     @Test
     void aFragmentWithoutACompleteDocIsDrs2055AndIsNotLoaded() throws Exception {
         Files.writeString(dir.resolve("probe-line.v1.fragment.yaml"), FRAGMENT);
-        assertThat(SutraBlocks.load(List.of(dir))).isEmpty();
-        assertThat(SutraBlocks.find("probe-line@1")).isPresent();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("probe-line@1")).isPresent();
 
         Map<String, String> broken = Map.of(
                 "no doc", FRAGMENT.substring(0, FRAGMENT.indexOf("doc:")) + FRAGMENT.substring(FRAGMENT.indexOf("panels:")),
@@ -152,15 +152,15 @@ class SutraFragmentsTest {
                 "no since", FRAGMENT.replace("  since: \"2.7.0\"\n", ""));
         for (Map.Entry<String, String> e : broken.entrySet()) {
             Files.writeString(dir.resolve("probe-line.v1.fragment.yaml"), e.getValue());
-            List<SutraProblem> problems = SutraBlocks.load(List.of(dir));
+            List<SutraProblem> problems = com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir));
             assertThat(problems).as(e.getKey()).isNotEmpty().allMatch(p -> p.code().equals(SutraDocstring.CODE));
-            assertThat(SutraBlocks.find("probe-line@1")).as(e.getKey()).isEmpty();
+            assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("probe-line@1")).as(e.getKey()).isEmpty();
         }
     }
 
     @Test
     void aCompositeFragmentPassesItsParametersExplicitlyToTheFragmentsItPins() {
-        SutraBlocks.load(List.of(LIBRARY));
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(LIBRARY));
         Sutra s = new SutraParser().parse(sutra("  - { use: curve-overview@1, with: { rows: $.CURVE, zero-fmt: pct4, curve-key: F2, table-title: Terms } }\n"),
                 "probe.v1.sutra.yaml", "x");
         assertThat(s.panels()).extracting(Panel::id).containsExactly("curve", "points");
@@ -183,26 +183,26 @@ class SutraFragmentsTest {
         Files.writeString(dir.resolve("probe-line.v1.fragment.yaml"), FRAGMENT);
         Files.writeString(dir.resolve("one.v1.fragment.yaml"), composite("one", "probe-line@1"));
         Files.writeString(dir.resolve("two.v1.fragment.yaml"), composite("two", "one@1"));
-        assertThat(SutraBlocks.load(List.of(dir))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).isEmpty();
         assertThat(new SutraParser().parse(sutra("  - { use: two@1 }\n"), "probe.v1.sutra.yaml", "x").panels()).extracting(Panel::id)
                 .containsExactly("line");                                                    // two > one > probe-line: three fragments deep
 
         Files.writeString(dir.resolve("four.v1.fragment.yaml"), composite("four", "two@1").replace("one@1", "two@1"));
         Files.writeString(dir.resolve("three.v1.fragment.yaml"), composite("three", "two@1"));
-        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("nest at most 3"));
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("nest at most 3"));
 
         Files.delete(dir.resolve("four.v1.fragment.yaml"));
         Files.delete(dir.resolve("three.v1.fragment.yaml"));
         Files.writeString(dir.resolve("loop-a.v1.fragment.yaml"), composite("loop-a", "loop-b@1"));
         Files.writeString(dir.resolve("loop-b.v1.fragment.yaml"), composite("loop-b", "loop-a@1"));
-        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("uses itself"));
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("uses itself"));
 
         Files.delete(dir.resolve("loop-a.v1.fragment.yaml"));
         Files.delete(dir.resolve("loop-b.v1.fragment.yaml"));
         Files.writeString(dir.resolve("one.v1.fragment.yaml"), composite("one", "probe-line@1").replace("use: probe-line@1, with", "use: probe-line, with"));
-        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("without a version"));
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("without a version"));
         Files.writeString(dir.resolve("one.v1.fragment.yaml"), composite("one", "probe-line@1").replace("uses: [probe-line@1]", "uses: []"));
-        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("doc.uses lists"));
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("doc.uses lists"));
     }
 
     static final String TABLE = """
@@ -231,7 +231,7 @@ class SutraFragmentsTest {
     @Test
     void aColumnsParameterIsAListOfColumnsFilledInAsWritten() throws Exception {
         Files.writeString(dir.resolve("probe-table.v1.fragment.yaml"), TABLE);
-        assertThat(SutraBlocks.load(List.of(dir))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).isEmpty();
         Sutra s = new SutraParser().parse(sutra("""
                   - use: probe-table@1
                     with:
@@ -248,19 +248,34 @@ class SutraFragmentsTest {
         assertThat(t.columns().get(1).total()).isTrue();
         assertThat(new SutraParser().parse(sutra("  - { use: probe-table@1 }\n"), "probe.v1.sutra.yaml", "x").panels().get(0).columns()).isEmpty();
         Files.writeString(dir.resolve("probe-table.v1.fragment.yaml"), TABLE.replace("default: [], meaning", "default: [x], meaning"));
-        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("is not the declared default"));
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("is not the declared default"));
     }
 
     @Test
     void anOlderBlockOrASutraWithoutADocIsAWarningOnly() throws Exception {
-        Files.writeString(dir.resolve("ticket.v1.block.yaml"), SutraBlocksTest.TICKET);
-        assertThat(SutraBlocks.load(List.of(dir))).isEmpty();
-        assertThat(SutraBlocks.find("ticket@1")).isPresent();
-        assertThat(SutraBlocks.warnings()).extracting(SutraProblem::code).containsExactly(SutraDocstring.CODE);
+        Files.writeString(dir.resolve("ticket.v1.block.yaml"), TICKET);
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("ticket@1")).isPresent();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.warnings()).extracting(SutraProblem::code).containsExactly(SutraDocstring.CODE);
         PNode plain = new PositionalYamlReader().read(sutra("  - { id: notes, kind: markdown, text: hi }\n"), new ArrayList<>());
         assertThat(SutraDocstring.checkSutra(plain, "sutra probe", "probe.v1.sutra.yaml")).extracting(SutraProblem::message)
                 .containsExactly("sutra probe has no doc: block (summary, description, examples, since)");
         assertThat(new SutraParser().parse(sutra("  - { id: notes, kind: markdown, text: hi }\n")
                 .replace("panels:", "doc: { summary: A probe. }\npanels:"), "probe.v1.sutra.yaml", "x")).isNotNull();   // doc: is a known key
     }
+
+    /** carried from the moved SutraBlocksTest (G4 rehearsal) */
+    static final String TICKET = """
+            rachana: 1
+            block: ticket
+            version: 1
+            description: A ticket.
+            params: { rate-fmt: price4 }
+            panels:
+              - id: ticket
+                kind: kv
+                columns:
+                  - { label: Price, bind: $.PRICE, fmt: "%{rate-fmt}" }
+              - { id: built, kind: provenance, title: How this view was built }
+            """;
 }

@@ -176,6 +176,6 @@ class ModelAnswersTest {
     void lateBoundFunctionsBecomeColumnsOfTheRow() {
         LateBound.Bound b = LateBound.bind(com.ash.drishti.tables.lang.Trees.parse("$.NOTIONAL * fx($.CCY, 'USD') + len(related(core.desks.NAME, on = $.DESK))"), false);
         assertThat(b.slots()).extracting(LateBound.Slot::fn).containsExactly("fx", "related");
-        assertThat(com.ash.drishti.rachana.el.Printer.print(b.expr())).isEqualTo("$.NOTIONAL * __l0 + len(__l1)");
+        assertThat(com.ash.rachana.el.Printer.print(b.expr())).isEqualTo("$.NOTIONAL * __l0 + len(__l1)");
     }
 }

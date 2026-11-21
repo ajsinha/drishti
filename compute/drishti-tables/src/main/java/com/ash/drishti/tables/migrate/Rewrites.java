@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.tables.migrate;
 
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Printer;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Printer;
 import com.ash.drishti.tables.lang.Trees;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

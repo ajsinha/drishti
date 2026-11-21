@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.rachana.el.check.Fields;
-import com.ash.drishti.rachana.el.check.Problem;
-import com.ash.drishti.rachana.el.check.Scope;
+import com.ash.rachana.el.check.Fields;
+import com.ash.rachana.el.check.Problem;
+import com.ash.rachana.el.check.Scope;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.expr.ExpressionException;
@@ -45,7 +45,7 @@ final class ExpressionCheck {
         out.put("expr", expr);
         out.put("scope", scope.word());
         String syntax = "rachana";
-        com.ash.drishti.rachana.el.check.Checker.Checked c = com.ash.drishti.rachana.el.CheckedMode.check(expr, scope, fields);
+        com.ash.rachana.el.check.Checker.Checked c = com.ash.rachana.el.CheckedMode.check(expr, scope, fields);
         problems.addAll(c.problems());
         out.put("type", c.type().word());
         out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));

@@ -18,11 +18,11 @@ package com.ash.drishti.engine.design;
 import com.ash.drishti.engine.shape.BuilderProperties;
 import com.ash.drishti.inference.Role;
 import com.ash.drishti.inference.Semantics;
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.SourceLocation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -385,7 +385,7 @@ final class StructurePanels {
             return new Column(label, "link(" + bind + ", '" + f.role().kind() + "')", null, null, false, false);
         }
         if (f.array()) {
-            return new Column(label, bind, com.ash.drishti.rachana.format.Formats.LIST, null, false, false);   // chips (drishti-core)
+            return new Column(label, bind, com.ash.rachana.format.Formats.LIST, null, false, false);   // chips (drishti-core)
         }
         if (f.is("status")) {
             return new Column(label, bind, null, "status", false, false);

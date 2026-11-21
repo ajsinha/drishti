@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.model.SourceLocation;
 import java.util.Map;
 
 /**

@@ -20,12 +20,12 @@ import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel.Cell;
 import com.ash.drishti.engine.view.ViewModel.LinkView;
 import com.ash.drishti.graph.ReferenceCatalog;
-import com.ash.drishti.rachana.el.Link;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.format.Tones;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelOptions;
+import com.ash.rachana.el.Link;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.format.Tones;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelOptions;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -425,7 +425,7 @@ final class ChartBinder {
      * {@code percentile(@.PNL, 0.99)}; docs/architecture/ARCHITECTURE.md part 3), over the value column {@code v}; refused in words for an aggregate of
      * two inputs or of text, which a panel's one value column cannot carry.
      */
-    private static String measure(com.ash.drishti.rachana.el.Functions.AggregateCall call) {
+    private static String measure(com.ash.rachana.el.Functions.AggregateCall call) {
         String args = call.options().isEmpty() ? "" : ", " + String.join(", ", call.options().stream().map(String::valueOf).toList());
         return switch (call.name()) {
             case "count" -> "sum(v)";                                     // v is 1 for a row whose input is not empty, else 0
@@ -456,8 +456,8 @@ final class ChartBinder {
         List<String> bys = pivotBy(p);
         String across = p.option("across").orElseThrow();
         String value = p.option("value").orElse(null);
-        com.ash.drishti.rachana.el.Functions.AggregateCall call = value != null && value.indexOf('(') > 0
-                ? com.ash.drishti.rachana.el.Functions.aggregateCall(binder.compile(value)).orElse(null) : null;
+        com.ash.rachana.el.Functions.AggregateCall call = value != null && value.indexOf('(') > 0
+                ? com.ash.rachana.el.Functions.aggregateCall(binder.compile(value)).orElse(null) : null;
         String agg = call != null ? call.name() : value == null ? "count" : p.option("agg").orElse("sum");
         String engineFunction = call != null ? measure(call) : measure(agg);
         String fmt = agg.equals("count") ? null : p.option("fmt").orElse(null);

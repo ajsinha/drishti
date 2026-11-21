@@ -16,16 +16,16 @@
 package com.ash.drishti.server.cli;
 
 import com.ash.drishti.common.JsonCodec;
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.SutraProblem;
 import com.ash.drishti.rachana.about.AboutCatalog;
 import com.ash.drishti.rachana.about.AboutText;
 import com.ash.drishti.rachana.about.CatalogGlossaryLookup;
 import com.ash.drishti.rachana.about.GlossaryLookup;
 import com.ash.drishti.rachana.about.HelpLint;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

@@ -17,9 +17,9 @@ package com.ash.drishti.bicompute.rachana;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.kernel.api.pivot.FigureSource;
-import com.ash.drishti.rachana.el.FunctionProvider;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.el.check.Signatures;
+import com.ash.rachana.el.FunctionProvider;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.el.check.Signatures;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The pivot engine as Rachana's provider of every aggregate (docs/architecture/ARCHITECTURE.md parts 1 to 3), found by {@link java.util.ServiceLoader}
- * ({@code META-INF/services/com.ash.drishti.rachana.el.FunctionProvider}): the aggregates over a list ({@link ListAggregates}, the same
+ * ({@code META-INF/services/com.ash.rachana.el.FunctionProvider}): the aggregates over a list ({@link ListAggregates}, the same
  * {@code AggFunction}s a pivot cell runs), the grouping behind {@code group(...)} ({@link ListGrouping}), and {@code measure(...)} and
  * {@code cell(...)}, answered by the server's {@link FigureSource} (registered with {@link #figures(FigureSource)}; refused with the
  * reason where none is, a command-line tool or a test without the server).

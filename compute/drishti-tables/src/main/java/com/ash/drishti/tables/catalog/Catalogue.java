@@ -25,7 +25,7 @@ import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.def.ModelDef;
 import com.ash.drishti.tables.def.TableDef;
 import com.ash.drishti.tables.def.TableName;
-import com.ash.drishti.rachana.el.Expr;
+import com.ash.rachana.el.Expr;
 import com.ash.drishti.tables.lang.Trees;
 import com.ash.drishti.tables.yaml.ModelYaml;
 import com.ash.drishti.tables.yaml.TableYaml;

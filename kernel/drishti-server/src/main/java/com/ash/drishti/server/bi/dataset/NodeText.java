@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.bi.dataset;
 
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Printer;
-import com.ash.drishti.rachana.el.check.Signatures;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Printer;
+import com.ash.rachana.el.check.Signatures;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

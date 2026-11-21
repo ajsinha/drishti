@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Template;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Template;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

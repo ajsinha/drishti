@@ -18,7 +18,7 @@ package com.ash.drishti.bicompute.rachana;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.el.Functions;
+import com.ash.rachana.el.Functions;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -20,8 +20,8 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Form;
-import com.ash.drishti.rachana.model.Panel;
+import com.ash.rachana.model.Form;
+import com.ash.rachana.model.Panel;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -278,7 +278,7 @@ public class DraftsController {
 
     /** The form of a panel: of the person's own Design when the page is drawn with one ({@code design}), else of the named Sutra. */
     private Form form(Principal who, String design, String sutra, String panelId) {
-        com.ash.drishti.rachana.model.Sutra s;
+        com.ash.rachana.model.Sutra s;
         if (!design.isBlank() && designs != null) {
             var d = designs.get(who.user(), design);
             if (d.sutra == null || d.sutra.isBlank()) {
@@ -355,8 +355,8 @@ public class DraftsController {
         if (blank(a) && blank(b)) {
             return true;
         }
-        var na = com.ash.drishti.rachana.model.FormExpr.number(a);
-        var nb = com.ash.drishti.rachana.model.FormExpr.number(b);
+        var na = com.ash.rachana.model.FormExpr.number(a);
+        var nb = com.ash.rachana.model.FormExpr.number(b);
         if (na != null && nb != null) {
             return na.compareTo(nb) == 0;
         }

@@ -28,14 +28,14 @@ import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.view.ViewModel.PanelView;
-import com.ash.drishti.rachana.SutraWiring;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.model.Wiring;
+import com.ash.rachana.SutraWiring;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.model.Wiring;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -423,7 +423,7 @@ public final class ScreenWire {
         Map<String, DataNode> events = new HashMap<>();
         s.fired().forEach((panel, byEvent) -> events.put(panel, payloads(byEvent, raw)));
         DataNode parent = n.parent() == null ? null : events.get(n.parent().id());
-        return new EvalContext.Scope(events, parent, null);
+        return new EvalContext.Scope(new java.util.LinkedHashMap<String, com.ash.rachana.api.Node>(events), parent, null);  // G4 rehearsal: Core takes Node maps
     }
 
     private static DataNode payloads(Map<String, Selection> byEvent, boolean raw) {

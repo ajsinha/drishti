@@ -13,14 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.rachana.parse;
+package com.ash.rachana.parse;
 
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.SutraProblem;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.SutraProblem;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -41,8 +41,8 @@ class UiKitBlocksTest {
 
     @AfterEach
     void noKit() {
-        SutraBlocks.kit(null);
-        SutraBlocks.load(List.of());
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(null);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
     }
 
     static String sutra(String panels) {
@@ -63,25 +63,25 @@ class UiKitBlocksTest {
 
     @Test
     void theKitLoadsWithNoPack() {
-        SutraBlocks.kit(KIT);
-        assertThat(SutraBlocks.load(List.of())).isEmpty();
-        assertThat(SutraBlocks.blocks()).hasSizeGreaterThanOrEqualTo(14).allMatch(SutraBlocks::fromKit).allMatch(SutraBlocks.Block::fragment);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(KIT);
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of())).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks()).hasSizeGreaterThanOrEqualTo(14).allMatch(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY::fromKit).allMatch(SutraBlocks.Block::fragment);
         Sutra s = new SutraParser().parse(sutra("  - { use: series-line@1 }\n  - { use: source-footer@1 }\n"), "probe.v1.sutra.yaml", "x");
         assertThat(s.panels()).hasSizeGreaterThanOrEqualTo(2);
-        assertThat(SutraBlocks.clashes()).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()).isEmpty();
     }
 
     @Test
     void aPackFragmentIsNamespacedByItsPackAndAClashWithTheKitWarnsAndTheKitWins() throws Exception {
-        SutraBlocks.kit(KIT);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(KIT);
         assertThat(SutraBlocks.packOf(pack())).isEqualTo("demo");
-        assertThat(SutraBlocks.load(List.of(dir.resolve("demo-folder/sutras")))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(dir.resolve("demo-folder/sutras")))).isEmpty();
 
-        assertThat(SutraBlocks.find("demo/deal-figure@1")).get().extracting(SutraBlocks.Block::name).isEqualTo("demo/deal-figure");
-        assertThat(SutraBlocks.find("deal-figure@1")).as("its plain name too, the kit having none").isPresent();
-        assertThat(SutraBlocks.find("key-figure@1")).get().matches(SutraBlocks::fromKit, "the kit's key-figure");
-        assertThat(SutraBlocks.find("demo/key-figure@1")).get().matches(b -> !SutraBlocks.fromKit(b), "the pack's, qualified");
-        assertThat(SutraBlocks.clashes()).extracting(SutraProblem::message).singleElement().asString()
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("demo/deal-figure@1")).get().extracting(SutraBlocks.Block::name).isEqualTo("demo/deal-figure");
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("deal-figure@1")).as("its plain name too, the kit having none").isPresent();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("key-figure@1")).get().matches(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY::fromKit, "the kit's key-figure");
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("demo/key-figure@1")).get().matches(b -> !com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.fromKit(b), "the pack's, qualified");
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()).extracting(SutraProblem::message).singleElement().asString()
                 .contains("pack demo's key-figure").contains("the kit's wins").contains("demo/key-figure@1");
 
         Sutra s = new SutraParser().parse(sutra("""
@@ -90,20 +90,20 @@ class UiKitBlocksTest {
                   - { use: demo/deal-figure@1, with: { id: c } }
                 """), "probe.v1.sutra.yaml", "x");
         assertThat(s.panels()).extracting(Panel::title).containsExactly("Key figure", "Pack figure", "Key figure");
-        assertThat(SutraBlocks.blocks()).extracting(SutraBlocks.Block::name).doesNotHaveDuplicates()
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks()).extracting(SutraBlocks.Block::name).doesNotHaveDuplicates()
                 .contains("demo/deal-figure", "demo/key-figure", "key-figure");
     }
 
     @Test
     void aCompositeMayUseAQualifiedFragment() throws Exception {
-        SutraBlocks.kit(KIT);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(KIT);
         Path sutras = pack();
         String footer = Files.readString(KIT.resolve("fragments/source-footer.v1.fragment.yaml"));
         assertThat(footer).contains("use: data-provenance@1");
         Files.writeString(sutras.resolve("common/demo-footer.v1.fragment.yaml"), footer.replace("source-footer", "demo-footer")
                 .replace("linked-entities@1", "demo/deal-figure@1"));
-        assertThat(SutraBlocks.load(List.of(sutras))).isEmpty();
-        assertThat(SutraBlocks.find("demo/demo-footer@1")).isPresent();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of(sutras))).isEmpty();
+        assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("demo/demo-footer@1")).isPresent();
         Sutra s = new SutraParser().parse(sutra("  - { use: demo/demo-footer@1 }\n"), "probe.v1.sutra.yaml", "x");
         assertThat(s.panels()).extracting(Panel::id).containsExactly("source", "built", "figure");
     }

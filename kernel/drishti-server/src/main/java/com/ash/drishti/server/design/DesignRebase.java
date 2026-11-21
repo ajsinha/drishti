@@ -20,12 +20,12 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.design.ops.Op;
-import com.ash.drishti.rachana.design.ops.OpApplier;
-import com.ash.drishti.rachana.design.ops.OpProblem;
-import com.ash.drishti.rachana.design.ops.OpResult;
-import com.ash.drishti.rachana.design.ops.Ops;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.design.ops.Op;
+import com.ash.rachana.design.ops.OpApplier;
+import com.ash.rachana.design.ops.OpProblem;
+import com.ash.rachana.design.ops.OpResult;
+import com.ash.rachana.design.ops.Ops;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -138,7 +138,7 @@ public class DesignRebase {
                 done.add(flat.get(i));
             }
         }
-        ArrayNode kept = Ops.toJson(done);
+        ArrayNode kept = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(Ops.toJson(done));
         StoredDesign out = designs.rebase(user, id, baseRev, newBase, baseText, r.yaml(), kept);
         return new Rebased(out, problems, done.size());
     }

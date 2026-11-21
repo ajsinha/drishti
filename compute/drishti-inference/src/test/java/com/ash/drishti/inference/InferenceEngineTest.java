@@ -23,11 +23,11 @@ import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.StripItem;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.StripItem;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -155,7 +155,7 @@ class InferenceEngineTest {
         assertThat(LayoutMerger.labelOf("$.legs[0].cashflows[1].amount")).isEqualTo("Amount");
         assertThat(LayoutMerger.labelOf("link($.nettingSet, 'netting-set')")).isEqualTo("Netting set");
         assertThat(LayoutMerger.labelOf("fmt($.dv01ByTenor, 'x')")).isEqualTo("DV01 by tenor");
-        var parsed = new com.ash.drishti.rachana.parse.SutraParser().parse("""
+        var parsed = new com.ash.rachana.parse.SutraParser().parse("""
                 rachana: 1
                 sutra: no-labels
                 version: 1

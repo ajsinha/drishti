@@ -17,11 +17,11 @@ package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.NodeType;
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.SourceLocation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

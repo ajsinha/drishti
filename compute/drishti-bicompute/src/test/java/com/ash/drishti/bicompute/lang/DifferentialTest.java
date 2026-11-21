@@ -18,8 +18,8 @@ package com.ash.drishti.bicompute.lang;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.check.Signatures;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.check.Signatures;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;

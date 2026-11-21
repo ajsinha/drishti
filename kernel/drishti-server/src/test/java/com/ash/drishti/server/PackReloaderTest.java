@@ -90,7 +90,7 @@ class PackReloaderTest {
     @Autowired com.ash.drishti.server.security.RoleCatalog roles;
     @Autowired com.ash.drishti.engine.search.SearchProperties search;
     @Autowired com.ash.drishti.graph.ReferenceCatalog references;
-    @Autowired com.ash.drishti.rachana.format.Formats formats;
+    @Autowired com.ash.rachana.format.Formats formats;
     @Autowired com.ash.drishti.rachana.about.AboutCatalog about;
 
     /** Writes a small pack: a kind, a mnemonic, a Sutra, and a connector template named {@code <name>-feed}. */

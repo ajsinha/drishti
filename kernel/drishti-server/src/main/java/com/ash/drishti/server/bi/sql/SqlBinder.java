@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.sql;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.rachana.el.check.Fields;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.mq.ModelQuery;
 import java.time.Duration;

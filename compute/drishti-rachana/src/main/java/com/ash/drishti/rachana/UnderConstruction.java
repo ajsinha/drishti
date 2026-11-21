@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.ScreenPhone;
-import com.ash.drishti.rachana.model.StripItem;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.ScreenPhone;
+import com.ash.rachana.model.StripItem;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

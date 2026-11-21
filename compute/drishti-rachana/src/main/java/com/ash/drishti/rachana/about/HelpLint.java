@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.SutraProblem;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.SutraProblem;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

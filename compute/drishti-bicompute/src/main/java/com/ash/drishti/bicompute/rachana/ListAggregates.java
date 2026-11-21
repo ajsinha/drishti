@@ -21,8 +21,8 @@ import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.rachana.el.ElException;
-import com.ash.drishti.rachana.el.Values;
+import com.ash.rachana.el.ElException;
+import com.ash.rachana.el.Values;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -212,6 +212,6 @@ final class ListAggregates {
     }
 
     static ElException error(String name, String why) {
-        return new ElException(ErrorCode.EL_EVAL, name + ": " + why);
+        return new ElException(com.ash.rachana.RachanaCode.EL_EVAL, name + ": " + why);
     }
 }

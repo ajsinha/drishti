@@ -16,11 +16,11 @@
 package com.ash.drishti.rachana;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.model.Sutra;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -111,9 +111,9 @@ public final class SutraMatcher {
     public List<String> shownByWhen(Sutra s, DataNode doc) {
         EvalContext ctx = EvalContext.of(doc, formats);
         List<String> out = new ArrayList<>();
-        for (com.ash.drishti.rachana.model.Panel p : s.panels()) {
-            for (com.ash.drishti.rachana.model.Panel q : java.util.stream.Stream.concat(java.util.stream.Stream.of(p), p.parts().stream()).toList()) {
-                q.option(com.ash.drishti.rachana.model.Panel.WHEN).filter(w -> holds(w, ctx)).ifPresent(w -> out.add(q.id()));
+        for (com.ash.rachana.model.Panel p : s.panels()) {
+            for (com.ash.rachana.model.Panel q : java.util.stream.Stream.concat(java.util.stream.Stream.of(p), p.parts().stream()).toList()) {
+                q.option(com.ash.rachana.model.Panel.WHEN).filter(w -> holds(w, ctx)).ifPresent(w -> out.add(q.id()));
             }
         }
         return out;

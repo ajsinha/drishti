@@ -21,7 +21,7 @@ import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.identity.design.StoredDesign.SampleInfo;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

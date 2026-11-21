@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.tables.lang;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.ElException;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Printer;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.ElException;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Printer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

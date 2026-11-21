@@ -18,7 +18,7 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.parse.SutraBlocks;
+import com.ash.rachana.parse.SutraBlocks;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,13 +50,13 @@ public class SutraLibraryController {
     @GetMapping
     public Map<String, Object> library(@RequestParam(name = "blocks", defaultValue = "false") boolean blocks) {
         List<Map<String, Object>> out = new ArrayList<>();
-        SutraBlocks.blocks().stream().filter(b -> blocks || b.fragment()).forEach(b -> out.add(describe(b, false)));
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks().stream().filter(b -> blocks || b.fragment()).forEach(b -> out.add(describe(b, false)));
         return Map.of("fragments", out, "count", out.size());
     }
 
     @GetMapping("/{name}/{version}")
     public Map<String, Object> fragment(@PathVariable String name, @PathVariable int version) {
-        return SutraBlocks.find(name + "@" + version).map(b -> describe(b, true))
+        return com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find(name + "@" + version).map(b -> describe(b, true))
                 .orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no fragment " + name + "@" + version));
     }
 
@@ -71,7 +71,7 @@ public class SutraLibraryController {
         m.put("summary", doc.getOrDefault("summary", b.description()));
         m.put("params", b.params());
         m.put("doc", doc);
-        m.put("origin", SutraBlocks.fromKit(b) ? "kit" : b.name().contains("/") ? b.name().substring(0, b.name().indexOf('/')) : "site");
+        m.put("origin", com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.fromKit(b) ? "kit" : b.name().contains("/") ? b.name().substring(0, b.name().indexOf('/')) : "site");
         m.put("source", sutras.relative(b.path()));
         if (text) {
             m.put("text", b.text());

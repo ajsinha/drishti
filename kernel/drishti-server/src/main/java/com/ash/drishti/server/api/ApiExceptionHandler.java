@@ -17,8 +17,8 @@ package com.ash.drishti.server.api;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.rachana.SutraException;
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.SutraException;
+import com.ash.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import java.util.List;
 import org.slf4j.Logger;
@@ -94,10 +94,10 @@ public class ApiExceptionHandler {
     ProblemDetail sutra(SutraException e) {
         LOG.info("Sutra rejected: {}", e.getMessage());
         List<SutraProblem> shown = sutras.relative(e.problems());
-        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(e.errorCode().httpStatus()),
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST /* G4: RachanaCode has no httpStatus; the host maps it */,
                 shown.size() + " problem(s): " + shown);
-        p.setTitle(e.errorCode().name().toLowerCase().replace('_', ' '));
-        p.setProperty("code", e.errorCode().code());
+        p.setTitle(e.code().name().toLowerCase().replace('_', ' '));
+        p.setProperty("code", e.code().code());
         p.setProperty("problems", shown);
         return p;
     }

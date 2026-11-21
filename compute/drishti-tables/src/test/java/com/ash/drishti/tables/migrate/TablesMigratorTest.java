@@ -47,7 +47,7 @@ class TablesMigratorTest {
      */
     static final DelTranslator AS_IS = (del, scope) -> {
         try {
-            return DelTranslator.Result.ok(com.ash.drishti.rachana.el.Printer.print(com.ash.drishti.tables.lang.Trees.parse(del)), List.of());
+            return DelTranslator.Result.ok(com.ash.rachana.el.Printer.print(com.ash.drishti.tables.lang.Trees.parse(del)), List.of());
         } catch (RuntimeException e) {
             return DelTranslator.Result.refused("not Rachana (the tests' translator reads Rachana only)");
         }

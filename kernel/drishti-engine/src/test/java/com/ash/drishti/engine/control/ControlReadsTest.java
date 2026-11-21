@@ -17,8 +17,8 @@ package com.ash.drishti.engine.control;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.parse.SutraParser;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.parse.SutraParser;
 import org.junit.jupiter.api.Test;
 
 /** The parts a control change rebuilds: a panel reads a control through its columns, its options or its own source. */

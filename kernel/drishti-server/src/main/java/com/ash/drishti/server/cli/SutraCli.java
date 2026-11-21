@@ -27,10 +27,10 @@ import com.ash.drishti.engine.shape.Sample;
 import com.ash.drishti.engine.shape.Shape;
 import com.ash.drishti.engine.shape.ShapeService;
 import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.rachana.SutraException;
+import com.ash.rachana.SutraException;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.cli.CliReports.Case;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -201,7 +201,7 @@ public final class SutraCli {
             undocumented += a.docs() ? docWarnings(u) : 0;
         }
         if (a.docs()) {
-            com.ash.drishti.rachana.parse.SutraBlocks.warnings().forEach(w -> err.println(w.location().file() + ":"
+            com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.warnings().forEach(w -> err.println(w.location().file() + ":"
                     + w.location().line() + " warning " + w.code() + " " + w.message()));   // an older block's doc
         }
         if (undocumented > 0) {          // a warning only, even with --strict, until the Sutras carry their docstrings
@@ -255,10 +255,10 @@ public final class SutraCli {
      * (1) and summed into one line, so a pack without docstrings yet is not drowned in warnings.
      */
     private int docWarnings(Unit u) {
-        com.ash.drishti.rachana.parse.PNode root;
+        com.ash.rachana.parse.PNode root;
         try {
-            root = new com.ash.drishti.rachana.parse.PositionalYamlReader().read(u.text(), new ArrayList<>());
-        } catch (IOException | RuntimeException e) {
+            root = new com.ash.rachana.parse.PositionalYamlReader().read(u.text(), new ArrayList<>());
+        } catch (RuntimeException e) {
             return 0;
         }
         if (root == null || !root.isMap()) {
@@ -267,7 +267,7 @@ public final class SutraCli {
         if (!root.map().containsKey("doc")) {
             return 1;
         }
-        for (com.ash.drishti.rachana.SutraProblem w : com.ash.drishti.rachana.parse.SutraDocstring.checkSutra(root, "sutra " + u.stem(), u.file().toString())) {
+        for (com.ash.rachana.SutraProblem w : com.ash.rachana.parse.SutraDocstring.checkSutra(root, "sutra " + u.stem(), u.file().toString())) {
             err.println(u.file() + ":" + w.location().line() + " warning " + w.code() + " " + w.message());
         }
         return 0;
@@ -279,11 +279,11 @@ public final class SutraCli {
             return false;
         }
         String kind = sutra.match() == null ? null : sutra.match().kind();
-        List<com.ash.drishti.rachana.SutraProblem> warnings = new ArrayList<>(
+        List<com.ash.rachana.SutraProblem> warnings = new ArrayList<>(
                 s.help().warnings(sutra, run, kind == null ? List.of() : s.sutras().forKind(kind)));
         List<JsonNode> docs = samplesOf(u, sutra, a.samples()).stream().filter(d -> d.error() == null).map(Doc::document).toList();
         warnings.addAll(s.help().uncovered(s.help().coverage(sutra, docs), sutra));
-        for (com.ash.drishti.rachana.SutraProblem w : warnings) {
+        for (com.ash.rachana.SutraProblem w : warnings) {
             String line = u.file() + (w.location() == null ? "" : ":" + w.location().line()) + " warning " + w.code() + " " + w.message();
             err.println(line);
             if (a.strict()) {
@@ -642,12 +642,12 @@ public final class SutraCli {
             }
         }
         Path kit = uiKit(dirs);                                       // the Drishti UI kit: always loaded, whatever the paths
-        com.ash.drishti.rachana.parse.SutraBlocks.kit(kit);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(kit);
         if (kit != null || dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
-            for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
+            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
             }
-            for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.clashes()) {
+            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " warning: " + p.message());
             }
         }
@@ -717,7 +717,7 @@ public final class SutraCli {
 
     private static boolean hasBlocks(Path dir) {
         try (Stream<Path> s = Files.walk(dir)) {
-            return s.anyMatch(com.ash.drishti.rachana.parse.SutraBlocks::isBlockFile);
+            return s.anyMatch(com.ash.rachana.parse.SutraBlocks::isBlockFile);
         } catch (IOException e) {
             return false;
         }

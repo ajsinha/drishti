@@ -25,8 +25,8 @@ final class RachanaFunctions {
 
     /** Adds the module's functions to Rachana while it is loaded; the returned action takes them out. */
     static Runnable register(FunctionProvider module) {
-        return com.ash.drishti.rachana.el.Functions.register(module.source(), module.functions().stream()
-                .map(f -> new com.ash.drishti.rachana.el.FunctionProvider.Provided(f.name(), f.minArgs(), f.maxArgs(), f.args(), "scalar",
-                        f.description(), "", (args, context) -> f.body().apply(args))).toList());
+        // G4 rehearsal STUB: Functions.register is gone; the module's functions reach Rachana through the profile
+        // (Profile.named("drishti").functions(provider)) and a holder that rebuilds the instance (SPLIT_PLAN 8.3c).
+        return () -> { };
     }
 }

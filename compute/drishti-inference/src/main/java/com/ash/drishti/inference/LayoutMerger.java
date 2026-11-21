@@ -16,15 +16,15 @@
 package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Match;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.StripItem;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Match;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.StripItem;
+import com.ash.rachana.model.Sutra;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

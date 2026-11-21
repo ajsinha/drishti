@@ -17,8 +17,8 @@ package com.ash.drishti.engine.control;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.model.Control;
-import com.ash.drishti.rachana.model.ControlKind;
+import com.ash.rachana.model.Control;
+import com.ash.rachana.model.ControlKind;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

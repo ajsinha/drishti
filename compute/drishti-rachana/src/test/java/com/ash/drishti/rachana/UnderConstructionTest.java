@@ -19,12 +19,12 @@ import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.StripItem;
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.parse.SutraBlocks;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.StripItem;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.parse.SutraBlocks;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +42,12 @@ class UnderConstructionTest {
 
     @AfterEach
     void noKit() {
-        SutraBlocks.kit(null);
-        SutraBlocks.load(List.of());
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(null);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
     }
 
     private static SutraRegistry packs() {
-        SutraBlocks.kit(Path.of(TestRoots.repo(), "config", "ui-kit"));
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(Path.of(TestRoots.repo(), "config", "ui-kit"));
         List<String> dirs = new ArrayList<>();
         for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
             dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());
@@ -104,13 +104,13 @@ class UnderConstructionTest {
                   - { id: a, what: field, release: x, treatment: under-construction, sutras: [{ kind: thing, binds: [$.A, "@.B"] }] }
                   - { id: b, what: field, release: x, treatment: hidden, sutras: [{ kind: thing, binds: [$.C], panels: [gone] }] }
                 """);
-        Sutra s = new Sutra("thing", 1, null, new com.ash.drishti.rachana.model.Match("thing", null, 10), null,
+        Sutra s = new Sutra("thing", 1, null, new com.ash.rachana.model.Match("thing", null, 10), null,
                 List.of(new StripItem("A", "$.A", "compact", null, true, null), new StripItem("C", "$.C", null, null, false, null),
                         new StripItem("D", "$.D", null, null, false, null)),
-                List.of(new Panel("t", com.ash.drishti.rachana.model.PanelKind.TABLE, "T", null, null, null, false,
+                List.of(new Panel("t", com.ash.rachana.model.PanelKind.TABLE, "T", null, null, null, false,
                                 List.of(new Column("B", "@.B", "compact", "sign", true, false), new Column("E", "@.E", null, null, false, false)), null,
                                 java.util.Map.of("rows", "$.ROWS"), null),
-                        new Panel("gone", com.ash.drishti.rachana.model.PanelKind.KV, "G", null, null, null, false, List.of(), null, java.util.Map.of(), null)),
+                        new Panel("gone", com.ash.rachana.model.PanelKind.KV, "G", null, null, null, false, List.of(), null, java.util.Map.of(), null)),
                 java.util.Map.of(), null);
         Sutra shown = uc.apply(s);
         assertThat(shown.strip()).extracting(StripItem::label).containsExactly("A", "D");
@@ -119,7 +119,7 @@ class UnderConstructionTest {
         assertThat(shown.panels()).extracting(Panel::id).containsExactly("t");
         assertThat(shown.panels().get(0).columns().get(0).bind()).isEqualTo("'Under construction'");
         assertThat(shown.panels().get(0).columns().get(1).bind()).isEqualTo("@.E");
-        assertThat(uc.apply(new Sutra("other", 1, null, new com.ash.drishti.rachana.model.Match("other", null, 10), null, List.of(), List.of(),
+        assertThat(uc.apply(new Sutra("other", 1, null, new com.ash.rachana.model.Match("other", null, 10), null, List.of(), List.of(),
                 java.util.Map.of(), null))).as("another kind: untouched").isNotNull();
         assertThatThrownBy(() -> UnderConstruction.parse("items: [{ id: x, treatment: maybe }]")).hasMessageContaining("hidden or under-construction");
         assertThat(UnderConstruction.load(Path.of("no-such-file.yaml")).items()).isEmpty();

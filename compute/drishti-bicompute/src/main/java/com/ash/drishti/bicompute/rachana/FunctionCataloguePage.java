@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.rachana;
 
-import com.ash.drishti.rachana.el.Functions;
+import com.ash.rachana.el.Functions;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

@@ -122,7 +122,7 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
                 entitlements.requireOpen(who, s.kind());
                 try {
                     fields.check(s.field());
-                } catch (com.ash.drishti.rachana.el.ElException e) {
+                } catch (com.ash.rachana.el.ElException e) {
                     throw new DrishtiException(ErrorCode.EL_SYNTAX, "field: " + e.getMessage());
                 }
             }

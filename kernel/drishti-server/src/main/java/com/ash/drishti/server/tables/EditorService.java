@@ -1186,7 +1186,7 @@ public final class EditorService {
     /** Rachana's function catalogue, for type-ahead: name, signature, family, scopes, one line and one example. */
     static List<Map<String, Object>> functions() {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (var s : com.ash.drishti.rachana.el.check.Signatures.get().all()) {
+        for (var s : com.ash.rachana.el.check.Signatures.get().all()) {
             if (!s.built()) {
                 continue;
             }
@@ -1296,7 +1296,7 @@ public final class EditorService {
         }
         try {
             com.ash.drishti.tables.lang.Trees.walk(com.ash.drishti.tables.lang.Trees.parse(expr), n -> {
-                if (n instanceof com.ash.drishti.rachana.el.Expr.Call c && c.name().equals("related") && !c.args().isEmpty()) {
+                if (n instanceof com.ash.rachana.el.Expr.Call c && c.name().equals("related") && !c.args().isEmpty()) {
                     String x = com.ash.drishti.tables.lang.Trees.name(c.args().get(0));
                     int last = x == null ? -1 : x.lastIndexOf('.');
                     if (last > 0) {

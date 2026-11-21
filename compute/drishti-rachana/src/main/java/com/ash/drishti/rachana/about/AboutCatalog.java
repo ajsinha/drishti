@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.SutraProblem;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.SutraProblem;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.SourceLocation;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -360,7 +360,7 @@ public final class AboutCatalog implements AboutSource, com.ash.drishti.common.L
             Loaded aboutFrom = null;
             Loaded titleFrom = null;
             Map<String, GlossaryEntry> glossary = new LinkedHashMap<>();
-            Map<String, com.ash.drishti.rachana.el.Template> panels = new LinkedHashMap<>();
+            Map<String, com.ash.rachana.el.Template> panels = new LinkedHashMap<>();
             for (Loaded l : having) {                                  // most specific first: the first to say a thing wins
                 KindAbout k = l.parsed().kinds().get(kind);
                 if (title == null && k.title() != null) {
@@ -382,7 +382,7 @@ public final class AboutCatalog implements AboutSource, com.ash.drishti.common.L
                 k.panels().forEach(panels::putIfAbsent);
             }
             Loaded source = aboutFrom != null ? aboutFrom : titleFrom != null ? titleFrom : having.get(0);
-            com.ash.drishti.rachana.el.Template about = aboutFrom == null ? null : aboutFrom.parsed().kinds().get(kind).about();
+            com.ash.rachana.el.Template about = aboutFrom == null ? null : aboutFrom.parsed().kinds().get(kind).about();
             out.put(kind, new AboutText(source.pack().name(), source.pack().title(), kind, title, about, guide, Map.copyOf(glossary),
                     Map.copyOf(panels), Map.copyOf(vocabulary)));
         }

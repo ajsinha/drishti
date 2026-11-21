@@ -23,7 +23,7 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;

@@ -27,8 +27,8 @@ import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
@@ -106,7 +106,7 @@ class ImperfectDataTest {
                 String json = mapper.writeValueAsString(vm);
                 JsonNode back = mapper.readTree(json);                  // valid JSON: no NaN or Infinity tokens
                 assertThat(back.path("panels").size()).as(s.id())                // a panel whose when: does not hold is left out
-                        .isBetween((int) s.panels().stream().filter(x -> x.option(com.ash.drishti.rachana.model.Panel.WHEN).isEmpty()).count(), s.panels().size());
+                        .isBetween((int) s.panels().stream().filter(x -> x.option(com.ash.rachana.model.Panel.WHEN).isEmpty()).count(), s.panels().size());
                 assertThat(vm.title().id()).as(s.id()).isNotBlank();
                 for (ViewModel.PanelView p : vm.panels()) {
                     if (p.data() == null) {
@@ -126,7 +126,7 @@ class ImperfectDataTest {
         guide = guide.substring(guide.indexOf("## 6. Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
-        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
+        Sutra s = new com.ash.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
         DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));

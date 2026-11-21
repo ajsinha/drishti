@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.engine.view;
 
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.ScreenPhone;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.ScreenPhone;
+import com.ash.rachana.model.Sutra;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

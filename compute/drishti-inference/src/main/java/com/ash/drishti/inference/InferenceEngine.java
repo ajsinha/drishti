@@ -16,8 +16,8 @@
 package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.model.StripItem;
-import com.ash.drishti.rachana.model.Title;
+import com.ash.rachana.model.StripItem;
+import com.ash.rachana.model.Title;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;

@@ -49,7 +49,7 @@ public class LiveSetConfiguration {
             com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.command.Mnemonics mnemonics,
             EditableFields fields, ObjectProvider<EditRuntime> edits,
             com.ash.drishti.server.security.Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog,
-            com.ash.drishti.rachana.format.Formats formats, com.ash.drishti.packs.PackRegistry packs, Environment env) {
+            com.ash.rachana.format.Formats formats, com.ash.drishti.packs.PackRegistry packs, Environment env) {
         java.time.Duration storeBudget = java.time.Duration.ofSeconds(env.getProperty("drishti.live-sets.store-timeout-seconds", Long.class, 120L));
         LiveSets.Sources sources = new LiveSets.Sources() {
             @Override
@@ -187,7 +187,7 @@ public class LiveSetConfiguration {
             if (java.util.Arrays.stream(env.getProperty("drishti.live-sets.edits-off", "").split(",")).map(String::trim).anyMatch(spec.id()::equals)) {
                 return "the site switched this blotter's edits off (drishti.live-sets.edits-off)";
             }
-            com.ash.drishti.rachana.model.Form.Save save = spec.form().save();
+            com.ash.rachana.model.Form.Save save = spec.form().save();
             if ("source".equals(save.target()) && save.connector() != null) {
                 java.util.Optional<String> why = rt.writes().unusable(save.connector(), save.command(), save.kind() != null ? save.kind() : spec.kind());
                 if (why.isPresent()) {
@@ -280,7 +280,7 @@ public class LiveSetConfiguration {
                     stamped.add(s);
                 }
             }
-            for (com.ash.drishti.rachana.model.Form.Field f : spec.form().fields()) {
+            for (com.ash.rachana.model.Form.Field f : spec.form().fields()) {
                 String bind = f.recordField();
                 if (bind == null || bind.isBlank()) {
                     out.add("edit field " + f.id() + " binds no record field: it has no write path");

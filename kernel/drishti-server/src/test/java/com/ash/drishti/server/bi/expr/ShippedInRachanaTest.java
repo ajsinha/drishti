@@ -19,11 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.lang.Compiler;
 import com.ash.drishti.bicompute.lang.SqlLowering;
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.Printer;
-import com.ash.drishti.rachana.el.check.Fields;
-import com.ash.drishti.rachana.el.check.Problem;
-import com.ash.drishti.rachana.el.check.Scope;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.Printer;
+import com.ash.rachana.el.check.Fields;
+import com.ash.rachana.el.check.Problem;
+import com.ash.rachana.el.check.Scope;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

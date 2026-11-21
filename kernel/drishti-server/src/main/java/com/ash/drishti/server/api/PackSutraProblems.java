@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
 import java.nio.file.Path;
 import java.util.ArrayList;

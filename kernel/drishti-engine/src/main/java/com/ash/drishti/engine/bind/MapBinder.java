@@ -16,9 +16,9 @@
 package com.ash.drishti.engine.bind;
 
 import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.model.Panel;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.model.Panel;
 
 /**
  * Binds a {@code map} panel: which country is highlighted (or whose regions are drawn), read from the document; what a click

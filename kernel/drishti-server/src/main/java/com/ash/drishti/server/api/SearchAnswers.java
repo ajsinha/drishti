@@ -101,7 +101,7 @@ public class SearchAnswers {
             return searchProps.pivotOf(kind).map(spec -> {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("source", kind);
-                m.put("fields", spec.fields().stream().map(com.ash.drishti.rachana.model.PivotSpec.Field::name).toList());
+                m.put("fields", spec.fields().stream().map(com.ash.rachana.model.PivotSpec.Field::name).toList());
                 m.put("view", com.ash.drishti.server.pivot.SpecViews.view(kind, null, spec.arrangementMap()));
                 return m;
             }).orElse(null);

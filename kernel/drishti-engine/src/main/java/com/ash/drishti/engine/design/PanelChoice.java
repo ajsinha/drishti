@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.engine.design;
 
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Column;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.PanelKind;
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Column;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.PanelKind;
+import com.ash.rachana.model.SourceLocation;
 import java.util.List;
 import java.util.Map;
 

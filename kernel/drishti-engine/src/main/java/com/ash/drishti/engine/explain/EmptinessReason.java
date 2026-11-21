@@ -17,8 +17,8 @@ package com.ash.drishti.engine.explain;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.NodeType;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.model.Panel;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.model.Panel;
 import java.util.Optional;
 
 /**

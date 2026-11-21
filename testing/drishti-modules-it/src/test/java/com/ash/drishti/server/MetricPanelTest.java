@@ -26,9 +26,9 @@ import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.rachana.model.Sutra;
-import com.ash.drishti.rachana.SutraException;
-import com.ash.drishti.rachana.parse.SutraParser;
+import com.ash.rachana.model.Sutra;
+import com.ash.rachana.SutraException;
+import com.ash.rachana.parse.SutraParser;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -143,7 +143,7 @@ class MetricPanelTest {
         assertThatThrownBy(() -> sutra("{ id: m, kind: metric, value: $.a, caption: [x, y] }")).isInstanceOf(SutraException.class)
                 .hasMessageContaining("DRS-2029");
         // value and delta are expressions, compiled and checked when the Sutra loads
-        var el = new com.ash.drishti.rachana.SutraExpressions(new com.ash.drishti.rachana.el.ElCompiler());
+        var el = new com.ash.rachana.SutraExpressions(new com.ash.rachana.el.ElCompiler());
         assertThat(el.check(sutra("{ id: m, kind: metric, value: '$.a +* 2' }"))).extracting("code").contains("DRS-2101");
         assertThat(el.check(sutra("{ id: m, kind: metric, value: $.a, delta: '$.b +* 2' }"))).extracting("code").contains("DRS-2101");
         assertThat(el.check(sutra(FULL))).isEmpty();

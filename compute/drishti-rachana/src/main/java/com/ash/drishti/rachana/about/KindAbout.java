@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.drishti.rachana.el.Template;
+import com.ash.rachana.el.Template;
 import java.util.Map;
 
 /**

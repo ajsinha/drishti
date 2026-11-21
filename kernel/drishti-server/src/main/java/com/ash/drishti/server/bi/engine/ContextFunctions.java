@@ -19,7 +19,7 @@ import com.ash.drishti.bicompute.context.FilterContext;
 import com.ash.drishti.bicompute.context.Periods;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.rachana.el.DatePartFunctions;
+import com.ash.rachana.el.DatePartFunctions;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
@@ -287,7 +287,7 @@ final class ContextFunctions {
                 case Node.Call c when "shift_date".equals(c.function()) -> {
                     List<Node> pos = Node.positional(c);
                     LocalDate base = constantOrNull(e, pos.get(0));
-                    yield base == null ? null : DatePartFunctions.shift(base, count(pos.get(1)), unit(c), time(e).calendar());
+                    yield base == null ? null : DatePartFunctions.shift(base, count(pos.get(1)), unit(c), com.ash.drishti.rachana.HostCalendars.core(time(e).calendar()));
                 }
                 default -> null;
             };

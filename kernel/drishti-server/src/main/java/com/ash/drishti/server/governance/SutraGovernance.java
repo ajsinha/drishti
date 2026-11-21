@@ -19,7 +19,7 @@ import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.security.SecurityProperties;

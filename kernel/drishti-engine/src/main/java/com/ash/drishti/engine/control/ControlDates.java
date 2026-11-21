@@ -17,7 +17,7 @@ package com.ash.drishti.engine.control;
 
 import com.ash.drishti.common.BusinessCalendar;
 import com.ash.drishti.engine.search.form.RelativeDates;
-import com.ash.drishti.rachana.model.ControlRules;
+import com.ash.rachana.model.ControlRules;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

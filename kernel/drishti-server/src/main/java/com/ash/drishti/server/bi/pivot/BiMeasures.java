@@ -18,8 +18,8 @@ package com.ash.drishti.server.bi.pivot;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
 import com.ash.drishti.bicompute.formula.FormulaLowering;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Functions;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Functions;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -143,7 +143,7 @@ public final class BiMeasures {
             case Expr.Ternary t -> "(" + print(ds, t.cond(), fields, tables, path, inAgg) + " ? " + print(ds, t.then(), fields, tables, path, inAgg)
                     + " : " + print(ds, t.otherwise(), fields, tables, path, inAgg) + ")";
             case Expr.Call c -> call(ds, c, fields, tables, path, inAgg);
-            default -> throw new NotPivot(com.ash.drishti.rachana.el.Printer.print(n) + " is not a pivot input");
+            default -> throw new NotPivot(com.ash.rachana.el.Printer.print(n) + " is not a pivot input");
         };
     }
 
@@ -159,7 +159,7 @@ public final class BiMeasures {
 
     private static String field(Dataset ds, Expr.Field f, Set<String> fields, Set<String> tables, boolean inAgg) {
         List<String> parts = parts(f);
-        String text = com.ash.drishti.rachana.el.Printer.print(f);
+        String text = com.ash.rachana.el.Printer.print(f);
         if ("ALL".equals(text)) {
             throw new NotPivot("ALL is a filter context: not a pivot function");
         }

@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.server.bi.dataset;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.ElException;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Functions;
-import com.ash.drishti.rachana.el.check.Signatures;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.ElException;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Functions;
+import com.ash.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.expr.ExpressionException;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +87,7 @@ public final class NodeLowering {
             case Expr.Call c -> call(c);
             case Expr.Absent a -> new Node.Null();
             case Expr.ListLit l -> throw refused(e, "a list is only the right side of in, or a named argument's value (by = [...])");
-            default -> throw refused(e, "'" + com.ash.drishti.rachana.el.Printer.print(e) + "' is not an expression BI runs: a table's column reads a path; a measure "
+            default -> throw refused(e, "'" + com.ash.rachana.el.Printer.print(e) + "' is not an expression BI runs: a table's column reads a path; a measure "
                     + "names alias.COLUMN inside an aggregate");
         };
     }
@@ -122,7 +122,7 @@ public final class NodeLowering {
             t = x.target();
         }
         if (!(t instanceof Expr.RowOrRoot)) {
-            throw refused(f, "'" + com.ash.drishti.rachana.el.Printer.print(f) + "' reads a path of the source: a path belongs in a table's column (path:), and an "
+            throw refused(f, "'" + com.ash.rachana.el.Printer.print(f) + "' reads a path of the source: a path belongs in a table's column (path:), and an "
                     + "expression names that column");
         }
         return parts.size() == 2 && "user".equals(parts.get(0)) ? new Node.UserRef(parts.get(1)) : new Node.Ref(List.copyOf(parts));

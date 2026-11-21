@@ -17,7 +17,7 @@ package com.ash.drishti.engine.view;
 
 import com.ash.drishti.engine.live.Frame;
 import com.ash.drishti.engine.live.Patch;
-import com.ash.drishti.rachana.model.PanelKind;
+import com.ash.rachana.model.PanelKind;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;

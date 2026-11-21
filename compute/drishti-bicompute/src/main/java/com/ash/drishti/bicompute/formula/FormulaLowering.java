@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.bicompute.formula;
 
-import com.ash.drishti.rachana.el.CheckedMode;
-import com.ash.drishti.rachana.el.ElException;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.Functions;
+import com.ash.rachana.el.CheckedMode;
+import com.ash.rachana.el.ElException;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.Functions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -151,7 +151,7 @@ public final class FormulaLowering {
             case Expr.Binary b when List.of("+", "-", "*", "/", "%").contains(b.op()) -> new FormulaAst.Binary(b.op(), node(b.l()), node(b.r()));
             case Expr.Field f -> field(f);
             case Expr.Call c -> call(c);
-            default -> throw new FormulaException("'" + com.ash.drishti.rachana.el.Printer.print(e) + "' is not part of a formula: arithmetic, comparisons "
+            default -> throw new FormulaException("'" + com.ash.rachana.el.Printer.print(e) + "' is not part of a formula: arithmetic, comparisons "
                     + "and functions of aggregates", at(e));
         };
     }
@@ -186,7 +186,7 @@ public final class FormulaLowering {
             e = x.target();
         }
         if (!(e instanceof Expr.RowOrRoot)) {
-            throw new FormulaException("'" + com.ash.drishti.rachana.el.Printer.print(f) + "' is not a field of the source", at(f));
+            throw new FormulaException("'" + com.ash.rachana.el.Printer.print(f) + "' is not a field of the source", at(f));
         }
         String name = String.join(".", parts);
         if (OLD_WORDS.contains(name)) {

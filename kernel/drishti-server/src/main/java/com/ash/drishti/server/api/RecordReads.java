@@ -46,12 +46,12 @@ public class RecordReads {
     private final SourceRouter router;
     private final BusinessDates dates;
     private final Entitlements entitlements;
-    private final com.ash.drishti.rachana.el.ElCompiler el;
-    private final com.ash.drishti.rachana.format.Formats formats;
+    private final com.ash.rachana.el.ElCompiler el;
+    private final com.ash.rachana.format.Formats formats;
     private final HistoryService history;
 
-    public RecordReads(SourceRouter router, BusinessDates dates, Entitlements entitlements, com.ash.drishti.rachana.el.ElCompiler el,
-            com.ash.drishti.rachana.format.Formats formats, HistoryService history) {
+    public RecordReads(SourceRouter router, BusinessDates dates, Entitlements entitlements, com.ash.rachana.el.ElCompiler el,
+            com.ash.rachana.format.Formats formats, HistoryService history) {
         this.router = router;
         this.dates = dates;
         this.entitlements = entitlements;
@@ -78,7 +78,7 @@ public class RecordReads {
     public Series series(String kind, String id, String path, int days, String to, AsOf current, Principal principal) {
         entitlements.requireOpen(principal, kind);
         String expr = path.startsWith("$") ? path : "$." + path;
-        com.ash.drishti.rachana.el.Expr compiled;
+        com.ash.rachana.el.Expr compiled;
         try {
             compiled = el.compile(expr);
         } catch (RuntimeException e) {
@@ -106,7 +106,7 @@ public class RecordReads {
             dated |= doc.provenance().businessDate() != null;
             Object v;
             try {
-                v = com.ash.drishti.rachana.el.Values.simplify(compiled.eval(com.ash.drishti.rachana.el.EvalContext.of(
+                v = com.ash.rachana.el.Values.simplify(compiled.eval(com.ash.rachana.el.EvalContext.of(
                         entitlements.redact(principal, doc.data()), formats)));
                 if (v instanceof com.ash.drishti.api.DataNode node) {
                     v = node.isNull() ? null : node.unwrap();

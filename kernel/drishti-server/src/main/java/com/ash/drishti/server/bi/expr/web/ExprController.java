@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.bi.expr.web;
 
-import com.ash.drishti.rachana.el.check.Scope;
-import com.ash.drishti.rachana.el.check.Signatures;
+import com.ash.rachana.el.check.Scope;
+import com.ash.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.mq.ModelCatalog;

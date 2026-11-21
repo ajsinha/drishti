@@ -44,14 +44,14 @@ import com.ash.drishti.inference.EffectiveLayout;
 import com.ash.drishti.inference.LayoutMerger;
 import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.el.EvalContext;
-import com.ash.drishti.rachana.el.Link;
-import com.ash.drishti.rachana.el.Values;
-import com.ash.drishti.rachana.format.Formats;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.StripItem;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.el.EvalContext;
+import com.ash.rachana.el.Link;
+import com.ash.rachana.el.Values;
+import com.ash.rachana.format.Formats;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.StripItem;
+import com.ash.rachana.model.Sutra;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.ArrayList;
@@ -390,7 +390,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
                 : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
         EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);
-        var nodes = com.ash.drishti.rachana.SutraWiring.nodes(layout.sutra());
+        var nodes = com.ash.rachana.SutraWiring.nodes(layout.sutra());
         Map<String, Map<String, ScreenWire.Selection>> byPanel = new LinkedHashMap<>();
         for (ScreenWire.Selection f : fired) {
             var n = nodes.get(f.panel());
@@ -504,7 +504,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         Map<String, com.ash.drishti.engine.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
                 asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen);   // what a map's link and shade read across a kind
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
-        ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.drishti.rachana.SutraWiring.nodes(layout.sutra()), ctx,
+        ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.rachana.SutraWiring.nodes(layout.sutra()), ctx,
                 eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, who, Map.of(), null);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {

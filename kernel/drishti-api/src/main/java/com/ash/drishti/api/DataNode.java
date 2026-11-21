@@ -28,10 +28,15 @@ import java.util.Objects;
  *
  * <p>Navigation never throws: a missing field or index yields {@link #missing()}.
  */
-public sealed interface DataNode permits DataNode.Obj, DataNode.Arr, DataNode.Val, DataNode.Missing {
+public sealed interface DataNode extends com.ash.rachana.api.Node permits DataNode.Obj, DataNode.Arr, DataNode.Val, DataNode.Missing {
 
     /** The node's type: object, array, a scalar's type, null or missing. */
     NodeType type();
+
+    @Override
+    default com.ash.rachana.api.Node.Kind kind() {
+        return com.ash.rachana.api.Node.Kind.valueOf(type().name());
+    }
 
     /** Field of an object; {@link #missing()} for any other node or an absent field. */
     default DataNode get(String field) {

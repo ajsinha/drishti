@@ -18,8 +18,8 @@ package com.ash.drishti.rachana;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.rachana.el.ElCompiler;
-import com.ash.drishti.rachana.parse.SutraBlocks;
+import com.ash.rachana.el.ElCompiler;
+import com.ash.rachana.parse.SutraBlocks;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -44,8 +44,8 @@ class PackSutrasTest {
 
     @AfterEach
     void noKit() {
-        SutraBlocks.kit(null);
-        SutraBlocks.load(List.of());
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(null);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
     }
 
     @ParameterizedTest
@@ -55,13 +55,13 @@ class PackSutrasTest {
         try (Stream<Path> s = Files.walk(pack.resolve("sutras"))) {
             files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
-        SutraBlocks.kit(KIT);
+        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(KIT);
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                 null, null, null, null, null, null, null, null), new ElCompiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);
-            assertThat(SutraBlocks.find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();
-            assertThat(SutraBlocks.clashes()).as(pack.getFileName() + " names no block like a kit fragment").isEmpty();
+            assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();
+            assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()).as(pack.getFileName() + " names no block like a kit fragment").isEmpty();
         }
     }
 }

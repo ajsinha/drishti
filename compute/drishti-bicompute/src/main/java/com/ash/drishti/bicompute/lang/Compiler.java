@@ -18,8 +18,8 @@ package com.ash.drishti.bicompute.lang;
 import com.ash.drishti.bicompute.context.FilterContext;
 import com.ash.drishti.bicompute.context.Periods;
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.rachana.el.Expr;
-import com.ash.drishti.rachana.el.check.Checker;
+import com.ash.rachana.el.Expr;
+import com.ash.rachana.el.check.Checker;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,7 +63,7 @@ public final class Compiler {
     /** A measure (aggregate scope). */
     public Lowered measure(Expr e) {
         if (e instanceof Expr.Call c) {
-            String fn = com.ash.drishti.rachana.el.Functions.oneName(c.name());
+            String fn = com.ash.rachana.el.Functions.oneName(c.name());
             if (AGGREGATES.contains(fn)) {
                 return aggregate(fn, c);
             }

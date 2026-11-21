@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.model.Sutra;
 import java.util.List;
 import java.util.Optional;
 

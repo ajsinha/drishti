@@ -17,10 +17,10 @@ package com.ash.drishti.server.layout;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.rachana.SutraLayoutEditor;
-import com.ash.drishti.rachana.model.Area;
-import com.ash.drishti.rachana.model.Panel;
-import com.ash.drishti.rachana.model.Sutra;
+import com.ash.rachana.SutraLayoutEditor;
+import com.ash.rachana.model.Area;
+import com.ash.rachana.model.Panel;
+import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

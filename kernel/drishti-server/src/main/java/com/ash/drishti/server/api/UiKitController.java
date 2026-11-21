@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.rachana.parse.SutraBlocks;
+import com.ash.rachana.parse.SutraBlocks;
 import com.ash.drishti.server.uikit.UiKit;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
@@ -66,9 +66,9 @@ public class UiKitController {
     public Map<String, Object> summary() {
         List<Map<String, Object>> fragments = new ArrayList<>();
         List<Map<String, Object>> packFragments = new ArrayList<>();
-        for (SutraBlocks.Block b : SutraBlocks.blocks()) {
+        for (SutraBlocks.Block b : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks()) {
             if (b.fragment()) {
-                (SutraBlocks.fromKit(b) ? fragments : packFragments).add(library.describe(b, false));
+                (com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.fromKit(b) ? fragments : packFragments).add(library.describe(b, false));
             }
         }
         List<Map<String, Object>> assets = new ArrayList<>();

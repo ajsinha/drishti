@@ -16,7 +16,7 @@
 package com.ash.drishti.bicompute.rachana;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.rachana.el.FunctionProvider;
+import com.ash.rachana.el.FunctionProvider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -112,13 +112,13 @@ public final class ModelDefParser {
         Map<String, ModelDef.Use> datasets = tables(root.path("tables"), y);
         List<ModelDef.Rel> rels = new ArrayList<>(relationships(root.path("relationships"), datasets, y));
         rels.addAll(bridges(root.path("bridges"), datasets, y));
-        Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> functions = functions(root.path("functions"), y);
+        Map<String, com.ash.rachana.el.MeasureFunctions.Def> functions = functions(root.path("functions"), y);
         Map<String, ModelDef.Meas> measures = measures(root.path("measures"), y);
         if (!functions.isEmpty()) {
             for (String mName : new ArrayList<>(measures.keySet())) {
                 ModelDef.Meas x = measures.get(mName);
                 try {
-                    String expanded = com.ash.drishti.rachana.el.MeasureFunctions.expand(x.expr(), functions);
+                    String expanded = com.ash.rachana.el.MeasureFunctions.expand(x.expr(), functions);
                     measures.put(mName, new ModelDef.Meas(x.name(), x.id(), expanded, x.format(), x.description(), x.currency(), x.additive(), x.python(), x.inputs(), x.by(), x.via(), x.implicit()));
                 } catch (IllegalArgumentException e) {
                     y.error("DRS-9127", "measures." + mName, e.getMessage());
@@ -369,8 +369,8 @@ public final class ModelDefParser {
         return out;
     }
 
-    private static Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> functions(JsonNode n, LayerYaml y) {
-        Map<String, com.ash.drishti.rachana.el.MeasureFunctions.Def> out = new LinkedHashMap<>();
+    private static Map<String, com.ash.rachana.el.MeasureFunctions.Def> functions(JsonNode n, LayerYaml y) {
+        Map<String, com.ash.rachana.el.MeasureFunctions.Def> out = new LinkedHashMap<>();
         n.fields().forEachRemaining(e -> {
             List<String> params = new ArrayList<>();
             e.getValue().path("params").forEach(p -> params.add(p.asText()));
@@ -378,7 +378,7 @@ public final class ModelDefParser {
             if (expr.isBlank()) {
                 y.error("DRS-9127", "functions." + e.getKey(), "a measure function is { params: [a, b], expr: \"...\" }");
             } else {
-                out.put(e.getKey(), new com.ash.drishti.rachana.el.MeasureFunctions.Def(params, expr));
+                out.put(e.getKey(), new com.ash.rachana.el.MeasureFunctions.Def(params, expr));
             }
         });
         return out;

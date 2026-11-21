@@ -23,9 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.rachana.RachanaProperties;
-import com.ash.drishti.rachana.SutraProblem;
+import com.ash.rachana.SutraProblem;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.drishti.rachana.model.SourceLocation;
+import com.ash.rachana.model.SourceLocation;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;

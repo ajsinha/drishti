@@ -20,7 +20,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.identity.collab.Ulid;
-import com.ash.drishti.rachana.model.Form;
+import com.ash.rachana.model.Form;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;

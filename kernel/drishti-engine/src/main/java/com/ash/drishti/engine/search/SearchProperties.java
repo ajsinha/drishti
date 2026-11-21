@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.engine.search;
 
-import com.ash.drishti.rachana.model.PivotSpec;
+import com.ash.rachana.model.PivotSpec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
