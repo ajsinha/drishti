@@ -26,7 +26,6 @@ import com.ash.drishti.kernel.api.data.KindProvider;
 import com.ash.drishti.kernel.api.explain.Explainer;
 import com.ash.drishti.kernel.api.function.FunctionProvider;
 import com.ash.drishti.kernel.api.health.HealthFigures;
-import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.kernel.api.official.OfficialResults;
 import com.ash.drishti.kernel.api.pivot.PivotSourceProvider;
 import com.ash.drishti.kernel.api.view.ViewAugmenter;
@@ -94,7 +93,6 @@ final class ModuleBridge {
         live(PivotSourceProvider.class, Contributions.Surface.SPI);
         live(DomainVocabulary.class, Contributions.Surface.GLOSSARY);
         live(OfficialResults.class, Contributions.Surface.SPI);
-        live(ApiAlias.class, Contributions.Surface.ROUTE);
         live(AiToolProvider.class, Contributions.Surface.AI_TOOL);
     }
 

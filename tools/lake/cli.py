@@ -26,9 +26,6 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/DATA_LAKE_GUIDE.md)
     check      connectors name known lakes; each lake file matches its tables on disk (format, partitions, promoted columns)
 
-  From an older release (deprecated: retired in the next release; each says so when it runs):
-    relocate        move a lake of the older layout (<data>/delta/<domain>) into its own folder, once
-    migrate-config  lake files from connector files that still describe their lake
 """
 from __future__ import annotations
 
@@ -38,14 +35,6 @@ import re
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-DEPRECATED = ("lake {cmd} is deprecated: a one-time move from an older release's layout, retired in the next release. "
-              "Run it once if your install still has that layout; nothing else needs it.")
-
-
-def deprecated(cmd: str) -> None:
-    print(DEPRECATED.format(cmd=cmd), file=sys.stderr, flush=True)
-
-
 def _mod(name: str):
     sys.path.insert(0, str(HERE))
     return __import__(name)
@@ -122,11 +111,6 @@ def cmd_delete(a, extra) -> int:
     return _mod("delete").run(a)
 
 
-def cmd_relocate(a, extra) -> int:
-    deprecated("relocate")
-    return _mod("relocate").run(a)
-
-
 def cmd_maintain(a, extra) -> int:
     return _mod("maintain").main(extra)
 
@@ -175,17 +159,12 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
              "exit: 0 deleted (or a dry run), 1 refused or failed (nothing changed), 2 deleted but the signal failed, 3 another run holds the lock. "
              "Guide: docs/guides/DATA_LAKE_GUIDE.md section 5.8")
     _mod("delete").add_arguments(dl)
-    rl = add(sub, "relocate", cmd_relocate, "lake relocate (deprecated, from an older release; retired in the next release): move a lake built "
-             "in the older layout (<data>/delta/<domain>) into its own folder <data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
-             "examples:\n  drishti.py lake relocate demo --dry-run\n  drishti.py lake relocate demo\n"
-             "The server does it for the demo lake at start (drishti.lakes.relocate-on-start). Guide: docs/guides/OPERATIONS_GUIDE.md")
-    _mod("relocate").add_arguments(rl)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
             "  drishti.py lake maintain --once --tables trading/trade_endur      (the file Admin -> Lakes writes: <data>/lakes/lake-maintenance.yaml)\n"
             "  drishti.py lake maintain --history\n"
             "  drishti.py lake maintain relayout --root data/delta/demo --domain trading\n"
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/guides/OPERATIONS_GUIDE.md")
-    _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
+    _mod("lakeconfig").register(sub, add)                               # lake show|check (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
         _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, docs/architecture/DATA_ARCHITECTURE.md)

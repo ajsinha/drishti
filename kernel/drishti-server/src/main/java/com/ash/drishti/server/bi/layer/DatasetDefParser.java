@@ -73,8 +73,7 @@ public final class DatasetDefParser {
         try {
             return com.ash.drishti.server.bi.expr.Expressions.node(text);
         } catch (RuntimeException e) {
-            y.error(e instanceof com.ash.drishti.server.bi.expr.ExpressionException d && com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX.equals(d.code()) ? d.code()
-                    : code, path, "the expression does not parse: " + e.getMessage()
+            y.error(code, path, "the expression does not parse: " + e.getMessage()
                             + (e instanceof com.ash.drishti.server.bi.expr.ExpressionException d && d.fix() != null ? " (" + d.fix() + ")" : ""));
             return null;
         }

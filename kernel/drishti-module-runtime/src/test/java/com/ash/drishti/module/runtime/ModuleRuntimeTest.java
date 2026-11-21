@@ -18,7 +18,7 @@ package com.ash.drishti.module.runtime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.kernel.api.modules.ApiAlias;
+import com.ash.drishti.kernel.api.services.InlineRequest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -120,7 +120,7 @@ class ModuleRuntimeTest {
         LoadedModule m = rt.loaded("hello").orElseThrow();
         assertThat(m.context().getParent()).isSameAs(kernel);
         assertThat(m.context().getBean("greeting")).isEqualTo("hello from hello");
-        assertThat(m.context().getBean(ApiAlias.class).to()).isEqualTo("/api/v1/hello");      // one ApiAlias class: the kernel's
+        assertThat(m.context().getBean(InlineRequest.class).view()).containsEntry("id", "hello");      // one InlineRequest class: the kernel's
         assertThat(((Supplier<?>) m.context().getBean("greeter")).get()).isEqualTo("greeter of hello");
         assertThat(m.loader().loadClass("test.hello.Greeter").getClassLoader()).isSameAs(m.loader());
         assertThatThrownBy(() -> m.loader().loadClass(ModuleRuntime.class.getName())).isInstanceOf(ClassNotFoundException.class);

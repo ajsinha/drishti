@@ -26,7 +26,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** {@code tables list|check|preview|lineage|migrate}: exit codes, words and JSON, all in a temporary folder. */
+/** {@code tables list|check|preview|lineage|offer}: exit codes, words and JSON, all in a temporary folder. */
 class TablesCliTest {
 
     @TempDir Path cwd;
@@ -36,8 +36,7 @@ class TablesCliTest {
     int run(String... args) {
         out.reset();
         err.reset();
-        return new TablesCli(new PrintStream(out, true, StandardCharsets.UTF_8), new PrintStream(err, true, StandardCharsets.UTF_8), cwd,
-                (del, scope) -> com.ash.drishti.tables.migrate.DelTranslator.Result.ok(del, List.of())).run(List.of(args));
+        return new TablesCli(new PrintStream(out, true, StandardCharsets.UTF_8), new PrintStream(err, true, StandardCharsets.UTF_8), cwd).run(List.of(args));
     }
 
     String out() {
@@ -101,10 +100,10 @@ class TablesCliTest {
     void usageAndUnknownCommands() {
         assertThat(run()).isEqualTo(TablesCli.USAGE);
         assertThat(run("--help")).isEqualTo(TablesCli.OK);
-        assertThat(out()).contains("tables list|check|preview|lineage|offer|migrate");
+        assertThat(out()).contains("tables list|check|preview|lineage|offer");
         assertThat(run("nope")).isEqualTo(TablesCli.USAGE);
         assertThat(run("check", "--bogus")).isEqualTo(TablesCli.USAGE);
-        assertThat(run("migrate", "--dry-run", "--check")).isEqualTo(TablesCli.USAGE);
+        assertThat(run("migrate")).as("the migrator is gone").isEqualTo(TablesCli.USAGE);
     }
 
     @Test
@@ -122,25 +121,6 @@ class TablesCliTest {
         assertThat(out()).contains("\"columns\"");
         assertThat(run("lineage", "trading.trades")).isEqualTo(TablesCli.OK);
         assertThat(out()).contains("nothing in the catalogue uses trading.trades");
-    }
-
-    @Test
-    void migrateDryRunCheckAndWrite() throws Exception {
-        Files.createDirectories(cwd.resolve("config/bi/datasets"));
-        Files.writeString(cwd.resolve("config/bi/datasets/t.dataset.yaml"), "rachana: 2\ndataset: t\nsource: { kind: trade }\ncolumns: { X: { type: string } }\n");
-        assertThat(run("migrate", "--check")).isEqualTo(TablesCli.PROBLEMS);
-        assertThat(out()).contains("1 file(s) would change");
-        assertThat(run("migrate", "--dry-run")).isEqualTo(TablesCli.OK);
-        assertThat(out()).contains("+++ b/bi/t.table.yaml").contains("+table: bi.t");
-        assertThat(Files.exists(cwd.resolve("config/tables/bi/t.table.yaml"))).isFalse();
-        assertThat(run("migrate", "--audit", "audit.jsonl", "--who", "ajsinha")).isEqualTo(TablesCli.OK);
-        assertThat(Files.readString(cwd.resolve("config/tables/bi/t.table.yaml"))).contains("X: { path: $.X, type: string }".replace("$.X", "\"$.X\""));
-        assertThat(Files.readString(cwd.resolve("audit.jsonl"))).contains("\"who\":\"ajsinha\"");
-        assertThat(run("migrate", "--check")).isEqualTo(TablesCli.OK);
-        assertThat(out()).contains("nothing to migrate");
-        tables();                                                   // a table of its own beside the migrated ones: checked in its own folder
-        assertThat(run("migrate", "--dry-run")).isEqualTo(TablesCli.OK);
-        assertThat(out()).doesNotContain("DRS-9601");
     }
 
     @Test

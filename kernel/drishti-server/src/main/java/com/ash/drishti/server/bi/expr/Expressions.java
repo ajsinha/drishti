@@ -23,45 +23,27 @@ import com.ash.drishti.server.bi.dataset.NodeText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The one way BI reads an expression (docs/architecture/ARCHITECTURE.md §28 section 2.6): Rachana's one parser ({@link CheckedMode#parse}), lowered to BI's
- * compiler tree by {@link NodeLowering}. A text in DEL or the old syntax is not read: {@code drishti.py tables migrate} rewrites it. Parses are
+ * compiler tree by {@link NodeLowering}. Parses are
  * cached by text (the L0 parse cache, bounded), so the many places that read the same measure pay once. Thread-safe.
  */
 public final class Expressions {
 
-    /** The setting {@code drishti.bi.expr.legacy}: DEL and the old syntax are no longer read, whatever it says. */
-    public enum Legacy {
-        /** Formerly: the old syntax read with a warning. */
-        WARN,
-        /** Refused: the only behaviour. */
-        REFUSE
-    }
-
-    public static final String OLD_SYNTAX = "DRS-9100";
-    public static final String NOT_CONVERTIBLE = "DRS-9190";
-
     /** A parsed expression: the compiler's tree, Rachana's tree with where each node was written, and the text. */
     public record Parsed(Node node, CheckedMode.Parsed rachana, String text) {}
 
-    private static volatile Legacy legacy = Legacy.REFUSE;
     private static volatile int cacheSize = 10_000;
     private static final Map<String, Object> CACHE = new ConcurrentHashMap<>();
 
     private Expressions() {}
 
     /** Set from {@code drishti.bi.expr.*} at start-up. */
-    public static void configure(Legacy mode, int maxCached) {
-        legacy = Objects.requireNonNull(mode);
+    public static void configure(int maxCached) {
         cacheSize = Math.max(0, maxCached);
         CACHE.clear();
-    }
-
-    public static Legacy legacyMode() {
-        return legacy;
     }
 
     /** The compiler's tree of a Rachana expression; a refusal is a {@link ExpressionException}. */

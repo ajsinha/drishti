@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
-``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
+``build_demo_lakes.py``, ``lake check`` and ``lake show``.
 
 There is ONE reader of the lake files, in Java (Drishti Lake's ``com.ash.lake.config.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
@@ -176,7 +176,7 @@ def disagree(what: str, given, lakes, entry: dict) -> None:
                               f"(config/lakes/{entry['lake']}.yaml): the lake file decides; drop {what} or correct the lake file")
 
 
-# ------------------------------------------------------------------------------------------------ drishti.py lake show|check|migrate-config
+# ------------------------------------------------------------------------------------------------ drishti.py lake show|check
 
 def _connectors_dir(a) -> pathlib.Path:
     return pathlib.Path(getattr(a, "connectors_dir", None) or os.environ.get("DRISHTI_CONNECTORS_DIR") or ROOT / "config" / "connectors")
@@ -221,33 +221,8 @@ def cmd_check(a) -> int:
     return 1 if out["errors"] else 0
 
 
-def cmd_migrate(a) -> int:
-    """L4: lake files written from the connector files that still describe their lake; the connectors rewritten to ``lake: <name>``.
-    A dry run (the files printed) unless --write. Nothing under the data folder changes."""
-    print("lake migrate-config is deprecated: a one-time move from an older release's layout, retired in the next release.", file=sys.stderr, flush=True)
-    args = ["migrate-config", "--connectors", str(_connectors_dir(a).resolve())] + (["--write"] if a.write else [])
-    try:
-        out = run(args, pathlib.Path(a.dir) if a.dir else None)
-    except LakeConfigError as e:
-        print(f"lake migrate-config: {e}", file=sys.stderr)
-        return 1
-    if a.json:
-        print(json.dumps(out, indent=2))
-        return 0
-    for n in out["notes"]:
-        print("  " + n)
-    if not out["written"]:
-        for path, text in (out.get("texts") or {}).items():
-            print(f"\n--- {path} (would be written)\n{text}")
-        print("\nlake migrate-config: a dry run; nothing written (add --write)")
-    else:
-        print(f"lake migrate-config: wrote {len(out['lake-files'])} lake files and rewrote {len(out['connector-files'])} connector files; "
-              "restart the server (or let it reload the connectors) and run drishti.py lake check")
-    return 0
-
-
 def register(sub, add) -> None:
-    """``lake show``, ``lake check`` and ``lake migrate-config`` (cli.py adds them to the ``lake`` group)."""
+    """``lake show`` and ``lake check`` (cli.py adds them to the ``lake`` group)."""
     s = add(sub, "show", lambda a, extra: cmd_show(a), "lake show: every lake of config/lakes/ and its tables, as the server reads them", [],
             "example:\n  drishti.py lake show\nGuide: docs/guides/DATA_LAKE_GUIDE.md")
     s.add_argument("--dir", help="the lake folder (default LAKE_LAKES_DIR, else config/lakes)")
@@ -258,11 +233,3 @@ def register(sub, add) -> None:
     c.add_argument("--dir", help="the lake folder (default LAKE_LAKES_DIR, else config/lakes)")
     c.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     c.add_argument("--json", action="store_true")
-    m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config (deprecated, from an older release; retired in the next release): write lake files from connector files that "
-            "describe their lake (root, domain, table.<kind>, layout.<kind>.*) and rewrite those connectors to lake: <name>", [],
-            "examples:\n  drishti.py lake migrate-config                 (a dry run: prints the files)\n"
-            "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/DATA_LAKE_GUIDE.md section 12")
-    m.add_argument("--dir", help="the lake folder written (default LAKE_LAKES_DIR, else config/lakes)")
-    m.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
-    m.add_argument("--write", action="store_true", help="write the files (default: a dry run)")
-    m.add_argument("--json", action="store_true")
