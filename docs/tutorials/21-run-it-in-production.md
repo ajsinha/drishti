@@ -222,7 +222,7 @@ You should see each cache with its statistics; `layoutHitRate` well below 0.99 a
 max_connections  >=  (sum of the pool sizes of every connector that points at it + the identity pool + loaders + your own clients)  x  server instances
 ```
 
-With the six banking connectors of the `postgres` profile, the identity database and a loader, on two server instances (a worked sum you can run):
+With the six banking connectors of the `postgres` example files, the identity database and a loader, on two server instances (a worked sum you can run):
 
 ```text
 $ python3 docs/tutorials/data/pools.py

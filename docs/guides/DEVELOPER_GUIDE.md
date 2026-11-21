@@ -2215,9 +2215,8 @@ connector `UP` with no data (its consumer retries), and a connector that cannot 
 endpoint) is listed under `failedToStart` and retried by itself ([DATA_GUIDE.md section 9, retries](DATA_GUIDE.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried)).
 One `DOWN` connector does not take the others with it.
 
-Connectors defined under `drishti.sources.connectors` in a site file loaded with
-`--spring.config.additional-location` are deprecated but read (flagged in the log and on Admin → Connectors; it overrides a file setting by
-setting); move each block to its own file ([DATA_GUIDE.md section 9, section 11](DATA_GUIDE.md#911-moving-off-applicationyaml-and-the-old-data-source-override)).
+A connector is a file of its own, never a block of a site configuration file
+([DATA_GUIDE.md section 9, section 11](DATA_GUIDE.md#911-where-connectors-are-defined)).
 
 ### 10.3 Which connector should I use?
 

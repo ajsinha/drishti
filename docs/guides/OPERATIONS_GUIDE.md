@@ -757,7 +757,6 @@ A site file of your own, read **in addition** to the bundled defaults:
 | one site file | `java -jar … --spring.config.additional-location=file:/etc/drishti/site.yaml` (or `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml`) |
 | several, later ones win | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | `--spring.config.additional-location=file:/etc/drishti/conf.d/` (end it with `/`) |
-| a profile shipped in the jar (`files`, `postgres`, `duckdb`, `mongodb`, `redis`, `aerospike`, `iceberg`) | `--spring.profiles.active=files` (or `SPRING_PROFILES_ACTIVE`) |
 | a profile of your own | `--spring.profiles.active=prod --spring.config.additional-location=file:/etc/drishti/` reads `/etc/drishti/application-prod.yaml` too |
 | **replace** the defaults (rare) | `--spring.config.location=classpath:/application.yaml,file:/etc/drishti/site.yaml` (keep the bundled file in the list) |
 
@@ -1015,9 +1014,9 @@ python tools/drishti.py data load --store aerospike localhost:3000 test
 ```
 
 Point the connectors at a store by copying the example files for it from `config/connectors.examples/<store>/` into `config/connectors/` (a file
-replaces the pack's template wholesale; [DATA_GUIDE.md section 9](DATA_GUIDE.md#911-moving-off-applicationyaml-and-the-old-data-source-override)).
-The older Spring profiles (`SPRING_PROFILES_ACTIVE=postgres` or `aerospike`, with `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD`,
-`DRISHTI_AEROSPIKE_HOSTS`, `DRISHTI_AEROSPIKE_NAMESPACE`) still work but are deprecated.
+replaces the pack's template wholesale; [DATA_GUIDE.md section 9](DATA_GUIDE.md#911-where-connectors-are-defined)).
+The example files read their location and credentials from `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD`,
+`DRISHTI_AEROSPIKE_HOSTS` and `DRISHTI_AEROSPIKE_NAMESPACE`.
 
 **Aerospike at scale, and retention.** Each domain is three sets: `<domain>` (a record per entity per business date), `<domain>_ix` (a record per
 entity listing its dates) and `<domain>_kinds`. A bulk book with a retention period:

@@ -84,7 +84,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [9.8 Admin → Connectors](#98-admin--connectors)
     - [9.9 The REST API](#99-the-rest-api)
     - [9.10 The CLI](#910-the-cli)
-    - [9.11 Moving off application.yaml and the old data-source override](#911-moving-off-applicationyaml-and-the-old-data-source-override)
+    - [9.11 Where connectors are defined](#911-where-connectors-are-defined)
     - [9.12 Health and problems](#912-health-and-problems)
     - [9.13 Decisions](#913-decisions)
     - [9.14 Connection pools](#914-connection-pools)
@@ -1110,8 +1110,7 @@ settings:                         # the plugin's settings; nesting is flattened 
   connector file" section.
 - A connector over the network takes the shared `tls.*` settings for a private CA or a client certificate, and, when it speaks HTTP, the
   shared `proxy:` block ([section 10](#10-tls-and-the-outbound-proxy)).
-- `drishti.sources.connectors` in `application.yaml` and the per-store profiles (`SPRING_PROFILES_ACTIVE=postgres`, …) still work but are
-  **deprecated** ([9.11](#911-moving-off-applicationyaml-and-the-old-data-source-override)).
+- Connectors are defined in files only, never in `application.yaml` or a profile ([9.11](#911-where-connectors-are-defined)).
 
 Which definition wins (environment and the deprecated `drishti.sources.connectors.*`, then the file, then the pack's template) is
 [Connector layers](#connector-layers); how `routes:` and a file's `kinds:` decide which connector answers a kind is
@@ -2209,25 +2208,13 @@ connectors of desk-demo   [files in …/config/connectors; change them with `dri
 [exit 1]
 ```
 
-### 9.11 Moving off application.yaml and the old data-source override
+### 9.11 Where connectors are defined
 
-**`drishti.sources.connectors` in `application.yaml`** (and `application-<profile>.yaml`, and environment variables such as
-`DRISHTI_SOURCES_CONNECTORS_RISK_STORE_SETTINGS_ROOT`) **keep working**, but are deprecated. At start the server logs, per connector:
-
-```
-WARN  deprecated: connector 'legacy-feed' is defined in the server's own configuration (drishti.sources.connectors.legacy-feed);
-      move it to /srv/drishti/config/connectors/legacy-feed.yaml and remove it from application.yaml. Until then it overrides that
-      file setting by setting.
-```
-
-The Connectors page flags them too, and opening one and pressing Save creates its file. To move one: write the file (the YAML has the
-same keys: `plugin`, `enabled`, `kinds`, `settings`), then delete the block from `application.yaml`.
-
-**The per-store profiles** (`application-postgres.yaml`, `-duckdb`, `-aerospike`, `-mongodb`, `-iceberg`, `-redis`, `-files`) are
-**kept working, deprecated**, and every one is also provided as **example files** in `config/connectors.examples/<store>/`. They were
-not converted in place because a profile *overlays* the pack's generated files setting by setting, while a file *replaces* the template;
-a faithful automatic conversion would hide a behaviour change. Copy the example files you want into `config/connectors/` (mind the
-trade connectors' names, section 4) and drop the profile.
+A connector is a file: `<connectors-dir>/<name>.yaml` (the same keys everywhere: `plugin`, `enabled`, `kinds`, `settings`), or the template
+of a pack or module that names it. Nothing in `application.yaml` or a profile defines one. The store a domain is read from is chosen by
+the files in the folder: `config/connectors.examples/<store>/` holds one file per banking domain for `postgres`, `duckdb`, `aerospike`,
+`mongodb`, `iceberg`, `redis`, `files` and `cassandra`; point `DRISHTI_CONNECTORS_DIR` at that folder (read only, nothing is written) or
+copy the files you want into `config/connectors/` (mind the trade connectors' names, section 4).
 
 **The Admin → Packs → Data source override** (`<data dir>/packs/settings/<pack>.yaml`, written by the earlier Data source panel) is
 **unified** with connector files. At the first start after the upgrade the server **migrates** each override into the connector file
@@ -3283,12 +3270,11 @@ memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
 python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
 python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
-The profile is deprecated; the same connectors as files are in `config/connectors.examples/postgres/` (copy them to
-`config/connectors/`; the example `trading-store.yaml` is one trade connector, see
-[DATA_GUIDE.md section 9.4](#94-examples-one-per-store)). Measured in an earlier release: the samples in 2 s, a
+The connectors are the files in `config/connectors.examples/postgres/` (the server reads them from there with `DRISHTI_CONNECTORS_DIR`,
+or copy them to `config/connectors/`; see [section 9.4](#94-examples-one-per-store)). Measured in an earlier release: the samples in 2 s, a
 million trades × 3 days in about 3 minutes and 11 GB. User and password come from `--user`/`--password`, else
 `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`. The samples' load recreates each domain's table; a running server sees a new
 load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md).
@@ -3298,7 +3284,7 @@ load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/d
 ```bash
 python tools/drishti.py data load --store iceberg ./data/iceberg                       # the samples
 python tools/drishti.py data load --store iceberg ./data/iceberg --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (The loader is the server jar's; or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#112-mixed-delta-and-iceberg-storage).)
@@ -3308,7 +3294,7 @@ Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). 
 ```bash
 python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb                              # the samples
 python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
@@ -3321,7 +3307,7 @@ over the old one, so it can run while the server answers; the server picks it up
 docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
 python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples
 python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
@@ -3332,7 +3318,7 @@ Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
 docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
 python tools/drishti.py data load --store redis redis://localhost:6380                       # the samples
 python tools/drishti.py data load --store redis redis://localhost:6380 --trades 10000        # and a book, for a laptop
-DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk \
+DRISHTI_REDIS_URI=redis://localhost:6380 DRISHTI_CONNECTORS_DIR=config/connectors.examples/redis DRISHTI_PACKS=market-risk,counterparty-risk \
   java -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -3346,7 +3332,7 @@ a day, so keep large books for a server. Each load replaces the business days it
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 python tools/drishti.py data load --store aerospike localhost:3000 test                                  # the samples
 python tools/drishti.py data load --store aerospike localhost:3000 test --trades 10000                   # and a book
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
@@ -3370,7 +3356,7 @@ expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA
 ```bash
 python tools/drishti.py data load --store files                              # the samples: data/files
 python tools/drishti.py data load --store files --trades 10000               # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../docs/connectors/types/file/README.md).

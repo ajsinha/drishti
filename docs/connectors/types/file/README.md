@@ -127,9 +127,9 @@ A line is one JSON object, in either form (a file may mix them):
   served and searches over it say `partial` with the reason. (A row with `columns` is indexed without parsing its `doc`; a `doc` that
   itself breaks a limit serves searches from its columns and fails to open with the limit named.)
 - **Promoted fields** are declared by the pack on the connector that stores the kind (`layout.<kind>.columns`, chosen as for every store:
-  [BUILD_GUIDE.md, Large kinds](../../../guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)); the `files` profile (`SPRING_PROFILES_ACTIVE=files`) switches the
-  banking packs' store connectors to this plugin and keeps their settings. The trades are read per source system (`trade-endur`,
-  `trade-calypso`, `trade-murex`), which the profile does not rename: point files at the trades with connector files of those names.
+  [BUILD_GUIDE.md, Large kinds](../../../guides/BUILD_GUIDE.md#51-large-kinds-the-lake-layout)); the files in `config/connectors.examples/files/` switch the
+  banking packs' store connectors to this plugin and keep their settings. The trades are read per source system (`trade-endur`,
+  `trade-calypso`, `trade-murex`), which those files do not rename: point files at the trades with connector files of those names.
 
 ## Examples
 
@@ -227,7 +227,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 python tools/drishti.py data load --store files                              # the samples: 1,791 documents x 10 business days, into data/files
 python tools/drishti.py data load --store files --trades 10000               # and a book of 10,000 trades a day for 3 days
 python tools/drishti.py data load --store files /tmp/files --trades 50000    # somewhere else, a larger book
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 `JsonlLoader` (in the plugin; `JsonlLoader FILE|- <root> [--future-days N] [--zone Z]`, run by `python tools/drishti.py data load --store files [root] [--trades N]
@@ -255,7 +255,7 @@ For a million trades a day that is a file of about 7.8 GB and an index of about 
 20–30 seconds on 8 threads (an estimate). Files compress about 8:1 with `gzip`, but compressed files cannot be read by offset, so the
 connector reads them uncompressed.
 
-Measured with the scale benchmark (`tools/bench/scale.sh`, a 24-thread laptop, `-Xmx2g`, the `files` profile; medians of 25 HTTP
+Measured with the scale benchmark (`tools/bench/scale.sh`, a 24-thread laptop, `-Xmx2g`, the `files` connector files; medians of 25 HTTP
 requests; every search exact). The last column is a straight-line **extrapolation**, not a measurement; "flat" means it does not grow
 with the book:
 

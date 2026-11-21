@@ -1138,9 +1138,8 @@ drishti:
 only names them (its `connectors:` mapping is read as a template from which a missing file is generated). Connectors still defined
 under `drishti.sources.connectors` (in `application.yaml`, an `application-<profile>.yaml` or environment variables such as
 `DRISHTI_SOURCES_CONNECTORS_<NAME>_SETTINGS_<KEY>`) keep working and override the file of the same name setting by setting, but the
-server logs a warning at start for each, naming the file that is equivalent, and Admin → Connectors flags them. The per-store
-profiles (`postgres`, `duckdb`, `aerospike`, `mongodb`, `iceberg`, `redis`, `files`) are deprecated in the same way; their equivalents are
-the example files in `config/connectors.examples/<store>/`. A file in `connectors-dir` replaces the pack's template wholesale.
+server logs a warning at start for each, naming the file that is equivalent, and Admin → Connectors flags them. The stores
+(`postgres`, `duckdb`, `aerospike`, `mongodb`, `iceberg`, `redis`, `files`) are connector files, in `config/connectors.examples/<store>/`. A file in `connectors-dir` replaces the pack's template wholesale.
 Scope `packs:admin` also covers writes to `/api/v1/admin/connectors/**`. Full guide: [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 What the bundled file sets under `plugins`:
@@ -2606,7 +2605,7 @@ A connector's settings go in its **connector file**, `config/connectors/<name>.y
 under its own name (the demo plugin) takes them under `drishti.sources.plugins.<plugin>.settings`. Named connectors under
 `drishti.sources.connectors.<name>.settings` in `application.yaml` still start but are **deprecated**: the server logs a warning naming the
 file to write, and they override a file setting by setting until moved
-([../guides/DATA_GUIDE.md section 9.11](../guides/DATA_GUIDE.md#911-moving-off-applicationyaml-and-the-old-data-source-override)). The
+([../guides/DATA_GUIDE.md section 9.11](../guides/DATA_GUIDE.md#911-where-connectors-are-defined)). The
 tables below use the same keys either way. Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
 described in [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
@@ -2683,7 +2682,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | Variable | Default | Pack | Effect |
 |---|---|---|---|
 | `DRISHTI_DELTA_ROOT` | `<data>/delta` | every shipped pack | Root of every pack's Delta Lake connector. |
-| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
+| `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` example files: they change the plugin of the same connectors, and this switch would turn them off too. |
 | `DRISHTI_ALLOW_INSECURE_TLS` | unset | every connector with `tls.*` | Must be `true` for a connector to run with `tls.insecure-trust-all: true` (development only). |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
 | `BROKER_DEFAULT_BOOTSTRAP_SERVERS` | `localhost:9092` | trading, market-risk | Its brokers (and the PV topic's): the default broker by name, `[broker.default] bootstrap-servers=` in the settings file ([Named lakes, databases and brokers](#named-lakes-databases-and-brokers)). |
@@ -2706,18 +2705,16 @@ DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVE
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
 
-### Profiles: another store instead of Delta Lake
+### Stores: another store instead of Delta Lake
 
-`SPRING_PROFILES_ACTIVE=<profile>` (`postgres`, `aerospike`, `duckdb`, `files`, `iceberg`, `mongodb` or `redis`) loads
-`application-<profile>.yaml`, which redefines the banking data-domain connectors (`reference-store`,
-`market-store`, `trade-endur`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
-the lake. The packs still decide kinds, routes and modes.
+The banking data-domain connectors (`reference-store`, `market-store`, `trading-store`, `risk-store`, `credit-store`,
+`collateral-store`) read a database instead of the lake when the connectors folder holds the files for it: one folder of example files
+per store in `config/connectors.examples/<store>/`, read in place by pointing `DRISHTI_CONNECTORS_DIR` at it (or copied into
+`config/connectors/`). The packs still decide kinds, routes and modes ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#911-where-connectors-are-defined)).
 
-**Deprecated.** The profiles still work and the server logs a warning that names the equivalent connector file; the way forward is one YAML file per connector in `config/connectors/` ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)), with an example for every store in `config/connectors.examples/`.
-
-| Profile | Variables | Defaults |
+| Store (folder) | Variables the files read | Defaults |
 |---|---|---|
-| `postgres` | `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD` | `jdbc:postgresql://localhost:5432/drishti`, `drishti`, `drishti` (tables `<domain>.entities`) |
+| `postgres` | `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD` | `jdbc:postgresql://localhost:5432/drishti`, `drishti`, none (set it) (tables `<domain>.entities`) |
 | `aerospike` | `DRISHTI_AEROSPIKE_HOSTS`, `DRISHTI_AEROSPIKE_NAMESPACE` | `localhost:3000`, `test` |
 | `files` | `DRISHTI_FILES_ROOT` | `<data>/files` (`<root>/<domain>/<date>/<kind>.jsonl`) |
 | `iceberg` | `DRISHTI_ICEBERG_ROOT`, `DRISHTI_ICEBERG_CATALOG`, `DRISHTI_ICEBERG_URI`, `DRISHTI_ICEBERG_WAREHOUSE`, `DRISHTI_ICEBERG_CREDENTIAL` | `<data>/iceberg`, `hadoop` (path-based tables); for a REST catalog `rest` and its URI, warehouse and credential |
@@ -2726,7 +2723,7 @@ the lake. The packs still decide kinds, routes and modes.
 | `duckdb` | `DRISHTI_DUCKDB_PATH`, `DRISHTI_DUCKDB_MEMORY` | `data/duckdb/drishti.duckdb`, `1GB` (one file, a schema per domain, `<domain>.entities`; `memory-limit` of the shared DuckDB instance) |
 
 ```bash
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
+DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
   DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-*-exec.jar
 ```
 
@@ -2740,7 +2737,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.shutdown` | `graceful` | Finish requests in flight on stop. |
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
-| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike`, `duckdb`, `files`, `iceberg`, `mongodb` or `redis` ([above](#profiles-another-store-instead-of-delta-lake); deprecated, connector files replace them). |
+| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | A profile of your own (`application-<profile>.yaml` beside the site files); the stores are chosen by connector files, not by a profile ([above](#stores-another-store-instead-of-delta-lake)). |
 | `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine). |
 | `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
 | `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`. |
@@ -2979,7 +2976,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) |
 | `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_VAR_PV_*`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
-| `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_*`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_*`, `DRISHTI_MONGODB_*`, `DRISHTI_REDIS_*` | S | [profiles](#profiles-another-store-instead-of-delta-lake) |
+| `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_*`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_*`, `DRISHTI_MONGODB_*`, `DRISHTI_REDIS_*` | S | [stores](#stores-another-store-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
 | `DRISHTI_AUTH_ENABLED`, `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE` | C | `auth.*` |
 | `DRISHTI_CONSOLE__<SECTION>__<KEY>` | C | any console key |
@@ -2988,9 +2985,9 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,195 settings in 21 areas, and 350 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,191 settings in 21 areas, and 350 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,770, **expert** 407. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,766, **expert** 407. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
@@ -2998,7 +2995,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 329 |
 | [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 5 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 157 |
-| [The console's other files](#the-consoles-other-files) | 108 |
+| [The console's other files](#the-consoles-other-files) | 104 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 533 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
 | [Lenses: `config/lenses/`](#lenses-configlenses) | 56 |
@@ -3288,7 +3285,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.sources.connectors-watch` | string | `auto` |  | server | auto (file events, polling as a fallback) \| poll \| off | restart |  | admin |
 | `drishti.sources.connectors-poll` | duration | `5s` |  | server | how often the files are looked at (also the safety net beside file events) | restart |  | expert |
 | `drishti.sources.connectors-drain` | duration | `3s` |  | server | a connector being restarted or stopped stays open this long so reads in flight finish | restart |  | admin |
-| `drishti.sources.connectors` | map | `{}` |  | server | DEPRECATED: connectors defined here still work (and override the file of the same name, setting by setting), but the server logs a warning naming the equivalent file. Move them to &lt;connectors-dir&gt;/&lt;name&gt;.yaml. | restart |  | admin |
 
 #### `drishti.sources.plugins`
 
@@ -6536,7 +6532,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DRAIN_TOKEN_FILE` | drishti.py node | none | tools | A file holding the drain token (instead of DRISHTI\_DRAIN\_TOKEN) |
 | `DRISHTI_DRAIN_WAIT` | `drishti.node.drain.on-stop-wait-seconds`, drishti.node.drain.on-stop-wait-seconds, drishti.py node drain | `90` | server, server, tools | how long that drain waits for safeToStop before the stop goes on anyway |
 | `DRISHTI_DUCKDB_MEMORY` | duckdb profile | `1GB` | profile | The shared DuckDB instance's memory limit |
-| `DRISHTI_DUCKDB_PATH` | duckdb profile | `<data>/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
+| `DRISHTI_DUCKDB_PATH` | duckdb profile | `data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
 | `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `<config>/edit/edit.yaml` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
@@ -6802,6 +6798,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `LAKE_LAKES_DIR` | lake.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `LAKE_PARQUET_ROW_GROUP_MB` | lake writer | none | tools | Row-group size of the Java lake writer, in MB |
 | `SAJHA_API_KEY` | `headers.<header>` (AI) | none | AI | a SAJHA API key (Admin &gt; API keys); or Authorization: Bearer ${SAJHA\_TOKEN} |
-| `SPRING_PROFILES_ACTIVE` | spring.profiles.active | none | server | A profile: postgres, aerospike, duckdb, files, iceberg, mongodb or redis (deprecated: connector files replace them) |
+| `SPRING_PROFILES_ACTIVE` | spring.profiles.active | none | server | A profile of your own (application-&lt;profile&gt;.yaml); the stores are chosen by connector files, not by a profile |
 
 <!-- generated: settings end -->

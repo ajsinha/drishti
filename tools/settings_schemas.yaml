@@ -532,7 +532,7 @@ env:
   - { name: DRISHTI_MONGODB_DATABASE, by: profile, default: drishti, sets: "mongodb profile", meaning: "Its database" }
   - { name: DRISHTI_REDIS_URI, by: profile, default: "redis://localhost:6379", sets: "redis profile", meaning: "The redis profile's server" }
   - { name: DRISHTI_REDIS_CLUSTER, by: profile, default: "false", sets: "redis profile", meaning: "Redis Cluster rather than one server" }
-  - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile: postgres, aerospike, duckdb, files, iceberg, mongodb or redis (deprecated: connector files replace them)" }
+  - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile of your own (application-<profile>.yaml); the stores are chosen by connector files, not by a profile" }
   # read by the code
   - { name: DRISHTI_TMP_DIR, by: "server, console, tools", default: "<data dir>/tmp", sets: "java.io.tmpdir, the console's tmp_dir", meaning: "The base of every temporary folder Drishti makes" }
   - { name: LAKE_PARQUET_ROW_GROUP_MB, by: tools, default: ~, sets: "lake writer", meaning: "Row-group size of the Java lake writer, in MB" }
