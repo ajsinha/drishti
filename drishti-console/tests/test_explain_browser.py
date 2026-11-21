@@ -181,6 +181,7 @@ def test_every_button_of_the_one_explain(stack, browser):
         drawer_ready(pg, "why")
         wait(pg, "document.querySelector('[data-dx-why]').dataset.painted === %r" % view, 180)
         assert pg.get_attribute(f'[data-dx-view="{view}"]', "aria-pressed") == "true"
+        shot(pg, f"explain-why-{view}")
     frm = pg.input_value("[data-dx-from]")
     assert frm
     pg.locator(".dx-dates button[type=submit]").click()
@@ -253,6 +254,7 @@ def test_var_explain_opens_the_page_at_why_it_moved_and_a_phone_gets_a_sheet(sta
     assert pg.evaluate("document.querySelector('[data-explain-page]').dataset.layout") == "why-a"
     wait(pg, "!!(document.querySelector('[data-dx-waterfall] drishti-chart') || {}).chart", 180)
     assert pg.locator("[data-dx-side] h2").inner_text().startswith("Biggest contributors")
+    shot(pg, "explain-why-page")
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     pg.close()
     ph = open_var(browser, str(stack), "/var?scope=BANK", {"width": 390, "height": 844})

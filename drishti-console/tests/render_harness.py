@@ -14,10 +14,10 @@
 
 """Draws one ViewModel two ways for the parity suite (EMBED_GUIDE.md section 14), with no server and no port: (a) the console's
 server HTML, rendered by the console's own macros (_macros/view.html, panels.html, terminal/_grid.html) into a page with the console's
-sheets and chart scripts, and (b) the client-side renderer into a blank page. Playwright serves both from one made-up origin
+sheets and chart scripts, and (b) the client-side renderer (Drishti Elements' painter behind render()) into a blank page. Playwright serves both from one made-up origin
 (``http://render.test``) by request interception, with the console's Content-Security-Policy on every answer, and records every request
-(none may leave that origin) and every CSP violation. ``read(page)`` takes what is compared: the accessible tree, the visible text, every
-cell, every link and its target, every tone, and every chart's series from its ECharts option."""
+(none may leave that origin) and every CSP violation. ``read(page)`` takes what is compared: the text, every cell, every entity link's
+target, and every chart's series from its ECharts option."""
 from __future__ import annotations
 
 import json
@@ -261,29 +261,29 @@ def _static(path: str):
 READ_JS = """
 async () => {
   const host = document.querySelector('#host');
-  const scope = host && host.shadowRoot ? host.shadowRoot : document;
-  const view = scope.querySelector('.view');
+  const scope = host ? (host.shadowRoot || host) : null;
+  const painted = !!(scope && scope.querySelector('.dv-view'));
+  const view = painted ? scope.querySelector('.dv-view') : document.querySelector('body > .view');
   const vis = (el) => el.checkVisibility ? el.checkVisibility() : !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
   const norm = (s) => String(s || '').replace(/\\s+/g, ' ').trim();
   const E = window.echarts;
   const charts = [];
-  view.querySelectorAll('.pnl').forEach((p) => {
-    p.querySelectorAll('.chart, .xchart').forEach((el, i) => {
+  view.querySelectorAll(painted ? '[data-panel]' : '.pnl').forEach((p) => {
+    p.querySelectorAll(painted ? '.dv-chart' : '.chart, .xchart').forEach((el, i) => {
       const c = E && E.getInstanceByDom(el);
-      if (!c) { charts.push([p.getAttribute('data-panel'), i, el.className.includes('pnl-empty') ? 'empty' : 'none']); return; }
+      if (!c) { return; }
       const o = c.getOption();
       const series = (o.series || []).map((s) => ({ type: s.type, name: s.name == null ? '' : String(s.name), data: JSON.parse(JSON.stringify(s.data || null, (k, v) => typeof v === 'function' ? undefined : v)) }));
-      charts.push([p.getAttribute('data-panel'), i, series]);
+      charts.push([p.getAttribute('data-panel'), series]);
     });
   });
-  // what ECharts draws inside a chart's box (axis ticks laid out to the pixel width) is compared above as series, not as text
-  view.querySelectorAll('.chart > *, .xchart > *').forEach((c) => { c.hidden = true; });
-  const lines = view.innerText.split('\\n').map(norm).filter(Boolean);
-  const cells = [...view.querySelectorAll('td, th')].filter(vis).map((c) => norm(c.textContent));
-  const links = [...view.querySelectorAll('a[href]')].filter(vis).map((a) => [norm(a.textContent), a.getAttribute('href').startsWith('?') ? a.getAttribute('href') : a.href]);
-  const tones = [...view.querySelectorAll('[class*="t-"]')].map((e) => [e.textContent.replace(/\\s+/g, ''), [...e.classList].filter((c) => /^t-/.test(c)).join(' ')]).filter((x) => x[1]);
+  const cells = [...view.querySelectorAll('td, th, dd, dt')].filter(vis).map((c) => norm(c.textContent)).filter(Boolean);
+  // a chart's marks (points, places, nodes) open their entities: on the console also as a list of links under the chart, in the painter by a
+  // click on the mark (the chart's own link event); those are compared as the chart's series, not as links
+  const inChart = (a) => { const p = a.closest(painted ? '[data-panel]' : '.pnl'); return !!(p && p.querySelector(painted ? '.dv-chart' : '.chart, .xchart, .graph, [data-graph]')); };
+  const links = [...view.querySelectorAll('a[href]')].filter((a) => vis(a) && !inChart(a)).map((a) => a.getAttribute('href')).filter((h) => /^\\/v\\//.test(h));
   const se = document.scrollingElement;
-  return { lines, cells, links, tones, charts, overflow: se.scrollWidth - window.innerWidth, csp: window.__csp || [] };
+  return { painted, text: norm(view.textContent), cells, links, charts, overflow: se.scrollWidth - window.innerWidth, csp: window.__csp || [] };
 }
 """
 
@@ -297,17 +297,10 @@ def settle(page, timeout=15000):
 
 
 def read(page) -> dict:
-    out = page.evaluate(READ_JS)
-    host = page.locator("#host")
-    view = host.locator(".view") if host.count() else page.locator("body > .view")
-    out["aria"] = view.first.aria_snapshot()
-    return out
+    """What is compared of a drawn view: its text, every cell, every entity link, every chart's series (from the engine's option)."""
+    return page.evaluate(READ_JS)
 
 
 async def read_async(page) -> dict:
     """read(), on Playwright's async API (the per-worker browser of browser_harness.py)."""
-    out = await page.evaluate(READ_JS)
-    host = page.locator("#host")
-    view = host.locator(".view") if await host.count() else page.locator("body > .view")
-    out["aria"] = await view.first.aria_snapshot()
-    return out
+    return await page.evaluate(READ_JS)

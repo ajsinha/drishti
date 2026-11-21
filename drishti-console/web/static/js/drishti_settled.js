@@ -71,7 +71,8 @@
         var st = C ? C.PanelCharts.state(el) : (el.querySelector('svg, canvas') ? 'drawn' : 'none');
         if (st === 'none') { undrawn += 1; } else if (animations !== false && st === 'animating') { moving += 1; }
       });
-      if (s !== document && s.querySelector('[aria-busy="true"]')) { why.push('render host busy'); }
+      // a render host still painting; a panel the ViewModel itself says is loading (its state, drawn as a skeleton) is drawn
+      if (s !== document && s.querySelector('[aria-busy="true"]:not(.drishti-state-loading)')) { why.push('render host busy'); }
       drawing += s.querySelectorAll('[data-dg-drawing]').length;
     });
     if (undrawn) { why.push(undrawn + ' chart(s) not drawn'); }

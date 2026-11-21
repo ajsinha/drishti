@@ -17,7 +17,7 @@
    Workbook part and handed to the host as data (toJSON) to put in a workbook, a pack or a message. The browser builds no workbook (the
    server writes it, as the person asking): this keeps what the person saw and said beside the number, nothing more. A picture is
    drawn through an <img> (an SVG is a data URL, never inserted as markup), the note as text. */
-import { ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
+import { ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
 
 const IMAGE = /^data:image\/(png|svg\+xml);/;
 

@@ -18,8 +18,8 @@ same host application (tools/elements-demo, ``/?elements=2``) and the same real 
 Chromium. Elements 1.x stays as it is (test_embed_elements_browser.py, unchanged); this file runs on its own ports.
 
 What it proves: the first view is live under the host's strict CSP, drawn from the ViewModel (``"contract": "1.0"``, no HTML over the
-wire), with masks; a link is a ``drishti:navigate`` the host takes over; the console's behaviours run inside the element (the Pivot tab's
-grid from the records the embed API reads, the column funnels); About is drawn from JSON in the element; one live connection per page
+wire), with masks; a link is a ``drishti:navigate`` the host takes over; every panel inside the element is drawn by Drishti Elements'
+painter (drishti-views), styled by one adopted sheet; About is drawn from JSON in the element; one live connection per page
 (a ``vm:`` subscription, panels as JSON); the versioned paths answer (``/embed/v2/render/<v>/``, ``/embed/v2/elements/2/``, a partial
 version's 302, a retired one's 410) and the served bytes match the integrity record. Skipped without Playwright, Chromium or the jar."""
 import json
@@ -52,6 +52,10 @@ def browser(stack):  # noqa: F811
 
 
 class Page2(E.Page):
+    def title(self, sel="#main"):
+        """The view's title: drawn by Drishti Elements' painter inside the element."""
+        return self.js(f"(document.querySelector('{sel}').shadowRoot.querySelector('.dv-id')||{{}}).textContent")
+
     def open(self, path="/?elements=2"):
         self.page.goto(E.HOST + path)
         self.state("#main", "live", timeout=30000)
@@ -86,7 +90,7 @@ def test_the_first_view_is_live_drawn_from_the_view_model_under_the_host_s_csp(h
     h.open()
     assert h.js("window.DrishtiElements.version") == rd.VERSION and h.js("window.DrishtiElements.renderer") == rd.VERSION
     assert h.title() == E.MAIN_ID
-    assert "MTM" in h.js("document.querySelector('#main').shadowRoot.querySelector('.strip').innerText")
+    assert "MTM" in h.js("document.querySelector('#main').shadowRoot.querySelector('.dv-strip').innerText")
     h.until(lambda: len(h.events("tick", "main")) >= 2, 25, "two ticks of the main view")
     views = [r for r in h.requests if r[0] == "GET" and "/embed/v2/views/" in r[1]]
     assert views and not [r for r in h.requests if "/embed/v1/" in r[1]], "Elements 2.0 speaks the embed API v2 only"
@@ -104,14 +108,14 @@ def test_the_view_model_carries_its_contract_and_masks(host):
     vm = h.js("document.querySelector('#main').handle.viewModel")
     assert vm["contract"] == "1.0" and vm["ref"] == {"kind": E.KIND, "id": E.MAIN_ID}
     E.show(h, "trade", E.TRADE_ID)
-    assert "•••" in h.js("document.querySelector('#main').shadowRoot.querySelector('.view').innerText")
+    assert "•••" in h.js("document.querySelector('#main').shadowRoot.querySelector('.dv-view').innerText")
 
 
 def test_a_link_is_a_navigate_event_the_host_takes_over(host):
     h = host()
     h.open()
-    link = h.page.locator("#main a.lnk[data-r-link='entity']").first
-    kind, ident = link.get_attribute("data-r-kind"), link.get_attribute("data-r-id")
+    link = h.page.locator("#main .dv-panel a.dv-link[href*='/v/']").first
+    kind, ident = link.get_attribute("href").split("/v/", 1)[1].split("/", 1)
     link.click()
     h.until(lambda: h.events("navigate", "main"), 10, "drishti:navigate")
     h.until(lambda: h.js("document.querySelector('#main').getAttribute('entity')") == ident, 15, "the element shows the linked entity")
@@ -119,14 +123,14 @@ def test_a_link_is_a_navigate_event_the_host_takes_over(host):
     assert h.js("location.pathname + location.search") == "/?elements=2", "the host's page never navigates"
 
 
-def test_the_console_s_behaviours_run_inside_the_element_and_about_comes_as_json(host):
+def test_the_painter_draws_inside_the_element_and_about_comes_as_json(host):
     h = host()
     h.open()
     E.show(h, "netting-set", E.NETTING_SET)
     root = "document.querySelector('#main').shadowRoot"
-    h.until(lambda: h.js(f"!!{root}.querySelector('th .cf-btn')"), 15, "the column funnels")
-    # a table's Pivot opens the console's pivot screen (the pivot engine) in a window of its own; nothing is pivoted in the element
-    assert not [r for r in h.requests if "/records" in r[1]], "no panel rows are read for a pivot inside the element"
+    h.until(lambda: h.js(f"{root}.querySelectorAll('.dv-panel').length > 0"), 15, "the panels, drawn by drishti-views")
+    assert h.js(f"{root}.adoptedStyleSheets.length") == 1, "one sheet, adopted: the host page's style-src is not asked"
+    assert not [r for r in h.requests if "/records" in r[1]], "no panel rows are read inside the element"
     h.page.locator("#main [data-r-about]").click()
     h.until(lambda: h.js(f"!!{root}.querySelector('.r-about .about-card')"), 15, "About this page")
     assert [r for r in h.requests if "/embed/v2/views/" in r[1] and "/about" in r[1]]
@@ -134,9 +138,10 @@ def test_the_console_s_behaviours_run_inside_the_element_and_about_comes_as_json
 
 
 def test_the_versioned_paths_answer_and_the_bytes_match_the_record(stack):  # noqa: F811 - the stack serves the paths
-    status, headers, _ = get(E.CONSOLE_URL + "/embed/v2/render/2/drishti-render.js")
+    major = rd.VERSION.split(".")[0]
+    status, headers, _ = get(E.CONSOLE_URL + f"/embed/v2/render/{major}/drishti-render.js")
     assert status == 200 or status == 302
-    req = urllib.request.Request(E.CONSOLE_URL + "/embed/v2/render/2/drishti-render.js", headers={"Origin": E.HOST})
+    req = urllib.request.Request(E.CONSOLE_URL + f"/embed/v2/render/{major}/drishti-render.js", headers={"Origin": E.HOST})
 
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *a, **k):

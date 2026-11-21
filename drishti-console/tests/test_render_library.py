@@ -29,8 +29,8 @@ EXTERNAL = re.compile(r"""(?:from|import)\s*\(?\s*['"]https?://|(?:src|href)\s*=
 
 
 def js_files():
-    """The current version's files and the renderer's own modules (drishti-renderer, under static/elements/)."""
-    return sorted(SRC.rglob("*.js")) + sorted(rd.LIBRARY.glob("*.js"))
+    """The current version's files: its entries and its host part (m/)."""
+    return sorted(SRC.rglob("*.js"))
 
 
 def code(path) -> str:
@@ -59,7 +59,7 @@ def test_the_sheet_is_generated_and_current():
     assert (SRC / rd.SHEET).read_text(encoding="utf-8") == text, "stale: python3 tools/render_sheet.py"
     assert "@font-face" not in text and ":root" not in text and "@container drishti" in text
     assert "[hidden] { display: none !important; }" in text
-    for glyph in ("inbox", "lock", "question-circle", "hand-index", "arrow-left", "chevron-down"):
+    for glyph in ("arrow-left", "info-circle", "shield-lock", "box-arrow-in-right"):
         assert f".bi-{glyph}::before" in text, glyph
 
 
@@ -79,28 +79,31 @@ def test_every_file_has_the_licence_and_stays_under_the_cap():
             text = p.read_text(encoding="utf-8")
             assert "PROPRIETARY AND CONFIDENTIAL" in text[:1200], p
             assert p.name == rd.SHEET or len(text.splitlines()) <= CODE_LINE_CAP, p          # the generated sheet is not a source
-            assert rd.LIBRARY not in p.parents or len(text.splitlines()) <= CODE_LINE_CAP, p  # an Elements module: the one code cap
 
 
-def test_every_kind_of_the_grammar_is_drawn():
-    kinds = re.search(r"KINDS = Object\.freeze\(\[(.*?)\]\)", (rd.LIBRARY / "drishti_kinds.js").read_text(encoding="utf-8"), re.S).group(1)
-    drawn = set(re.findall(r"'([a-z]+)'", kinds))
+def test_every_kind_of_the_grammar_is_drawn_by_the_painter():
+    """Every panel kind the console's macros draw has a painter in Drishti Elements' drishti-views (the one way to draw a ViewModel in the
+    browser); facets, the old renderer's kind that no server sends, is gone (I7B_DUPLICATES DD-11)."""
+    views = elements_pin.ROOT / "elements" / "drishti-views" / "src"
+    text = "\n".join(p.read_text(encoding="utf-8") for p in views.glob("*.js"))
+    drawn = set(re.findall(r"defineKind\('([a-z-]+)'", text))
+    drawn |= set(re.findall(r"'([a-z]+)'", re.search(r"CHART_KINDS = Object\.freeze\(\[(.*?)\]\)", text, re.S).group(1)))
     macro = set(re.findall(r"p\.kind (?:==|in) \[?'([a-z]+)'", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")))
     macro |= set(re.findall(r"'([a-z]+)'", re.search(r"p\.kind in \(([^)]*)\)", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")).group(1)))
-    assert len(drawn) == 23 and macro <= drawn, sorted(macro - drawn)
+    assert macro - {"facets"} <= drawn, sorted(macro - drawn)
 
 
-def test_the_renderer_draws_with_the_libraries_and_keeps_no_grid_chart_format_or_live_code_of_its_own():
-    """The owner's rule (2026-11-07): tables are drishti-grid's, charts drishti-chart's (the only place an engine is called), formats and
-    the element maker drishti-core's, streams drishti-events (raw mode); one component test covers the console and the renderer."""
+def test_the_host_part_draws_no_panel_and_keeps_no_grid_chart_format_or_live_code_of_its_own():
+    """No dual machinery (owner 11-16): every panel is drawn by the painter (drishti-views paint()); the host part only fetches, signs in,
+    navigates and draws its own bar, sign-in card and About sheet. Streams are drishti-events' (raw mode)."""
     src = {p.name: code(p) for p in rd.LIBRARY.glob("*.js")}
-    engine = re.compile(r"echarts\.init|\.setOption\(|getInstanceByDom|new EventSource|\.toFixed\(|Intl\.NumberFormat|createElement\('table'\)|h\('table'")
+    engine = re.compile(r"echarts\.init|\.setOption\(|getInstanceByDom|new EventSource|\.toFixed\(|Intl\.NumberFormat|createElement\('table'\)|h\('table'|h\('td'")
     assert {k: engine.findall(v) for k, v in src.items() if engine.search(v)} == {}
-    gone = {"drishti_tables.js", "drishti_charts.js", "drishti_draw.js", "drishti_format.js"}
-    assert not gone & set(src), "the renderer's private table, chart and format modules are gone (no dual machinery)"
     joined = "\n".join(src.values())
-    for lib in ("drishti-grid", "drishti-chart", "drishti-core", "drishti-events"):
+    for lib in ("drishti-views", "drishti-core", "drishti-events"):
         assert f"/vendor/drishti-elements/{elements_pin.VERSION}/elements/{lib}/src/drishti_index.js" in joined, lib   # the vendored copy
+    assert "paint as paintView" in src["drishti_screen.js"]
+    assert not (rd.WEB / "static" / "elements" / "drishti-renderer").exists(), "the old renderer library is gone"
 
 
 def test_the_playground_asks_for_sign_in_first():

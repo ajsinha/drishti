@@ -12,24 +12,21 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer's behaviour (docs/guides/EMBED_GUIDE.md): formats, tones and the DOM rules as units; a hostile
-ViewModel; a streamed (GenUI) screen that ends equal to a one-shot render; live patches and the stream; in-place navigation with its
-back stack and the navigate event; sorting the way the console sorts; drill-downs, tree rows and tabs by keyboard; 44 px targets on a
-phone; the playground. Every page runs under the console's CSP on one made-up origin; no request may leave it and window.open is never
-called in place."""
-import copy
+"""The client-side renderer in a real browser (docs/guides/EMBED_GUIDE.md sections 5 to 14): render() over Drishti Elements' painter
+(drishti-views paint()), Drishti's host part around it. What the host part owes: a hostile ViewModel draws as text only; every case of
+VIEWMODEL.md draws with no page error, no CSP violation, no request off the console's origin and no sideways scroll at 390 px; live frames
+and the console's raw stream are applied in place by the painter; in-place navigation with its own back stack and the navigate event,
+which the host may take; a row with a pick says so; the playground. Every page runs under the console's CSP on one made-up origin, and
+window.open is never called in place. The panels themselves (tables, sorting, tabs, charts, formats) are tested by Drishti Elements."""
 import json
-import math
 
 import pytest
 
 import render_cases as cases
 import render_harness as H
-from core import elements_pin as _pin
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-E = _pin.URL + "/elements/"      # the libraries the renderer draws with: Elements' vendored tree (core/elements_pin.py)
-R = "/static/elements/"          # drishti-renderer: the console's own
+M = f"/static/render/{H.render_dist.VERSION}/m/"      # the host part
 
 
 @pytest.fixture(scope="module")
@@ -51,20 +48,28 @@ def site():
     return s
 
 
-@pytest.fixture
-def lab(browser, site):
-    page = browser.new_page(viewport={"width": 1280, "height": 900})
+def _open(browser, site, width=1280, height=900):
+    page = browser.new_page(viewport={"width": width, "height": height})
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
+    page.on("console", lambda m: errors.append(m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
+    page.on("response", lambda r: errors.append(f"{r.status} {r.url}") if r.status >= 400 else None)
     page.route("**/*", site.handle)
-    before = len(site.requests)
     page.goto(H.ORIGIN + "/render-test/lab.html")
     page.wait_for_function("() => window.__lab === true")
+    return page, errors
+
+
+@pytest.fixture
+def lab(browser, site):
+    before = len(site.requests)
+    page, errors = _open(browser, site)
     yield page
     try:
         assert errors == [], errors
         assert page.evaluate("() => window.__csp") == []
         assert [u for u in site.requests[before:] if not u.startswith(H.ORIGIN + "/")] == []
+        assert page.evaluate("() => window.__opened") == []
     finally:
         page.close()
 
@@ -75,56 +80,21 @@ def render(page, name, opts=None):
 
 
 def view(page):
-    return page.locator("#host .view")
+    return page.locator("#host .dv-view")
 
 
-# ---- units: formats, tones and the DOM rules ---------------------------------------------------------------------------------------
-NUMBERS = [74.0, 73.2, 0.1, 1e16, 1e17, 1.5e-5, 1e-4, 123456.789, -0.5, 2.0 ** 53, 1 / 3]
-HALVES = [(0.5, 0), (1.5, 0), (2.5, 0), (-2.5, 0), (2.675, 2), (0.125, 2), (36.45, 1), (33.35, 1)]
+def title(page):
+    return view(page).locator(".dv-id").inner_text()
 
 
-def test_formats_are_the_libraries_and_round_half_up(lab):
-    """The renderer formats nothing of its own: a raw number (an older server's candles) is drishti-core's Python float text, the figures
-    the macros compute (a share, a bar's width, a heat bucket) are rounded half up by drishti-core, as the server's FormatSpec (decided),
-    and axis ticks are drishti-chart's."""
-    got = lab.evaluate("""async ([nums, halves]) => {
-      const C = await import('%sdrishti-core/src/drishti_index.js'), G = await import('%sdrishti-grid/src/drishti_index.js');
-      const K = await import('%sdrishti-chart/src/drishti_index.js'), R = await import('%sdrishti-renderer/src/drishti_index.js');
-      return { floats: nums.map(C.formatPythonFloat), rounds: halves.map(([x, n]) => C.roundHalfUp(x, n)),
-        share: [1 / 3, 1 / 2, 2 / 8].map((x) => C.formatNumber(x * 100, { decimals: 1, grouping: false })),
-        compact: [1750000, -1.2e9, 250000, 12345, 3.14159, NaN].map(K.panelCompact), heat: [G.heatBucket(-2, -2, 7), G.heatBucket(7, -2, 7), G.heatBucket(2.5, -2, 7), G.heatBucket(1, 1, 1)],
-        tones: [R.toneClass({tone: 'neg'}), R.toneClass({})] };
-    }""" % (E, E, E, R), [NUMBERS, HALVES])
-    assert got["floats"] == [repr(x) if not math.isinf(x) else "inf" for x in NUMBERS]
-    assert got["rounds"] == ["1", "2", "3", "3", "2.68", "0.13", "36.5", "33.4"]     # the digits, half up on the decimal value (the sign is the format's)
-    assert got["share"] == ["33.3", "50.0", "25.0"]
-    assert got["compact"] == ["1.75m", "−1.2bn", "250k", "12.3k", "3.14", ""]
-    assert got["heat"] == [0, 9, 5, 5]                        # 4.5 rounds up to 5 (Python's round gave 4)
-    assert got["tones"] == [" t-neg", ""]
-
-
-def test_the_dom_rules_refuse_markup_handlers_styles_and_script_urls(lab):
+# ---- the host part's own elements and a hostile ViewModel ---------------------------------------------------------------------------
+def test_the_host_part_s_elements_refuse_markup_handlers_styles_and_script_urls(lab):
     got = lab.evaluate("""async () => {
-      const C = await import('%sdrishti-core/src/drishti_index.js'), R = await import('%sdrishti-renderer/src/drishti_index.js');
-      const D = { h: R.h, safeUrl: C.safeUrl, attrAllowed: C.attrAllowed };
-      const urls = ['javascript:alert(1)', ' JaVaScRiPt:x', '\\u0001javascript:x', 'data:text/html,x', 'vbscript:x', '//evil.example/x', '/v/trade/X', '?dr.p=1', '#x', 'https://www.sec.gov/x', 'http://a/b'];
+      const D = await import('%sdrishti_dom.js');
       const el = D.h('span', { onclick: 'alert(1)', style: 'color:red', title: 't', 'data-x': '1', 'aria-label': 'a', href: 'javascript:alert(1)', srcdoc: 'x' }, '<img src=x onerror=alert(1)>');
-      return { urls: urls.map((u) => D.safeUrl(u)), names: ['onclick', 'ONLOAD', 'style', 'srcdoc', 'src', 'href', 'data-ev', 'aria-pressed', 'class', 'formaction'].map(D.attrAllowed),
-        attrs: [...el.attributes].map((a) => a.name).sort(), children: el.childNodes.length, kind: el.firstChild.nodeType, imgs: el.querySelectorAll('img').length };
-    }""" % (E, R))
-    assert got["urls"] == [None, None, None, None, None, None, "/v/trade/X", "?dr.p=1", "#x", "https://www.sec.gov/x", "http://a/b"]
-    assert got["names"] == [False, False, False, False, False, True, True, True, True, False]
-    assert got["attrs"] == ["aria-label", "data-x", "title"]
-    assert got["children"] == 1 and got["kind"] == 3 and got["imgs"] == 0
-
-
-def test_sorting_reads_values_the_way_the_console_does(lab):
-    texts = ["1.5m", "−30,205,543", "250k", "4.25%", "2026-10-02", "abc", "−1.2bn", "12bp", "", "Zed"]
-    got = lab.evaluate("""async (texts) => {
-      const C = await import('%sdrishti-core/src/drishti_index.js');
-      return texts.slice().sort((a, b) => C.compareTextKeys(C.textSortKey(a), C.textSortKey(b)));
-    }""" % E, texts)
-    assert got == ["−1.2bn", "−30,205,543", "4.25%", "12bp", "250k", "1.5m", "2026-10-02", "", "abc", "zed".capitalize()]
+      return { attrs: [...el.attributes].map((a) => a.name).sort(), children: el.childNodes.length, kind: el.firstChild.nodeType, imgs: el.querySelectorAll('img').length };
+    }""" % M)
+    assert got == {"attrs": ["aria-label", "data-x", "title"], "children": 1, "kind": 3, "imgs": 0}
 
 
 def test_a_hostile_view_model_draws_text_only(lab, site):
@@ -138,79 +108,55 @@ def test_a_hostile_view_model_draws_text_only(lab, site):
     render(lab, "hostile")
     got = lab.evaluate("""() => { const r = document.getElementById('host').shadowRoot;
       return { scripts: r.querySelectorAll('script, img, iframe').length, pwned: !!window.__pwned, hrefs: [...r.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((h) => /^javascript/i.test(h)),
-        handlers: [...r.querySelectorAll('*')].some((e) => [...e.attributes].some((a) => /^on/i.test(a.name))), title: r.querySelector('h1').textContent }; }""")
+        handlers: [...r.querySelectorAll('*')].some((e) => [...e.attributes].some((a) => /^on/i.test(a.name))), title: r.querySelector('.dv-id').textContent }; }""")
     assert got == {"scripts": 0, "pwned": False, "hrefs": [], "handlers": False, "title": evil}
-    # the only style attributes are the CSSOM widths the renderer sets itself (bars, gauges, grid cells), never from data
-    assert lab.evaluate("() => [...document.getElementById('host').shadowRoot.querySelectorAll('[style]')].every((e) => /^(width|--sg-po|grid|height|left|top)/.test(e.getAttribute('style').trim()) || e.closest('.chart, .xchart'))")
 
 
-# ---- GenUI: a streamed screen ends as a one-shot render -----------------------------------------------------------------------
-@pytest.mark.parametrize("name", ["showcase", "grid-areas", "states"])
-def test_a_streamed_view_model_ends_equal_to_a_one_shot_render(browser, site, name):
-    vm = cases.edge_cases()[name]
-    stubs = [{k: p[k] for k in ("id", "kind", "title", "area", "span", "height") if k in p} for p in vm["panels"][:-2]]
-    skeleton = {**copy.deepcopy(vm), "panels": stubs}
-    late = vm["panels"][-2:]
-    messages = [{"type": "skeleton", "view": skeleton}]
-    for p in vm["panels"][:-2][::-1]:                                      # bound in any order: here the last first
-        messages.append({"type": "panel-replace", "panel": p})
-    for i, p in enumerate(late):                                           # panels the skeleton did not announce
-        messages.append({"type": "panel-add", "panel": p, "after": (vm["panels"][-3] if i == 0 else late[0])["id"]})
-    messages.append({"type": "done", "provenance": vm["provenance"]})
-    site.add_vm(f"stream-{name}", vm)
-    site.pages[f"/render-test/vm/stream-{name}-messages.json"] = json.dumps(messages)
-    reads = []
-    for mode in ("once", "stream"):
-        page = browser.new_page(viewport={"width": 1280, "height": 900})
-        page.route("**/*", site.handle)
-        page.goto(H.ORIGIN + "/render-test/lab.html")
-        page.wait_for_function("() => window.__lab === true")
-        if mode == "once":
-            render(page, f"stream-{name}", {"tables": False})
-        else:
-            busy = page.evaluate("""async (n) => {
-              const ms = await window.vm(n + '-messages');
-              async function* gen() { for (const m of ms) { await new Promise((r) => setTimeout(r, 5)); yield m; } }
-              window.h = window.R.render(document.getElementById('host'), gen(), { tables: false });
-              await new Promise((r) => setTimeout(r, 1));
-              const first = document.getElementById('host').shadowRoot.querySelector('.view');
-              const was = first ? first.getAttribute('aria-busy') : 'none';
-              await window.h.ready;
-              return [was, document.getElementById('host').shadowRoot.querySelector('.view').getAttribute('aria-busy')];
-            }""", f"stream-{name}")
-            assert busy[1] is None, busy
-            H.settle(page)
-            assert any(e[0] == "ready" for e in page.evaluate("() => window.__events"))
-        reads.append(H.read(page))
+# ---- every case draws, cleanly, at both widths -------------------------------------------------------------------------------------
+@pytest.mark.parametrize("width", [1280, 390])
+def test_every_case_draws_under_the_policy_without_errors_or_sideways_scroll(browser, site, width):
+    page, errors = _open(browser, site, width, 844)
+    before = len(site.requests)
+    try:
+        for name in {**cases.edge_cases(), **cases.fixture_views()}:
+            render(page, name, {"theme": "terminal"})
+            n = page.evaluate("() => document.getElementById('host').shadowRoot.querySelectorAll('.dv-panel').length")
+            assert n >= 1, name
+            assert page.evaluate("() => document.scrollingElement.scrollWidth - window.innerWidth") <= 1, name
+        assert errors == [] and page.evaluate("() => window.__csp") == []
+        assert [u for u in site.requests[before:] if not u.startswith(H.ORIGIN + "/")] == []
+    finally:
         page.close()
-    a, b = reads
-    for k in ("aria", "lines", "cells", "links", "tones", "charts"):
-        assert a[k] == b[k], f"{name}: {k} differs after streaming"
 
 
-# ---- live: patches and the stream ----------------------------------------------------------------------------------------------
-def test_patches_change_the_strip_a_panel_and_the_banners_in_place(lab):
+def test_the_sheet_is_adopted_and_no_page_stylesheet_is_loaded(lab):
+    render(lab, "showcase", {"theme": "terminal"})
+    got = lab.evaluate("""() => ({ adopted: document.getElementById('host').shadowRoot.adoptedStyleSheets.length,
+      pageSheets: [...document.querySelectorAll('link[rel~=stylesheet]')].map((l) => l.href).filter((h) => !h.endsWith('/render-test/page.css')),
+      bg: getComputedStyle(document.getElementById('host')).backgroundColor })""")
+    assert got["adopted"] == 1 and got["pageSheets"] == [] and got["bg"] not in ("", "rgba(0, 0, 0, 0)")
+
+
+# ---- live: frames and the stream ----------------------------------------------------------------------------------------------
+def test_frames_change_the_strip_and_a_panel_in_place(lab):
     render(lab, "showcase")
-    lab.evaluate("() => { window.keep = document.getElementById('host').shadowRoot.querySelector('#p-terms'); }")
+    lab.evaluate("() => { window.keep = document.getElementById('host').shadowRoot.querySelector('[data-panel=\"terms\"]'); }")
     sc = cases.showcase()
     metric = next(p for p in sc["panels"] if p["id"] == "headline")
     metric["data"]["value"]["text"] = "−1,300,000"
-    metric["data"]["value"]["tone"] = "neg"
     frame = {"seq": 1, "generation": 2, "patches": [
         {"op": "strip", "index": 3, "cell": {"label": "MTM (USD)", "text": "−1,300,000", "tone": "neg", "emphasis": True}},
-        {"op": "panel", "panel": metric},
-        {"op": "provenance", "provenance": {**sc["provenance"], "generation": 2, "stale": True, "source": "ledger", "updatedAt": "2026-10-30T09:00:00Z", "staleAfter": "PT5M"}},
-        {"op": "sparkle", "x": 1}]}
-    changed = lab.evaluate("(f) => window.h.patch(f)", frame)
-    assert changed == {"strip": [3], "panels": ["headline"]}
+        {"op": "panel", "panel": metric}, {"op": "sparkle", "x": 1}]}
+    assert lab.evaluate("(f) => window.h.patch(f)", frame) == {"strip": [3], "panels": ["headline"]}
+    lab.wait_for_function("() => document.getElementById('host').shadowRoot.querySelector('.dv-fig[data-index=\"3\"] dd').textContent === '−1,300,000'")
     r = lab.evaluate("""() => { const s = document.getElementById('host').shadowRoot;
-      return { strip: s.querySelector('[data-r-strip="3"] dd').textContent, tone: s.querySelector('[data-r-strip="3"] dd').className,
-        metric: s.querySelector('#p-headline .metric-v').textContent, banner: !!s.querySelector('.stale-banner'), same: s.querySelector('#p-terms') === window.keep,
-        gen: s.querySelector('.view').getAttribute('data-generation') }; }""")
-    assert r == {"strip": "−1,300,000", "tone": "mono t-neg emph live-cell", "metric": "−1,300,000", "banner": True, "same": True, "gen": "2"}
-    lab.evaluate("() => window.h.patch({ seq: 2, patches: [{ op: 'deleted', at: '2026-10-30T10:00:00Z' }, { op: 'strip', index: 0, cell: { text: 'IGNORED' } }] })")
-    assert lab.locator("#host .r-deleted-banner").count() == 1
-    assert "IGNORED" not in view(lab).inner_text()
+      return { metric: s.querySelector('[data-panel="headline"]').textContent.includes('−1,300,000'), same: s.querySelector('[data-panel="terms"]') === window.keep,
+        gen: document.getElementById('host').getAttribute('data-generation') }; }""")
+    assert r == {"metric": True, "same": True, "gen": "2"}
+    assert [e[1]["changed"] for e in lab.evaluate("() => window.__events") if e[0] == "tick"] == [{"strip": [3], "panels": ["headline"]}]
+    lab.evaluate("() => window.h.patch({ seq: 2, patches: [{ op: 'deleted', at: '2026-10-30T10:00:00Z' }] })")
+    lab.locator("#host .dv-deleted").wait_for()
+    assert any(e[0] == "deleted" for e in lab.evaluate("() => window.__events"))
 
 
 def test_subscribe_follows_the_console_s_raw_stream(lab, site):
@@ -219,7 +165,7 @@ def test_subscribe_follows_the_console_s_raw_stream(lab, site):
     site.pages["/api/stream/trade/SAMPLE?raw=1"] = f"event: view\ndata: {json.dumps(sc)}\n\nevent: frame\ndata: {json.dumps(frame)}\n\n"
     render(lab, "showcase")
     lab.evaluate("() => { window.stop = window.h.subscribe(); }")
-    lab.wait_for_function("() => document.getElementById('host').shadowRoot.querySelector('[data-r-strip=\"0\"] dd').textContent === 'USD 26,000,000'")
+    lab.wait_for_function("() => document.getElementById('host').shadowRoot.querySelector('.dv-fig[data-index=\"0\"] dd').textContent === 'USD 26,000,000'")
     lab.evaluate("() => window.stop()")
     assert any(u.endswith("/api/stream/trade/SAMPLE?raw=1") for u in site.requests)
 
@@ -231,130 +177,57 @@ def _target(site):
     return t
 
 
+def _cp(page):
+    return page.locator("#host .dv-title a.dv-link")
+
+
 def test_an_entity_link_opens_in_place_with_a_back_stack(lab, site):
     t = _target(site)
-    render(lab, "links-and-tones")
-    lab.locator("#host .with-cp a").click()
+    render(lab, "links-and-tones", {"live": False})                     # the opened trade is live: its stream is the next test's
+    assert _cp(lab).get_attribute("href") == "/v/counterparty/CP-NORTHBRIDGE"      # a real link: open in a new tab works
+    _cp(lab).click()
     lab.wait_for_function("() => window.h.depth === 1")
     H.settle(lab)
-    assert view(lab).locator("h1.vid").inner_text() == t["title"]["id"]
+    assert title(lab) == t["title"]["id"]
     ev = [e for e in lab.evaluate("() => window.__events") if e[0] == "navigate"]
     assert ev and ev[0][1]["kind"] == "counterparty" and ev[0][1]["id"] == "CP-NORTHBRIDGE" and ev[0][1]["target"] == "entity"
     assert lab.url.endswith("/render-test/lab.html")                       # the host's address and window are untouched
     lab.locator("#host [data-r-back]").click()
     lab.wait_for_function("() => window.h.depth === 0")
-    assert view(lab).locator("h1.vid").inner_text() == "DEMO-BOND-1"
-    lab.locator("#host .with-cp a").click()
+    assert title(lab) == "DEMO-BOND-1"
+    _cp(lab).click()
     lab.wait_for_function("() => window.h.depth === 1")
     lab.locator("#host [data-r-back]").focus()
     lab.keyboard.press("Alt+ArrowLeft")                                    # the keyboard's Back, inside the container
     lab.wait_for_function("() => window.h.depth === 0")
-    assert lab.evaluate("() => window.__opened") == []
 
 
 @pytest.mark.parametrize("mode", ["host", "cancelled", "new-window"])
-def test_the_host_may_take_navigation(lab, site, mode):
+def test_the_host_may_take_navigation(browser, site, mode):
     _target(site)
-    if mode == "cancelled":
-        lab.evaluate("() => { window.__cancel = ['navigate']; }")
-    render(lab, "links-and-tones", {"navigation": "host" if mode == "host" else "new-window" if mode == "new-window" else "in-place"})
-    lab.locator("#host .with-cp a").click()
-    lab.wait_for_timeout(300)
-    assert view(lab).locator("h1.vid").inner_text() == "DEMO-BOND-1" and lab.evaluate("() => window.h.depth") == 0
-    assert [e[0] for e in lab.evaluate("() => window.__events")].count("navigate") == 1
-    assert len(lab.evaluate("() => window.__opened")) == (1 if mode == "new-window" else 0)
-
-
-def test_console_and_outside_links_are_events_by_default(lab):
-    render(lab, "links-and-tones")
-    lab.locator("#host #p-terms .pnl-help").click()
-    lab.locator("#host #p-kvl a.ext").click()
-    ev = [e[1] for e in lab.evaluate("() => window.__events") if e[0] == "navigate"]
-    assert [e["target"] for e in ev] == ["console", "outside"]
-    assert lab.url.endswith("/render-test/lab.html") and lab.evaluate("() => window.__opened") == []
-
-
-def test_rows_and_bars_with_events_say_so(lab):
-    render(lab, "links-and-tones")
-    lab.locator("#host #p-cells tbody tr").first.click(position={"x": 400, "y": 5})
-    ev = lab.evaluate("() => window.__events")
-    rc = [e[1] for e in ev if e[0] == "row-click"]
-    assert rc and rc[0]["panel"] == "cells" and rc[0]["event"] == "row-1" and rc[0]["pick"] == "MX-20000001"
-    assert [e[1] for e in ev if e[0] == "select"][0]["value"] == "MX-20000001"
-
-
-# ---- tables, drills, trees, tabs -------------------------------------------------------------------------------------------------
-def test_a_column_sorts_as_the_console_sorts_it(browser, site):
-    vm = cases.more_shapes()
-    site.add_vm("sorting", vm)
-    html = H.console_html(vm).replace("</body>", '<script src="/static/vendor/drishti-elements/3.1.0/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
-                                      '<script src="/static/js/drishti_tables.js"></script></body>')
-    site.add_console("sorting", html)
-    orders = []
-    for side in ("console", "library"):
-        page = browser.new_page(viewport={"width": 1280, "height": 900})
-        page.route("**/*", site.handle)
-        if side == "console":
-            page.goto(H.ORIGIN + "/render-test/console/sorting.html")
-            H.settle(page)
-            page.locator("#p-big thead th").nth(1).click(position={"x": 8, "y": 8})
-            rows = page.locator("#p-big tbody tr:not([hidden])")
-        else:
-            page.goto(H.ORIGIN + "/render-test/lab.html")
-            page.wait_for_function("() => window.__lab === true")
-            render(page, "sorting", {"tables": True})
-            page.locator("#host #p-big thead th").nth(1).locator(".tbl-sort").click()
-            rows = page.locator("#host #p-big tbody tr:not([hidden])")
-        orders.append([rows.nth(i).locator("td").nth(1).inner_text() for i in range(rows.count())])
+    page, errors = _open(browser, site)
+    try:
+        if mode == "cancelled":
+            page.evaluate("() => { window.__cancel = ['navigate']; }")
+        render(page, "links-and-tones", {"navigation": "host" if mode == "host" else "new-window" if mode == "new-window" else "in-place"})
+        _cp(page).click()
+        page.wait_for_timeout(300)  # wait-ok: proving that nothing happens
+        assert title(page) == "DEMO-BOND-1" and page.evaluate("() => window.h.depth") == 0 and page.url.endswith("/render-test/lab.html")
+        assert [e[0] for e in page.evaluate("() => window.__events")].count("navigate") == 1
+        assert len(page.evaluate("() => window.__opened")) == (1 if mode == "new-window" else 0)
+        assert errors == []
+    finally:
         page.close()
-    assert orders[0] == orders[1] and len(orders[1]) == 25
-    assert lab_free_sorted(orders[1])
 
 
-def lab_free_sorted(texts):
-    vals = [float(t.replace("−", "-").replace(",", "")) for t in texts]
-    return vals == sorted(vals)
+def test_a_row_with_a_pick_says_so(lab):
+    render(lab, "links-and-tones")
+    lab.locator("#host [data-panel=\"cells\"] tbody tr[data-pick]").first.click()
+    rc = [e[1] for e in lab.evaluate("() => window.__events") if e[0] == "row-click"]
+    assert rc and rc[0]["panel"] == "cells" and rc[0]["pick"] == "MX-20000001"
 
 
-def test_drill_tree_and_tabs_work_in_place_by_keyboard(lab):
-    render(lab, "more-shapes")
-    lab.locator("#host #p-drill a.dr-open").first.click()
-    assert lab.locator("#host #p-drill .dr-lv:not([hidden]) caption").first.text_content().startswith("Books")
-    assert lab.locator("#host #p-drill [data-dr-crumbs] li").count() == 2
-    lab.locator("#host #p-drill .dr-lv:not([hidden]) a.dr-open").first.focus()
-    lab.keyboard.press("Escape")
-    assert lab.locator("#host #p-drill [data-dr-crumbs] li").count() == 1
-    assert lab.url.endswith("/render-test/lab.html")
-    tab = lab.locator("#host #p-tabin [role=tab]").first
-    tab.focus()
-    lab.keyboard.press("ArrowRight")
-    assert lab.locator("#host #p-tabin [role=tab]").nth(1).get_attribute("aria-selected") == "true"
-    assert lab.locator("#host #p-tabin #tabin-pane-1").is_visible()
-    render(lab, "showcase")
-    tree = lab.locator("#host #p-tree .dt-tp")                                          # the tree table: drishti-tree's tree grid
-    tree.locator(".dg-row").first.wait_for()
-    shown = tree.locator(".dg-row").count()
-    closed = tree.locator(".dg-row[aria-expanded='false']").first
-    closed.locator(".dg-cell").first.click()
-    lab.keyboard.press("ArrowRight")
-    lab.wait_for_function("(n) => document.getElementById('host').shadowRoot.querySelectorAll('#p-tree .dt-tp .dg-row').length > n", arg=shown)
-    assert lab.locator("#host #p-tree table.tbl-tree").is_hidden()                    # the server's table stays, hidden
-
-
-def test_targets_are_44_px_on_a_phone(browser, site):
-    page = browser.new_page(viewport={"width": 390, "height": 844})
-    page.route("**/*", site.handle)
-    page.goto(H.ORIGIN + "/render-test/lab.html")
-    page.wait_for_function("() => window.__lab === true")
-    render(page, "showcase", {"tables": True})
-    small = page.evaluate("""() => [...document.getElementById('host').shadowRoot.querySelectorAll('.pnl-help, .tab-head, .md-btn, .tbl-sort, .tbl-pg-b')]
-      .filter((e) => e.checkVisibility()).map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])
-      .filter(([, w, h]) => w < 44 || h < 44)""")
-    assert small == []
-    assert page.evaluate("() => document.scrollingElement.scrollWidth - window.innerWidth") <= 1
-    page.close()
-
-
+# ---- the playground ---------------------------------------------------------------------------------------------------------------
 def test_the_playground_renders_a_view_of_this_console(browser, site):
     site.pages["/api/view/trade/IRS-48213"] = json.dumps(cases.fixture_views()["view_trade_IRS-48213"])
     # the playground opens on an entity the console says the server holds (no made-up default), and shows the person's lens
@@ -363,8 +236,8 @@ def test_the_playground_renders_a_view_of_this_console(browser, site):
     page.route("**/*", site.handle)
     before = len(site.requests)
     page.goto(H.ORIGIN + f"/static/render/{H.render_dist.VERSION}/demo.html")
-    page.locator("#screen .view h1.vid").wait_for()
-    assert page.locator("#screen .view h1.vid").inner_text() == "IRS-48213"
+    page.locator("#screen .dv-view .dv-id").wait_for()
+    assert page.locator("#screen .dv-view .dv-id").inner_text() == "IRS-48213"
     assert "render(document.getElementById('risk')" in page.locator("[data-code]").inner_text()
     assert "No lens" in page.locator("[data-lens]").inner_text()
     assert page.evaluate("() => (window.__csp || []).length") == 0

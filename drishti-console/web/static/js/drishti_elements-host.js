@@ -16,7 +16,7 @@
 /* The host's settings for Drishti Elements (an external component, vendored under static/vendor/drishti-elements/<version>/;
    docs/architecture/ELEMENTS_IN_DRISHTI.md), loaded by base.html straight after drishti-core's bundle: the one place the console's
    routes are told to Elements. The live-set client, the grid's pivot link and the data client read these endpoints (with none they
-   say the feature is off); the loader learns Drishti's own libraries (drishti-insight, drishti-renderer, drishti-risk), which live
+   say the feature is off); the loader learns Drishti's own libraries (drishti-insight, drishti-risk), which live
    under static/elements/, so a page may load them by name. */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
@@ -25,8 +25,7 @@
   if (!core || !core.configure) { return; }
   core.configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' } });
   var own = drishti_url('/static/elements/');          // drishti-core installed drishti_url (the console's URL sub-path)
-  [['drishti-insight', ['drishti-core']], ['drishti-renderer', ['drishti-core', 'drishti-grid', 'drishti-chart', 'drishti-data', 'drishti-events', 'drishti-graph', 'drishti-tree']],
-    ['drishti-risk', ['drishti-core', 'drishti-grid', 'drishti-chart']]].forEach(function (l) {
+  [['drishti-insight', ['drishti-core']], ['drishti-risk', ['drishti-core', 'drishti-grid', 'drishti-chart']]].forEach(function (l) {
     var short = l[0].replace('drishti-', '');
     core.register(l[0], { base: own, bundle: l[0] + '/drishti_' + short + '.js', requires: l[1], module: l[0] === 'drishti-risk' ? 'banking' : 'core' });
   });

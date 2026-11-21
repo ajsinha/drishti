@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from core import elements_pin
+from core import render_dist as rd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -42,14 +43,13 @@ COMPARE_CALLS = ("startsWith", "endsWith", "indexOf", "lastIndexOf", "includes",
 
 # Not under the console's URL sub-path by design, each with its reason: (file suffix, text on the line).
 ALLOWED: list[tuple[str, str]] = [
-    ("drishti-renderer/src/drishti_screen.js", "const EMBED = '/embed/v2'"),      # joined to o.server, the console's root with its sub-path
-    ("drishti-renderer/src/drishti_embed.js", "export const API = '/embed/v2'"),  # joined to serverOf(), the console's root with its sub-path
-    ("drishti-renderer/src/drishti_signin.js", "const BASE = '/embed/v2/sign-in'"),   # joined to the console's root (this.server)
-    ("drishti-renderer/src/drishti_elements.js", "views(r, '/about'"),           # a suffix of server + API + the view's path
-    ("drishti-renderer/src/drishti_screen.js", "views(r, '/about'"),             # the same, in the screen
+    ("/m/drishti_screen.js", "const EMBED = '/embed/v2'"),      # the client renderer's host part: joined to o.server, the console's root with its sub-path
+    ("/m/drishti_embed.js", "export const API = '/embed/v2'"),  # joined to serverOf(), the console's root with its sub-path
+    ("/m/drishti_signin.js", "const BASE = '/embed/v2/sign-in'"),   # joined to the console's root (this.server)
+    ("/m/drishti_elements.js", "views(r, '/about'"),           # a suffix of server + API + the view's path
+    ("/m/drishti_screen.js", "views(r, '/about'"),             # the same, in the screen
     # the host's endpoints for Drishti Elements: its endpoint(name) puts each under the console's base itself (drishti-core's url())
     ("js/drishti_elements-host.js", "endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' }"),
-    ("elements/drishti-renderer/src/drishti_kinds.js", "configure({ endpoints: { pivotPage: '/pivot' } })"),   # as the host script: drishti-core's endpoint() puts the base path in front
     ("js/drishti_bi-design-model.js", "path.slice('/reports/'.length)"),        # a length, not a URL
 ]
 
@@ -62,7 +62,7 @@ RELATIVE: list[tuple[str, str]] = [
     ("js/drishti_bi-design-model.js", "api"),         # B.api, kept before the designer wraps it
     ("js/drishti_pivot.js", "call"),                  # drishti_url(API + path): the Pivot's own API
     ("js/drishti_pivot-switches.js", "call"),         # the Pivot screen's call (screen().call), the same
-    ("drishti-renderer/src/drishti_about.js", "link"),   # (R.server || basePath()) + href: the console's root, sub-path included
+    ("/m/drishti_about.js", "link"),   # (R.server || basePath()) + href: the console's root, sub-path included
 ]
 
 
@@ -239,6 +239,7 @@ def _js_files() -> list[Path]:
     files = [p for p in STATIC.rglob("*.js") if not ({"vendor", "render"} & set(p.relative_to(STATIC).parts))]
     files = [p for p in files if not (p.parent.parent.name == "elements" and p.name.startswith("drishti_"))]   # a library's bundle: its src/ is read
     files = [p for p in files if "harness" not in p.name and p.name != "drishti_catalogue.js"]    # the libraries' test pages; generated data
+    files += sorted(rd.LIBRARY.glob("*.js"))          # the client renderer's host part (the current version's m/; the published folders are frozen)
     files += list((CONSOLE / "plugins").glob("*/static/**/*.js"))
     files += [p for p in (ROOT / "modules").rglob("*.js") if "console" in p.parts and "static" in p.parts and not ({"node_modules", "target"} & set(p.parts))]   # never build output
     return sorted(files)
@@ -341,12 +342,11 @@ def _names_in(path: Path, start: str) -> set[str]:
 
 def standalone_scripts() -> list[Path]:
     """The console's scripts that a page without drishti-core may load: embed v1's enhancers, what the renderers load beside themselves
-    (2.x through /embed/v2/js/, the frozen 1.2.0, the Elements renderer's console behaviours), the maps and the live hub's SharedWorker."""
+    (2.x through /embed/v2/js/, the frozen 1.2.0), the maps and the live hub's SharedWorker."""
     names = (_names_in(CONSOLE / "routes" / "embed_routes.py", "ENHANCERS = (")
              | _names_in(CONSOLE / "web" / "embed" / "assets.js", "ENHANCERS = [")
              | _names_in(CONSOLE / "routes" / "embed_v2_routes.py", "SCRIPTS = {")
              | _names_in(STATIC / "render" / "1.2.0" / "m" / "console.js", "SCRIPTS = [")
-             | _names_in(STATIC / "elements" / "drishti-renderer" / "src" / "drishti_console.js", "SCRIPTS = [")
              | {"geomap", "live-hub"})
     files = [STATIC / "js" / f"drishti_{n}.js" for n in sorted(names) if not n.startswith("elements-")]
     return [f for f in files if f.exists()]

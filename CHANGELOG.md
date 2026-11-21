@@ -30,6 +30,15 @@
   report formats (a bad value of any format key is an error, `DRS-9032`); and Rachana-parity's `LegacyListAggregates` oracle (the engine's
   aggregates are compared with Rachana Core's own).
 
+
+- **The client renderer draws every panel with Drishti Elements' painter.** Drishti Elements is pinned at **3.2.0**. Embeds (`<drishti-view>`,
+  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
+  `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
+  page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
+  filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` draws with the painter's tables (no column
+  funnels or Chart any table inside an embed); a GenUI stream's messages are not drawn. The old `drishti-renderer` library, its harness
+  and fixtures are deleted; `/static/render/3.1.0/` and `/embed/v2/render/3.1.0/` answer `308` to 3.2.0 for one release, and
+  `/embed/v2/elements/2/` is the current renderer again.
 - **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
   snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
   rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default

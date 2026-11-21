@@ -1,0 +1,162 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* What the host loads, once per page, all from the console that serves it (CLIENT_RENDERER.md section 5): its sheet (Drishti Elements'
+   tokens, every theme, and the painter's sheets, rewritten for a shadow root and adopted by each one, so a host page with style-src 'self'
+   needs nothing more), the icon font of the host's own few glyphs (FontFace: an @font-face inside a shadow root is not used), and the
+   vendored ECharts (and ECharts GL for a 3D surface) as scripts, which drishti-chart's panel charts draw with. Nothing comes from a CDN.
+   Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's static scripts. */
+import { staticUrl, manifest, url as drishtiUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
+
+const base = { statics: null, sheet: null };
+
+/**
+ * Where the console's static files and the sheet are (the public entry calls it with addresses made from its own URL).
+ * @param {{statics: string, sheet: string}} o statics: the console's static root ("https://drishti.example/static/"); sheet: the sheet's address
+ * @returns {void}
+ */
+export function setAssetBase(o) {
+  if (o && o.statics) { base.statics = String(o.statics).replace(/\/?$/, '/'); }
+  if (o && o.sheet) { base.sheet = String(o.sheet); }
+}
+
+/**
+ * The address of a file under the console's static root.
+ * @param {string} rel for example "vendor/bootstrap-icons/fonts/bootstrap-icons.woff2"
+ * @returns {string}
+ */
+export function statics(rel) {
+  // by default the console's static root is three folders above Drishti Elements' root (static/vendor/drishti-elements/<version>/)
+  const root = base.statics || new URL('../../../', new URL(staticUrl(''), document.baseURI)).href;
+  return new URL(rel, root).href;
+}
+
+const once = new Map();
+/**
+ * Runs fn once per page for key (a failure is forgotten, so the next call tries again).
+ * @param {string} key
+ * @param {function(): Promise<*>} fn
+ * @returns {Promise<*>}
+ */
+export function memoised(key, fn) {
+  if (!once.has(key)) { once.set(key, fn().catch((e) => { once.delete(key); throw e; })); }
+  return once.get(key);
+}
+
+let policy;
+/** @private the Trusted Types policy, made the first time a script is loaded (null when the host's policy list does not name it) */
+function trusted() {
+  if (policy !== undefined) { return policy; }
+  policy = null;
+  try {
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+      policy = window.trustedTypes.createPolicy('drishti-render', {
+        createScriptURL: (u) => {
+          const url = new URL(u, document.baseURI), root = new URL(statics(''));
+          if (url.origin === root.origin && url.pathname.startsWith(root.pathname)) { return u; }
+          throw new TypeError('drishti-render: not a script of this console: ' + u);
+        }
+      });
+    }
+  } catch (e) { policy = null; }
+  return policy;
+}
+
+/**
+ * Loads a classic script of Drishti Elements' vendored tree (an engine), once.
+ * @param {string} rel its path in the tree ("vendor/echarts/echarts.min.js")
+ * @returns {Promise<void>}
+ */
+export function script(rel) {
+  const url = new URL(staticUrl(rel), document.baseURI).href;
+  return memoised('s:' + url, () => new Promise((resolve, reject) => {
+    const s = document.createElement('script'), p = trusted();
+    s.src = p ? p.createScriptURL(url) : url;
+    s.async = false;
+    s.setAttribute('data-manual', '');
+    s.onload = () => resolve(); s.onerror = () => reject(new Error('cannot load ' + url));
+    document.head.appendChild(s);
+  }));
+}
+
+/**
+ * ECharts: the page's own when it has one, else the vendored copy.
+ * @returns {Promise<Object>}
+ */
+export async function echarts() {
+  if (!window.echarts) { await script('vendor/echarts/echarts.min.js'); }
+  return window.echarts;
+}
+
+/**
+ * ECharts GL for a 3D surface, only when first asked for.
+ * @returns {Promise<void>}
+ */
+export async function echartsGl() {
+  await echarts();
+  if (!(window.echarts && window.echarts.graphicGL)) { await script('vendor/echarts-gl/echarts-gl.min.js'); }
+}
+
+/**
+ * The sheet as a constructable sheet (adopted by shadow roots; style-src is not asked).
+ * @returns {Promise<CSSStyleSheet>}
+ */
+export function sheet() {
+  return memoised('sheet', async () => {
+    const res = await fetch(base.sheet || statics('render/' + ELEMENTS_VERSION + '/drishti-render.css'), { credentials: 'omit' });
+    if (!res.ok) { throw new Error('drishti-render.css: HTTP ' + res.status); }
+    const s = new CSSStyleSheet();
+    s.replaceSync(await res.text());
+    return s;
+  });
+}
+
+/**
+ * The painter, drawing inside a shadow root of the host's, would ask drishti-core's loader to link the libraries' sheets into the page (a
+ * request a host page's style-src may refuse, and a sheet a shadow root does not see). The host's adopted sheet already holds them, so the
+ * loader's page links are claimed once, without loading anything: a <link> with no rel, which is what the loader looks for by its address.
+ * @returns {void}
+ */
+export function claimSheets() {
+  memoised('claimed', async () => {
+    const libs = manifest().libraries || {};
+    Object.keys(libs).forEach((n) => (libs[n].css || []).forEach((c) => {
+      const href = drishtiUrl(staticUrl(c));
+      if (!document.querySelector('link[data-drishti-elements="' + href + '"]')) {
+        const l = document.createElement('link');
+        l.setAttribute('data-drishti-elements', href);
+        document.head.appendChild(l);
+      }
+    }));
+  });
+}
+
+/**
+ * The icon font, registered with the document (shadow roots use it).
+ * @returns {Promise<void>}
+ */
+export function font() {
+  return memoised('font', async () => {
+    if ([...document.fonts].some((f) => f.family.replace(/"/g, '') === 'bootstrap-icons')) { return; }
+    const face = new FontFace('bootstrap-icons', 'url(' + statics('vendor/bootstrap-icons/fonts/bootstrap-icons.woff2') + ') format("woff2")');
+    document.fonts.add(await face.load());
+  });
+}
+
+/**
+ * Whether script URLs go through the Trusted Types policy.
+ * @returns {boolean}
+ */
+export const trustedTypesActive = () => !!trusted();
