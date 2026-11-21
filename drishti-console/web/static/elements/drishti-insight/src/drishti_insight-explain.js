@@ -33,7 +33,7 @@
 import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
 import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
 import { showBusy, answerError } from './drishti_insight-busy.js';
-import { url as drishtiUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { url as drishtiUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window

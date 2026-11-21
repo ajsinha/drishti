@@ -287,7 +287,7 @@ def test_rows_and_bars_with_events_say_so(lab):
 def test_a_column_sorts_as_the_console_sorts_it(browser, site):
     vm = cases.more_shapes()
     site.add_vm("sorting", vm)
-    html = H.console_html(vm).replace("</body>", '<script src="/static/vendor/drishti-elements/2.4.0/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
+    html = H.console_html(vm).replace("</body>", '<script src="/static/vendor/drishti-elements/3.1.0/elements/drishti-grid/drishti_grid.js"></script><script src="/static/js/drishti_colfilter.js"></script>'
                                       '<script src="/static/js/drishti_tables.js"></script></body>')
     site.add_console("sorting", html)
     orders = []

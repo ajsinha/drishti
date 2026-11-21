@@ -123,7 +123,7 @@ def test_a_trade_grid_both_ways(stack, browser, n):
     rid = f"file:report:arrow-bench-{n}"
     page.goto(f"{CONSOLE_URL}/bi/r/{rid}")
     painted(page, n)
-    page.add_script_tag(url="/static/vendor/drishti-elements/2.4.0/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js")
+    page.add_script_tag(url="/static/vendor/drishti-elements/3.1.0/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js")
     page.add_script_tag(url="/static/js/drishti_table.js")
     result = arrow_bench.measure(page, f"/bi/api/reports/{rid.replace(':', '%3A')}/query", "POST", {"page": "grid", "visual": "rows", "state": {}})
     assert result["arrowIsArrow"], result

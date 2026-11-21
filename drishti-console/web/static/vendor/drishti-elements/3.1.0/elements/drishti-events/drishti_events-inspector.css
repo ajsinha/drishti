@@ -1,0 +1,46 @@
+/*
+ * Drishti Elements
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY.
+ *
+ * This file is the proprietary property of Ashutosh Sinha.
+ * Copying, use, modification or distribution of this file, via any medium,
+ * is not permitted except with the express prior written permission of the
+ * copyright holder.
+ *
+ * See the LICENSE file in the root of this repository.
+ */
+/* The events inspector (drishti-events' inspector part): a bar of tabs, a filter and buttons over the panes; the lists are drishti-grids.
+   Tokens only (dark and light, every density); a drawer at the page's side when no element is given. */
+
+.drishti-events-inspector { display: flex; flex-direction: column; min-height: 0; height: 100%; background: var(--d-surface); color: var(--d-ink);
+  font-size: var(--d-fs-13); }
+.dei-bar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--d-sp-6); padding: var(--d-sp-5) var(--d-sp-6); border-bottom: 1px solid var(--d-border); }
+.dei-tabs { display: flex; gap: var(--d-sp-2); }
+.dei-tab, .dei-pause, .dei-close, .dei-why-go { font: inherit; color: var(--d-ink); background: transparent; border: 1px solid var(--d-border);
+  border-radius: var(--d-radius); padding: var(--d-sp-2) var(--d-sp-10); cursor: pointer; }
+.dei-tab[aria-selected="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); font-weight: 600; }
+.dei-tab:focus-visible, .dei-pause:focus-visible, .dei-close:focus-visible, .dei-why-go:focus-visible, .dei-filter:focus-visible,
+.dei-why-form input:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.dei-pause[aria-pressed="true"] { border-color: var(--d-warn); color: var(--d-warn); }
+.dei-filter, .dei-why-form input { font: inherit; color: var(--d-ink); background: var(--d-bg); border: 1px solid var(--d-border); border-radius: var(--d-radius);
+  padding: var(--d-sp-2) var(--d-sp-6); min-width: 16em; }
+.dei-status { color: var(--d-muted); margin-left: auto; }
+.dei-body { flex: 1; min-height: 0; display: flex; }
+.dei-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; padding: var(--d-sp-5); }
+.dei-pane[hidden] { display: none; }
+.dei-grid { flex: 1; min-height: 12em; }
+.dei-detail { margin: var(--d-sp-5) 0 0; padding: var(--d-sp-6); max-height: 40%; overflow: auto; background: var(--d-bg-2); border: 1px solid var(--d-border);
+  border-radius: var(--d-radius); font-family: var(--d-font-mono); font-size: var(--d-fs-12); white-space: pre-wrap; }
+.dei-figures { display: grid; grid-template-columns: max-content 1fr; gap: var(--d-sp-2) var(--d-sp-12); margin: 0 0 var(--d-sp-10); }
+.dei-figures dt { color: var(--d-muted); }
+.dei-figures dd { margin: 0; font-variant-numeric: tabular-nums; }
+.dei-timeline { margin: 0; padding-left: 1.4em; font-family: var(--d-font-mono); font-size: var(--d-fs-12); }
+.dei-why-form { display: flex; flex-wrap: wrap; gap: var(--d-sp-6); margin-bottom: var(--d-sp-10); }
+.dei-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100vw); z-index: 1000; box-shadow: var(--d-elev-drawer); background: var(--d-surface); }
+.dei-drawer[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .drishti-events-inspector * { transition: none !important; animation: none !important; } }
+@media (forced-colors: active) { .dei-tab[aria-selected="true"] { border: 2px solid Highlight; } }

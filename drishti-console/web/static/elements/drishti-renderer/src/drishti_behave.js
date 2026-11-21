@@ -18,8 +18,8 @@
    with their breadcrumb, and unless the host turns them off (tables: false) sorting, a filter box and paging) are drishti-grid's
    (enhanceDocTables); a table with rows nested under rows is drishti-tree's (treeTables: the tree grid or the org chart, its mode, open
    rows and filter kept across live patches by the screen). Everything happens inside the container: no address change, no new window. */
-import { enhanceDocTables } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
-import { treeTables } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-tree/src/drishti_index.js';
+import { enhanceDocTables } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-grid/src/drishti_index.js';
+import { treeTables } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-tree/src/drishti_index.js';
 
 /**
  * Widths from data-w (the CSP forbids style attributes; CSSOM is allowed).

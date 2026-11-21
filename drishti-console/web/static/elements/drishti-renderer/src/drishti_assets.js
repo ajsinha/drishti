@@ -19,7 +19,7 @@
    draw with. Nothing comes from a CDN. Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's
    static scripts. Where the files are: the static root drishti-core's loader knows (the folder its bundle came from, or configure()), or
    what the public entry (static/render/<version>/drishti-render.js) says from its own address (setAssetBase). */
-import { staticUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { staticUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 
 const base = { statics: null, sheet: null };
 

@@ -17,10 +17,10 @@
    shortly before it expires, renewed after a 401), the sign-in window of auth 'popup', resolving a typed command, and one live connection
    per page and server: /embed/v2/channel, read by drishti-data's live client over fetch (an EventSource cannot send the bearer), its
    subscriptions added and removed by POST as elements come and go, reconnected with drishti-data's back-off. */
-import { LiveClient } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-data/src/drishti_index.js';
+import { LiveClient } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-data/src/drishti_index.js';
 import { signInFor } from './drishti_signin.js';
 import { statics } from './drishti_assets.js';
-import { url as drishtiUrl, ELEMENTS_VERSION as ONE_VERSION } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { url as drishtiUrl, ELEMENTS_VERSION as ONE_VERSION } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 
 /** The Elements version this renderer carries: the one version of Drishti Elements. */
 export const ELEMENTS_VERSION = ONE_VERSION;

@@ -1,0 +1,26 @@
+/*
+ * Drishti Elements
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY.
+ *
+ * This file is the proprietary property of Ashutosh Sinha.
+ * Copying, use, modification or distribution of this file, via any medium,
+ * is not permitted except with the express prior written permission of the
+ * copyright holder.
+ *
+ * See the LICENSE file in the root of this repository.
+ */
+/* drishti-events: the status badge (statusBadge). The words carry the state; the dot beside them repeats it in colour, never alone.
+   Tokens only, so every theme works in dark and light. */
+
+.drishti-events-badge { display: inline-flex; align-items: center; position: relative; }
+.drishti-events-badge-state.drishti-state-compact { padding: var(--d-sp-2) var(--d-sp-6); gap: var(--d-sp-6); }
+.drishti-events-badge-state::before { content: ""; width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--d-faint); flex: none; }
+.drishti-events-badge-state[data-tone="good"]::before { background: var(--d-ok); }
+.drishti-events-badge-state[data-tone="warn"]::before { background: var(--d-warn); }
+.drishti-events-badge-state[data-tone="bad"]::before { background: var(--d-bad); }
+.drishti-events-badge-state[data-tone="good"] .drishti-state-text { color: var(--d-ink); }
+@media (forced-colors: active) { .drishti-events-badge-state::before { background: CanvasText; } }

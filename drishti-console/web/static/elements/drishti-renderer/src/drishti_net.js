@@ -18,8 +18,8 @@
    (X-Drishti-Device) when the host says it. A view is read with drishti-core's API client and a stream is followed with drishti-data's
    live client (reconnect with back-off, resume from the last event id); the renderer keeps only what a ViewModel needs: its addresses,
    and every failure as a problem with a DRS code, words and the fix. */
-import { createClient, AS_OF_HEADER, basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
-import { LiveClient } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-data/src/drishti_index.js';
+import { createClient, AS_OF_HEADER, basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
+import { LiveClient } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-data/src/drishti_index.js';
 
 const FIXES = {
   401: 'Sign in to the console, or give render() a token: { token: () => fetchMyDrishtiToken() }.',

@@ -20,7 +20,7 @@
 
      var box = Drishti.searchBox(input, { where: 'all', list: ul, grouped: true, row: fn(item, q) -> html, keys: fn(e, box) -> handled,
                                           go: fn(item, i, box), enter: fn(box) })                                            */
-import { url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 /**
  * Installs the one search box in a page (once): Drishti.searchBox, Drishti.find (Alt+K) and the top bar's search button.
  * @param {Window} win the page's window

@@ -20,7 +20,7 @@
 import { h, str, icon, clear } from './drishti_dom.js';
 import { pyQuote } from './drishti_kinds.js';
 import { personFetch } from './drishti_net.js';
-import { basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 
 const WHY = { missing: 'is missing in this document', null: 'is null in this document', 'empty list': 'is an empty list', masked: 'is hidden for your role',
   'no values': 'has no values', 'no data': 'has no data' };

@@ -17,7 +17,7 @@
    rows in data-pv-tree) is drawn again by drishti-grid's own grid with tree data: each row by its path, the groups open down to the
    Sutra's expand, every figure the server's text (the browser sums nothing: clientAggregation off), the total column and the grand total
    row as the server sent them. In 'library' mode the document table drishti-grid drew first stays. */
-import { Grid } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
+import { Grid } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-grid/src/drishti_index.js';
 
 /** The row height of the compact density (drishti-grid) and the most rows shown before the grid scrolls inside itself. */
 const ROW_PX = 28, MOST = 14;

@@ -18,8 +18,8 @@
    server's table, drawn by the grid: docTable, docDrill, docPivot, docPlainTable) with the renderer's cells as its hooks; charts are
    drishti-chart's panel charts, drawn from the container's data (a property, never an attribute of JSON) once the panel is in the page;
    the few figures the macros compute (a bar's width, a share, a gauge's level, a progress) are rounded by drishti-core, half up. */
-import { roundHalfUp, formatNumber, formatPythonFloat, basePath, url as drishtiUrl, configure, endpoint } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
-import { docPivotable, docDrill, docPivot, docPlainTable } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
+import { roundHalfUp, formatNumber, formatPythonFloat, basePath, url as drishtiUrl, configure, endpoint } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
+import { docPivotable, docDrill, docPivot, docPlainTable } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-grid/src/drishti_index.js';
 import { h, str, icon, toneClass, capitalize } from './drishti_dom.js';
 import { cellText, entity, entityLink, fields } from './drishti_cells.js';
 

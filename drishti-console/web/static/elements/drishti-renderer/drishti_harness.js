@@ -16,8 +16,8 @@
 /* drishti-renderer's fixture harness (drishti_harness.html): a ViewModel of the parity suite drawn by the public entry of renderer 2.0.0,
    one shot or streamed (a skeleton, then every panel in reverse order, then done), with every drishti:* event counted on window.__rx for
    the browser test. No server: the fixtures are a static file beside this one. */
-import { render, VERSION } from '../../render/2.4.0/drishti-render.js';
-import { selectElement } from '../../vendor/drishti-elements/2.4.0/elements/drishti-inputs/src/drishti_index.js';
+import { render, VERSION } from '../../render/3.1.0/drishti-render.js';
+import { selectElement } from '../../vendor/drishti-elements/3.1.0/elements/drishti-inputs/src/drishti_index.js';
 
 const q = new URLSearchParams(location.search);
 const host = document.getElementById('host'), log = document.getElementById('rx-log');

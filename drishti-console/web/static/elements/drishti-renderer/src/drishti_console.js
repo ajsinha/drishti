@@ -25,8 +25,8 @@ import * as assets from './drishti_assets.js';
 import { strip } from './drishti_view.js';
 import { personFetch } from './drishti_net.js';
 import { drawNestedPivots } from './drishti_nested.js';
-import { consoleTables } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-grid/src/drishti_index.js';
-import { textSortKey, compareTextKeys, url as drishtiUrl } from '../../../vendor/drishti-elements/2.4.0/elements/drishti-core/src/drishti_index.js';
+import { consoleTables } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-grid/src/drishti_index.js';
+import { textSortKey, compareTextKeys, url as drishtiUrl } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
 
 /** The console's scripts still loaded, in the order they need each other (colfilter before tables). */
 export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];

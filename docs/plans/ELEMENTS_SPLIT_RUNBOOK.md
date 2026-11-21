@@ -751,7 +751,7 @@ git rm -q compute/drishti-rachana/src/main/resources/world-regions.yaml compute/
 they now come inside Drishti Elements (their rows and licence files are in its own `vendor/`).
 
 ```text
-| **Drishti Elements** (an external component with its own repository and docs: github.com/ajsinha/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit; with its engines: Apache ECharts, CodeMirror, the Natural Earth map shapes) | 2.4.0 (github.com/ajsinha/drishti-elements, tag v2.4.0, commit <id from $WORK/elements-tag-commit.txt>; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` | `drishti-elements/2.4.0/` | yes | every page |
+| **Drishti Elements** (an external component with its own repository and docs: github.com/ajsinha/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit; with its engines: Apache ECharts, CodeMirror, the Natural Earth map shapes) | 2.4.0 (github.com/ajsinha/drishti-elements, tag v2.4.0, commit <id from $WORK/elements-tag-commit.txt>; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` | `drishti-elements/3.1.0/` | yes | every page |
 ```
 
 Below it, "Updating": clone the Elements repository at the new tag into an empty folder outside this repository, check the commit
