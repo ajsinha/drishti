@@ -129,13 +129,13 @@ net -4,392. `SharedToolsGuardTest` holds it: no main source carries a copy or wr
 Every workbook Drishti's tests make was written on the parent commit and on the new code (60 workbooks: the exports with every chart kind, the statement with
 its print set-up, the pivot export, the capacity workbook, the VaR, Parametric VaR, Explain, FRTB and SIMM playground books, the VaR basket and the
 regulatory sign-off), read with Apache POI and compared cell by cell and formula by formula, then by sheet and by style (`tools/xlsx_before_after/XlsxCompare.java`;
-the capture hook was a temporary patch of the tests, not kept). Cell values, cell types, formulas (text and cached result), merges, freeze panes, column widths,
+the capture is a temporary patch of the tests, `capture_patch.py` and `capture_unpatch.py` in the same folder, never committed in the tests). Cell values, cell types, formulas (text and cached result), merges, freeze panes, column widths,
 outline levels, drop-downs, conditional formats, print set-up, defined names, charts (kind and references) are **equal in all 60**. Every difference:
 
 | Difference | Count | Reason |
 |---|---|---|
-| Default row height written (15) where there was none; playgrounds 14 to 15 | 327 sheets | the shared writer's default (Excel's own) |
-| The first sheet is the selected tab (the playgrounds selected the sheet called `Main`, the exports none) | 28 sheets | no sheet name in the writer |
+| Default row height written (15) where there was none; playgrounds 14 to 15 | 337 sheets | the shared writer's default (Excel's own) |
+| The first sheet is the selected tab (the playgrounds selected the sheet called `Main`, the exports none) | 30 sheets | no sheet name in the writer |
 | Print-titles defined name `'MTM'!$1:$1` written `MTM!$1:$1` | 2 | the quotes are written only where a name needs them; the same reference |
 | Pivot export's header fill `DCE6F1` and title 14 pt are the exports' `EEF1F5` and 16 pt | 24 cells | one standard look for the four writers |
 | Provenance rows: a run's timing (`computeMs`), the order of the data-version lines (a set) | 6 cells | the runs, not the writer (the same on two runs of the old code) |
