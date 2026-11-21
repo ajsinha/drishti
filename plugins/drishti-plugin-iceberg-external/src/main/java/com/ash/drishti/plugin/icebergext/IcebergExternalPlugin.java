@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.plugin.icebergext;
 
+import com.ash.lake.iceberg.external.ExternalTable;
+import com.ash.lake.iceberg.external.KindConfig;
+import com.ash.lake.iceberg.external.Shape;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.DataNode;
@@ -27,13 +31,13 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.iceberg.Table;
-import com.ash.drishti.iceberg.catalog.Catalog;
-import com.ash.drishti.iceberg.catalog.Catalogs;
-import com.ash.drishti.iceberg.catalog.S3Tables;
-import com.ash.drishti.iceberg.read.JsonValues;
-import com.ash.drishti.plugin.icebergext.ExternalTable.Day;
-import com.ash.drishti.plugin.icebergext.ExternalTable.Layout;
+import com.ash.lake.iceberg.Table;
+import com.ash.lake.iceberg.catalog.Catalog;
+import com.ash.lake.iceberg.catalog.Catalogs;
+import com.ash.lake.iceberg.catalog.S3Tables;
+import com.ash.lake.iceberg.read.JsonValues;
+import com.ash.lake.iceberg.external.ExternalTable.Day;
+import com.ash.lake.iceberg.external.ExternalTable.Layout;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -579,9 +583,9 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         idIndexes.synchronous().invalidateAll();
         columnSets.synchronous().invalidateAll();
         docs.invalidateAll();
-        com.ash.drishti.lakeio.ParquetFooters.purge();
-        com.ash.drishti.iceberg.scan.Planner.purge();
-        com.ash.drishti.iceberg.read.Deletes.purge();
+        com.ash.lake.io.ParquetFooters.purge();
+        com.ash.lake.iceberg.scan.Planner.purge();
+        com.ash.lake.iceberg.read.Deletes.purge();
     }
 
     @Override

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
+import com.ash.lake.iceberg.table.IcebergAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -86,6 +86,6 @@ final class IcebergSink implements OfficialSink {
         }
         Map<String, String> s = new HashMap<>(settings);
         s.put("root", OfficialSink.local(root) ? OfficialSink.folder(root).toString() : root);
-        return IcebergAppender.append(s, FOLDER, table, date, out, promoted, Set.of(), properties());
+        return IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), s, FOLDER, table, date, out, promoted, Set.of(), properties());
     }
 }

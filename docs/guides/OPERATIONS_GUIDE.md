@@ -2119,7 +2119,7 @@ server.
 |---|---|---|
 | Delta and Iceberg connectors (heap) | days' id maps and promoted columns, recent documents, whole days of small tables | **one memory budget**: connectors that set none share one cache of each, sized from the heap (`id-map-mb` 20%, `columns-cache-mb` 20%, `doc-cache-mb` 5%, `cache-mb` 5%: half the heap in all); one that sets its own keeps it |
 | Delta and Iceberg connectors (disk) | id maps memory-mapped (`<data>/cache/<connector>/idmaps`); documents read before (`.../docs`, RocksDB), kept across restarts, keyed by table version | `id-map-disk.*`, `doc-disk-cache.*` ([14.5](#145-disk-caches-per-connector)) |
-| Parquet footers | each file's parsed footer | `-Ddrishti.parquet.footer-cache-mb` (64) |
+| Parquet footers | each file's parsed footer | `-Dlake.parquet.footer-cache-mb` (64) |
 | Derived connector (grouped pages) | `store: heap`: every page; `store: disk` (the trading pack's `trade-pages`): each group's totals in memory, members on disk under `<data>/derived/<connector>`, kept across restarts | `max-stream` (100,000) for heap; the disk, 16 dates, for disk |
 | Kafka connector | where each entity's latest message is, each id for type-ahead (about 0.4 to 0.5 GB per million entities), recent documents | `cache-mb` (256); `mode: ticks` keeps nothing; `search: false` drops the id index |
 | Kafka disk cache | every live message of the day, on local disk (RocksDB, LZ4, oldest files dropped first), one folder per connector | `disk-cache.max-gb` (10), cleared every night at `disk-cache.reset-at` (02:00 New York), `disk-cache.dir` |

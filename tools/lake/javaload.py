@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``lake build --engine java``: the whole build done by the parallel lake loader (drishti-lakeload, ``com.ash.drishti.lakeload.LakeLoad``
+"""``lake build --engine java``: the whole build done by the parallel lake loader (Drishti Lake's ``LakeLoad``, started as ``com.ash.drishti.lakehost.DrishtiLakeCli load``
 in the server's exec jar) instead of Python staging plus a Java writer: JSON Lines read, parsed, sorted and written as Parquet by many
 threads, one commit per business date, Delta or Iceberg, memory bounded by ``memory.budget-mb`` (docs/architecture/DATA_ARCHITECTURE.md).
 
@@ -35,8 +35,8 @@ import subprocess
 import sys
 import zipfile
 
-LOADER_MAIN = "com.ash.drishti.lakeload.LakeLoad"
-LOADER_CLASS = "com/ash/drishti/lakeload/LakeLoad.class"
+LOADER_MAIN = "com.ash.drishti.lakehost.DrishtiLakeCli"     # Drishti Lake's loader with Drishti's catalog: `DrishtiLakeCli load ...`
+LOADER_CLASS = "com/ash/drishti/lakehost/DrishtiLakeCli.class"
 SECRET_KEYS = {"access-key", "secret-key", "s3.access-key", "s3.secret-key", "session-token", "s3.session-token", "credential", "token"}
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT / "tools") not in sys.path:
@@ -54,7 +54,7 @@ def jar_has_loader(jar: str) -> bool:
             names = set(z.namelist())
             if LOADER_CLASS in names:
                 return True
-            return any(n.startswith("BOOT-INF/lib/drishti-lakeload-") and n.endswith(".jar") for n in names)
+            return any(n.startswith("BOOT-INF/lib/drishti-lake-host-") and n.endswith(".jar") for n in names)
     except (OSError, zipfile.BadZipFile):
         return False
 
@@ -69,10 +69,10 @@ def command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
     heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_LOADER_HEAP", "4g")
     cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
     if cp and not jar:
-        return java_bin, [heap, "-cp", cp, LOADER_MAIN]
+        return java_bin, [heap, "-cp", cp, LOADER_MAIN, "load"]
     j = writers.find_jar(jar)
     if j and jar_has_loader(j):
-        return java_bin, [heap, f"-Dloader.main={LOADER_MAIN}", "-jar", j]
+        return java_bin, [heap, f"-Dloader.main={LOADER_MAIN}", "-jar", j, "load"]
     return None
 
 

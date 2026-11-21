@@ -325,7 +325,7 @@ class BuildTest(unittest.TestCase):
         (pack / "pack.yaml").write_text(
             "pack: synth-book\nconnectors:\n  book-store:\n    plugin: delta\n    kinds: [deal]\n    settings:\n      root: x\n      domain: book\n"
             "ingest:\n  deal: {key: TRADE_ID, date: TRADE_DATE}\n", encoding="utf-8")
-        with mock.patch.dict(os.environ, {"DRISHTI_LAKES_DIR": str(lakes)}):
+        with mock.patch.dict(os.environ, {"LAKE_LAKES_DIR": str(lakes)}):
             p = build.plan(args(src=[str(self.src)], lake="two", pack=str(pack)))
             self.assertEqual((p["domain"], p["kind"], p["table"]), ("book", "deal", "deal"))
             with self.assertRaises(build.BuildError) as refused:           # no domain to go by: both tables named, nothing guessed
@@ -461,7 +461,7 @@ class CommandLineTest(unittest.TestCase):
             self.assertIn("lake-build partial", out.getvalue())
             # a lake's name resolves where its lake file says, as the other lake commands do (the rehearsal: --lake demo said "no tables")
             from unittest import mock
-            with mock.patch.dict(os.environ, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_LAKES_DIR": tmp}):
+            with mock.patch.dict(os.environ, {"DRISHTI_DELTA_ROOT": str(lake), "LAKE_LAKES_DIR": tmp}):
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out):
                     self.assertEqual(drishti.main(["lake", "status", "--lake", "demo"]), 0)

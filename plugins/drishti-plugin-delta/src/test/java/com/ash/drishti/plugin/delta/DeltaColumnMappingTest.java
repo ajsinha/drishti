@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -99,7 +99,7 @@ class DeltaColumnMappingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void aColumnMappedTableReadsAsThePlainOne(String engine) throws Exception {
         List<LocalDate> days = List.of(LocalDate.of(2026, 9, 29), LocalDate.of(2026, 9, 30));
         String cols = "mtm,book,nettingSet,counterparty.id";
@@ -120,7 +120,7 @@ class DeltaColumnMappingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void aMappedPartitionColumnReadsItsValueFromTheLog(String engine) throws Exception {
         List<LocalDate> days = List.of(LocalDate.of(2026, 9, 30));
         DeltaSourcePlugin plain = plugin("lake-partitioned", "desk", engine, "layout.trade.columns", "PRODUCT_TYPE,CURRENCY");
@@ -136,7 +136,7 @@ class DeltaColumnMappingTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void mappedVectorsReadAsThePlainOnes(String engine) throws Exception {
         LocalDate day = LocalDate.of(2026, 9, 30);
         String[] s = {"layout.pnl-vector.columns", "DESK,TT_BOOK", "layout.pnl-vector.vectors", "PNL"};

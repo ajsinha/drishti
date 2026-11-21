@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;

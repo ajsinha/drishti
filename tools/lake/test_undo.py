@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """lake undo (tools/lake/undo.py): the plan from the Java undo's answers, the words, the confirmation (a dry run first, the load id typed
-again, --yes for scripts, refused without a terminal). The undo itself is tested in Java (drishti-lakeload AppendNewestLoadTest)."""
+again, --yes for scripts, refused without a terminal). The undo itself is tested in Java (Drishti Lake (lake-load) AppendNewestLoadTest)."""
 import json
 import sys
 import types

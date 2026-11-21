@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The java and python load routes into a temporary lake (its own lake file under DRISHTI_LAKES_DIR, its own root): the recorded test
+"""The java and python load routes into a temporary lake (its own lake file under LAKE_LAKES_DIR, its own root): the recorded test
 feed pulled, loaded, and loaded again for the same date (replace by date: the same rows, never twice). They need the server's exec jar
 (<home>/lib) and Java 21; without them they are skipped."""
 from __future__ import annotations
@@ -49,7 +49,7 @@ def lake(tmp_path, monkeypatch):
     lakes.mkdir()
     root = tmp_path / "lake"
     (lakes / "feedtestlake.yaml").write_text(f"lake: feedtestlake\nformat: delta\nroot: {root}\ndefaults: {{load-mode: replace}}\ntables: {{}}\n")
-    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(lakes))
+    monkeypatch.setenv("LAKE_LAKES_DIR", str(lakes))
     return root
 
 

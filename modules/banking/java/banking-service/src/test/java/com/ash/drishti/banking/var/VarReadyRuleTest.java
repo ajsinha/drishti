@@ -17,8 +17,8 @@ package com.ash.drishti.banking.var;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.dataload.ReadyCheck;
-import com.ash.drishti.dataload.ReadyRule;
+import com.ash.lake.inbox.ReadyCheck;
+import com.ash.lake.inbox.ReadyRule;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

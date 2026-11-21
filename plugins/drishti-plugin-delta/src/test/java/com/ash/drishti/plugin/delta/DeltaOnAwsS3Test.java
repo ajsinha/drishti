@@ -15,17 +15,17 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.lakeconfig.ConnectorLake;
-import com.ash.drishti.lakeconfig.Lake;
-import com.ash.drishti.lakeconfig.Lakes;
+import com.ash.lake.config.ConnectorLake;
+import com.ash.lake.config.Lake;
+import com.ash.lake.config.Lakes;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.s3.S3Endpoint;
-import com.ash.drishti.testkit.s3.S3MockServer;
+import com.ash.lake.tck.s3.S3Endpoint;
+import com.ash.lake.tck.s3.S3MockServer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;

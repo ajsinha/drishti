@@ -50,7 +50,7 @@ def start_servers(work) -> list:
     (work / "data").mkdir(parents=True, exist_ok=True)
     if not (work / "data" / "testdata").exists():
         (work / "data" / "testdata").symlink_to(ROOT / "data" / "testdata")
-    procs = _start(work, {**SERVER_ENV, "DRISHTI_CONNECTORS_DIR": str(connectors), "DRISHTI_LAKES_DIR": str(lakes), "DRISHTI_MEMORY_LAKE_ENABLED": "true",
+    procs = _start(work, {**SERVER_ENV, "DRISHTI_CONNECTORS_DIR": str(connectors), "LAKE_LAKES_DIR": str(lakes), "DRISHTI_MEMORY_LAKE_ENABLED": "true",
                           "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"})
     deadline = time.monotonic() + 240
     while time.monotonic() < deadline:

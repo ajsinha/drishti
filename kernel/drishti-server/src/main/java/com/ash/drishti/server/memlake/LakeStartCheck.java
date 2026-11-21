@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.memlake;
 
-import com.ash.drishti.lakeconfig.LakeCheck;
-import com.ash.drishti.lakeconfig.Lakes;
+import com.ash.lake.load.LakeCheck;
+import com.ash.lake.config.Lakes;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,20 +38,20 @@ class LakeStartCheck {
     @EventListener(ApplicationReadyEvent.class)
     void check() {
         try {
-            Lakes lakes = Lakes.current();
+            Lakes lakes = Lakes.current(com.ash.drishti.lakehost.DrishtiLake.runtime());
             if (lakes.all().isEmpty()) {
                 return;
             }
             int errors = 0;
-            for (LakeCheck.Finding f : LakeCheck.check(lakes, Map.of())) {
+            for (LakeCheck.Finding f : LakeCheck.check(com.ash.drishti.lakehost.DrishtiLake.runtime(), lakes, Map.of())) {
                 if (f.level().equals("error")) {
                     errors++;
                     LOG.warn("lake {} table {}: {}", f.lake(), f.table(), f.message());
                 }
             }
-            LOG.info("lake files: {} lakes in {} checked against their tables, {} differences", lakes.all().size(), Lakes.dir(), errors);
+            LOG.info("lake files: {} lakes in {} checked against their tables, {} differences", lakes.all().size(), Lakes.dir(com.ash.drishti.lakehost.DrishtiLake.runtime()), errors);
         } catch (RuntimeException e) {
-            LOG.warn("the lake files in {} were refused: {}", Lakes.dir(), e.getMessage());
+            LOG.warn("the lake files in {} were refused: {}", Lakes.dir(com.ash.drishti.lakehost.DrishtiLake.runtime()), e.getMessage());
         }
     }
 }

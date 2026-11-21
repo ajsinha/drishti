@@ -17,7 +17,7 @@ package com.ash.drishti.banking.official;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
+import com.ash.lake.iceberg.table.IcebergAppender;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;

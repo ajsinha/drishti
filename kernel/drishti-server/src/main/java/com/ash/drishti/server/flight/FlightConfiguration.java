@@ -22,7 +22,7 @@ import com.ash.drishti.flight.FlightSqlCatalog;
 import com.ash.drishti.identity.ApiTokenStore;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
-import com.ash.drishti.memlake.MemoryLake;
+import com.ash.lake.memory.MemoryLake;
 import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
@@ -120,7 +120,7 @@ public class FlightConfiguration {
         if (dv != null) {
             KindFlightForm kinds = new KindFlightForm(dv);
             forms.add(kinds);
-            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (docs/architecture/DATA_ARCHITECTURE.md)
+            forms.add(new LakeFlightForm(() -> com.ash.lake.config.Lakes.current(com.ash.drishti.lakehost.DrishtiLake.runtime()), kinds, dv, memory.getIfAvailable()));   // the lake files (docs/architecture/DATA_ARCHITECTURE.md)
         }
         if (catalog.getIfAvailable() != null && mq.getIfAvailable() != null && bi.getIfAvailable() != null) {
             forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject(), sql.getIfAvailable()));

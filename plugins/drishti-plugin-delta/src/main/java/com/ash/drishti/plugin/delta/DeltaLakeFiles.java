@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.read.DataFile;
+import com.ash.lake.read.DayFiles;
+import com.ash.lake.read.TableSnapshot;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.LakeFiles;
 import com.ash.drishti.api.RowEstimate;
@@ -33,12 +37,11 @@ final class DeltaLakeFiles {
     private DeltaLakeFiles() {}
 
     static Optional<LakeFiles> of(DeltaSourcePlugin plugin, String kind, AsOf asOf) {
-        DeltaTable table = plugin.tables.get(kind);
-        if ("effective".equals(plugin.modes.get(kind)) || table == null) {
+        if ("effective".equals(plugin.modes.get(kind)) || !plugin.tables.containsKey(kind)) {
             return Optional.empty();
         }
-        Optional<DeltaTable.Layout> l = plugin.readableLayout(kind, asOf.knownAt());
-        if (l.isEmpty() || l.get().deletionVectors()) {
+        Optional<TableSnapshot> l = plugin.readableLayout(kind, asOf.knownAt());
+        if (l.isEmpty() || l.get().deletes()) {
             return Optional.empty();
         }
         List<LocalDate> dates = plugin.candidates(kind, l.get(), asOf.businessDate());
@@ -46,18 +49,19 @@ final class DeltaLakeFiles {
             return Optional.empty();
         }
         LocalDate d = dates.get(0);
+        Optional<DayFiles> day = l.get().day(d);
+        if (day.isEmpty() || day.get().deletes()) {
+            return Optional.empty();
+        }
         List<String> files = new ArrayList<>();
         long bytes = 0;
-        for (io.delta.kernel.data.Row r : l.get().files().getOrDefault(d, List.of())) {
-            io.delta.kernel.utils.FileStatus fs = io.delta.kernel.internal.InternalScanFileUtils.getAddFileStatus(r);
-            String path = fs.getPath();
-            if (path.startsWith("file:")) {
-                path = java.nio.file.Path.of(java.net.URI.create(path)).toString();
-            } else if (path.contains("://")) {
+        for (DataFile f : day.get().files()) {
+            Optional<java.nio.file.Path> local = f.local();
+            if (local.isEmpty()) {
                 return Optional.empty();                       // an object store: the connector reads it
             }
-            files.add(path);
-            bytes += fs.getSize();
+            files.add(local.get().toString());
+            bytes += f.size();
         }
         if (files.isEmpty()) {
             return Optional.empty();
@@ -68,6 +72,6 @@ final class DeltaLakeFiles {
         } catch (RuntimeException e) {
             rows = -1;
         }
-        return Optional.of(new LakeFiles("delta", files, plugin.promotedColumns(kind, l.get()), table.idColumn(), d, bytes, rows));
+        return Optional.of(new LakeFiles("delta", files, plugin.promotedColumns(kind, l.get()), l.get().idColumn(), d, bytes, rows));
     }
 }

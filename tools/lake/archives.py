@@ -15,7 +15,7 @@
 """Archives as loader input: ``.zip``, ``.tar.gz``, ``.tgz`` and ``.tar``, read in place (nothing is unpacked to disk).
 
 The rule is one for every loader, Python and Java (docs/guides/DATA_GUIDE.md, section 2.7 "Archives"; the Java side is
-drishti-lakeload's ``Archives``). Both test suites run the same fixtures (``tools/lake/testdata/archives``, ``expected.json``):
+Drishti Lake's ``Archives``). Both test suites run the same fixtures (``tools/lake/testdata/archives``, ``expected.json``):
 
 * **Members.** A member named ``*.jsonl``, ``*.ndjson`` or ``*.json``, plain or compressed (``.gz``, ``.zst``), is JSON Lines; the
   members of a dataset are read in name order. Any other file is skipped with a note, and so are hidden files (a name part that starts
@@ -36,8 +36,8 @@ are stricter: a tar (``.tar``, ``.tgz``, ``.tar.gz``, ``.tar.zip``) holds ``<tab
 (``filedate.tar_layout``: every problem listed, the whole archive refused), each member dated by its folder; a ``.zip`` is one table and
 one date, loose JSON Lines files only (folders refused). The rule above (``layout="rows"``) stays for ``load_rows.py``.
 
-Every check that needs no reading is made by ``plan`` before a row is read. ``DRISHTI_ARCHIVE_MAX_MB``, ``DRISHTI_ARCHIVE_MAX_RATIO``
-and ``DRISHTI_ARCHIVE_MAX_MEMBERS`` change the caps' defaults."""
+Every check that needs no reading is made by ``plan`` before a row is read. ``LAKE_ARCHIVE_MAX_MB``, ``LAKE_ARCHIVE_MAX_RATIO``
+and ``LAKE_ARCHIVE_MAX_MEMBERS`` change the caps' defaults."""
 from __future__ import annotations
 
 import gzip
@@ -76,11 +76,11 @@ class Limits:
 
     @classmethod
     def from_env(cls, env=None, **overrides) -> "Limits":
-        """The defaults, then ``DRISHTI_ARCHIVE_MAX_*``, then ``overrides`` (keys max_mb, max_ratio, max_members; None is no override)."""
+        """The defaults, then ``LAKE_ARCHIVE_MAX_*``, then ``overrides`` (keys max_mb, max_ratio, max_members; None is no override)."""
         e = os.environ if env is None else env
-        kw = {"max_mb": float(e.get("DRISHTI_ARCHIVE_MAX_MB") or DEFAULT_MAX_MB),
-              "max_ratio": float(e.get("DRISHTI_ARCHIVE_MAX_RATIO") or DEFAULT_MAX_RATIO),
-              "max_members": int(e.get("DRISHTI_ARCHIVE_MAX_MEMBERS") or DEFAULT_MAX_MEMBERS)}
+        kw = {"max_mb": float(e.get("LAKE_ARCHIVE_MAX_MB") or DEFAULT_MAX_MB),
+              "max_ratio": float(e.get("LAKE_ARCHIVE_MAX_RATIO") or DEFAULT_MAX_RATIO),
+              "max_members": int(e.get("LAKE_ARCHIVE_MAX_MEMBERS") or DEFAULT_MAX_MEMBERS)}
         kw.update({k: v for k, v in overrides.items() if v is not None})
         if kw["max_mb"] <= 0 or kw["max_ratio"] <= 0 or kw["max_members"] <= 0:
             raise ValueError("the archive caps (max-mb, max-ratio, max-members) must be more than 0")
@@ -328,7 +328,7 @@ def plan(path, dataset: str | None = None, configured: Iterable[str] | None = No
 
 def _tar_feed(path: pathlib.Path, kind: str, entries, size: int, configured, today) -> Plan:
     """A tar feed's plan: one dataset per table, each member dated by its folder (filedate.tar_layout); any problem refuses the archive."""
-    import filedate
+    from drishti_lake import filedate
     for raw, _sz, t in entries:                       # the guards first: an unsafe member refuses the archive before anything else
         safe_parts(raw)
     lay = filedate.tar_layout([(raw, t) for raw, _sz, t in entries], today, None if configured is None else list(configured))

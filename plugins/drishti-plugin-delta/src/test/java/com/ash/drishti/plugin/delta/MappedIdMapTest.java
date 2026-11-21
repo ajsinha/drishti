@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.read.IdMap;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
@@ -36,7 +38,7 @@ class MappedIdMapTest {
         for (int i = 0; i < files.length; i++) {
             files[i] = i % 3;
         }
-        DeltaTable.IdMap heap = new DeltaTable.HeapIdMap(ids, files);
+        IdMap heap = IdMap.of(ids, files);
         Path file = tmp.resolve("trade").resolve("7@1").resolve("2026-10-16.idmap");
         MappedIdMap mapped = MappedIdMap.write(heap, file);
         assertThat(mapped.size()).isEqualTo(ids.length);
@@ -59,7 +61,7 @@ class MappedIdMapTest {
      */
     @Test
     void fiftyVersionsOfADateLeaveTwoFolders() throws Exception {
-        DeltaTable.IdMap heap = new DeltaTable.HeapIdMap(new String[] {"A", "B", "C"}, new int[] {0, 1, 2});
+        IdMap heap = IdMap.of(new String[] {"A", "B", "C"}, new int[] {0, 1, 2});
         for (int v = 1; v <= 50; v++) {
             Path file = tmp.resolve("trade").resolve(v + "@" + (1000 + v)).resolve("2026-10-16.idmap");
             MappedIdMap.write(heap, file);

@@ -15,10 +15,13 @@
  */
 package com.ash.drishti.plugin.icebergext;
 
+import com.ash.lake.iceberg.external.KindConfig;
+import com.ash.lake.iceberg.external.Shape;
+
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.SourceContext;
-import com.ash.drishti.iceberg.types.NestedField;
-import com.ash.drishti.iceberg.types.Type;
+import com.ash.lake.iceberg.types.NestedField;
+import com.ash.lake.iceberg.types.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

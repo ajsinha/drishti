@@ -54,3 +54,54 @@ Branch `wip/g4-rehearsal-rx`, cut from `wip/g4-rehearsal` before its Lake step (
 ### Product fixes needed
 
 Rachana: a node factory hook so a host's tree types come out of expressions (P3); a live view of `Formats` (P7); a decision on the printer's text (P10) and a note that the `Sutra` record's JSON no longer holds `domain` and `match` (P5); a default language level that a host can pin without calling `language(...)` after the fact (the 1.2 default is a trap). Elements: a distinct dev version name (E8); the two parity differences in the changelog (E7). P4 (a wrong answer) needs an owner for investigation before the aggregate kernel is trusted.
+
+## Pass 3 (2026-11-21): lake, on `g4/lake`
+
+Branch `g4/lake` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Products from fresh worktrees into a scratch Maven
+repository: drishti-lake `origin/main` `a3c6b2a` (`0.9.0-SNAPSHOT`), drishti-tools `origin/main` `b3a451d` (`1.0.0-SNAPSHOT`),
+drishti-rachana `origin/g2/integration` `417f6af9` (`0.11.0-SNAPSHOT`). Pass 1's lake step (`9de17833d`: the 275 moved files deleted, the
+hadoop engine retired) cherry-picked first, then finished. About 61,000 lines leave Drishti, about 2,000 come in.
+
+### What was done
+
+| Item | Result |
+|---|---|
+| Modules | `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` deleted; `drishti-lakeio` is `lake/drishti-lake-host` (the shipped lake files and Drishti's side of the product). `lake-bom` and the AWS SDK bill imported in the parent (Drishti's own pins first). |
+| Catalog and runtime | `DrishtiLakeCatalog`: shipped lakes from every jar's and live module's `drishti/lakes/shipped.txt`, pack files from the one resolution, connector templates, named lake writers, `ReadyRule` extensions, the module boot's child-process settings. `DrishtiLake`: the one `LakeRuntime` of the process, built once by `PackEnvironmentPostProcessor` from the server's settings with the catalog and the `mem://` storage, and installed; a tool or a unit test without one gets one of the process's settings (rebuilt when they change). `DrishtiLakeCli load|check`: the loader and `LakeCheck` with that runtime. |
+| Settings | The product's options under its names (`lake.*`, `LAKE_*`): archive caps, business zone, Parquet row group and page, lakes dir, footer and Iceberg caches, loader trace. `drishti.home`, `drishti.data.dir`, `drishti.config.dir`, `drishti.tmp-dir` stand for the lake's folders when those are not set. |
+| Source plugins | Delta and Iceberg on `com.ash.lake.read` only (`LakeReader`, `TableReader`, `TableSnapshot`, `DayFiles`, `DataFile`, `IdMap`, `ColumnBlock`, `VectorRequest`, `Documents.withVectors`): no Kernel or Iceberg type, no package-private class. `VectorBatches` back in the Delta adapter (RA-7). `LakeReads` (lake-host) opens a connector's lake, maps a failed read to `UnreadableData` and keeps the connector's own listings. |
+| Memory lake | `ConnectorRows`: the connectors as the product's `RowSource`; `Retention` held by the server (`RetentionHolder`); `MemoryBinding` in `server.memlake`; `MemoryStores.of(runtime)` everywhere. |
+| Duplicates gone | Drishti's `RowFeed` (the product's, in the runtime's business zone, for every store loader); the hadoop engine's leftovers: the `engine`, `hadoop.*` and `lz4-via-native` settings, `DRISHTI_DELTA_ENGINE`, the launcher's `--engine`, the Windows workflow line, the delta-s3 example's row, the hadoop jars of `plugin-delta`. |
+| Python | `tools/lake/filedate.py` deleted: 15 callers on `drishti_lake.filedate`; `hostdates.py` keeps `local_day` and `of_input` (host). The loader starts as `DrishtiLakeCli load`; `lakeconfig`, `undo`, `relocate`, `delete`, `deltaread` start the product's mains. |
+| Tests | Tests of the table layer's internals deleted (their cases are the TCK's: `NamedTables`, `NewTables`, Iceberg layout, orphan files, REST and S3 catalogs, S3 natives, pyiceberg, `AppendNewestLoadTest`, `PythonPathEqualityTest`). Iceberg fixtures (contract rows, vector lakes, the server's mirror) written by the one loader (`format: loader-rows`). TLS and proxy fixtures from `tools-testkit`. |
+
+### Results
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/dist` and `drishti-modules-it` (needs the module packaging) | green; the server exec jar builds |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical**. `PackagedVarGoldenTest` not run (`drishti-modules-it`) |
+| Demo lake: `lake demo --engine java --only trades/endur,market-risk/{risk-factor,scenario-pv,desk-pnl}` (4,407 trades a day, 60 days), built by this branch's jar (`DrishtiLakeCli load`) and by `wip/g4-rehearsal-rx`'s (Drishti's own loader) | **identical**: `compare_lakes.py` 4 of 4 tables, 565 of 565 partitions, 318,180 rows; every column of every row equal (all but `_load_id` and `_source_file`); table properties equal |
+| Delta plugin tests | 93 run, 90 pass, 3 fail (R1, R2) |
+| Iceberg plugin tests | 49 run, 44 pass, 5 fail (R6) |
+| `drishti-lake-host`, `drishti-packs` | 6 and 69 pass |
+| `drishti-engine` | 711 run, 2 fail, none lake: `AbandonedReadsTest` (timing, P12), `DerivedPageTest` (Rachana, P3) |
+| Python (`test_feedfiles`, `test_business_dates`, `test_archives`, `test_javaload`, `test_launch`, `test_build`) with `drishti_lake` on the path | 126 pass after one expectation changed (the loader's `load` word) |
+
+### Breakages left
+
+| # | Symptom | Cause | Who fixes | Size |
+|---|---|---|---|---|
+| R1 | `TableReader.snapshot(AsOf.time(t))` before the first commit throws `no version committed at or before` and records a problem (health DEGRADED) instead of empty (`DeltaSourcePluginTest`: knownAt, health) | the read API's own contract says "empty: no table then" | Lake | S |
+| R2 | `DeltaAfterMaintenanceTest`: the maintenance job does not run | `tools/lake/maintain.py` without `drishti_lake` and the Delta writer's new main | Drishti (D5) | S |
+| R3 | The data inbox's loader child is the product's `LakeLoad` (runtime from the process: no catalog, so no shipped lake or pack template in the child) | `LoaderProcess` launches its own main | Lake: a host-named main for the child; then Drishti passes `DrishtiLakeCli load` | S |
+| R4 | `lakeconfig.py` reads lake files through `LakesCli` without Drishti's catalog (a shipped lake the folder lacks is not seen) | `LakesCli.run(runtime, ..)` is not public | Lake (public `run(runtime, args, out)`), then Drishti (`DrishtiLakeCli lakes`) | S |
+| R5 | `drishti-plugin-iceberg-external` is out of the build | the shaped read of a foreign table (READ_API RA-S8) is not built; `ExternalTable`, `KindConfig`, `Shape` are package-private | Lake (RA-S8), then Drishti rewrites the plugin as Delta and Iceberg here | M |
+| R6 | 5 Iceberg tests: vector-lake fixtures through the one loader (reject words, file counts, a null vector's document) | tests written for `IcebergLoader`'s shape | Drishti | S |
+| R7 | Id-map files keep Drishti's `MappedIdFile` format beside the product's `IdMaps`; Iceberg's maps are now keyed by the files stamp (rebuilt once) | RA-5: the folder's lifecycle is the host's, the format the product's | Drishti (adopt `IdMaps` under `IdMapFolder`) | S |
+| R8 | `jsonstream`, `archives`, `lakeconfig`, `laketables`, `maintain*`, `delete`, `undo`, `relocate`, `scan`, `deltaread`, `ownership`, `compare_lakes`, `memory_*` stay in `tools/lake` | the wheel has no `inputs`-compatible stream (JSON arrays, archive guards) and no lake-cli parts yet (SPLIT_STATUS L10 "not yet") | Lake (L10 parts), then Drishti | M |
+| R9 | `drishti_lake` must be on the tools' path (here `PYTHONPATH` to the product's `python/`) | the wheel is not in the console's environment | Drishti (D1, D5: install the pinned wheel) | S |
+| R10 | `testing/drishti-testroots` is still a shim; Drishti's tests use `lake-tck`'s `TestRoots` | L6 | Drishti | S |
+| R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name `DRISHTI_DELTA_ENGINE`; the capacity workbook's setting names | D7 | Drishti | M |
+| R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
+| R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |

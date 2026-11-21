@@ -88,7 +88,7 @@ def stack(tmp_path_factory):
     cached = _lake_cache().cached("publicsector-feeds|" + ",".join(FEEDS), build)
     shutil.copytree(cached / "data", data)  # the server writes its own state in its data folder: a copy (small: the recorded fixtures)
     senv = dict(os.environ, DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
-                DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), DRISHTI_LAKES_DIR=str(ROOT / "config" / "lakes"),
+                DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), LAKE_LAKES_DIR=str(ROOT / "config" / "lakes"),
                 DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector")
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"],
                                        tmp=tmp / "jvm-tmp", cwd=work, env=senv), cwd=work, env=senv, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]

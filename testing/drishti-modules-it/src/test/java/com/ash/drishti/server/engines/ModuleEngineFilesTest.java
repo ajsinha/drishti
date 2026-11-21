@@ -17,7 +17,7 @@ package com.ash.drishti.server.engines;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.nio.file.Files;

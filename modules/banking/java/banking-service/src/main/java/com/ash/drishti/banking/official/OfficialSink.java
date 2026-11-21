@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.drishti.lakeio.LocalPaths;
-import com.ash.drishti.lakeio.S3Settings;
-import com.ash.drishti.lakeio.S3Storage;
+import com.ash.lake.io.LocalPaths;
+import com.ash.lake.io.S3Settings;
+import com.ash.lake.io.S3Storage;
 import com.ash.drishti.server.dist.JsonlWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

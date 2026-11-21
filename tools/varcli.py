@@ -460,7 +460,7 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
         rows = move_dates(rows, day)
     import sys as _sys
     _sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent / "lake"))
-    import filedate
+    from drishti_lake import filedate
     if why := filedate.date_error(src.name):
         raise ValueError(f"{why}: a file with a wrong date in its name is refused (rename it)")
     named = filedate.of(src.name)

@@ -127,7 +127,7 @@ def inbox() -> Path:
 def env() -> dict:
     """The command line's and the loaders' environment: the scratch server, its lake files, data and connector folders."""
     w = work()
-    return {**os.environ, "DRISHTI_SERVER": f"http://127.0.0.1:{SERVER_PORT}", "DRISHTI_LAKES_DIR": str(w / "config" / "lakes"),
+    return {**os.environ, "DRISHTI_SERVER": f"http://127.0.0.1:{SERVER_PORT}", "LAKE_LAKES_DIR": str(w / "config" / "lakes"),
             "DRISHTI_DATA_DIR": str(w / "data"), "DRISHTI_CONNECTORS_DIR": str(w / "config" / "connectors")}
 
 

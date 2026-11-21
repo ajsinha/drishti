@@ -15,8 +15,7 @@
  */
 package com.ash.drishti.server;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
-import com.ash.drishti.plugin.iceberg.IcebergLoader;
+import com.ash.lake.iceberg.table.IcebergAppender;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -93,7 +92,7 @@ public final class IcebergMirror {
                     rows.add(new IcebergAppender.Row(a.get(0).asText(), a.get(1).asText(), cols));
                 }
                 vectors.forEach(promoted::remove);
-                IcebergAppender.append(Map.of("root", root.toString()), "risk", kind, LocalDate.parse(e.getKey()), rows, promoted, vectors, Map.of());
+                IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), Map.of("root", root.toString()), "risk", kind, LocalDate.parse(e.getKey()), rows, promoted, vectors, Map.of());
             }
             return;
         }
@@ -112,8 +111,31 @@ public final class IcebergMirror {
         try {
             // the producer of the feed: one tar of <kind>/<YYYY-MM-DD>/ folders (or one dated file), so each row lands under its own
             // business date by the load rules (DATA_LAKE_GUIDE.md), never under the business today of an undated name
-            Path file = com.ash.drishti.testkit.LoaderRows.write(feed, lines);
-            IcebergLoader.run(new String[] {file.toString(), root.toString(), "--engine", "native", "--spill-dir", work.toString(), "--buffer-mb", "64"});
+            // Drishti Lake's one loader (source.format: loader-rows), each business date replaced
+            Set<String> promote = new LinkedHashSet<>();
+            Set<String> vectors = new LinkedHashSet<>();
+            Map<String, List<String>> byDate = new java.util.TreeMap<>();
+            for (String line : lines) {
+                JsonNode l = JSON.readTree(line);
+                l.path("columns").fields().forEachRemaining(f -> (f.getValue().isArray() ? vectors : promote).add(f.getKey()));
+                byDate.computeIfAbsent(l.path("date").asText(), d -> new ArrayList<>()).add(line);
+            }
+            promote.removeAll(vectors);
+            for (Map.Entry<String, List<String>> d : byDate.entrySet()) {
+                Files.write(feed.resolve(kind + "." + d.getKey() + ".jsonl"), d.getValue());
+            }
+            Path config = work.resolve(feed.getFileName() + ".yaml");
+            Files.writeString(config, "source:\n  files: '" + feed + "/*.jsonl'\n  format: loader-rows\n"
+                    + (promote.isEmpty() ? "" : "  promote: [" + String.join(", ", promote) + "]\n")
+                    + (vectors.isEmpty() ? "" : "  vectors: [" + String.join(", ", vectors) + "]\n")
+                    + "target:\n  format: iceberg\n  lake: '" + root + "'\n  domain: risk\n  kind: " + kind + "\n  mode: replace-date\n");
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
+                    new java.io.PrintStream(out, true, java.nio.charset.StandardCharsets.UTF_8));
+            Files.deleteIfExists(config);
+            if (code != 0) {
+                throw new IllegalStateException("the loader failed (" + code + "): " + out);
+            }
         } finally {
             try (var all = Files.walk(feed)) {
                 all.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());

@@ -43,12 +43,12 @@ public final class DrishtiTools {
     /** How a message names the site's proxy settings. */
     public static final String SITE_PROXY_PREFIX = "drishti.http.proxy.";
 
-    /** The prefix of the environment variable that names the business zone of a load ({@code DRISHTI_BUSINESS_ZONE}). */
-    public static final String ENV_PREFIX = "DRISHTI_";
+    /** The prefix of the environment variable that names the business zone of a load ({@code LAKE_BUSINESS_ZONE}: the loaders are the lake's). */
+    public static final String ENV_PREFIX = "LAKE_";
 
     private DrishtiTools() {}
 
-    /** The guard a loader's command line asks for ({@code --zone}, {@code --as-of}, ...); the business zone from {@code DRISHTI_BUSINESS_ZONE}. */
+    /** The guard a loader's command line asks for ({@code --zone}, {@code --as-of}, ...); the business zone from {@code LAKE_BUSINESS_ZONE}. */
     public static LoadGuard loadGuard(String[] args) {
         return LoadGuard.fromArgs(args, ENV_PREFIX);
     }

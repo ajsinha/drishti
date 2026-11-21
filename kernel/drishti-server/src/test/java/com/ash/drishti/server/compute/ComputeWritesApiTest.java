@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.compute;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

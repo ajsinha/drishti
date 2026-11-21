@@ -148,7 +148,7 @@ def file_kind(f: pathlib.Path) -> str:
     lake = str(pathlib.Path(__file__).resolve().parent / "lake")
     if lake not in sys.path:
         sys.path.insert(0, lake)
-    import filedate
+    from drishti_lake import filedate
     n = filedate.parse(f.name)
     if n.error is None and not n.tar and n.table:
         return f.name.split(".")[0]

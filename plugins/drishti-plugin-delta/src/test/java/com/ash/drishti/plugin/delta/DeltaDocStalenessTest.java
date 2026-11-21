@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.IdMapFolder;
-import com.ash.drishti.deltalake.write.LakeCli;
+import com.ash.lake.delta.write.LakeCli;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

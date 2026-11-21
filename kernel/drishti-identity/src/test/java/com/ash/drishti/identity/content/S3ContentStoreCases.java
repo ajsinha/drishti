@@ -18,7 +18,7 @@ package com.ash.drishti.identity.content;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.testkit.s3.ConditionalWrites;
-import com.ash.drishti.testkit.s3.S3Endpoint;
+import com.ash.lake.tck.s3.S3Endpoint;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 

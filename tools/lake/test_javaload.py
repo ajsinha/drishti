@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """lake build --engine java (javaload.py): the build's options as the parallel loader's configuration, when --engine auto picks the loader,
-and secrets kept out of the configuration file. The loads themselves are tested in drishti-lakeload (PythonPathEqualityTest runs lake build
+and secrets kept out of the configuration file. The loads themselves are tested in Drishti Lake (lake-load) (PythonPathEqualityTest runs lake build
 both ways and compares the tables)."""
 import gzip
 import json

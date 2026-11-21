@@ -96,7 +96,7 @@ business date alone.
 **In memory.** A lake whose root is `mem://<store>` lives in the server's memory under a hard cap, for feeds that may never be written
 to disk: [section 13](#13-the-in-memory-lake).
 
-**Where the files are read from.** `config/lakes/` (the system property `drishti.lakes.dir` or `DRISHTI_LAKES_DIR` say otherwise). The
+**Where the files are read from.** `config/lakes/` (the system property `lake.lakes.dir` or `LAKE_LAKES_DIR` say otherwise). The
 demo lake's file also ships inside the server, so a server started in another folder, a container or a cluster node knows it; a
 `demo.yaml` in the folder wins. Example lake files for S3, Iceberg path tables, AWS S3 Tables, a REST catalog behind a private CA and an
 in-memory store are in `config/lakes.examples/`, each beside its connectors in `config/connectors.examples/`.
@@ -1722,7 +1722,7 @@ note; hidden files and `__MACOSX/` are skipped; a leading `./` is ignored; `\` i
 | Entries | more than `max-members` (100,000) |
 | Zip bombs | declared or expanded sizes over `max-mb` (102,400 MB) or `max-ratio` (200) times the archive's own size; reading stops the moment one is passed |
 
-The caps come from `DRISHTI_ARCHIVE_MAX_MB`, `DRISHTI_ARCHIVE_MAX_RATIO` and `DRISHTI_ARCHIVE_MAX_MEMBERS`; the parallel loader also
+The caps come from `LAKE_ARCHIVE_MAX_MB`, `LAKE_ARCHIVE_MAX_RATIO` and `LAKE_ARCHIVE_MAX_MEMBERS`; the parallel loader also
 takes `source.archive.*` in its load file. **Datasets** (the parallel loader with `datasets:`, and `drishti.py convert`): an archive with
 no folders is one dataset named after it; folders one level deep are one dataset each; loose files beside folders, or files deeper than
 one folder, are refused. With several datasets every one is read and checked before the first commit, so one that would fail stops the

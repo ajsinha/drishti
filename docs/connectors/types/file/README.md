@@ -235,7 +235,7 @@ SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -j
 
 - **A file the stream reaches is replaced whole**: its lines go to `<kind>.jsonl.tmp`, renamed into place at the end, so a running
   server never reads half a day.
-- **Dates are guarded**: a row dated after tomorrow in the business zone (`--future-days`, 1; `--zone`, else `DRISHTI_BUSINESS_ZONE`,
+- **Dates are guarded**: a row dated after tomorrow in the business zone (`--future-days`, 1; `--zone`, else `LAKE_BUSINESS_ZONE`,
   else `America/New_York`) is not written; the first few are named and the load ends with an error once the other files are in place.
 - At most 256 files are open at once (a file closed early is reopened for appending); a row that would land outside the root (a domain
   or kind like `../x`) is refused.

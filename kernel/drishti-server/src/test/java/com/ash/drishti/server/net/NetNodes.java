@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.DrishtiApplication;
 import java.io.IOException;

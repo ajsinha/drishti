@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.sources;
 
-import com.ash.drishti.dataload.ReadyCheck;
-import com.ash.drishti.dataload.ReadyRule;
+import com.ash.lake.inbox.ReadyCheck;
+import com.ash.lake.inbox.ReadyRule;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourceSystems;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -28,6 +28,8 @@
   <name>drishti-plugin-mongodb</name>
   <description>MongoDB source: a document per entity per business date, promoted fields beside it, a day read as columns over an index</description>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- the version Spring Boot manages (5.5.x) -->
     <dependency><groupId>org.mongodb</groupId><artifactId>mongodb-driver-sync</artifactId></dependency>

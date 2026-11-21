@@ -36,7 +36,7 @@ def _reader() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build drishti-lakeio or the server jar)")
+pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build Drishti Lake (lake-config) or the server jar)")
 
 LAKE = """lake: main
 root: {root}
@@ -69,7 +69,7 @@ def test_a_kind_the_lake_lacks_is_refused(tmp_path):
 
 
 def test_lake_build_refuses_a_partition_the_lake_file_does_not_say(tmp_path, monkeypatch):
-    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(_folder(tmp_path)))
+    monkeypatch.setenv("LAKE_LAKES_DIR", str(_folder(tmp_path)))
     import build
     a = build.add_arguments(argparse.ArgumentParser()).parse_args(
         ["--from", str(tmp_path), "--kind", "trade", "--table", "trade_endur", "--domain", "trading", "--as-of", "2026-10-28",
@@ -105,7 +105,7 @@ def test_a_refused_build_writes_nothing_outside_the_lake_or_the_data_folder(tmp_
     """No root litter: ``--lake NAME`` is a lake's name, never a folder of the current directory. A run refused by the lake file (a
     --partition-by that contradicts it: the summary in that lake's folder, as a successful run's; a kind it has no entry for: under
     <data>/lakes/<name>) writes nothing where it was started."""
-    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(_folder(tmp_path)))
+    monkeypatch.setenv("LAKE_LAKES_DIR", str(_folder(tmp_path)))
     monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
     cwd = tmp_path / "cwd"
     src = tmp_path / "in"
@@ -131,7 +131,7 @@ def test_a_refused_build_writes_nothing_outside_the_lake_or_the_data_folder(tmp_
 def test_a_refused_build_with_a_lake_root_keeps_its_summary_there(tmp_path, monkeypatch):
     """lake demo's builds (--lake demo --lake-root DIR): refused before the entry is read (here a lake name whose reader fails), the
     summary goes to DIR's _drishti-lake, never ./demo of the current directory."""
-    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(_folder(tmp_path)))
+    monkeypatch.setenv("LAKE_LAKES_DIR", str(_folder(tmp_path)))
     monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
     cwd = tmp_path / "cwd"
     cwd.mkdir()

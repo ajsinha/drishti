@@ -28,6 +28,8 @@
   <name>drishti-plugin-redis</name>
   <description>Redis source: today and the last few days in memory, compressed documents per entity per business date, a day's promoted fields stored column-wise in chunks</description>
   <dependencies>
+    <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId></dependency>
     <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId></dependency>

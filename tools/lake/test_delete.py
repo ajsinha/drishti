@@ -14,7 +14,7 @@
 
 """lake delete (tools/lake/delete.py): the dates asked, the Java writer's answer read, a missing date refused in words, the dry run, the
 confirmation (the table's name typed, --yes for scripts, refused without a terminal), the run log, and the data-load signal with status
-deleted. The delete itself in the three stores is tested in Java (drishti-lakeload DeleteDatesParityTest); a files store end to end here
+deleted. The delete itself in the three stores is tested in Java (Drishti Lake (lake-load) DeleteDatesParityTest); a files store end to end here
 when the server jar is built."""
 import argparse
 import http.server

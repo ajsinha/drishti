@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
-import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.mongodb.ConnectionString;
@@ -93,7 +93,7 @@ public final class MongoLoader {
     private final long t0 = System.nanoTime();
 
     MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight) {
-        this(db, format, ttlDays, batchSize, maxInFlight, DrishtiTools.loadGuard(new String[0]));
+        this(db, format, ttlDays, batchSize, maxInFlight, LoadGuard.fromArgs(new String[0]));
     }
 
     MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight, LoadGuard guard) {
@@ -122,11 +122,11 @@ public final class MongoLoader {
         MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
                 .applyToConnectionPoolSettings(p -> p.maxSize(poolSize).maxWaitTime(6, java.util.concurrent.TimeUnit.HOURS)).build();
         try (MongoClient client = MongoClients.create(settings);
-             RowFeed in = RowFeed.open(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
+             RowFeed in = DrishtiLake.rowFeed(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
             MongoLoader loader = new MongoLoader(client.getDatabase(database),
                     MongoLayout.DocFormat.valueOf(options.getOrDefault("doc-format", "string").toUpperCase(java.util.Locale.ROOT)),
                     Integer.parseInt(options.getOrDefault("ttl-days", "0")), Integer.parseInt(options.getOrDefault("batch", "1000")), inFlight,
-                    DrishtiTools.loadGuard(args));
+                    LoadGuard.fromArgs(args));
             long n = loader.load(in);
             System.out.printf("mongodb: loaded %,d rows into database %s in %,.0f s%n", n, database, loader.seconds());
             if (options.containsKey("keep-days")) {

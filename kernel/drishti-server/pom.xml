@@ -37,8 +37,11 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
     <!-- the table layer (docs/architecture/ARCHITECTURE.md §28): BI depends on it, never the reverse -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-tables</artifactId></dependency>
-    <!-- the in-memory lake (mem://): the server keeps only its Spring wiring (server.memlake) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId></dependency>
+    <!-- Drishti Lake: the loader, the in-memory lake (mem://), the files store; the server keeps its wiring (server.memlake, server.dataload) -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-memory</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-files</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
@@ -50,9 +53,9 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-redis</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
-    <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.drishti.lakeload.LakeLoad) -->
+    <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.lake.load.LakeLoad) -->
     <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
+    <!-- drishti-plugin-iceberg-external: out of the build until Drishti Lake's RA-S8 (docs/plans/G4_REHEARSAL.md, Pass 3) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId></dependency>

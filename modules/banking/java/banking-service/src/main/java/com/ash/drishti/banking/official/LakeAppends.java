@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
+import com.ash.lake.iceberg.table.IcebergAppender;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,7 +52,7 @@ public final class LakeAppends {
             String vector) throws IOException {
         Map<String, Boolean> promoted = new LinkedHashMap<>();
         types.forEach((c, t) -> promoted.put(c, "double".equals(t)));
-        return IcebergAppender.append(Map.of("root", lake.toString()), domain, kind, day, rows, promoted,
+        return IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), Map.of("root", lake.toString()), domain, kind, day, rows, promoted,
                 vector == null ? Set.of() : Set.of(vector), Map.of());
     }
 }

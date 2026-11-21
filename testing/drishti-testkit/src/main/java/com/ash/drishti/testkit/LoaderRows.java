@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.testkit;
 
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
@@ -113,7 +114,7 @@ public final class LoaderRows {
     /** A feed of the rows (written as {@link #write(List)} writes them). */
     public static RowFeed feed(List<String> lines) {
         try {
-            return RowFeed.open(write(lines).toString(), null);
+            return DrishtiLake.rowFeed(write(lines).toString(), null);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

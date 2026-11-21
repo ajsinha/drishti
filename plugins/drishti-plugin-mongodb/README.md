@@ -222,7 +222,7 @@ python tools/drishti.py data load --store mongodb mongodb://localhost:27017 dris
 
 Options: `--keep-days N`, `--ttl-days N`, `--doc-format string|bson` (`string`), `--batch N` (1000), `--in-flight N` (16),
 `--pool-size N` (20), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z`
-(`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+(`LAKE_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
 
 **Your own writer** (a Kafka consumer, a batch job) writes the same documents: `MongoLayout.record(...)` builds the domain document,
 `MongoLayout.columnsRecord(record)` its narrow copy and `MongoLayout.prepare(db, collection, ttl)` the collections and indexes. Any

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.deltalake.write.LakeCli;
+import com.ash.lake.delta.write.LakeCli;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

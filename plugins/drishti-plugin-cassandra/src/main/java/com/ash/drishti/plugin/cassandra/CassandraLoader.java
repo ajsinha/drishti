@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
-import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.tools.time.LoadGuard;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -163,11 +163,11 @@ public final class CassandraLoader implements AutoCloseable {
             System.exit(2);
         }
         Options o = parse(args);
-        LoadGuard guard = DrishtiTools.loadGuard(args);
+        LoadGuard guard = LoadGuard.fromArgs(args);
         long t0 = System.nanoTime();
         Result r;
         try (CassandraLoader loader = new CassandraLoader(o, guard);
-             RowFeed in = RowFeed.open(args[0], RowFeed.asOf(args))) {
+             RowFeed in = DrishtiLake.rowFeed(args[0], RowFeed.asOf(args))) {
             r = loader.load(in);
         }
         double s = (System.nanoTime() - t0) / 1e9;

@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.lakes;
 
-import com.ash.drishti.lakeconfig.Lakes;
-import com.ash.drishti.lakeload.LakeRelocate;
+import com.ash.lake.config.Lakes;
+import com.ash.lake.load.LakeRelocate;
 import java.util.function.Function;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -65,7 +65,7 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
             if (lakes.find(LAKE).isEmpty()) {
                 return;
             }
-            LakeRelocate.Outcome o = LakeRelocate.relocate(lakes, LAKE, false);
+            LakeRelocate.Outcome o = LakeRelocate.relocate(com.ash.drishti.lakehost.DrishtiLake.runtime(), lakes, LAKE, false);
             log(o);
         } catch (RuntimeException e) {
             LOG.log(System.Logger.Level.WARNING, "lake " + LAKE + ": the one-time move into its own folder was not tried (" + e.getMessage()

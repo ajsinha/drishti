@@ -26,7 +26,6 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     env:
-      DRISHTI_DELTA_ENGINE: native
       DRISHTI_PORT: '18480'
     defaults:
       run: { shell: pwsh }

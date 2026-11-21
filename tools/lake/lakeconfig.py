@@ -15,7 +15,7 @@
 """The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
 ``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
 
-There is ONE reader of the lake files, in Java (drishti-lakeio, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
+There is ONE reader of the lake files, in Java (Drishti Lake's ``com.ash.lake.config.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
 loader is: ``DRISHTI_LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
 ``lake/drishti-lakeio/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
@@ -28,7 +28,7 @@ import pathlib
 import subprocess
 import sys
 
-MAIN = "com.ash.drishti.lakeconfig.LakesCli"
+MAIN = "com.ash.lake.config.LakesCli"   # Drishti Lake's lake-file reader (lake-config)
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 NAME_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 if str(ROOT / "tools" / "lake") not in sys.path:
@@ -40,8 +40,8 @@ class LakeConfigError(RuntimeError):
 
 
 def lakes_dir() -> pathlib.Path:
-    """The lake folder: DRISHTI_LAKES_DIR, else <Drishti folder>/config/lakes (as the server's ``drishti.lakes.dir``)."""
-    given = os.environ.get("DRISHTI_LAKES_DIR")
+    """The lake folder: LAKE_LAKES_DIR, else <Drishti folder>/config/lakes (as the server's ``lake.lakes.dir``)."""
+    given = os.environ.get("LAKE_LAKES_DIR")
     if given:
         return pathlib.Path(given)
     return ROOT / "config" / "lakes"                                 # this checkout's lake files, wherever the tool is run from
@@ -70,11 +70,11 @@ def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
 
 
 def _maven_classpath() -> str | None:
-    """The compiled drishti-lakeio (and the two classes of the kernel it names: drishti-common's ModuleLoaders, the kernel API's
+    """The compiled Drishti Lake (lake-config) (and the two classes of the kernel it names: drishti-common's ModuleLoaders, the kernel API's
     DomainVocabulary) with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
     (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
     fails with NoSuchMethodError before a lake file is read)."""
-    classes = ROOT / "lake/drishti-lakeio" / "target" / "classes"
+    classes = ROOT / "lake/drishti-lake-host" / "target" / "classes"
     kernel = [ROOT / "kernel" / m / "target" / "classes" for m in ("drishti-common", "drishti-kernel-api")]
     if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file() or not all(k.is_dir() for k in kernel):
         return None
@@ -118,7 +118,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
     raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) and no compiled "
-                          "drishti-lakeio (mvn -pl :drishti-lakeio compile); DRISHTI_LAKE_CLASSPATH names one")
+                          "drishti-lake-host; DRISHTI_LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
 
 
 def run(args: list[str], folder: pathlib.Path | None = None, jar: str | None = None, java: str | None = None) -> dict:
@@ -292,19 +292,19 @@ def register(sub, add) -> None:
     """``lake show``, ``lake check`` and ``lake migrate-config`` (cli.py adds them to the ``lake`` group)."""
     s = add(sub, "show", lambda a, extra: cmd_show(a), "lake show: every lake of config/lakes/ and its tables, as the server reads them", [],
             "example:\n  drishti.py lake show\nGuide: docs/guides/DATA_LAKE_GUIDE.md")
-    s.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
+    s.add_argument("--dir", help="the lake folder (default LAKE_LAKES_DIR, else config/lakes)")
     s.add_argument("--json", action="store_true")
     c = add(sub, "check", lambda a, extra: cmd_check(a), "lake check: connectors name known lakes; each lake file matches its tables on disk "
             "(format, partition columns, promoted columns)", [], "example:\n  drishti.py lake check\nexit: 0 ok, 1 an error found. "
             "Guide: docs/guides/DATA_LAKE_GUIDE.md")
-    c.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
+    c.add_argument("--dir", help="the lake folder (default LAKE_LAKES_DIR, else config/lakes)")
     c.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     c.add_argument("--json", action="store_true")
     m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config (deprecated, from an older release; retired in the next release): write lake files from connector files that "
             "describe their lake (root, domain, table.<kind>, layout.<kind>.*) and rewrite those connectors to lake: <name>", [],
             "examples:\n  drishti.py lake migrate-config                 (a dry run: prints the files)\n"
             "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/DATA_LAKE_GUIDE.md section 12")
-    m.add_argument("--dir", help="the lake folder written (default DRISHTI_LAKES_DIR, else config/lakes)")
+    m.add_argument("--dir", help="the lake folder written (default LAKE_LAKES_DIR, else config/lakes)")
     m.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     m.add_argument("--write", action="store_true", help="write the files (default: a dry run)")
     m.add_argument("--json", action="store_true")

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The archive rule (DATA_GUIDE.md section 2.7), Python side: every case of the shared fixtures (testdata/archives/expected.json, the
-same cases drishti-lakeload's ArchivesTest runs), the row counts of the unpacked files, and the loaders that read archives: lake build's
+same cases Drishti Lake's ArchivesTest runs), the row counts of the unpacked files, and the loaders that read archives: lake build's
 reader (jsonstream), load_rows.py and convert.
 
     python3 -m pytest -q tools/lake/test_archives.py
@@ -66,7 +66,7 @@ def test_the_shared_cases(case):
 def test_the_defaults_are_the_shared_ones():
     d = EXPECTED["defaults"]
     assert (A.DEFAULT_MAX_MB, A.DEFAULT_MAX_RATIO, A.DEFAULT_MAX_MEMBERS, A.FLOOR) == (d["max_mb"], d["max_ratio"], d["max_members"], d["floor_bytes"])
-    assert A.Limits.from_env(env={"DRISHTI_ARCHIVE_MAX_MB": "5", "DRISHTI_ARCHIVE_MAX_RATIO": "7", "DRISHTI_ARCHIVE_MAX_MEMBERS": "9"}) \
+    assert A.Limits.from_env(env={"LAKE_ARCHIVE_MAX_MB": "5", "LAKE_ARCHIVE_MAX_RATIO": "7", "LAKE_ARCHIVE_MAX_MEMBERS": "9"}) \
         == A.Limits(5, 7, 9)
 
 
@@ -211,10 +211,10 @@ def test_convert_unpacks_an_archive_into_json_lines(tmp_path):
 
 
 def test_the_caps_come_from_the_environment(monkeypatch):
-    monkeypatch.setenv("DRISHTI_ARCHIVE_MAX_RATIO", "2")
+    monkeypatch.setenv("LAKE_ARCHIVE_MAX_RATIO", "2")
     with pytest.raises(A.ArchiveError, match="max-ratio"):
         A.plan(FIX / "bomb.zip")
-    monkeypatch.delenv("DRISHTI_ARCHIVE_MAX_RATIO")
+    monkeypatch.delenv("LAKE_ARCHIVE_MAX_RATIO")
     assert A.plan(FIX / "bomb.zip").datasets
 
 

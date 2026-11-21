@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.banking.compute.var.CurrencyTotals;
 import com.ash.drishti.banking.compute.var.HierarchySpec;
 import com.ash.drishti.banking.compute.var.PositionRules;

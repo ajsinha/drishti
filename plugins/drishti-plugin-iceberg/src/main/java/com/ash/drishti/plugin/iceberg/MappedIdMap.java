@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.read.IdMap;
+
 import com.ash.drishti.api.MappedIdFile;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,7 +28,7 @@ import java.nio.file.Path;
  * a restart and survives commits of other dates (the Delta connector's design).
  * Since 2.9.7 the mapping is released when the map leaves the connector's cache or its file is pruned (never left to the collector).
  */
-final class MappedIdMap implements KindTable.IdMap {
+final class MappedIdMap implements IdMap {
 
     /** Mapped again when its mapping was released for being idle ({@code id-map-disk.idle-release}, 2.9.7). */
     private final MappedIdFile.Handle f;
@@ -42,7 +44,7 @@ final class MappedIdMap implements KindTable.IdMap {
     }
 
     /** Writes {@code m} to {@code file} (through a temporary file, so a reader never sees half of it) and maps it. */
-    static MappedIdMap write(KindTable.IdMap m, Path file) throws IOException {
+    static MappedIdMap write(IdMap m, Path file) throws IOException {
         return new MappedIdMap(MappedIdFile.write(m.size(), m::id, m::file, file));
     }
 

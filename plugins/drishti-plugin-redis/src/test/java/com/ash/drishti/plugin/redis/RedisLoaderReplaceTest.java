@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.plugin.redis;
 
-import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.lakehost.DrishtiLake;
+import com.ash.lake.common.RowFeed;
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -77,7 +78,7 @@ class RedisLoaderReplaceTest {
         System.arraycopy(flags, 0, args, 2, flags.length);
         RedisLoader.Options o = RedisLoader.Options.parse(args);
         try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, TIMEOUT)) {
-            new RedisLoader(o, c).load(RowFeed.open(LoaderRows.write(lines).toString(), RowFeed.asOf(args)));   // as the loader's main
+            new RedisLoader(o, c).load(DrishtiLake.rowFeed(LoaderRows.write(lines).toString(), RowFeed.asOf(args)));   // as the loader's main
         }
     }
 
@@ -246,7 +247,7 @@ class RedisLoaderReplaceTest {
             try {
                 RedisLoader.Options o = RedisLoader.Options.parse(new String[] {"-", uri(), "--codec", "zstd", "--threads", "1"});
                 try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, TIMEOUT)) {
-                    new RedisLoader(o, c).load(RowFeed.stream(in, D3));     // a stream of one kind and one day
+                    new RedisLoader(o, c).load(DrishtiLake.rowStream(in, D3));     // a stream of one kind and one day
                 }
             } catch (Exception e) {
                 throw new java.util.concurrent.CompletionException(e);

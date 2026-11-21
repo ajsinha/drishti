@@ -15,20 +15,20 @@
  */
 package com.ash.drishti.plugin.icebergext;
 
-import com.ash.drishti.testroots.TestRoots;
-import com.ash.drishti.iceberg.Table;
-import com.ash.drishti.iceberg.catalog.Catalog;
-import com.ash.drishti.iceberg.catalog.Catalogs;
-import com.ash.drishti.iceberg.expr.Expr;
-import com.ash.drishti.iceberg.manifest.DataFile;
-import com.ash.drishti.iceberg.meta.PartitionSpec;
-import com.ash.drishti.iceberg.read.TaskReader;
-import com.ash.drishti.iceberg.scan.FileTask;
-import com.ash.drishti.iceberg.types.NestedField;
-import com.ash.drishti.iceberg.types.Schema;
-import com.ash.drishti.iceberg.types.Type;
-import com.ash.drishti.iceberg.write.Operations;
-import com.ash.drishti.iceberg.write.ParquetDataWriter;
+import com.ash.lake.tck.TestRoots;
+import com.ash.lake.iceberg.Table;
+import com.ash.lake.iceberg.catalog.Catalog;
+import com.ash.lake.iceberg.catalog.Catalogs;
+import com.ash.lake.iceberg.expr.Expr;
+import com.ash.lake.iceberg.manifest.DataFile;
+import com.ash.lake.iceberg.meta.PartitionSpec;
+import com.ash.lake.iceberg.read.TaskReader;
+import com.ash.lake.iceberg.scan.FileTask;
+import com.ash.lake.iceberg.types.NestedField;
+import com.ash.lake.iceberg.types.Schema;
+import com.ash.lake.iceberg.types.Type;
+import com.ash.lake.iceberg.write.Operations;
+import com.ash.lake.iceberg.write.ParquetDataWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

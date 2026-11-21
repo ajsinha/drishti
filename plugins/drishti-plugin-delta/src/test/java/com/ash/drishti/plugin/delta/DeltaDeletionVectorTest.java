@@ -15,12 +15,15 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.read.LakeReader;
+import com.ash.lake.read.TableSnapshot;
+
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.deltalake.NativeEngine;
+import com.ash.lake.delta.NativeEngine;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,14 +59,14 @@ class DeltaDeletionVectorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void aRowDeletedWithADeletionVectorIsGone(String engine) throws Exception {
         Path root = lake("lake-layout");
         LocalDate day = LocalDate.of(2026, 9, 30);
         Thread.sleep(20);                                         // after the copied commits (their times are the copy's)
         Instant beforeDelete = Instant.now();
         Thread.sleep(20);                                         // the delete's commit is strictly later
-        try (NativeEngine writer = NativeEngine.create()) {
+        try (NativeEngine writer = NativeEngine.create(com.ash.drishti.lakehost.DrishtiLake.runtime())) {
             DeletionVectorFixture.delete(writer, root.resolve("desk/trade"), day.toString(), "T-033");
         }
         DeltaSourcePlugin p = new DeltaSourcePlugin();
@@ -86,10 +89,10 @@ class DeltaDeletionVectorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void bothEnginesSeeTheSameRowsAfterADelete(String engine) throws Exception {
         Path root = lake("lake");
-        try (NativeEngine writer = NativeEngine.create()) {
+        try (NativeEngine writer = NativeEngine.create(com.ash.drishti.lakehost.DrishtiLake.runtime())) {
             DeletionVectorFixture.delete(writer, root.resolve("desk/trade"), DatedSourceContract.D3.toString(), "T-2");
         }
         DeltaSourcePlugin p = new DeltaSourcePlugin();
@@ -109,41 +112,43 @@ class DeltaDeletionVectorTest {
      * that column, so the id map applies the vector (DATA-16), with each engine.
      */
     @ParameterizedTest
-    @ValueSource(strings = {"NATIVE", "HADOOP"})
+    @ValueSource(strings = {"NATIVE"})
     void theIdMapLeavesOutDeletedRows(String engine) throws Exception {
         Path root = lake("lake-layout");
         LocalDate day = LocalDate.of(2026, 9, 30);
-        try (NativeEngine writer = NativeEngine.create()) {
+        try (NativeEngine writer = NativeEngine.create(com.ash.drishti.lakehost.DrishtiLake.runtime())) {
             DeletionVectorFixture.delete(writer, root.resolve("desk/trade"), day.toString(), "T-033");
         }
-        try (LakeStore lake = LakeStore.of(root.toString(), "desk", Map.of(), EngineKind.valueOf(engine))) {
-            DeltaTable t = new DeltaTable(lake.engine(), lake.table("trade"), "id", "doc", "business_date");
-            DeltaTable.Layout l = t.layout(null).orElseThrow();
-            DeltaTable.IdMap ids = t.ids(l, day);
+        try (LakeReader lake = com.ash.drishti.lakehost.LakeReads.open("delta", Map.of("root", root.toString(), "domain", "desk"))) {
+            TableSnapshot l = lake.table("trade").snapshot(com.ash.lake.spi.AsOf.LATEST).orElseThrow();
+            com.ash.lake.read.IdMap ids = l.ids(day);
             assertThat(ids.ids()).hasSize(39).doesNotContain("T-033").contains("T-032", "T-034");
             assertThat(ids.ids()).as("sorted").isSorted();
-            assertThat(java.util.Arrays.asList(ids.ids())).isEqualTo(t.read(l, day).keySet().stream().sorted().toList());
-            assertThat(t.doc(l, day, ids.file("T-034"), "T-034")).isPresent();          // each id still finds its file
-            assertThat(t.ids(l, day.minusDays(1)).ids()).hasSize(40).contains("T-033");
+            java.util.Map<String, String> docs = new java.util.TreeMap<>();
+            l.documents(day, docs::put);
+            assertThat(java.util.Arrays.asList(ids.ids())).isEqualTo(List.copyOf(docs.keySet()));
+            assertThat(l.document(day, ids.file("T-034"), "T-034")).isPresent();          // each id still finds its file
+            assertThat(l.ids(day.minusDays(1)).ids()).hasSize(40).contains("T-033");
         }
     }
 
     /** Two deletes in a row from the same file: both rows are gone and the others are read once (not twice). */
     @ParameterizedTest
-    @ValueSource(strings = {"native", "hadoop"})
+    @ValueSource(strings = {"native"})
     void twoSequentialDeletesFromOneFile(String engine) throws Exception {
         Path root = lake("lake-layout");
         LocalDate day = LocalDate.of(2026, 9, 30);
-        try (NativeEngine writer = NativeEngine.create()) {
+        try (NativeEngine writer = NativeEngine.create(com.ash.drishti.lakehost.DrishtiLake.runtime())) {
             DeletionVectorFixture.delete(writer, root.resolve("desk/trade"), day.toString(), "T-033");
             DeletionVectorFixture.delete(writer, root.resolve("desk/trade"), day.toString(), "T-034");
         }
-        try (LakeStore lake = LakeStore.of(root.toString(), "desk", Map.of(), EngineKind.valueOf(engine.toUpperCase(java.util.Locale.ROOT)))) {
-            DeltaTable t = new DeltaTable(lake.engine(), lake.table("trade"), "id", "doc", "business_date");
-            DeltaTable.Layout l = t.layout(null).orElseThrow();
-            assertThat(l.files().get(day)).as("the day's files, each live once").hasSize(l.files().get(day.minusDays(1)).size());
-            assertThat(t.read(l, day)).hasSize(38).doesNotContainKeys("T-033", "T-034");
-            assertThat(t.ids(l, day).ids()).hasSize(38).doesNotContain("T-033", "T-034");
+        try (LakeReader lake = com.ash.drishti.lakehost.LakeReads.open("delta", Map.of("root", root.toString(), "domain", "desk"))) {
+            TableSnapshot l = lake.table("trade").snapshot(com.ash.lake.spi.AsOf.LATEST).orElseThrow();
+            assertThat(l.day(day).orElseThrow().files()).as("the day's files, each live once").hasSize(l.day(day.minusDays(1)).orElseThrow().files().size());
+            java.util.Map<String, String> docs = new java.util.HashMap<>();
+            l.documents(day, docs::put);
+            assertThat(docs).hasSize(38).doesNotContainKeys("T-033", "T-034");
+            assertThat(l.ids(day).ids()).hasSize(38).doesNotContain("T-033", "T-034");
         }
         DeltaSourcePlugin p = new DeltaSourcePlugin();
         p.start(DatedSourceContract.context(Map.of("root", root.toString(), "domain", "desk", "engine", engine)));

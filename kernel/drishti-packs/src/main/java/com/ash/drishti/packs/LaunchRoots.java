@@ -67,7 +67,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             new Root("modules", List.of(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING), HOME, "modules", true),
             new Root("module switches", List.of("drishti.modules.dir"), "config", "modules", false),
             new Root("access", List.of("drishti.access.dir"), "config", "access", false),
-            new Root("lakes", List.of("drishti.lakes.dir"), "config", "lakes", false),
+            new Root("lakes", List.of("lake.lakes.dir"), "config", "lakes", false),
             new Root("connectors", List.of("drishti.sources.connectors-dir"), "config", "connectors", false),
             new Root("inbox", List.of("drishti.dataload.dir"), "data", "dataload", false));
     /** The keys the settings file set (server main, before Spring): their origin is the file. */
