@@ -24,6 +24,7 @@ import * as GraphLib from '../../../vendor/drishti-elements/3.2.0/elements/drish
 import * as EventsLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-events/src/drishti_index.js';
 import * as DataLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-data/src/drishti_index.js';
 import * as InputsLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-inputs/src/drishti_index.js';
+import * as GeoPart from '../../../vendor/drishti-elements/3.2.0/elements/drishti-chart/src/drishti_geohelper.js';
 import { url as drishtiUrl, basePath } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
 import { h, icon, str } from './drishti_dom.js';
 import * as assets from './drishti_assets.js';
@@ -119,7 +120,7 @@ export class Screen {
       panels: Array.isArray(o.panels) ? o.panels : undefined,
       links: { href: (link) => (link && link.kind && link.id ? drishtiUrl(entityHref(o, link)) : null) },
       fetch: personFetch(o),
-      libraries: { 'drishti-chart': ChartLib, 'drishti-graph': GraphLib, 'drishti-events': EventsLib, 'drishti-data': DataLib, 'drishti-inputs': InputsLib },
+      libraries: { 'drishti-chart': ChartLib, 'drishti-graph': GraphLib, 'drishti-events': EventsLib, 'drishti-data': DataLib, 'drishti-inputs': InputsLib, 'drishti-chart:geo': GeoPart },
       gl: () => assets.echartsGl()
     };
   }

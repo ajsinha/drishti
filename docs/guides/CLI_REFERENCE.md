@@ -4083,7 +4083,6 @@ of Parquet.
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale ([ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md#6-the-render-folder-and-the-embed)). A released version's folder never changes: a change means a new version folder |
-| `tools/renderer_fixtures.py` | writes drishti-renderer's harness fixtures (`static/elements/drishti-renderer/drishti_fixtures.json`) from the parity suite's cases; `--check` says whether they are stale |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `python tools/drishti.py calc install` (`tools/calcruntime.py`; `--tarball FILE` offline, `--dest DIR`, `--cache DIR`, `--force`) | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN); standard library only, so the console's Docker image runs it alone as `python tools/calcruntime.py` |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |

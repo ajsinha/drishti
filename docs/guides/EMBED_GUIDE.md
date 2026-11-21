@@ -963,8 +963,14 @@ pinned to an old version tells you to move the pin.
 `/embed/v2/render/3.2.0/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What
 you may see: the nested pivot in `behaviours: 'console'` is drishti-grid's tree grid (its own headings, keyboard and density, the grand
 total as a last row), a tree table keeps drishti-grid's own filter box, a figure exactly on a half rounds up, tooltips escape every
-value, and the option `insight` is new. A host that bundled 1.2.0's `m/` files bundles
-`static/elements/drishti-renderer/src/` and the four libraries it imports instead.
+value, and the option `insight` is new. A host that bundled 1.2.0's `m/` files bundles the current version's `m/` and the vendored
+Drishti Elements libraries it imports instead.
+
+**Renderer 3.2.0.** Every panel is drawn by Drishti Elements' painter (`drishti-views`); the API, the options, the events, the element
+attributes and the contract are the same. What you may see: the painter's look (its title line, freshness line and function keys, a
+filter box and pages on long tables, a Data table under each chart), a dash in an empty cell, a pivot's corner in its fields' own case;
+`behaviours: 'console'` draws with the painter's tables (no column funnels, no Chart any table); a GenUI stream's messages are not drawn.
+The `3.1.0` paths answer `308` to `3.2.0` for one release.
 
 **Moving from Elements 1.x to 2.x.** Change the script line ([chapter 3](#3-five-minutes-a-static-page)); the token exchange, the
 attributes, the events and the slots are the same. Keep `<drishti-report>`, `<drishti-about>` and `<drishti-search>` pages on 1.x.

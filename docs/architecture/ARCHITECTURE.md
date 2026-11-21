@@ -2694,12 +2694,13 @@ Decisions: [ADR-021](adr/021-embedding-is-html-over-the-wire.md) (embedding, the
 ### 30.1 One page renderer, one embed renderer
 
 - **The console's pages are drawn by the server**: Jinja and the view macros (30.3). That is the one page renderer.
-- **Drishti Render** (`drishti-renderer`, Elements library 7, renderer 2.0.0) draws a screen in the browser from the ViewModel JSON. It
-  draws **embeds** (Elements 2.x, the embed API v2) and `<drishti-report>` only. Renderer 1.2.0 stays served, frozen, for pages that
-  pinned it.
+- **Drishti Render** (`static/render/<version>/`, the version the Elements pin) draws a screen in the browser from the ViewModel JSON:
+  every panel by Drishti Elements' painter (`drishti-views`, `paint()`), around it Drishti's host part (`m/`). It draws **embeds**
+  (Elements 2.x, the embed API v2) and Explain's "Why it moved" only. Renderer 1.2.0 stays served, frozen, for pages that pinned it.
 - **Drishti Elements 1.x** (`web/embed/`, version 1.4.5, frozen) is HTML over the wire: the console renders panels with the same macros
   and the element swaps sanitised fragments into a shadow root. It carries `<drishti-report>`, `<drishti-about>` and `<drishti-search>`.
 - **Elements 2.x** is `<drishti-view>`, `<drishti-panel>` and `<drishti-screen>` on Drishti Render, with 1.x's element API.
+- **Jinja stays** (owner, I7B_DUPLICATES DD-7): the console's own pages are server HTML, a documented exception to "one way to draw".
 
 The rule that holds it together: **the server is the only judge of what a user may see** (roles, masks, row rules, per viewer, before
 the JSON or HTML leaves); the browser code decides nothing about rights and cannot unmask. A parity suite (30.8) keeps the browser
@@ -2713,36 +2714,25 @@ renderer and the macros drawing the same thing.
    one Connection per page ── GET /embed/v2/channel?s=vm:… ──┘  frames over ChannelSession, token renewed in place
 ```
 
-### 30.2 The renderer as an Elements library
+### 30.2 The renderer on Drishti Elements' painter
 
-The renderer has no grid, chart, format, live or input code of its own: it draws panels with the same components the console uses, so one
-component test covers both (`test_render_library.py` fails an engine call, an `EventSource`, `toFixed`, `Intl.NumberFormat` or a table
-built by the renderer).
+The renderer draws no panel of its own: every panel, the title line, the strip, the freshness line and the keys are Drishti Elements'
+painter (`drishti-views`: `paint(el, viewModel, options)` and its handle), which draws with drishti-chart, drishti-graph, drishti-data and
+drishti-inputs and computes nothing (every figure is the producer's text). Drishti keeps only the host part, in the version's folder
+(`static/render/<version>/m/`, about 1,000 lines): `drishti_render.js` (the entry: `render`, `patch`, `subscribe`, the `Handle`,
+`<drishti-screen>`), `drishti_screen.js` (where the ViewModel comes from, the painter's options and events, the Back bar and in-place
+navigation with its own stack, live frames handed to the painter, the stream), `drishti_net.js` (the view as the person, the stream over
+drishti-events), `drishti_signin.js` and `drishti_embed.js` (the sign-in window, the token provider, one connection per page),
+`drishti_elements.js` (`<drishti-view>`, `<drishti-panel>`), `drishti_about.js` (About this page from JSON), `drishti_assets.js` (the
+sheet, the icon font, ECharts) and `drishti_dom.js`. `test_render_library.py` fails an engine call, an `EventSource`, `toFixed`,
+`Intl.NumberFormat` or a table built by the host part.
 
-| Part of a screen | Drawn by |
-|---|---|
-| tables, trees, drills, the pivot kind, every chart's Data table | drishti-grid's document table (`docPivotable`, `docDrill`, `docPivot`, `docPlainTable`, `enhanceDocTables`) with the renderer's cells as hooks |
-| the nested pivot in `behaviours: 'console'` | drishti-grid's grid with tree data (every figure the server's text, `clientAggregation` off) |
-| every chart | drishti-chart's panel charts (`PanelCharts`, `panelOption`): the console's options series for series; the only place an engine is called |
-| the element maker, untrusted-data rules, formats, the API client | drishti-core (`h`, `attrAllowed`, `safeUrl`, `roundHalfUp`, `formatNumber`, `formatPythonFloat`, `createClient`) |
-| streams and the one connection per page | drishti-data's `LiveClient` (SSE over fetch so the bearer travels; back-off; resume) |
-| About this page | the renderer, from JSON; its source a drishti-insight hook (`options.insight.about`) |
-| funnels, Chart any table, zoom, controls (`behaviours: 'console'`) | still the console's root-scoped scripts, loaded beside the library |
-
-The renderer's own modules (`static/elements/drishti-renderer/src/`, each under 530 lines) hold screen logic only: `drishti_render.js`
-(entry, `render`, the `Handle`, `<drishti-screen>`), `drishti_screen.js` (paint, patch, stream messages, in-place navigation, events),
-`drishti_view.js`, `drishti_layout.js` (a port of `core/screen_grid.py`'s `arrange`), `drishti_kinds.js` (the panel frame, its states,
-each kind mapped onto the libraries), `drishti_cells.js`, `drishti_behave.js`, `drishti_net.js`, `drishti_assets.js`,
-`drishti_console.js`, `drishti_nested.js`, `drishti_about.js`, `drishti_signin.js`, `drishti_embed.js`, `drishti_elements.js`,
-`drishti_dom.js`. `tools/elements/build.py` bundles them as `drishti_renderer.js` for classic pages; hosts import the public entry
-`static/render/<version>/drishti-render.js`, which finds the libraries, the console's static files and the sheet from its own address, so
-the same files work under `/embed/v2/render/<version>/`. Size: 168 KB, 63 KB gzip of its own; ECharts (330 KB gzip) only when a screen has
-a chart, once per page.
-
-**One paint and one patch path for three sources.** A static ViewModel, a live one and a streamed one go through the same code: a
-streamed screen is a skeleton painted like any ViewModel, then `panel-replace` messages applied exactly like live `panel` patches. A
-streamed screen therefore ends equal to a one-shot render (tested on the showcase, a Sutra grid with areas, tabs and a split, and every
-panel state). GenUI (screens composed by an AI agent and streamed this way) is a design, not built.
+The painter draws into the host's shadow root without its own (`shadow: false`); the sheet (`drishti-render.css`, generated by
+`tools/render_sheet.py` from Elements' tokens with every theme and the painter's sheets) is adopted by that shadow root, so a host page
+whose policy is `style-src 'self'` needs nothing more, and the loader's page links for those sheets are claimed without a request. The
+public entry finds Elements, the console's static files and the sheet from its own address, so the same files work under
+`/embed/v2/render/<version>/`. A GenUI stream's messages are not drawn (GenUI inside Drishti will use the painter's pieces);
+`behaviours: 'console'` is accepted and draws with the painter's own tables.
 
 ### 30.3 The view macros shared with the console
 

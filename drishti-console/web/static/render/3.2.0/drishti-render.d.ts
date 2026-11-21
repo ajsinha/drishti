@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/** Drishti Render 2.4.0 (drishti-renderer, drawn with the Drishti Elements libraries): the client-side renderer, and Elements 2.4 (drishti-elements.js).
+/** Drishti Render 3.2.0 (every panel drawn by Drishti Elements' painter, drishti-views; Drishti's host part in m/): the client-side renderer, and the embed elements 2.x (drishti-elements.js).
     The API is 1.x's; it adds `insight`. docs/architecture/CLIENT_RENDERER.md, docs/architecture/ELEMENTS.md. */
 
 /** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/architecture/VIEWMODEL.md); unknown fields are ignored. */
@@ -57,7 +57,7 @@ export type StreamMessage =
   | { type: 'done'; provenance?: Record<string, unknown> }
   | { type: 'error'; code: string; detail?: string; fix?: string; panel?: string };
 
-export type Source = ViewModel | { kind: string; id: string; controls?: Record<string, string> } | { stream: string } | AsyncIterable<StreamMessage>;
+export type Source = ViewModel | { kind: string; id: string; controls?: Record<string, string> } | { stream: string };
 
 export interface RenderOptions {
   /** Draw inside a Shadow DOM with the library's own sheet (default true). false: the host's sheets style it (the console's own pages). */
@@ -75,8 +75,7 @@ export interface RenderOptions {
   outsideLinks?: 'event' | 'follow' | 'new-window';
   /** Follow the view's live stream when it is live (default true). */
   live?: boolean;
-  /** 1.0.0: whose behaviours: the library's own (default), the console's (funnels, Chart any table, the Pivot grid, drills, zoom,
-      controls, loaded beside the library), or the host page's own scripts ('host': the console's page). */
+  /** Accepted for 1.x and 2.x hosts: every value draws with the painter's own tables, tabs and pivots. */
   behaviours?: 'library' | 'console' | 'host';
   /** 1.0.0: an About button in the head and `?`: About this page from JSON in a side sheet inside the container. */
   about?: boolean;
@@ -84,17 +83,6 @@ export interface RenderOptions {
   aboutUrl?: (ref: { kind: string; id: string }, generation?: number) => string;
   /** the insight components' hooks (drishti-insight): About this page from the host's own source instead of aboutUrl. */
   insight?: { about?: (ref: { kind: string; id: string }, generation: number) => Promise<{ explain?: unknown; index?: unknown; error?: unknown }> };
-  recordsUrl?: (ref: { kind: string; id: string; panel: string }) => string;
-  panelsUrl?: (query: string) => string;
-  /** 1.0.0, for the console as host: its per-panel affordances; drawing into its own .view; its arranged grid; the Back to live link;
-      what the paint waits for before charts; what it keeps in a panel through a live tick. */
-  chrome?: boolean;
-  bare?: boolean;
-  grid?: Record<string, unknown>;
-  backToLive?: string;
-  beforeCharts?: Promise<unknown>;
-  onReplace?: (old: HTMLElement, panel: Panel) => ((fresh: HTMLElement) => void) | void;
-  businessDate?: { selected?: string };
   /** For a ViewModel source: subscribe at once (true: the default stream; a string: that SSE URL). */
   subscribe?: boolean | string;
   /** A bearer token for the console (the token exchange of ELEMENTS.md section 8): a string or {token}. */
@@ -138,15 +126,11 @@ export interface Handle {
   /** How many screens Back returns through. */
   readonly depth: number;
   patch(frame: Frame): { strip: number[]; panels: string[] };
-  apply(message: StreamMessage): Promise<unknown>;
+  /** The painter's handle (drishti-views ViewHandle) of the view shown now. */
+  readonly view: unknown;
   /** A URL or a reference (an EventSource on the stream), or the host's own channel: a function handed {view, frame, message, gone} that returns stop(). */
   subscribe(source?: string | { kind: string; id: string } | ((on: { view(vm: ViewModel): void; frame(f: Frame): void; message(m: StreamMessage): void; gone(e: unknown): void }) => () => void)): () => void;
   unsubscribe(): void;
-  /** 1.0.0: parts for a host that places them itself. */
-  drawPanel(panel: Panel): HTMLElement;
-  drawStrip(cells: Cell[]): HTMLElement;
-  drawAbout(got: { explain?: Record<string, unknown>; index?: Record<string, unknown>; error?: { code: string; detail: string } }): HTMLElement;
-  drawCharts(scope?: Element): Promise<void>;
   about(open?: boolean): void;
   navigate(ref: Link): boolean;
   back(): boolean;

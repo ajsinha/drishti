@@ -1,8 +1,8 @@
 {
   "bytes": {
     "css": 112350,
-    "js": 99714,
-    "js_gzip": 37764
+    "js": 99859,
+    "js_gzip": 37797
   },
   "contracts": [
     1
@@ -17,8 +17,8 @@
       "integrity": "sha384-w6DzQnyTcUtqCBi+zgUOu6GtBY0A3V6jZxvBcBPkblred1x5hb6CvLxUs4C79fK3"
     },
     "drishti-render.d.ts": {
-      "bytes": 12519,
-      "integrity": "sha384-EUWicHgQiZIgNVE6ziGQK4nU51/4WdXEsGLEsqYNgyujvgHwpW7uur6/yMLXVzJ0"
+      "bytes": 11513,
+      "integrity": "sha384-6LgPxPF2vomHwwU3mOrMsDIPxiSR/hIF1aIrCiXz1HrKt09H4u1UGkVRPtUfLQTm"
     },
     "drishti-render.js": {
       "bytes": 2039,
@@ -57,8 +57,8 @@
       "integrity": "sha384-x9JalOtVkTaRxTNll8WPbq+BYtEoHDmaowIng5AWp9PakNknR1ueE89aaWYAAyB/"
     },
     "m/drishti_screen.js": {
-      "bytes": 20044,
-      "integrity": "sha384-9PADuXz5z+SeqhBRITnLht8+fnSmayX+gyvqZr1YH6GA0MxPdQTDa3TFeo1gG/c5"
+      "bytes": 20189,
+      "integrity": "sha384-AcIT1f0RGRzzh+pzd4DJCpw10f7gvrWAcxXqGtip25mVjwGrbEeBONsifN1au8HD"
     },
     "m/drishti_signin.js": {
       "bytes": 11159,
