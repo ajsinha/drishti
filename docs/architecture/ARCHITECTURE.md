@@ -3019,7 +3019,7 @@ advisory `gate_kind`, pin, body, masked spans, channels, view state, thread id),
 `notified | no-access | no-pack | disabled | over-limit`, `opened_at`), `drishti_thread` (anchor `entity | panel | field | share`, state
 `open | resolved | locked`), `drishti_comment` (current state) and the insert-only `drishti_comment_revision` (SHA-256 chain per thread),
 `drishti_mention`, `drishti_follow`, `drishti_inbox` (pointers, not content), `drishti_outbox`, `drishti_collab_hold`,
-`drishti_collab_seal`, `drishti_note_link` (old notes imported once as one-comment threads). The API (`/directory`, `/shares`, `/threads`,
+`drishti_collab_seal`. The API (`/directory`, `/shares`, `/threads`,
 `/comments`, `/me/inbox`, `/admin/collab/*`, problem codes `DRS-7001`-`7016`) is in [API_REFERENCE.md](../guides/API_REFERENCE.md); a
 share id the caller may not read is `404 DRS-7001` whether it exists or not, so ids are no oracle. Personal API tokens only read.
 

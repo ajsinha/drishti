@@ -16,7 +16,7 @@
 static/js/drishti_help.js), dark and light:
 - the front door: the search box, the most used row and nine tiles (an administrator: Internal too), with no script error;
 - a tile opens its section; the section's rows filter as you type (a group with none left folds away), Enter searches that section only;
-- an old address /help#cat-<id> opens the section that took it over;
+- an address /help#cat-<id> opens that section;
 - F1 on the help pages and on the terminal opens the screen's guide;
 - a visitor who is not signed in reads every running engine's guides (Help is documentation), but not Internal;
 - on a phone (390 px): search first, the most used row scrolls sideways inside itself, the tiles stand in one column, every tile and
@@ -144,12 +144,10 @@ def test_the_front_door_and_a_section(browser, console_url, theme):
         ctx.close()
 
 
-def test_an_old_section_address_opens_its_section(browser, console_url):
+def test_a_section_address_opens_its_section(browser, console_url):
     ctx = _context(browser, 1280, "terminal")
     page = ctx.new_page()
     try:
-        page.goto(console_url + "/help#cat-use", wait_until="load")
-        page.wait_for_url("**/help/section/get-started", timeout=10000)
         page.goto(console_url + "/help#cat-knowledge", wait_until="load")
         page.wait_for_url("**/help/section/knowledge", timeout=10000)
         page.goto(console_url + "/help/docs-guides-var-guide", wait_until="load")   # an old page address: still the page

@@ -1,0 +1,19 @@
+rachana: 3
+table: bi.lake_test_trades
+version: 1.0.0
+title: Lake test
+from: { kind: trade, connector: test-lake }
+columns:
+  desk:           { path: "$.desk", type: string }
+  book:           { path: "$.book", type: string }
+  currency:       { path: "$.currency", type: string }
+  counterpartyId: { path: "$.counterparty.id", type: string }
+  notional:       { path: "$.notional", type: decimal }
+  mtm:            { path: "$.mtm", type: decimal, masked: true }
+  tradeDate:      { path: "$.tradeDate", type: date }
+rules:
+  - { role: desk-head, where: "$.desk in user.desks" }
+  - { role: bi-risk, where: "true" }
+  - { role: bi-analyst, where: "true" }
+  - { role: admin, where: "true" }
+materialize: on-load

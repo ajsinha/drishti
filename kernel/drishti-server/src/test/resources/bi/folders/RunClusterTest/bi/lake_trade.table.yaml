@@ -1,0 +1,13 @@
+rachana: 3
+table: bi.lake_trade
+was: lake-trade
+version: 1.0.0
+from: { kind: trade, connector: run-lake }
+keys: [id]
+columns:
+  DESK:     { path: "$.DESK", type: string }
+  TRADER:   { path: "$.TRADER", type: string, masked: true }
+  NOTIONAL: { path: "$.NOTIONAL", type: decimal, aggregate: sum }
+rules:
+  - { role: [bi-raw, bi-masked, admin], where: "true" }
+materialize: on-load

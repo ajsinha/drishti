@@ -1,0 +1,9 @@
+rachana: 3
+model: st-model
+version: 1.0.0
+tables:
+  trade: { table: bi.st_trade, role: fact }
+measures:
+  MTM:      { expr: sum(trade.MTM) }
+  NOTIONAL: { expr: sum(trade.NOTIONAL) }
+  Trades:   { expr: count(trade) }

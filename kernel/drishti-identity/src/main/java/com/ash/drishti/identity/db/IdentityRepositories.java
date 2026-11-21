@@ -109,12 +109,6 @@ public final class IdentityRepositories {
         int deleteOlderThan(@org.springframework.data.repository.query.Param("before") java.time.Instant before);
     }
 
-    public interface Notes extends JpaRepository<NoteEntity, Long> {
-        List<NoteEntity> findByKindAndEntityIdOrderByIdAsc(String kind, String entityId);
-
-        long countByKindAndEntityId(String kind, String entityId);
-    }
-
     public interface Audit extends JpaRepository<AuditEventEntity, Long> {
         List<AuditEventEntity> findAllByOrderByIdDesc(Pageable page);
 
@@ -271,11 +265,5 @@ public final class IdentityRepositories {
         List<ThreadEntities.Follow> findByKeyThreadId(String threadId);
 
         void deleteByKeyThreadId(String threadId);
-    }
-
-    public interface NoteLinks extends JpaRepository<ThreadEntities.NoteLink, Long> {
-        java.util.Optional<ThreadEntities.NoteLink> findByCommentId(String commentId);
-
-        void deleteByCommentIdIn(java.util.Collection<String> commentIds);
     }
 }

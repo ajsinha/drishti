@@ -48,25 +48,10 @@ class NetLiveBiTest {
     static void bi(Path folder, Path lake) throws Exception {
         Files.createDirectories(folder.resolve("datasets"));
         Files.createDirectories(folder.resolve("reports"));
-        Files.writeString(folder.resolve("datasets/lake-report.dataset.yaml"), """
-                rachana: 1
-                dataset: lake-report
-                title: Lake for reports
-                tables:
-                  trades:
-                    source: { connector: rep-lake, kind: trade }
-                    columns:
-                      TRADE_ID: { type: string, key: true }
-                      DESK: string
-                      NOTIONAL: decimal
-                measures:
-                  Notional: { expr: "sum(trades.NOTIONAL)" }
-                  Trades: { expr: "count(trades)" }
-                """);
         Files.writeString(folder.resolve("reports/lake-report.report.yaml"), """
                 report: lake-report
                 title: Lake report
-                dataset: lake-report
+                model: lake-report@1
                 pages:
                   - id: main
                     title: Main
@@ -75,26 +60,6 @@ class NetLiveBiTest {
                       - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.DESK], values: [Notional] } }
                 """);
         Files.createDirectories(folder.resolve("models"));
-        Files.writeString(folder.resolve("datasets/lake-trade.dataset.yaml"), """
-                rachana: 2
-                dataset: lake-trade
-                version: 1.0.0
-                source: { connector: rep-lake, kind: trade }
-                grain: { keys: [TRADE_ID] }
-                columns:
-                  TRADE_ID: { type: string }
-                  DESK:     { type: string }
-                  NOTIONAL: { type: decimal, aggregate: sum }
-                """);
-        Files.writeString(folder.resolve("models/lake-model.model.yaml"), """
-                rachana: 2
-                model: lake-model
-                version: 1.0.0
-                datasets:
-                  trades: { dataset: lake-trade, role: fact }
-                measures:
-                  Notional: { expr: "sum(trades.NOTIONAL)" }
-                """);
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
             lines.add("{\"TRADE_ID\":\"LK-" + i + "\",\"DESK\":\"DESK-" + (i % 3) + "\",\"NOTIONAL\":" + 1000.0 * (i + 1) + ",\"LEGAL_ENTITY\":\"LE-NORTH\"}");
@@ -109,7 +74,7 @@ class NetLiveBiTest {
         Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "livebi-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
-        com.ash.drishti.server.bi.TablesFolder.migrate(root.resolve("bi"));     // tables migrate: the datasets and models become the layer's
+        com.ash.drishti.server.bi.TablesFolder.place(root.resolve("bi"), "NetLiveBiTest");
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);

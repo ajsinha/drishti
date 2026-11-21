@@ -1,0 +1,10 @@
+rachana: 3
+table: bi.hidden_sample
+was: hidden-sample
+version: 1.0.0
+title: A sample
+sample: true
+from: { kind: trade }
+columns:
+  desk: { path: "$.desk", type: string }
+materialize: on-load

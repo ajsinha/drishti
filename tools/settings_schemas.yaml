@@ -113,13 +113,11 @@ schemas:
     file: drishti-console/config/help.yaml
     applies: console
     change: live
-    maps: [contextual, knowledge, moved, aliases, documents]
+    maps: [contextual, knowledge, documents]
     keys:
       - { key: most-used, type: list, default: shipped, meaning: "The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out)" }
       - { key: "most-used[].slug", type: string, meaning: "The page" }
       - { key: "most-used[].label", type: string, default: "its title", meaning: "A shorter name on its chip" }
-      - { key: aliases, type: map, default: shipped, meaning: "Old section names to the section that took them over (a pack guide's category, an edition's help.categories, /help#cat-<id>)" }
-      - { key: "aliases.<name>", type: string, meaning: "One old name and its section's id" }
       - { key: documents, type: map, default: shipped, meaning: "An unlisted document's section by its top folder under docs/ (\"\" the top-level *.md, default any other)" }
       - { key: "documents.<name>", type: string, meaning: "One folder and its section's id" }
       - { key: pack-group, type: string, default: "From the packs", meaning: "The group a pack's own guides join, at the end of their section" }
@@ -147,8 +145,6 @@ schemas:
       - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
       - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
-      - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
-      - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
       - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
       - { key: contextual, type: map, default: shipped, meaning: "F1: screen -> the guide it opens" }

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 guides:
-  - { slug: helpdesk-pack, category: start, title: "The help-desk pack", kind: guide, icon: headset,
+  - { slug: helpdesk-pack, category: get-started, title: "The help-desk pack", kind: guide, icon: headset,
       file: guides/helpdesk.md, summary: "Tickets, agents and clients." }
 contextual:
   terminal: helpdesk-pack

@@ -103,7 +103,7 @@ def test_a_standing_querys_pushed_answers_reach_the_browser_over_the_one_channel
 def test_every_consumer_has_the_time_picker_the_chip_and_follows_pushed_answers():
     c = app_with(BiBackend())
     report = c.get("/bi/r/r1").text
-    board = c.get("/bi/b/b1").text
+    board = c.get("/bi/r/b1").text
     notebook = c.get("/bi/notebook").text
     for page in (report, board, notebook):
         assert "data-time-mode" in page and 'value="asof"' in page and 'value="window"' in page and "/static/js/drishti_bi-consume.js" in page

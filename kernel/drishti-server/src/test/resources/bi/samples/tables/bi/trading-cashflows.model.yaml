@@ -1,0 +1,40 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 3
+model: trading-cashflows
+version: 1.0.0
+title: Trade legs and cashflows
+description: "Legs and scheduled cashflows of the trading pack's trades as tables (one row per array element), joined to their trade. Shows cashflow amount by pay month, notional by leg direction and a nested model. Reads documents once per business date (arrays cannot come from promoted columns), so it is slower to build than the other samples."
+sample: true
+endorsement: promoted
+tags: [sample, trading, nested, cashflows]
+tables:
+  trades:    { table: bi.trading_cashflows_trades, role: fact }
+  legs:      { table: bi.trading_cashflows_legs, role: fact }
+  cashflows: { table: bi.trading_cashflows_cashflows, role: fact }
+relationships:
+  - { from: legs.id, to: trades.id }
+  - { from: cashflows.id, to: trades.id }
+measures:
+  Cashflow amount:       { expr: sum(cashflows.NOTIONAL), format: amount0, description: "The flows' notional (quantity times price, or the principal of a period), summed over the rows the visual groups by." }
+  Trades:                { expr: count(trades), description: "Trades of every source system (ENDUR, CALYPSO, MUREX): group by trades.SOURCE_SYSTEM to see each." }
+  Cashflows:             { expr: count(cashflows) }
+  Average cashflow:      { expr: avg(cashflows.NOTIONAL), format: amount0 }
+  Largest cashflow:      { expr: max(cashflows.NOTIONAL), format: amount0 }
+  Legs:                  { expr: count(legs) }
+  Leg notional:          { expr: sum(legs.NOTIONAL), format: amount0 }
+  Trades with cashflows: { expr: distinct(cashflows.id) }
+hierarchies:
+  Pay date: [cashflows.PAYMENT_DATE.year, cashflows.PAYMENT_DATE.quarter, cashflows.PAYMENT_DATE.month, cashflows.PAYMENT_DATE]

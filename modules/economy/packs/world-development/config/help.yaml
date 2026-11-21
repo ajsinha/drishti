@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: world-development-pack, category: packs, title: "The world-development pack", kind: guide, icon: globe, file: guides/world-development.md, summary: "World Bank World Development Indicators by country and year (CC BY 4.0), filled daily by the world-development feed into worldlake: a profile per economy with the latest of each indicator and the world map by GDP per head, and the history of every indicator. Type WDI WDI-CAN." }
+  - { slug: world-development-pack, category: data, title: "The world-development pack", kind: guide, icon: globe, file: guides/world-development.md, summary: "World Bank World Development Indicators by country and year (CC BY 4.0), filled daily by the world-development feed into worldlake: a profile per economy with the latest of each indicator and the world map by GDP per head, and the history of every indicator. Type WDI WDI-CAN." }

@@ -1,0 +1,11 @@
+rachana: 3
+table: bi.desk_book
+was: desk-book
+version: 1.0.0
+from: { model: "acc-model@1", query: { select: { fields: [trades.desk], measures: [Notional, Trades] } } }
+keys: [desk]
+columns:
+  desk:     { path: "$.trades.desk", type: string, role: key, key: true }
+  notional: { path: "$.Notional", type: decimal, aggregate: sum }
+  trades:   { path: "$.Trades", type: integer, aggregate: sum }
+materialize: none

@@ -126,38 +126,10 @@ class DistApiTest {
             Path reports = com.ash.drishti.server.TestRun.root().resolve("dist-api-folder/reports");
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
-            Files.writeString(datasets.resolve("dist-lake.dataset.yaml"), """
-                    rachana: 1
-                    dataset: dist-lake
-                    title: Lake for distribution
-                    tables:
-                      trades:
-                        source: { connector: dist-lake, kind: trade }
-                        columns:
-                          tradeId: { type: string, key: true }
-                          desk: string
-                          book: string
-                          currency: string
-                          notional: decimal
-                          mtm: decimal
-                          tradeDate: date
-                    measures:
-                      Notional: { expr: "sum(trades.notional)" }
-                      Trades: { expr: "count(trades)" }
-                      MTM: { expr: "sum(trades.mtm)" }
-                    security:
-                      rows:
-                        - { role: desk-head, where: "trades.desk in user.desks" }
-                        - { role: bi-risk, where: "true" }
-                        - { role: bi-analyst, where: "true" }
-                        - { role: report-author, where: "true" }
-                        - { role: admin, where: "true" }
-                      masked: [mtm]
-                    """);
             Files.writeString(reports.resolve("dist-report.report.yaml"), """
                     report: dist-report
                     title: Distribution report
-                    dataset: dist-lake
+                    model: dist-lake@1
                     pages:
                       - id: main
                         title: Main
@@ -171,7 +143,7 @@ class DistApiTest {
                         title: Other
                         visuals: []
                     """);
-            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(datasets.getParent(), "DistApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

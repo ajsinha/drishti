@@ -65,9 +65,7 @@ public final class TableCodes {
     public static final String UNKNOWN_NAME = "DRS-9152";
     /** BI's: a relationship's ends (unknown alias or column, key types that differ). */
     public static final String RELATIONSHIP = "DRS-9122";
-    /** The migration refused an item or an expression (docs/architecture/ARCHITECTURE.md §28 section 4.2). */
-    public static final String MIGRATION_REFUSED = "DRS-9195";
-    /** A server found a file in an old form and refused it, naming the command to run (section 4.3). */
+    /** A server found a file in an old form and refused it, naming what to write instead. */
     public static final String MIGRATE_FIRST = "DRS-9196";
 
     private TableCodes() {}

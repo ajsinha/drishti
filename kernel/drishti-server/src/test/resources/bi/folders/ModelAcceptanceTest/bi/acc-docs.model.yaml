@@ -1,0 +1,7 @@
+rachana: 3
+model: acc-docs
+version: 1.0.0
+tables:
+  docs: { table: bi.acc_docs, role: fact }
+measures:
+  Trades: { expr: count(docs) }

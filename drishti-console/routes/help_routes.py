@@ -35,9 +35,9 @@ def _edition(request):
     return getattr(request.state, "edition", None) or request.app.state.editions.instance
 
 
-def shown(edition, guide, aliases: dict | None = None) -> bool:
+def shown(edition, guide) -> bool:
     """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
-    a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
+    a section's id), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
     pages, packs.enabled for pack guides), and an unlisted document only
     when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide. A lens hides nothing: its
     distribution answers."""
@@ -45,7 +45,7 @@ def shown(edition, guide, aliases: dict | None = None) -> bool:
     if not edition.active:
         return True
     cats = edition.help_categories()
-    if cats is not None and guide.category not in {(aliases or {}).get(c, c) for c in cats}:
+    if cats is not None and guide.category not in set(cats):
         return False
     if not guide.listed and edition.refuse_unlisted:
         return False
@@ -65,18 +65,12 @@ def _me(request):
     return getattr(request.state, "identity", None)
 
 
-def _aliases(request) -> dict:
-    """help.yaml's aliases: (old section names), from the library in use."""
-    lib = next(iter(getattr(request.app.state, "libraries", {}).values()), None)
-    return getattr(lib, "aliases", {}) or {}
-
-
 def visible(request, guide) -> bool:
     """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`), the guide's ``roles:`` let them
     (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis) and its engine runs in the cluster (help.yaml
     ``engine:``). Help is documentation, not data: a running engine's pages are open to anyone who can open Help, whatever the Engines
     menu's ``opens:`` say. A guide they may not see is not listed, not found by search and not reached by its address (404)."""
-    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide) and _module_on(guide)
+    return guide.permits(_me(request)) and shown(_edition(request), guide) and _engine_on(guide) and _module_on(guide)
 
 
 def _module_on(guide) -> bool:
@@ -113,7 +107,7 @@ def status(request, guide) -> str:
         return "on"
     me = _me(request)
     if (me is not None and me.is_admin and not _engine_on(guide) and guide.permits(me)
-            and shown(_edition(request), guide, _aliases(request))):
+            and shown(_edition(request), guide)):
         return "off"
     return ""
 
@@ -167,7 +161,6 @@ async def help_index(request: Request):
     hidden = any(lib.guides.get(s) is not None for e in engines.off() for s in e.get("help") or []) or any(
         g.engine and not engines.engine_available(g.engine) for g in lib.guides.values())
     names = {c["id"]: c["id"] for c in lib.categories}
-    names.update({k: lib.section_id(k) for k in lib.aliases})
     return render(request, "help/index.html", sections=secs, count=sum(len(c["guides"]) for c in secs), most=most, engines_hidden=hidden,
                   section_names=names, screen="help", competitive=_competitive(request, lib))
 
@@ -175,10 +168,8 @@ async def help_index(request: Request):
 @router.get("/help/section/{sid}")
 async def help_section(request: Request, sid: str):
     """A section's own page: its pages grouped, every guide beside its tutorial, a search of this section only; an administrator sees
-    the pages of an engine that runs nowhere greyed. An old section name leads to the section that took it over."""
+    the pages of an engine that runs nowhere greyed."""
     lib = await library(request)
-    if sid != lib.section_id(sid) and lib.section(sid) is not None:
-        return RedirectResponse(f"/help/section/{lib.section_id(sid)}", status_code=301)
     sec = lib.section(sid)
     if sec is None or not _section_open(request, sec):
         return render(request, "help/search.html", status_code=404, q=sid.replace("-", " "), hits=[], missing=sid, screen="help")
@@ -331,8 +322,6 @@ async def help_api_file(request: Request, path: str):
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
     lib = await library(request)
-    if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
-        return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
     uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),

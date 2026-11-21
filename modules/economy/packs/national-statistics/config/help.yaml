@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: national-statistics-pack, category: packs, title: "The national-statistics pack", kind: guide, icon: bar-chart, file: guides/national-statistics.md, summary: "Statistics Canada's headline series by vector (Statistics Canada Open Licence), filled daily by the national-statistics feed into worldlake: CPI, unemployment, monthly GDP, population, housing starts, the overnight rate. Type NSTAT NSTAT-V41690973." }
+  - { slug: national-statistics-pack, category: data, title: "The national-statistics pack", kind: guide, icon: bar-chart, file: guides/national-statistics.md, summary: "Statistics Canada's headline series by vector (Statistics Canada Open Licence), filled daily by the national-statistics feed into worldlake: CPI, unemployment, monthly GDP, population, housing starts, the overnight rate. Type NSTAT NSTAT-V41690973." }

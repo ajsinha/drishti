@@ -289,8 +289,7 @@ def test_the_mask_reads_the_same_in_the_grid_and_the_cards_for_a_reader_without_
 def test_the_desk_wall_colours_tiles_fills_the_screen_and_turns_its_pages(stack, browser):
     page = sign_in(browser)
     page.clock.install()
-    resp = page.goto(f"{CONSOLE_URL}/bi/b/file:board:desk-wall")                         # the 2.3 address opens the report viewer (2.4.0)
-    assert "/bi/r/" + BOARD in page.url
+    resp = page.goto(f"{CONSOLE_URL}/bi/r/{BOARD}")
     assert resp.headers["content-security-policy"].count("wasm") == 0                      # no Perspective tile: the strict policy
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
     page.wait_for_function("() => document.querySelectorAll('.bi-vis').length === 7 && !document.querySelector('.bi-vis-busy')", timeout=30000)

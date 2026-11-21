@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,8 +49,8 @@ class ListFilterTest {
         lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("      mtmK:", "      tags: list\n      mtmK:");
-        DatasetParser.Result r = Layered.dataset(yaml);
+        String trades = TestLake.trades().replace("  mtmK:", "  tags:      { path: \"$.tags\", type: list }\n  mtmK:");
+        DatasetParser.Result r = TestLake.dataset(TestLake.model(), trades);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }

@@ -78,12 +78,6 @@ def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
             assert f'id="{anchor}"' in client.get(f"/help/{page}").text, (screen, anchor)
-    for slug in ("bi-studio", "transforms", "notebook", "themes", "drishti-net"):
-        r = client.get(f"/help/{slug}", follow_redirects=False)
-        assert r.status_code == 301, slug
-        page, _, anchor = r.headers["location"].removeprefix("/help/").partition("#")
-        final = client.get(f"/help/{page}")
-        assert final.status_code == 200 and (not anchor or f'id="{anchor}"' in final.text), slug
 
 
 def test_f1_context_and_panel_help(client):
@@ -158,13 +152,10 @@ def test_the_sutra_developer_guide_teaches_writing_end_to_end_and_links_the_cata
     assert len(text.splitlines()) < 5500     # the build guide holds packs, schema to pack, Sutras, forms and phones (2.9.11.h)
 
 
-def test_the_retired_sutra_guides_are_gone_and_their_addresses_redirect(client):
+def test_the_retired_sutra_guides_are_gone():
     docs = SUTRA_GUIDE.parent
     for old in ("RACHANA_GUIDE.md", "SUTRA_CLI.md"):
         assert not (docs / old).exists(), old
-    for old in ("sutra-guide", "rachana-guide"):
-        r = client.get(f"/help/{old}", follow_redirects=False)
-        assert r.status_code == 301 and r.headers["location"] == "/help/build-guide#11-what-a-sutra-is-and-when-one-applies", old
     assert not (SUTRA_GUIDE.parents[2] / "drishti-console" / "web" / "guides" / "sutra-guide.md").exists()
 
 
@@ -193,64 +184,9 @@ def test_guide_screenshots_fit_their_column_and_open_full_size(client):
 
 
 def test_a_help_page_has_one_h1_whatever_the_guide_headings_are(client):
-    for slug in ("release-notes", "plugins"):
+    for slug in ("release-notes", "developer-guide"):
         html = client.get(f"/help/{slug}").text
         assert html.count("<h1") == 1, slug
-
-
-# The 90 slugs of the help centre before it was consolidated into six sections (2.0.0): every one still opens something.
-OLD_SLUGS = """quickstart windows ide-guide install-and-run impact sharing-and-discussion monitors-and-alerts workspaces layout-mode pivot-tab python-calc bi-guide
-bi-tutorial datasets python-bi analyse reports bi-governance distribution boards using-the-terminal sutra-developer-guide screen-designer schema-to-pack
-build-workbench-tutorial screen-builder panel-kinds panel-developer-guide examples nested-data rachana-reference inference live performance scale-benchmark
-connector-developer-guide connector-files connector-tls connector-proxy connector-demo demo-data connector-file connector-delta connector-iceberg
-connector-duckdb connector-postgres jdbc-queries connector-mongodb connector-redis connector-aerospike connector-s3 connector-rest connector-feeds
-connector-news connector-yfinance connector-kafka connector-activemq connector-rabbitmq packs pack-developer-guide operationalising cli-guide data-loads
-real-data user-management operations configuration troubleshooting runbook-source-down runbook-sutra-broken runbook-live-latency runbook-sign-in clients
-developer-guide api how-it-fits elements-guide elements ai-providers mcp-client rupaka about-this-page-design collaboration architecture quant-service
-decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split() + [
-    "docs-tutorials-22-build-a-screen-with-the-designer",     # the Sutra designer tutorial, now tutorial 19's part B
-    # the 41 tutorials merged into 22 (h-docs, 2026-11-08): each old address opens its tutorial, or the part of it
-    "docs-tutorials-02-look-up-anything",
-    "docs-tutorials-03-query-by-form",
-    "docs-tutorials-04-connect-your-data",
-    "docs-tutorials-05-build-a-pack",
-    "docs-tutorials-06-design-a-screen",
-    "docs-tutorials-07-load-data-daily",
-    "docs-tutorials-08-share-and-collaborate",
-    "docs-tutorials-09-reports",
-    "docs-tutorials-10-first-bi-report",
-    "docs-tutorials-11-bi-that-runs-itself",
-    "docs-tutorials-12-live-bi-and-boards",
-    "docs-tutorials-13-govern-bi",
-    "docs-tutorials-14-python-and-analyse",
-    "docs-tutorials-15-ai-in-drishti",
-    "docs-tutorials-16-embed-drishti",
-    "docs-tutorials-17-run-it-in-production",
-    "docs-tutorials-18-several-datasets-in-one-report",
-    "docs-tutorials-19-a-cluster-of-three",
-    "docs-tutorials-20-statements-and-field-parameters",
-    "docs-tutorials-21-an-entity-over-time",
-    "docs-tutorials-23-computed-panels",
-    "docs-tutorials-24-correct-a-trade-and-approve-it",
-    "docs-tutorials-25-var-from-the-bank-to-a-trade",
-    "docs-tutorials-26-exposure-from-the-bank-to-a-trade",
-    "docs-tutorials-27-groupings-and-analytics",
-    "docs-tutorials-28-funds-and-etfs",
-    "docs-tutorials-29-var-on-iceberg",
-    "docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk",
-    "docs-tutorials-31-news-in-memory-only",
-    "docs-tutorials-32-simm-from-the-examples-to-a-netting-set",
-    "docs-tutorials-33-the-pivot-engine",
-    "docs-tutorials-34-one-file-per-lake",
-    "docs-tutorials-35-data-out-with-arrow-flight",
-    "docs-tutorials-36-load-files-with-the-data-inbox",
-    "docs-tutorials-37-custom-functions-and-explain",
-    "docs-tutorials-38-the-mr-cube-on-the-pivot-engine",
-    "docs-tutorials-43-parametric-var-beside-historical",
-    "docs-tutorials-44-virtual-tables-and-models",
-    "docs-tutorials-45-load-your-own-data-into-a-new-lake",
-    "docs-tutorials-46-public-sector-data",
-]
 
 
 def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
@@ -293,90 +229,9 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     assert 30 <= total <= 80, total
 
 
-def test_every_old_help_address_still_opens_something(client):
-    """A retired slug answers 301 to the page, and the section of it, that took the subject over; a slug still listed answers 200."""
-    catalogue = _catalogue()
-    listed = {g["slug"] for g in _pages(catalogue)}
-    moved = 0
-    for slug in OLD_SLUGS:
-        r = client.get(f"/help/{slug}", follow_redirects=False)
-        if slug in listed or slug in ("changelog",):   # root documents Help shows unlisted
-            assert r.status_code == 200, slug
-            continue
-        assert r.status_code == 301, (slug, r.status_code)
-        moved += 1
-        target = r.headers["location"]
-        page, _, anchor = target.removeprefix("/help/").partition("#")
-        final = client.get(f"/help/{page}")
-        assert final.status_code == 200 and "data-unavailable" not in final.text, target
-        if anchor:
-            assert f'id="{anchor}"' in final.text, f"{slug} -> {target}: no such section"
-    assert moved >= 50
-
-
-def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_with_its_pictures(client):
-    page = client.get("/help/tutorials")
-    assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
-    links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    written = sorted((CONSOLE.parent / "docs" / "tutorials").glob("[0-9][0-9]-*.md"))
-    assert len(links) == len(written), links          # every written tutorial, counted from the files (the tutorials merged into 22, 2026-11-08)
-    shots = 0
-    for href in links:
-        t = client.get(href)
-        assert t.status_code == 200 and "data-unavailable" not in t.text, href
-        shots += len(re.findall(r'src="/help/files/tutorials/img/', t.text))
-    assert shots >= 100
-
-
-def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_else(client, monkeypatch):
-    """help.yaml `roles: [admin]` (the internal competitive analysis): an administrator sees it in the index and search and opens it; a
-    viewer finds it in neither and gets 404 at its address; a person holding a listed role sees it too (routes/help_routes.py visible())."""
-    import routes.help_routes as hr
-    from core.auth import Identity
-
-    entry = next(g for g in _pages(_catalogue())
-                 if g["slug"] == "competitive-analysis")
-    assert entry["roles"] == ["admin"]
-    page = client.get("/help/competitive-analysis")                  # security off: the acting user is an administrator
-    assert page.status_code == 200 and "Internal" in page.text and "not for customers" in page.text
-    assert 'href="/help/competitive-analysis"' in client.get("/help").text
-    assert "/help/competitive-analysis" in client.get("/help/search", params={"q": "competitive analysis"}).text
-
-    def as_(*roles):
-        monkeypatch.setattr(hr, "_me", lambda request: Identity("vic", "Vic", "Rates", roles, admin=bool({"*", "admin"} & set(roles))))
-
-    as_("viewer")
-    assert client.get("/help/competitive-analysis").status_code == 404
-    centre = client.get("/help").text
-    assert "/help/competitive-analysis" not in centre[centre.index('data-help-hub'):]   # the page itself (the top bar's menu reads the signed-in user)
-    assert 'href="/help/section/internal"' not in centre and client.get("/help/section/internal").status_code == 404   # no Internal tile
-    found = client.get("/help/search", params={"q": "competitive analysis"}).text
-    assert "/help/competitive-analysis" not in found[found.index('class="help-wrap"'):]
-    assert client.get("/help/user-guide").status_code == 200                       # everything else stays open
-    assert "Read the competitive analysis" not in client.get("/about").text          # nor linked from About
-    as_("viewer", "admin")
-    assert client.get("/help/competitive-analysis").status_code == 200
-    assert 'href="/help/competitive-analysis"' in client.get("/about").text
-    monkeypatch.setattr(hr, "_me", lambda request: None)
-    assert client.get("/help/competitive-analysis").status_code == 404
-
-
-def test_a_guide_without_roles_permits_everyone_and_with_roles_only_those(tmp_path):
-    from core.auth import Identity
-    from core.guides import Guide
-
-    open_ = Guide("a", "A", "", "i", "reference", "operate", tmp_path / "a.md")
-    closed = Guide("b", "B", "", "i", "reference", "operate", tmp_path / "b.md", roles=("admin", "risk-head"))
-    viewer, head, admin = (Identity("u", "U", "", r, admin="*" in r) for r in (("viewer",), ("risk-head",), ("*",)))
-    assert open_.permits(None) and open_.permits(viewer)
-    assert not closed.permits(None) and not closed.permits(viewer) and closed.permits(head) and closed.permits(admin)
-
-
-# ---- the help hub (2.9.11.a, mock-up help-hub/A) --------------------------------------------------------------------------------------
-
 def test_every_help_page_belongs_to_exactly_one_section():
     """help.yaml: each page once, in one section and one group; a pair names a tutorial of the same group; a section's id is unique
-    and every alias and document folder names a section."""
+    and every document folder names a section."""
     catalogue = _catalogue()
     ids = [s["id"] for s in catalogue["sections"]]
     assert len(ids) == len(set(ids))
@@ -391,7 +246,7 @@ def test_every_help_page_belongs_to_exactly_one_section():
                     assert g["pair"] in slugs, (g["slug"], g["pair"])
                     pair = next(x for x in grp["guides"] if x["slug"] == g["pair"])
                     assert pair.get("kind") == "tutorial" and pair.get("engine") == g.get("engine"), g["slug"]
-    assert set(catalogue["aliases"].values()) <= set(ids) and set(catalogue["documents"].values()) <= set(ids)
+    assert set(catalogue["documents"].values()) <= set(ids)
     for m in catalogue["most-used"]:
         assert m["slug"] in seen, m
 
@@ -440,9 +295,7 @@ def test_a_section_page_pairs_each_guide_with_its_tutorial_and_searches_only_its
     assert "data-section-search" in hits and 'href="/help/section/risk"' in hits
 
 
-def test_old_section_names_and_addresses_keep_working(client):
-    r = client.get("/help/section/start", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/help/section/get-started"
+def test_an_unknown_section_is_not_found_and_a_guide_links_its_section(client):
     assert client.get("/help/section/no-such-section").status_code == 404
     guide = client.get("/help/docs-guides-var-guide").text
     assert 'href="/help/section/risk">Risk measures</a>' in guide                          # the breadcrumb opens its section

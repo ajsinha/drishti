@@ -79,9 +79,11 @@ class OneGrammarRulesTest {
     @ArchTest
     static final ArchRule onlyTheEngineAddsFunctionsToRachana = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.bicompute..")
+            .and().haveNameNotMatching("com\\.ash\\.drishti\\.server\\.modules\\.host\\.RachanaFunctions.*")   // a started module's scalar functions, never an aggregate
             .should().implement(FunctionProvider.class)
             .orShould().implement(FunctionProvider.Grouping.class)
-            .because("Rachana's aggregates, grouping, measure and cell come from the pivot engine only (docs/architecture/ARCHITECTURE.md parts 1 to 3)");
+            .because("Rachana's aggregates, grouping, measure and cell come from the pivot engine only (docs/architecture/ARCHITECTURE.md parts 1 to 3); "
+                    + "the module host adds a module's scalar functions through RachanaFunctions");
 
     @ArchTest
     static final ArchRule rachanaNeverDependsOnTheEngine = noClasses()

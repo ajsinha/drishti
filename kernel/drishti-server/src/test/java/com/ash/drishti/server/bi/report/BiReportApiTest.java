@@ -102,43 +102,10 @@ class BiReportApiTest {
             Path reports = com.ash.drishti.server.TestRun.root().resolve("bi-report-folder/reports");
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
-            Files.writeString(datasets.resolve("lake-report.dataset.yaml"), """
-                    rachana: 1
-                    dataset: lake-report
-                    title: Lake for reports
-                    tables:
-                      trades:
-                        source: { connector: rep-lake, kind: trade }
-                        columns:
-                          tradeId: { type: string, key: true }
-                          desk: string
-                          book: string
-                          currency: string
-                          notional: decimal
-                          mtm: decimal
-                          tradeDate: date
-                    measures:
-                      Notional: { expr: "sum(trades.notional)" }
-                      MTM: { expr: "sum(trades.mtm)" }
-                      Trades: { expr: "count(trades)" }
-                      Average notional: { expr: "avg(trades.notional)" }
-                      Largest: { expr: "max(trades.notional)" }
-                      Notional ytd: { expr: "ytd(sum(trades.notional), trades.tradeDate)" }
-                    hierarchies:
-                      Desk and book: [trades.desk, trades.book]
-                    security:
-                      rows:
-                        - { role: desk-head, where: "trades.desk in user.desks" }
-                        - { role: bi-risk, where: "true" }
-                        - { role: bi-analyst, where: "true" }
-                        - { role: report-author, where: "true" }
-                        - { role: admin, where: "true" }
-                      masked: [mtm]
-                    """);
             Files.writeString(reports.resolve("lake-report.report.yaml"), """
                     report: lake-report
                     title: Lake report
-                    dataset: lake-report
+                    model: lake-report@1
                     pages:
                       - id: main
                         title: Main
@@ -154,15 +121,13 @@ class BiReportApiTest {
                         title: Other
                         visuals: []
                     """);
-            Files.writeString(datasets.resolve("restricted.dataset.yaml"), Files.readString(datasets.resolve("lake-report.dataset.yaml")).replace("dataset: lake-report", "dataset: restricted")
-                    .replace("title: Lake for reports", "title: Restricted\naudience: { roles: [bi-risk] }"));
-            Files.writeString(reports.resolve("uses-restricted.report.yaml"), "report: uses-restricted\ndataset: restricted\npages:\n  - id: p\n    visuals:\n"
+            Files.writeString(reports.resolve("uses-restricted.report.yaml"), "report: uses-restricted\nmodel: restricted@1\npages:\n  - id: p\n    visuals:\n"
                     + "      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n");
-            Files.writeString(reports.resolve("one-bad.report.yaml"), "report: one-bad\ndataset: lake-report\npages:\n  - id: p\n    visuals:\n"
+            Files.writeString(reports.resolve("one-bad.report.yaml"), "report: one-bad\nmodel: lake-report@1\npages:\n  - id: p\n    visuals:\n"
                     + "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n"
                     + "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n");
             Files.writeString(reports.resolve("broken.report.yaml"), "report: broken\ndataset: no-such-dataset\npages:\n  - { id: p, visuals: [] }\n");
-            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets become tables and models, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(datasets.getParent(), "BiReportApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -395,8 +360,8 @@ class BiReportApiTest {
         assertThat(viaReport.path("rows").get(0).get(0).asInt()).isEqualTo(24);
         refused(call("GET", "/api/v1/bi/datasets/file:table:bi.restricted_trades", ann(), null), 404, "DRS-9001");
         // a draft naming it, from an author who may not read it, does not find it
-        String draft = "report: d\ndataset: restricted\npages:\n  - id: p\n    visuals: []\n";
-        assertThat(ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", draft))).path("problems").toString()).contains("DRS-9034").contains("no dataset 'restricted'");
+        String draft = "report: d\nmodel: restricted@1\npages:\n  - id: p\n    visuals: []\n";
+        assertThat(ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", draft))).path("problems").toString()).contains("DRS-9151").contains("no model 'restricted'");
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=restricted", wes(), null), 422, "DRS-9034");
     }
 

@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: central-banks-pack, category: packs, title: "The central-banks pack", kind: guide, icon: bank, file: guides/central-banks.md, summary: "Policy rates and the market series around them from FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed into worldlake: a page per bank (policy rate, last move, series) and per series (two years of history). FRED needs DRISHTI_FRED_API_KEY. Type CBANK CBANK-FED." }
+  - { slug: central-banks-pack, category: data, title: "The central-banks pack", kind: guide, icon: bank, file: guides/central-banks.md, summary: "Policy rates and the market series around them from FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed into worldlake: a page per bank (policy rate, last move, series) and per series (two years of history). FRED needs DRISHTI_FRED_API_KEY. Type CBANK CBANK-FED." }

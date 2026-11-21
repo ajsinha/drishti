@@ -1,0 +1,13 @@
+rachana: 3
+model: lake-report
+version: 1.0.0
+title: Lake for reports
+description: Trades of the lake
+tables:
+  trades: { table: bi.lake_report_trades, role: fact }
+measures:
+  Notional: { expr: sum(trades.notional), description: Sum of the notional }
+  MTM:      { expr: sum(trades.mtm) }
+  Trades:   { expr: count(trades) }
+hierarchies:
+  Desk and book: [trades.desk, trades.book]

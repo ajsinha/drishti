@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.layer.DatasetDef;
@@ -38,19 +38,21 @@ import org.junit.jupiter.api.Test;
  */
 class ModelViewHashTest {
 
-    static final String BODY = "rachana: 2\nmodel: desk-risk\nversion: 1.0.0\n";
+    static final String BODY = "rachana: 3\nmodel: desk-risk\nversion: 1.0.0\n";
 
     static DatasetDef dataset(String name, String version) {
-        return Layered.tableDef("""
-                rachana: 2
-                dataset: %s
+        return Tables.tableDef("""
+                rachana: 3
+                table: bi.%s
                 version: %s
-                source: { connector: lake, kind: %s }
+                from: { kind: %s, connector: lake }
+                keys: [desk]
                 columns:
-                  desk:   { type: string, role: key }
-                  name:   { type: string }
-                  region: { type: string }
-                  mtm:    { type: decimal, aggregate: sum }
+                  desk:   { path: "$.desk", type: string, key: true }
+                  name:   { path: "$.name", type: string }
+                  region: { path: "$.region", type: string }
+                  mtm:    { path: "$.mtm", type: decimal }
+                materialize: on-load
                 """.formatted(name, version, name)).dataset();
     }
 

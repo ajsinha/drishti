@@ -1,0 +1,7 @@
+rachana: 3
+model: lang-desk-view
+version: 1.0.0
+tables:
+  desks: { table: bi.lang_desk_sql, role: fact }
+measures:
+  Desk notional: { expr: sum(desks.notional) }

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.alerts;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -47,15 +47,26 @@ import org.mockito.ArgumentCaptor;
 /** An alert on a Python measure: what is handed to the runner, what a masked column does, and how the runner's groups become the one number. */
 class PythonAlertReaderTest {
 
-    static final String DATASET = """
-            dataset: d
+    static final String MODEL = """
+            rachana: 3
+            model: d
+            version: 1.0.0
             tables:
-              trade:
-                source: { kind: trade }
-                columns: { desk: string, pnl1d: decimal }
+              trade: { table: bi.d_trade, role: fact }
             measures:
-              N: { expr: "count(trade)" }
+              "N": { expr: count(trade) }
               Vol: { python: vol, inputs: [trade.pnl1d], by: [trade.desk] }
+            """;
+    static final String TABLE = """
+            rachana: 3
+            table: bi.d_trade
+            version: 1.0.0
+            title: d.trade
+            from: { kind: trade }
+            columns:
+              desk:  { path: "$.desk", type: string }
+              pnl1d: { path: "$.pnl1d", type: decimal }
+            materialize: on-load
             """;
     static final ObjectMapper JSON = new ObjectMapper();
 
@@ -84,7 +95,7 @@ class PythonAlertReaderTest {
     };
 
     PythonAlertReader reader() {
-        Dataset ds = Layered.dataset(DATASET).dataset();
+        Dataset ds = Tables.dataset(MODEL, TABLE).dataset();
         when(datasets.parsed(any(), anyString())).thenReturn(ds);
         when(datasets.ask(any(), anyString(), any(), anyBoolean())).thenReturn(mock(QueryService.Result.class));
         when(datasets.json(any())).thenAnswer(i -> answer);

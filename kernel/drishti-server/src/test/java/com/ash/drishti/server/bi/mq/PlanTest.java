@@ -54,24 +54,23 @@ class PlanTest {
 
     /** Trades and desks, a rule on trades only (a dimension with rules joins every query, so no one-table rollup could answer). */
     static final String TRADES_ONLY = """
-            rachana: 2
+            rachana: 3
             model: desk-risk
             version: 1.0.0
-            datasets:
-              trades: { dataset: trades, role: fact }
-              desks:  { dataset: desks, role: dimension }
+            tables:
+              trades: { table: bi.trades, role: fact }
+              desks:  { table: bi.desks, role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
             measures:
-              MTM:      { id: m_mtm, expr: "sum(trades.mtm)" }
-              Notional: { id: m_notional, expr: "sum(trades.notional)" }
-              Trades:   { id: m_trades, expr: "count(trades)" }
-            rollups:
-              - { name: by_desk_ccy, table: trades, by: [desk, currency], measures: [MTM, Notional, Trades] }
+              MTM:      { expr: sum(trades.mtm), id: m_mtm }
+              Notional: { expr: sum(trades.notional), id: m_notional }
+              Trades:   { expr: count(trades), id: m_trades }
+            rollups: [{ name: by_desk_ccy, table: trades, by: [desk, currency], measures: [MTM, Notional, Trades] }]
             security:
               rows:
                 trades:
-                  - { role: desk-head, where: "trades.desk in user.desks" }
+                  - { role: desk-head, where: trades.desk in user.desks }
                   - { role: [risk, analyst], where: "true" }
               may-see-all: { desks: [desk-head] }
             """;
@@ -241,8 +240,8 @@ class PlanTest {
         // wave B: a balance added across the dates with a measure that does add up over them is refused, with the balance functions as the fix;
         // written with last() it is not. (Since 2.3.0 a count of a daily snapshot such as Trades takes the last date too, so it is no longer a mix:
         // the flow here is a measure its author declares additive.)
-        MqService.Bound flows = h.bind(MqHarness.model(ROLLUP_MODEL.replace("  Trades:   { id: m_trades, expr: \"count(trades)\" }\n",
-                "  Trades:   { id: m_trades, expr: \"count(trades)\" }\n  Bookings: { id: m_bookings, expr: \"count(trades)\", additive: true }\n"),
+        MqService.Bound flows = h.bind(MqHarness.model(ROLLUP_MODEL.replace("  Trades:   { expr: count(trades), id: m_trades }\n",
+                "  Trades:   { expr: count(trades), id: m_trades }\n  Bookings: { expr: count(trades), id: m_bookings, additive: true }\n"),
                 MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS), MqHarness.RITA, "m");
         assertThat(refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Trades] }, time: { window: { from: 2026-10-08, to: "
                 + "2026-10-09 } } }"), false).body().get("rows")).as("a balance and a snapshot count: both the last date's, so answered").isNotNull();
@@ -282,7 +281,7 @@ class PlanTest {
             ModelView m2 = MqHarness.model(both.replace("    rows:\n", "    rows:\n").replace("where: \"" + p1 + "\" }", "where: \"(" + p1 + ") && (" + p2 + ")\" }"),
                     MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS);
             List<String> by = groupings.get(rnd.nextInt(groupings.size()));
-            String q = "{ mq: 1, model: desk-risk, select: { fields: " + EquivalenceTest.list(by) + ", measures: [Trades] } }";
+            String q = "{ mq: 1, model: desk-risk, select: { fields: " + MqHarness.list(by) + ", measures: [Trades] } }";
             Map<String, Double> wide = byKey(mq.ask(h.bind(m1, MqHarness.RITA, "p1-" + i), MqParser.parse(q), false).body());
             Map<String, Double> narrow = byKey(mq.ask(h.bind(m2, MqHarness.RITA, "p2-" + i), MqParser.parse(q), false).body());
             assertThat(wide.keySet()).as(p1 + " AND " + p2 + " by " + by).containsAll(narrow.keySet());
@@ -308,7 +307,7 @@ class PlanTest {
             List<String> ms = new ArrayList<>(measures.subList(0, 1 + rnd.nextInt(measures.size())));
             String f = filters.get(rnd.nextInt(filters.size()));
             MqHarness.Reader who = readers.get(rnd.nextInt(readers.size()));
-            String q = "{ mq: 1, model: desk-risk, select: { fields: " + EquivalenceTest.list(by) + ", measures: " + EquivalenceTest.list(ms) + " }" + f + ", options: { layer: %s } }";
+            String q = "{ mq: 1, model: desk-risk, select: { fields: " + MqHarness.list(by) + ", measures: " + MqHarness.list(ms) + " }" + f + ", options: { layer: %s } }";
             Map<String, Object> auto = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(q.formatted("auto")), false).body();
             Map<String, Object> columns = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(q.formatted("columns")), false).body();
             @SuppressWarnings("unchecked")
@@ -346,7 +345,7 @@ class PlanTest {
             List<String> ms = new ArrayList<>(measures.subList(0, 1 + rnd.nextInt(measures.size())));
             String f = filters.get(rnd.nextInt(filters.size()));
             MqHarness.Reader who = readers.get(i % readers.size());
-            String one = "{ mq: 1, model: desk-risk, select: { fields: " + EquivalenceTest.list(by) + ", measures: " + EquivalenceTest.list(ms) + " }" + f + ", options: { layer: %s } }";
+            String one = "{ mq: 1, model: desk-risk, select: { fields: " + MqHarness.list(by) + ", measures: " + MqHarness.list(ms) + " }" + f + ", options: { layer: %s } }";
             Map<String, Object> auto = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(one.formatted("auto")), false).body();
             Map<String, Object> columns = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(one.formatted("columns")), false).body();
             @SuppressWarnings("unchecked")

@@ -110,37 +110,10 @@ class ModelAcceptanceTest {
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path reports = Files.createDirectories(folder.resolve("reports"));
             Path models = Files.createDirectories(folder.resolve("models"));
-            Files.writeString(datasets.resolve("acc-trades.dataset.yaml"), """
-                    rachana: 1
-                    dataset: acc-trades
-                    title: Acceptance trades
-                    tables:
-                      trades:
-                        source: { connector: acc-lake, kind: trade }
-                        columns:
-                          tradeId: { type: string, key: true }
-                          desk: string
-                          book: string
-                          currency: string
-                          notional: decimal
-                          mtm: decimal
-                          tradeDate: date
-                    measures:
-                      Notional: { expr: "sum(trades.notional)" }
-                      MTM: { expr: "sum(trades.mtm)" }
-                      Trades: { expr: "count(trades)" }
-                    security:
-                      rows:
-                        - { role: desk-head, where: "trades.desk in user.desks" }
-                        - { role: bi-risk, where: "true" }
-                        - { role: bi-analyst, where: "true" }
-                        - { role: admin, where: "true" }
-                      masked: [mtm]
-                    """);
             Files.writeString(reports.resolve("acc-report.report.yaml"), """
                     report: acc-report
                     title: Acceptance report
-                    dataset: acc-trades
+                    model: acc-trades@1
                     pages:
                       - id: main
                         title: Main
@@ -150,110 +123,10 @@ class ModelAcceptanceTest {
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, MTM] } }
                     """);
             // a model of the model layer over the same lake, and a dataset whose source is that model's answer (wave W1 package S4)
-            Files.writeString(datasets.resolve("acc-trade.dataset.yaml"), """
-                    rachana: 2
-                    dataset: acc-trade
-                    version: 1.0.0
-                    source: { connector: acc-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      desk:     { type: string }
-                      notional: { type: decimal, aggregate: sum }
-                      mtm:      { type: decimal, aggregate: sum }
-                    security:
-                      rows:
-                        - { role: desk-head, where: "desk in user.desks" }
-                        - { role: [bi-risk, bi-analyst, report-author, admin], where: "true" }
-                      masked: [mtm]
-                    """);
-            Files.writeString(datasets.resolve("acc-sched.dataset.yaml"), """
-                    rachana: 2
-                    dataset: acc-sched
-                    version: 1.0.0
-                    source: { connector: acc-lake, kind: trade }
-                    grain: { keys: [id] }
-                    refresh: { schedule: "daily 06:00", on-load: true }
-                    columns:
-                      desk:     { type: string }
-                      notional: { type: decimal, aggregate: sum }
-                    """);
-            Files.writeString(models.resolve("acc-model.model.yaml"), """
-                    rachana: 2
-                    model: acc-model
-                    version: 1.0.0
-                    datasets:
-                      trades: { dataset: acc-trade, role: fact }
-                    measures:
-                      Notional: { expr: "sum(trades.notional)" }
-                      Trades:   { expr: "count(trades)" }
-                    """);
-            Files.writeString(datasets.resolve("desk-book.dataset.yaml"), """
-                    rachana: 2
-                    dataset: desk-book
-                    version: 1.0.0
-                    source:
-                      model: acc-model@1
-                      query: { select: { fields: [trades.desk], measures: [Notional, Trades] } }
-                    grain: { keys: [desk] }
-                    columns:
-                      desk:     { type: string, path: trades.desk, role: key }
-                      notional: { type: decimal, path: Notional, aggregate: sum }
-                      trades:   { type: integer, path: Trades, aggregate: sum }
-                    """);
-            Files.writeString(models.resolve("desk-view.model.yaml"), """
-                    rachana: 2
-                    model: desk-view
-                    version: 1.0.0
-                    datasets:
-                      books: { dataset: desk-book, role: fact }
-                    measures:
-                      Book notional: { expr: "sum(books.notional)" }
-                      Book trades:   { expr: "sum(books.trades)" }
-                    """);
             // a table the lake cannot scan as columns (the trader is not in the connector's layout): it is read document by document, from acc-lake only
-            Files.writeString(datasets.resolve("acc-docs.dataset.yaml"), """
-                    rachana: 2
-                    dataset: acc-docs
-                    version: 1.0.0
-                    source: { connector: acc-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      desk:     { type: string }
-                      trader:   { type: string }
-                    """);
-            Files.writeString(models.resolve("acc-docs.model.yaml"), """
-                    rachana: 2
-                    model: acc-docs
-                    version: 1.0.0
-                    datasets:
-                      docs: { dataset: acc-docs, role: fact }
-                    measures:
-                      Trades: { expr: "count(docs)" }
-                    """);
             // a cycle: a dataset read from a model that holds that dataset
-            Files.writeString(datasets.resolve("loop-a.dataset.yaml"), """
-                    rachana: 2
-                    dataset: loop-a
-                    version: 1.0.0
-                    source:
-                      model: loop-model@1
-                      query: { select: { fields: [a.desk], measures: [Total] } }
-                    grain: { keys: [desk] }
-                    columns:
-                      desk:  { type: string, role: key }
-                      total: { type: decimal, path: Total, aggregate: sum }
-                    """);
-            Files.writeString(models.resolve("loop-model.model.yaml"), """
-                    rachana: 2
-                    model: loop-model
-                    version: 1.0.0
-                    datasets:
-                      a: { dataset: loop-a, role: fact }
-                    measures:
-                      Total: { expr: "sum(a.total)" }
-                    """);
-            // every dataset and model of the folder moved onto the table layer the way an installation is (tables migrate), the reports rebound
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);
+            // every dataset and model of the folder moved onto the table layer the way an installation is
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "ModelAcceptanceTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -447,7 +320,7 @@ class ModelAcceptanceTest {
 
     @Test @Order(4)
     void aDatasetReadFromAModelAsksThatModelAsTheReaderAndACycleIsRefused() throws Exception {
-        for (String file : List.of("tables/bi/desk_book.table.yaml", "tables/bi/desk-view.model.yaml")) {         // as tables migrate wrote them
+        for (String file : List.of("tables/bi/desk_book.table.yaml", "tables/bi/desk-view.model.yaml")) {        
             JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder").resolve(file)))));
             assertThat(checked.path("valid").asBoolean()).as(file + ": " + checked.path("problems")).isTrue();
         }

@@ -1,0 +1,16 @@
+rachana: 3
+model: lang-model
+version: 1.0.0
+fields: { trades.desk: { display: Desk, folder: Organisation, description: The trading desk, category: none }, trades.notional: { display: Notional amount, format: amount0, folder: Amounts, summarise: sum } }
+perspectives: { desk-view: { title: Desk view, fields: [trades.desk, trades.notional], measures: [Notional, Trades] } }
+tables:
+  trades: { table: bi.lang_trade, role: fact }
+measures:
+  Notional:  { expr: sum(trades.notional), id: m_notional }
+  MTM:       { expr: sum(trades.mtm), id: m_mtm }
+  Trades:    { expr: count(trades), id: m_trades }
+  Open MTM:  { expr: "sum(trades.mtm, where = trades.currency == 'USD')", id: m_open }
+  Per trade: { expr: "measure('m_notional') / measure('Trades')", id: m_per }
+tests: [{ name: DESK-A notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.desk = 'DESK-A' AS OF DATE '2026-10-08'", expect: 92000, role: bi-risk }, { name: by desk, sql: "SELECT trades.desk, MEASURE('Trades') AS n FROM trades GROUP BY trades.desk AS OF DATE '2026-10-08'", row: { trades.desk: DESK-B }, column: "n", expect: 8, role: bi-risk }]
+security:
+  hidden-for: { roles: [bi-analyst], fields: [trades.currency], measures: [Open MTM] }

@@ -266,7 +266,6 @@ class ContentCollabStoreTest {
         Comment c = comment(t.id(), "ann", "old note", t0);
         append(ft, c);
         ft.follow(new Follow(t.id(), "ann", false, t0));
-        ft.linkNote(7, c.id());
         FileShareStore fs = new FileShareStore(old);
         Share s = new Share(Ulid.next("sh_"), "ann", Instant.now(), "trade", "MX-7", null, null, new Pin(null, true, Instant.now(), 5, null),
                 "hello", List.of(), "in-app", null, null).signed();
@@ -289,8 +288,6 @@ class ContentCollabStoreTest {
         ContentThreadStore threads = new ContentThreadStore(node());
         assertThat(threads.chain(t.id())).isEqualTo(ft.chain(t.id()));
         assertThat(HashChain.verify(t.id(), threads.chain(t.id()))).isNull();
-        assertThat(threads.commentOfNote(7)).contains(c.id());
-        assertThat(threads.noteOfComment(c.id())).contains(7L);
         assertThat(threads.followers(t.id())).hasSize(1);
         assertThat(new ContentShareStore(node()).recipients(s.id())).hasSize(1);
         assertThat(new ContentInboxStore(node(), 1000).list("ravi", null, false, 10, 0)).extracting(Notice::seq).containsExactly(n.seq());

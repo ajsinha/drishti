@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnScans;
 import com.ash.drishti.api.ColumnSet;
@@ -96,50 +97,109 @@ public class TestLake implements SourceGateway {
         };
     }
 
-    public static String yaml() {
+    /** The model of the fixture (a model of the table layer: the two tables below, the relationship, the measures, the rollup). */
+    public static String model() {
         return """
-                rachana: 1
-                dataset: lake-test
-                version: 1
+                rachana: 3
+                model: lake-test
+                version: 1.0.0
                 tables:
-                  trades:
-                    source: { connector: trading-lake, kind: trade }
-                    columns:
-                      desk: string
-                      currency: { path: ccy, type: string }
-                      cpty: { path: counterparty.id, type: string }
-                      notional: decimal
-                      mtm: decimal
-                      tradeDate: date
-                      mtmK: { type: decimal, expr: "mtm / 1000" }
-                  desks:
-                    source: { connector: desk-lake, kind: desk }
-                    columns:
-                      desk: { type: string, key: true }
-                      region: string
+                  trades: { table: bi.lake_test_trades, role: fact }
+                  desks:  { table: bi.lake_test_desks, role: fact }
                 relationships:
-                  - { from: trades.desk, to: desks.desk, cardinality: many-to-one }
+                  - { from: trades.desk, to: desks.desk }
                 measures:
-                  Notional: { expr: "sum(trades.notional)" }
-                  MTM: { expr: "sum(trades.mtm)" }
-                  Trades: { expr: "count(trades)" }
-                  AvgMTM: { expr: "avg(trades.mtm)" }
-                  MTMperM: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
-                  Names: { expr: "distinct(trades.cpty)" }
-                  P50: { expr: "percentile(trades.mtm, 0.5)" }
-                  EurMTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
-                  Biggest: { expr: "max(trades.notional)" }
-                  Share: { expr: "measure('MTM') / measure('Notional')" }
+                  Notional:  { expr: sum(trades.notional) }
+                  MTM:       { expr: sum(trades.mtm) }
+                  Trades:    { expr: count(trades) }
+                  AvgMTM:    { expr: avg(trades.mtm) }
+                  MTMperM:   { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
+                  Names:     { expr: distinct(trades.cpty) }
+                  P50:       { expr: "percentile(trades.mtm, 0.5)" }
+                  EurMTM:    { expr: "sum(trades.mtm, where = trades.currency == 'EUR')" }
+                  Biggest:   { expr: max(trades.notional) }
+                  Share:     { expr: "measure('MTM') / measure('Notional')" }
                   NotionalM: { expr: "round(sum(trades.notional) / 1000000, 1)" }
-                security:
-                  rows:
-                    - { role: desk-head, where: "trades.desk in user.desks" }
-                    - { role: risk, where: "true" }
-                    - { role: auditor, where: "trades.desk == 'DESK-B' || trades.desk == 'DESK-C'" }
-                  masked: [cpty, trades.mtm]
-                rollups:
-                  - { name: byDesk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades, AvgMTM, MTMperM, Biggest, Share] }
+                rollups: [{ name: byDesk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades, AvgMTM, MTMperM, Biggest, Share] }]
                 """;
+    }
+
+    /** The fixture's fact table, as the table layer reads it ({@code bi.lake_test_trades}). */
+    public static String trades() {
+        return """
+                rachana: 3
+                table: bi.lake_test_trades
+                version: 1.0.0
+                title: lake-test.trades
+                from: { kind: trade, connector: trading-lake }
+                columns:
+                  desk:      { path: "$.desk", type: string }
+                  currency:  { path: "$.ccy", type: string }
+                  cpty:      { path: "$.counterparty.id", type: string, masked: true }
+                  notional:  { path: "$.notional", type: decimal }
+                  mtm:       { path: "$.mtm", type: decimal, masked: true }
+                  tradeDate: { path: "$.tradeDate", type: date }
+                  mtmK:      { expr: "$.mtm / 1000", type: decimal }
+                rules:
+                  - { role: desk-head, where: "$.desk in user.desks" }
+                  - { role: risk, where: "true" }
+                  - { role: auditor, where: "$.desk == 'DESK-B' || $.desk == 'DESK-C'" }
+                materialize: on-load
+                """;
+    }
+
+    /** The fixture's desk table ({@code bi.lake_test_desks}). */
+    public static String desks() {
+        return """
+                rachana: 3
+                table: bi.lake_test_desks
+                version: 1.0.0
+                title: lake-test.desks
+                from: { kind: desk, connector: desk-lake }
+                keys: [desk]
+                columns:
+                  desk:   { path: "$.desk", type: string, key: true }
+                  region: { path: "$.region", type: string }
+                rules:
+                  - { role: desk-head, where: "related_rows('trades')" }
+                  - { role: risk, where: "true" }
+                  - { role: auditor, where: "related_rows('trades')" }
+                materialize: on-load
+                """;
+    }
+
+    /** The fixture flattened over its tables: what BI's compiler plans over. */
+    public static com.ash.drishti.server.bi.dataset.DatasetParser.Result dataset() {
+        return Tables.flatten(model(), java.util.List.of(trades(), desks()));
+    }
+
+    /** The fixture's model and tables, flattened over these tables (the fact table and desks first, then any more the model uses). */
+    public static com.ash.drishti.server.bi.dataset.DatasetParser.Result dataset(String model, String trades, String... more) {
+        java.util.List<String> all = new java.util.ArrayList<>(java.util.List.of(trades, desks()));
+        all.addAll(java.util.List.of(more));
+        return Tables.flatten(model, all);
+    }
+
+    /** A model of the fixture (the base one, edited) flattened over the fixture's two tables. */
+    public static com.ash.drishti.server.bi.dataset.DatasetParser.Result dataset(String model) {
+        return Tables.flatten(model, java.util.List.of(trades(), desks()));
+    }
+
+    /** One more table of the fixture ({@code bi.lake_test_<name>}), with the fixture's row rules; {@code columns} are the lines under {@code columns:}. */
+    public static String table(String name, String kind, String connector, String columns) {
+        return "rachana: 3\ntable: bi.lake_test_" + name + "\nversion: 1.0.0\ntitle: lake-test." + name + "\nfrom: { kind: " + kind + ", connector: " + connector + " }\ncolumns:\n"
+                + columns + "rules:\n  - { role: desk-head, where: \"related_rows('trades')\" }\n  - { role: risk, where: \"true\" }\n"
+                + "  - { role: auditor, where: \"related_rows('trades')\" }\nmaterialize: on-load\n";
+    }
+
+    /** The model with one more table of the fixture used under its name. */
+    public static String withTable(String model, String name) {
+        return model.replace("  desks:  { table: bi.lake_test_desks, role: fact }\n", "  desks:  { table: bi.lake_test_desks, role: fact }\n  " + name + ": { table: bi.lake_test_" + name + ", role: fact }\n");
+    }
+
+    /** The fact table kept live ({@code live} is the settings inside the braces, e.g. {@code rows: 5}); a live table is keyed by {@code id}. */
+    public static String liveTrades(String live) {
+        return trades().replace("from: { kind: trade, connector: trading-lake }\n", "from: { kind: trade, connector: trading-lake }\nkeys: [id]\n").replace("materialize: on-load", "materialize: { live: { " + live + " } }");
     }
 
     // ---- the connectors ----------------------------------------------------------------------------------------------

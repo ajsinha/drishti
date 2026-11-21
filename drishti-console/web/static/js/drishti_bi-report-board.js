@@ -18,7 +18,7 @@
    a visual of another report (`from:`): it is asked of that report, as the person looking (its model, their rows and masks), followed live like any visual,
    and coloured by its `alert:` (said in words under it, never by colour alone). Ordinary visuals on a board page are the report's own and take its slicers,
    cross-filter and drill. Kiosk fills the screen, hides the menus and turns the board pages by themselves (`board: { rotate }` of the report, else the
-   console's default); Esc leaves it. The 2.3 board viewer (/bi/b/<id>) sends people here. */
+   console's default); Esc leaves it. */
 (function () {
   'use strict';
   const B = window.drishtiBi;

@@ -4948,8 +4948,6 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `most-used` | list | `shipped` |  | console | The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out) | live |  | admin |
 | `most-used[].slug` | string | none |  | console | The page | live |  | admin |
 | `most-used[].label` | string | `its title` |  | console | A shorter name on its chip | live |  | admin |
-| `aliases` | map | `shipped` |  | console | Old section names to the section that took them over (a pack guide's category, an edition's help.categories, /help#cat-&lt;id&gt;) | live |  | admin |
-| `aliases.<name>` | string | none |  | console | One old name and its section's id | live |  | admin |
 | `documents` | map | `shipped` |  | console | An unlisted document's section by its top folder under docs/ ("" the top-level \*.md, default any other) | live |  | admin |
 | `documents.<name>` | string | none |  | console | One folder and its section's id | live |  | admin |
 | `pack-group` | string | `From the packs` |  | console | The group a pack's own guides join, at the end of their section | live |  | admin |
@@ -4977,8 +4975,6 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `sections[].groups[].guides[].children[].summary` | string | none |  | console | The row's summary, also searched | live |  | admin |
 | `sections[].groups[].guides[].domain` | string | `core` |  | console | The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served | live |  | admin |
 | `sections[].groups[].guides[].lenses` | list | `none` |  | console | The lenses that show the page (none: every lens; the full product shows every page) | live |  | admin |
-| `moved` | map | `shipped` |  | console | Retired addresses: old slug -&gt; slug or slug#anchor, answered with a 301 | live |  | admin |
-| `moved.<name>` | string | none |  | console | One retired slug and the page (and section) that took it over | live |  | admin |
 | `knowledge` | map | `shipped` |  | console | "What does this mean?" beside a data page: screen or kind -&gt; the Knowledge page or glossary entry that explains it | live |  | admin |
 | `knowledge.<name>` | string | none |  | console | One screen or kind and its Knowledge target | live |  | admin |
 | `contextual` | map | `shipped` |  | console | F1: screen -&gt; the guide it opens | live |  | admin |

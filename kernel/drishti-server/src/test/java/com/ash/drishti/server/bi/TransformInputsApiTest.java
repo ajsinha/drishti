@@ -113,30 +113,8 @@ class TransformInputsApiTest {
                           return df
                     """);
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
-            Files.writeString(datasets.resolve("desk-notional-prep.dataset.yaml"), """
-                    rachana: 2
-                    dataset: desk-notional-prep
-                    version: 1.0.0
-                    source:
-                      python: desk-notional-prep
-                      inputs:
-                        trades: { kind: trade, connector: tin-lake, fields: [desk, notional] }
-                    grain: { keys: [desk] }
-                    columns:
-                      desk:     { type: string, role: key }
-                      notional: { type: decimal, aggregate: sum }
-                    """);
             Path models = Files.createDirectories(folder.resolve("models"));
-            Files.writeString(models.resolve("desk-notional-prep.model.yaml"), """
-                    rachana: 2
-                    model: desk-notional-prep
-                    version: 1.0.0
-                    datasets:
-                      desks: { dataset: desk-notional-prep, role: fact }
-                    measures:
-                      Notional: { expr: "sum(desks.notional)" }
-                    """);
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "TransformInputsApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

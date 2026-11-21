@@ -23,8 +23,12 @@
   `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,
   `lake migrate-config`, the module API aliases (`ApiAlias`, `api.legacy`) and `EngineKeyAliases`, the users.json and notes imports, and the
   one-time move of jars into the lib folder are gone. A file in an old form is refused with a message that names what to write instead; a
-  removed setting that is still set says so in one start-up line. The old-form test fixtures are read by a translator that lives in the
-  server's test tree only.
+  removed setting that is still set says so in one start-up line. The server's test fixtures are written as tables and models of the
+  layer (no translator is kept for them, in tests or elsewhere), and the migrator and DEL reader that read the old fixtures are deleted. Also
+  gone: the notes table (`drishti_note`, `drishti_note_link`) with `NoteStore` and `linkNote`; the `/bi/b/<id>` redirect of the console (alerts
+  and runs link to `/bi/r/<id>`); Help's `aliases:` and `moved:` (a pack guide names its section by its id); the legacy format-key leniency of
+  report formats (a bad value of any format key is an error, `DRS-9032`); and Rachana-parity's `LegacyListAggregates` oracle (the engine's
+  aggregates are compared with Rachana Core's own).
 
 - **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
   snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row

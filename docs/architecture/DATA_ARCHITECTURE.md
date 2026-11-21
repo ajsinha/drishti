@@ -2777,7 +2777,7 @@ The ordered migration list (the inventory of content kept on one node only, 2026
 2. **BI workspaces and items:** done, section 9. `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event,
    user_item, usage, setting).
 3. **BI runs:** done, section 9. The `drishti_bi_run*` rows, and results and snapshots under `<data>/bi-runs`.
-4. **Notes:** done (section 10.2). `drishti_note` is only the source of the one-time note import; notes live in comment threads.
+4. **Notes:** done (section 10.2). Notes live in comment threads.
 5. **Collaboration:** done (section 10.3): threads, comments, revisions, mentions, follows, note links, shares and recipients, inbox,
    outbox, holds and seals. Still per node: the access log (`drishti_access`, who read what), next.
 6. **Alerts and monitors:** NOT copied, on purpose (each node evaluates its own).

@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: oecd-pack, category: packs, title: "The oecd pack", kind: guide, icon: globe2, file: guides/oecd.md, summary: "The OECD members' leading indicator, unemployment, inflation and GDP growth from the OECD Data Explorer (SDMX), filled daily by the oecd feed into worldlake: a page per member with the members on a map by inflation, and each series' history. Type OECD OECD-CAN." }
+  - { slug: oecd-pack, category: data, title: "The oecd pack", kind: guide, icon: globe2, file: guides/oecd.md, summary: "The OECD members' leading indicator, unemployment, inflation and GDP growth from the OECD Data Explorer (SDMX), filled daily by the oecd feed into worldlake: a page per member with the members on a map by inflation, and each series' history. Type OECD OECD-CAN." }

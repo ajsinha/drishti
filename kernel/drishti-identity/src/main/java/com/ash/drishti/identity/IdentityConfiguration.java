@@ -156,14 +156,14 @@ public class IdentityConfiguration {
     public com.ash.drishti.identity.collab.CollabImport.Content collabContent(com.ash.drishti.identity.collab.CollabProperties props,
             com.ash.drishti.identity.content.TxContentStore content, IdentityRepositories.Threads threads, IdentityRepositories.Comments comments,
             IdentityRepositories.Revisions revisions, IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
-            IdentityRepositories.NoteLinks links, IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients,
+            IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients,
             IdentityRepositories.Inbox inbox, IdentityRepositories.Outbox outbox, IdentityRepositories.Holds holds,
             IdentityRepositories.Seals seals, TransactionTemplate identityTransactions) {
         if (!props.content()) {
             return new com.ash.drishti.identity.collab.CollabImport.Content(null);
         }
         com.ash.drishti.identity.collab.CollabImport.Target target = com.ash.drishti.identity.collab.CollabImport.Target.of(content);
-        com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("jpa", new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links,
+        com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("jpa", new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows,
                 identityTransactions), new com.ash.drishti.identity.collab.JpaShareStore(shares, recipients, identityTransactions), new com.ash.drishti.identity.collab.JpaInboxStore(inbox,
                 identityTransactions), new com.ash.drishti.identity.collab.JpaOutboxStore(outbox, identityTransactions), new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions),
                 new com.ash.drishti.identity.collab.JpaSealStore(seals, identityTransactions)), target);
@@ -238,10 +238,10 @@ public class IdentityConfiguration {
     @Bean
     public com.ash.drishti.identity.collab.ThreadStore threadStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
-            IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows, IdentityRepositories.NoteLinks links,
+            IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
             TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
         com.ash.drishti.identity.collab.ThreadStore inner = collabContent.isPresent() ? collabContent.get().threads()
-                : props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links, identityTransactions)
+                : props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
         return com.ash.drishti.identity.collab.Seals.sealing(inner, seals);
     }
@@ -315,11 +315,6 @@ public class IdentityConfiguration {
             @org.springframework.beans.factory.annotation.Value("${drishti.access-log.keep-days:90}") int keepDays,
             @org.springframework.beans.factory.annotation.Value("${drishti.access-log.queue:100000}") int queue) {
         return new AccessLog(access, identityTransactions, keepDays, queue);
-    }
-
-    @Bean
-    public NoteStore noteStore(IdentityRepositories.Notes notes, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
-        return new NoteStore(notes, identityTransactions, auditLog);
     }
 
     /**

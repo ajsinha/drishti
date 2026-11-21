@@ -34,8 +34,8 @@ import java.util.TreeSet;
  * per thread, {@code collab/threads/<thread id>.json}, holds the thread, its comments, the sealed revision chain, the mentions, the
  * followers and the legacy-note links: a reply, an edit or a follow is one compare-and-set of that document, so the chain can never
  * fork between two nodes. Lookups go through small index documents written in the same transaction ({@link TxContentStore}):
- * {@code collab/entities/<kind>/<sha1 of entity>/<thread>}, {@code collab/comments/<comment>} (its thread),
- * {@code collab/mentions/<sha1 of target>/<comment>} and {@code collab/note-links/<note, 19 digits>}. The thread document is the truth:
+ * {@code collab/entities/<kind>/<sha1 of entity>/<thread>}, {@code collab/comments/<comment>} (its thread)
+ * and {@code collab/mentions/<sha1 of target>/<comment>}. The thread document is the truth:
  * readers check an index entry against it, so an index left without its thread changes nothing.
  */
 public final class ContentThreadStore implements ThreadStore {
@@ -49,7 +49,6 @@ public final class ContentThreadStore implements ThreadStore {
         public List<Revision> chain = new ArrayList<>();
         public List<Mention> mentions = new ArrayList<>();
         public List<Follow> follows = new ArrayList<>();
-        public Map<String, Long> notes = new LinkedHashMap<>();
     }
 
     private final TxContentStore store;
@@ -74,10 +73,6 @@ public final class ContentThreadStore implements ThreadStore {
 
     private static String mentionPrefix(String target) {
         return "collab/mentions/" + ContentDocs.hash(target) + "/";
-    }
-
-    private static String noteKey(long noteId) {
-        return "collab/note-links/" + ContentDocs.pad(noteId);
     }
 
     private static byte[] text(String s) {
@@ -163,9 +158,6 @@ public final class ContentThreadStore implements ThreadStore {
             for (Mention m : d.mentions) {
                 store.deleteLatest(mentionPrefix(m.target()) + m.commentId());
             }
-            for (Long note : d.notes.values()) {
-                store.deleteLatest(noteKey(note));
-            }
             store.deleteLatest(entityPrefix(d.thread.kind(), d.thread.entityId()) + id);
             store.deleteLatest(threadKey(id));
             return null;
@@ -200,24 +192,6 @@ public final class ContentThreadStore implements ThreadStore {
         return had[0];
     }
 
-    /** Links the legacy note; {@code 409 DRS-5057} when another node already gave that number to a comment. */
-    @Override
-    public void linkNote(long noteId, String commentId) {
-        store.run(() -> {
-            String threadId = store.get(commentKey(commentId)).map(ContentStore.Item::text)
-                    .orElseThrow(() -> new IllegalStateException("no comment " + commentId));
-            store.put(noteKey(noteId), text(commentId), null);
-            docs.update(threadKey(threadId), Doc.class, d -> {
-                if (d == null) {
-                    throw new IllegalStateException("no thread " + threadId);
-                }
-                d.notes.put(commentId, noteId);
-                return d;
-            });
-            return null;
-        });
-    }
-
     /** The import: the thread document exactly as the old store had it (revisions keep their hashes) and its indexes. */
     void importThread(Doc d) {
         store.run(() -> {
@@ -230,7 +204,6 @@ public final class ContentThreadStore implements ThreadStore {
             for (Mention m : d.mentions) {
                 index(mentionPrefix(m.target()) + m.commentId(), id);
             }
-            d.notes.forEach((comment, note) -> index(noteKey(note), comment));
             return null;
         });
     }
@@ -334,25 +307,5 @@ public final class ContentThreadStore implements ThreadStore {
     @Override
     public List<Mention> mentions(String commentId) {
         return docOfComment(commentId).map(d -> d.mentions.stream().filter(m -> m.commentId().equals(commentId)).toList()).orElse(List.of());
-    }
-
-    @Override
-    public Optional<String> commentOfNote(long noteId) {
-        return store.get(noteKey(noteId)).map(ContentStore.Item::text).filter(c -> noteOfComment(c).filter(n -> n == noteId).isPresent());
-    }
-
-    @Override
-    public Optional<Long> noteOfComment(String commentId) {
-        return docOfComment(commentId).map(d -> d.notes.get(commentId));
-    }
-
-    @Override
-    public Set<Long> linkedNotes() {
-        Set<Long> out = new TreeSet<>();
-        String p = "collab/note-links/";
-        for (String k : store.list(p)) {
-            out.add(Long.parseLong(k.substring(p.length())));
-        }
-        return out;
     }
 }

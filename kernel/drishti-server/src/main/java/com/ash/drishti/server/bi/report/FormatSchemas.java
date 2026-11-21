@@ -40,18 +40,12 @@ import java.util.regex.Pattern;
  * {@code allOf} member count as the object's own, so {@code additionalProperties: false} beside {@code allOf: [common frame]} still admits the frame's keys.
  * A key a visual family has but a type does not use ({@code x-types}) is a warning, never an error.
  *
- * <p>Compatibility: a format key that a 2.3 report could already hold ({@link #LEGACY}) keeps working, so a bad value of one is a warning (the viewer ignores
- * it); a bad value of a key that is new in 2.4 is {@code DRS-9032}, an error. An unknown key is a warning ({@code DRS-9030}), as before.
+ * <p>A bad value of a format key is {@code DRS-9032}, an error. An unknown key is a warning ({@code DRS-9030}).
  */
 public final class FormatSchemas {
 
     /** The family files, in the order the designer lists them. */
     public static final List<String> FAMILIES = List.of("chart", "other-chart", "card", "table", "matrix", "slicer", "static", "code");
-
-    /** Format keys a 2.3 report could hold: a bad value of one is a warning, never an error, so a stored report never stops opening. */
-    static final Set<String> LEGACY = Set.of("labels", "stacked", "smooth", "axisTitles", "legend", "colour", "period", "numberFormat", "conditional", "bins", "mode",
-            "level", "drill", "min", "max", "totals", "dataBars", "subtotals", "scope", "default", "options", "size", "python", "params", "run", "spec", "window", "plugin",
-            "view", "aggregates");
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -117,7 +111,6 @@ public final class FormatSchemas {
     private final class Walk {
         private final String type;
         private final List<Problem> out;
-        private boolean legacy;
 
         Walk(String type, List<Problem> out) {
             this.type = type;
@@ -125,7 +118,7 @@ public final class FormatSchemas {
         }
 
         private void bad(String path, String message) {
-            out.add(new Problem(legacy ? "warning" : "error", ReportParser.VISUAL, path, legacy ? message + " (ignored)" : message));
+            out.add(new Problem("error", ReportParser.VISUAL, path, message));
         }
 
         /** The object rules of {@code schema}, its {@code allOf} members' properties merged in. {@code top} marks the format itself. */
@@ -145,10 +138,6 @@ public final class FormatSchemas {
             value.fields().forEachRemaining(e -> {
                 String k = e.getKey();
                 String kp = path + "." + k;
-                boolean was = legacy;
-                if (top) {
-                    legacy = LEGACY.contains(k);
-                }
                 Ref p = props.get(k);
                 if (p != null) {
                     JsonNode types = p.node().path("x-types");
@@ -163,7 +152,6 @@ public final class FormatSchemas {
                     out.add(new Problem("warning", ReportParser.INVALID, kp, "unknown " + (top ? "format " : "") + "key '" + k + "' is ignored" + (props.isEmpty() ? ""
                             : " (" + String.join(", ", props.keySet().stream().filter(x -> !top || visibleFor(props.get(x))).toList()) + ")")));
                 }
-                legacy = was;
             });
         }
 
@@ -243,7 +231,6 @@ public final class FormatSchemas {
             for (JsonNode b : branches) {
                 List<Problem> trial = new ArrayList<>();
                 Walk w = new Walk(type, trial);
-                w.legacy = legacy;
                 w.value(file, b, value, path);
                 if (trial.stream().noneMatch(Problem::error)) {
                     out.addAll(trial);
