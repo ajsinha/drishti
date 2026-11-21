@@ -30,6 +30,10 @@
   column order; the shared writer refuses that, so the header and the term cells are written in column order now. The key identity of the TLS test
   fixture is `client` (was `drishti`).
 
+- **One `ComputeEngine` interface.** Drishti had two interfaces of that name: the engine switch (`kernel.api.engines`, the engine
+  registry, Admin → Engines) and the reactive connector's computation (`api.compute`). They are one now, `com.ash.drishti.api.compute.ComputeEngine`
+  in drishti-api, with both sets of methods (each with a default, `id()` defaulting to the manifest's name); the kernel API's
+  `engines` package is gone (kernel API **0.6**, surface regenerated). Engines, switches and Admin behave as before.
 - **The server starts on a machine with few cores.** The connectors started side by side on virtual threads; a start loads classes from
   the server jar and initialises class holders, and a virtual thread doing either holds its carrier thread, so on a laptop with few cores
   every carrier was held and the start-up stopped after *connector … waits for the modules to load*. `SourceRegistry` now starts the

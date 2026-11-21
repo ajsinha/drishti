@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules.host;
 
+import com.ash.drishti.api.compute.ComputeEngine;
 import com.ash.drishti.common.Extensions;
 import com.ash.drishti.engine.source.ComputedKindSource;
 import com.ash.drishti.engine.source.SourceRegistry;
@@ -22,7 +23,6 @@ import com.ash.drishti.kernel.api.ai.AiToolProvider;
 import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.kernel.api.capacity.CapacityFigures;
 import com.ash.drishti.kernel.api.data.KindProvider;
-import com.ash.drishti.kernel.api.engines.ComputeEngine;
 import com.ash.drishti.kernel.api.explain.Explainer;
 import com.ash.drishti.kernel.api.function.FunctionProvider;
 import com.ash.drishti.kernel.api.health.HealthFigures;

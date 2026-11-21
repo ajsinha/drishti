@@ -165,3 +165,20 @@ Green: the TLS and proxy tests of the connectors, lake storage and AI, the setti
 the pivot and export tests, the capacity workbook, the VaR, FRTB, SIMM playground and API tests, `SharedToolsGuardTest`; the VaR and ES goldens are untouched (no
 engine or test-data file changed). Build: `mvn` with a scratch `-Dmaven.repo.local` holding Drishti Tools, Rachana and Lake snapshots; nothing installed in `~/.m2`.
 
+## Pass 3: compute engine (2026-11-21), on `g4/compute-engine` merged into `wip/g4-rehearsal-rx`
+
+Front-loaded from the engine integration design (EN-25, owner: fix known duplicates now). The two interfaces named `ComputeEngine` are one:
+`com.ash.drishti.api.compute.ComputeEngine` (drishti-api) with the union of their real uses, each method with a default: the switch
+(`id`, `start`, `changing`, `stop`, `memoryBytes`, `datesOpen`, `threadPrefixes`, `running`, `threadsNamed`) and the reactive computation
+(`manifest`, `compute`, `incremental`, `affected`, `close`). `id()` defaults to the manifest's name; `manifest()` of a switch-only engine
+refuses. `kernel.api.engines.ComputeEngine` is deleted (the package is gone): kernel API **0.6**, surface baseline regenerated. The registry,
+Admin controller, configuration, module bridge, `BasicEngine`, `OpenBlasEngine` and the registry test import the one type; the reactive
+engines (`VectorSumEngine`, `BetaEngine`, `CorrelationEngine`, `VarResultEngine`, `ExposureResultEngine`, test engines) are unchanged. Engine
+ids and the catalogues (`engines/catalogue.yaml`, modules' `META-INF/drishti/engines.yaml`) are unchanged, so they stay consistent. The new
+engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the combined i8.
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
+| `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
