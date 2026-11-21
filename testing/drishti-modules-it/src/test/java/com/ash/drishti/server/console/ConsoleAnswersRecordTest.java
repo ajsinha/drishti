@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConsoleAnswersRecordTest {
 
-    static final Path REPO = Path.of(com.ash.drishti.testroots.TestRoots.repo());
+    static final Path REPO = Path.of(com.ash.lake.tck.TestRoots.repo());
 
     @Test
     void theRecordedBootstrapsAreTheServersAnswers() throws Exception {
@@ -113,7 +113,7 @@ class ConsoleAnswersRecordTest {
     static Map<String, Object> commands(List<String> named) {
         com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.repository(REPO);
         Map<String, Map<String, Object>> loaded = new LinkedHashMap<>();
-        for (String name : named.isEmpty() ? com.ash.drishti.packs.distribution.Distributions.defaultPacks(java.nio.file.Path.of(com.ash.drishti.testroots.TestRoots.repo(), "config", "distributions", "kernel.yaml"), com.ash.drishti.api.resolution.ModuleHomes.source(java.nio.file.Path.of(com.ash.drishti.testroots.TestRoots.repo()))) : named) {
+        for (String name : named.isEmpty() ? com.ash.drishti.packs.distribution.Distributions.defaultPacks(java.nio.file.Path.of(com.ash.lake.tck.TestRoots.repo(), "config", "distributions", "kernel.yaml"), com.ash.drishti.api.resolution.ModuleHomes.source(java.nio.file.Path.of(com.ash.lake.tck.TestRoots.repo()))) : named) {
             com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
             if (at != null) {
                 loaded.put(name, ConsoleAnswers.read(at.dir().resolve("pack.yaml")));

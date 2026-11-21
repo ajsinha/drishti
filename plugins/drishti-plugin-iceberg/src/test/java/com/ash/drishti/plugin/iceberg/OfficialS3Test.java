@@ -15,16 +15,18 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.iceberg.table.IcebergAppender;
+
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.s3.S3MockServer;
+import com.ash.lake.tck.s3.S3MockServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -160,7 +162,7 @@ class OfficialS3Test {
                 .contents().stream().map(o -> o.key()).toList();
         assertThat(log).anyMatch(k -> k.endsWith("00000000000000000001.json"));
         // a commit file is an exclusive create: a second create of a version that exists is refused (the loser retries on the next)
-        var storage = new com.ash.drishti.lakeio.S3Storage(com.ash.drishti.lakeio.S3Settings.from(storage()));
+        var storage = new com.ash.lake.io.S3Storage(com.ash.lake.io.S3Settings.from(storage()));
         try {
             assertThat(storage.createIfAbsent("s3://lake/delta-results/risk-results/var-official/_delta_log/00000000000000000001.json",
                     "{}".getBytes(StandardCharsets.UTF_8))).isFalse();

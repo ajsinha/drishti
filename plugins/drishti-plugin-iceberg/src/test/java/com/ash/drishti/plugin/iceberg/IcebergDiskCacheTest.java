@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.KindTable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -82,8 +84,8 @@ class IcebergDiskCacheTest {
             }
         }
         assertThat(removed).isGreaterThan(2);
-        com.ash.drishti.lakeio.ParquetFooters.purge();          // nothing of the files is left in this process either
-        com.ash.drishti.iceberg.read.Deletes.purge();
+        com.ash.lake.io.ParquetFooters.purge();          // nothing of the files is left in this process either
+        com.ash.lake.iceberg.read.Deletes.purge();
 
         IcebergSourcePlugin second = plugin(root, cache, Map.of());
         try {

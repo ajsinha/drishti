@@ -13,15 +13,15 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.lakeload;
+package com.ash.lake.load;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.FileDates;
+import com.ash.lake.common.FileDates;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.ash.drishti.plugin.iceberg.IcebergSourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;

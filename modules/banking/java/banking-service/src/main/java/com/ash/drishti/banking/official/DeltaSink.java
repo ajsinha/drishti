@@ -16,8 +16,8 @@
 package com.ash.drishti.banking.official;
 
 import com.ash.drishti.common.TempFiles;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedWriter;
 import java.io.IOException;

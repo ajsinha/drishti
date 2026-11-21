@@ -97,13 +97,13 @@ class ArchitectureRulesTest {
     /** The in-memory lake is plain Java: no Spring, nothing of the server (the server wires it in, server.memlake). */
     @ArchTest
     static final ArchRule memoryLakeIsPlainJava = noClasses()
-            .that().resideInAPackage("com.ash.drishti.memlake..")
+            .that().resideInAPackage("com.ash.lake.memory..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
 
     /** The data inbox is plain Java and never names the server (DATA_LAKE_GUIDE.md): the server wires it in, server.dataload. */
     @ArchTest
     static final ArchRule dataInboxIsPlainJava = noClasses()
-            .that().resideInAPackage("com.ash.drishti.dataload..")
+            .that().resideInAPackage("com.ash.lake.inbox..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
 
     /**
@@ -112,45 +112,45 @@ class ArchitectureRulesTest {
      */
     @ArchTest
     static final ArchRule dataInboxWritesNoTable = noClasses()
-            .that().resideInAPackage("com.ash.drishti.dataload..")
-            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..", "com.ash.drishti.lakeio..",
-                    "com.ash.drishti.memlake..", "io.delta..", "org.apache.iceberg..", "org.apache.parquet..", "org.apache.arrow..");
+            .that().resideInAPackage("com.ash.lake.inbox..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.delta..", "com.ash.lake.iceberg..", "com.ash.lake.io..",
+                    "com.ash.lake.memory..", "io.delta..", "org.apache.iceberg..", "org.apache.parquet..", "org.apache.arrow..");
 
     /** The lake engines and connectors reach mem:// through lakeio's StorageProviders, never through the in-memory lake's module. */
     /** The lake core: the lake configuration and the lake file access, two packages of drishti-lakeio that do not know each other. */
     @ArchTest
     static final ArchRule lakeConfigurationAndFileAccessStayApart = noClasses()
-            .that().resideInAPackage("com.ash.drishti.lakeconfig..")
-            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.lakeio..");
+            .that().resideInAPackage("com.ash.lake.config..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.lake.io..");
 
     @ArchTest
     static final ArchRule lakeFileAccessDoesNotReadTheLakeFiles = noClasses()
-            .that().resideInAPackage("com.ash.drishti.lakeio..")
-            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.lakeconfig..");
+            .that().resideInAPackage("com.ash.lake.io..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.lake.config..");
 
     /** The engine and the packs read the lake configuration only, never the lake files themselves. */
     @ArchTest
     static final ArchRule engineAndPacksReachNoLakeFile = noClasses()
             .that().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.packs..")
-            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..",
-                    "com.ash.drishti.iceberg..", "com.ash.drishti.lakeload..", "com.ash.drishti.dataload..", "com.ash.drishti.memlake..");
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.io..", "com.ash.lake.delta..",
+                    "com.ash.lake.iceberg..", "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.memory..");
 
     /** Loading the lakes (drishti-lakeload): the loader sees neither the inbox nor the in-memory lake, and the in-memory lake neither. */
     @ArchTest
     static final ArchRule theLoaderSeesNeitherTheInboxNorTheMemoryLake = noClasses()
-            .that().resideInAPackage("com.ash.drishti.lakeload..")
-            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.dataload..", "com.ash.drishti.memlake..");
+            .that().resideInAPackage("com.ash.lake.load..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.inbox..", "com.ash.lake.memory..");
 
     @ArchTest
     static final ArchRule theMemoryLakeLoadsNothing = noClasses()
-            .that().resideInAPackage("com.ash.drishti.memlake..")
-            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.dataload..", "com.ash.drishti.lakeload..");
+            .that().resideInAPackage("com.ash.lake.memory..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.inbox..", "com.ash.lake.load..");
 
     @ArchTest
     static final ArchRule lakeReadersDoNotSeeTheMemoryLake = noClasses()
-            .that().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..",
+            .that().resideInAnyPackage("com.ash.lake.io..", "com.ash.lake.delta..", "com.ash.lake.iceberg..",
                     "com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.api..")
-            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.memlake..");
+            .should().dependOnClassesThat().resideInAPackage("com.ash.lake.memory..");
 
     /**
      * The native BLAS binding is named in one class (HIGH_PERFORMANCE_NATIVE.md section 6.3): every caller uses LinearAlgebra, so the binding

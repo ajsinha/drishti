@@ -15,6 +15,11 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLayout;
+import com.ash.lake.iceberg.table.IcebergLoader;
+import com.ash.lake.iceberg.table.IcebergMaintenance;
+import com.ash.lake.iceberg.table.LayoutLake;
+
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLoader;
+import com.ash.lake.iceberg.table.IcebergMaintenance;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;

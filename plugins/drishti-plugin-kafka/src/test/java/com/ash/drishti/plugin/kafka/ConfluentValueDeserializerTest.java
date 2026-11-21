@@ -22,7 +22,7 @@ import com.ash.drishti.api.tls.TlsContexts;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.api.tls.TlsMaterial;
 import com.ash.drishti.api.tls.TlsSettings;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.lake.tck.TestPki;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;

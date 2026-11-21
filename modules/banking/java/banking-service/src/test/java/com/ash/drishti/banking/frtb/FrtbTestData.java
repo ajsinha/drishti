@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.frtb;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.api.DataNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;

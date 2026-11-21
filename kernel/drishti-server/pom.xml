@@ -49,7 +49,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-redis</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
-    <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.drishti.lakeload.LakeLoad) -->
+    <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.lake.load.LakeLoad) -->
     <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>

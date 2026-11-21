@@ -15,20 +15,20 @@
  */
 /**
  * The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md), plain Java with no Spring: the tables of the memory stores and their replenish
- * jobs ({@link com.ash.drishti.memlake.MemoryLake}, {@link com.ash.drishti.memlake.ReplenishSource}), the eviction ladder, automated
- * compaction ({@link com.ash.drishti.memlake.MemoryCompactor}), the expiry of old versions ({@link com.ash.drishti.memlake.MemoryUpkeep}),
+ * jobs ({@link com.ash.lake.memory.MemoryLake}, {@link com.ash.lake.memory.ReplenishSource}), the eviction ladder, automated
+ * compaction ({@link com.ash.lake.memory.MemoryCompactor}), the expiry of old versions ({@link com.ash.lake.memory.MemoryUpkeep}),
  * the owner node's binding of the pack ({@link com.ash.drishti.memlake.MemoryBinding}), the never-on-disk guard
- * ({@link com.ash.drishti.memlake.Retention}) and the host checks. The storage itself, {@code mem://}, is
- * {@link com.ash.drishti.memlake.store}.
+ * ({@link com.ash.lake.memory.Retention}) and the host checks. The storage itself, {@code mem://}, is
+ * {@link com.ash.lake.memory.store}.
  *
  * <h2>The dependency direction</h2>
  *
  * <p>This package (in drishti-lakeload) depends on {@code drishti-lakeio} and {@code drishti-deltalake} (it writes its tables with the lake
  * writer and reads them with Delta Kernel); nothing below it depends on it. The lake readers reach {@code mem://} the other way round:
- * {@code drishti-lakeio} defines {@link com.ash.drishti.lakeio.StorageProvider}, and this package registers its memory stores as the
+ * {@code drishti-lakeio} defines {@link com.ash.lake.io.StorageProvider}, and this package registers its memory stores as the
  * provider of the scheme {@code mem}
- * ({@code META-INF/services/com.ash.drishti.lakeio.StorageProvider}). The native Delta engine, the lake writer, the Iceberg
- * engine and the Delta and Iceberg connectors ask {@link com.ash.drishti.lakeio.StorageProviders} for a path's storage, and whether it is
+ * ({@code META-INF/services/com.ash.lake.io.StorageProvider}). The native Delta engine, the lake writer, the Iceberg
+ * engine and the Delta and Iceberg connectors ask {@link com.ash.lake.io.StorageProviders} for a path's storage, and whether it is
  * memory-only, and never name a class of this module. So:
  *
  * <ul>
@@ -39,7 +39,7 @@
  * </ul>
  *
  * <p>The server keeps only the Spring wiring ({@code com.ash.drishti.server.memlake}): binding {@code drishti.lake.memory.*} onto
- * {@link com.ash.drishti.memlake.MemoryLakeSettings}, the beans, the cron parser, the joins to the memory budget and busy protection, and the
+ * {@link com.ash.lake.memory.MemoryLakeSettings}, the beans, the cron parser, the joins to the memory budget and busy protection, and the
  * REST controller of Admin, Lakes.
  */
-package com.ash.drishti.memlake;
+package com.ash.lake.memory;

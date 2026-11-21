@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.memlake;
 
-import com.ash.drishti.lakeconfig.LakeCheck;
-import com.ash.drishti.lakeconfig.Lakes;
+import com.ash.lake.config.LakeCheck;
+import com.ash.lake.config.Lakes;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLoader;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 

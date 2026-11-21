@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.delta.table.LakeStore;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

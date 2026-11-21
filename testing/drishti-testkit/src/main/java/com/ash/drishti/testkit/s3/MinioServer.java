@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.testkit.s3;
 
+import com.ash.lake.tck.s3.S3Endpoint;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;

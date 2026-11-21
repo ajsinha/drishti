@@ -15,12 +15,15 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.delta.table.DeltaTable;
+import com.ash.lake.delta.table.LakeStore;
+
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.deltalake.NativeEngine;
+import com.ash.lake.delta.NativeEngine;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.nio.file.Files;
 import java.nio.file.Path;

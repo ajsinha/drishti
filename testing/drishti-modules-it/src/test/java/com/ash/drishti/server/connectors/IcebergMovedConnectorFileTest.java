@@ -85,7 +85,7 @@ class IcebergMovedConnectorFileTest {
             // the rows as drishti.py data load --store iceberg gives them: a tar of <kind>/<YYYY-MM-DD>/ folders (the load rules: each row under its folder's date)
             lines = com.ash.drishti.testkit.LoaderRows.write(base.resolve("rows"), List.of(rows.toString().split("\n")));
             // the loader drishti.py data load --store iceberg runs, with the options QA gave it
-            com.ash.drishti.plugin.iceberg.IcebergLoader.main(new String[] {lines.toString(), base.resolve("ice1").toString(), "--engine", "native",
+            com.ash.lake.iceberg.table.IcebergLoader.main(new String[] {lines.toString(), base.resolve("ice1").toString(), "--engine", "native",
                 "--spill-dir", base.resolve("spill").toString()});
             Files.move(base.resolve("ice1"), base.resolve("ice2"));
             Path connectors = com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors");

@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server;
 
-import com.ash.drishti.testroots.TestRoots;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.lake.tck.TestRoots;
+import com.ash.lake.delta.write.LakeManifest;
+import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -93,7 +93,7 @@ final class PublicPackLakes {
             }
             String kind = ds.path("kind").asText();
             // the pack's entry for the kind, from its lake: block (its templates name lake: demo) or an older template's layout
-            com.ash.drishti.lakeconfig.PackEntry entry = com.ash.drishti.lakeconfig.PackEntry.read(com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent()).packDir(pack), kind,
+            com.ash.lake.config.PackEntry entry = com.ash.lake.config.PackEntry.read(com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent()).packDir(pack), kind,
                     ds.path("connector").asText(null));
             List<String> promoted = new ArrayList<>(entry.promote());
             TreeMap<String, JsonNode> docs = new TreeMap<>();

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.memlake;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.memlake.MemoryLake;
+import com.ash.lake.memory.MemoryLake;
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -292,6 +292,6 @@ class NewsInMemorySentinelTest {
         leaks.addAll(found(com.ash.drishti.common.TempFiles.root()));
         assertThat(leaks).as("files holding a marker").isEmpty();
         assertThat(output.getAll()).as("the logs").doesNotContain(MARK);
-        assertThat(com.ash.drishti.memlake.store.MemoryStores.store("news").pool().inUseBytes()).isGreaterThan(0);
+        assertThat(com.ash.lake.memory.store.MemoryStores.store("news").pool().inUseBytes()).isGreaterThan(0);
     }
 }

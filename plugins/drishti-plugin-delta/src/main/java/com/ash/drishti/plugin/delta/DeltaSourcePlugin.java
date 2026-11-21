@@ -15,6 +15,12 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.delta.table.DeltaTable;
+import com.ash.lake.delta.table.LakeStore;
+import com.ash.lake.delta.table.NewTables;
+import com.ash.lake.delta.table.TableProblems;
+import com.ash.lake.delta.table.VectorBatches;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
@@ -79,7 +85,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     // The storage providers loaded with this class, on the thread that discovers the plugins, so no connector's start waits on
     // their holder's initialisation while the connectors start side by side.
-    private static final int PROVIDERS = com.ash.drishti.lakeio.StorageProviders.load();
+    private static final int PROVIDERS = com.ash.lake.io.StorageProviders.load();
 
     /**
      * A partition of one table version. The version's commit time is part of the key: a table removed and written again (lake demo, a
@@ -294,7 +300,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.domain = ctx.setting("domain", "");
         // a lake in memory (mem://, docs/architecture/DATA_ARCHITECTURE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
-        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
+        this.memoryOnly = com.ash.lake.io.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
         this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
@@ -1408,7 +1414,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (diskDocs != null) {
             diskDocs.clear();
         }
-        com.ash.drishti.deltalake.NativeEngine.purgeFooterCache();
+        com.ash.lake.delta.NativeEngine.purgeFooterCache();
         latest.synchronous().invalidateAll();
         travelled.synchronous().invalidateAll();
         // this connector's entries only: the caches may be shared with the other Delta connectors

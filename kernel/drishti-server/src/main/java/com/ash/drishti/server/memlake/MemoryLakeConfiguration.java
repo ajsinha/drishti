@@ -18,10 +18,10 @@ package com.ash.drishti.server.memlake;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.memlake.MemoryBinding;
-import com.ash.drishti.memlake.MemoryLake;
-import com.ash.drishti.memlake.MemoryLakeSettings;
-import com.ash.drishti.memlake.ReplenishSource;
-import com.ash.drishti.memlake.Retention;
+import com.ash.lake.memory.MemoryLake;
+import com.ash.lake.memory.MemoryLakeSettings;
+import com.ash.lake.memory.ReplenishSource;
+import com.ash.lake.memory.Retention;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +49,7 @@ public class MemoryLakeConfiguration {
         MemoryLakeSettings bound = Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
         // the stores are lakes (config/lakes/<store>.yaml, root: mem://<store>, docs/guides/DATA_LAKE_GUIDE.md); the engine file keeps the switch,
         // the replenish jobs and the compaction policy (the engine's work, not the lake's description)
-        return bound.withLakeStores(com.ash.drishti.lakeconfig.Lakes.current(),
+        return bound.withLakeStores(com.ash.lake.config.Lakes.current(),
                 m -> org.slf4j.LoggerFactory.getLogger(MemoryLakeConfiguration.class).warn(m));
     }
 
@@ -118,8 +118,8 @@ public class MemoryLakeConfiguration {
         ctx.getBeanProvider(com.ash.drishti.server.admission.AdmissionGate.class).ifAvailable(g -> {
             for (String store : lake.stores().keySet()) {
                 if (lake.owns(store)) {
-                    g.memoryStore(store, () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().allocatedBytes(),
-                            () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().capBytes());
+                    g.memoryStore(store, () -> com.ash.lake.memory.store.MemoryStores.store(store).pool().allocatedBytes(),
+                            () -> com.ash.lake.memory.store.MemoryStores.store(store).pool().capBytes());
                 }
             }
         });

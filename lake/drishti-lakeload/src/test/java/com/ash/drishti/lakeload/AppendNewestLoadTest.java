@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.lakeload;
+package com.ash.lake.load;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -158,11 +158,11 @@ class AppendNewestLoadTest {
         Path lake = tmp.resolve("lake-iundo");
         load(first.getParent(), lake, "iceberg");
         String id2 = load(second.getParent(), lake, "iceberg").path("loads").fieldNames().next();
-        var undone = com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id2, false, tmp);
+        var undone = com.ash.lake.iceberg.table.IcebergMaintenance.undoLake(lake.toString(), id2, false, tmp);
         assertThat(undone).singleElement().satisfies(u -> assertThat(u).containsEntry("table", "risk/scenario-pv").containsEntry("removed", 2L));
         assertThat(read("iceberg", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
         String id3 = load(second.getParent(), lake, "iceberg", "target.mode=replace-date").path("loads").fieldNames().next();
-        var restored = com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id3, false, tmp);
+        var restored = com.ash.lake.iceberg.table.IcebergMaintenance.undoLake(lake.toString(), id3, false, tmp);
         assertThat(restored).singleElement().satisfies(u -> assertThat(u).containsEntry("replaced", true).containsEntry("restored", 2L));
         assertThat(read("iceberg", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
     }
@@ -251,7 +251,7 @@ class AppendNewestLoadTest {
         if (format.equals("delta")) {
             return LakeUndo.undo(lake.toString(), id, List.of(), true).stream().map(LakeUndo.Done::date).toList();
         }
-        return com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id, true, tmp).stream()
+        return com.ash.lake.iceberg.table.IcebergMaintenance.undoLake(lake.toString(), id, true, tmp).stream()
                 .map(u -> String.valueOf(u.get("date"))).toList();
     }
 
@@ -259,7 +259,7 @@ class AppendNewestLoadTest {
         if (format.equals("delta")) {
             assertThat(LakeUndo.undo(lake.toString(), id, List.of(), false)).isNotEmpty();
         } else {
-            assertThat(com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id, false, tmp)).isNotEmpty();
+            assertThat(com.ash.lake.iceberg.table.IcebergMaintenance.undoLake(lake.toString(), id, false, tmp)).isNotEmpty();
         }
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.delta.table.DeltaTable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;

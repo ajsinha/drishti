@@ -22,7 +22,7 @@ import com.aerospike.client.Host;
 import com.aerospike.client.policy.AuthMode;
 import com.aerospike.client.policy.ClientPolicy;
 import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.lake.tck.TlsFixture;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;

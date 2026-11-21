@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.lake.delta.table.DeltaTable;
+
 import com.ash.drishti.api.MappedIdFile;
 import java.io.IOException;
 import java.nio.file.Path;

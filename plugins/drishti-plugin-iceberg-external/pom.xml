@@ -28,6 +28,8 @@
   <name>drishti-plugin-iceberg-external</name>
   <description>Iceberg tables Drishti does not write (Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg): rows as documents, ids from identifier fields or columns, dates from a column or the partition spec, every column searchable; read-only, through drishti-iceberg (no Hadoop)</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-iceberg</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>

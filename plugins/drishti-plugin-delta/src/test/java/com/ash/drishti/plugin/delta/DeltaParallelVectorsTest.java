@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.VectorReads;
 import com.ash.drishti.api.VectorSink;
-import com.ash.drishti.deltalake.write.LakeCli;
+import com.ash.lake.delta.write.LakeCli;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -147,7 +147,7 @@ class DeltaParallelVectorsTest {
         write(root.resolve("risk/pnl-vector"), 1200, 1);
         List<Path> fs = files(root.resolve("risk/pnl-vector"));
         assertThat(fs).hasSize(1);
-        try (com.ash.drishti.deltalake.NativeEngine ne = com.ash.drishti.deltalake.NativeEngine.create()) {
+        try (com.ash.lake.delta.NativeEngine ne = com.ash.lake.delta.NativeEngine.create()) {
             assertThat(ne.rowGroups(io.delta.kernel.utils.FileStatus.of(fs.get(0).toString(), Files.size(fs.get(0)), 0)).length)
                     .as("row groups of the file").isGreaterThan(4);
         }

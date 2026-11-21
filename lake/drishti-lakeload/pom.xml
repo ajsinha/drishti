@@ -39,6 +39,10 @@
     <drishti.test.forks>1</drishti.test.forks>
   </properties>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-memory</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-files</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>

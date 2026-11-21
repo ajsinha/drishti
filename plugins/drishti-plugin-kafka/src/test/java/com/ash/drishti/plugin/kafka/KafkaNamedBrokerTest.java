@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.NamedResources;
 import com.ash.drishti.settingsfile.SettingsFile;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.lake.tck.TestPki;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

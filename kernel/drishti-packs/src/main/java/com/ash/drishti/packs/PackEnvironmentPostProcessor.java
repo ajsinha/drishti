@@ -39,13 +39,14 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         String dir = PackPaths.packsDir(env);
         // the lake files' references (${DRISHTI_DELTA_ROOT:...}, drishti.lakes.dir) resolved with the server's settings, as a connector
         // file's are (docs/guides/DATA_LAKE_GUIDE.md): an environment variable, a system property, a --setting or a test's property
-        com.ash.drishti.lakeconfig.Lakes.useProperties(k -> {
+        // G4 rehearsal STUB: the runtime built from the server's settings (the names supplier is the real work: DRISHTI_LAKE_DESIGN D4)
+        com.ash.drishti.common.DrishtiLake.use(com.ash.lake.LakeRuntime.builder().settings(k -> {
             try {
                 return env.getProperty(k);
             } catch (IllegalArgumentException e) {
                 return null;
             }
-        });
+        }, java.util.Collections::emptyList).build());
         // the named lakes, databases and brokers ([lake.<name>], [db.<name>], [broker.<name>], [connector.<name>], [pack.<name>]) read
         // through the same settings: the settings files' entries, -D, the environment, a --setting or a test's property
         com.ash.drishti.common.NamedResources.useView(k -> {

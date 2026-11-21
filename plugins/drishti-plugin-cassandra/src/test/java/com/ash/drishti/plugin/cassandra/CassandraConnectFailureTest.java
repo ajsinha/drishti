@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.lake.tck.TlsFixture;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;

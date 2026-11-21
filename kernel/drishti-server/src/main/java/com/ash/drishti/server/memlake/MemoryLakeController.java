@@ -18,8 +18,8 @@ package com.ash.drishti.server.memlake;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.memlake.MemoryLake;
-import com.ash.drishti.memlake.Retention;
+import com.ash.lake.memory.MemoryLake;
+import com.ash.lake.memory.Retention;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
@@ -73,12 +73,12 @@ public class MemoryLakeController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("dir", com.ash.drishti.lakeconfig.Lakes.dir().toAbsolutePath().normalize().toString());
+        out.put("dir", com.ash.lake.config.Lakes.dir().toAbsolutePath().normalize().toString());
         try {
-            com.ash.drishti.lakeconfig.Lakes lakes = com.ash.drishti.lakeconfig.Lakes.current();
+            com.ash.lake.config.Lakes lakes = com.ash.lake.config.Lakes.current();
             out.put("lakes", lakes.describe());
             if (check) {
-                out.put("findings", com.ash.drishti.lakeconfig.LakeCheck.check(lakes, Map.of()));
+                out.put("findings", com.ash.lake.config.LakeCheck.check(lakes, Map.of()));
             }
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             out.put("lakes", List.of());

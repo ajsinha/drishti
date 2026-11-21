@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.proxy.SiteProxy;
-import com.ash.drishti.testkit.FakeProxy;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.lake.tck.FakeProxy;
+import com.ash.lake.tck.TlsFixture;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;

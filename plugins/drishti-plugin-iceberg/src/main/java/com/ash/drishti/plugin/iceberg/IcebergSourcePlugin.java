@@ -15,6 +15,12 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLayout;
+import com.ash.lake.iceberg.table.IcebergVectors;
+import com.ash.lake.iceberg.table.KindTable;
+import com.ash.lake.iceberg.table.LakeTables;
+import com.ash.lake.iceberg.table.TableProblems;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.DataNode;
@@ -29,10 +35,10 @@ import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.ReferenceScanner;
-import com.ash.drishti.iceberg.catalog.S3Tables;
-import com.ash.drishti.plugin.iceberg.KindTable.Day;
-import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
-import com.ash.drishti.plugin.iceberg.KindTable.Layout;
+import com.ash.lake.iceberg.catalog.S3Tables;
+import com.ash.lake.iceberg.table.KindTable.Day;
+import com.ash.lake.iceberg.table.KindTable.IdMap;
+import com.ash.lake.iceberg.table.KindTable.Layout;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -94,7 +100,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     // The storage providers loaded with this class, on the thread that discovers the plugins, so no connector's start waits on
     // their holder's initialisation while the connectors start side by side.
-    private static final int PROVIDERS = com.ash.drishti.lakeio.StorageProviders.load();
+    private static final int PROVIDERS = com.ash.lake.io.StorageProviders.load();
 
     private record SnapKey(String kind, long snapshotId) {}
 
@@ -207,7 +213,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
                 : root + (domain.isBlank() ? "" : "/" + domain) + "/" + (lake instanceof LakeTables.Named n ? n.tableOf(kind) : kind),
                 relocation(ctx.setting("relocate", "")));
-        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root) || com.ash.drishti.lakeio.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
+        this.memoryOnly = com.ash.lake.io.StorageProviders.memoryOnly(root) || com.ash.lake.io.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
         this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
@@ -256,8 +262,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /** The {@code relocate} pairs tables are read through. */
-    private com.ash.drishti.iceberg.io.Relocation relocation(String spec) {
-        return com.ash.drishti.iceberg.io.Relocation.parse(spec);   // read already by the catalog: a pair that cannot be read failed the start there
+    private com.ash.lake.iceberg.io.Relocation relocation(String spec) {
+        return com.ash.lake.iceberg.io.Relocation.parse(spec);   // read already by the catalog: a pair that cannot be read failed the start there
     }
 
     private static long mb(SourceContext ctx, String key, String fallback) {
@@ -1005,7 +1011,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 loc = t.file().location();
                 size = t.file().fileSizeInBytes();
                 format = String.valueOf(t.file().format());
-            } else if (o instanceof com.ash.drishti.iceberg.scan.FileTask t) {
+            } else if (o instanceof com.ash.lake.iceberg.scan.FileTask t) {
                 loc = t.file().path();
                 size = t.file().fileSizeInBytes();
                 format = String.valueOf(t.file().format());
@@ -1141,9 +1147,9 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         parts.synchronous().invalidateAll();
         docs.invalidateAll();
         disk.purge();
-        com.ash.drishti.lakeio.ParquetFooters.purge();         // the per-file caches (footers, manifests, delete files)
-        com.ash.drishti.iceberg.scan.Planner.purge();
-        com.ash.drishti.iceberg.read.Deletes.purge();
+        com.ash.lake.io.ParquetFooters.purge();         // the per-file caches (footers, manifests, delete files)
+        com.ash.lake.iceberg.scan.Planner.purge();
+        com.ash.lake.iceberg.read.Deletes.purge();
     }
 
     /** One date's id maps, column sets and day parts go, in memory and its id-map files on disk (2.9.7); documents by their key. */

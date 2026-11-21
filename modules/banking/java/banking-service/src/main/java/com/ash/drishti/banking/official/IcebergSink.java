@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
+import com.ash.lake.iceberg.table.IcebergAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDate;

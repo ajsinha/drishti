@@ -486,7 +486,7 @@ public final class ConnectorManager {
     public record Template(String pack, Map<String, Object> definition) {
         /** Where the template comes from: {@code pack trading}, or {@code module source-endur} for a source module's connector. */
         public String owner() {
-            Object m = definition.get(com.ash.drishti.lakeconfig.ModuleConnectors.FROM_MODULE);
+            Object m = definition.get(com.ash.lake.config.ModuleConnectors.FROM_MODULE);
             return m == null ? "pack " + pack : "module " + m;
         }
     }
@@ -975,10 +975,10 @@ public final class ConnectorManager {
                 out.add(new Problem("warning", "kinds", "kind '" + k + "' is not owned by a loaded pack (loaded: " + String.join(", ", known.stream().limit(8).toList()) + (known.size() > 8 ? ", and " + (known.size() - 8) + " more" : "") + ")"));
             }
         }
-        List<String> own = com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(d.plugin())
-                ? com.ash.drishti.lakeconfig.ConnectorLake.overridden(d.settings()) : List.of();
+        List<String> own = com.ash.lake.config.ConnectorLake.PLUGINS.contains(d.plugin())
+                ? com.ash.lake.config.ConnectorLake.overridden(d.settings()) : List.of();
         for (String k : own) {                                  // both forms: the explicit path wins (DATA_LAKE_GUIDE.md section 6)
-            out.add(new Problem("warning", "settings." + k, "the connector names lake " + d.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE)
+            out.add(new Problem("warning", "settings." + k, "the connector names lake " + d.settings().get(com.ash.lake.config.ConnectorLake.LAKE)
                     + " and gives " + k + " itself: its own value wins over the lake file's"));
         }
         boolean on = shownEnabled(d);

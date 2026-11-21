@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.KindTable;
+
 import com.ash.drishti.api.MappedIdFile;
 import java.io.IOException;
 import java.nio.file.Path;

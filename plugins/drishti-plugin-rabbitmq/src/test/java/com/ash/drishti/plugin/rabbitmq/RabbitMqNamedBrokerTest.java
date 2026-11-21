@@ -22,7 +22,7 @@ import com.ash.drishti.api.tls.TlsMaterial;
 import com.ash.drishti.api.tls.TlsSettings;
 import com.ash.drishti.common.NamedResources;
 import com.ash.drishti.settingsfile.SettingsFile;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.lake.tck.TestPki;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultSaslConfig;
 import java.nio.file.Files;

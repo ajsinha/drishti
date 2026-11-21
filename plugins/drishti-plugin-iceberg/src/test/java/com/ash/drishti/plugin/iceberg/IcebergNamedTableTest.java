@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLoader;
+import com.ash.lake.iceberg.table.LakeTables;
+
 import com.ash.drishti.testkit.LoaderRows;
 import static com.ash.drishti.testkit.DatedSourceContract.context;
 import static org.assertj.core.api.Assertions.assertThat;

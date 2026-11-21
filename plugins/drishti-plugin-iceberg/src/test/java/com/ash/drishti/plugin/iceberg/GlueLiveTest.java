@@ -15,7 +15,9 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.iceberg.table.IcebergLoader;
+
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -194,7 +196,7 @@ class GlueLiveTest {
     void s3TablesCreatesWritesReadsAndDrops() throws Exception {
         String ns = "drishti_check_" + Long.toString(System.currentTimeMillis(), 36);
         // the connector's own form, catalog: s3tables and the ARN, with the REST settings it stands for (the library side reads those)
-        Map<String, String> s = new LinkedHashMap<>(com.ash.drishti.iceberg.catalog.S3Tables.expand(Map.of("catalog", "s3tables",
+        Map<String, String> s = new LinkedHashMap<>(com.ash.lake.iceberg.catalog.S3Tables.expand(Map.of("catalog", "s3tables",
                 "table-bucket-arn", env("DRISHTI_S3TABLES_ARN", ""), "domain", ns, "engine", "native")));
         roundTrip("s3tables", s, null);
     }

@@ -668,7 +668,7 @@ public final class RunService {
     private void finish(Flight f, Answer a, double seconds) {
         Long bytes = null;
         boolean keep = f.visible || f.background || props.store().keepInteractive() && seconds >= props.store().minSeconds();
-        if (keep && com.ash.drishti.memlake.Retention.current().mentions(f.q.question() + " " + f.q.dataVersion())) {
+        if (keep && com.ash.lake.memory.Retention.current().mentions(f.q.question() + " " + f.q.dataVersion())) {
             keep = false;            // memory-only data (docs/architecture/DATA_ARCHITECTURE.md section 8): the run's definition is kept, its rows are recomputed when opened
         }
         if (keep) {

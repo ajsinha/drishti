@@ -15,7 +15,9 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.delta.table.NewTables;
+
+import com.ash.lake.tck.TestRoots;
 import static com.ash.drishti.testkit.DatedSourceContract.context;
 import static org.assertj.core.api.Assertions.assertThat;
 

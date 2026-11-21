@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.ai.FakeLlmServer;
 import com.ash.drishti.ai.LlmException;
 import com.ash.drishti.ai.llm.Canonical.ChatMessage;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.lake.tck.TestPki;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;

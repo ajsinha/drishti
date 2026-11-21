@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.net.security.NetHeaders;

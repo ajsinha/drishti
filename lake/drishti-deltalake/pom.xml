@@ -28,6 +28,8 @@
   <name>drishti-deltalake</name>
   <description>A Hadoop-free Delta Kernel engine: reads Delta tables on local disk (Windows included, no winutils.exe) and in S3 through java.nio and the AWS SDK</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-delta</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>

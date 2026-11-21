@@ -15,12 +15,15 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergLayout;
+import com.ash.lake.iceberg.table.NativeLayout;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.iceberg.Table;
-import com.ash.drishti.iceberg.catalog.Catalog;
-import com.ash.drishti.iceberg.catalog.Catalogs;
-import com.ash.drishti.iceberg.write.Operations;
+import com.ash.lake.iceberg.Table;
+import com.ash.lake.iceberg.catalog.Catalog;
+import com.ash.lake.iceberg.catalog.Catalogs;
+import com.ash.lake.iceberg.write.Operations;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

@@ -32,6 +32,10 @@
     with no Hadoop: local disk (Windows included) and S3 through java.nio and the AWS SDK, byte ranges, Parquet page codecs and the
     Parquet footer cache</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-api</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-io</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-config</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- the lake configuration: domain vocabularies (kernel API) and where a pack is -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>

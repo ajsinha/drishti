@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server;
 
-import com.ash.drishti.plugin.iceberg.IcebergAppender;
-import com.ash.drishti.plugin.iceberg.IcebergLoader;
+import com.ash.lake.iceberg.table.IcebergAppender;
+import com.ash.lake.iceberg.table.IcebergLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

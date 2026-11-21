@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.lake.iceberg.table.IcebergMaintenance;
+import com.ash.lake.iceberg.table.LayoutLake;
+import com.ash.lake.iceberg.table.OrphanFiles;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -84,7 +88,7 @@ class IcebergOrphanFilesTest {
         return root;
     }
 
-    private static com.ash.drishti.iceberg.Table nativeTable(Path root) {
+    private static com.ash.lake.iceberg.Table nativeTable(Path root) {
         LayoutLake lake = LayoutLake.of(Map.of("root", root.toString(), "domain", "risk", "engine", "native"));
         return ((LayoutLake.Native.Kind) lake.load(VectorLake.KIND).orElseThrow()).t();
     }

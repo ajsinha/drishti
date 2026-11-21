@@ -213,7 +213,7 @@ public final class PackLoader {
 
     /**
      * The manifest with the connector templates of the source modules that require the pack ({@link
-     * com.ash.drishti.lakeconfig.ModuleConnectors}) among its own, where the pack does not declare that name: the template layer of a
+     * com.ash.lake.config.ModuleConnectors}) among its own, where the pack does not declare that name: the template layer of a
      * source system's connectors (docs/guides/DATA_GUIDE.md, "Connector layers").
      */
     @SuppressWarnings("unchecked")
@@ -228,7 +228,7 @@ public final class PackLoader {
             km.keySet().forEach(k -> kinds.add(String.valueOf(k)));
         }
         // the resolution this load was given (a server's own), never another one in the same process
-        Map<String, Map<String, Object>> mods = res != null ? res.templatesForKinds(kinds) : com.ash.drishti.lakeconfig.ModuleConnectors.forKinds(kinds);
+        Map<String, Map<String, Object>> mods = res != null ? res.templatesForKinds(kinds) : com.ash.lake.config.ModuleConnectors.forKinds(com.ash.drishti.common.DrishtiLake.runtime(), kinds);
         if (mods.isEmpty()) {
             return m;
         }

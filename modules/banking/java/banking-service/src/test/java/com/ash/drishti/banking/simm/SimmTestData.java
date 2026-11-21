@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.simm;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.banking.frtb.FrtbData;
 import com.ash.drishti.banking.frtb.FrtbProperties;

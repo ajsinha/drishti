@@ -28,6 +28,8 @@
   <name>drishti-plugin-iceberg</name>
   <description>Apache Iceberg source: dated entity tables (path-based or through a REST catalog) with time travel</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-iceberg</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- Apache Iceberg on iceberg-core with Drishti's file access and Parquet reader; no Hadoop -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>

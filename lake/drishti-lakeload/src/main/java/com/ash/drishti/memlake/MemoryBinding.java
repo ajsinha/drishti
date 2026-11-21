@@ -13,10 +13,10 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.memlake;
+package com.ash.lake.memory;
 
 import com.ash.drishti.engine.source.SourceRegistry;
-import com.ash.drishti.memlake.store.MemoryStores;
+import com.ash.lake.memory.store.MemoryStores;
 import java.util.Locale;
 
 /**

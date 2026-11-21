@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.it;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -24,7 +24,7 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourceSystems;
 import com.ash.drishti.engine.source.SourcesProperties;
-import com.ash.drishti.lakeload.LakeLoad;
+import com.ash.lake.load.LakeLoad;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;

@@ -542,8 +542,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             // [connector.<name>] keys, the named broker's or database's section, relative files under the install folder (NamedResources)
             own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(
                     com.ash.drishti.common.NamedResources.connector(name, c.plugin(), c.settings())));
-            own = new LinkedHashMap<>(com.ash.drishti.lakeconfig.ConnectorLake.expand(name, c.plugin(), c.kinds(), own,
-                    com.ash.drishti.lakeconfig.Lakes::current,
+            own = new LinkedHashMap<>(com.ash.lake.config.ConnectorLake.expand(name, c.plugin(), c.kinds(), own,
+                    () -> com.ash.lake.config.Lakes.current(com.ash.drishti.common.DrishtiLake.runtime()),
                     LOG::warn));
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             throw new IllegalStateException(e.getMessage(), e);
@@ -941,7 +941,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
      */
     public Optional<String> tableOf(String connector, String kind) {
         SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
-        if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin())) {
+        if (c == null || !com.ash.lake.config.ConnectorLake.PLUGINS.contains(c.plugin())) {
             return Optional.empty();
         }
         Map<String, String> own;
@@ -965,10 +965,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     private String lakeName(String connector) {
         SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
-        if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || c.settings() == null) {
+        if (c == null || !com.ash.lake.config.ConnectorLake.PLUGINS.contains(c.plugin()) || c.settings() == null) {
             return null;
         }
-        String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+        String lake = c.settings().get(com.ash.lake.config.ConnectorLake.LAKE);
         return lake == null || lake.isBlank() ? null : lake.strip();
     }
 
@@ -976,16 +976,16 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         java.util.Set<String> out = new java.util.TreeSet<>();
         java.util.Map<String, String> byRoot = new java.util.HashMap<>();
         try {
-            com.ash.drishti.lakeconfig.Lakes.current().all().values().forEach(l -> byRoot.putIfAbsent(normal(l.root()), l.name()));
+            com.ash.lake.config.Lakes.current(com.ash.drishti.common.DrishtiLake.runtime()).all().values().forEach(l -> byRoot.putIfAbsent(normal(l.root()), l.name()));
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             LOG.debug("the lakes cannot be read for the connectors' lakes: {}", e.getMessage());
         }
         applied.forEach((name, c) -> {
-            if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || Boolean.FALSE.equals(c.enabled())
+            if (c == null || !com.ash.lake.config.ConnectorLake.PLUGINS.contains(c.plugin()) || Boolean.FALSE.equals(c.enabled())
                     || c.settings() == null) {
                 return;
             }
-            String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+            String lake = c.settings().get(com.ash.lake.config.ConnectorLake.LAKE);
             if (lake != null && !lake.isBlank()) {
                 out.add(lake.strip());
             } else if (c.settings().get("root") != null && byRoot.containsKey(normal(c.settings().get("root")))) {

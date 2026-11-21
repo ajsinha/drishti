@@ -28,6 +28,8 @@
   <name>drishti-iceberg</name>
   <description>Apache Iceberg on iceberg-core, with no Hadoop: Drishti's FileIO over java.nio and S3, path-based tables, and Drishti's Parquet reader and writer; on local disk (Windows included) and S3</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-iceberg</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <!-- the Iceberg protocol: metadata, manifests, planning, commits, the REST client; no Hadoop at run time -->

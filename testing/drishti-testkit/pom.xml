@@ -28,6 +28,8 @@
   <name>drishti-testkit</name>
   <description>Fixtures and contract tests every source plugin must pass</description>
   <dependencies>
+    <!-- G4 rehearsal: the pinned Drishti Lake jars -->
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-tck</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <!-- the one packager (ModuleFixtures.pack): optional, a test that packs modules has the module runtime on its class path -->

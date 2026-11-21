@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.rachana;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;

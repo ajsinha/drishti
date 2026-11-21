@@ -15,14 +15,14 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.drishti.testroots.TestRoots;
+import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.testkit.s3.ConditionalWrites;
 import com.ash.drishti.testkit.s3.MinioServer;
-import com.ash.drishti.testkit.s3.S3Endpoint;
-import com.ash.drishti.testkit.s3.S3MockServer;
+import com.ash.lake.tck.s3.S3Endpoint;
+import com.ash.lake.tck.s3.S3MockServer;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
