@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.banking.compute.var.ParametricVar;
-import com.ash.drishti.server.playground.SheetStream;
-import com.ash.drishti.server.playground.WorkbookStream;
+import Sheet;
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -136,7 +137,7 @@ final class VarPlaygroundParametric {
 
     private static final int FIRST_INPUT = 5;
 
-    static void sheet(SheetStream s, WorkbookStream w, Refs refs, Engine e) {
+    static void sheet(Sheet s, PlaygroundWorkbook w, Refs refs, Engine e) {
         ParametricVar.Figures f = e.scope();
         boolean cached = refs.cached();
         int n = refs.scenarios();
@@ -244,7 +245,7 @@ final class VarPlaygroundParametric {
         s.checks("B3", ALL_PASS);
     }
 
-    private static int input(SheetStream s, WorkbookStream w, int r, String name, double v, String style, String meaning) {
+    private static int input(Sheet s, PlaygroundWorkbook w, int r, String name, double v, String style, String meaning) {
         w.name(name, "Parametric", "$B$" + r);
         s.row(r).text(0, name, "label").number(1, v, style).number(2, v, style)
                 .formulaText(3, "IF(B" + r + "=C" + r + ",\"" + VarPlaygroundBook.PASS + "\",\"" + VarPlaygroundBook.FAIL + "\")", VarPlaygroundBook.PASS, "check")
@@ -252,7 +253,7 @@ final class VarPlaygroundParametric {
         return r + 1;
     }
 
-    private static int result(SheetStream s, WorkbookStream w, int r, String name, String formula, double sheet, double engine, boolean cached, String style,
+    private static int result(Sheet s, PlaygroundWorkbook w, int r, String name, String formula, double sheet, double engine, boolean cached, String style,
             String meaning, double tolerance) {
         w.name(name, "Parametric", "$B$" + r);
         String tol = tolerance >= 0.005 ? String.valueOf(tolerance) : tolerance + "*MAX(1,ABS(C" + r + "))";

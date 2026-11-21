@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -59,7 +60,7 @@ class RunExportTest {
         ExportDoc doc = exporter(1).ofAnswer("MTM by desk", "Run r-1", ANSWER);
         assertThat(doc.sections().get(0).rows()).hasSize(1);
         assertThat(doc.sections().get(0).note()).startsWith("Cut at 1 of 2 rows");
-        byte[] xlsx = XlsxWriter.write(doc);
+        byte[] xlsx = ExportWorkbook.write(doc);
         assertThat(xlsx).hasSizeGreaterThan(100);
         assertThat(new String(xlsx, 0, 2, StandardCharsets.ISO_8859_1)).isEqualTo("PK");                 // a zip: the xlsx container
     }

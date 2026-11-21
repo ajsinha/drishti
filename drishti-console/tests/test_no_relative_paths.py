@@ -58,7 +58,6 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
     "config/packs/": [(": config/", "relative to the pack folder")],
     # not paths of the server: a check that refuses '../' in an uploaded zip, and an xlsx part's relationship target
     "kernel/drishti-server/src/main/java/com/ash/drishti/server/design/PackFragment.java": [('contains("../")', "a zip-slip check")],
-    "kernel/drishti-server/src/main/java/com/ash/drishti/server/dist/XlsxWriter.java": [('Target=\\"../', "an xlsx part's relative target")],
     "testing/drishti-testkit/src/main/java/com/ash/drishti/testkit/s3/MinioServer.java": [('Path.of("")', "the test kit looks for the repository from its Maven module")],
     "config/store/store.yaml": [("${drishti.data.dir:./data}", "the store file is also read by tools/storecli; the server resolves drishti.data.dir")],
     # benchmarks and the test kit run under Maven in their own module folder: their scratch is target/ there by design

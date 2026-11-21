@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
+import com.ash.tools.xlsx.PrintSetup;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.DatasetService;
@@ -49,7 +51,7 @@ import java.util.function.Supplier;
  * Paginated reports and statements (docs/architecture/ARCHITECTURE.md §28 section 12.2, wave D server item 1; docs/guides/bi/README.md): the statement pages of
  * a report ({@code layout: statement}) made for <b>one reader</b>. Every band that holds data is asked of the report service as that reader, so their row
  * rules and masks apply exactly as on the screen; the period, the parameters and the business date of the run are the state every band is asked under.
- * The bands are then laid out page by page ({@link StatementLayout}) and written as PDF ({@link StatementPdf}) or Excel ({@link XlsxWriter}, the paper's
+ * The bands are then laid out page by page ({@link StatementLayout}) and written as PDF ({@link StatementPdf}) or Excel ({@link com.ash.drishti.server.dist.ExportWorkbook}, the paper's
  * print setup), or returned as pages for the BI Studio's preview. A subscription to a statement bursts it: one run, and one file, per recipient.
  *
  * <p>Stateless and thread-safe: each run has its own layout and its own small pool of band queries ({@code bandQueries} at a time).
@@ -276,7 +278,7 @@ public final class StatementService {
         StatementSpec s = r.spec();
         double[] mm = s.margins();
         double[] inches = {mm[0] / 25.4, mm[1] / 25.4, mm[2] / 25.4, mm[3] / 25.4};
-        return XlsxWriter.write(r.doc(), new XlsxWriter.PrintSetup(s.landscape(), EXCEL_PAPER.getOrDefault(s.paper(), 9), inches, excel(s.header(), r.tokens()),
+        return ExportWorkbook.write(r.doc(), new PrintSetup(s.landscape(), EXCEL_PAPER.getOrDefault(s.paper(), 9), inches, excel(s.header(), r.tokens()),
                 excel(s.footer(), r.tokens())));
     }
 

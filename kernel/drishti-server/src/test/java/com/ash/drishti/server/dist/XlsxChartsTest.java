@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.server.dist.ExportWorkbook;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -65,7 +66,7 @@ class XlsxChartsTest {
     }
 
     private static Map<String, String> write(ExportDoc.Section s) throws Exception {
-        Map<String, String> parts = unzip(XlsxWriter.write(new ExportDoc("Risk", "as of today", List.of(), List.of(s))));
+        Map<String, String> parts = unzip(ExportWorkbook.write(new ExportDoc("Risk", "as of today", List.of(), List.of(s))));
         wellFormed(parts);
         return parts;
     }
@@ -109,7 +110,7 @@ class XlsxChartsTest {
         allMasked.add(java.util.Arrays.asList("DESK-A", "•••"));
         Map<String, String> parts = write(section("column", List.of("Desk", "MTM"), allMasked, List.of("MTM")));
         assertThat(parts).containsKey("xl/worksheets/sheet2.xml").doesNotContainKey("xl/charts/chart2.xml");
-        Map<String, String> table = unzip(XlsxWriter.write(new ExportDoc("Risk", "", List.of(),
+        Map<String, String> table = unzip(ExportWorkbook.write(new ExportDoc("Risk", "", List.of(),
                 List.of(new ExportDoc.Section("t", "Trades", ExportDoc.TABLE, List.of("Desk", "N"), rows(), null, List.of(), "column")))));
         assertThat(table).doesNotContainKey("xl/charts/chart2.xml");
     }
@@ -120,7 +121,7 @@ class XlsxChartsTest {
         Path dir = com.ash.drishti.common.TempFiles.root().resolve("xlsx-charts-test");
         Files.createDirectories(dir);
         Path file = dir.resolve("charts.xlsx");
-        Files.write(file, XlsxWriter.write(new ExportDoc("Risk", "", List.of(), List.of(section("pie", List.of("Desk", "Notional"), rows(), List.of())))));
+        Files.write(file, ExportWorkbook.write(new ExportDoc("Risk", "", List.of(), List.of(section("pie", List.of("Desk", "Notional"), rows(), List.of())))));
         Process p = new ProcessBuilder("/usr/bin/soffice", "--headless", "-env:UserInstallation=file://" + dir.resolve("profile"), "--convert-to", "pdf", "--outdir", dir.toString(),
                 file.toString()).redirectErrorStream(true).start();
         assertThat(p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)).isTrue();

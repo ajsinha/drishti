@@ -15,8 +15,9 @@
  */
 package com.ash.drishti.banking;
 
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.banking.compute.MethodChoices;
-import com.ash.drishti.server.playground.SheetStream;
+import Sheet;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ public final class PlaygroundSheets {
     }
 
     /** The Explain sheet: {@code playground} is the measure's name in the title. */
-    public static void explain(SheetStream s, String playground, List<String[]> steps) {
+    public static void explain(Sheet s, String playground, List<String[]> steps) {
         s.width(0, 44).width(1, 150);
         s.row(1).text(0, com.ash.drishti.common.Branding.current().productOr("") + " · " + playground + " · how each figure is worked out", "title");
         s.blank(1, "title");
@@ -38,7 +39,7 @@ public final class PlaygroundSheets {
     }
 
     /** The Provenance sheet, one row per entry; a list is its size and then one row per element. */
-    public static void provenance(SheetStream s, Map<String, Object> prov) {
+    public static void provenance(Sheet s, Map<String, Object> prov) {
         s.width(0, 38).width(1, 120);
         s.row(1).text(0, "Provenance", "title");
         s.blank(1, "title");
@@ -58,13 +59,13 @@ public final class PlaygroundSheets {
     }
 
     /** The heading of the Config sheet's switch table, on row 3. */
-    public static void switchHead(SheetStream s) {
+    public static void switchHead(Sheet s) {
         s.row(3).text(0, "Switch", "head").text(1, "Value (choose)", "head").text(2, "Default", "head").text(3, "Options", "head").text(4, "Rule", "head")
                 .text(5, "Why the default", "head");
     }
 
     /** One switch of the Config sheet's table, its value cell a drop-down of the options. */
-    public static void switchRow(SheetStream s, int row, MethodChoices.Switch x, String value) {
+    public static void switchRow(Sheet s, int row, MethodChoices.Switch x, String value) {
         s.row(row).text(0, x.name(), "label").text(1, value, "input.text").text(2, x.dflt(), "text").text(3, String.join(", ", x.options()), "text")
                 .text(4, x.rule(), "text").text(5, x.why(), "wrap");
         s.list("B" + row, x.options());

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.xlsx.Formulas;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -23,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.PinnedBusinessDate;
-import com.ash.drishti.server.dist.XlsxFormulas;
+import Formulas;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -291,7 +292,7 @@ class VarPlaygroundApiTest {
     @Test
     void theExportOfFiveHundredAndRestRecalculatesToTheEngine() throws Exception {
         byte[] xlsx = download("/api/v1/risk/var/playground.xlsx", "scope", "DESK:DESK-MANY", "count", "500");
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         JsonNode h = ask("/api/v1/risk/var/scope", status().isOk(), "scope", "DESK:DESK-MANY");
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         Path work = Files.createDirectories(Path.of(TestRoots.module(), "target", "playground-api-"+ System.nanoTime()));
@@ -319,9 +320,9 @@ class VarPlaygroundApiTest {
         assertThat(est.at("/choices/1/default").asBoolean()).isTrue();
         assertThat(est.at("/choices/1/apps").toString()).contains("Excel", "Google Sheets");
         byte[] one = download("/api/v1/risk/var/playground.xlsx", "scope", "DESK:DESK-ONE", "ccy", "EUR");
-        assertThat(XlsxFormulas.scan(one)).isEmpty();
+        assertThat(Formulas.scan(one)).isEmpty();
         byte[] blank = download("/api/v1/risk/var/playground/template", "positions", "5", "scenarios", "40");
-        assertThat(XlsxFormulas.scan(blank)).isEmpty();
+        assertThat(Formulas.scan(blank)).isEmpty();
         assertThat(new String(blank, 0, 2)).isEqualTo("PK");
     }
 }

@@ -15,12 +15,14 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.server.dist.XlsxWriter;
+import com.ash.tools.xlsx.Cells;
+import com.ash.tools.xlsx.Formulas;
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.server.playground.ExportSizing;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
 import com.ash.drishti.server.playground.SeriesLayout;
-import com.ash.drishti.server.playground.SheetStream;
-import com.ash.drishti.server.playground.WorkbookStream;
+import Sheet;
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,7 +37,7 @@ import java.util.function.Consumer;
  * inputs, the results beside the engine's with a check each, every confidence, the per-position table, the check band), Config (one row a
  * position), Data (values only: the scenario PVs or P&amp;L as delivered, and Rest of scope), FX (one column a currency), PnL (every cell a
  * formula), Explain and Provenance. Positions are columns while they fit (16,384 columns), rows beyond. Every formula comes from here,
- * checked against the common function set ({@link com.ash.drishti.server.dist.XlsxFormulas}), each with its cached result from
+ * checked against the common function set ({@link Formulas}), each with its cached result from
  * {@link VarPlaygroundModel}.
  */
 final class VarPlaygroundBook {
@@ -140,7 +142,7 @@ final class VarPlaygroundBook {
         v.put("SUBJECT", "VaR, ES and components worked in formulas, " + m.reporting + ", " + m.n + " scenarios");
         v.put("USER", about.user());
         v.put("NOW", about.now());
-        try (WorkbookStream w = new WorkbookStream(out, t, v)) {
+        try (PlaygroundWorkbook w = new PlaygroundWorkbook(out, t, v)) {
             main(w.sheet("Main", "1F3A5F"), w);
             config(w.sheet("Config", "B08A2E"));
             data(w.sheet("Data", "B08A2E"));
@@ -211,11 +213,11 @@ final class VarPlaygroundBook {
     }
 
     private String fxLast() {
-        return XlsxWriter.col(fxCols.size());
+        return Cells.col(fxCols.size());
     }
 
     private String fxRep() {
-        return XlsxWriter.col(fxCols.size() + 1);
+        return Cells.col(fxCols.size() + 1);
     }
 
     private String pnlRange(int item) {
@@ -249,9 +251,9 @@ final class VarPlaygroundBook {
     // ---- Main --------------------------------------------------------------------------------------------------------------------
 
     /** Main's cells, collected by row and column then written in order (its blocks sit side by side). */
-    private final TreeMap<Integer, TreeMap<Integer, Consumer<SheetStream>>> grid = new TreeMap<>();
+    private final TreeMap<Integer, TreeMap<Integer, Consumer<Sheet>>> grid = new TreeMap<>();
 
-    private void put(int r, int col, Consumer<SheetStream> cell) {
+    private void put(int r, int col, Consumer<Sheet> cell) {
         grid.computeIfAbsent(r, k -> new TreeMap<>()).put(col, cell);
     }
 
@@ -272,7 +274,7 @@ final class VarPlaygroundBook {
     }
 
     /** A named cell in column B of Main: its name, label and meaning beside it. */
-    private void named(int r, String name, String meaning, Consumer<SheetStream> value, Object v) {
+    private void named(int r, String name, String meaning, Consumer<Sheet> value, Object v) {
         names.put(name, "$B$" + r);
         values.put(name, v);
         text(r, 0, name, "label");
@@ -280,7 +282,7 @@ final class VarPlaygroundBook {
         text(r, 2, meaning, "note");
     }
 
-    private void main(SheetStream s, WorkbookStream w) {
+    private void main(Sheet s, PlaygroundWorkbook w) {
         VarPlaygroundModel.Settings st = m.set;
         String title = com.ash.drishti.common.Branding.current().productOr("") + " · VaR Playground · " + about.scope() + " · " + about.date() + " · "
                 + m.reporting + " · " + lensLabel();
@@ -436,7 +438,7 @@ final class VarPlaygroundBook {
 
     /** The per-position table's column {@code c} (0-based within the table) from its first to its last item row, absolute. */
     private String col(int c) {
-        return "$" + XlsxWriter.col(c) + "$" + (tableFirst) + ":$" + XlsxWriter.col(c) + "$" + (tableFirst + items - 1);
+        return "$" + Cells.col(c) + "$" + (tableFirst) + ":$" + Cells.col(c) + "$" + (tableFirst + items - 1);
     }
 
     private int result(int r, String label, String formula, double sheet, double engine, String style) {
@@ -685,7 +687,7 @@ final class VarPlaygroundBook {
 
     // ---- Config, Data, FX ----------------------------------------------------------------------------------------------------------
 
-    private void config(SheetStream s) {
+    private void config(Sheet s) {
         String[] heads = {"Position", "Kind", "Currency", "Base PV (own currency)", "Base FX (USD per unit)", "Input form", "Source", "Value today (USD)",
             "FX column"};
         s.freeze(1, 1).width(0, 30).width(1, 12).width(2, 9).widths(3, 4, 18).width(5, 10).width(6, 30).width(7, 18).width(8, 9);
@@ -714,7 +716,7 @@ final class VarPlaygroundBook {
         }
     }
 
-    private void data(SheetStream s) {
+    private void data(Sheet s) {
         s.freeze(data.itemsAsColumns() ? 3 : 1, data.itemsAsColumns() ? 1 : 3).width(0, 22);
         if (data.itemsAsColumns()) {
             s.widths(1, Math.min(items, 16_000), 16);
@@ -723,12 +725,12 @@ final class VarPlaygroundBook {
         }
         data.emit(s, new SeriesLayout.Cells() {
             @Override
-            public void headTitle(SheetStream x, int col, int line) {
+            public void headTitle(Sheet x, int col, int line) {
                 x.text(col, new String[] {"Position", "Currency", "Input form"}[line], "head");
             }
 
             @Override
-            public void itemHead(SheetStream x, int col, int item, int line) {
+            public void itemHead(Sheet x, int col, int item, int line) {
                 boolean isRest = item >= m.positions.size();
                 String v = switch (line) {
                     case 0 -> itemId(item);
@@ -739,24 +741,24 @@ final class VarPlaygroundBook {
             }
 
             @Override
-            public void pointLabel(SheetStream x, int col, int point) {
+            public void pointLabel(Sheet x, int col, int point) {
                 x.text(col, (point + 1) + " · " + m.dates.get(point), data.itemsAsColumns() ? "text" : "head");
             }
 
             @Override
-            public void seriesTitle(SheetStream x, int col, String series) {}
+            public void seriesTitle(Sheet x, int col, String series) {}
 
             @Override
-            public void item(SheetStream x, int col, int item, int point) {
+            public void item(Sheet x, int col, int item, int point) {
                 x.number(col, item < m.positions.size() ? m.positions.get(item).data()[point] : m.rest[point], "input.money");
             }
 
             @Override
-            public void series(SheetStream x, int col, String series, int point) {}
+            public void series(Sheet x, int col, String series, int point) {}
         });
     }
 
-    private void fx(SheetStream s) {
+    private void fx(Sheet s) {
         s.freeze(3, 1).width(0, 22).widths(1, fxCols.size() + 1, 13);
         s.row(1);
         s.text(0, "Scenario", "head");
@@ -828,9 +830,9 @@ final class VarPlaygroundBook {
         f.put("k", "MAX(1,MIN(ScenarioCount,ROUNDUP(ScenarioCount*(1-Confidence)-1E-9,0)))");
         f.put("rank", "SUMPRODUCT((" + series("Portfolio") + "<PnL!" + pnl.seriesCell("Portfolio", 0) + ")*1)+1");
         f.put("dataFirst", "Data!" + data.cell(0, 0));
-        f.put("pnlFirstColumn", XlsxWriter.col(pnl.itemCol(0, 0)));
+        f.put("pnlFirstColumn", Cells.col(pnl.itemCol(0, 0)));
         f.put("pnlFirstRow", String.valueOf(pnl.itemRow(0, 0)));
-        f.put("seriesFirstColumn", XlsxWriter.col(pnl.seriesCol("Portfolio", 0)));
+        f.put("seriesFirstColumn", Cells.col(pnl.seriesCol("Portfolio", 0)));
         return f;
     }
 
@@ -844,7 +846,7 @@ final class VarPlaygroundBook {
         return "PnL!" + pnl.seriesRange("Without " + (item + 1));
     }
 
-    private void pnl(SheetStream s) {
+    private void pnl(Sheet s) {
         s.freeze(pnl.itemsAsColumns() ? 3 : 1 + pnl.series().size(), pnl.itemsAsColumns() ? 1 : 3).width(0, 22);
         if (pnl.itemsAsColumns()) {
             s.widths(1, Math.min(pnl.columns() - 1, 16_000), 16);
@@ -855,12 +857,12 @@ final class VarPlaygroundBook {
         String t10All = pnl.seriesRange("10-day sum", 9, m.n - 1);
         pnl.emit(s, new SeriesLayout.Cells() {
             @Override
-            public void headTitle(SheetStream x, int col, int line) {
+            public void headTitle(Sheet x, int col, int line) {
                 x.text(col, new String[] {"Position", "Currency", "Input form"}[line], "head");
             }
 
             @Override
-            public void itemHead(SheetStream x, int col, int item, int line) {
+            public void itemHead(Sheet x, int col, int item, int line) {
                 boolean isRest = item >= m.positions.size();
                 String v = switch (line) {
                     case 0 -> itemId(item);
@@ -871,23 +873,23 @@ final class VarPlaygroundBook {
             }
 
             @Override
-            public void pointLabel(SheetStream x, int col, int point) {
+            public void pointLabel(Sheet x, int col, int point) {
                 x.text(col, (point + 1) + " · " + m.dates.get(point), pnl.itemsAsColumns() ? "text" : "head");
             }
 
             @Override
-            public void seriesTitle(SheetStream x, int col, String series) {
+            public void seriesTitle(Sheet x, int col, String series) {
                 String t = series.startsWith("Without ") ? "Without " + itemId(Integer.parseInt(series.substring(8)) - 1) : series;
                 x.text(col, t, "head");
             }
 
             @Override
-            public void item(SheetStream x, int col, int item, int point) {
+            public void item(Sheet x, int col, int item, int point) {
                 x.formula(col, pnlFormula(item, point), c(pnlValue(item, point)), "money");
             }
 
             @Override
-            public void series(SheetStream x, int col, String series, int j) {
+            public void series(Sheet x, int col, String series, int j) {
                 String pf = pnl.seriesCell("Portfolio", j);
                 switch (series) {
                     case "Portfolio" -> x.formula(col, "SUM(" + pnl.across(j, 0, items - 1) + ")", c(m.portfolio[j]), "money.bold");
@@ -938,7 +940,7 @@ final class VarPlaygroundBook {
 
     // ---- Explain, Provenance -------------------------------------------------------------------------------------------------------
 
-    private void explain(SheetStream s) {
+    private void explain(Sheet s) {
         s.width(0, 44).width(1, 150);
         s.row(1);
         s.text(0, com.ash.drishti.common.Branding.current().productOr("") + " · VaR Playground · how each figure is worked out", "title");
@@ -990,7 +992,7 @@ final class VarPlaygroundBook {
         return String.valueOf(v);
     }
 
-    private void provenance(SheetStream s) {
+    private void provenance(Sheet s) {
         s.width(0, 34).width(1, 120);
         s.row(1);
         s.text(0, "Provenance", "title");

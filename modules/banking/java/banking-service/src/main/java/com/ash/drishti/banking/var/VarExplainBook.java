@@ -15,11 +15,13 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.xlsx.Cells;
+import com.ash.tools.xlsx.Formulas;
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.banking.compute.var.VarMath;
-import com.ash.drishti.server.dist.XlsxWriter;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.playground.SheetStream;
-import com.ash.drishti.server.playground.WorkbookStream;
+import Sheet;
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import com.ash.drishti.banking.var.VarExplainMath.Op;
 import com.ash.drishti.banking.var.VarExplainMath.State;
 import java.io.OutputStream;
@@ -34,7 +36,7 @@ import java.util.Map;
  * docs/guides/VAR_GUIDE.md): Main (the inputs, each state's VaR worked from its column beside the engine's with a check, each
  * step as a difference of two cells, the add-up check), Data (values only: the two dates' scope P&amp;L and the churn's sums by scenario
  * day), States (each state's P&amp;L column, a formula over the one before and Data, and its ranks), Drivers (the engine's contributors),
- * Explain and Provenance. Every formula is checked against the common function set ({@link com.ash.drishti.server.dist.XlsxFormulas}).
+ * Explain and Provenance. Every formula is checked against the common function set ({@link Formulas}).
  */
 final class VarExplainBook {
 
@@ -79,7 +81,7 @@ final class VarExplainBook {
         v.put("SUBJECT", "The VaR change split into causes that add up exactly, worked in formulas");
         v.put("USER", user);
         v.put("NOW", now);
-        try (WorkbookStream w = new WorkbookStream(out, t, v)) {
+        try (PlaygroundWorkbook w = new PlaygroundWorkbook(out, t, v)) {
             main(w.sheet("Main", "1F3A5F"));
             data(w.sheet("Data", "B08A2E"));
             states(w.sheet("States", "2E5A88"));
@@ -105,7 +107,7 @@ final class VarExplainBook {
     }
 
     private String dataCol(String name) {
-        return XlsxWriter.col(1 + DATA.indexOf(name));
+        return Cells.col(1 + DATA.indexOf(name));
     }
 
     private String data(String name, int u) {
@@ -113,11 +115,11 @@ final class VarExplainBook {
     }
 
     private String pnlCol(int s) {
-        return XlsxWriter.col(1 + 2 * s);
+        return Cells.col(1 + 2 * s);
     }
 
     private String rankCol(int s) {
-        return XlsxWriter.col(2 + 2 * s);
+        return Cells.col(2 + 2 * s);
     }
 
     /** A state's P&amp;L column on States, absolute. */
@@ -136,7 +138,7 @@ final class VarExplainBook {
 
     // ---- Main ------------------------------------------------------------------------------------------------------------------------
 
-    private void main(SheetStream s) {
+    private void main(Sheet s) {
         int last = states.size() - 1;
         int stepsHead = stateRow(last) + 2;
         int stepFirst = stepsHead + 1;
@@ -269,7 +271,7 @@ final class VarExplainBook {
         return Math.abs(math.sumOfSteps() - math.change()) < 0.005;
     }
 
-    private void named(SheetStream s, int row, String name, String meaning, java.util.function.Consumer<SheetStream> value, Object v) {
+    private void named(Sheet s, int row, String name, String meaning, java.util.function.Consumer<Sheet> value, Object v) {
         names.put(name, "$B$" + row);
         values.put(name, v);
         s.row(row);
@@ -280,7 +282,7 @@ final class VarExplainBook {
 
     // ---- Data ------------------------------------------------------------------------------------------------------------------------
 
-    private void data(SheetStream s) {
+    private void data(Sheet s) {
         VarExplainMath.Days d = math.days();
         VarExplainMath.Inputs in = r.inputs();
         List<double[]> cols = new ArrayList<>();
@@ -319,7 +321,7 @@ final class VarExplainBook {
 
     // ---- States ----------------------------------------------------------------------------------------------------------------------
 
-    private void states(SheetStream s) {
+    private void states(Sheet s) {
         s.freeze(1, 1).width(0, 12).widths(1, 2 * states.size(), 15);
         s.row(1);
         s.text(0, "Scenario day", "head");
@@ -406,7 +408,7 @@ final class VarExplainBook {
     // ---- Drivers, Explain, Provenance -----------------------------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private void drivers(SheetStream s) {
+    private void drivers(Sheet s) {
         s.width(0, 34).widths(1, 6, 18);
         int row = 1;
         s.row(row++);
@@ -473,7 +475,7 @@ final class VarExplainBook {
         return o instanceof Number x ? x.doubleValue() : Double.NaN;
     }
 
-    private void explain(SheetStream s) {
+    private void explain(Sheet s) {
         s.width(0, 44).width(1, 150);
         s.row(1);
         s.text(0, com.ash.drishti.common.Branding.current().productOr("") + " · Why VaR moved · how each figure is worked out", "title");
@@ -506,7 +508,7 @@ final class VarExplainBook {
     }
 
     @SuppressWarnings("unchecked")
-    private void provenance(SheetStream s) {
+    private void provenance(Sheet s) {
         s.width(0, 34).width(1, 120);
         s.row(1);
         s.text(0, "Provenance", "title");

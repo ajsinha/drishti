@@ -120,7 +120,7 @@ public class VarRegulatoryController {
             run.put("definition", Map.of("file", "(computed on demand, not a report run)"));
             run.put("node", node);
             run.put("backtest", out);
-            byte[] bytes = com.ash.drishti.server.dist.XlsxWriter.write(VarReportSignoff.doc(run, Map.of(), false));
+            byte[] bytes = com.ash.drishti.server.dist.ExportWorkbook.write(VarReportSignoff.doc(run, Map.of(), false));
             return file(bytes, "backtesting_" + node.replace('~', '_') + "_" + out.get("to") + ".xlsx", "xlsx");
         }
         svc.audit(p.user(), "var-backtesting", node, "asOf=" + date(asOf));

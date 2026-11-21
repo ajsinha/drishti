@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
+import com.ash.tools.xlsx.Formulas;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.Branding;
@@ -22,7 +24,7 @@ import com.ash.drishti.banking.compute.simm.Simm;
 import com.ash.drishti.banking.compute.simm.SimmChoices;
 import com.ash.drishti.banking.compute.simm.SimmExamples;
 import com.ash.drishti.banking.compute.simm.SimmInput;
-import com.ash.drishti.server.dist.XlsxFormulas;
+import Formulas;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
 import java.io.ByteArrayOutputStream;
@@ -87,7 +89,7 @@ class SimmPlaygroundWorkbookTest {
     /** Recalculates the workbook and checks Main against the engine of the side Config starts on, row by row, to the cent. */
     void recalculatedEqualsEngine(SimmService.Run run, List<SimmPlaygroundBook.Alternative> alts, String side, String name) throws Exception {
         byte[] xlsx = write(run, alts, false, side);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         long t0 = System.nanoTime();
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, name, xlsx), work);
@@ -170,7 +172,7 @@ class SimmPlaygroundWorkbookTest {
         assertThat(parts.get("docProps/core.xml")).contains("TestProduct").doesNotContain("{{");
         // the shipped template: the same formulas, every parameter cell empty, no licensed number
         Map<String, String> tp = parts(write(svc.template(), List.of(), true, "collect"));
-        assertThat(XlsxFormulas.scan(write(svc.template(), List.of(), true, "collect"))).isEmpty();
+        assertThat(Formulas.scan(write(svc.template(), List.of(), true, "collect"))).isEmpty();
         assertThat(tp.get("xl/worksheets/sheet1.xml")).contains(SimmPlaygroundBook.TEMPLATE);
         String config = tp.get("xl/worksheets/sheet2.xml");
         assertThat(config).contains("InterestRate.across-currencies").doesNotContain("<v>0.3</v>").doesNotContain("<v>0.98</v>");

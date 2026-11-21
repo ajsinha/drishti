@@ -16,23 +16,17 @@
 package com.ash.drishti.server.capacity;
 
 import com.ash.drishti.common.Branding;
-import com.ash.drishti.server.dist.XlsxWriter;
+import com.ash.tools.xlsx.WorkbookTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * The planner workbook for a download (Admin → Capacity, "Download the working"): the template {@code tools/sizing_planner.py} writes into
@@ -40,21 +34,18 @@ import java.util.zip.ZipOutputStream;
  * each input's row), with only the Inputs sheet's value cells filled, so Results, Coefficients and Explain go out untouched and every
  * figure stays a live Excel formula (recalculated on opening: {@code fullCalcOnLoad}). An optional second Inputs column (Live or Plan)
  * holds the other set of figures beside them, and an optional block under the inputs lists measured figures that are not inputs.
- * The parts are copied into the zip on the response's stream, as the VaR Playground's workbook is.
+ * The parts are copied into the zip on the response's stream by the shared workbook writer's template ({@code tools-xlsx}), as the VaR
+ * Playground's workbook is written; this class knows only where the planner's cells are.
  */
 public final class CapacityWorkbook {
-
     static final String BASE = "capacity/template/";
-    private static final Pattern COLS_END = Pattern.compile("</cols>");
-    /** The copyright notice each template part carries, dropped from the workbook (as the playground's template). */
-    private static final Pattern COMMENT = Pattern.compile("<!--.*?-->\\s*", Pattern.DOTALL);
 
     private final JsonNode meta;
-    private final Map<String, String> parts = new LinkedHashMap<>();
+    private final WorkbookTemplate template;
 
-    private CapacityWorkbook(JsonNode meta, Map<String, String> parts) {
+    private CapacityWorkbook(JsonNode meta, WorkbookTemplate template) {
         this.meta = meta;
-        this.parts.putAll(parts);
+        this.template = template;
     }
 
     /** The built-in template, from the classpath. */
@@ -63,9 +54,9 @@ public final class CapacityWorkbook {
             JsonNode meta = new ObjectMapper().readTree(read(BASE + "template.json"));
             Map<String, String> parts = new LinkedHashMap<>();
             for (JsonNode p : meta.get("parts")) {
-                parts.put(p.asText(), COMMENT.matcher(read(BASE + p.asText())).replaceAll(""));
+                parts.put(p.asText(), read(BASE + p.asText()));
             }
-            return new CapacityWorkbook(meta, parts);
+            return new CapacityWorkbook(meta, WorkbookTemplate.of(parts));       // the copyright comments each part carries are dropped
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -82,12 +73,12 @@ public final class CapacityWorkbook {
 
     /** The parts' names, in the zip's order. */
     public List<String> partNames() {
-        return List.copyOf(parts.keySet());
+        return template.partNames();
     }
 
     /** A template part as it is, placeholders unfilled. */
     public String part(String name) {
-        return parts.get(name);
+        return template.part(name);
     }
 
     /** The row of an input on the Inputs sheet. */
@@ -109,72 +100,54 @@ public final class CapacityWorkbook {
      */
     public void write(OutputStream out, Map<String, Object> values, String extraHeader, Map<String, Object> extra, List<String[]> measured,
             Branding branding) throws IOException {
-        ZipOutputStream zip = new ZipOutputStream(new java.io.FilterOutputStream(out) {
-            @Override
-            public void close() throws IOException {
-                flush();                                              // the response's stream stays open for the container
-            }
+        inputs(values, extraHeader, extra, measured).fill(brandValues(branding)).write(out);
+    }
 
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                out.write(b, off, len);
-            }
-        }, StandardCharsets.UTF_8);
-        zip.setLevel(Deflater.BEST_SPEED);
-        String inputsSheet = meta.get("inputsSheet").asText();
-        for (Map.Entry<String, String> p : parts.entrySet()) {
-            String text = p.getKey().equals(inputsSheet) ? inputs(p.getValue(), values, extraHeader, extra, measured) : p.getValue();
-            zip.putNextEntry(new ZipEntry(p.getKey()));
-            zip.write(brand(text, branding).getBytes(StandardCharsets.UTF_8));
-            zip.closeEntry();
-        }
-        zip.finish();
-        zip.flush();
+    /** The branding's placeholders: {@code {{PRODUCT}}}, {@code {{OWNER}}}, {@code {{COPYRIGHT}}}. */
+    static Map<String, String> brandValues(Branding b) {
+        return Map.of("PRODUCT", b.product(), "OWNER", b.owner(), "COPYRIGHT", b.copyright());
     }
 
     static String brand(String text, Branding b) {
-        return text.replace("{{PRODUCT}}", XlsxWriter.esc(b.product())).replace("{{OWNER}}", XlsxWriter.esc(b.owner()))
-                .replace("{{COPYRIGHT}}", XlsxWriter.esc(b.copyright()));
+        return WorkbookTemplate.fill(text, brandValues(b));
     }
 
-    /** The Inputs sheet with its value cells (column B) replaced, the second column and the measured block added. */
-    String inputs(String sheet, Map<String, Object> values, String extraHeader, Map<String, Object> extra, List<String[]> measured) {
+    /** The template with the Inputs sheet's value cells (column B) replaced, the second column and the measured block added. */
+    WorkbookTemplate inputs(Map<String, Object> values, String extraHeader, Map<String, Object> extra, List<String[]> measured) {
+        String sheet = meta.get("inputsSheet").asText();
         String col = meta.get("valueColumn").asText();
         String xcol = meta.get("extraColumn").asText();
         JsonNode styles = meta.get("styles");
-        String s = sheet;
+        WorkbookTemplate t = template;
         int lastRow = 0;
         for (Map.Entry<String, JsonNode> e : (Iterable<Map.Entry<String, JsonNode>>) meta.get("inputs")::fields) {
             int row = e.getValue().get("row").asInt();
             lastRow = Math.max(lastRow, row);
             if (values.containsKey(e.getKey())) {
-                s = replaceCell(s, col + row, values.get(e.getKey()));
+                t = t.setCell(sheet, col + row, values.get(e.getKey()));
             }
             if (extraHeader != null && extra.get(e.getKey()) != null) {
                 Object v = extra.get(e.getKey());
-                String style = styles.get(v instanceof Number ? "num0" : "text").asText();
-                s = appendToRow(s, row, cell(xcol + row, style, v));
+                t = t.addCell(sheet, xcol + row, styles.get(v instanceof Number ? "num0" : "text").asInt(), v);
             }
         }
         if (extraHeader != null) {
             int head = meta.get("headerRow").asInt();
-            s = appendToRow(s, head, cell(xcol + head, styles.get("head").asText(), extraHeader));
-            s = COLS_END.matcher(s).replaceFirst("<col min=\"6\" max=\"6\" width=\"30\" customWidth=\"1\"/></cols>");
+            t = t.addCell(sheet, xcol + head, styles.get("head").asInt(), extraHeader);
+            t = t.width(sheet, 5, 30);
         }
         if (measured != null && !measured.isEmpty()) {
-            StringBuilder rows = new StringBuilder();
             int r = lastRow + 2;
-            rows.append("<row r=\"").append(r).append("\">").append(cell("A" + r, styles.get("head").asText(), "Measured on this server (not inputs)"))
-                    .append(cell("B" + r, styles.get("head").asText(), "Value")).append(cell("C" + r, styles.get("head").asText(), "Unit")).append("</row>");
+            int head = styles.get("head").asInt();
+            t = t.addCell(sheet, "A" + r, head, "Measured on this server (not inputs)").addCell(sheet, "B" + r, head, "Value")
+                    .addCell(sheet, "C" + r, head, "Unit");
             for (String[] m : measured) {
                 r++;
-                rows.append("<row r=\"").append(r).append("\">").append(cell("A" + r, styles.get("text").asText(), m[0]))
-                        .append(cell("B" + r, styles.get("num0").asText(), number(m[1]))).append(cell("C" + r, styles.get("note").asText(), m[2]))
-                        .append("</row>");
+                t = t.addCell(sheet, "A" + r, styles.get("text").asInt(), m[0]).addCell(sheet, "B" + r, styles.get("num0").asInt(), number(m[1]))
+                        .addCell(sheet, "C" + r, styles.get("note").asInt(), m[2]);
             }
-            s = s.replace("</sheetData>", rows + "</sheetData>");
         }
-        return s;
+        return t;
     }
 
     private static Object number(String v) {
@@ -183,37 +156,5 @@ public final class CapacityWorkbook {
         } catch (NumberFormatException | NullPointerException e) {
             return v == null ? "" : v;
         }
-    }
-
-    /** One cell: a number, or inline text. */
-    static String cell(String ref, String style, Object v) {
-        if (v instanceof Number n) {
-            return "<c r=\"" + ref + "\" s=\"" + style + "\"><v>" + plain(n.doubleValue()) + "</v></c>";
-        }
-        return "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"inlineStr\"><is><t xml:space=\"preserve\">" + XlsxWriter.esc(String.valueOf(v))
-                + "</t></is></c>";
-    }
-
-    /** 300000, not 300000.0 or 3.0E5. */
-    static String plain(double d) {
-        return BigDecimal.valueOf(d).stripTrailingZeros().toPlainString();
-    }
-
-    /** The cell {@code ref} with a new value, its style kept. */
-    static String replaceCell(String sheet, String ref, Object v) {
-        Matcher m = Pattern.compile("<c r=\"" + ref + "\"(?: s=\"(\\d+)\")?[^>]*?(?:/>|>.*?</c>)").matcher(sheet);
-        if (!m.find()) {
-            throw new IllegalStateException("the template's Inputs sheet has no cell " + ref);
-        }
-        String style = m.group(1) == null ? "0" : m.group(1);
-        return sheet.substring(0, m.start()) + cell(ref, style, v) + sheet.substring(m.end());
-    }
-
-    private static String appendToRow(String sheet, int row, String cell) {
-        Matcher m = Pattern.compile("<row r=\"" + row + "\"[^>]*>.*?(</row>)").matcher(sheet);
-        if (!m.find()) {
-            throw new IllegalStateException("the template's Inputs sheet has no row " + row);
-        }
-        return sheet.substring(0, m.start(1)) + cell + sheet.substring(m.start(1));
     }
 }

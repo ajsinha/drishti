@@ -15,13 +15,15 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
+import com.ash.tools.xlsx.Formulas;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.banking.compute.var.ParametricVar;
 import com.ash.drishti.banking.compute.var.VarCalc;
 import com.ash.drishti.banking.compute.var.VarLens;
 import com.ash.drishti.banking.compute.var.VarMath;
-import com.ash.drishti.server.dist.XlsxFormulas;
+import Formulas;
 import com.ash.drishti.server.playground.LibreOfficeRecalc;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Path;
@@ -102,7 +104,7 @@ class PvarPlaygroundWorkbookTest {
     void recalculatedEqualsEngine(Case c, String name) throws Exception {
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
         byte[] xlsx = write(c, false);
-        assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
+        assertThat(Formulas.scan(xlsx)).isEmpty();
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, name, xlsx), work);
         Map<String, Object> s = LibreOfficeRecalc.cells(saved, "Parametric");
         ParametricVar.Figures f = c.parametric().scope();
@@ -143,7 +145,7 @@ class PvarPlaygroundWorkbookTest {
     @Test
     void cachedValuesAndTheCommonSet() throws Exception {
         Case c = build(5, 5, "USD", ParametricVar.Settings.EQUAL);
-        assertThat(XlsxFormulas.scan(write(c, true))).isEmpty();               // NORM.S.INV and PI are in the common set now
-        assertThat(XlsxFormulas.check("NORM.S.INV(0.99)*SQRT(2*PI())")).isNotNull();
+        assertThat(Formulas.scan(write(c, true))).isEmpty();               // NORM.S.INV and PI are in the common set now
+        assertThat(Formulas.check("NORM.S.INV(0.99)*SQRT(2*PI())")).isNotNull();
     }
 }

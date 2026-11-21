@@ -15,15 +15,16 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.tools.xlsx.Cells;
+import com.ash.tools.xlsx.Sheet;
 import com.ash.drishti.banking.PlaygroundSheets;
 import com.ash.drishti.banking.compute.simm.Simm;
 import com.ash.drishti.banking.compute.simm.SimmChoices;
 import com.ash.drishti.banking.compute.simm.SimmInput;
 import com.ash.drishti.banking.compute.simm.SimmParams;
-import com.ash.drishti.server.dist.XlsxWriter;
 import com.ash.drishti.server.playground.PlaygroundTemplate;
-import com.ash.drishti.server.playground.SheetStream;
-import com.ash.drishti.server.playground.WorkbookStream;
+import Sheet;
+import com.ash.drishti.server.playground.PlaygroundWorkbook;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -112,11 +113,11 @@ final class SimmPlaygroundBook {
     }
 
     private static String col(int c) {
-        return XlsxWriter.col(c);
+        return Cells.col(c);
     }
 
     private static String abs(String sheet, int c, int row) {
-        return WorkbookStream.quote(sheet) + "!$" + col(c) + "$" + row;
+        return Cells.quoteSheet(sheet) + "!$" + col(c) + "$" + row;
     }
 
     private static String q(String s) {
@@ -236,7 +237,7 @@ final class SimmPlaygroundBook {
         planClasses();
         planCurvature();
         addOnTotal = abs("Add-ons", 4, addOnPlan().totalRow());
-        try (WorkbookStream w = new WorkbookStream(out, t, v)) {
+        try (PlaygroundWorkbook w = new PlaygroundWorkbook(out, t, v)) {
             main(w.sheet("Main", "1F3A5F"));
             config(w.sheet("Config", "B08A2E"));
             data(w.sheet("Data", "B08A2E"));
@@ -261,7 +262,7 @@ final class SimmPlaygroundBook {
         return "IF(" + same + ",IF(ABS(C" + row + "-IF(" + sw("side") + "=\"post\",E" + row + ",D" + row + "))<0.005,\"" + PASS + "\",\"" + FAIL + "\"),\"changed\")";
     }
 
-    private void engineRow(SheetStream s, int row, double collect, double posted, String same, String style) {
+    private void engineRow(Sheet s, int row, double collect, double posted, String same, String style) {
         s.number(3, collect, style).number(4, posted, style);
         if (empty) {
             s.text(5, "—", "check");
@@ -270,7 +271,7 @@ final class SimmPlaygroundBook {
         }
     }
 
-    private void main(SheetStream s) {
+    private void main(Sheet s) {
         s.width(0, 30).width(1, 16).widths(2, 4, 18).width(5, 10).width(6, 18).width(7, 10).freeze(4, 0);
         s.row(1).text(0, com.ash.drishti.common.Branding.current().productOr("") + " · SIMM Playground", "title");
         for (int i = 1; i < 8; i++) {
@@ -370,7 +371,7 @@ final class SimmPlaygroundBook {
 
     // ---- Config ----------------------------------------------------------------------------------------------------------------------
 
-    private void config(SheetStream s) {
+    private void config(Sheet s) {
         s.width(0, 52).width(1, 18).width(2, 22).width(3, 22).width(4, 34).width(5, 90);
         s.row(1).text(0, "Config: the switches, the constants and the parameters of SIMM " + p.version + (empty ? " (empty: ISDA's numbers are licensed; the bank's "
                 + "own export fills them)" : " (licensed: confidential to the bank)"), "title");
@@ -405,7 +406,7 @@ final class SimmPlaygroundBook {
         return "Data!$" + col(c) + "$" + FIRST + ":$" + col(c) + "$" + dataLast();
     }
 
-    private void data(SheetStream s) {
+    private void data(Sheet s) {
         s.width(0, 26).width(1, 12).width(2, 34).width(3, 10).width(4, 16).widths(5, 6, 11).width(7, 44).width(8, 12).width(9, 16).width(10, 44)
                 .width(11, 10).width(12, 16).freeze(3, 0);
         s.row(1).text(0, "Data: the sensitivities in " + run.calculationCurrency() + " (converted at the date's FX), each into its SIMM risk; the side switch negates them", "title");
@@ -462,7 +463,7 @@ final class SimmPlaygroundBook {
         return x.group == null ? "" : x.productClass + "|" + x.riskClass + "|" + x.measure + "|" + x.group;
     }
 
-    private void ws(SheetStream s) {
+    private void ws(Sheet s) {
         s.width(0, 10).width(1, 12).width(2, 10).width(3, 9).width(4, 30).width(5, 44).width(6, 44).widths(7, 15, 15).freeze(3, 0);
         s.row(1).text(0, "WS: each factor's netted sensitivity, risk weight, HVR and concentration factor CR = max(1, √(|Σ| / T)) at the rules' grain", "title");
         s.row(3).text(0, "Product", "head").text(1, "Risk class", "head").text(2, "Measure", "head").text(3, "Bucket", "head").text(4, "Factor", "head")
@@ -528,7 +529,7 @@ final class SimmPlaygroundBook {
     }
 
     /** One bucket block on {@code sheet}: the members' values, ρ (× f) matrix, the terms, K, the net and the capped S. */
-    private void block(SheetStream s, Block bl, boolean curvature) {
+    private void block(Sheet s, Block bl, boolean curvature) {
         Simm.Bucket b = bl.b();
         Simm.Charge ch2 = bl.c();
         int n = b.members.length;
@@ -579,7 +580,7 @@ final class SimmPlaygroundBook {
         s.row(k + 2).text(0, "S_b = max(min(Σ, K_b), −K_b)", "label").formula(1, "MAX(MIN(B" + (k + 1) + "," + tc + k + "),-" + tc + k + ")", c(b.s), "money.bold");
     }
 
-    private void buckets(SheetStream s) {
+    private void buckets(Sheet s) {
         s.width(0, 40).width(1, 16).width(2, 10).freeze(0, 2);
         s.row(1).text(0, "Buckets: K_b = √max(0, Σ_k Σ_l ρ_kl · f_kl · WS_k · WS_l), f_kl = min(CR_k, CR_l) / max(CR_k, CR_l) (1 for rates); S_b capped at ±K_b", "title");
         for (Block bl : blocks) {
@@ -626,7 +627,7 @@ final class SimmPlaygroundBook {
         return "1";
     }
 
-    private void across(SheetStream s, Simm.Charge c, int top, boolean curvature) {
+    private void across(Sheet s, Simm.Charge c, int top, boolean curvature) {
         List<Simm.Bucket> core = c.core();
         int nb = core.size();
         boolean g = c.riskClass.equals("InterestRate") && !curvature;
@@ -681,7 +682,7 @@ final class SimmPlaygroundBook {
         }
     }
 
-    private void classes(SheetStream s) {
+    private void classes(Sheet s) {
         s.width(0, 34).widths(1, 3, 16).widths(4, 30, 14);
         s.row(1).text(0, "Classes: Delta = √(Σ K_b² + Σ γ_bc · g_bc · S_b · S_c) + K_residual; then SIMM_p = √(Σ_r Σ_s ψ_rs · IM_r · IM_s) per product class", "title");
         for (ClassBlock cb : classBlocks) {
@@ -774,7 +775,7 @@ final class SimmPlaygroundBook {
         }
     }
 
-    private void curvature(SheetStream s) {
+    private void curvature(Sheet s) {
         s.width(0, 44).width(1, 18).width(2, 16).width(3, 30).width(4, 44).widths(5, 30, 14).freeze(0, 2);
         s.row(1).text(0, "Curvature: CVR_k = Σ SF(t) · σ · ∂V/∂σ (Data); K_b with ρ²; θ = min(Σ CVR / Σ |CVR|, 0); λ = (Φ⁻¹(99.5 %)² − 1)(1 + θ) − θ; "
                 + "max(Σ CVR + λ · √(Σ K_b² + Σ γ² S_b S_c), 0); the residual bucket alone; rates × HVR_IR⁻²", "title");
@@ -844,7 +845,7 @@ final class SimmPlaygroundBook {
         return new AddOnPlan(4, lineFirst, lineLast, multFirst, multLast, Math.max(multLast, multFirst - 1) + 2);
     }
 
-    private void addOns(SheetStream s) {
+    private void addOns(Sheet s) {
         AddOnPlan ap = addOnPlan();
         SimmInput.AddOns a = r.input().addOns();
         s.width(0, 34).width(1, 22).widths(2, 4, 18);
@@ -873,11 +874,11 @@ final class SimmPlaygroundBook {
 
     // ---- Explain, Provenance -----------------------------------------------------------------------------------------------------
 
-    private void explain(SheetStream s) {
+    private void explain(Sheet s) {
         PlaygroundSheets.explain(s, "SIMM Playground", t.explain());
     }
 
-    private void provenance(SheetStream s) {
+    private void provenance(Sheet s) {
         Map<String, Object> prov = new LinkedHashMap<>(run.provenance());
         prov.put("Scope", run.scope() + " (" + run.kind() + ")");
         prov.put("Calculation currency", run.calculationCurrency());
