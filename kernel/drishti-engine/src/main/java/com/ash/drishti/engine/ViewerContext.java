@@ -38,7 +38,7 @@ import java.util.function.UnaryOperator;
  * @param mayView the records they may see under their row rules (kind and record; every record when none applies)
  */
 public record ViewerContext(String user, Set<String> roles, Map<String, List<Object>> attributes, boolean raw, UnaryOperator<DataNode> redact,
-        Predicate<String> mayOpen, BiPredicate<String, DataNode> mayView) {
+        Predicate<String> mayOpen, BiPredicate<String, DataNode> mayView) implements com.ash.rachana.bind.Masker {
 
     public ViewerContext(String user, Set<String> roles, Map<String, List<Object>> attributes, boolean raw, UnaryOperator<DataNode> redact,
             Predicate<String> mayOpen) {
@@ -59,6 +59,18 @@ public record ViewerContext(String user, Set<String> roles, Map<String, List<Obj
     /** A viewer known only by their masks and kinds (no person): what callers that name no person pass. */
     public static ViewerContext of(UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         return new ViewerContext(null, Set.of(), Map.of(), false, redact, mayOpen);
+    }
+
+    /** Rachana's mask hook: the caller's redaction of a document (the same object when nothing is masked). */
+    @Override
+    public com.ash.rachana.api.Node mask(com.ash.rachana.api.Node data) {
+        return data == null ? null : redact.apply(DataNode.of(data));
+    }
+
+    /** Rachana's kind hook: whether the caller may open entities of {@code kind}. */
+    @Override
+    public boolean mayOpen(String kind) {
+        return mayOpen.test(kind);
     }
 
     /** True when a person is named (a virtual table is read only for a named person: its rules are theirs). */

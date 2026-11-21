@@ -69,8 +69,7 @@ def policy_name(args) -> str:
 
 
 def connector_yaml(arn: str, domain: str) -> str:
-    return (f"plugin: iceberg\nkinds: [...]\nsettings:\n  catalog: s3tables\n  table-bucket-arn: {arn}\n  domain: {domain}\n"
-            f"  engine: native\n")
+    return (f"plugin: iceberg\nkinds: [...]\nsettings:\n  catalog: s3tables\n  table-bucket-arn: {arn}\n  domain: {domain}\n")
 
 
 class S3TablesTool:

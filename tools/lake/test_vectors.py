@@ -14,7 +14,7 @@
 
 """lake build with a vector column (VAR_GUIDE.md section 29.3): a P&L vector of numbers becomes a list<double> column, out of the
 document (which keeps a {"$vector": "PNL"} marker), read back equal to the bit; a vector that is not a list of numbers is a reject. The
-same in both formats: Delta (the default) and Iceberg (--format iceberg, written by the server's exec jar or DRISHTI_ICEBERG_CLASSPATH;
+same in both formats: Delta (the default) and Iceberg (--format iceberg, written by the server's exec jar or LAKE_CLASSPATH;
 skipped without one).
 
     uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_vectors.py -q
@@ -34,10 +34,10 @@ import writers  # noqa: E402
 
 
 def iceberg_loader() -> bool:
-    """Whether the Iceberg loader can run here: Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH)."""
+    """Whether the Iceberg loader can run here: Java and the server's exec jar (or LAKE_CLASSPATH)."""
     import stores
     try:
-        stores.loader_command(Path(tempfile.gettempdir()))
+        stores.loader_command(Path(tempfile.gettempdir()), main="com.ash.drishti.lakehost.DrishtiLakeCli")
         return True
     except SystemExit:
         return False
@@ -136,7 +136,7 @@ class IcebergFormatTest(unittest.TestCase):
         a = build.build_parser().parse_args(["--from", str(self.src)])
         self.assertEqual(a.format, "delta")
 
-    @unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH)")
+    @unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or LAKE_CLASSPATH)")
     def test_round_trip_to_the_bit(self):
         import pyarrow.parquet as pq
         code, summary = build.run(self.args("--partition-by", "DESK"), say=lambda *x, **k: None)

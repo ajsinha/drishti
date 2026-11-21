@@ -16,7 +16,7 @@
 # Data architecture: live updates, history, Iceberg, reactive connectors, content and the database
 
 How Drishti's data layer is built, for developers: **live updates** (section 1: streams, frames, coalescing, reconnects, live
-BI), **history queries** (section 2: an entity over time), **drishti-iceberg** (section 3: Drishti's own Apache Iceberg
+BI), **history queries** (section 2: an entity over time), **lake-iceberg** (section 3: Drishti's own Apache Iceberg
 engine), **reactive connectors** (section 4: R1 to R4 built; R5 and R6 planned), **the content store**
 (section 5: user content every node reaches), **the one Drishti database** (section 6: design, not built; the
 write-back tables are built), **loading** (section 7: the data inbox), **the lake file** (section 8), **the in-memory lake** (section 9),
@@ -26,7 +26,7 @@ write-back tables are built), **loading** (section 7: the data inbox), **the lak
 |---|---|
 | 1. Live updates | built |
 | 2. History queries | built and built |
-| 3. drishti-iceberg | built (`native` is the default engine) |
+| 3. lake-iceberg | built (`native` is the default engine) |
 | 4. Reactive connectors | R1 to R4 built and built; R5 and R6 planned |
 | 5. The content store | built, built |
 | 6. The one Drishti database | design, not built (the write-back tables are built) |
@@ -37,7 +37,7 @@ write-back tables are built), **loading** (section 7: the data inbox), **the lak
 | 11. Arrow Flight | built |
 
 The people who load data read [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md) and [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)
-and the per-store documents; VaR's intake is the parallel lake loader ([section 10](#10-the-parallel-lake-loader-drishti-lakeload)). Each section keeps its own numbering.
+and the per-store documents; VaR's intake is the parallel lake loader ([section 10](#10-the-parallel-lake-loader-lake-load)). Each section keeps its own numbering.
 
 ## Contents
 
@@ -77,7 +77,7 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
     - [20. Docs to update when it is built](#20-docs-to-update-when-it-is-built)
     - [21. Where the code forced a change from the agreed design](#21-where-the-code-forced-a-change-from-the-agreed-design)
     - [22. Open questions](#22-open-questions)
-3. [drishti-iceberg: Drishti's own Apache Iceberg engine](#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
+3. [lake-iceberg: Drishti's own Apache Iceberg engine](#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
     - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
@@ -131,7 +131,7 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
 7. [Loading: the data inbox and the load rules (internal)](#7-loading-the-data-inbox-and-the-load-rules-internal)
 8. [The lake file: one description of every lake](#8-the-lake-file-one-description-of-every-lake)
 9. [The in-memory lake: Delta tables that never touch a disk](#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)
-10. [The parallel lake loader (drishti-lakeload)](#10-the-parallel-lake-loader-drishti-lakeload)
+10. [The parallel lake loader (lake-load)](#10-the-parallel-lake-loader-lake-load)
 11. [Arrow Flight: Drishti's data to any client](#11-arrow-flight-drishtis-data-to-any-client)
 12. [Computed and derived attributes](#12-computed-and-derived-attributes)
 13. [VaR sharding: how it is built](#13-var-sharding-how-it-is-built)
@@ -899,9 +899,9 @@ kept. The path index remains available if a very large view ever needs it.
 Status: **built**; the implementation notes say where
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
-yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
+yet (lake-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
 [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (forwarding), [CLUSTER_GUIDE.md](ARCHITECTURE.md#3213-super-scale-design-not-built) section 10 (slices and owners),
-[CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (the history row of its table), [section 3](#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop),
+[CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (the history row of its table), [section 3](#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop),
 [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md).
 
 ### 1. The ask
@@ -1438,9 +1438,9 @@ What each layout allows, from the code (and the two unmerged branches, read with
 | Connector | Layout (real) | History fast path | Versions |
 |---|---|---|---|
 | **delta** (`DeltaSourcePlugin`, `DeltaTable`) | one table per kind, partitioned `business_date=`; `(id, doc)` plus promoted columns (`layout.<kind>.columns`); `Layout.files()` is a `NavigableMap<LocalDate, List<Row>>` of the snapshot; a date's **id map** (`MappedIdMap`, memory-mapped) gives the file; one row group read by id statistics; heap and disk document caches | `days()` = `layout.files().subMap(from, true, to, true).keySet()`: the dates from the snapshot already in memory, no read. Per date: `idMap(kind, l, d).file(id)` (absent = no data, nothing read), then the one row group. When every asked field is promoted, read **only those columns** of that row group (a new `DeltaTable.row(l, d, file, id, columns)`; no `doc` decode, no JSON parse); otherwise the document through the existing caches. Reads go under `docReads` (`max-concurrent-reads`, 16). `knownAt` uses `layout(kind, knownAt)` once for the whole range. Effective tables: the entity's change dates are the dates whose id map holds it. | commits that added files for the date in the retained log (read once per table version, cached); `filesStamp(l, d)` already tells a restated date |
-| **drishti-iceberg** (branch `worktree-agent-aea970bf1efcd2886`: `IcebergSourcePlugin`, `KindTable`, `NativeKindTable`, `drishti-iceberg` `scan/Planner`, `scan/Pruning`) | one table per kind; `id`, `doc`, `business_date`, promoted columns (`LEGS.CURRENCY` as `LEGS__CURRENCY`); partitioned `identity(business_date)`, **sorted by id**, files of about 250k rows with disjoint id ranges, 1 MB row groups; manifests keep id bounds | **One planned scan**: `id = X AND business_date BETWEEN from AND to`, pruned by partition summaries and the manifests' id bounds, gives about one file per day with no per-day id map (an id map reads the whole day's id column, about 75 MB per 1M ids). Then each file's row group by its id statistics, projecting `(business_date, id, <promoted fields>)` or `doc`. Files read in parallel (8). `days()` from the planned layout's dates. `knownAt` plans the snapshot `snapshotAt(K)`. | snapshots that added files to the partition, from the snapshot log (`meta/Snapshot`) |
-| **iceberg-external** (same branch: `IcebergExternalPlugin`, `ExternalTable`, `KindConfig`) | any layout: id from identifier fields or named columns, date from a column, `day(ts)` or the partition spec; a table with no date is current-only | the same planned scan when the date is a partition or has column bounds; otherwise the per-day **id index** it already builds (`id-index-mb`); a table with no date has no history (`DRS-1012`) | as drishti-iceberg |
-| **iceberg** (develop: `IcebergTable`, `IcebergLake`; kept as `engine: library` on the branch) | as drishti-iceberg | the default (it re-reads the Parquet footer on every read) | none |
+| **lake-iceberg** (branch `worktree-agent-aea970bf1efcd2886`: `IcebergSourcePlugin`, `KindTable`, `NativeKindTable`, `lake-iceberg` `scan/Planner`, `scan/Pruning`) | one table per kind; `id`, `doc`, `business_date`, promoted columns (`LEGS.CURRENCY` as `LEGS__CURRENCY`); partitioned `identity(business_date)`, **sorted by id**, files of about 250k rows with disjoint id ranges, 1 MB row groups; manifests keep id bounds | **One planned scan**: `id = X AND business_date BETWEEN from AND to`, pruned by partition summaries and the manifests' id bounds, gives about one file per day with no per-day id map (an id map reads the whole day's id column, about 75 MB per 1M ids). Then each file's row group by its id statistics, projecting `(business_date, id, <promoted fields>)` or `doc`. Files read in parallel (8). `days()` from the planned layout's dates. `knownAt` plans the snapshot `snapshotAt(K)`. | snapshots that added files to the partition, from the snapshot log (`meta/Snapshot`) |
+| **iceberg-external** (same branch: `IcebergExternalPlugin`, `ExternalTable`, `KindConfig`) | any layout: id from identifier fields or named columns, date from a column, `day(ts)` or the partition spec; a table with no date is current-only | the same planned scan when the date is a partition or has column bounds; otherwise the per-day **id index** it already builds (`id-index-mb`); a table with no date has no history (`DRS-1012`) | as lake-iceberg |
+| **iceberg** (develop: `IcebergTable`, `IcebergLake`; kept as `engine: library` on the branch) | as lake-iceberg | the default (it re-reads the Parquet footer on every read) | none |
 | **cassandra** (branch `worktree-agent-ad01b2d6c9c414a21`: `CassandraSourcePlugin`, `CassandraLayout`, `DayReads`) | data table `PRIMARY KEY ((business_date, generation, bucket), id)`; **`entity_days`** `PRIMARY KEY ((kind, id), business_date)` DESC, written for every row; `kind_days` per date with its `generation` and `buckets` | `days()` = one single-partition range read: `SELECT business_date FROM entity_days WHERE kind=? AND id=? AND business_date >= ? AND business_date <= ?`, filtered by `kind_days` (an `entity_days` row may outlive its data). Then one token-aware point read per date (generation and bucket computed locally), in parallel. The documents cannot come from one query: `business_date` is in the data table's partition key. No `knownAt` (one generation kept, `DRS-1007`). | 1 (one generation kept) |
 | **jdbc** table mode (`PostgresLayout`, `TableCatalog`; `(kind, id, business_date, doc jsonb)`, partitioned by month) | one row per entity per date | **one query**: `SELECT business_date, doc FROM <table> WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ? ORDER BY business_date` (only the asked fields with `doc -> 'F'` when `fields` is set), partition pruning by month; `days()` the same without `doc` | `null` |
 | **jdbc** query mode (`query.<kind>` with `:id` and `:asOf`) | a site's own SQL | an optional `history.<kind>` query with `:id`, `:from`, `:to` (documented in `JDBC_QUERIES.md`); without it the default per-day loop of the existing query | from a `generation` column when the query returns one |
@@ -1559,7 +1559,7 @@ owner that does not answer within `forward-timeout` from S3 itself (section 10.3
 | the same, warm (documents in the doc cache) | < 150 ms at the server | Delta's warm single read is 4.3 ms median (DELTA_CONNECTOR.md); 30 / 8 × 4.3 ≈ 20 ms |
 | the same, cached answer | < 30 ms at the server | the cache key needs only `dataVersion`, which is cheap by contract |
 | 250 days, Delta, promoted fields only | < 1.5 s cold | column reads of one row group per day, no `doc` |
-| 30 days, drishti-iceberg | < 400 ms cold | see below |
+| 30 days, lake-iceberg | < 400 ms cold | see below |
 | 30 days, Cassandra | < 100 ms (estimate) | one `entity_days` read and 30 point reads of about 5 ms in parallel |
 
 **Iceberg.** The Iceberg builder measured one trade at **54 ms** median (native engine, doc cache emptied; 94 ms for a past date not yet
@@ -1730,7 +1730,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H3** | A | `HistoryController.rows` (`/{kind}/{id}` and `/~`), the new `ErrorCode`s, masks, `AccessRecorder.ACTIONS`; `series` re-pointed at the service (260 becomes `max-days`); `HistoryDefinitions` reading `history:`; deploy and `sutra lint` checks | controller tests with a fake router: masks per row, rights, every error, the JSON equals the fixture's shape | API_GUIDE endpoint, PACK_DEVELOPER_GUIDE `history:` |
 | **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS_GUIDE.md routing table |
 | **H5** | A | Fast paths: delta (with promoted-column row read and versions), jdbc table and query mode, duckdb, mongodb, aerospike, redis, file | the contract test per plugin with the fast path, plus "reads no document when the fields are promoted" for delta | each connector's document in `docs/connectors/` |
-| **H6** | A | Fast paths on the merged branches: drishti-iceberg / iceberg-external (planned scan), cassandra (`entity_days`) | their contract tests; starts only after those branches are on develop | ICEBERG_CONNECTOR, CASSANDRA_CONNECTOR |
+| **H6** | A | Fast paths on the merged branches: lake-iceberg / iceberg-external (planned scan), cassandra (`entity_days`) | their contract tests; starts only after those branches are on develop | ICEBERG_CONNECTOR, CASSANDRA_CONNECTOR |
 | **H7** | B | The command: `HistoryRange`, `CommandController.resolve` (range after alias expansion, before pick), `CommandResponse.history`, `SuggestionService` range suggestions | `HistoryRangeTest` (every row of section 4.2's table), `CommandControllerTest` cases | USER_GUIDE command line |
 | **H8** | B | Console: `/v/{kind}/{id}/history` route, `/v/…?days=` redirect, `/go` redirect, `backend.history()`, `terminal/history.html`, `web/static/js/drishti_history-page.js`, `web/static/css/drishti_history.css`; document shape, keys, changes only, drawer, open the day | `FakeBackend.history` from the fixture; route and template tests; `test_contrast.py` passes | USER_GUIDE history section |
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
@@ -1851,9 +1851,9 @@ All five were decided by the product owner on 2026-10-20, before the build start
 5. **Tutorial numbering:** the ask names tutorial 1, Part E; 20 is not used on develop today. Keep 21?
    **Decided: 21** (`docs/tutorials/01-first-15-minutes.md`).
 
-## 3. drishti-iceberg: Apache Iceberg on iceberg-core, with no Hadoop
+## 3. lake-iceberg: Apache Iceberg on iceberg-core, with no Hadoop
 
-Status: **built.** Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg`. The Iceberg protocol comes from Apache Iceberg's own
+Status: **built.** Modules `lake-io`, `lake-iceberg`, `plugins/drishti-plugin-iceberg`. The Iceberg protocol comes from Apache Iceberg's own
 `iceberg-core`; Drishti adds thin wrappers for file access and speed. There is one engine: nothing chooses between engines, and Hadoop is not on the run-time class path, so the connector, loader and maintenance run on Windows with no `winutils.exe`.
 
 | Layer | From where | What it does |
@@ -1865,7 +1865,7 @@ Status: **built.** Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti
 | File access | Drishti: `DrishtiFileIO` over `java.nio` and the AWS SDK | local disk (Windows included), S3, `mem://`; `relocate` for a table copied elsewhere |
 | Rows | Drishti's Parquet reader and writer, cached footers | read by field id, with position and equality deletes |
 
-`drishti-iceberg`'s `Schema`, `Type`, `DataFile` and `FileTask` are plain values the Parquet reader and writer work in, and `Bridge` converts them from Iceberg's objects. `Transform` and `Pruning` remain as the reader's own partition pruning for `iceberg-external`.
+`lake-iceberg`'s `Schema`, `Type`, `DataFile` and `FileTask` are plain values the Parquet reader and writer work in, and `Bridge` converts them from Iceberg's objects. `Transform` and `Pruning` remain as the reader's own partition pruning for `iceberg-external`.
 
 **Path-based tables** keep the `HadoopTables` layout (`metadata/vN.metadata.json`, `version-hint.text`), so existing tables and tables other engines wrote work unchanged. A commit writes `vN+1` as one exclusive create (a hard link on local disk, a conditional PUT on S3), so one of two writers wins and Iceberg retries the other. Stores that do not honour conditional writes are single-writer, detected by a probe at the first commit. A table a catalog wrote (`NNNNN-<uuid>.metadata.json`) is read at its newest file.
 
@@ -1873,18 +1873,18 @@ Status: **built.** Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti
 
 **Stores.** Local disk, `s3://`, `s3a://`, `mem://`. Azure (`abfs://`), Google Cloud Storage (`gs://`) and HDFS are refused by name; reach them through a REST catalog vending S3-compatible access, or add a `FileIO` for them.
 
-**The `engine` setting and `DRISHTI_ICEBERG_ENGINE` are ignored.** A connector file that sets them keeps working, and the loader and maintenance still accept `--engine`.
+**There is no `engine` setting.** One reader and one writer (Drishti Lake's); a connector file that still sets `engine` or `DRISHTI_ICEBERG_ENGINE` is not affected.
 
 **Proof.** `IcebergSpecInteropTest` runs both ways against the Apache Iceberg library (kept in test scope only, with Hadoop): the library writes every transform with every special partition character, position and equality deletes, and Drishti reads every row; Drishti writes every special partition character and the library reads every row. `PyicebergReadsNativeTest` and `NativeReadInteropTest` do the same against pyiceberg.
 
 ### 15. Two connectors: Drishti tables and external tables
 
 The product owner (2026-10-20): Drishti needs **a connector for Iceberg tables Drishti writes and one for Iceberg tables
-it does not write**. Both run on `drishti-iceberg` (the `iceberg` connector also on the `library` engine; `iceberg-external` refuses it); they differ in what they expect of a table.
+it does not write**. Both run on `lake-iceberg` (the `iceberg` connector also on the `library` engine; `iceberg-external` refuses it); they differ in what they expect of a table.
 
 | | `iceberg` (Drishti tables) | `iceberg-external` (anyone's tables) |
 |---|---|---|
-| Tables | written in Drishti's layout by `IcebergLoader` (ICEBERG_CONNECTOR.md section 3): `id`, `doc`, `business_date`, promoted columns, sorted by id | written by Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg, in any layout |
+| Tables | written in Drishti's layout by Drishti Lake's loader (ICEBERG_CONNECTOR.md section 3): `id`, `doc`, `business_date`, promoted columns, sorted by id | written by Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg, in any layout |
 | The document | the `doc` column, exactly as loaded | **the row**, as JSON (every column; structs as objects, lists as arrays, maps as objects), or a JSON column named by `document: column:<name>` |
 | The id | the `id` column | one column or several (`id: [SOURCE_SYSTEM, TRADE_ID]`, joined by `id-separator`, `:`); by default the table's **identifier fields** (Iceberg v2's `identifier-field-ids`) |
 | The business date | `business_date` | a date column, or a timestamp column with `date-from: day` (in `date-zone`); by default the partition spec's date (`identity` of a date, or `day(ts)`); none: the table is **current only** (every read is the current snapshot) |
@@ -1921,7 +1921,7 @@ lists every file under the table's location first, then reads the references: th
 entry status, so a file a kept snapshot may read is never taken) and the statistics files. A file not referenced and older than
 `--older-than-hours` (72 at least: longer than the longest load) is deleted; `--dry-run` lists them. Reading the references after the
 listing means a commit landing in between only adds references; the age keeps a load in flight safe. The sweep reads the table with
-drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`IcebergOrphanFilesTest`).
+lake-iceberg whichever engine wrote it, on local disk and in S3 alike (`IcebergOrphanFilesTest`).
 
 ### Connector and data-source review (standards)
 
@@ -3236,13 +3236,13 @@ demo move and the `.ready` file's `lake:` added in 2.9.11.d (2026-11-07).
 
 | Need | Reused | As |
 |---|---|---|
-| Read JSON Lines, `.gz`, `.zst`, `.zip`, tars, with every archive guard | `drishti-lakeload`: `Archives`, `TarStream`, `GzipMembers`, `SourceReader` | the inbox's reader |
+| Read JSON Lines, `.gz`, `.zst`, `.zip`, tars, with every archive guard | `lake-load`: `Archives`, `TarStream`, `GzipMembers`, `SourceReader` | the inbox's reader |
 | Write Delta and Iceberg in parallel, one commit per business date, a table lock, a run log, exit codes 0/1/2/3 | `LakeLoad`, `Loader`, `DeltaTarget`, `IcebergTarget`, `LoadConfig`, `LoadReport` | the inbox's writer, run as a child process |
-| A table's layout | the lake files (`drishti-lakeio`, package `lakeconfig`: `Lakes`, `LakeFiles`, `PackEntry`) and `PackLayout` | routing |
+| A table's layout | the lake files (`lake-io`, package `lakeconfig`: `Lakes`, `LakeFiles`, `PackEntry`) and `PackLayout` | routing |
 | Tell the server | `LoadService.announce` (what `POST /api/v1/packs/{pack}/loads` calls), `RefreshCoalescer`, `LoadForwarding` in a cluster | the signal, idempotent per pack, kind, date and batch |
 | Schedules, switches, busy protection, temp files | the scheduler, `config/engines/*.yaml`, `AdmissionGate` (`Work.BULK_LOAD`), `TempFiles` | as every engine |
 
-The inbox (package `dataload` of `drishti-lakeload`) only **finds, claims, routes, records and moves** files: `Inbox` (the hand-shake), `Claims` (`inprocess/`,
+The inbox (package `dataload` of `lake-load`) only **finds, claims, routes, records and moves** files: `Inbox` (the hand-shake), `Claims` (`inprocess/`,
 the lock and its heartbeat), `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess` (the child `LakeLoad`, behind the `LoadRunner` contract),
 `Outbox`, `Recovery`, `Cycle`, `DataInbox` (the schedule, Load now, Retry, the status), `InboxStatus` (the one status source of the
 Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.dataload.DataLoadConfiguration`, `DataLoadController`).
@@ -3348,7 +3348,7 @@ forms are permanent. `drishti.py lake migrate-config` writes lake files from pat
 
 | Part | Where | Why this way |
 |---|---|---|
-| The reader | the lake core `drishti-lakeio`, package `lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
+| The reader | the lake core `lake-io`, package `lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
 | Python | `tools/lake/lakeconfig.py` runs `LakesCli` (`dump`, `table`, `check`, `migrate-config`, `add-entry`) and reads its JSON | one reader, the Java one. The one exception is `tools/lake/memory_caps.py`, which sizes the JVM before any JVM runs and reads two keys (`root`, `memory.max-mb`) |
 | Several tables of one kind | an entry is `<domain>.<table>` with `kind:` (`trading.trade_endur`, `kind: trade`); connectors name entries with `lake-tables:`; the loader picks with `target.table` | the demo lake has three trade tables (ENDUR, CALYPSO, MUREX); a kind with several tables is never guessed |
 | Readers | `SourceRegistry.ownSettings` expands `lake:` into the settings the plugins already read (`root`, `domain`, `table.<kind>`, `layout.<kind>.columns`, `layout.<kind>.vectors`, `s3.<key>`, `catalog`, `uri`, `warehouse`) | one point every connector's settings pass, whatever file or template they came from; the plugins keep one way of reading. A connector that names a lake and also sets one of those keys is refused |
@@ -3356,7 +3356,7 @@ forms are permanent. `drishti.py lake migrate-config` writes lake files from pat
 | Append | `TableTarget.appended`; `DeltaTarget` (`withTransactionId(drishti-batch:<batch>:<date>, 1)`); `IcebergTarget` (`drishti.batch` in the snapshot summary) | the batch is per date, so a crash after some dates' commits retries only the rest. The batch rule exists once, in the Java loader: the Python writer refuses an append into a lake-file append table |
 | Memory stores | `MemoryLakeSettings.withLakeStores` | the engine file keeps the switch, the replenish jobs and the compaction policy (the engine's work); the lake file keeps the description |
 | Packs | every shipped pack's `lake:` block; its Delta templates `lake: demo` + `lake-tables`; `tools/packlake.py` (`lake_form` for the generators, `view` for the tools that read a template's layout); `PackEntry` | one transformation each way, so the generators and every reader of a template agree |
-| Shipped copy | `lake/drishti-lakeio/src/main/resources/drishti/lakes/demo.yaml`, checked equal by `settings_catalogue.py` | a server in another working folder (a container, a stack node) knows the demo lake |
+| Shipped copy | `lake/lake-io/src/main/resources/drishti/lakes/demo.yaml`, checked equal by `settings_catalogue.py` | a server in another working folder (a container, a stack node) knows the demo lake |
 | References | nested `${A:${B:x}/delta}`, resolved with the server's settings (`Lakes.useProperties`, installed by `PackEnvironmentPostProcessor`), else a dotted name as a system property or its environment form | the demo root follows the data folder and a `--setting` or test property |
 | Official results | `config/lakes/banking/var-official.yaml`, `ccr-official.yaml`; `OfficialReaders` only switches the plugin | the readers follow the publisher without a second description of its store |
 | Inbox loader | `Lakes.environment()`: the settings the lake files name, as the server resolves them, handed to the child process | nothing resolved twice |
@@ -3482,9 +3482,9 @@ not load the store; a request for the pack's kinds is forwarded to the owner ove
 on their disks, exactly as any pack a peer holds ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), `peer-only-packs`). The code is
 `MemoryBinding`: local routing and the digest leave the kinds to the owner.
 
-### 9.8 The package: memlake, in drishti-lakeload
+### 9.8 The package: memlake, in lake-load
 
-The in-memory lake is one package, **`memlake`** of the module `drishti-lakeload` (loading the lakes), in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
+The in-memory lake is one package, **`memlake`** of the module `lake-load` (loading the lakes), in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
 
 | Package | What is in it |
 |---|---|
@@ -3496,11 +3496,11 @@ The in-memory lake is one package, **`memlake`** of the module `drishti-lakeload
 memory budget and busy protection; `MemoryLakeController` is Admin → Lakes' REST API. The engine switch (`config/engines/memory-lake.yaml`)
 acts there too.
 
-**Which way the dependencies go.** The package `memlake` depends on `drishti-lakeio` and `drishti-deltalake` (it writes its tables with the
+**Which way the dependencies go.** The package `memlake` depends on `lake-io` and `lake-delta` (it writes its tables with the
 lake writer and reads them back with Delta Kernel) and on the engine's connector registry. The lake readers must reach `mem://` without
-depending on it, which would be a cycle. So `drishti-lakeio` defines a small service interface, **`StorageProvider`** (a scheme, the
+depending on it, which would be a cycle. So `lake-io` defines a small service interface, **`StorageProvider`** (a scheme, the
 storage for a path, whether the scheme is memory-only), and **`StorageProviders`**, which finds the providers on the class path once with
-Java's `ServiceLoader`. `drishti-lakeload` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
+Java's `ServiceLoader`. `lake-load` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
 The native Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders`
 for a path's storage and whether it is memory-only; none names a class of `memlake`
 (`ArchitectureRulesTest.lakeReadersDoNotSeeTheMemoryLake`). So: no cycle; one code path for every storage (a later scheme is one more
@@ -3530,9 +3530,9 @@ the missing module, never a quiet detour through a disk.
 - The *refilling* words on the Sutra pages themselves (the connector's health and Admin → Lakes have them).
 - Native Memory Tracking compared with the store's own count over a long soak.
 
-## 10. The parallel lake loader (drishti-lakeload)
+## 10. The parallel lake loader (lake-load)
 
-How the Java loader is built: module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in the server's exec jar. How to
+How the Java loader is built: module `lake-load`, main class `com.ash.drishti.lakehost.DrishtiLakeCli`, in the server's exec jar. How to
 run it: [DATA_LAKE_GUIDE.md 3.3](../guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader); every key of a load file:
 [CLI_REFERENCE.md section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader). Its target: the bank's full scenario-PV load (2.3 million
 positions × about 510 scenarios, about 1.2 billion doubles, 20+ GB of JSON Lines) in at most 10 minutes on a real server, into Delta or
@@ -3542,12 +3542,12 @@ Iceberg, from a folder or S3, with memory bounded by configuration whatever the 
 
 | Needs | For | Why not elsewhere |
 |---|---|---|
-| `drishti-lakeio` | local and S3 reads (`Storage`, `RangeReader`: ranged GETs), S3 settings, the Parquet page codecs | shared by both lake engines already |
-| `drishti-iceberg` | the Hadoop-free Parquet writer (`ParquetDataWriter`: `double[]` vectors, UTF-8 text, per-column encodings), catalogs, the Iceberg commit (`Operations.replacePartitions`) | the native Iceberg engine; the Delta files are written by the same writer |
-| `drishti-deltalake` | Delta Kernel's transaction and the engine `LakeWriter` commits with (`LakeWriter.engineFor`, `LakeWriter.removals`) | Kernel stays the only Delta committer |
+| `lake-io` | local and S3 reads (`Storage`, `RangeReader`: ranged GETs), S3 settings, the Parquet page codecs | shared by both lake engines already |
+| `lake-iceberg` | the Hadoop-free Parquet writer (`ParquetDataWriter`: `double[]` vectors, UTF-8 text, per-column encodings), catalogs, the Iceberg commit (`Operations.replacePartitions`) | the native Iceberg engine; the Delta files are written by the same writer |
+| `lake-delta` | Delta Kernel's transaction and the engine `LakeWriter` commits with (`LakeWriter.engineFor`, `LakeWriter.removals`) | Kernel stays the only Delta committer |
 | Jackson (core, YAML), zstd-jni | streaming JSON, the configuration, `.zst` input | already on the server's class path |
 
-Not in `drishti-deltalake` (it would then need the Iceberg engine) nor in the Iceberg plugin (it carries Apache Iceberg Java and Hadoop's
+Not in `lake-delta` (it would then need the Iceberg engine) nor in the Iceberg plugin (it carries Apache Iceberg Java and Hadoop's
 S3 file system; the loader needs neither). No third-party dependency of its own.
 
 ### 10.2 The pipeline
@@ -3618,7 +3618,7 @@ after GC and the MB spilled. A 10,000-position load ran in a `-Xmx192m` JVM with
 
 **Spill space.** Before reading, the loader estimates the spill (the input's uncompressed size, compressed files at 6 to 1 for gzip and
 8 to 1 for zstd, less the sort buffers, times 1.1) and stops with a clear message when `memory.spill-dir` has less free space
-(`memory.check-spill-space: false` to try anyway). The spill folder is a fresh `drishti-lakeload-<pid>-<n>` under `memory.spill-dir`
+(`memory.check-spill-space: false` to try anyway). The spill folder is a fresh `lake-load-<pid>-<n>` under `memory.spill-dir`
 (default `java.io.tmpdir`, which `lake build` points into the run's staging folder): local disk, EBS, or a Fargate task's ephemeral
 storage.
 
@@ -3697,7 +3697,7 @@ by id) leaves such a table in its order (`IcebergMaintenance.shardSorted`). A De
 Local paths (Windows paths too: `C:\data\pv\*.jsonl.gz`) and `file:` URIs read through `LocalStorage`; `s3://` (and `s3a://`) through
 `S3Storage`: a plain object's splits as parallel ranged GETs, a compressed object as a stream of 64 KB to 8 MB reads. Writing: Parquet
 through the same `Storage` (`S3Output`: multipart upload while the file is written), the Delta log through Kernel's `StorageWriteFileIO`,
-Iceberg metadata through drishti-iceberg's commit. S3 settings come from `source.storage-options` / `target.storage-options` and
+Iceberg metadata through lake-iceberg's commit. S3 settings come from `source.storage-options` / `target.storage-options` and
 **credentials only from the AWS default chain** (environment, profile, instance or task role): a key in the file is refused. A REST
 catalog's secret is given as `${AN_ENVIRONMENT_VARIABLE}`. No Hadoop anywhere, so it runs on Windows (zstd-jni and snappy-java are JNI
 libraries inside their jars, no `.exe`).
@@ -3735,7 +3735,7 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 
 ### 10.11 Tests
 
-`./mvnw -o -q -pl :drishti-lakeload test`:
+`./mvnw -o -q -pl :lake-load test`:
 
 | Test | What |
 |---|---|

@@ -68,6 +68,7 @@ def retrieved_at(cache: Path) -> str:
     business calendar (local time, hostdates.local_day), so an evening download is never dated tomorrow."""
     import json
     sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
     from drishti_lake import filedate
     import hostdates  # noqa: E402  (the one business-date rule)
     z = R.newest(cache / "nport", "_nport.zip")

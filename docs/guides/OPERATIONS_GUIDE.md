@@ -379,11 +379,10 @@ The QA profile walked end to end in the IDEs, with no terminal: [IDE_GUIDE.md �
 
 ## 4. Drishti on Windows
 
-Drishti runs natively on Windows 10 and 11 and Windows Server 2019 or later: no WSL, no Docker, no Hadoop. The Delta connector reads
-through its **native engine** (Java's own file access for local disks, the AWS SDK for S3) and the Iceberg connectors through
-**drishti-iceberg**, so Hadoop's `winutils.exe` is never needed
-([Delta engines](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop),
-[Iceberg engines](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches)). The `windows` CI job builds, tests and starts the
+Drishti runs natively on Windows 10 and 11 and Windows Server 2019 or later: no WSL, no Docker, no Hadoop. The Delta and Iceberg connectors read
+through Drishti Lake (Java's own file access for local disks, the AWS SDK for S3), so Hadoop's `winutils.exe` is never needed
+([the Delta reader](../../plugins/drishti-plugin-delta/README.md#the-reader-drishti-lake),
+[the Iceberg reader](../../plugins/drishti-plugin-iceberg/README.md#the-reader-and-caches)). The `windows` CI job builds, tests and starts the
 server on `windows-latest`. No `.exe` beyond Java and Python is needed.
 
 ### 4.1 Install Java and Python
@@ -411,8 +410,8 @@ $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 dir kernel\drishti-server\target\*-exec.jar
 ```
 
-The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl :drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
-`.\mvnw.cmd -q verify -pl :drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
+The Delta connector's tests: `.\mvnw.cmd -q verify -pl :drishti-lake-host,plugins/drishti-plugin-delta -am`; the Iceberg ones:
+`.\mvnw.cmd -q verify -pl :drishti-lake-host,plugins/drishti-plugin-iceberg -am` (Docker tests skip). Drishti Lake's own tests run in its repository.
 
 **Or copy** a release built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: what goes in it is listed
 in [DEPLOYMENT_AND_QA_GUIDE.md › Get the release](../DEPLOYMENT_AND_QA_GUIDE.md#4-get-the-release) (the jar in `lib\`, `modules\`, `config\`,
@@ -431,7 +430,7 @@ py tools\drishti.py stop all
 ```
 
 `lake demo` writes the same tables as on Linux, with Drishti's Java loader (no Hadoop, no `.exe`). The one command `tools\drishti.py` is the same on Windows, Linux and macOS
-(`py` here, `python` there): `start server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
+(`py` here, `python` there): `start server` checks that Java is 21 or newer, adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `setup` and `start console` make
 the console's environment (with uv when present, else `python -m venv` and pip). Every option ([CLI_REFERENCE.md](CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)), where the pid, log and
 temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
@@ -439,16 +438,14 @@ Admin → Health then lists each lake connector as `UP (engine: native)`. The co
 drishti-console\.venv`, `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements.txt`. From IntelliJ IDEA
 instead of the command: [IDE_GUIDE.md](IDE_GUIDE.md).
 
-**Iceberg tables on Windows** run on the native engine too. `py tools\drishti.py data load --store iceberg` loads them (the samples, ten
-business days; `--trades 10000 --days 3` adds a book), then
+**Iceberg tables on Windows** run on the same reader. `py tools\drishti.py lake build --format iceberg` loads them, then
 `py tools\drishti.py start server --iceberg` (settings only: the connectors folder is `config/connectors.examples/iceberg` and the
-warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux and macOS the same is `python tools/drishti.py data load --store iceberg ./data/iceberg --engine native`.
+warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux and macOS the same is `python tools/drishti.py lake build --format iceberg --lake ./data/iceberg ...`.
 
 ### 4.4 What works differently on Windows
 
 | What | Why | Instead |
 |---|---|---|
-| A Delta connector's `engine: hadoop` (or `auto` on Linux) | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default; `auto` is native on Windows); `hadoop` only for Azure (`abfs://`) or Google Cloud Storage (`gs://`), which the native engine does not read. Iceberg's `engine: library` likewise |
 | Local paths | | `C:\lakes\drishti`, `\\fileserver\lakes`, `file:/C:/lakes`, paths with spaces all work; S3 with the connector's `s3.*` settings |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename over an open file | load a new file and switch the connector's `path`, or stop the server first |
 | `tools\drill.sh`, `tools\bench\*.sh` (internal test tooling) | they need bash | `tools\drishti.py` for starting and stopping the server and console, lakes (`lake demo --engine java`), packs, loads (`data load --store <store>`) and feeds (`drishti.py feed run <feed>`), `tools\rolling.py` for upgrades; the Python tools run as they are; or Git Bash or WSL |
@@ -2668,7 +2665,7 @@ is one (`<root>/<domain>/<table>/metadata/*.metadata.json`, as `lake build --for
 
 ![Admin → Lakes over two roots: MUREX's trades in Delta, the risk tables and the official results in Iceberg](../tutorials/img/t29/03-lakes.jpg)
 
-Each step is one Iceberg commit (run by `IcebergMaintenance` from the server's exec jar; `DRISHTI_ICEBERG_CLASSPATH` in development): **retention** keeps
+Each step is one Iceberg commit (run by `IcebergMaintenance` from the server's exec jar; `LAKE_CLASSPATH` in development): **retention** keeps
 the table's newest N business dates on or before today and drops older ones in one metadata-only delete (`max-drop-share` as for Delta); **compaction**
 re-lays out the days that drifted; no checkpoint; **vacuum** expires snapshots older than `vacuum-hours` and deletes the files only they used;
 **orphans** removes files no snapshot references older than `orphan-hours` (72, the least allowed). The 7-year floor holds (`--floor-days 2557`). A dry
@@ -3235,10 +3232,9 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | You see | Do |
 |---|---|
 | `Drishti runs on Java 21 or newer …; … says: … version "17…` | pass `--java-home` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
-| `HADOOP_HOME and hadoop.home.dir are unset`, `Could not locate executable winutils.exe` | a Delta connector on `engine: hadoop`: remove it and unset `DRISHTI_DELTA_ENGINE` (or `native`); Health then shows `UP (engine: native)` |
 | Health `DOWN: cannot reach C:\…\data\delta\demo (engine: native)` | no lake there: `tools\drishti.py --settings … lake demo --engine java`, or `--lake-root` |
 | Health `DOWN: no Delta tables under …` | the folder has no `<kind>\_delta_log`: check the root and the connector's `domain` |
-| `the native Delta engine reads local disk and S3 …, not abfs://…` | an Azure or GCS lake: that connector's `engine: hadoop` (with `winutils.exe`) |
+| `… not abfs://…` (or `gs://`, `hdfs://`) | an Azure, Google Cloud or HDFS lake: the reader reads local disk and S3-compatible storage only |
 | Windows Defender slows the first start | it scans the native libraries as they unpack; later starts are faster |
 
 ### 21.2 Things that failed to load or lost their connection
@@ -3355,7 +3351,7 @@ quote values with `{$.path}` so each reader sees their own.
 | `failedToStart` shows `no plugin named 'null'` or `'x'` | the file has no `plugin:`, or a misspelt one (`postgres` is `jdbc`); an extra plugin's jar goes in the lib folder (`drishti.lib.path`) |
 | A connector fails behind a proxy: `HTTP 407 Proxy Authentication Required`, `refused to open a tunnel (CONNECT)`, `cannot connect to the proxy`, `cannot resolve the name … (DNS)` | Admin → Connectors → the connector → **Proxy** shows the proxy in effect and where it came from. From the server's host: `curl -v -x http://proxy:3128 --proxy-user svc:… https://target/` and `curl -v --proxytunnel -x http://proxy:3128 https://target/`. Correct `proxy.username`/`proxy.password`, ask for the target on the allow-list (port 443), correct `proxy.url` (`http://host:port`), add to `proxy.no-proxy` or `proxy: none` ([DATA_GUIDE.md section 10](DATA_GUIDE.md#proxy-11-troubleshooting)) |
 | A TLS start-up message (`tls.keystore '…': wrong password`, `tls.key-file '…' does not match the certificate`, `tls.ca-file '…': file not found`), or `DOWN: … PKIX path building failed`, `No subject alternative DNS name matching …` | `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host < /dev/null` (`Verification: OK`); put the CA in `tls.ca-file` or `tls.truststore`; re-issue the server's certificate with SANs (last resort `tls.verify-hostname: false`); give client certificate and key for mutual TLS ([DATA_GUIDE.md section 10](DATA_GUIDE.md#108-start-up-checks-and-their-messages); each plugin's README) |
-| `tls.* is set but … is not https://` (or `rediss://`, `tls.enabled is not true`) | `tls.*` beside a plain address: change the address (`https://`, `rediss://`, `amqps://`, `ssl://`) or remove the keys. Where a library cannot take a private CA per connector (Delta `engine: hadoop`, Iceberg `catalog: hadoop`, the REST catalog) use the JVM truststore, `-Djavax.net.ssl.trustStore=…` |
+| `tls.* is set but … is not https://` (or `rediss://`, `tls.enabled is not true`) | `tls.*` beside a plain address: change the address (`https://`, `rediss://`, `amqps://`, `ssl://`) or remove the keys. Where a library cannot take a private CA per connector (the REST catalog's own connection) use the JVM truststore, `-Djavax.net.ssl.trustStore=…` |
 | PostgreSQL connects but is not verified | the driver's `sslmode=prefer` encrypts without checking: `tls.enabled: true` with `tls.ca-file`, or `sslmode=verify-full` |
 | `UP (TLS certificate CN=… (tls.cert-file) expires in 12 days …)` | rotate it and restart the source ([DATA_GUIDE.md section 10](DATA_GUIDE.md#1010-rotation)) |
 | A Kafka connector skips every message of a topic: `a message in the Confluent wire format could not be read` | set `schema-registry.url` and `schema-registry.basic-auth: ${SR_KEY}:${SR_SECRET}` (Avro and JSON Schema are read; Protobuf is not supported yet) ([the Kafka connector](../../plugins/drishti-plugin-kafka/README.md#schema-registry-and-the-confluent-wire-format)) |

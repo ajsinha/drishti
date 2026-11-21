@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.net;
 
-import com.ash.drishti.engine.view.PanelData;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.PanelData;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
@@ -83,13 +83,13 @@ public final class NetServedBy {
     }
 
     /** A live frame with {@code line} added to the provenance panels it carries whole (unchanged when {@code line} is null). */
-    public static com.ash.drishti.engine.live.Frame annotate(com.ash.drishti.engine.live.Frame f, String line) {
+    public static com.ash.rachana.view.Frame annotate(com.ash.rachana.view.Frame f, String line) {
         if (line == null || f.patches().stream().noneMatch(x -> x.panel() != null && "provenance".equals(x.panel().kind()))) {
             return f;
         }
-        List<com.ash.drishti.engine.live.Patch> patches = f.patches().stream().map(x -> x.panel() == null ? x
-                : new com.ash.drishti.engine.live.Patch(x.op(), x.index(), x.cell(), annotate(x.panel(), line), x.provenance(), x.at())).toList();
-        return new com.ash.drishti.engine.live.Frame(f.seq(), f.generation(), patches, f.latencyMs(), f.p99Ms());
+        List<com.ash.rachana.view.Patch> patches = f.patches().stream().map(x -> x.panel() == null ? x
+                : new com.ash.rachana.view.Patch(x.op(), x.index(), x.cell(), annotate(x.panel(), line), x.provenance(), x.at())).toList();
+        return new com.ash.rachana.view.Frame(f.seq(), f.generation(), patches, f.latencyMs(), f.p99Ms());
     }
 
     /** One panel with the line added when it is a provenance panel. */

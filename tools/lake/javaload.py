@@ -22,7 +22,7 @@ its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, `
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
 
 The Python path is the default: ``--engine auto`` never picks the loader on its own. Only with ``--java-above-mb N`` does it pick the
-loader for a large load: every input JSON Lines, at least N MB of them, mode overwrite-dates, and a jar (or DRISHTI_LAKE_CLASSPATH) that
+loader for a large load: every input JSON Lines, at least N MB of them, mode overwrite-dates, and a jar (or LAKE_CLASSPATH) that
 has the loader; anything else goes the way it always went. Java is started
 only through ``tools/javacmd.py``'s ``java_cmd``."""
 from __future__ import annotations
@@ -60,14 +60,14 @@ def jar_has_loader(jar: str) -> bool:
 
 
 def command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
-    """(java, arguments before the loader's own): DRISHTI_LAKE_CLASSPATH (development: ``-cp CP LakeLoad``), else the server's exec jar
+    """(java, arguments before the loader's own): LAKE_CLASSPATH (development: ``-cp CP LakeLoad``), else the server's exec jar
     (``-Dloader.main=... -jar J``). The heap is DRISHTI_LAKE_LOADER_HEAP (default 4g); the loader's budget is half of it unless set."""
     import writers
     java_bin = writers.find_java(java)
     if not java_bin:
         return None
     heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_LOADER_HEAP", "4g")
-    cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
+    cp = os.environ.get("LAKE_CLASSPATH")
     if cp and not jar:
         return java_bin, [heap, "-cp", cp, LOADER_MAIN, "load"]
     j = writers.find_jar(jar)
@@ -190,7 +190,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
     base = command(getattr(a, "jar", None), getattr(a, "java", None))
     if not base:
         raise LoaderError("--engine java needs the server's exec jar with the parallel loader (--jar, or <home>/lib: "
-                          "python tools/drishti.py build jar; or DRISHTI_LAKE_CLASSPATH) and Java 21")
+                          "python tools/drishti.py build jar; or LAKE_CLASSPATH) and Java 21")
     workdir.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
     cfg = config(a, p, as_of, lake, iceberg, workdir, env)

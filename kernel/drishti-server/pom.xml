@@ -55,7 +55,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
     <!-- the parallel lake loader: drishti.py lake build with engine java starts it from this jar (loader.main com.ash.lake.load.LakeLoad) -->
     <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
-    <!-- drishti-plugin-iceberg-external: out of the build until Drishti Lake's RA-S8 (docs/plans/G4_REHEARSAL.md, Pass 3) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId></dependency>

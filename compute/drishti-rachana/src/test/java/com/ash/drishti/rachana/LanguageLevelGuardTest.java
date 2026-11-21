@@ -29,8 +29,8 @@ class LanguageLevelGuardTest {
 
     @Test
     void noOtherMainCodeBuildsAnInstanceOrPicksALevel() throws IOException {
-        Pattern bad = Pattern.compile("Rachana\\.(core|with)\\(|\\.language\\(\"|Grammar\\.DEFAULT_LEVEL|new\\s+(?:com\\.ash\\.rachana\\.parse\\.)?SutraParser\\(");
-        Path root = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();   // anchored: the parent pom's surefire property, never the working folder
+        Pattern bad = Pattern.compile("Rachana\\.(core|with|at)\\(|\\.language\\(\"|Grammar\\.DEFAULT_LEVEL|new\\s+(?:com\\.ash\\.rachana\\.parse\\.)?SutraParser\\(");
+        Path root = Path.of(com.ash.lake.tck.TestRoots.repo()).toAbsolutePath().normalize();
         List<String> offenders;
         try (Stream<Path> files = Files.walk(root)) {
             offenders = files.filter(f -> f.toString().endsWith(".java") && f.toString().contains("/src/main/") && !f.toString().contains("/target/"))

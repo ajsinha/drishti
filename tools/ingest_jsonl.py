@@ -36,7 +36,7 @@ else the date in its name (trade.2026-11-03.jsonl), else the business today. Eve
 counted, as lake build does; it never chooses the date.
 
 --store iceberg --lake DIR writes Apache Iceberg tables instead of Delta ones, the same rows and columns (the id, doc, business_date and the
-promoted columns of the layout), parent and child kinds alike, by Drishti's Iceberg loader in the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH;
+promoted columns of the layout), parent and child kinds alike, by Drishti's Iceberg loader in the server's exec jar (or LAKE_CLASSPATH;
 --iceberg-set KEY=VALUE for its settings): each business date of the input replaces that date (overwrite-dates, the default and only mode).
 
 --store files --root DIR writes the File connector's layout instead (no Delta dependencies): <DIR>/<domain>/<date>/<kind>.jsonl,
@@ -64,6 +64,7 @@ sys.path.insert(0, str(HERE / "lake"))
 import feedroute  # noqa: E402  (a file's .ready file)
 sys.path.insert(0, str(HERE / "packgen"))
 import childkinds as CK  # noqa: E402  (a parent's array of objects as rows of its child kind: the one explode, shared with pack new)
+import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate  # noqa: E402  (the table and business date in a file's name, the Java loader's FileDates)
 
 MODES = ("overwrite-dates", "append", "replace")

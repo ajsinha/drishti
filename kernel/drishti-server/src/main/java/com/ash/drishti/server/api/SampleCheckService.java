@@ -24,7 +24,7 @@ import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.design.SampleChecker;
 import com.ash.drishti.engine.design.SampleChecker.Input;
 import com.ash.drishti.engine.design.SampleChecker.Matrix;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.rachana.model.Panel;
 import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;

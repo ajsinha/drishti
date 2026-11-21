@@ -33,7 +33,7 @@ import re
 import subprocess
 from datetime import date, datetime, timezone
 
-MAINT = "com.ash.drishti.plugin.iceberg.IcebergMaintenance"
+MAINT = "com.ash.lake.iceberg.table.IcebergMaintenance"
 ORPHAN_HOURS = 72
 VERSION = re.compile(r"^v?(\d+)[.-]")
 

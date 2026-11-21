@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import pathlib
 
-RETENTION = "com.ash.drishti.lakeload.LakeRetention"
+RETENTION = "com.ash.lake.load.LakeRetention"
 
 
 def clean(conf) -> dict | None:

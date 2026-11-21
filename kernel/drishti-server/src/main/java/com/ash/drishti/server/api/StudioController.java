@@ -20,7 +20,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.view.ViewModel;
+import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.rachana.SutraWriter;
@@ -98,7 +98,7 @@ public class StudioController {
     @PostMapping("/studio/preview")
     public ViewModel preview(@RequestBody PreviewRequest req, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal,
             jakarta.servlet.http.HttpServletRequest request) {
-        com.ash.drishti.engine.control.ControlValues controls = com.ash.drishti.engine.control.ControlValues.of(request.getParameterMap());
+        com.ash.rachana.control.ControlValues controls = com.ash.rachana.control.ControlValues.of(request.getParameterMap());
         boolean pasted = req.document() != null && !req.document().isNull();
         if (req.yaml() == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'yaml' is required: the Sutra text to preview");

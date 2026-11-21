@@ -317,7 +317,7 @@ def root_flags(args: list, cwd=None, env=None) -> list:
     none); ``drishti.data.dir``, ``<home>/data``; ``drishti.modules.home``, this repository's ``modules/``. The server never takes a root
     from its process's folder, so a launcher names them."""
     jar = "-jar" in args and any(Path(a).name.startswith("drishti") and a.endswith(".jar") for a in args)
-    main = any(a.startswith("com.ash.drishti.") for a in args)        # a Drishti main class on a class path (DRISHTI_LAKE_CLASSPATH)
+    main = any(a.startswith("com.ash.drishti.") for a in args)        # a Drishti main class on a class path (LAKE_CLASSPATH)
     if not jar and not main:
         return []
     home = (Path(cwd) if cwd else REPO).resolve()

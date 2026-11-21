@@ -90,9 +90,8 @@ there waits and says so, and the rest works). The two can run on one machine or 
 **Windows without any `.exe` beyond Java and Python.** Drishti needs nothing else: no Hadoop (`winutils.exe`), no Docker, no MinIO, no
 uv, no bash. Java comes from the Temurin ZIP (`C:\jdk-21\bin\java.exe` is Java's own), Python from python.org; the console's environment is
 made with Python's own `venv` and `pip` (through the company's mirror: `%APPDATA%\pip\pip.ini`); every command is `tools\drishti.py`. The
-demo lake is written by Drishti's own Java loader (`--engine java`, [section 6](#6-build-the-demo-lake)) and read by the Delta connector's
-**native** engine, the Windows default: both are pure Java. Never choose `--engine hadoop` (or a connector's `engine: hadoop`) on Windows:
-Hadoop needs `winutils.exe`. Native libraries the server unpacks itself (DLLs loaded by `java.exe`) are not programs and are allowed. What
+demo lake is written by Drishti Lake's Java loader (`--engine java`, [section 6](#6-build-the-demo-lake)) and read by Drishti Lake's Delta
+reader: both are pure Java, and there is no Hadoop engine to choose. Native libraries the server unpacks itself (DLLs loaded by `java.exe`) are not programs and are allowed. What
 works differently on Windows: [OPERATIONS_GUIDE.md › Drishti on Windows](guides/OPERATIONS_GUIDE.md#44-what-works-differently-on-windows).
 
 **Check the machine:**
@@ -739,7 +738,6 @@ command) adds the install's `config/profiles/<NAME>.ini` after them ([1.6](#16-t
 | `--data-dir DIR` | the settings files' `drishti.data.dir`, else `DRISHTI_DATA_DIR`, else `<drishti>/data` | the data folder; the pid, log and temporary files go under it, and the server is given it as `-Ddrishti.data.dir`, so the two always agree |
 | `--env-file FILE` | none | `KEY=VALUE` lines put into the server's environment: the secrets stay off the command line, and their values are never printed |
 | `--demo` | off | the demo profile, `config/profiles/demo.ini`, the same file **Drishti server (demo lakes)** names: the offline demo on the lake of [section 6](#6-build-the-demo-lake) (the packs of every module that is on plus us-equities, gleif and funds, samples off, offline, sign-in on, the data inbox on, a 4 GB heap), with **development secrets and the `drishti-dev-admin` account: not for production**; a secret you set yourself wins |
-| `--engine NAME` | the server's own (`native`) | the Delta engine: `native`, `hadoop` or `auto`. Never `hadoop` on Windows: it needs `winutils.exe` |
 | `--lake-root DIR` | the lake files' own roots | the Delta lake root (`DRISHTI_DELTA_ROOT`) |
 | `--iceberg`, `--iceberg-root DIR` | off, `<data folder>/iceberg` | serve the stores from Iceberg tables, as settings only: the connectors folder (`DRISHTI_CONNECTORS_DIR`) is `config/connectors.examples/iceberg`, the bindings and placement files stay in `config/`, the warehouse is under the data folder; nothing is copied or written (connector files are read-only; a `DRISHTI_CONNECTORS_DIR` you set is kept) |
 | `--distribution NAME` | `DRISHTI_DISTRIBUTION`, else Drishti All | `risk`, `finance`, `genomics`, `all`, or a file path ([7.7](#77-starting-a-white-labelled-instance)) |

@@ -26,6 +26,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import tempfile
 import threading
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -59,14 +60,13 @@ def read(table, version: int | None = None, date: str | None = None, columns: li
     import datetime as dt
     import decimal
     import pyarrow as pa
-    import writers
-    from javacmd import java_cmd
-    j = writers.find_jar(jar)
-    jv = writers.find_java(java)
-    if not j or not jv:
+    import stores
+    try:                                                    # LAKE_CLASSPATH (development), else the server's exec jar
+        cmd = stores.loader_command(pathlib.Path(os.environ.get("DRISHTI_TMP_DIR") or tempfile.gettempdir()), jar, java, main=MAIN)
+    except SystemExit as e:
         raise ReadError("Delta tables are read by Delta Kernel, the server's reader: build the server's exec jar "
-                        "(python tools/drishti.py build jar puts it in <home>/lib), and Java 21")
-    args = [f"-Xmx{os.environ.get('DRISHTI_LOADER_HEAP', '2g')}", f"-Dloader.main={MAIN}", "-jar", j, str(table)]
+                        "(python tools/drishti.py build jar puts it in <home>/lib; or LAKE_CLASSPATH), and Java 21") from e
+    args = [str(table)]
     if version is not None:
         args += ["--version", str(version)]
     if date:
@@ -74,7 +74,7 @@ def read(table, version: int | None = None, date: str | None = None, columns: li
     if columns:
         args += ["--columns", ",".join(columns)]
     schema, cols = None, None
-    with subprocess.Popen(java_cmd(jv, args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8") as p:
+    with subprocess.Popen(cmd + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8") as p:
         err: list[str] = []
         drain = threading.Thread(target=lambda: err.extend(p.stderr), daemon=True)   # a full stderr pipe would stall the reader
         drain.start()

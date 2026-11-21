@@ -109,12 +109,12 @@ def deltalake_available() -> bool:
 
 def java_command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
     """How to start Drishti's writer, as (java, arguments): the server's exec jar (``java -jar J lake ...``), or for development a class
-    path in DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.lake.delta.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
+    path in LAKE_CLASSPATH (``java -cp CP com.ash.lake.delta.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
     java_bin = find_java(java)
     if not java_bin:
         return None
     heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_HEAP", "1g")
-    cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
+    cp = os.environ.get("LAKE_CLASSPATH")
     if cp and not jar:
         return java_bin, [heap, "-cp", cp, "com.ash.lake.delta.write.LakeCli"]
     j = find_jar(jar)
@@ -129,7 +129,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
         cmd = java_command(jar, java)
         if cmd:
             args = cmd[1]
-            return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
+            return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "LAKE_CLASSPATH")
         if engine == "drishti":
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, or <home>/lib: "
                              "python tools/drishti.py build jar) and Java 21")

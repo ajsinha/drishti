@@ -82,7 +82,7 @@ class IcebergDiskCacheTest {
                 }
             }
         }
-        assertThat(removed).isGreaterThan(2);
+        assertThat(removed).as("one data file a date: the loader writes one").isEqualTo(days.size());
         try (var r = com.ash.drishti.lakehost.LakeReads.open("iceberg", Map.of("root", root.toString(), "domain", "risk"))) {
             r.purge();                                   // nothing of the files is left in this process either
         }

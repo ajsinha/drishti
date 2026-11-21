@@ -37,7 +37,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 UNDO = "com.ash.lake.load.LakeUndo"
-MAINT = "com.ash.drishti.plugin.iceberg.IcebergMaintenance"
+MAINT = "com.ash.lake.iceberg.table.IcebergMaintenance"
 
 
 def plan(lake: str, load_id: str, dry_run: bool, jar=None, java=None, runner=None) -> list[dict]:

@@ -54,8 +54,8 @@ until I8.
 | `kernel/drishti-server/.../console/ConsoleAnswers.java` | `Distributions.homes(env)` | |
 | `kernel/drishti-server/.../modules/deploy/ModuleNode.java`, `ModuleDeployService.java` | the old store, its active versions through `LegacyModules` | deleted in I8 |
 | `kernel/drishti-module-runtime/.../ModuleDiscovery.java` | the folders it is given (the deployment's) | `readActive` moved into `LegacyModules`; the rest deleted in I8 |
-| `lake/drishti-lakeload/.../LoaderProcess.java` | passes `drishti.module.homes`, every `drishti.module.dir.*` and `drishti.modules.dev` to the loader process, which never boots | |
-| `lake/drishti-lakeio/.../ModuleDirs.java` | deleted (no reader left) | |
+| `lake/lake-load/.../LoaderProcess.java` | passes `drishti.module.homes`, every `drishti.module.dir.*` and `drishti.modules.dev` to the loader process, which never boots | |
+| `lake/lake-io/.../ModuleDirs.java` | deleted (no reader left) | |
 | `modules/banking/.../frtb/FrtbProperties.java`, `config/engines/frtb-sa.yaml` | `${drishti.module.dir.banking:}`; else banking's home | |
 | `tools/resolved.py` | the jar's answer; its cache key carries `modules_fingerprint` (= `ModuleHomes.fingerprint()` of the modules folder: packages, else source folders) | a rebuilt module never serves an old answer |
 
@@ -95,10 +95,10 @@ until I8.
 | `kernel/drishti-server/.../server/uikit/UiKit.java:71-72`, `compute/drishti-rachana/.../rachana/UiKitDir.java:34-39`, `RachanaConfiguration.java:52-53` | the UI kit "beside the packs folder" (`<packs>/../ui-kit`) | direct | **A** (anchored on `drishti.packs.dir`'s parent) | its own setting only (`drishti.ui-kit.dir`); the beside-the-packs guess deleted |
 | `compute/drishti-rachana/.../rachana/RachanaConfiguration.java:69-78` | `under-construction.yaml` "beside the packs folder" | direct | **A** | its own setting only |
 | `compute/drishti-rachana/.../rachana/parse/SutraBlocks.java:202-205` | the `pack.yaml` beside a Sutra's folder | direct (a given file) | C | none |
-| `lake/drishti-lakeio/.../lakeconfig/LakeFiles.java:300-309` | pack tables of the lake files: every `pack.yaml` under the roots given | PF `list(root)` | B | the caller passes `packs().manifests()` |
-| `lake/drishti-lakeio/.../lakeconfig/PackEntry.java:59-100` | `pack.yaml` + source-module connector templates; modules folder = system property `drishti.modules.dir` (**the same name as the server's setting for the switches folder `config/modules`**: one name, two meanings) else "walk up to a folder holding `modules` and `config`" | direct | **A** (the walk-up fails for a pack under `modules/installed/...` or any pack whose ancestors have no `config`; the property means two things) | reads `ModuleContributions` from the resolution; no walk-up, no property |
-| `lake/drishti-lakeio/.../lakeconfig/ModuleDirs.java:38-74` | module folders: `<modules>/<id>` then `installed/<id>/<version>` | — | C (the right list, but ignores on/off and misses `<id>/dmod`) | becomes the module half of the resolver (`ModuleFolders`), in drishti-api |
-| `lake/drishti-lakeload/.../dataload/Routes.java:571`, `lakeload/ChildKinds.java:55`, `PackEntry.java:111,135,252` | a given pack folder's `pack.yaml` | PR / given | C | none |
+| `lake/lake-io/.../lakeconfig/LakeFiles.java:300-309` | pack tables of the lake files: every `pack.yaml` under the roots given | PF `list(root)` | B | the caller passes `packs().manifests()` |
+| `lake/lake-io/.../lakeconfig/PackEntry.java:59-100` | `pack.yaml` + source-module connector templates; modules folder = system property `drishti.modules.dir` (**the same name as the server's setting for the switches folder `config/modules`**: one name, two meanings) else "walk up to a folder holding `modules` and `config`" | direct | **A** (the walk-up fails for a pack under `modules/installed/...` or any pack whose ancestors have no `config`; the property means two things) | reads `ModuleContributions` from the resolution; no walk-up, no property |
+| `lake/lake-io/.../lakeconfig/ModuleDirs.java:38-74` | module folders: `<modules>/<id>` then `installed/<id>/<version>` | — | C (the right list, but ignores on/off and misses `<id>/dmod`) | becomes the module half of the resolver (`ModuleFolders`), in drishti-api |
+| `lake/lake-load/.../dataload/Routes.java:571`, `lakeload/ChildKinds.java:55`, `PackEntry.java:111,135,252` | a given pack folder's `pack.yaml` | PR / given | C | none |
 | `ModulePack` (`bringContent`, `collect`; `module pack` of the server jar) | the packs inside a module being packed | given folder | C | none |
 | `kernel/drishti-server/.../server/deploy/PackArchive.java:313-318`, `PackDiffer.java:76` | an uploaded archive's `pack.yaml` | given folder | C | none |
 
@@ -274,7 +274,7 @@ Tests: `BindingsTest` (21), `BindingResolverTest` (8), `BindingServiceTest` (4),
 
 | File:line | What it reads | Risk | Change |
 |---|---|---|---|
-| `lake/drishti-lakeload/.../dataload/DataLoadSettings.java:20-88` | `drishti.dataload.*`; `rulesFile` default `./config/dataload.yaml` | C | kept: the site's rules file is this one setting |
+| `lake/lake-load/.../dataload/DataLoadSettings.java:20-88` | `drishti.dataload.*`; `rulesFile` default `./config/dataload.yaml` | C | kept: the site's rules file is this one setting |
 | `lake/.../dataload/Routes.java:107-190,340-430,498-602` | the site's rules, then each module's (`Packs.moduleRules()`), then the `.ready` file, then `pack.yaml`; a rule with no connector takes "the first that serves the kind" in `pack.yaml`; **never asks the bindings** | **A** (a fourth answer to "which connector serves this kind") | the rules come from `resolution.inboxRules()`; a rule with no connector takes `resolution.bindings().read(kind)` |
 | `lake/.../dataload/Cycle.java:186`, `InboxStatus.java:87`, `ReadyDesk.java:191` | the three callers of `Routes.read`, every cycle | C | pass the resolution's current snapshot |
 | `kernel/drishti-server/.../dataload/DataLoadConfiguration.java:127-195` | module rules: **`drishti.live-sets.modules-dir`** (default `modules`) → `ModuleDirs.of` → each `module.yaml`'s `dataload:`; off modules skipped; **an unreadable file silently gives no rules** | **A** (a fourth setting for the modules folder; a silent skip) | `resolution.inboxRules()`; an unreadable rules file is a problem in Health (DRS-1048), never silent |

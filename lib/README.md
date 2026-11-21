@@ -29,3 +29,8 @@ holds the server's JVM options (`deploy/jvm/*.args`, generated from the function
 
 An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `lib/ext`. Jars found in `<data>/lib` (the previous default) are moved
 once into `lib/ext` at the next start; Admin → Health says so.
+
+- `<home>/lib/wheels` holds the `drishti_lake-<version>-py3-none-any.whl` wheel (Drishti Lake's Python path: the load rules, the Python
+  loader, the archive guards, the launcher of its Java tools). `pip install -r drishti-console/requirements.txt` installs it from here (a
+  pure-Python wheel: the same on Linux, macOS and Windows, no executable). Where it is not installed the tools put this wheel on their path
+  (`tools/lake/lakewheel.py`); for development `LAKE_PYTHON` names the product's `python` folder instead. Replaced on an upgrade.

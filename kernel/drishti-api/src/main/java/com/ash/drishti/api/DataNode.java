@@ -38,6 +38,27 @@ public sealed interface DataNode extends com.ash.rachana.api.Node permits DataNo
         return com.ash.rachana.api.Node.Kind.valueOf(type().name());
     }
 
+    /**
+     * Drishti's node factory: the lists and records an expression builds over a Drishti document come out as {@code DataNode}s
+     * (Rachana's {@code NodeFactory} hook); a foreign node is converted by {@link #of(Object)}.
+     */
+    com.ash.rachana.api.NodeFactory NODES = new com.ash.rachana.api.NodeFactory() {
+        @Override
+        public com.ash.rachana.api.Node of(Object value) {
+            return DataNode.of(value);
+        }
+
+        @Override
+        public com.ash.rachana.api.Node list(List<? extends com.ash.rachana.api.Node> elements) {
+            return new Arr(elements.stream().map(DataNode::of).toList());
+        }
+    };
+
+    @Override
+    default com.ash.rachana.api.NodeFactory nodes() {
+        return NODES;
+    }
+
     /** Field of an object; {@link #missing()} for any other node or an absent field. */
     default DataNode get(String field) {
         return Missing.INSTANCE;

@@ -17,8 +17,8 @@ package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.engine.live.Frame;
-import com.ash.drishti.engine.live.Patch;
+import com.ash.rachana.view.Frame;
+import com.ash.rachana.view.Patch;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -108,6 +108,6 @@ class LiveTest {
     }
 
     static Patch stripPatch(int i, String text) {
-        return new Patch("strip", i, com.ash.drishti.engine.view.ViewModel.Cell.of(null, text), null, null);
+        return new Patch("strip", i, com.ash.rachana.view.ViewModel.Cell.of(null, text), null, null);
     }
 }

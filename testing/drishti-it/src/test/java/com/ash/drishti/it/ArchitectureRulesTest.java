@@ -23,8 +23,12 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
-/** Structural rules: one-way module dependencies, a Spring-free plugin SPI, constructor injection. */
-@AnalyzeClasses(packages = "com.ash.drishti", importOptions = ImportOption.DoNotIncludeTests.class)
+/**
+ * Structural rules: one-way module dependencies, a Spring-free plugin SPI, constructor injection. The lake is Drishti Lake, a product with
+ * its own packages ({@code com.ash.lake}: the loader, the Delta, Iceberg and files stores, the in-memory lake, the inbox, the read API),
+ * imported here with Drishti's so the rules between the two sides are checked where both are on the class path.
+ */
+@AnalyzeClasses(packages = {"com.ash.drishti", "com.ash.lake"}, importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureRulesTest {
 
     @ArchTest
@@ -107,7 +111,7 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
 
     /**
-     * The data inbox never writes a table itself: only drishti-lakeload does (its loader, started as a child process). No lake engine,
+     * The data inbox never writes a table itself: only the product's loader does (com.ash.lake.load, started as a child process). No lake engine,
      * no table format, no storage of its own.
      */
     @ArchTest
@@ -116,8 +120,7 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.delta..", "com.ash.lake.iceberg..", "com.ash.lake.io..",
                     "com.ash.lake.memory..", "io.delta..", "org.apache.iceberg..", "org.apache.parquet..", "org.apache.arrow..");
 
-    /** The lake engines and connectors reach mem:// through lakeio's StorageProviders, never through the in-memory lake's module. */
-    /** The lake core: the lake configuration and the lake file access, two packages of drishti-lakeio that do not know each other. */
+    /** The lake core: the lake configuration and the lake file access, two packages of the product (lake-config, lake-io) that do not know each other. */
     @ArchTest
     static final ArchRule lakeConfigurationAndFileAccessStayApart = noClasses()
             .that().resideInAPackage("com.ash.lake.config..")
@@ -135,7 +138,7 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.io..", "com.ash.lake.delta..",
                     "com.ash.lake.iceberg..", "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.memory..");
 
-    /** Loading the lakes (drishti-lakeload): the loader sees neither the inbox nor the in-memory lake, and the in-memory lake neither. */
+    /** Loading the lakes (the product's lake-load): the loader sees neither the inbox nor the in-memory lake, and the in-memory lake neither. */
     @ArchTest
     static final ArchRule theLoaderSeesNeitherTheInboxNorTheMemoryLake = noClasses()
             .that().resideInAPackage("com.ash.lake.load..")
@@ -151,6 +154,37 @@ class ArchitectureRulesTest {
             .that().resideInAnyPackage("com.ash.lake.io..", "com.ash.lake.delta..", "com.ash.lake.iceberg..",
                     "com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.api..")
             .should().dependOnClassesThat().resideInAPackage("com.ash.lake.memory..");
+
+    // ------------------------------------------------------------------------------------------------ Drishti and Drishti Lake (G4 rehearsal)
+
+    /** The product does not know its host: nothing of com.ash.lake depends on a class of Drishti (the host wires it in: lake-host). */
+    @ArchTest
+    static final ArchRule theLakeProductKnowsNoDrishti = noClasses()
+            .that().resideInAPackage("com.ash.lake..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti..")
+            .because("Drishti Lake is a product with its own repository: the host gives it a catalog and settings, the product never names the host");
+
+    /**
+     * The Delta, Iceberg and Iceberg-external source plugins read through the product's public read API only (com.ash.lake.read, the runtime com.ash.lake and the
+     * SPI): no table-layer class, and no Delta Kernel, Iceberg, Parquet or Hadoop type (the product's tables are its own; there is no Hadoop engine).
+     */
+    @ArchTest
+    static final ArchRule sourcePluginsReadThroughThePublicReadApi = noClasses()
+            .that().resideInAnyPackage("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.plugin.icebergext..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.delta..", "com.ash.lake.iceberg..", "com.ash.lake.io..",
+                    "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.files..", "io.delta..", "org.apache.iceberg..",
+                    "org.apache.parquet..", "org.apache.hadoop..");
+
+    /** The one runtime of the process lives in lake-host (DrishtiLake): the engine and the packs never build or hold a lake runtime themselves. */
+    @ArchTest
+    static final ArchRule onlyTheLakeHostBuildsTheRuntime = noClasses()
+            .that().resideOutsideOfPackages("com.ash.drishti.lakehost..", "com.ash.drishti.server..", "com.ash.lake..", "com.ash.drishti.testkit..")
+            .and().resideOutsideOfPackages("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.plugin.icebergext..")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is LakeRuntime.fromProcess or LakeRuntime.builder",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> t.getOwner().getFullName().equals("com.ash.lake.LakeRuntime")
+                                    && (t.getName().equals("fromProcess") || t.getName().equals("builder")))))
+            .allowEmptyShould(true);
 
     /**
      * The native BLAS binding is named in one class (HIGH_PERFORMANCE_NATIVE.md section 6.3): every caller uses LinearAlgebra, so the binding
@@ -206,10 +240,14 @@ class ArchitectureRulesTest {
             .should().implement(java.io.Serializable.class)
             .allowEmptyShould(true);
 
-    /** Every temporary file or folder of the server is made by TempFiles (one per-process folder, cleaned up), never by the JDK directly. */
+    /**
+     * Every temporary file or folder of the server is made by TempFiles (one per-process folder, cleaned up), never by the JDK directly. Drishti's
+     * own classes only: the product's (com.ash.lake) have their own TempFiles ({@code com.ash.lake.common}) and their own gate in Drishti Lake.
+     */
     @ArchTest
     static final ArchRule temporaryFilesComeFromTempFiles = noClasses()
-            .that().doNotHaveFullyQualifiedName("com.ash.drishti.common.TempFiles")
+            .that().resideInAPackage("com.ash.drishti..")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.common.TempFiles")
             .and().resideOutsideOfPackage("com.ash.drishti.testkit..")
             .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
                     com.tngtech.archunit.base.DescribedPredicate.describe("is Files.createTempFile, Files.createTempDirectory or File.createTempFile",

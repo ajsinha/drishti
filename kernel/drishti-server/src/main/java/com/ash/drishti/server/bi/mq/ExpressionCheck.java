@@ -61,7 +61,7 @@ final class ExpressionCheck {
         }
         out.put("syntax", syntax);
         out.put("valid", problems.stream().noneMatch(Problem::error));
-        out.put("problems", problems.stream().map(Problem::toMap).toList());
+        out.put("problems", problems.stream().map(ExpressionCheck::answered).toList());
         return out;
     }
 
@@ -88,5 +88,14 @@ final class ExpressionCheck {
                         0, length));
             }
         }
+    }
+
+    /** A problem as the API answers it: Rachana's {@code RCH-} code as Drishti's {@code DRS-} code of the same number. */
+    private static java.util.Map<String, Object> answered(Problem p) {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>(p.toMap());
+        if (m.get("code") instanceof String code) {
+            m.put("code", com.ash.drishti.rachana.DrishtiRachana.drs(code));
+        }
+        return m;
     }
 }

@@ -79,8 +79,8 @@ final class ExternalFixtures {
 
     /** Copies a fixture table's current rows into a new path-based table {@code <root>/<ns>/<name>}, each partition in {@code split} files. */
     static void copy(String fixture, Path root, String ns, String name, ExecutorService pool, int split) throws IOException {
-        try (Catalog src = Catalogs.open(metadataSettings(Map.of(fixture, fixture)));
-             Catalog dst = Catalogs.open(Map.of("root", root.toString(), "domain", ns))) {
+        try (Catalog src = Catalogs.open(com.ash.drishti.lakehost.DrishtiLake.runtime(), metadataSettings(Map.of(fixture, fixture)));
+             Catalog dst = Catalogs.open(com.ash.drishti.lakehost.DrishtiLake.runtime(), Map.of("root", root.toString(), "domain", ns))) {
             Table from = src.load(fixture).orElseThrow();
             Schema schema = from.metadata().schema();
             PartitionSpec spec = from.metadata().spec();

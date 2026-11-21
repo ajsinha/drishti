@@ -194,6 +194,7 @@ class Profile:
 def file_date(f) -> str | None:
     """A file's business date by the load rules (tools/lake/filedate.py, the loaders' rule): the date in its name
     (trade.2026-11-03.jsonl.gz), else none (such a file loads under --as-of, its .ready file's date or the business today)."""
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
     from drishti_lake import filedate
     d = filedate.of(f.name)
     return d.isoformat() if d else None

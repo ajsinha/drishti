@@ -210,12 +210,17 @@ def test_a_run_uses_one_data_folder_and_removes_its_input(ran):
 
 def test_a_failed_load_ends_with_the_loaders_line_then_ours(ran, capsys):
     fake, data = ran
-    fake.fail_on = "IcebergLoader"
-    assert SL.run("iceberg", [], None, None, []) == 1
+    fake.fail_on = "PostgresLoader"
+    assert SL.run("postgres", [], None, None, []) == 1
     err = capsys.readouterr().err.strip().splitlines()
     assert err == ["iceberg: the bucket 'warehouse' does not exist at http://localhost:9000",
-                   "data load iceberg: the load did not finish: see the line above"]
+                   "data load postgres: the load did not finish: see the line above"]
     assert not (data / "build" / "loader-rows").exists()
+
+
+def test_iceberg_is_not_loaded_here_until_it_is_rebuilt_on_the_one_loader(ran, capsys):
+    assert SL.run("iceberg", [], None, None, []) == 2
+    assert "lake build --format iceberg" in capsys.readouterr().err
 
 
 def test_a_usage_error_runs_nothing(ran, capsys):

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.api;
 
-import com.ash.drishti.engine.live.Frame;
+import com.ash.rachana.view.Frame;
 
 /** Test access to the package-private mailbox merge. */
 public final class MailboxAccess {

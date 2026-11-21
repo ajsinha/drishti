@@ -17,8 +17,7 @@
 
 There is ONE reader of the lake files, in Java (Drishti Lake's ``com.ash.lake.config.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
-loader is: ``DRISHTI_LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
-``lake/drishti-lakeio/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
+loader is: ``LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``)."""
 from __future__ import annotations
 
 import functools
@@ -28,7 +27,7 @@ import pathlib
 import subprocess
 import sys
 
-MAIN = "com.ash.lake.config.LakesCli"   # Drishti Lake's lake-file reader (lake-config)
+MAIN = "com.ash.drishti.lakehost.DrishtiLakeCli"   # Drishti Lake's lake-file reader (LakesCli) with Drishti's catalog: `DrishtiLakeCli lakes ...`
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 NAME_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 if str(ROOT / "tools" / "lake") not in sys.path:
@@ -59,43 +58,6 @@ def _version_key(v: str) -> tuple:
     return tuple(int(x) if x.isdigit() else -1 for x in v.replace("-", ".").split("."))
 
 
-def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
-    """The versions of one artifact in the local Maven repository: version -> its jar."""
-    out = {}
-    for d in (m2 / group / art).glob("*"):
-        j = d / f"{art}-{d.name}.jar"
-        if j.is_file():
-            out[d.name] = j
-    return out
-
-
-def _maven_classpath() -> str | None:
-    """The compiled Drishti Lake (lake-config) (and the two classes of the kernel it names: drishti-common's ModuleLoaders, the kernel API's
-    DomainVocabulary) with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
-    (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
-    fails with NoSuchMethodError before a lake file is read)."""
-    classes = ROOT / "lake/drishti-lake-host" / "target" / "classes"
-    kernel = [ROOT / "kernel" / m / "target" / "classes" for m in ("drishti-common", "drishti-kernel-api")]
-    if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file() or not all(k.is_dir() for k in kernel):
-        return None
-    m2 = pathlib.Path(os.environ.get("MAVEN_REPO") or pathlib.Path.home() / ".m2" / "repository")
-    core = "com/fasterxml/jackson/core"
-    databind, jcore = _jars(m2, core, "jackson-databind"), _jars(m2, core, "jackson-core")
-    yaml = _jars(m2, "com/fasterxml/jackson/dataformat", "jackson-dataformat-yaml")
-    common = sorted(set(databind) & set(jcore) & set(yaml), key=_version_key)
-    if not common:
-        return None
-    v = common[-1]
-    annotations = _jars(m2, core, "jackson-annotations")
-    minor = ".".join(v.split(".")[:2])
-    ann = annotations.get(v) or annotations.get(minor) or annotations.get(minor + ".0")
-    snake = _jars(m2, "org/yaml", "snakeyaml")
-    if not ann or not snake:
-        return None
-    return os.pathsep.join([str(classes), *map(str, kernel), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
-                            str(snake[max(snake, key=_version_key)])])
-
-
 def command(jar: str | None = None, java: str | None = None) -> list[str]:
     import writers
     if str(pathlib.Path(__file__).resolve().parents[1]) not in sys.path:
@@ -108,17 +70,13 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     java_bin = writers.find_java(java)
     if not java_bin:
         raise LakeConfigError("no java found to read the lake files (drishti.java.home in the settings file, DRISHTI_JAVA_HOME, JAVA_HOME, or java on the PATH)")
-    cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
+    cp = os.environ.get("LAKE_CLASSPATH")
     if cp and not jar:
-        return java_cmd(java_bin, ["-cp", cp, MAIN])
+        return java_cmd(java_bin, ["-cp", cp, MAIN, "lakes"])
     j = writers.find_jar(jar)
     if j:
-        return java_cmd(java_bin, [f"-Dloader.main={MAIN}", "-jar", j])
-    cp = _maven_classpath()
-    if cp:
-        return java_cmd(java_bin, ["-cp", cp, MAIN])
-    raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) and no compiled "
-                          "drishti-lake-host; DRISHTI_LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
+        return java_cmd(java_bin, [f"-Dloader.main={MAIN}", "-jar", j, "lakes"])
+    raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) or LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
 
 
 def run(args: list[str], folder: pathlib.Path | None = None, jar: str | None = None, java: str | None = None) -> dict:

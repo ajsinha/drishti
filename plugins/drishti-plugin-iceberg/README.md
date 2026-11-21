@@ -47,8 +47,6 @@ settings:
 - metadata-location.*
 - relocate
 - vended-credentials
-- lz4-decoder
-- hadoop.*
 - catalog.*
 - warehouse
 - credential
@@ -84,7 +82,7 @@ settings:
 - tls.*
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
-licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
+licence: Reads through Drishti Lake (its own Iceberg reader over iceberg-core and Apache Parquet, and the AWS SDK for Java v2; all Apache-2.0), bundled. No Hadoop.
 windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (any system); `python tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
@@ -98,8 +96,8 @@ tables someone else designed, use `iceberg-external`.
 
 A data domain is a folder (`<root>/<domain>/<kind>`, `catalog: hadoop`, the default) or a REST catalog's namespace (`catalog: rest`
 with `uri`, `warehouse`, `credential`), and each kind is one Iceberg table (or `table.<kind>` when its name differs). A table can also
-be named by its metadata file (`metadata-location.<kind>`), and a table copied elsewhere is read with `relocate`. Two engines: `native`
-(drishti-iceberg, no Hadoop, the default) and `library` (Apache Iceberg Java over Hadoop; also `abfs://`, `gs://`, `hdfs://`). It
+be named by its metadata file (`metadata-location.<kind>`), and a table copied elsewhere is read with `relocate`. The reader is Drishti
+Lake's (no Hadoop; one reader, no choice of engine). It
 reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python tools/drishti.py data load --store iceberg` does.
 
 ## Settings
@@ -130,12 +128,10 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `metadata-location.*` | string |  | A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json) |
 | `relocate` | string |  | `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, plugins/drishti-plugin-iceberg/README.md › Catalogs and storage). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
 | `vended-credentials` | boolean | `true` | `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
-| `lz4-decoder` | one of safe, fast | `safe` | The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present) |
-| `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
 | `catalog.*` | string |  | Any Iceberg catalog property (catalog.<property>) |
 | `warehouse` | string |  | REST catalog warehouse |
 | `credential` | string |  | REST catalog credential: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `root` | path |  | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
+| `root` | path |  | `hadoop` (path-based catalog): the lake, a folder or `s3://…` (the product reads local disk and S3-compatible storage) |
 | `uri` | string |  | `rest`: the catalog's URI |
 | `catalog` | string | `hadoop` | `hadoop` (path-based tables), `rest`, or `s3tables` (AWS S3 Tables: its Iceberg REST endpoint, the settings from `table-bucket-arn`) |
 | `table-bucket-arn` | string |  | `s3tables`: the table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>`; the endpoint, SigV4 signing (`s3tables`), region, warehouse and REST prefix follow from it, the domain is the namespace and a kind is read from its table with underscores (`pnl-vector` is `pnl_vector`). Blank: the connector stays idle. Native engine only |
@@ -234,7 +230,7 @@ Every setting with its environment variable is in [CONFIGURATION.md](../../docs/
 
 | `catalog` | Tables | Use it for |
 |---|---|---|
-| `hadoop` (default) | path-based tables at `<root>/<domain>/<kind>`; `root` is a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://` on the library engine) | a lake Drishti's loader writes; local disk; a single writer |
+| `hadoop` (default) | path-based tables at `<root>/<domain>/<kind>`; `root` is a folder or `s3://…` | a lake Drishti's loader writes; local disk; a single writer |
 | `rest` | the tables of namespace `<domain>` (or `namespace`) of an Iceberg REST catalog at `uri` | Apache Polaris, Snowflake Open Catalog, AWS Glue, Unity Catalog, Nessie, Lakekeeper, Gravitino |
 | `s3tables` | the tables of an AWS S3 table bucket, everything from `table-bucket-arn` | [AWS S3 Tables](#aws-s3-tables) |
 
@@ -249,8 +245,8 @@ settings: { catalog: rest, uri: "https://<account>.snowflakecomputing.com/polari
             credential: "${POLARIS_CLIENT_ID}:${POLARIS_CLIENT_SECRET}", scope: "PRINCIPAL_ROLE:drishti_reader", domain: trading }
 ```
 
-**Path-based tables in S3 need a single writer** on the library engine: a `hadoop` table commits by renaming a metadata file, which S3
-does not do atomically. The native engine commits with a conditional PUT; for several writers of any kind, use a REST catalog.
+**Path-based tables in S3 commit with a conditional PUT** (a `hadoop`-layout table is not renamed into place, which S3 does not do
+atomically); for several writers of any kind, use a REST catalog.
 
 ### AWS Glue
 
@@ -260,7 +256,7 @@ database, requests signed with SigV4 as `glue` (credentials from the AWS default
 ```yaml
 settings: { catalog: rest, uri: "https://glue.eu-west-2.amazonaws.com/iceberg", warehouse: "123456789012", domain: risk,
             catalog.rest.sigv4-enabled: "true", catalog.rest.signing-name: glue, catalog.rest.signing-region: eu-west-2,
-            s3.region: eu-west-2, engine: native }
+            s3.region: eu-west-2 }
 ```
 
 Create the Glue database with a `LocationUri` (`s3://<lake bucket>/iceberg/<domain>`) so new tables land under it
@@ -290,8 +286,7 @@ settings:
 The ARN gives `uri` (`amazonaws.com.cn` in China; a given value wins, for a VPC endpoint), `warehouse` (the ARN), `prefix` (the ARN,
 URL-encoded), SigV4 as `s3tables` in the ARN's region, `s3.region`, `vended-credentials: false` (the connector's own principal reads the
 data) and the namespace (`risk-results` is `risk_results`). Names allow lower-case letters, digits and underscores: the kind `pnl-vector`
-is the table `pnl_vector`, and a name that still breaks the rule is refused, naming it; list the kinds in the file. Always the native
-engine (`engine: library` is refused); with `table-bucket-arn` blank the connector stays idle. Lake maintenance is not run: AWS does it.
+is the table `pnl_vector`, and a name that still breaks the rule is refused, naming it; list the kinds in the file. With `table-bucket-arn` blank the connector stays idle. Lake maintenance is not run: AWS does it.
 
 **IAM**: a reader needs `s3tables:GetTableBucket`, `ListNamespaces`, `GetNamespace`, `ListTables`, `GetTable`,
 `GetTableMetadataLocation` and `GetTableData` on the bucket and `bucket/<name>/table/*`; a loader also `CreateNamespace`, `CreateTable`,
@@ -307,34 +302,28 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 
 ## Loading
 
-`python tools/drishti.py data load --store iceberg` loads the packs' samples and, optionally, a generated book through
-`IcebergLoader`:
-
-Run these from the Drishti folder (the repository root, or the install folder of a release).
+Iceberg tables are written by Drishti Lake's one loader (the same loader, rules and layout as Delta; `source.format: loader-rows` for rows
+already wrapped with their table). `python tools/drishti.py lake build --format iceberg` loads a pack's tables into a table
+`<lake>/<domain>/<table>` (`--iceberg-set key=value` for a REST catalog or object store), `python tools/drishti.py lake demo --store
+calypso=iceberg` moves a source system's tables, and `ingest_jsonl.py --store iceberg` loads JSON lines:
 
 ```bash
-python tools/drishti.py data load --store iceberg ./data/iceberg                                   # the sample documents
-python tools/drishti.py data load --store iceberg ./data/iceberg --trades 10000 --days 3           # and a book of 10,000 trades, streamed
-python tools/drishti.py data load --store iceberg ./data/iceberg --keep-days 1800                  # keep seven years of business days
-python tools/drishti.py data load --store iceberg --catalog rest --uri http://polaris:8181/api/catalog --warehouse risk --credential id:secret
-python tools/drishti.py data load --store iceberg s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
+python tools/drishti.py lake build --format iceberg --lake ./data/iceberg trading/trade-*.jsonl.gz        # a pack's table
+python tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceberg --iceberg-set s3.region=us-east-1 ...
 ```
 
-- **Input**: loader rows, JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, as a tar of
-  `<kind>/<YYYY-MM-DD>/rows.jsonl` folders or a plain file of one kind on one date (`-` reads standard input). Each row is filed under
-  a business date from outside it, by [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo):
-  a tar's folder, else `--as-of`, the `.ready` file, the file name, the business today. Samples and a book go in as one input, since a
-  load replaces the days it writes.
-- **An external sort per day**: at most `--buffer-mb` (1024) of rows are held (about three times that at peak); beyond it the largest
-  day is sorted and spilled to `--spill-dir`; the runs are merged in id order, the last row of a repeated id winning.
-- **Writing and committing**: files of `--file-rows` (250,000) rows, row groups of `--row-group-mb` (1), up to `--threads` days at once.
-  A large day is one overwrite of its partition; small days of a table are committed together. Loading a day again replaces it.
-- **Retention and guards**: `--keep-days N` drops days older than the table's newest N and expires week-old snapshots; dropping more
-  than `--max-drop-share` (0.5) needs `--force-drop`. A row dated after tomorrow is not loaded. A failed load ends with one line
-  naming the cause (`-Dlake.loader.trace=true` adds the stack trace). The loader's heap is `DRISHTI_LOADER_HEAP` (4g).
+- **Input**: JSON lines of documents, or loader rows `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}` (the lines
+  `tools/lake/loaderows.py` writes, one file a business date). Each row is filed under a business date from outside it, by
+  [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo): a tar's folder, else `--as-of`,
+  the `.ready` file, the file name, the business today. Loading a day again replaces it.
+- **Writing and committing**: each day sorted by id (an external sort within the loader's memory budget, spilling to the build's staging
+  folder), one overwrite of its partition; the vector fields of a document become `list<double>` columns, and a vector that is not a list
+  of numbers is a reject (the row is not loaded, the others are).
+- **Retention and guards**: keeping the newest N days is `IcebergMaintenance --keep-days` (the lake maintenance), dropping more than
+  `--max-drop-share` (0.5) needs `--force-drop`. A row dated after tomorrow is not loaded. A failed load ends with one line naming the
+  cause (`-Dlake.loader.trace=true` adds the stack trace). The loader's heap is `DRISHTI_LAKE_LOADER_HEAP` (4g).
 
-Other options: `--engine`, `--future-days N` (1), `--zone Z`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`,
-`--set key=value`. For millions of rows, `drishti.py lake build --format iceberg --engine java` (the parallel lake loader,
+For millions of rows, `drishti.py lake build --format iceberg --engine java` (the parallel lake loader,
 [CLI_REFERENCE.md section 4.13](../../docs/guides/CLI_REFERENCE.md#713-the-parallel-lake-loader)) writes the same layout, every stage multi-threaded.
 
 **Your own writer** (Spark, Flink, Snowflake, Trino) writes the same table, partitioned by `business_date`, `WRITE ORDERED BY id`, with
@@ -416,21 +405,21 @@ automatic maintenance, Spark's `rewrite_data_files` with `sort_order => 'id'`, T
 `DELETE … WHERE business_date < …`. Never apply S3 lifecycle **expiry** to a table's files; storage-class transitions of `data/` are safe
 (`deploy/aws/iceberg/setup-lifecycle.sh`).
 
-## Engines and caches
+## The reader and caches
 
-Iceberg's protocol comes from `iceberg-core` (metadata, manifests, planning, commits, the REST client) with Drishti's file access and Parquet reader, and there is one engine: `engine`, `DRISHTI_ICEBERG_ENGINE` and `--engine` are accepted and ignored. Roots: local disk, `s3://`, `s3a://`, `mem://`; `abfs://`, `gs://` and `hdfs://` are refused by name ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)). Parquet is read by **field id** (renames, added columns, widened types, `schema.name-mapping.default`), deletes are applied by sequence number, and commits are
+Iceberg's protocol comes from `iceberg-core` (metadata, manifests, planning, commits, the REST client) with Drishti Lake's file access and
+Parquet reader; there is one reader, and no setting chooses between readers. Roots: local disk, `s3://`, `s3a://`, `mem://`; `abfs://`,
+`gs://` and `hdfs://` are refused by name ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)). Parquet is read by **field id** (renames, added columns, widened types, `schema.name-mapping.default`), deletes are applied by sequence number, and commits are
 safely (a hard link on local disk, a conditional PUT on S3, the catalog's requirements through REST). It refuses by name, never reading
 wrongly: format version 3 deletion vectors and variant columns, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing. File paths are opened as
 written, never percent-decoded (a partition folder `g=a%2Fb` another writer made is that folder). The loader writes only tables
 partitioned by `business_date` alone and refuses one another engine re-partitioned. The full feature table, both directions:
 [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
-**Caches.** The native engine reads each Parquet footer once and keeps it (`-Dlake.parquet.footer-cache-mb`, 64, shared with Delta),
-plus parsed manifests and delete files (`lake.iceberg.delete-cache-rows`); the library
-engine reads the footer on every single read. On the 10,000-trade test lake the native engine started in 637 ms against 1,848 ms and read
-a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
+**Caches.** The reader reads each Parquet footer once and keeps it (`-Dlake.parquet.footer-cache-mb`, 64, shared with Delta), plus parsed
+manifests and delete files (`lake.iceberg.delete-cache-rows`). A purge of the connector empties every cache.
 
-**Windows**: `py tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files and the native engine
+**Windows**: `py tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files
 ([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches
@@ -487,8 +476,7 @@ secure the **object store** that holds the data and metadata (MinIO, Ceph, a gat
 | `s3.access-key`, `s3.secret-key` | static keys as `${ENV}` or `file:`; a catalog that vends credentials overrides them |
 
 Not covered by `tls.*`: the **REST catalog's own `https://` connection** uses the JVM's truststore (import a private CA there; the
-connector warns at start), and path-based tables on the **library** engine go through Hadoop's S3A, which has no private-CA setting
-(`tls.*` is refused there; the native engine takes it). A complete file, `config/connectors/iceberg-rest-private-ca.yaml`:
+connector warns at start). A complete file, `config/connectors/iceberg-rest-private-ca.yaml`:
 
 ```yaml
 plugin: iceberg
@@ -515,7 +503,7 @@ Check with `curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000
 The shared `proxy.*` settings ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
 [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)): a `proxy:` block in `settings:` (or `proxy: none`) overrides the
 site default. A REST catalog's own client takes it as `rest.client.proxy.*` (when the catalog is not on `no-proxy`), the object store's
-S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kept), and Hadoop's S3A gets `fs.s3a.proxy.*`. Health adds
+S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kept). Health adds
 `via proxy host:port (source)`.
 
 ## Limits and production checklist
@@ -524,8 +512,6 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 - Only Parquet data files; no encrypted tables; format version 3 is refused. Time travel reaches back only as far as snapshots are kept.
   Branches and tags other than `main` are not read by name (expiry keeps their snapshots). Spec compliance, feature by feature:
   [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
-- The library engine reads a footer on every single read, needs Hadoop (and `winutils.exe` on Windows), and path-based tables on S3
-  need one writer at a time there.
 
 1. Choose the catalog: a REST catalog when other engines also write the tables; path-based tables when only Drishti's loader does.
 2. Declare `layout.<kind>.columns` for every large kind and write the layout, or let `IcebergMaintenance --relayout` bring other
@@ -554,9 +540,7 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 | `… (relocate <pairs> is set, but no old folder in it holds <folder>)` | the old folder in `relocate` is not the one the metadata names | use the pair the message gives |
 | `relocate <pairs> sends its reads to <folder>, and the files are not there either` | the new folder is wrong | fix it |
 | start fails: `relocate: '<pair>' cannot be read: …` | no ` -> `, a side missing, or a relative folder | `<old folder> -> <new folder>`, both absolute or URIs (`file:/data/ice1`, `s3://bucket/wh`) |
-| `UP (relocate is read by engine: native only; engine: library ignores it)` | `relocate` with `engine: library` | set `engine: native` |
 | `tls.* is set but s3.endpoint is not https:// (...)` | `tls.*` with no or a plain endpoint | give the `https://` endpoint |
-| `tls.* applies to a REST catalog's object store: Hadoop's S3A … has no setting for a private CA` | `tls.*` with `catalog: hadoop` on the library engine | `engine: native`, or import the CA into the JVM truststore |
 | a read fails with `PKIX path building failed` | the object store's certificate is not signed by `tls.ca-file`, or the catalog's private certificate is not in the JVM truststore | fix the CA |
 
 A table that cannot be read is one problem in Health per kind, with one log line when it appears or changes and one when it is over,

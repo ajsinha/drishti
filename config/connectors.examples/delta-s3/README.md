@@ -26,7 +26,7 @@ doc: plugins/drishti-plugin-delta/README.md
 # Delta Lake on S3 connector templates
 
 Ready-made connector files for **Delta Lake in AWS S3**: the `delta` plugin with its root in a bucket, `s3://<bucket>/<prefix>`, read
-by the native engine (the AWS SDK, no Hadoop). The AWS side (the bucket, the lake's prefix, the IAM policy) is made, checked and
+by Drishti Lake's reader (the AWS SDK, no Hadoop). The AWS side (the bucket, the lake's prefix, the IAM policy) is made, checked and
 removed by [`deploy/aws/delta-s3/`](../../../deploy/aws/delta-s3/README.md); a production lake with KMS, a VPC endpoint, tiers and
 alarms by [`deploy/aws/delta-lake/`](../../../deploy/aws/delta-lake/).
 

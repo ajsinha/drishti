@@ -25,7 +25,7 @@ import com.ash.drishti.bicompute.sql.TabularSource;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
-import com.ash.drishti.engine.bind.PivotBinder;
+import com.ash.rachana.bind.PivotBinder;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;

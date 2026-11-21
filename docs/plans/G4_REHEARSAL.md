@@ -106,6 +106,28 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
 | R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |
 
+### Pass 3 closure, Drishti side (2026-11-21, on `g4/lake`, against Drishti Lake `420ba7a`)
+
+| # | State | What was done |
+|---|---|---|
+| R2 | closed | `maintain.py` runs (the `drishti_lake` import it needed came through `lakewheel`); a Delta table's dates leave through Drishti Lake's `LakeRetention --dates` (`delete.plan`), row retention and the Iceberg upkeep through its `LakeRetention` and `IcebergMaintenance`. Delta compaction, checkpoint and vacuum stay on delta-rs: the product has no Delta upkeep tool yet (Lake item). `DeltaAfterMaintenanceTest` passes |
+| R3 | closed | `DrishtiLakeLoad` (the child's main: `LakeLoad` with Drishti's runtime); `DrishtiLakeCatalog.loaderMain()` names it |
+| R4 | closed | `DrishtiLakeCli lakes` runs `LakesCli.run(runtime, ..)`; `lakeconfig.py` starts it (the lake-file reader sees the shipped lakes) |
+| R5 | closed | `drishti-plugin-iceberg-external` is back in the build and the server: `IcebergExternalPlugin` on `LakeReader.foreign` with a `TableShape` (631 lines to about 520; `Shape`, `KindConfig`, `ExternalTable` not copied); `StarterSchemas` from the snapshot's columns. 7 of 7 tests pass. Differences: the reader's "looked in ..." account of a missing table is not given (the plugin says `no table <t>`), and starter schemas describe flat columns (no nested fields, no partition-spec date role): Lake items |
+| R6 | closed | Iceberg plugin: 49 of 49 (a null vector's document is `null` on every store: the one loader's rule, the Delta fixture follows; one data file a date; the loader's reject words) |
+| R7 | closed | One id-map format, Drishti Lake's `LKIDMAP1` (`MappedIdFile` writes and reads it; strings in String order). What stays Drishti's: the lifecycle (reader guard, unmap, registry, TTL, cap), which `IdMaps` does not have. A file written by either is read by the other (`MappedIdMapTest`, same bytes) |
+| R8 | partly | One launcher for the Java tools (`stores.loader_command`, `LAKE_CLASSPATH`, else the exec jar): undo, retention, relocate, maintain, deltaread, lakes, load. The Iceberg writers (`lake build --format iceberg`, `ingest_jsonl --store iceberg`, `stores.copy`) go through one `loaderows.py` onto `DrishtiLakeCli load` with `format: loader-rows`. Left in `tools/lake` (no product equivalent): `jsonstream` JSON arrays, `scan`, `ownership`, `compare_lakes`, `memory_*`. `data load --store iceberg` is refused with a pointer to `lake build --format iceberg` until rebuilt on the one loader (the files store's `JsonlLoader` is Drishti's and works) |
+| R9 | closed | `drishti-lake==0.9.0.dev0` in `drishti-console/requirements.txt` from `lib/wheels` (`--find-links`, pure-Python wheel, no executable); tools find the wheel by themselves where it is not installed (`tools/lake/lakewheel.py`, or `LAKE_PYTHON` for development). The wheel is not committed |
+| R11 | closed | Every hadoop-engine mention and old module name in the guides, plugin READMEs, examples, deploy scripts and tools; the settings catalogue (`engine`, `hadoop.*`, `lz4-*` gone from the connectors; `LAKE_CLASSPATH` one variable for the tools); `CONFIGURATION.md` regenerated and checked; `DRISHTI_DELTA_ENGINE`, `DRISHTI_ICEBERG_CLASSPATH`, `DRISHTI_LAKE_CLASSPATH` gone. Left as they were: history in `IMPLEMENTATION_PLAN`, `BENCHMARK` results, the generated bench result files; Iceberg's `catalog: hadoop` is the path-based catalog's name and stays |
+| R12 | closed | `ArchitectureRulesTest`, 30 of 30, analysing `com.ash.drishti` and `com.ash.lake`: (1) the lake-layer rules keep their text (they run on the product's classes now on the class path); (2) added `theLakeProductKnowsNoDrishti`, `sourcePluginsReadThroughThePublicReadApi` (Delta, Iceberg, Iceberg-external plugins: no table-layer, Kernel, Iceberg, Parquet or Hadoop type) and `onlyTheLakeHostBuildsTheRuntime`; (3) **narrowed**: `temporaryFilesComeFromTempFiles` now covers Drishti's classes only (the product has its own `TempFiles` and four legitimate callers of `Files.createTemp*`; Drishti Lake has no rule of its own for it: a Lake item) |
+| build | closed | `packaging/dist` and `drishti-modules-it` build and test-compile (three test fixtures moved to the runtime and the one loader) |
+| tests | closed | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` pass (bit-identical); `PackagedVarGoldenTest` passes (2 of 2, the exec jar and the `.dmod` packages, the demo lake built by `lake demo --engine java`); Delta plugin 94 of 94 (R1 and R2 included), Iceberg 49, Iceberg-external 7, `drishti-lake-host` 6, `drishti-packs` 69, `ArchitectureRulesTest` 30. Banking's kernel-internals allowance names `lakehost` instead of the old lake packages (conformance C1) |
+
+Python: the tests that cross-checked Java source or fixtures of the deleted module now use a copy of the product's `childkinds` fixtures
+(`tools/lake/testdata/childkinds`) or `LAKE_HOME` (the ready keys); `test_delta_interop` compiles its reader against `lake-delta`.
+Two failures are older than this branch (`test_memory_caps` run-config check, `test_lake_paths` clusterctl path): same result at `48f7b9931`.
+
+
 ## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
 
 ### What was done
@@ -182,5 +204,40 @@ engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the co
 | Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
 | `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
 | VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
+
+## Pass 3 (2026-11-21): binder, ViewModel writer and aggregate kernel onto Rachana, on `g4/binder`
+
+Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. Rachana rebuilt from `origin/g2/integration` `f7f4cd8f` (includes the G4-ready commit `35fdf00f`) into a scratch Maven repository; Elements pack unchanged from pass 2.
+
+### What was done
+
+| Step | Result |
+|---|---|
+| Rachana's "Drishti to act on" | `DataNode.nodes()` returns Drishti's `NodeFactory` (lists and records an expression builds are `DataNode`s); `SutraJsonMixin` deleted (the `Sutra` record's components are its JSON; a written Sutra now also carries `extensions`); the level is pinned with `Rachana.at(level, ...)` (guard extended to `Rachana.at`); the parity oracle `LegacyListAggregates` reads a list of any node type. **P4 closed**: the 0 was the oracle's; `SutraAggregateParityTest` passes (39 calls, 153,900 comparisons). |
+| 8.3e one binder | Drishti's `engine/{bind,view,control,wire}` and `live/{Frame,Patch}` deleted (5,398 lines, and the five unit tests Rachana holds); 69 files' imports rewritten to `com.ash.rachana.*`. Drishti keeps only profile hooks, in `engine/rachana`: `DrishtiBinder` (`LinkResolver` over `ReferenceCatalog` and `Mnemonics`; the `links` and `provenance` panels reading a `Host` record in `BindContext.host()`; `Semantics::humanize` labels; limits; `PivotCore` as the `PivotEngine`), `DrishtiTables` (`TableProvider` over `SourceRouter`, `ComputeRef` ids), `DrishtiDays`, `Hosted` (the Drishti and Rachana refs, as-of and documents), `PanelSettings` (`drishti.panels`, since Core's `PanelLimits` has no Spring annotation). `ViewerContext` is the `Masker`. Formats reload: `DrishtiRachana.prepareFormats` (a `LiveSettings` bean) reloads Rachana's live `Formats` in place (**P7 closed**). The seven new panel kinds come with Core's binder (**P8 closed**; the schema test is held to the server's level 1.0). Jackson reads Rachana's `@Include` and writes Rachana nodes; `RCH-` codes of Rachana records, of the expression check and of a panel's error are answered `DRS-` (**P9 closed**). |
+| 8.3g writer | `ViewJsonConverter`: the API answers a ViewModel with `ViewJson.write` as a raw body; `ViewJsonBytesTest` proves the bytes equal to the server's Jackson (reference trade, netting set, curve, all-panels showcase). There is no `Rachana.binder(hooks, engine)` in this Rachana: Drishti builds `new Binder(el, formats, hooks, engine)`. |
+| 8.3h aggregate kernel | Drishti's `functions/{Builtins,Moments,MoreAggregates,Holistics,Comoments}` and `rachana/{ListAggregates,ListAnalytics,ListGrouping}` deleted; `Functions.builtIn` takes Core's `Catalogue.of` behind `CoreAggregate` (a thin `AggFunction` shell; state bytes and SQL text Core's); `EngineFunctions` gives only the `_once` family (`OnceAggregates`), `measure`, `cell` and the measure-level functions, never a Core name (**P1 closed**, stopgap gone). `Final` stays in Drishti (Core's `Final` keeps `TAG`/`encode`/`decode` package-private). `AggregateStateCompatTest`: states recorded by the deleted classes decode with Core's kernel; same bytes, except `geomean` (state) and `skewness_pop` (figure) in the last place (CoreMath), as 8.3h expected. `FUNCTIONS.md` regenerated from the instance catalogue (Core's names: runs R, source Rachana Core; **P11 closed**). Net: 3,535 lines deleted, 392 added. |
+
+### Proof
+
+| Check | Result |
+|---|---|
+| All unit tests, every module but `packaging/*`, `drishti-it`, `drishti-modules-it`, `drishti-benchmarks` | **5,625 run, 8 failures, 1 error** (pass 2: 759 errors); two of them fixed after the run (test paths, panel error code), the rest below |
+| VaR/ES goldens `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | pass, unchanged. `PackagedVarGoldenTest` not run (needs a packaged build) |
+| ViewModel goldens (`ViewPipelineTest`, `DrillPanelTest`, `DeepTradeViewTest`, `ChartPanelsTest`, `CoreSutraNextEquivalenceTest`, `LiveTest`, `ViewModelSchemaTest`, `ViewJsonBytesTest`) | pass. `MetricPanelTest`, `MapPanelTest` are in `drishti-modules-it`: not run |
+| Rachana conformance inside Drishti with the profile loaded (`DrishtiProfileConformanceTest`: the pinned suite's expr, expr-error, check, grammar and format cases on `DrishtiRachana`'s instance over `DataNode`s, against the suite's reference instance) | **1,999 cases, 1,998 alike**; one known difference listed (below) |
+| `drishti-rachana` 70, `drishti-bicompute` 300, `drishti-engine` 700 tests | pass (but `AbandonedReadsTest`, timing) |
+
+### Remaining breakages
+
+| # | Symptom | Cause | Who |
+|---|---|---|---|
+| P10 | `PivotFormulaMigrationTest` | fixed in `g4/fixes-1` (see T8 of the tools pass): Core's reader accepts `and`/`or`/`not`, the five parity rows expect their own text | done |
+| P14 | `WindowFunctionsTest`: `rank(sum(trades.mtm), 'sideways')` no longer refused | Rachana's checked mode changed (CF fixes) | Rachana to confirm, or the test changes |
+| P15 | `el/limits#call-chain-past-the-depth`: `RCH-2101` on the reference instance, `StackOverflowError` on Drishti's | not found; the depth refusal comes too late on Drishti's instance | investigate (Drishti or Rachana) |
+| P2 | a compiler taken early never sees a module loaded later (`ElCompiler` bean, `RowPredicate`, `DocPath`) | per-instance function table | Drishti, unchanged |
+| P12, P13 | `AbandonedReadsTest`, `NetForwardTest`, `VarShardClusterTest` (timing); `PythonPathEqualityTest`, `DomainPacksTest` (demo data for the business day) | not the rehearsal | rerun quiet; triage |
+| R-1 | Rachana's ViewModel schema has no data record for the level-1.2 `form` kind (`PanelData.FormPanel`) | schema gap | Rachana |
+| R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
 
 Note (g4/fixes-1): `drishti.py build jar` ran the server's tests and `LiveTablesAdapterTest` failed (4 tests: no table `position`, RCH-2081 on `TRADE_ID`, a problem-message text) against the lake lane's Rachana snapshot; not one of the four above, not investigated, not changed here.

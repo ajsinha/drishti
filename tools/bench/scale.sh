@@ -105,7 +105,7 @@ case "$STORE" in
   delta)
     mkdir -p "$DATA/lake"; ENGINE=native
     LOADER=("${DLOAD[@]}" delta "$DATA/lake" --trades "$TRADES" --days "$DAYS")
-    ENV+=(DRISHTI_DELTA_ROOT="$DATA/lake" DRISHTI_DELTA_ENGINE=native) ;;
+    ENV+=(DRISHTI_DELTA_ROOT="$DATA/lake") ;;
   files)
     LOADER=("${DLOAD[@]}" files "$DATA/files" --trades "$TRADES" --days "$DAYS")
     ENV+=(SPRING_PROFILES_ACTIVE=files DRISHTI_FILES_ROOT="$DATA/files") ;;

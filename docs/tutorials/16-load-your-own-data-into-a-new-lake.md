@@ -1384,7 +1384,6 @@ bindings) is where a site binds them elsewhere:
 plugin: iceberg
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
-  engine: native
   domain: risk
   layout:
     pnl-vector:
@@ -1524,7 +1523,6 @@ plugin: iceberg
 settings:
   root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
   domain: risk-results
-  engine: native
 ```
 
 **You should see** `var-results` on `iceberg` and running, and the official records read back: `VOFF HIERARCHY == 'LL'` on
