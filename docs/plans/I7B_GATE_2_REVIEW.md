@@ -319,7 +319,7 @@ level into a new project, so a tool upgrade re-levels that project silently.
 
 **Is CPU time enough for F18?** No. It removes the time a test waits for a core. It does not remove three things: a loaded
 machine runs each instruction slower (shared cores, cache, clock speed), so CPU time itself rises; the suite has tests on real
-timers (`setTimeout` in six files, the browser rate test); and `node --test` starts a process per file inside one of eight
+timers (`setTimeout` in seven files, the browser rate test); and `node --test` starts a process per file inside one of eight
 pytest workers. Budget tests must be kept away from parallel load: mark them, run everything else with `-n 8`, then run the
 marked ones alone and serially. A budget is a release measurement, not a unit test.
 
