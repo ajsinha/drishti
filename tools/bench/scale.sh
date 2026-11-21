@@ -108,15 +108,15 @@ case "$STORE" in
     ENV+=(DRISHTI_DELTA_ROOT="$DATA/lake") ;;
   files)
     LOADER=("${DLOAD[@]}" files "$DATA/files" --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=files DRISHTI_FILES_ROOT="$DATA/files") ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/files"DRISHTI_FILES_ROOT="$DATA/files") ;;
   duckdb)
     mkdir -p "$DATA/duckdb"
     LOADER=("${DLOAD[@]}" duckdb "$DATA/duckdb/drishti.duckdb" --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=duckdb DRISHTI_DUCKDB_PATH="$DATA/duckdb/drishti.duckdb") ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/duckdb"DRISHTI_DUCKDB_PATH="$DATA/duckdb/drishti.duckdb") ;;
   iceberg)
     mkdir -p "$DATA/iceberg" "$DATA/spill"
     LOADER=("${DLOAD[@]}" iceberg "$DATA/iceberg" --trades "$TRADES" --days "$DAYS" --spill-dir "$DATA/spill")
-    ENV+=(SPRING_PROFILES_ACTIVE=iceberg DRISHTI_ICEBERG_ROOT="$DATA/iceberg") ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/iceberg"DRISHTI_ICEBERG_ROOT="$DATA/iceberg") ;;
   postgres)
     note "starting postgres:18-alpine (memory $CMEM)"
     docker run -d --name "$NAME" -m "$CMEM" --shm-size 256m -p "$PG_PORT:5432" -e POSTGRES_DB=drishti -e POSTGRES_USER=drishti \
@@ -125,7 +125,7 @@ case "$STORE" in
     sleep 2
     URL="jdbc:postgresql://localhost:$PG_PORT/drishti"
     LOADER=("${DLOAD[@]}" postgres "$URL" --user drishti --password drishti --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL="$URL" DRISHTI_PG_USER=drishti DRISHTI_PG_PASSWORD=drishti) ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/postgres"DRISHTI_PG_URL="$URL" DRISHTI_PG_USER=drishti DRISHTI_PG_PASSWORD=drishti) ;;
   redis)
     note "starting redis:8.2 (memory $CMEM)"
     docker run -d --name "$NAME" -m "$CMEM" -p "$REDIS_PORT:6379" -v "$VOLUME:/data" redis:8.2 \
@@ -133,14 +133,14 @@ case "$STORE" in
     wait_for 60 docker exec "$NAME" redis-cli ping
     URI="redis://localhost:$REDIS_PORT"
     LOADER=("${DLOAD[@]}" redis "$URI" --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=redis DRISHTI_REDIS_URI="$URI") ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/redis"DRISHTI_REDIS_URI="$URI") ;;
   mongodb)
     note "starting mongo:7 (memory $CMEM)"
     docker run -d --name "$NAME" -m "$CMEM" -p "$MONGO_PORT:27017" -v "$VOLUME:/data/db" mongo:7 ${STORE_ARGS:---wiredTigerCacheSizeGB 0.5} >/dev/null
     wait_for 120 docker exec "$NAME" mongosh --quiet --eval 'db.runCommand({ping: 1}).ok'
     URI="mongodb://localhost:$MONGO_PORT"
     LOADER=("${DLOAD[@]}" mongodb "$URI" drishti --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=mongodb DRISHTI_MONGODB_URI="$URI" DRISHTI_MONGODB_DATABASE=drishti) ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/mongodb"DRISHTI_MONGODB_URI="$URI" DRISHTI_MONGODB_DATABASE=drishti) ;;
   aerospike)
     AS_GB=$(( TRADES * DAYS * 12 / 1000000 )); (( AS_GB < 8 )) && AS_GB=8      # about 7 KB a trade-day, with room
     note "starting aerospike-server:8.1.2.5 (memory $CMEM, namespace test on a file)"
@@ -150,7 +150,7 @@ case "$STORE" in
     sleep 3
     HOSTS="localhost:$AS_PORT"
     LOADER=("${DLOAD[@]}" aerospike "$HOSTS" test --trades "$TRADES" --days "$DAYS")
-    ENV+=(SPRING_PROFILES_ACTIVE=aerospike DRISHTI_AEROSPIKE_HOSTS="$HOSTS" DRISHTI_AEROSPIKE_NAMESPACE=test) ;;
+    ENV+=(DRISHTI_CONNECTORS_DIR="$PWD/config/connectors.examples/aerospike"DRISHTI_AEROSPIKE_HOSTS="$HOSTS" DRISHTI_AEROSPIKE_NAMESPACE=test) ;;
 esac
 mkdir -p "$DATA/empty-lake"
 

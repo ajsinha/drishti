@@ -18,20 +18,27 @@ package com.ash.drishti.server;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.engine.source.SourceRegistry;
+import com.ash.lake.tck.TestRoots;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * The `postgres` profile turns each banking data domain's store into a JDBC table connector. With no database at
+ * The connector files of config/connectors.examples/postgres turn each banking data domain's store into a JDBC table connector. With no database at
  * the configured URL the connectors still start (they reconnect once it is up), report themselves down, and the
  * server runs.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=market-risk,counterparty-risk",
-        "DRISHTI_PG_URL=jdbc:postgresql://127.0.0.1:1/nowhere"})
-@ActiveProfiles("postgres")
+        "DRISHTI_PG_URL=jdbc:postgresql://127.0.0.1:1/nowhere", "DRISHTI_PG_PASSWORD=none"})
 class StoreProfilesTest {
+
+    @DynamicPropertySource
+    static void connectorFiles(DynamicPropertyRegistry r) {
+        r.add("drishti.sources.connectors-dir", () -> Path.of(TestRoots.repo(), "config", "connectors.examples", "postgres").toString());
+    }
 
     @Autowired SourceRegistry registry;
 

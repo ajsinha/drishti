@@ -74,34 +74,31 @@ cmd_rabbit_down() { docker rm -f -v "$MQ" >/dev/null 2>&1 || true; echo "rabbitm
 cmd_run() {
   local cfg="${1:?config}" jdk="${2:?21 or 25}" secs="${3:-180}" home opts run
   [[ "$jdk" == 21 ]] && { home=$JDK21; opts=(-Djdk.tracePinnedThreads=full); } || { home=$JDK25; opts=(-XX:+UseCompactObjectHeaders); }
-  run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity" "$run/tmp"; cd "$run"
+  run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity" "$run/tmp" "$run/connectors"; cd "$run"
   if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then echo "port $PORT is in use" >&2; exit 2; fi
   local jar; jar=$(ls -t "$REPO"/lib/drishti-server-*-exec.jar | head -1)
   local env=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_PACKS_DIR="$REPO/packs" DRISHTI_DELTA_ROOT="$D/lake"
     DRISHTI_IDENTITY_DB_URL="jdbc:sqlite:$run/identity/drishti.db" DRISHTI_USERS_FILE="$run/identity/users.json"
     DRISHTI_AUDIT_FILE="$run/identity/audit.jsonl" DRISHTI_GOVERNANCE_DIR="$run/governance" DRISHTI_REPORTS_DIR="$run/reports"
     DRISHTI_PACKS_OVERLAY="$run/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$run/packs/installed" DRISHTI_FEEDS="$run/feeds"
-    DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false DRISHTI_FEED_ECB_FX=true)
+    DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false DRISHTI_FEED_ECB_FX=true
+    DRISHTI_CONNECTORS_DIR="$run/connectors")
   case "$cfg" in
     delta) ;;
-    duckdb) env+=(SPRING_PROFILES_ACTIVE=duckdb DRISHTI_DUCKDB_PATH="$D/drishti.duckdb") ;;
-    files) env+=(SPRING_PROFILES_ACTIVE=files DRISHTI_FILES_ROOT="$D/files") ;;
+    duckdb) env+=(DRISHTI_DUCKDB_PATH="$D/drishti.duckdb"); cp "$REPO"/config/connectors.examples/duckdb/*.yaml "$run/connectors/" ;;
+    files) env+=(DRISHTI_FILES_ROOT="$D/files"); cp "$REPO"/config/connectors.examples/files/*.yaml "$run/connectors/" ;;
     *) echo "unknown config $cfg" >&2; exit 2 ;;
   esac
-  cat > application.local.yaml <<EOF
-drishti:
-  sources:
-    connectors:
-      pin-mq:
-        plugin: rabbitmq
-        kinds: [pin-order]
-        settings:
-          uri: amqp://pin:pin@localhost:$MQ_AMQP/%2f
-          queues: $MQ_QUEUE
-          declare: true
-          kind.$MQ_QUEUE: pin-order
-          id-field.$MQ_QUEUE: callId
-          state.max-gb: 1
+  cat > "$run/connectors/pin-mq.yaml" <<EOF
+plugin: rabbitmq
+kinds: [pin-order]
+settings:
+  uri: amqp://pin:pin@localhost:$MQ_AMQP/%2f
+  queues: $MQ_QUEUE
+  declare: true
+  kind.$MQ_QUEUE: pin-order
+  id-field.$MQ_QUEUE: callId
+  state.max-gb: 1
 EOF
   docker exec -u rabbitmq "$MQ" rabbitmqctl -q purge_queue "$MQ_QUEUE" >/dev/null 2>&1 || true
   echo "[$(date +%H:%M:%S)] $cfg on Java $jdk: starting the server on :$PORT"

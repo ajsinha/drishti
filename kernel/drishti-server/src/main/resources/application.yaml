@@ -336,9 +336,6 @@ drishti:
     connectors-watch: auto                  # auto (file events, polling as a fallback) | poll | off
     connectors-poll: 5s                     # how often the files are looked at (also the safety net beside file events)
     connectors-drain: 3s                    # a connector being restarted or stopped stays open this long so reads in flight finish
-    # DEPRECATED: connectors defined here still work (and override the file of the same name, setting by setting), but the
-    # server logs a warning naming the equivalent file. Move them to <connectors-dir>/<name>.yaml.
-    connectors: {}
   bindings:
     # The site's data bindings (docs/guides/DATA_LAKE_GUIDE.md section 6.1, ADMIN_GUIDE.md section 23): one binding per kind, which
     # connectors serve it in read order. Written once from the connectors' kinds: lists when missing; changed from Admin -> Data bindings.
