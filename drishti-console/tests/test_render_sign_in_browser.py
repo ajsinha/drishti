@@ -360,7 +360,7 @@ def test_no_window_without_a_click_then_one_window_and_the_screen_in_place(stack
     assert len(v.windows) == 1 and stack.authorized == before + 1
     v.until(lambda: v.events("loaded"), what="the screen")
     assert v.events("signed-in")[0][1]["user"] == USER
-    assert TRADE in v.page.locator("#risk").evaluate("e => e.shadowRoot.querySelector('.view').innerText")
+    assert TRADE in v.page.locator("#risk").evaluate("e => e.shadowRoot.querySelector('.dv-view').innerText")
     assert v.page.url == HOST + "/page.html", "the page itself never navigated"
     assert not v.errors, v.errors
 
@@ -394,7 +394,7 @@ def test_silent_renewal_while_the_session_lasts_then_the_button_comes_back(stack
     v.page.clock.fast_forward(55_000)                     # the token lives 60 s: renewed some seconds before it expires
     v.until(lambda: v.page.evaluate("window.h._s.signin.token") not in (None, first), what="a renewed token")
     assert stack.refreshed == renewed + 1 and not v.events("signed-out")
-    assert v.page.locator("#risk").evaluate("e => !!e.shadowRoot.querySelector('.view .vtitle')"), "the screen stays"
+    assert v.page.locator("#risk").evaluate("e => !!e.shadowRoot.querySelector('.dv-view .dv-title')"), "the screen stays"
     stack.end_session()
     try:
         v.page.clock.fast_forward(120_000)
@@ -436,4 +436,4 @@ def test_elements_2_signs_in_through_the_window_too(stack, visit):
     assert v.page.evaluate("window.DrishtiElements.version") == rd.VERSION     # the one Elements version
     v.sign_in("#main")
     v.until(lambda: v.page.evaluate("document.querySelector('#main').state") in ("live", "static"), what="the element drawn")
-    assert TRADE in v.page.evaluate("document.querySelector('#main').shadowRoot.querySelector('.view').innerText")
+    assert TRADE in v.page.evaluate("document.querySelector('#main').shadowRoot.querySelector('.dv-view').innerText")

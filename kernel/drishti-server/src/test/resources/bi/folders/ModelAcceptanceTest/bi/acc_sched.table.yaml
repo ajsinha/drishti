@@ -1,0 +1,11 @@
+rachana: 3
+table: bi.acc_sched
+was: acc-sched
+version: 1.0.0
+from: { kind: trade, connector: acc-lake }
+keys: [id]
+columns:
+  desk:     { path: "$.desk", type: string }
+  notional: { path: "$.notional", type: decimal, aggregate: sum }
+refresh: { on-load: true, schedule: "daily 06:00" }
+materialize: on-load

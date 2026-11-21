@@ -12,14 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parity: the client-side renderer draws what the console's macros draw (docs/guides/EMBED_GUIDE.md section 14).
+"""Parity: the client-side renderer shows what the console's macros show (docs/guides/EMBED_GUIDE.md section 14).
 
-Each ViewModel is drawn two ways, the console's server HTML and the library in a blank page, and compared: the accessible tree, the
-visible text line by line, every cell, every link and its target, every tone, every chart's series and points (from its ECharts option,
-not pixels), at 390 and 1280 px, with no sideways scroll, no CSP violation and no request off the console's origin. The ViewModels: the
-captured views and the edge cases of VIEWMODEL.md (render_cases.py) in every theme, and every Sutra of every shipped pack bound on its
-own sample by a real server (skipped when the server jar or a JDK is missing). The intentional differences are normalised by name in
-``INTENTIONAL`` below; anything else fails.
+Each ViewModel is drawn two ways, the console's server HTML and the library (Drishti Elements' painter behind render()) in a blank page,
+and compared for content, not markup (the painter's DOM and look are its own): every text of the console's cells, fields and strip is in
+the library's view, every entity link of the console's page is a link of the library's, and every chart has the same series and points
+(from its ECharts option, not pixels); at 390 and 1280 px, with no sideways scroll, no CSP violation, no script error and no request off
+the console's origin. The ViewModels: the captured views and the edge cases of VIEWMODEL.md (render_cases.py) in every theme, and every
+Sutra of every shipped pack bound on its own sample by a real server (skipped when the server jar or a JDK is missing). The intentional
+differences are normalised by name in ``INTENTIONAL`` below; anything else fails.
 
 Every test is small and independent (one ViewModel, its pages drawn at once on the worker's browser) and marked ``spread``: the
 browser lane hands them to its workers one by one (docs/architecture/TEST_HARNESS.md). The pages wait on the page's settled signal."""
@@ -38,41 +39,55 @@ pytest.importorskip("playwright.async_api", reason="needs Playwright (pip instal
 pytestmark = [pytest.mark.browser, pytest.mark.spread]
 WIDTHS = (390, 1280)
 
-# What differs on purpose, each with its reason (EMBED_GUIDE.md section 14.3). Applied to both sides before comparing.
+# What differs on purpose, each with its reason (EMBED_GUIDE.md section 14.3). Applied before comparing.
 INTENTIONAL = {
-    "unknown-kind": "a kind the client does not know says so (VIEWMODEL.md section 8); the macros draw an empty body",
-    "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "
-                   "tabpanel after parsing; the renderer sets the role before the panel is in the page, and HTML-AAM says generic",
-    "resize-handles": "the console's resize handles are its chrome, bound by its own component (drishti-core's resize): a side column's "
-                      "splitter, a table's column handles and the screen grid's split (drag, arrows, Home or a double-click: as designed); "
-                      "the library, for embeds and <drishti-report>, draws the grid's split with its own handle (1.2.0, unchanged)",
+    "unknown-kind": "a kind neither side draws: the console draws an empty body, the painter a titled panel that says so",
+    "console-chrome": "texts of the console's own chrome around a panel (its help '?', the download menu, the filter row, Chart any table): "
+                      "not the ViewModel's content",
+    "empty-cell": "an empty cell: the console prints nothing, the painter a dash",
+    "pivot-corner": "a pivot's corner names its row fields in their own case on the painter ('book › family'), capitalised on the console",
+    "inactive-words": "an inactive cell: the console adds the words 'not active' for a screen reader, the painter says it with the tone",
+    "drill-count": "a drill-down row's count of children ('2 ▸'): the console's affordance; the painter opens the row by a click",
+    "chart-marks": "a chart's marks: compared as each series' type, name and values; colours come from each page's theme, and the points' "
+                   "own payload (links, texts) is what each side's click and tooltip read",
 }
-UNKNOWN = re.compile(r"This panel kind is not supported by this client \([^)]*\)")
-HANDLE = re.compile(r'''^\s*- '?separator "Resize the ''')                # a splitter or column handle: the console's only
-SPLIT = re.compile(r'''^(\s*- )'?(separator "Divider between [^":]+)(?::[^"]*)?"'?$''')   # the grid's split, in both: its name, not its keys
+CHROME = {"?", "—", "–", "-"}
+DRILL = re.compile(r"\s*\d+ ▸$")
+INACTIVE = re.compile(r" not active$")
 
 
-def _aria(text: str) -> list[str]:
-    out, drop = [], None
-    for line in text.splitlines():
-        ind = len(line) - len(line.lstrip())
-        if drop is not None and ind <= drop:
-            drop = None
-        if line.strip() == "- banner:":                                    # header-role
-            drop = ind
+def _texts(r: dict) -> set[str]:
+    out = set()
+    for c in r["cells"]:
+        c = DRILL.sub("", c)
+        if c in CHROME:
             continue
-        if UNKNOWN.search(line):                                            # unknown-kind
-            continue
-        if HANDLE.match(line):                                              # resize-handles
-            continue
-        line = SPLIT.sub(r'\1\2"', line)
-        out.append(line[2:] if drop is not None else line)
+        out.add(INACTIVE.sub("", c))
     return out
 
 
-def normalised(r: dict) -> dict:
-    return {"aria": _aria(r["aria"]), "lines": [x for x in r["lines"] if not UNKNOWN.search(x)], "cells": r["cells"], "links": r["links"],
-            "tones": r["tones"], "charts": [json.dumps(c, sort_keys=True) for c in r["charts"]]}
+def _value(d):
+    if isinstance(d, dict):
+        return d.get("value")
+    return d
+
+
+def _chart(c) -> list:
+    """A chart as compared: its panel and, per series, the type, the name and the values that are there."""
+    panel, series = c
+    if series and series[0]["type"] == "map":         # a map: its values, and how many places are marked (each side projects them its own way)
+        return [panel, [[s["type"], len(s["data"] or [])] if s["type"] == "scatter" else [s["type"], [v for v in (_value(d) for d in (s["data"] or [])) if v is not None]] for s in series]]
+    return [panel, [[s["type"], s["name"], [v for v in (_value(d) for d in (s["data"] or [])) if v is not None]] for s in series]]
+
+
+def missing(console: dict, library: dict) -> dict:
+    """What the console's page shows that the library's does not: {part: [items]} (empty when the library shows everything)."""
+    text = library["text"].lower()
+    charts = [_chart(c) for c in library["charts"]]
+    out = {"cells": sorted(c for c in _texts(console) if c.lower() not in text),
+           "links": sorted(set(console["links"]) - set(library["links"])),
+           "charts": [c for c in (_chart(c) for c in console["charts"]) if c not in charts]}
+    return {k: v for k, v in out.items() if v}
 
 
 async def draw(browsers, site, url, width, library):
@@ -106,8 +121,7 @@ async def compare(browsers, site, name, vm, width, theme="", design=True, light=
         draw(browsers, site, f"{H.ORIGIN}/render-test/console/{key}-{theme}-{int(design)}.html", width, False),
         draw(browsers, site, f"{H.ORIGIN}/render-test/{page}?case={key}&design={int(design)}&theme={theme or 'inherit'}&o={o}", width, True))
     off = [u for u in a["seen"] + b["seen"] if not u.startswith(H.ORIGIN + "/")]
-    na, nb = normalised(a), normalised(b)
-    diffs = {k: (na[k], nb[k]) for k in na if na[k] != nb[k]}
+    diffs = missing(a, b)
     problems = []
     if b["overflow"] > 1:                                                     # the library never scrolls sideways
         problems.append(f"sideways scroll: library {b['overflow']} px (console {a['overflow']} px)")
@@ -123,11 +137,10 @@ async def compare(browsers, site, name, vm, width, theme="", design=True, light=
 
 
 def explain(diffs) -> str:
-    import difflib
     out = []
-    for k, (x, y) in diffs.items():
-        out.append(f"--- {k}")
-        out += list(difflib.unified_diff([str(i) for i in x], [str(i) for i in y], "console", "library", lineterm="", n=1))[:40]
+    for k, items in diffs.items():
+        out.append(f"--- {k}: on the console's page, not in the library's")
+        out += [f"  {str(i)[:300]}" for i in items[:40]]
     return "\n".join(out)
 
 
@@ -140,7 +153,7 @@ def assert_same(browsers, site, name, vm, widths=WIDTHS, **kw):
         if problems:
             failures.append(f"{name} at {width}px: " + "; ".join(problems))
         if diffs:
-            failures.append(f"{name} at {width}px ({kw}) differs:\n" + explain(diffs))
+            failures.append(f"{name} at {width}px ({kw}) misses content:\n" + explain(diffs))
     assert not failures, "\n\n".join(failures)
 
 
@@ -170,7 +183,7 @@ def test_without_the_designer_the_sutra_is_named_without_a_link(browsers, render
 
 
 def test_light_dom_with_the_console_s_own_sheets_is_the_same(browsers, render_site):
-    """shadow: false (how the console itself will draw its pages, phase 2): the host's sheets style it."""
+    """shadow: false: drawn into the host's own element, styled by the page's sheets."""
     render_site.pages["/render-test/library-light.html"] = ('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>light</title>'
                                                             + "".join(f'<link rel="stylesheet" href="{H._pin.static_url(s)}">' for s in H.CONSOLE_SHEETS)
                                                             + '</head><body class="terminal"><div id="host"></div><script src="/render-test/csp.js"></script>'

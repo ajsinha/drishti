@@ -38,7 +38,7 @@ YAML below it, a preview read as you, "adds up?" from the engine, and review bef
 models is in [BI_GUIDE.md](TABLES_AND_MODELS.md)**; this section is what a report author needs of them, and the BI pages that show them.
 
 BI reads only the table layer's form, and only Rachana in it. A file in BI's older dataset or model form under `config/bi/datasets` or
-`config/bi/models` is refused with `DRS-9196` and the command that migrates it: `drishti.py tables migrate` ([BI_GUIDE.md section 9](TABLES_AND_MODELS.md#9-the-migration-tables-migrate)).
+`config/bi/models` is refused with `DRS-9196`: write it as a table or a model of the layer ([TABLES_AND_MODELS.md](TABLES_AND_MODELS.md)).
 A pack carries its BI tables and models as `config/bi/tables/*.table.yaml` and `config/bi/models/*.model.yaml` in the layer's form (**Build →
 New pack** writes them).
 

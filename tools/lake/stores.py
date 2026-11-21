@@ -129,8 +129,7 @@ def data_of(lake: pathlib.Path) -> pathlib.Path:
 
 def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> list[str]:
     """The demo lake's table folders still directly in <data>/delta (the older layout) when ``lake`` is the demo lake's own folder
-    <data>/delta/<name> and does not exist yet: building there now would leave two copies. Empty: nothing in the way. The server moves them
-    at start, or ``drishti.py lake relocate demo`` (docs/guides/OPERATIONS_GUIDE.md)."""
+    <data>/delta/<name> and does not exist yet: building there now would leave two copies. Empty: nothing in the way."""
     import yaml
     lake = pathlib.Path(lake).resolve()
     placeholder = lake.is_dir() and [c.name for c in lake.iterdir()] == ["README.md"]   # kept in git with only its README.md
@@ -146,8 +145,7 @@ def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> l
 
 def older_layout_words(lake: pathlib.Path, found: list[str]) -> str:
     return (f"the demo lake's tables are still directly in {pathlib.Path(lake).parent} ({', '.join(found[:6])}{' ...' if len(found) > 6 else ''}), "
-            f"the older layout: move them into {lake} first (start the server once, or drishti.py lake relocate {pathlib.Path(lake).name}), "
-            "so the lake is not built twice")
+            f"the older layout: delete them and build again into {lake} (drishti.py lake build), so the lake is not built twice")
 
 
 def iceberg_root(lake: pathlib.Path) -> pathlib.Path:

@@ -30,7 +30,7 @@ kernel: '>=0.2 <1.0'
 rachana: '>=1.0'
 contracts: '>=1.0'
 plugin-api: '>=2.0'
-elements: '>=3.1 <4'
+elements: '>=3.2 <4'
 requires:
   market-data: '>=1.0 <2'
 provides:
@@ -109,15 +109,6 @@ data:
   needs: data/needs.yaml
 api:
   prefix: risk
-  # the old prefixes, answered as the new ones for one release (the module's ApiAlias beans); the registry reads them
-  legacy:
-  - /api/v1/var
-  - /api/v1/exposure
-  - /api/v1/frtb
-  - /api/v1/simm
-  - /api/v1/sensitivities
-  - /api/v1/risk-factors
-  - /api/v1/pivot/mr
 console:
   plugin: console/plugin.yaml
   domain-label: Risk                 # the name of the top bar's Domains menu while this is the one active domain

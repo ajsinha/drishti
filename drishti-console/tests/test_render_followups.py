@@ -103,22 +103,25 @@ def test_the_playground_names_no_made_up_entity_and_shows_the_lens():
 
 
 def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, client):
-    """One page renderer (Jinja); the client-side renderer draws embeds and <drishti-report>: the one Elements version (drishti-renderer, on the Elements
-    libraries) and 1.2.0 frozen beside it for one release; 0.1.0 to 1.1.0 are retired."""
+    """One page renderer (Jinja); the client-side renderer draws embeds and Explain: the one Elements version (Drishti's host part in m/, every panel
+    drawn by Elements' painter, drishti-views) and 1.2.0 frozen beside it for one release; 0.1.0 to 1.1.0 are retired, 2.0.0 and 3.1.0 redirect."""
     V = rd.VERSION          # the one Elements version (drishti_elements.json)
     assert rd.versions() == ["1.2.0", V] and rd.FROZEN == ("1.2.0",)
     for v in ("0.1.0", "1.0.0", "1.1.0"):
         assert not (rd.ROOT / v).exists() and client.get(f"/static/render/{v}/drishti-render.js").status_code == 404
-    assert "m/signin.js" in rd.record("1.2.0")["files"] and "../../elements/drishti-renderer/src/drishti_signin.js" in rd.record()["files"]
-    assert embed_v2_routes.ELEMENTS == {"2.2.0": "1.2.0", V: V} and "pivot" not in embed_v2_routes.SCRIPTS
+    assert "m/signin.js" in rd.record("1.2.0")["files"] and "m/drishti_signin.js" in rd.record()["files"]
+    assert embed_v2_routes.ELEMENTS == {"2.2.0": "1.2.0", "2.4.0": V, V: V} and "pivot" not in embed_v2_routes.SCRIPTS
     embed = make_client(backend)
     two = embed.get("/embed/v2/elements/2/drishti-elements.js", follow_redirects=False)
     assert two.headers["location"] == f"/embed/v2/render/{V}/drishti-elements.js"
     pinned = embed.get("/embed/v2/elements/2.2/drishti-elements.js", follow_redirects=False)
     assert pinned.headers["location"] == "/embed/v2/render/1.2.0/drishti-elements.js", "Elements 2.2 stays on the frozen renderer"
-    lib = embed.get("/embed/v2/elements/drishti-renderer/src/drishti_index.js")
-    assert lib.status_code == 200 and "drishti-renderer" in lib.text
-    assert embed.get("/embed/v2/elements/drishti-renderer/src/../../../js/drishti_app.js").status_code == 404
+    lib = embed.get("/embed/v2/elements/drishti-views/src/drishti_index.js")
+    assert lib.status_code == 200 and "drishti-views" in lib.text
+    assert embed.get("/embed/v2/elements/drishti-renderer/src/drishti_index.js").status_code == 404          # the old renderer library is gone
+    assert embed.get("/embed/v2/elements/drishti-views/src/../../../js/drishti_app.js").status_code == 404
+    prev = embed.get("/embed/v2/render/3.1.0/drishti-render.js", follow_redirects=False)   # the previous pin: one release of redirect
+    assert prev.status_code == 308 and prev.headers["location"] == f"/embed/v2/render/{V}/drishti-render.js"
     for old in ("2.1", "2.0.0"):
         r = embed.get(f"/embed/v2/elements/{old}/drishti-elements.js", follow_redirects=False)
         assert r.status_code in (404, 410) and r.json()["code"] == "DRS-8006", old
@@ -131,3 +134,4 @@ def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, cli
     assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006" and V in gone.json()["detail"]
     assert "ELEMENTS_VERSION = '2.2.0'" in (rd.ROOT / "1.2.0" / "m" / "elements.js").read_text(encoding="utf-8")
     assert "ELEMENTS_VERSION = ONE_VERSION" in (rd.LIBRARY / "drishti_embed.js").read_text(encoding="utf-8")
+    assert rd.LIBRARY == rd.ROOT / V / "m" and not (rd.ROOT / "3.1.0").exists()

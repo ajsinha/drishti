@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.common.BusinessCalendar;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -49,6 +49,11 @@ final class MqHarness {
         return new Reader("hana", true, desk, List.of("desk-head"));
     }
 
+    /** A quoted list as a query writes it: {@code ["a", "b"]}. */
+    static String list(List<String> names) {
+        return "[" + String.join(", ", names.stream().map(n -> "\"" + n + "\"").toList()) + "]";
+    }
+
     private final QueryService service;
     private final LocalDate today;
 
@@ -59,13 +64,13 @@ final class MqHarness {
 
     /** A model over {@code rachana: 2} datasets given by their YAML, checked (no error may be left). */
     static ModelView model(String modelYaml, String... datasetYamls) {
-        ModelDefParser.Result r = Layered.modelDef(modelYaml);
+        ModelDefParser.Result r = Tables.modelDef(modelYaml);
         if (!r.ok()) {
             throw new IllegalArgumentException(r.problems().toString());
         }
         Map<String, ResolvedDataset> byName = new LinkedHashMap<>();
         for (String y : datasetYamls) {
-            DatasetDefParser.Result d = Layered.tableDef(y);
+            DatasetDefParser.Result d = Tables.tableDef(y);
             if (!d.ok()) {
                 throw new IllegalArgumentException(d.problems().toString());
             }
@@ -88,12 +93,12 @@ final class MqHarness {
      * {@code related()} column reads.
      */
     static ModelView model(String modelYaml, java.util.function.Function<String, java.util.Optional<com.ash.drishti.server.bi.layer.DatasetDef>> kinds, String... datasetYamls) {
-        ModelDefParser.Result r = Layered.modelDef(modelYaml);
+        ModelDefParser.Result r = Tables.modelDef(modelYaml);
         if (!r.ok()) {
             throw new IllegalArgumentException(r.problems().toString());
         }
         Map<String, com.ash.drishti.server.bi.layer.DatasetDef> byName = new LinkedHashMap<>();
-        for (DatasetDefParser.Result d : Layered.tableDefs(datasetYamls)) {          // migrated together: a narrowing reads its base
+        for (DatasetDefParser.Result d : Tables.tableDefs(datasetYamls)) {          // migrated together: a narrowing reads its base
             if (!d.ok()) {
                 throw new IllegalArgumentException(d.problems().toString());
             }

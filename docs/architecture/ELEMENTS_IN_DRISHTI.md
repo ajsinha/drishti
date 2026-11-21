@@ -78,9 +78,10 @@ feature is off), and `register` for Drishti's own libraries (section 4), so a pa
 
 ## 4. Drishti's own libraries
 
-Three libraries stay in Drishti because they are clients of Drishti's server or belong to a module: **drishti-insight** (About and
-Explain, search, approvals, workbook export), **drishti-renderer** (the ViewModel client: `/api/view`, sign-in, the DRS codes) and
-**drishti-risk** (the banking module's kinds and presets). They live under `static/elements/drishti-{insight,renderer,risk}/`, listed in
+Two libraries stay in Drishti because they are clients of Drishti's server or belong to a module: **drishti-insight** (About and
+Explain, search, approvals, workbook export) and **drishti-risk** (the banking module's kinds and presets). The client renderer is not a
+library any more: every panel is Elements' painter (`drishti-views`) and Drishti's host part lives in the render folder (section 6).
+They live under `static/elements/drishti-{insight,risk}/`, listed in
 `static/elements/drishti_elements.json` (no version of their own: the pin), and import the eight through the vendored copy's entry files
 (`../../../vendor/drishti-elements/<version>/elements/drishti-core/src/drishti_index.js`). Their bundles are written by the vendored build
 tool:
@@ -102,8 +103,8 @@ and `Formats.java` read the same names from the classpath and git holds no secon
 
 ## 6. The render folder and the embed
 
-`static/render/<version>/` (the public entry of the client-side renderer, its sheet and its integrity record) is Drishti's and is named
-after the pin; `tools/render_sheet.py` writes it. **The redirect policy is unchanged:** when the pin moves, a new folder is written, the
+`static/render/<version>/` (the public entry of the client-side renderer, its host part `m/`, its sheet and its integrity record) is
+Drishti's and is named after the pin; `tools/render_sheet.py` writes it. **The redirect policy is unchanged:** when the pin moves, a new folder is written, the
 previous folder's paths answer `308` to the current one with `Deprecation: true` for one release, then are removed; `1.2.0` stays frozen
 byte for byte (its engines are served from the vendored copy by the embed's vendor route). The element sheets of `<drishti-view>` and
 `<drishti-report>` (`tools/elements_sheet.py`) read Elements' sheets through `elements_pin.static_path`.
@@ -146,7 +147,8 @@ the screen's tests and screenshots are unchanged or deliberately updated.
    then the maps (`drishti_geomap.js`); Vega-Lite visuals translated to the spec and Vega deleted (O1).
 6. **drishti-inputs**: controls, forms, pickers, the code and formula editors (Build, Studio, the editors, BI).
 7. **drishti-insight**: About and Explain, search, approvals, workbook export.
-8. **drishti-renderer**: drawn with libraries 1 to 5; `behaviours: 'console'` from libraries.
+8. **The client renderer**: every panel drawn by Elements' painter (`drishti-views`) behind the same entry; the old drishti-renderer
+   library deleted (G4).
 9. **drishti-risk**: the VaR explorer's and exposure explorer's charts, backtesting, the stress window, the scenario matrix, FRTB-SA,
    SIMM and the MR lens; moved into the banking plugin.
 10. **The allow list empty**; the guard strict; the inventory regenerated into section 2.

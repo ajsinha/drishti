@@ -208,7 +208,7 @@ async def help_pages(request: Request, q: str, section: str = "", limit: int = 2
     if not words:
         return []
     lib = await library(request)
-    sid = lib.section_id(section) if section else ""
+    sid = section or ""
     hits = []
     pages = [g for g in lib.guides.values()
              if (g.listed or "qa" not in g.path.parts)                # the QA records (history) are reachable by link, not search

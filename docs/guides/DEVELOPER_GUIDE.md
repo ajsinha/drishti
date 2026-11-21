@@ -361,7 +361,7 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 | `module.DrishtiModule` (the manifest's `java.entry`) | started with the kernel's `ModuleContext` (kinds as rows, settings `drishti.module.<id>.*`, its data folder, audit, the business date); stopped before its context closes |
 | `approvals.ApprovalSource`, `explain.Explainer`, `view.ViewAugmenter`, `pivot.PivotSourceProvider` | the Approvals queue, Explain this number, the views, the pivot's sources |
 | `health.HealthFigures`, `capacity.CapacityFigures` | Health and the capacity page |
-| `vocabulary.DomainVocabulary`, `official.OfficialResults`, `modules.ApiAlias` | the domain words, the readers of official results, old API paths |
+| `vocabulary.DomainVocabulary`, `official.OfficialResults` | the domain words, the readers of official results |
 | `ai.AiToolProvider` | held for the AI layer |
 
 Pages and their routes come from the console part (`console/plugin.yaml` format 2, served under `/m/<id>/`), through the live route table.
@@ -1909,8 +1909,7 @@ server's `GET /api/v1/bi/mq/stream` sends `answer` and `status` events (section 
 15. **A hidden file or folder.** Drishti makes none, in the repository or at run time: a person must be able to see what is where. Name a
     new file or folder with a visible name (`history/`, `generated/`, `drishti-temp-folder.txt`, a temp file `name-xxxx.tmp`, never
     `.history`). Everything the server, the console and the tools write goes under the data folder (`DRISHTI_DATA_DIR`, default
-    `./data`), never the repository root. When a name changes, read the old one once and rename it with a log line (`LegacyNames` in
-    Java; see `packregen._gen_dir` in Python), never lose data. `tools/test_no_hidden_names.py` fails on a new hidden name or a tracked
+    `./data`), never the repository root. When a name changes, the old name is not read: nothing is renamed at start. `tools/test_no_hidden_names.py` fails on a new hidden name or a tracked
     one.
 16. **camelCase in a pack.** The shipped packs' documents, Sutras, BI files, samples and test data are UPPER_SNAKE (`TRADE_ID`,
     `PRODUCT_TYPE`, `LEGS[].CASH_FLOWS[].RESETS`). A Sutra path, a DEL measure or a search written in camelCase finds nothing (a search

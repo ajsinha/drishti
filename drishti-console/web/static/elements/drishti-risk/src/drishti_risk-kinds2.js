@@ -21,7 +21,7 @@
      risk.scenario-matrix    the P&L of each stress scenario (rows) in each bucket (columns): diverging scale about zero, the figures written
 
    The figures are the server's: use, contribution and P&L come in the rows; nothing is computed here but the order and the share. */
-import { buildWaterfall, buildHeatmap, num, fieldOf, toneColour, textStyle, axisOf } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-chart/src/drishti_index.js';
+import { buildWaterfall, buildHeatmap, num, fieldOf, toneColour, textStyle, axisOf } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-chart/src/drishti_index.js';
 
 /** The zones of a limit's use (a share of the limit): up to ok is calm, up to warn is near, above is a breach. */
 export const LIMIT_ZONES = Object.freeze({ ok: 0.75, warn: 1 });

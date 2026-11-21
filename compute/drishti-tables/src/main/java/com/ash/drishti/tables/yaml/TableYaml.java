@@ -64,7 +64,7 @@ public final class TableYaml {
             return new Result(null, y.problems);
         }
         if (root.has("dataset") || root.has("datasets")) {
-            y.error(TableCodes.OLD_FORM, "dataset", "a BI dataset, not a virtual table: run drishti.py tables migrate on it (--dry-run first)");
+            y.error(TableCodes.OLD_FORM, "dataset", "a BI dataset, not a virtual table: write it as a table of the layer (TABLES_AND_MODELS.md)");
             return new Result(null, y.problems);
         }
         Set<String> known = new java.util.HashSet<>(TOP);
@@ -74,7 +74,7 @@ public final class TableYaml {
         if (rachana == null) {
             y.warning(TableCodes.UNREADABLE, "rachana", "add rachana: 3 (the language version of the file)");
         } else if (!String.valueOf(RACHANA).equals(rachana)) {
-            y.error(TableCodes.OLD_FORM, "rachana", "rachana: " + rachana + " is BI's form: run drishti.py tables migrate (--dry-run first)");
+            y.error(TableCodes.OLD_FORM, "rachana", "rachana: " + rachana + " is BI's old form: write it in the layer's form (rachana: 3, TABLES_AND_MODELS.md)");
         }
         String name = y.text(root, "table", "table", null);
         if (name == null) {

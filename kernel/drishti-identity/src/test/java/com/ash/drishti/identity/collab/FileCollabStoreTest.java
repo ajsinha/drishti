@@ -70,10 +70,7 @@ class FileCollabStoreTest {
         Path dir = Files.createDirectories(tmp.resolve("collab-threads"));
         CollabStoreChecks.threads(new FileThreadStore(dir));
         FileThreadStore again = new FileThreadStore(dir);
-        assertThat(again.linkedNotes()).hasSize(1);
-        CommentThread t = again.threads("trade", again.linkedNotes().isEmpty() ? "" : again.thread(
-                again.comment(again.commentOfNote(again.linkedNotes().iterator().next()).orElseThrow()).orElseThrow().threadId()).orElseThrow().entityId())
-                .get(0);
+        CommentThread t = again.page(null, 100_000).stream().filter(x -> again.chain(x.id()).size() == 4).findFirst().orElseThrow();
         assertThat(HashChain.verify(t.id(), again.chain(t.id()))).isNull();
         assertThat(again.chain(t.id())).hasSize(4);
     }

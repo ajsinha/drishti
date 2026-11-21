@@ -24,7 +24,7 @@ Virtual tables and semantic models: where definitions live, a table key by key, 
 A **virtual table** is a named, typed table defined once by configuration over any kind any connector serves (a lake table, a database
 table, an in-memory table), a SQL query, a Python transform, a model's answer or another virtual table. A **model** relates virtual tables
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
-reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
+reference: every key, every check, the command line; the hands-on walk-through is the
 [virtual tables tutorial](TABLES_AND_MODELS.md). The design, with its decisions, is
 [ARCHITECTURE.md section 24](../../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
 [ARCHITECTURE.md §28 section 18](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).
@@ -43,7 +43,6 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 7. [Who sees what](#7-who-sees-what)
 7a. [Reading a table: dates and shared reads](#7a-reading-a-table-dates-and-shared-reads)
 8. [Checks, preview and lineage](#8-checks-preview-and-lineage)
-9. [The migration: tables migrate](#9-the-migration-tables-migrate)
 10. [Problem codes](#10-problem-codes)
 11. [The editors](#11-the-editors)
 12. [Measures in a model: filter context, and what is refused](#12-measures-in-a-model-filter-context-and-what-is-refused)
@@ -60,7 +59,7 @@ The catalogue reads both, checks every definition and the catalogue as a whole, 
 module is `drishti-tables` (plain Java); BI depends on it, never the reverse.
 
 Every file starts with `rachana: 3`, the language version of the layer's files: expressions are Rachana. A file in BI's old form
-(`rachana: 2`, `dataset:`, `datasets:`) is refused with the command that migrates it (`DRS-9614`).
+(`rachana: 2`, `dataset:`, `datasets:`) is refused (`DRS-9614`); write it as a table or a model.
 
 ### 2. Names
 
@@ -215,8 +214,8 @@ A rule on one fact also limits another fact of a model through `related_rows('al
 on the exposure table keeps the exposure rows that share a key (a dimension both reference, such as the counterparty, or a reference
 between the two) with the trades the desk head sees, so she sees the exposure of the counterparties her desks trade with and nothing
 more. BI's engine works it out over the other table with that table's own rules; a model where the two share no key refuses the question,
-and a table with such a rule read on its own shows that role no rows. `tables migrate` writes it wherever an old dataset's rule named
-another table (nobody sees more data after the upgrade; ARCHITECTURE.md §28 8.5). A live table's history follows its table's rules the same way,
+and a table with such a rule read on its own shows that role no rows. Write it wherever a rule names
+another table (ARCHITECTURE.md §28 8.5). A live table's history follows its table's rules the same way,
 on its group columns.
 
 Before the table's own rules, a read is a read of the source as the reader: their row rules and masks on the source kind apply to every
@@ -330,80 +329,6 @@ materialize: none
 # offered from 24 document(s); grains you may choose instead: [$.NETTING_SETS[*]]
 ```
 
-### 9. The migration: tables migrate
-
-One command turns BI's datasets and models into tables and models of the layer, and every DEL expression in them into Rachana, in one pass.
-BI reads only the layer's tables and models and only Rachana: an installation with its own datasets or models in `config/bi/datasets` or
-`config/bi/models` runs the command (dry run first) before it starts the server. The shipped ones ship migrated, in `config/tables/bi`.
-
-```text
-$ drishti.py tables migrate --dry-run          # the diff per file and the report; nothing written
-$ drishti.py tables migrate --check            # exit 1 when anything would change (CI)
-$ drishti.py tables migrate --report migration.txt --audit data/audit/tables-migrate.jsonl --who ajsinha
-```
-
-| Step | What it does |
-|---|---|
-| read | `config/bi/datasets/*.dataset.yaml` and `config/bi/models/*.model.yaml` (`--bi` for another folder), `rachana: 1` and `2` |
-| map | every key of a dataset to its table key (the source to `from`, `each` to `grain`, a column without a path to `$.NAME` or `@.NAME`, dotted indexes to brackets, `derive` and calculated columns to `expr`, `where` to `filter`, `grain.one-row-per` and `keep: latest by` to `keys` and `keep`, the time mode to `materialize`, `security.rows` to `rules`, `security.masked` to `masked: true`); every key of a model (`datasets` to `tables`, aliases kept, `via` to `calc(..., via = ...)`, a live table's `history` to the model) |
-| translate | each DEL expression read by DEL's parser and mapped to Rachana's tree (section 2.4 of the design): the words (`True`, `None`, `and`, `or`, `not`), `a if c else b` as `c ? a : b`, `**` and `//` as `power` and `floor`, chained comparisons, `x is None`, the renamed functions (`startswith` is `starts_with`, `last` and `first` of a balance are `latest` and `earliest`, `cumulative` is `running`) |
-| rewrite | a bare column to its path (`MTM / 1000000` is `$.MTM / 1000000`); `alias.COLUMN.month` in a measure to `month(alias.COLUMN)`; the null rule (below) |
-| check | the result through the layer's checks, as `tables check` would |
-| write | the files under `config/tables/bi/`, each with the source file's licence lines and a line naming the file it came from; one audit line per file (`tables-migrate`: who, when, the file, the SHA-256 of before and after); the BI files stay until BI reads the layer (`--moved-to DIR` moves them). A file already under `config/tables` is never replaced: one of the same shape (the same columns, a model with every measure) that holds at least the old dataset's row rules, masks and hidden columns is kept as it is, with whatever was added to it; any other is refused with the reason (rename one, or remove the file to have it written) |
-
-**The null rule, kept.** DEL, like SQL, makes a comparison with a missing value false; Rachana makes `null != 'X'` true. The migration
-rewrites every comparison whose meaning would change, so every figure stays the same:
-
-| DEL | Rachana after the migration |
-|---|---|
-| `sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')` | `sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)` |
-| `a != b` (both may be missing) | `a != b && a != null && b != null` |
-| `trades.DESK == books.DESK` | `trades.DESK == books.DESK && trades.DESK != null` |
-| `DESK not in ['A', 'B']` | `$.DESK not in ['A', 'B'] && $.DESK != null` |
-| `not (DESK == 'FX')` | `$.DESK != 'FX' && $.DESK != null` |
-| `trades.DESK == 'FX'`, `x in [...]`, `x is None` | unchanged in meaning (`x == null` for the last) |
-
-A key column and a literal are never missing, so they gain no guard. Running the migration again changes nothing.
-
-**Grouped datasets and consumers.** A dataset with `group:` becomes two tables: its rows (`bi.<name>_rows`) and a summary table under its
-name whose rows are that table's implicit model's answer (`from: { model: table:bi.<name>_rows, query }`). The consumers in `config/bi`
-(reports, boards, alerts, notebooks) are rewritten in place, comments and layout kept: a binding to a version-1 dataset becomes its model
-(`model: live-trading@1`), and every `expr:` and `define:` entry is translated as a measure.
-
-**Stored items.** The server migrates the item store's datasets and models at its first start (once BI reads the layer): every version of
-every item rewritten in place under its number, the draft too, the text before kept as a saved state of the item's history, one event and
-one audit line per item; an item that cannot be migrated is left as it was with the reason on its page.
-
-**What it refuses** (`DRS-9195`, the item named in the report, nothing written for it): an expression the translator cannot keep the
-meaning of, two items that give one name and differ (a `rachana: 1` original whose converted form ships beside it with the same tables and
-measures is recognised, not refused), a pack-generated dataset (regenerated, never migrated) and a model SQL source.
-
-The report:
-
-```text
-$ drishti.py tables migrate --dry-run --report migration.txt
-...
-items: 34 (converted 34, unchanged 0, refused 0)
-expressions: 103 (rewritten 22, refused 0)
-files to write: 32
-
-converted  datasets/counterparty-exposure-official-netting-sets.dataset.yaml  ->  bi/counterparty_exposure_official_netting_sets.table.yaml
-    filter:
-      - HIERARCHY == 'NSET'
-      + $.HIERARCHY == 'NSET'
-        (HIERARCHY is $.HIERARCHY (an expression reads the source))
-...
-converted  models/trading-risk.model.yaml  ->  bi/trading-risk.model.yaml
-    measures.Open MTM.expr:
-      - sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
-      + sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)
-        (DEL into Rachana (section 2.4))
-        (kept DEL's meaning for a missing value: trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null (Q1))
-```
-
-The 32 files are 22 tables and 10 models under `config/tables/bi/`; the two consumers rewritten in place are the live reports, bound to
-their models. Run against a `config/tables` that already holds tables of its own, each is checked in its own domain folder.
-
 ### 10. Problem codes
 
 | Code | Meaning |
@@ -425,7 +350,6 @@ their models. Run against a `config/tables` that already holds tables of its own
 | `DRS-9615` | a read refused: a date the source does not hold, known-at on a source without history, too many rows, a source its runner computes, a condition on a masked column, a reader no rule names |
 | `DRS-9616` | a virtual table named like a stored table |
 | `DRS-9127`, `DRS-9129`, `DRS-9152`, `DRS-9122` | the language's (checked mode): a type or scope, not yet, an unknown name; a relationship's ends |
-| `DRS-9195` | the migration refused an item or an expression |
 
 ### 11. The editors
 
@@ -613,8 +537,7 @@ than as a chain of `? :`.
 
 A virtual table turns documents into rows and typed columns, once, for every reader. In this tutorial you define the trades' legs as a
 table, preview it over sample documents, add a column converted to US dollars and the desk's name looked up in a table of books, give a
-trader only their own trades, relate the legs to the books in a model with measures, and migrate BI's shipped datasets and models with a dry
-run first. Each step shows the YAML, the command line and the screen. The guide is [BI_GUIDE.md](README.md).
+trader only their own trades, relate the legs to the books in a model with measures. Each step shows the YAML, the command line and the screen. The guide is [BI_GUIDE.md](README.md).
 
 The outputs below are real: the test data's Endur trades, books and FX spots of 2026-09-30 (`data/testdata`), and the shipped
 `config/bi`. BI reads the table layer from the switch on; until then the screens shown are the ones that read the same data today.
@@ -636,7 +559,7 @@ About 30 minutes.
   ```
 
 - Run every command from the folder that holds `config/tables` (the repository's folder, or a copy of it to try things in): the tables live
-  under `config/tables`, one folder per domain, and `tables migrate` reads `config/bi` beside it.
+  under `config/tables`, one folder per domain.
 
 ### What you will learn
 
@@ -644,7 +567,6 @@ About 30 minutes.
 - why a calculated column reads the source, never another column, and how `fx` and `related` read another source;
 - how a table's rules and masks apply to every reader, and what a reader no rule names sees;
 - how a model relates tables and defines measures in Rachana;
-- how `tables migrate` turns BI's datasets and models into tables and models, keeping every figure (the null rule).
 
 ### Step 1 · A table of the trades' legs
 
@@ -774,7 +696,7 @@ The rules apply to every reader of the table: BI, the pivot, Arrow Flight; `tabl
 rule reads the row and `user`). You should see `0 error(s)` from the check and, once BI reads the layer, a trader see the legs of their
 own trades, risk and analysts every leg, and a role no rule names none, told so (`DRS-9131`). A list attribute is strict: a rule
 `$.DESK in user.desks` holds nothing for a reader with no desks. On the screen, BI's model `trading-risk` shows the same today on its Security tab: a row rule
-per role and the masked columns, which `tables migrate` carries into its tables (step 6):
+per role and the masked columns of its tables:
 
 ![The model trading-risk, Security: its row rules per role and its masked columns](../../tutorials/img/t44/02-model-security.jpg)
 
@@ -834,61 +756,6 @@ measures:
 **At the prompt:** `tools/drishti.py bi dax "CALCULATE(SUM(trades[NOTIONAL]), USERELATIONSHIP(trades[SETTLE_DATE], dates[DAY]))"`
 
 You should see group rows by limit group that do not add to the total when a book sits in two groups: the total counts each trade once.
-
-### Step 6 · BI's samples migrated, with a dry run first
-
-The dry run prints the diff of every file it would write and a report; nothing is written:
-
-```text
-$ python3 tools/drishti.py tables migrate --dry-run --report migration.txt
---- /dev/null
-+++ b/bi/counterparty_exposure_counterparties.table.yaml
-...
---- a/config/bi/reports/banking/live-trading-desk.report.yaml
-+++ b/config/bi/reports/banking/live-trading-desk.report.yaml
-@@ -30,7 +30,7 @@
- sample: true
- endorsement: promoted
- tags: [sample, trading, live, streaming, tutorial]
-+model: live-trading@1
--dataset: live-trading
- theme: { palette: default }
-items: 34 (converted 34, unchanged 0, refused 0)
-expressions: 103 (rewritten 22, refused 0)
-files to write: 32
-```
-
-You should see 34 items converted, none refused: 22 tables and 10 models under `config/tables/bi/`, and the two live reports bound to their
-models. In the report, `trading-risk`'s *Open MTM*:
-
-```text
-converted  models/trading-risk.model.yaml  ->  bi/trading-risk.model.yaml
-    measures.Open MTM.expr:
-      - sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
-      + sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)
-        (DEL into Rachana (section 2.4))
-        (kept DEL's meaning for a missing value: trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null (Q1))
-```
-
-The guard keeps BI's figure: in Rachana a missing status is not `'MATURED'`, so without it a trade with no status would be counted. On the
-screen, the model's measures as BI shows them today, *Open MTM* among them:
-
-![The model trading-risk, Measures: Open MTM among its measures](../../tutorials/img/t44/04-model-measures.jpg)
-
-Then the write, with an audit line per file, and `--check` (exit 1 while something would change):
-
-```text
-$ python3 tools/drishti.py tables migrate --audit data/audit/tables-migrate.jsonl
-...
-34 file(s) written under /path/to/drishti/config/tables
-$ python3 tools/drishti.py tables migrate --check
-nothing to migrate
-$ python3 tools/drishti.py tables check
-24 table(s), 11 model(s): 0 error(s), 0 warning(s)
-```
-
-You should see the files under `config/tables/bi/` beside your own two tables and model, 34 lines in the audit, the second run change
-nothing, and the whole catalogue check clean.
 
 ### Next steps
 

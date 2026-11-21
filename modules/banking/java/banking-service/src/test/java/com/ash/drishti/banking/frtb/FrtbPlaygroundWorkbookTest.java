@@ -183,4 +183,35 @@ class FrtbPlaygroundWorkbookTest {
         assertThat(parts.get("xl/worksheets/sheet1.xml")).contains(FrtbPlaygroundBook.ALL_PASS, "Copyright (c) 2026 Test Owner");
         assertThat(parts.get("docProps/core.xml")).contains("TestProduct").doesNotContain("{{");
     }
+
+    /** The Config sheet is the same on every run: the fixed parameters in declaration order, then the risk-weight rows (which follow the data) in sorted key order. */
+    @Test
+    void theConfigRowsAreInADeterministicOrder() throws Exception {
+        byte[] xlsx = write(example(cases(), FrtbChoices.defaults()), List.of(), true);
+        Map<String, String> parts = new LinkedHashMap<>();
+        try (var z = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(xlsx))) {
+            for (var e = z.getNextEntry(); e != null; e = z.getNextEntry()) {
+                parts.put(e.getName(), new String(z.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        List<String> shared = new ArrayList<>();
+        if (parts.containsKey("xl/sharedStrings.xml")) {
+            var m = java.util.regex.Pattern.compile("<si>(.*?)</si>", java.util.regex.Pattern.DOTALL).matcher(parts.get("xl/sharedStrings.xml"));
+            while (m.find()) {
+                shared.add(m.group(1).replaceAll("<[^>]+>", ""));
+            }
+        }
+        List<String> keys = new ArrayList<>();
+        var cell = java.util.regex.Pattern.compile("<c r=\"A\\d+\"([^>]*)>(.*?)</c>", java.util.regex.Pattern.DOTALL).matcher(parts.get("xl/worksheets/sheet2.xml"));
+        while (cell.find()) {
+            String text = cell.group(2).replaceAll("<[^>]+>", "");
+            if (cell.group(1).contains("t=\"s\"")) {
+                text = shared.get(Integer.parseInt(text.strip()));
+            }
+            if (text.matches("[A-Z_]+\\.delta\\.[a-z-]+(\\.\\d+)?")) {
+                keys.add(text);
+            }
+        }
+        assertThat(keys).as("risk-weight rows of the Config sheet").isNotEmpty().isSorted();
+    }
 }

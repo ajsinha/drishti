@@ -280,7 +280,7 @@ public final class BiBoardService {
         return m;
     }
 
-    /** A 2.3 board's YAML converted into the report with board pages it becomes (R7; nothing is stored): what {@code drishti.py bi migrate --boards} writes. */
+    /** A 2.3 board's YAML converted into the report with board pages it becomes (R7; nothing is stored). */
     public Map<String, Object> convert(Principal p, String yaml) {
         bi.requirePower(p, BiAccess.AUTHOR);
         String report = BoardConverter.toReport(yaml, "");

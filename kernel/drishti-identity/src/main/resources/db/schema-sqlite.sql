@@ -167,18 +167,6 @@ CREATE TABLE IF NOT EXISTS drishti_session (
 CREATE INDEX IF NOT EXISTS drishti_session_user ON drishti_session (username);
 CREATE INDEX IF NOT EXISTS drishti_session_expires ON drishti_session (expires_at);
 
-CREATE TABLE IF NOT EXISTS drishti_note (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind       TEXT NOT NULL,
-    entity_id  TEXT NOT NULL,
-    path       TEXT,
-    username   TEXT NOT NULL,
-    body       TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
-);
-CREATE INDEX IF NOT EXISTS drishti_note_entity ON drishti_note (kind, entity_id);
-
 CREATE TABLE IF NOT EXISTS drishti_access (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     at            TIMESTAMP NOT NULL,
@@ -285,12 +273,6 @@ CREATE TABLE IF NOT EXISTS drishti_mention (
     PRIMARY KEY (comment_id, target)
 );
 CREATE INDEX IF NOT EXISTS drishti_mention_target ON drishti_mention (target, created_at);
-
--- A legacy note and the comment it became (the import, and the deprecated /notes facade): note_id is drishti_note.id.
-CREATE TABLE IF NOT EXISTS drishti_note_link (
-    note_id INTEGER PRIMARY KEY,
-    comment_id VARCHAR(30) NOT NULL
-);
 
 CREATE TABLE IF NOT EXISTS drishti_follow (
     thread_id VARCHAR(30) NOT NULL,

@@ -254,15 +254,4 @@ public final class ThreadEntities {
         @Column(name = "since", nullable = false)
         public Instant since;
     }
-
-    @Entity(name = "CollabNoteLink")
-    @Table(name = "drishti_note_link")
-    public static class NoteLink {
-        @Id
-        @Column(name = "note_id")
-        public long noteId;
-
-        @Column(name = "comment_id", nullable = false)
-        public String commentId;
-    }
 }

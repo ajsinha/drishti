@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -60,9 +60,8 @@ public final class BiFoundationLive {
         Clock clock = Clock.fixed(Instant.parse("2026-10-09T10:00:00Z"), ZoneOffset.UTC);
         Map<String, Object> out = new TreeMap<>();
         try (QueryService service = new QueryService(props, live, new DuckDbEngine(props), lake, clock)) {
-            String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live");
             QueryService.Loaded ds = new QueryService.Loaded("file:dataset:live-foundation", Layers.key("file:dataset:live-foundation"),
-                    Layered.dataset(yaml).dataset(), "h1");
+                    TestLake.dataset(TestLake.model(), TestLake.liveTrades("")).dataset(), "h1");
             Map<String, QueryService.Caller> persons = new TreeMap<>();
             persons.put("risk", caller("rita", true, "", "risk"));
             persons.put("desk-head", caller("hana", true, "DESK-A", "desk-head"));

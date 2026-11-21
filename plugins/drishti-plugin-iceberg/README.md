@@ -223,7 +223,6 @@ settings:
 ```
 
 Both forms are permanent; values given in the connector file win over the lake file's (Admin → Connectors says so on each field).
-`drishti.py lake migrate-config` moves a connector into a lake file ([DATA_LAKE_GUIDE.md section 12](../../docs/guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
 Every setting with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#iceberg-tls-proxy).
 
 ## Catalogs and storage

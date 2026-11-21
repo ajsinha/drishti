@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class LiveHistoryTest {
 
-    private static final String LIVE = "\n    live: { rows: 100, history: { every: 1s, keep: 3, by: [desk], measures: [MTM, Trades] } }";
+    private static final String LIVE = "history: { every: \"1s\", keep: 3, by: [desk], measures: [MTM, Trades] }\n";
 
     @TempDir Path store;
     LiveTablesTest.LiveLake lake;
@@ -63,12 +63,11 @@ class LiveHistoryTest {
         return start(LIVE);
     }
 
-    QueryService.Loaded start(String liveSettings) {
+    QueryService.Loaded start(String historyLine) {
         QueryProperties props = QueryProperties.defaults(store.toString());
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofHours(1));
         service = new QueryService(props, live, new DuckDbEngine(props), lake, clock);
-        String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + liveSettings);
-        DatasetParser.Result r = Layered.dataset(yaml);
+        DatasetParser.Result r = TestLake.dataset(TestLake.model() + historyLine, TestLake.liveTrades("rows: 100"));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return new QueryService.Loaded("file:dataset:live-test", Layers.key("file:dataset:live-test"), r.dataset(), "h1");
     }

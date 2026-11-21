@@ -191,8 +191,6 @@ class ReportStack:
             shutil.copy(shipped("reports", f"{name}.report.yaml"), reports)
         shutil.copytree(ROOT / "config" / "bi" / "themes", work / "config" / "bi" / "themes")          # the shipped themes (2.4.0): Corporate and Print
         self.prepare(work)
-        from bi_samples import migrate_folder
-        migrate_folder(work / "config" / "bi", self.tmp / "migrate-tmp")       # a test's own BI files in the old forms move onto the table layer, as an installation's do
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"),
                    # Python (a Python item's check, its tests, Python measures) runs on the server's compute pool, in the interpreter running this test

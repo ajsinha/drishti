@@ -179,40 +179,10 @@ class StatementApiTest {
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));
-            Files.writeString(datasets.resolve("st-trade.dataset.yaml"), """
-                    rachana: 2
-                    dataset: st-trade
-                    version: 1.0.0
-                    source: { connector: stmt-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      TRADE_ID:     { type: string }
-                      DESK:         { type: string }
-                      PORTFOLIO:    { type: string }
-                      LEGAL_ENTITY: { type: string }
-                      NOTIONAL:     { type: decimal, aggregate: sum }
-                      MTM:          { type: decimal, aggregate: sum }
-                    security:
-                      rows:
-                        - { role: st-head, where: "DESK in user.desks" }
-                        - { role: [st-analyst, st-author, admin], where: "true" }
-                      masked: [MTM]
-                    """);
-            Files.writeString(models.resolve("st-model.model.yaml"), """
-                    rachana: 2
-                    model: st-model
-                    version: 1.0.0
-                    datasets:
-                      trade: { dataset: st-trade, role: fact }
-                    measures:
-                      MTM:      { expr: "sum(trade.MTM)" }
-                      NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
-                      Trades:   { expr: "count(trade)" }
-                    """);
             Files.writeString(reports.resolve("monthly-statement.report.yaml"), STATEMENT);
             Files.writeString(reports.resolve("sorted-statement.report.yaml"), STATEMENT.replace("report: monthly-statement", "report: sorted-statement")
                     .replace("sort: { by: trade.TRADE_ID }", "sort: { by: MTM, desc: true }"));
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "StatementApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

@@ -119,41 +119,10 @@ class BiAiTest {
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
             Files.createDirectories(ai);
-            Files.writeString(datasets.resolve("lake-report.dataset.yaml"), """
-                    rachana: 1
-                    dataset: lake-report
-                    title: Lake for reports
-                    description: Trades of the lake
-                    tables:
-                      trades:
-                        source: { connector: ai-lake, kind: trade }
-                        columns:
-                          tradeId: { type: string, key: true }
-                          desk: { type: string, description: The desk that owns the trade }
-                          book: string
-                          currency: string
-                          notional: decimal
-                          mtm: decimal
-                          tradeDate: date
-                    measures:
-                      Notional: { expr: "sum(trades.notional)", description: Sum of the notional }
-                      MTM: { expr: "sum(trades.mtm)" }
-                      Trades: { expr: "count(trades)" }
-                    hierarchies:
-                      Desk and book: [trades.desk, trades.book]
-                    security:
-                      rows:
-                        - { role: desk-head, where: "trades.desk in user.desks" }
-                        - { role: bi-risk, where: "true" }
-                        - { role: bi-analyst, where: "true" }
-                        - { role: report-author, where: "true" }
-                        - { role: admin, where: "true" }
-                      masked: [mtm]
-                    """);
             Files.writeString(reports.resolve("lake-report.report.yaml"), """
                     report: lake-report
                     title: Lake report
-                    dataset: lake-report
+                    model: lake-report@1
                     pages:
                       - id: main
                         title: Main
@@ -164,35 +133,6 @@ class BiAiTest {
             Path models = com.ash.drishti.server.TestRun.root().resolve("bi-ai-folder/models");
             Files.createDirectories(models);
             // the same lake through the model layer: a rachana 2 dataset and a model over it
-            Files.writeString(datasets.resolve("lake-trade.dataset.yaml"), """
-                    rachana: 2
-                    dataset: lake-trade
-                    version: 1.0.0
-                    source: { connector: ai-lake, kind: trade }
-                    grain: { keys: [tradeId] }
-                    columns:
-                      tradeId:  { type: string }
-                      desk:     { type: string, description: The desk that owns the trade }
-                      book:     { type: string }
-                      currency: { type: string }
-                      notional: { type: decimal }
-                      mtm:      { type: decimal }
-                    security:
-                      rows:
-                        - { role: [bi-risk, report-author, admin], where: "true" }
-                    """);
-            Files.writeString(models.resolve("lake-model.model.yaml"), """
-                    rachana: 2
-                    model: lake-model
-                    version: 1.0.0
-                    title: Lake model
-                    description: Trades of the lake, as a model
-                    datasets:
-                      trades: { dataset: lake-trade, role: fact }
-                    measures:
-                      Notional: { expr: "sum(trades.notional)", description: Sum of the notional }
-                      MTM:      { expr: "sum(trades.mtm)" }
-                    """);
             Files.writeString(reports.resolve("lake-model-report.report.yaml"), """
                     rachana: 2
                     report: lake-model-report
@@ -258,7 +198,7 @@ class BiAiTest {
                         - match: "QUESTION: [^\\n]*total"
                           reply: '{"fields":[],"measures":["Notional"],"dates":{"from":"2026-10-08","to":"2026-10-08"}}'
                     """);
-            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(datasets.getParent(), "BiAiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

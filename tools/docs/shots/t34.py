@@ -13,14 +13,13 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Pictures of tutorial 16, Part B, one file per lake (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to docs/tutorials/img/t34/, in the light
-theme. Run the tutorial's steps 4 to 6 first (they write the scratch folder $SCRATCH), then start a scratch stack on the demo lake whose
-lake folder is $SCRATCH/lakes (LAKE_LAKES_DIR: the demo lake file, the official-results lakes, the append lake `intraday` of step 5
-and the lake `lake` the migration of step 6 wrote), sign-in off, and point this at its console:
+theme. Run the tutorial's steps 4 to 5 first (they write the scratch folder $SCRATCH), then start a scratch stack on the demo lake whose
+lake folder is $SCRATCH/lakes (LAKE_LAKES_DIR: the demo lake file, the official-results lakes, and the append lake `intraday` of step 5), sign-in off, and point this at its console:
 
     DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t34
 
 The pictures, in the tutorial's order: Admin → Lakes with the demo lake open, Admin → Connectors on trade-endur, the lakes checked,
-trading.trade_endur's row, the append table's row, and the lake written by the migration."""
+trading.trade_endur's row, and the append table's row."""
 from __future__ import annotations
 
 from _tut import OUT, light
@@ -91,9 +90,3 @@ def trade_endur(c: Ctx):
 def append_table(c: Ctx):
     _lakes(c, "intraday")
     c.save("05-append-table.jpg")
-
-
-@shot("06-migrated-lake.jpg")
-def migrated(c: Ctx):
-    _lakes(c, "lake")
-    c.save("06-migrated-lake.jpg")

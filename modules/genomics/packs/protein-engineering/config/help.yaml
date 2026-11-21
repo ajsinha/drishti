@@ -15,7 +15,7 @@
 # The protein-engineering pack's Help entries. Written by tools/packgen/genomics_showcase/make.py.
 guides:
 - slug: protein-engineering-pack
-  category: packs
+  category: data
   title: The protein-engineering pack
   kind: guide
   icon: diagram-2

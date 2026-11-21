@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -166,7 +166,7 @@ class DatasetRefresherTest {
     }
 
     void start(String refresh, BiRefreshProperties props) {
-        DatasetParser.Result r = Layered.dataset(table(refresh));
+        DatasetParser.Result r = Tables.dataset(table(refresh));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "America/New_York", null, null), clock);
@@ -376,11 +376,11 @@ class DatasetRefresherTest {
         assertThat(RefreshSpec.normalise("daily at 06:00")).isEqualTo("daily 06:00");
         assertThat(RefreshSpec.normalise("business days at 07:30")).isEqualTo("business-days 07:30");
         for (String ok : List.of("hourly", "weekly mon 07:00", "monthly last 18:00 business", "after-load trade", "weekdays 18:30")) {
-            assertThat(Layered.dataset(table(ok)).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
+            assertThat(Tables.dataset(table(ok)).problems()).as(ok).noneMatch(DatasetParser.Problem::error);
         }
-        DatasetParser.Result bad = Layered.dataset(table("whenever"));
+        DatasetParser.Result bad = Tables.dataset(table("whenever"));
         assertThat(bad.problems()).anyMatch(p -> p.error() && p.path().equals("refresh") && p.message().contains("not a schedule"));
-        DatasetParser.Result table = Layered.dataset(table("daily 06:00"));
+        DatasetParser.Result table = Tables.dataset(table("daily 06:00"));
         assertThat(table.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         assertThat(table.dataset().tables().get("trades").schedule()).isEqualTo("daily 06:00");
         assertThat(Dataset.Refresh.NONE.scheduled()).isFalse();

@@ -55,32 +55,33 @@ import org.junit.jupiter.api.io.TempDir;
 class TimeAndCurrencyTest {
 
     static final String RATES = """
-            rachana: 2
-            dataset: fx-rates
+            rachana: 3
+            table: bi.fx_rates
             version: 1.0.0
-            source: { connector: fx-lake, kind: fxrate }
+            from: { kind: fxrate, connector: fx-lake }
             columns:
-              base:  { type: string }
-              quote: { type: string }
-              rate:  { type: decimal }
-              day:   { type: date }
+              base:  { path: "$.base", type: string }
+              quote: { path: "$.quote", type: string }
+              rate:  { path: "$.rate", type: decimal }
+              day:   { path: "$.day", type: date }
+            materialize: on-load
             """;
     static final String MODEL = """
-            rachana: 2
+            rachana: 3
             model: desk-fx
             version: 1.0.0
-            datasets:
-              trades: { dataset: trades, role: fact }
-              desks:  { dataset: desks, role: dimension }
-              rates:  { dataset: fx-rates, role: dimension }
+            tables:
+              trades: { table: bi.trades, role: fact }
+              desks:  { table: bi.desks, role: dimension }
+              rates:  { table: bi.fx_rates, role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
             measures:
-              Notional:    { expr: "sum(trades.notional)" }
-              Notional USD: { expr: "convert(sum(trades.notional), to='USD')" }
-              Notional EUR at trade: { expr: "convert(sum(trades.notional), to='EUR', at='trade-date')" }
-              Rated:       { expr: "sum(trades.notional * fx(trades.currency, 'USD', at=date('2026-10-01')))" }
-              Fytd:        { expr: "fiscal_ytd(sum(trades.mtm), trades.tradeDate)" }
+              Notional:              { expr: sum(trades.notional) }
+              Notional USD:          { expr: "convert(sum(trades.notional), to = 'USD')" }
+              Notional EUR at trade: { expr: "convert(sum(trades.notional), to = 'EUR', at = 'trade-date')" }
+              Rated:                 { expr: "sum(trades.notional * fx(trades.currency, 'USD', date('2026-10-01')))" }
+              Fytd:                  { expr: "fiscal_ytd(sum(trades.mtm), trades.tradeDate)" }
             calendars: { holidays: USNY, fiscal-year-start: 4 }
             fx: { rates: rates, from: base, to: quote, rate: rate, date: day }
             """;

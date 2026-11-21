@@ -52,7 +52,7 @@ public final class DatasetDefParser {
             return LayerTables.read(yaml);
         }
         return new Result(null, List.of(new DatasetParser.Problem("error", DatasetParser.MIGRATE_FIRST, "", "not a table of the table layer (rachana: 3 with "
-                + "table:): a dataset in BI's old form is migrated by drishti.py tables migrate (bi/TABLES_AND_MODELS.md, the migration)")));
+                + "table:): a dataset in BI's old form is not read: write it as a table (bi/TABLES_AND_MODELS.md)")));
     }
 
     /** True when the text is a table of the layer ({@code rachana: 3} with {@code table:}). */
@@ -73,8 +73,7 @@ public final class DatasetDefParser {
         try {
             return com.ash.drishti.server.bi.expr.Expressions.node(text);
         } catch (RuntimeException e) {
-            y.error(e instanceof com.ash.drishti.server.bi.expr.ExpressionException d && com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX.equals(d.code()) ? d.code()
-                    : code, path, "the expression does not parse: " + e.getMessage()
+            y.error(code, path, "the expression does not parse: " + e.getMessage()
                             + (e instanceof com.ash.drishti.server.bi.expr.ExpressionException d && d.fix() != null ? " (" + d.fix() + ")" : ""));
             return null;
         }

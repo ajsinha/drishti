@@ -7062,7 +7062,7 @@ from the risk lake built into Iceberg. The build itself, the official results on
 ### Step 26 · The same VaR on Iceberg
 
 **Before this step**, with the server stopped, build the VaR inputs into Iceberg (step 1's `--only` list with `--store risk=iceberg`; the
-build and its output are [tutorial 16, step 30](../tutorials/16-load-your-own-data-into-a-new-lake.md#step-30--build-the-var-data-into-iceberg)), then start the server again:
+build and its output are [tutorial 16, step 29](../tutorials/16-load-your-own-data-into-a-new-lake.md#step-29--build-the-var-data-into-iceberg)), then start the server again:
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \

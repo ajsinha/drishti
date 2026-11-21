@@ -1,0 +1,16 @@
+rachana: 3
+table: bi.lake_trade
+was: lake-trade
+version: 1.0.0
+from: { kind: trade, connector: ai-lake }
+keys: [tradeId]
+columns:
+  tradeId:  { path: "$.tradeId", type: string }
+  desk:     { path: "$.desk", type: string, description: The desk that owns the trade }
+  book:     { path: "$.book", type: string }
+  currency: { path: "$.currency", type: string }
+  notional: { path: "$.notional", type: decimal }
+  mtm:      { path: "$.mtm", type: decimal }
+rules:
+  - { role: [bi-risk, report-author, admin], where: "true" }
+materialize: on-load

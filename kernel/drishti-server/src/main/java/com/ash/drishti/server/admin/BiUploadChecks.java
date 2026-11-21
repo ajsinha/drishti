@@ -63,8 +63,7 @@ final class BiUploadChecks {
         String base = filename == null ? "" : filename.replace('\\', '/');
         base = base.substring(base.lastIndexOf('/') + 1);
         if (OLD.matcher(base).matches()) {
-            problems.add(BiFolder.MIGRATE_FIRST + ": a dataset file in BI's old form is not read; run drishti.py tables migrate --dry-run, then without it, "
-                    + "and upload the tables and model it writes (<name>.table.yaml, <name>.model.yaml)");
+            problems.add(BiFolder.MIGRATE_FIRST + ": a dataset file in BI's old form is not read: write it as tables and a model and upload those (<name>.table.yaml, <name>.model.yaml; TABLES_AND_MODELS.md)");
             return new Outcome("", "", "", problems, warnings);
         }
         Matcher m = FILE.matcher(base);

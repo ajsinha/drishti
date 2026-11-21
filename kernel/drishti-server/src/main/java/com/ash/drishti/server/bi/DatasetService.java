@@ -1125,7 +1125,7 @@ public final class DatasetService {
     public Map<String, Object> runTransform(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
         throw new DrishtiException(ErrorCode.QUERY_INVALID, "'" + item.title() + "': derived datasets were removed in 2.2; a Python dataset (source.python) runs its "
-                + "Transform when it is asked (drishti.py bi migrate --models converts a derived dataset; docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8.3)");
+                + "Transform when it is asked (write a derived dataset as tables and a model; docs/guides/bi/TABLES_AND_MODELS.md)");
     }
 
     /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */

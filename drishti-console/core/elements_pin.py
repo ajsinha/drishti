@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 """The pinned Drishti Elements: an external component (github.com/ajsinha/drishti-elements), vendored as its release tree under
 ``web/static/vendor/drishti-elements/<version>/`` (docs/architecture/ELEMENTS_IN_DRISHTI.md). The pin has one home: the name of the
-single folder there. Everything the console reads of Elements (the eight libraries, their sheets, the engines, the gallery, the two
+single folder there. Everything the console reads of Elements (the ten libraries, their sheets, the engines, the gallery, the two
 tables) is read through this module, never from a path of its own.
 
 ``static_path(rel)`` maps a path under the console's static root as the pages name it (``elements/drishti-grid/drishti_grid.css``,
@@ -27,8 +27,8 @@ from pathlib import Path
 STATIC = Path(__file__).resolve().parent.parent / "web" / "static"
 VENDOR = STATIC / "vendor" / "drishti-elements"
 
-#: the eight libraries Drishti Elements holds (drishti-insight, drishti-renderer and drishti-risk are Drishti's own)
-LIBRARIES = ("drishti-core", "drishti-inputs", "drishti-grid", "drishti-chart", "drishti-data", "drishti-tree", "drishti-graph", "drishti-designer")
+#: the ten libraries Drishti Elements holds (drishti-insight and drishti-risk are Drishti's own)
+LIBRARIES = ("drishti-core", "drishti-inputs", "drishti-grid", "drishti-chart", "drishti-data", "drishti-tree", "drishti-graph", "drishti-designer", "drishti-events", "drishti-views")
 #: drishti-core's sheets, in css/ of the release tree
 CORE_SHEETS = ("drishti_tokens.css", "drishti_resize.css", "drishti_chips.css", "drishti_states.css", "drishti_command-palette.css", "drishti_dock.css")
 #: the engines that come inside the release tree's vendor/ folder

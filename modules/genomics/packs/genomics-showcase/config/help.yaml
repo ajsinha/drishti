@@ -15,7 +15,7 @@
 # The genomics-showcase pack's Help entries. Written by tools/packgen/genomics_showcase/make.py.
 guides:
 - slug: genomics-showcase-pack
-  category: packs
+  category: data
   title: The genomics-showcase pack
   kind: guide
   icon: diagram-2

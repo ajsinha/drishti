@@ -1,0 +1,9 @@
+rachana: 3
+model: lake-report
+version: 1.0.0
+title: Lake for reports
+tables:
+  trades: { table: bi.lake_report_trades, role: fact }
+measures:
+  Notional: { expr: sum(trades.NOTIONAL) }
+  Trades:   { expr: count(trades) }

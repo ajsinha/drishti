@@ -230,13 +230,6 @@ public final class CollabStoreChecks {
         s.saveThread(bumped);
         assertThat(s.thread(th.id())).contains(bumped);
         assertThat(s.threads("trade", u)).extracting(CommentThread::id).containsExactly(th.id(), other.id());
-
-        long note = System.nanoTime();
-        assertThat(s.commentOfNote(note)).isEmpty();
-        s.linkNote(note, c1.id());
-        assertThat(s.commentOfNote(note)).contains(c1.id());
-        assertThat(s.noteOfComment(c1.id())).contains(note);
-        assertThat(s.linkedNotes()).contains(note);
     }
 
     /** Paging and whole-thread / whole-share removal (what retention uses), on any store. */
@@ -255,7 +248,6 @@ public final class CollabStoreChecks {
         Comment cb = new Comment(Ulid.next("cm_", t0.toEpochMilli() + 5), b.id(), "ravi", t0, null, 1, pin, "stays", List.of(), Comment.LIVE, null);
         Revision rb = s.append(cb, Revision.draft(cb.id(), 1, t0, "ravi", Revision.CREATED, cb.body(), null), List.of());
         s.follow(new Follow(a.id(), "ravi", false, t0));
-        s.linkNote(System.nanoTime(), ca.id());
 
         assertThat(s.page(null, 100_000)).extracting(CommentThread::id).contains(a.id(), b.id());
         assertThat(s.page(a.id(), 100_000)).extracting(CommentThread::id).contains(b.id()).doesNotContain(a.id());
@@ -268,7 +260,6 @@ public final class CollabStoreChecks {
         assertThat(s.chain(a.id())).isEmpty();
         assertThat(s.mentions(ca.id())).isEmpty();
         assertThat(s.followers(a.id())).isEmpty();
-        assertThat(s.noteOfComment(ca.id())).isEmpty();
         assertThat(s.threads("trade", u)).extracting(CommentThread::id).containsExactly(b.id());
         assertThat(s.chain(b.id())).extracting(Revision::hash).containsExactly(rb.hash());
         s.deleteThread("th_NOPE");

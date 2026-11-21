@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -87,7 +87,7 @@ class TimeIntelligenceTest {
         lake.trades.put(DAY, book);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("measures:\n", """
+        String yaml = TestLake.model().replace("measures:\n", """
                 measures:
                   Ytd: { expr: "ytd(sum(trades.mtm), trades.tradeDate)" }
                   Mtd: { expr: "mtd(sum(trades.mtm), trades.tradeDate)" }
@@ -100,7 +100,7 @@ class TimeIntelligenceTest {
                   Running: { expr: "running(sum(trades.mtm), trades.tradeDate)" }
                   RunningTrades: { expr: "running(count(trades), trades.tradeDate)" }
                 """);
-        DatasetParser.Result r = Layered.dataset(yaml);
+        DatasetParser.Result r = TestLake.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -233,19 +233,19 @@ class TimeIntelligenceTest {
 
     @Test
     void theValidatorHoldsTimeFunctionsToTheirShape() {
-        String base = TestLake.yaml();
+        String base = TestLake.model();
         for (String bad : List.of("ytd(trades.mtm, trades.tradeDate)", "ytd(sum(trades.mtm))", "ytd(sum(trades.mtm), trades.desk)", "running(avg(trades.mtm), trades.tradeDate)",
                 "ytd(ytd(sum(trades.mtm), trades.tradeDate), trades.tradeDate)", "mtd(sum(trades.mtm), trades.nope)")) {
-            DatasetParser.Result r = Layered.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
+            DatasetParser.Result r = TestLake.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
             assertThat(r.problems()).as(bad).anyMatch(DatasetParser.Problem::error);
         }
-        assertThat(Layered.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"lag(sum(trades.mtm))\" }\n")).problems()).anyMatch(DatasetParser.Problem::error);
+        assertThat(TestLake.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"lag(sum(trades.mtm))\" }\n")).problems()).anyMatch(DatasetParser.Problem::error);
     }
 
     @Test
     void timeMeasuresAreNotRollupMaterial() {
-        String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  Ytd: { expr: \"ytd(sum(trades.mtm), trades.tradeDate)\" }\n")
+        String yaml = TestLake.model().replace("measures:\n", "measures:\n  Ytd: { expr: \"ytd(sum(trades.mtm), trades.tradeDate)\" }\n")
                 .replace("measures: [Notional,", "measures: [Ytd, Notional,");
-        assertThat(Layered.dataset(yaml).problems()).anyMatch(p -> p.code().equals("DRS-9012") && p.message().contains("Ytd"));
+        assertThat(TestLake.dataset(yaml).problems()).anyMatch(p -> p.code().equals("DRS-9012") && p.message().contains("Ytd"));
     }
 }

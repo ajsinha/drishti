@@ -33,7 +33,7 @@ kernel: '>=0.2 <1.0'
 rachana: '>=1.0'
 contracts: '>=1.0'
 plugin-api: '>=2.0'
-elements: '>=3.1 <4'
+elements: '>=3.2 <4'
 requires:
   trading: '>=1.0 <2'
 data:

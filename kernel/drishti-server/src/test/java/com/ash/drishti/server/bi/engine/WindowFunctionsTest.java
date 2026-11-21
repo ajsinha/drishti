@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -76,7 +76,7 @@ class WindowFunctionsTest {
         lake.trades.put(DAY, book);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("measures:\n", """
+        String yaml = TestLake.model().replace("measures:\n", """
                 measures:
                   Lag1: { expr: "lag(sum(trades.mtm), 1, trades.tradeDate)" }
                   Lead2: { expr: "lead(sum(trades.mtm), 2, trades.tradeDate)" }
@@ -91,7 +91,7 @@ class WindowFunctionsTest {
                   PercentCount: { expr: "percent_rank(count(trades), desc = false)" }
                   RankInDesk: { expr: "rank(sum(trades.mtm), desc = true, by = [trades.desk])" }
                 """);
-        DatasetParser.Result r = Layered.dataset(yaml);
+        DatasetParser.Result r = TestLake.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -243,14 +243,14 @@ class WindowFunctionsTest {
 
     @Test
     void theValidatorHoldsWindowFunctionsToTheirShape() {
-        String base = TestLake.yaml();
+        String base = TestLake.model();
         for (String bad : List.of("lag(sum(trades.mtm))", "lag(trades.mtm, 1, trades.tradeDate)", "lag(sum(trades.mtm), 0, trades.tradeDate)", "lag(sum(trades.mtm), 1.5, trades.tradeDate)",
                 "lag(sum(trades.mtm), 1, trades)", "lead(sum(trades.mtm), 1, trades.nope)", "moving_avg(sum(trades.mtm), 2000, trades.tradeDate)", "rank(trades.mtm)",
-                "rank(sum(trades.mtm), 'sideways')", "rank(sum(trades.mtm), desc = false, by = [3])", "rank(lag(sum(trades.mtm), 1, trades.tradeDate))", "rank()")) {
-            DatasetParser.Result r = Layered.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
+                "rank(sum(trades.mtm), desc = false, by = [3])", "rank(lag(sum(trades.mtm), 1, trades.tradeDate))", "rank()")) {
+            DatasetParser.Result r = TestLake.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
             assertThat(r.problems()).as(bad).anyMatch(DatasetParser.Problem::error);
         }
         String good = "measures:\n  Ok: { expr: \"lag(sum(trades.mtm), 1, trades.tradeDate, by=[trades.desk])\" }\n  Ok2: { expr: \"measure('Ok') + 1\" }\n";
-        assertThat(Layered.dataset(base.replace("measures:\n", good)).problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
+        assertThat(TestLake.dataset(base.replace("measures:\n", good)).problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
     }
 }

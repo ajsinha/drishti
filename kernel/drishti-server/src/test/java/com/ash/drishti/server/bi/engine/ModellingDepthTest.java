@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.rachana.el.MeasureFunctions;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.tables.check.FilterPaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,48 +40,81 @@ import org.junit.jupiter.api.Test;
  */
 class ModellingDepthTest {
 
-    static final String YAML = """
-            rachana: 1
-            dataset: mdl
-            version: 1
-            tables:
-              trades:
-                source: { connector: c, kind: trade }
+    static final String[] YAML = {
+            """
+                rachana: 3
+                model: mdl
+                version: 1.0.0
+                tables:
+                  trades: { table: bi.mdl_trades, role: fact }
+                  books:  { table: bi.mdl_books, role: fact }
+                  lg:     { table: bi.mdl_lg, role: fact }
+                  blg:    { table: bi.mdl_blg, role: fact }
+                relationships:
+                  - { from: trades.BOOK, to: books.BOOK }
+                measures:
+                  "N":        { expr: sum(trades.AMT) }
+                  Top:        { expr: max(trades.AMT) }
+                  Books:      { expr: count(books) }
+                  AllFilters: { expr: "calc(measure('N'), ignore = ALL)" }
+                  NoGroup:    { expr: "calc(measure('N'), ignore = GROUP)" }
+                  WholeTable: { expr: "calc(measure('N'), ignore = [books])" }
+                  KeepDesk:   { expr: "calc(measure('N'), ignore = [books], keep = [books.DESK])" }
+                  SumByDesk:  { expr: "sum_by(max(trades.AMT), by = [books.DESK])" }
+                  MaxByDesk:  { expr: "max_by(sum(trades.AMT), by = [books.DESK])" }
+                  MinByDesk:  { expr: "min_by(sum(trades.AMT), by = [books.DESK])" }
+                  BigDesks:   { expr: "calc(measure('N'), ignore = [books.DESK], by = [books.DESK], having = measure('N') > 320)" }
+                """,
+            """
+                rachana: 3
+                table: bi.mdl_blg
+                version: 1.0.0
+                title: mdl.blg
+                from: { kind: bridge, connector: c }
                 columns:
-                  TID: { type: string, key: true }
-                  BOOK: string
-                  AMT: decimal
-              books:
-                source: { connector: c, kind: book }
+                  BOOK: { path: "$.BOOK", type: string }
+                  GID:  { path: "$.GID", type: string }
+                materialize: on-load
+                """,
+            """
+                rachana: 3
+                table: bi.mdl_books
+                version: 1.0.0
+                title: mdl.books
+                from: { kind: book, connector: c }
+                keys: [BOOK]
                 columns:
-                  BOOK: { type: string, key: true }
-                  DESK: string
-              lg:
-                source: { connector: c, kind: group }
+                  BOOK: { path: "$.BOOK", type: string, key: true }
+                  DESK: { path: "$.DESK", type: string }
+                materialize: on-load
+                """,
+            """
+                rachana: 3
+                table: bi.mdl_lg
+                version: 1.0.0
+                title: mdl.lg
+                from: { kind: group, connector: c }
+                keys: [GID]
                 columns:
-                  GID: { type: string, key: true }
-                  NAME: string
-                  REGION: string
-              blg:
-                source: { connector: c, kind: bridge }
+                  GID:    { path: "$.GID", type: string, key: true }
+                  NAME:   { path: "$.NAME", type: string }
+                  REGION: { path: "$.REGION", type: string }
+                materialize: on-load
+                """,
+            """
+                rachana: 3
+                table: bi.mdl_trades
+                version: 1.0.0
+                title: mdl.trades
+                from: { kind: trade, connector: c }
+                keys: [TID]
                 columns:
-                  BOOK: string
-                  GID: string
-            relationships:
-              - { from: trades.BOOK, to: books.BOOK, cardinality: many-to-one }
-            measures:
-              N: { expr: "sum(trades.AMT)" }
-              Top: { expr: "max(trades.AMT)" }
-              Books: { expr: "count(books)" }
-              AllFilters: { expr: "calc(measure('N'), ignore=ALL)" }
-              NoGroup: { expr: "calc(measure('N'), ignore=GROUP)" }
-              WholeTable: { expr: "calc(measure('N'), ignore=[books])" }
-              KeepDesk: { expr: "calc(measure('N'), ignore=[books], keep=[books.DESK])" }
-              SumByDesk: { expr: "sum_by(max(trades.AMT), by=[books.DESK])" }
-              MaxByDesk: { expr: "max_by(sum(trades.AMT), by=[books.DESK])" }
-              MinByDesk: { expr: "min_by(sum(trades.AMT), by=[books.DESK])" }
-              BigDesks: { expr: "calc(measure('N'), ignore=[books.DESK], by=[books.DESK], having=measure('N') > 320)" }
-            """;
+                  TID:  { path: "$.TID", type: string, key: true }
+                  BOOK: { path: "$.BOOK", type: string }
+                  AMT:  { path: "$.AMT", type: decimal }
+                materialize: on-load
+                """
+    };
 
     static final Map<String, String> SOURCES = Map.of(
             "trades", "(SELECT * FROM (VALUES ('T1','B1',100.0),('T2','B2',200.0),('T3','B3',300.0),('T4','B1',50.0)) AS v(\"TID\",\"BOOK\",\"AMT\")) AS \"trades\"",
@@ -92,7 +125,7 @@ class ModellingDepthTest {
     private final ObjectMapper json = new ObjectMapper();
 
     private static Dataset model(boolean leftBoth) {
-        Dataset d = Layered.dataset(YAML).dataset();
+        Dataset d = Tables.dataset(YAML).dataset();
         List<Dataset.Relationship> rels = new ArrayList<>(d.relationships());
         rels.add(new Dataset.Relationship("books", "BOOK", "lg", "GID", "many-to-many", "single", false, "b", "blg-name",
                 new Dataset.Bridge("blg", "BOOK", "GID", "bridge_books", "bridge_lg", leftBoth, false)));
@@ -221,7 +254,7 @@ class ModellingDepthTest {
 
     @Test
     void bothWaysReadsAOneSideMeasureBySemiJoin() throws Exception {
-        Dataset d = Layered.dataset(YAML).dataset();
+        Dataset d = Tables.dataset(YAML).dataset();
         List<Dataset.Relationship> rels = new ArrayList<>();
         for (Dataset.Relationship r : d.relationships()) {
             rels.add(new Dataset.Relationship(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), r.cardinality(), "both", r.active(), r.id(), "trade_book", null));

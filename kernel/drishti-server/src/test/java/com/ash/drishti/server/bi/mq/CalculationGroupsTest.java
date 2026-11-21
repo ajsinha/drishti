@@ -46,41 +46,32 @@ import org.junit.jupiter.api.io.TempDir;
 class CalculationGroupsTest {
 
     static final String MODEL = """
-            rachana: 2
+            rachana: 3
             model: desk-calc
             version: 1.0.0
-            datasets:
-              trades: { dataset: trades, role: fact }
-              desks:  { dataset: desks, role: dimension }
+            perspectives: { desk-view: { title: Desk view, fields: ["desks.*"], measures: [MTM, Trades] } }
+            tables:
+              trades: { table: bi.trades, role: fact }
+              desks:  { table: bi.desks, role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
             measures:
-              MTM:      { expr: "sum(trades.mtm)" }
-              Notional: { expr: "sum(trades.notional)" }
-              Trades:   { expr: "count(trades)" }
-              AvgMTM:   { expr: "avg(trades.mtm)" }
-              Biggest:  { expr: "max(trades.notional)" }
-              Worst:    { expr: "min(trades.mtm)" }
-              EurMTM:   { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
-              Names:    { expr: "distinct(trades.cpty)" }
+              MTM:      { expr: sum(trades.mtm) }
+              Notional: { expr: sum(trades.notional) }
+              Trades:   { expr: count(trades) }
+              AvgMTM:   { expr: avg(trades.mtm) }
+              Biggest:  { expr: max(trades.notional) }
+              Worst:    { expr: min(trades.mtm) }
+              EurMTM:   { expr: "sum(trades.mtm, where = trades.currency == 'EUR')" }
+              Names:    { expr: distinct(trades.cpty) }
               PerM:     { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
               Share:    { expr: "measure('MTM') / measure('Notional')" }
               Shocked:  { expr: "measure('MTM') * (1 + param.shock)" }
-              Pct:      { expr: "share_of(measure('MTM'), over=ALL)" }
-            calc-groups:
-              Time:
-                precedence: 10
-                items:
-                  Current: "SELECTED"
-                  YTD: "ytd(SELECTED, trades.tradeDate)"
-                  MTD: "mtd(SELECTED, trades.tradeDate)"
-            parameters:
-              shock:     { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }
-              breakdown: { kind: field, fields: [desks.region, trades.currency], default: desks.region }
-            perspectives:
-              desk-view: { title: Desk view, fields: [desks.*], measures: [MTM, Trades] }
+              Pct:      { expr: "share_of(measure('MTM'), over = ALL)" }
+            calc-groups: { Time: { precedence: 10, items: { Current: SELECTED, YTD: "ytd(SELECTED, trades.tradeDate)", MTD: "mtd(SELECTED, trades.tradeDate)" } } }
+            parameters: { shock: { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }, breakdown: { kind: field, fields: [desks.region, trades.currency], default: desks.region } }
             """;
-    static final String TRADES = MqEngineTest.TRADES.replace("security:\n  masked: [cpty]\n", "");
+    static final String TRADES = MqEngineTest.TRADES.replace(", masked: true", "");
     static final List<String> TEN = List.of("MTM", "Notional", "Trades", "AvgMTM", "Biggest", "Worst", "EurMTM", "Names", "PerM", "Share");
 
     @TempDir Path store;

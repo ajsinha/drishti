@@ -1,0 +1,22 @@
+rachana: 3
+table: bi.restricted_trades
+version: 1.0.0
+title: Restricted
+audience: { roles: [bi-risk] }
+from: { kind: trade, connector: rep-lake }
+keys: [tradeId]
+columns:
+  tradeId:   { path: "$.tradeId", type: string, key: true }
+  desk:      { path: "$.desk", type: string }
+  book:      { path: "$.book", type: string }
+  currency:  { path: "$.currency", type: string }
+  notional:  { path: "$.notional", type: decimal }
+  mtm:       { path: "$.mtm", type: decimal, masked: true }
+  tradeDate: { path: "$.tradeDate", type: date }
+rules:
+  - { role: desk-head, where: "$.desk in user.desks" }
+  - { role: bi-risk, where: "true" }
+  - { role: bi-analyst, where: "true" }
+  - { role: report-author, where: "true" }
+  - { role: admin, where: "true" }
+materialize: on-load

@@ -17,7 +17,6 @@ package com.ash.drishti.server.modules.host;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.module.runtime.LoadedModule;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -28,6 +27,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * its parent), and an object that is a bean under two names counts once.
  */
 class ModuleBridgeTest {
+
+    /** A stand-in extension type: the bridge works on any type. */
+    record ApiAlias(String from, String to) {}
 
     @Test
     void theBridgeTakesTheModulesOwnBeansOnceAndNeverTheKernels() {

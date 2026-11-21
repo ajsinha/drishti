@@ -1,0 +1,9 @@
+rachana: 3
+model: lang-guarded
+version: 1.0.0
+audience: { roles: [bi-risk, admin] }
+tables:
+  trades: { table: bi.lang_trade, role: fact }
+measures:
+  Notional: { expr: sum(trades.notional), id: m_notional }
+  Trades:   { expr: count(trades), id: m_trades }

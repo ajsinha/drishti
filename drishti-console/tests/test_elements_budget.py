@@ -23,7 +23,7 @@ pytestmark = pytest.mark.static
 
 ELEMENTS = Path(__file__).resolve().parent.parent / "web" / "static" / "elements"
 # bytes; about 15% over the size when written (2026-11-16)
-BUNDLES = {"drishti-insight": 82_000, "drishti-risk": 32_000, "drishti-renderer": 165_000}
+BUNDLES = {"drishti-insight": 82_000, "drishti-risk": 32_000}
 
 
 @pytest.mark.parametrize("library,budget", sorted(BUNDLES.items()))

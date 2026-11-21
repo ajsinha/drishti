@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.SourcePlugin;
@@ -48,8 +48,8 @@ class UnionTableTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), two, Clock.systemUTC())) {
             for (String source : List.of("{ kind: trade }", "{ connector: trading-lake, kind: trade }")) {
-                String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: " + source);
-                DatasetParser.Result r = Layered.dataset(yaml);
+                String trades = TestLake.trades().replace("from: { kind: trade, connector: trading-lake }", "from: " + source);
+                DatasetParser.Result r = TestLake.dataset(TestLake.model(), trades);
                 var ds = new QueryService.Loaded("file:dataset:union-" + source.length(), Layers.key("file:dataset:union-" + source.length()), r.dataset(), "h1");
                 var who = new QueryService.Caller("u", Set.of("risk"), true, UserAttributes.of("u", List.of("risk"), null, null), (t, c) -> false);
                 var answer = service.query(ds, QueryRequest.of(new ObjectMapper().readTree("{\"measures\": [\"Trades\"]}")), who, true);

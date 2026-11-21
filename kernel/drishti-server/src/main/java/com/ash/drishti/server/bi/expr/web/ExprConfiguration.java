@@ -29,7 +29,7 @@ public class ExprConfiguration {
     @Bean
     public InitializingBean expressionSettings(ExprProperties props) {
         return () -> {
-            Expressions.configure(props.mode(), props.parseCache());
+            Expressions.configure(props.parseCache());
         };
     }
 }

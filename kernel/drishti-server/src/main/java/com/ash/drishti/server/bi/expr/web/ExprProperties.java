@@ -15,28 +15,17 @@
  */
 package com.ash.drishti.server.bi.expr.web;
 
-import com.ash.drishti.server.bi.expr.Expressions;
-import java.util.Locale;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The expression language, {@code drishti.bi.expr.*} (docs/admin/CONFIGURATION.md).
  *
- * @param legacy {@code warn}: the old expression syntax is read with a {@code DRS-9100} warning (wave A); {@code refuse}: refused with the DEL v2 text as the fix
  * @param parseCache how many parsed expressions are kept (the L0 parse cache; 0 turns it off)
  */
 @ConfigurationProperties("drishti.bi.expr")
-public record ExprProperties(String legacy, Integer parseCache) {
+public record ExprProperties(Integer parseCache) {
 
     public ExprProperties {
-        legacy = legacy == null || legacy.isBlank() ? "refuse" : legacy.strip().toLowerCase(Locale.ROOT);
-        if (!legacy.equals("warn") && !legacy.equals("refuse")) {
-            throw new IllegalArgumentException("drishti.bi.expr.legacy is warn or refuse, not '" + legacy + "'");
-        }
         parseCache = parseCache == null || parseCache < 0 ? 10_000 : parseCache;
-    }
-
-    public Expressions.Legacy mode() {
-        return "refuse".equals(legacy) ? Expressions.Legacy.REFUSE : Expressions.Legacy.WARN;
     }
 }

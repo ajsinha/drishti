@@ -34,19 +34,17 @@ public final class JpaThreadStore implements ThreadStore {
     private final IdentityRepositories.Revisions revisions;
     private final IdentityRepositories.Mentions mentions;
     private final IdentityRepositories.Follows follows;
-    private final IdentityRepositories.NoteLinks links;
     private final TransactionTemplate tx;
 
     @SuppressWarnings("java:S107")
     public JpaThreadStore(IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
-            IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows, IdentityRepositories.NoteLinks links,
+            IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
             TransactionTemplate tx) {
         this.threads = threads;
         this.comments = comments;
         this.revisions = revisions;
         this.mentions = mentions;
         this.follows = follows;
-        this.links = links;
         this.tx = tx;
     }
 
@@ -127,7 +125,6 @@ public final class JpaThreadStore implements ThreadStore {
             if (!ids.isEmpty()) {
                 revisions.deleteByKeyCommentIdIn(ids);
                 mentions.deleteByKeyCommentIdIn(ids);
-                links.deleteByCommentIdIn(ids);
             }
             comments.deleteByThreadId(id);
             follows.deleteByKeyThreadId(id);
@@ -202,35 +199,6 @@ public final class JpaThreadStore implements ThreadStore {
     @Override
     public List<Mention> mentions(String commentId) {
         return tx.execute(s -> mentions.findByKeyCommentId(commentId).stream().map(JpaThreadStore::toMention).toList());
-    }
-
-    @Override
-    public void linkNote(long noteId, String commentId) {
-        tx.executeWithoutResult(s -> {
-            ThreadEntities.NoteLink e = new ThreadEntities.NoteLink();
-            e.noteId = noteId;
-            e.commentId = commentId;
-            links.save(e);
-        });
-    }
-
-    @Override
-    public Optional<String> commentOfNote(long noteId) {
-        return tx.execute(s -> links.findById(noteId).map(l -> l.commentId));
-    }
-
-    @Override
-    public Optional<Long> noteOfComment(String commentId) {
-        return tx.execute(s -> links.findByCommentId(commentId).map(l -> l.noteId));
-    }
-
-    @Override
-    public Set<Long> linkedNotes() {
-        return tx.execute(s -> {
-            Set<Long> out = new HashSet<>();
-            links.findAll().forEach(l -> out.add(l.noteId));
-            return out;
-        });
     }
 
     private static CommentThread toThread(ThreadEntities.Thread e) {

@@ -36,11 +36,7 @@ def client():
     return TestClient(app)
 
 
-def test_a_two_three_board_address_opens_the_report_viewer_and_the_report_designer(client):
-    view = client.get("/bi/b/file:board:desk-wall?kiosk=1", follow_redirects=False)
-    assert view.status_code == 307 and view.headers["location"] == "/bi/r/file:report:desk-wall?kiosk=1"
-    stored = client.get("/bi/b/bi-1234", follow_redirects=False)
-    assert stored.headers["location"] == "/bi/r/bi-1234"
+def test_a_board_address_opens_the_report_designer(client):
     design = client.get("/bi/design/board/file:board:desk-wall", follow_redirects=False)
     assert design.status_code == 307 and design.headers["location"] == "/bi/design/file:report:desk-wall"
     for gone in ("board.html", "design_board.html"):
@@ -68,7 +64,7 @@ def test_the_start_page_makes_a_board_as_a_report_with_a_board_page(client):
 def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     page = client.get("/bi/design/bi-1")
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
-    assert 'data-studio data-studio-kind="report"' in page.text and "/static/vendor/drishti-elements/3.1.0/elements/drishti-designer/drishti_designer.js" in page.text
+    assert 'data-studio data-studio-kind="report"' in page.text and "/static/vendor/drishti-elements/3.2.0/elements/drishti-designer/drishti_designer.js" in page.text
     studio = (STATIC / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")     # BI Studio is the kit's DesignerShell: Explorer, open items, dock
     for part in ("new K.DesignerShell(", "docs: true", "collapsible: true", "{ id: 'problems', label: 'Problems' }", "{ id: 'query', label: 'Query' }", "shell.setObjects(", "shell.setDocs("):
         assert part in studio, part

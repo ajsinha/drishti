@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: news-and-markets-pack, category: start, title: "The news-and-markets pack", kind: guide, icon: newspaper, file: guides/news-and-markets.md, summary: "Sample: headlines for fifteen topics and twenty listed companies with a live quote and price history, from two on-demand connectors." }
+  - { slug: news-and-markets-pack, category: get-started, title: "The news-and-markets pack", kind: guide, icon: newspaper, file: guides/news-and-markets.md, summary: "Sample: headlines for fifteen topics and twenty listed companies with a live quote and price history, from two on-demand connectors." }

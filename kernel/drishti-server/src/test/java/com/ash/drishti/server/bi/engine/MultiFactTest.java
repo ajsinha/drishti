@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -53,22 +53,14 @@ class MultiFactTest {
         lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("relationships:", """
-                  limits:
-                    source: { connector: limit-lake, kind: limit }
-                    columns:
-                      desk: string
-                      amount: decimal
-                relationships:
-                  - { from: limits.desk, to: desks.desk, cardinality: many-to-one }""")
-                .replace("measures:\n", """
+        String model = TestLake.withTable(TestLake.model(), "limits").replace("relationships:\n", "relationships:\n  - { from: limits.desk, to: desks.desk }\n").replace("measures:\n", """
                 measures:
-                  LimitTotal: { expr: "sum(limits.amount)" }
-                  Limits: { expr: "count(limits)" }
-                  MaxLimit: { expr: "max(limits.amount)" }
+                  LimitTotal: { expr: sum(limits.amount) }
+                  Limits: { expr: count(limits) }
+                  MaxLimit: { expr: max(limits.amount) }
                   Mixed: { expr: "measure('MTM') / measure('LimitTotal')" }
                 """);
-        DatasetParser.Result r = Layered.dataset(yaml);
+        DatasetParser.Result r = TestLake.dataset(model, TestLake.trades(), TestLake.table("limits", "limit", "limit-lake", "  desk:   { path: \"$.desk\", type: string }\n  amount: { path: \"$.amount\", type: decimal }\n"));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }

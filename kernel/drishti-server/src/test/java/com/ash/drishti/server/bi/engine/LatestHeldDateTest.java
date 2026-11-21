@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -96,7 +96,7 @@ class LatestHeldDateTest {
     }
 
     private static QueryService.Loaded dataset() {
-        DatasetParser.Result r = Layered.dataset(TestLake.yaml());
+        DatasetParser.Result r = TestLake.dataset();
         return new QueryService.Loaded("file:dataset:held", Layers.key("file:dataset:held"), r.dataset(), "h1");
     }
 
@@ -247,7 +247,7 @@ class LatestHeldDateTest {
         lake.trades.remove(TestLake.DAY2);
         QueryProperties props = QueryProperties.defaults(store.toString());
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {
-            DatasetParser.Result r = Layered.dataset(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { kind: trade }"));
+            DatasetParser.Result r = TestLake.dataset(TestLake.model(), TestLake.trades().replace("from: { kind: trade, connector: trading-lake }", "from: { kind: trade }"));
             var ds = new QueryService.Loaded("file:dataset:held-unnamed", Layers.key("file:dataset:held-unnamed"), r.dataset(), "h1");
             String asOf = "{\"fields\": [\"desks.region\"], \"measures\": [\"Trades\"], \"dates\": {\"from\": \"" + TestLake.DAY2 + "\"}}";
             assertThat(total(service, ds, asOf)).isEqualTo(lake.trades.get(TestLake.DAY1).size());

@@ -319,8 +319,8 @@ class BiLiveApiTest {
     void aPerspectiveVisualOverTwoTablesAndAnUnknownAggregateAreRefused() throws Exception {
         String author = as("wes", "live-author");
         // the 2.1 copy keeps its Perspective pivot (config/bi has a matrix since 2.3.0, the browser computing nothing)
-        String yaml = Files.readString(Path.of(TestRoots.repo(), "kernel", "drishti-server", "src", "test", "resources", "bi", "samples-2.1", "reports", "live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
-                "aggregates: { trade.MTM: total }").replace("\ndataset: live-trading\n", "\nmodel: live-trading@1\n");   // the live sample is a model of the table layer
+        String yaml = Files.readString(Path.of(TestRoots.repo(), "kernel", "drishti-server", "src", "test", "resources", "bi", "samples", "reports", "live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
+                "aggregates: { trade.MTM: total }");
         JsonNode r = ok(call("POST", "/api/v1/bi/reports/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();
         assertThat(r.path("problems").toString()).contains("DRS-9032").contains("is not an aggregate");

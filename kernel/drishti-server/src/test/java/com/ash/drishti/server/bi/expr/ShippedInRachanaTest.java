@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Every expression of the shipped tables and models ({@code config/tables}, migrated from BI's datasets and models) read as Rachana
+ * Every expression of the shipped tables and models ({@code config/tables}, ) read as Rachana
  * (docs/architecture/ARCHITECTURE.md §28 2.4, 2.6 and 7.1): in Rachana's one spelling ({@link Printer}: parsed and printed, the same text), checked in
  * its scope (measures in aggregate scope, rules in rule scope, the rest in row scope) and lowered by the one compiler without a problem;
- * and the worked examples of the design as the migration's DEL step ({@link DelToRachana}) maps them. The values of the same expressions in Java and in SQL are compared by
+ * The values of the same expressions in Java and in SQL are compared by
  * drishti-bicompute's DifferentialTest; the parity of BI's figures is part B's.
  */
 class ShippedInRachanaTest {
@@ -100,27 +100,5 @@ class ShippedInRachanaTest {
         }
         // the comparisons whose meaning changes for a null under Rachana's rule are few, and the migrator rewrote each (Q1)
         assertThat(nullRule).hasSizeLessThan(10);
-    }
-
-    @Test
-    void theDesignsWorkedExamplesMapAsWritten() {
-        assertThat(rachana("sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')")).isEqualTo("sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED')");
-        assertThat(rachana("ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000")).isEqualTo("ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000");
-        assertThat(rachana("payments.AMOUNT * (1 / 148.2 if payments.CURRENCY == 'JPY' else 1.174 if payments.CURRENCY == 'EUR' else None)"))
-                .isEqualTo("payments.AMOUNT * (payments.CURRENCY == 'JPY' ? 1 / 148.2 : payments.CURRENCY == 'EUR' ? 1.174 : null)");
-        assertThat(rachana("DESK in user.desks")).isEqualTo("DESK in user.desks");
-        assertThat(rachana("0 < x <= 10")).isEqualTo("0 < x && x <= 10");
-        assertThat(rachana("x ** 2 + x // 3")).isEqualTo("power(x, 2) + floor(x / 3)");
-        assertThat(rachana("trades.book is not None and not trades.live == True")).isEqualTo("trades.book != null && !(trades.live == true)");
-        assertThat(rachana("last(sum(accounts.balance), accounts.business_date)")).isEqualTo("latest(sum(accounts.balance), accounts.business_date)");
-        assertThat(rachana("calc(measure('MTM'), ignore=[desks.name])")).isEqualTo("calc(measure('MTM'), ignore = [desks.name])");
-        assertThat(rachana("share_of(measure('MTM'), over=ALL)")).isEqualTo("share_of(measure('MTM'), over = ALL)");
-        assertThat(rachana("measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))"))
-                .isEqualTo("measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))");
-        assertThat(rachana("startswith(trades.book, 'R') or 1_000_000 > trades.n")).isEqualTo("starts_with(trades.book, 'R') || 1000000 > trades.n");
-    }
-
-    static String rachana(String del) {
-        return Printer.print(DelToRachana.map(DelParser.parse(del)).expr());
     }
 }

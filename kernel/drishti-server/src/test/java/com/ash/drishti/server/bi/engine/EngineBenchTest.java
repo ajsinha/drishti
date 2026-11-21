@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.engine;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +58,7 @@ class EngineBenchTest {
         QueryProperties uncached = QueryProperties.defaults(store.resolve("nocache").toString()).withCacheEntries(0);
         QueryService svc = new QueryService(uncached, new DuckDbEngine(uncached), lake, Clock.systemUTC());
         QueryService withCache = new QueryService(cached, new DuckDbEngine(cached), lake, Clock.systemUTC());
-        QueryService.Loaded ds = new QueryService.Loaded("bench", "bench", Layered.dataset(TestLake.yaml()).dataset(), "h");
+        QueryService.Loaded ds = new QueryService.Loaded("bench", "bench", TestLake.dataset().dataset(), "h");
         QueryService.Caller who = new QueryService.Caller("bench", Set.of("risk"), true, java.util.Map.of(), SqlCompiler.Masks.NONE);
         String byDesk = "{\"fields\":[\"trades.desk\",\"trades.currency\"],\"measures\":[\"Notional\",\"MTM\",\"Trades\"],\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-09\"}";
         String rollupQuery = byDesk + "}";

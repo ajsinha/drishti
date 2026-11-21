@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.report;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -31,15 +31,14 @@ import org.junit.jupiter.api.Test;
 /** The report parser and validator: the shipped samples are clean, and every kind of mistake comes back with its DRS code and the path of the key. */
 class ReportParserTest {
 
-    static final Path REPORTS = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "reports");            // the 2.1 reports on datasets (config/bi has them on models)
-    static final Path DATASETS = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "datasets");
+    static final Path REPORTS = Tables.sampleReports();
 
     static String report(String name) throws IOException {
         return Files.readString(REPORTS.resolve(name + ".report.yaml"));
     }
 
     static Dataset dataset(String name) throws IOException {
-        return Layered.dataset(Files.readString(DATASETS.resolve(name + ".dataset.yaml"))).dataset();
+        return Tables.sample(name).dataset();
     }
 
     static final String MINI = """
@@ -66,7 +65,7 @@ class ReportParserTest {
             ReportParser.Result r = ReportParser.parse(report(s[0]));
             assertThat(r.problems().stream().filter(Problem::error).toList()).as(s[0]).isEmpty();
             assertThat(r.report().sample()).isTrue();
-            assertThat(r.report().dataset()).isEqualTo(s[1]);
+            assertThat(r.report().dataset()).isEqualTo("model:" + s[1] + "@1");
             assertThat(ReportValidator.validate(r.report(), dataset(s[1]))).as(s[0] + " against " + s[1]).isEmpty();
             assertThat(Files.readString(REPORTS.resolve(s[0] + ".report.yaml")).lines().filter(l -> l.startsWith("#")).count()).isGreaterThan(3);
         }

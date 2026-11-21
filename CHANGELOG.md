@@ -18,6 +18,32 @@
 
 ## Unreleased
 
+- **Compatibility shims removed (no customer, no tech debt).** The BI and tables migrators (`tables migrate`, `bi migrate`, the start-up
+  migration of stored items and of saved pivot formulas, `PivotFormulaMigration`), the DEL reader (`DelParser`, `DelToRachana`; the setting
+  `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,
+  `lake migrate-config`, the module API aliases (`ApiAlias`, `api.legacy`) and `EngineKeyAliases`, the users.json and notes imports, and the
+  one-time move of jars into the lib folder are gone. A file in an old form is refused with a message that names what to write instead; a
+  removed setting that is still set says so in one start-up line. The server's test fixtures are written as tables and models of the
+  layer (no translator is kept for them, in tests or elsewhere), and the migrator and DEL reader that read the old fixtures are deleted. Also
+  gone: the notes table (`drishti_note`, `drishti_note_link`) with `NoteStore` and `linkNote`; the `/bi/b/<id>` redirect of the console (alerts
+  and runs link to `/bi/r/<id>`); Help's `aliases:` and `moved:` (a pack guide names its section by its id); the legacy format-key leniency of
+  report formats (a bad value of any format key is an error, `DRS-9032`); and Rachana-parity's `LegacyListAggregates` oracle (the engine's
+  aggregates are compared with Rachana Core's own).
+
+
+- **The client renderer draws every panel with Drishti Elements' painter.** Drishti Elements is pinned at **3.2.0**. Embeds (`<drishti-view>`,
+  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
+  `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
+  page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
+  filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` draws with the painter's tables (no column
+  funnels or Chart any table inside an embed); a GenUI stream's messages are not drawn. The old `drishti-renderer` library, its harness
+  and fixtures are deleted; `/static/render/3.1.0/` and `/embed/v2/render/3.1.0/` answer `308` to 3.2.0 for one release, and
+  `/embed/v2/elements/2/` is the current renderer again.
+- **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
+  snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
+  rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default
+  (`drishti.live-sets.engine: rachana` turns it on); the kernel's live result sets still serve the console.
+
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
   taken from `drishti-tools` (`tools-net`, `tools-settings`, `tools-concurrent`, `tools-time`, `tools-testkit`, pinned once as

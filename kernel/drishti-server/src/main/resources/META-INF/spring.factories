@@ -1,4 +1,2 @@
 org.springframework.boot.env.EnvironmentPostProcessor=com.ash.drishti.server.http.SiteProxyEnvironmentPostProcessor,\
-  com.ash.drishti.server.http.SitePoolEnvironmentPostProcessor,\
-  com.ash.drishti.server.engines.EngineKeyAliases,\
-  com.ash.drishti.server.lakes.LakeRelocateOnStart
+  com.ash.drishti.server.http.SitePoolEnvironmentPostProcessor

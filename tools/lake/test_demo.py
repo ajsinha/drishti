@@ -223,7 +223,7 @@ class TheDemoLakesOwnFolder(unittest.TestCase):
                 fresh = tmp / "other" / "delta"
                 (fresh / "risk").mkdir(parents=True)
                 self.assertEqual(stores.older_layout(fresh / "demo"), ["risk"])
-                self.assertIn("relocate demo", stores.older_layout_words(fresh / "demo", ["risk"]))
+                self.assertIn("build again", stores.older_layout_words(fresh / "demo", ["risk"]))
             finally:
                 for k, v in saved.items():
                     os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)

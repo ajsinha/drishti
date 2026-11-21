@@ -25,8 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Finds source plugins: those on the application class path (the shipped connectors), the computed kinds' providers, and the connectors
  * of the site's shared lib folder ({@code drishti.lib.path}, default {@code <home>/lib/ext}; one class loader under the kernel's). The lib folder is the one way to add a
- * connector or a JDBC driver: the older plugin folder ({@code drishti.sources.plugin-dir}, each jar in its own loader) is gone; its
- * jars are moved into lib once, at start ({@link com.ash.drishti.common.SharedLib#migrate}).
+ * connector or a JDBC driver: the older plugin folder ({@code drishti.sources.plugin-dir}, each jar in its own loader) is gone.
  */
 public final class PluginDiscovery {
 

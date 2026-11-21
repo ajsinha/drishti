@@ -33,7 +33,6 @@ numbers and times will differ. The OpenAPI document is at `/api/docs` and the Sw
 - [4. Datasets and the query engine: `/api/v1/bi`](#4-datasets-and-the-query-engine-apiv1bi)
 - [5. Models and the model query language: `/api/v1/bi`](#5-models-and-the-model-query-language-apiv1bi)
 - [6. Expressions: `/api/v1/bi/expr`](#6-expressions-apiv1biexpr)
-- [7. BI migrations: `/api/v1/bi/migrate`](#7-bi-migrations-apiv1bimigrate)
 - [8. Drishti SQL: `/api/v1/bi/sql`](#8-drishti-sql-apiv1bisql)
 - [9. BI runs: `/api/v1/bi/runs`](#9-bi-runs-apiv1biruns)
 - [10. Reports: `/api/v1/bi/reports`](#10-reports-apiv1bireports)
@@ -1613,7 +1612,7 @@ datasets in a star with relationships, measures, model security (only tighter) a
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
 pack dataset, the pack dimensions its columns reference, one hop), or the name of a model the converter made of an older dataset (the same name). A `rachana: 1` dataset is not read as a model
-(`DRS-9151` says to run `drishti.py bi migrate --models`); `POST /bi/datasets/{id}/query` answers `410` with the
+(`DRS-9151`); `POST /bi/datasets/{id}/query` answers `410` with the
 equivalent model query.
 
 **Every consumer asks through the model query language** (section 5.9 of the spec). A report visual (and with it exports, subscriptions, board tiles, live tiles
@@ -1835,7 +1834,7 @@ read-only token).
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/bi/expr/functions` | the function catalogue (`?scope=row\|rule\|aggregate` keeps the functions allowed there): each function's `name`, `family`, `signature`, `params` (`name`, `type`, `default`, `keywordOnly`, `variadic`), `returns`, `scopes`, `status` (`built` or `planned`), `since`, `legacy` (its old name), `description`, `examples` (`expr`, `says`), `edgeCases`; plus `keywords`, `operators`, `literals`, `scopes` and `legacy` (the `drishti.bi.expr.legacy` mode) |
+| `GET` | `/api/v1/bi/expr/functions` | the function catalogue (`?scope=row\|rule\|aggregate` keeps the functions allowed there): each function's `name`, `family`, `signature`, `params` (`name`, `type`, `default`, `keywordOnly`, `variadic`), `returns`, `scopes`, `status` (`built` or `planned`), `since`, `description`, `examples` (`expr`, `says`), `edgeCases`; plus `keywords`, `operators`, `literals` and `scopes` |
 | `POST` | `/api/v1/bi/expr/validate` | body `{expr, scope?, model?, yaml?, alias?}`: checks one expression. `scope` is `row`, `rule` or `aggregate` (default); `model` a model reference (`name@major`) or `dataset:<name>` — the fields and measures are the model's **as the caller sees them** (hidden columns absent, masked ones marked); `alias` the dataset whose row is in context in row and rule scope (default: the only one). Without `model`, only the language and the catalogue are checked. `yaml` instead of `model`: the designer's **unsaved** model (`model:`) or `rachana: 2` dataset (its implicit model), its datasets resolved as published, read as the caller; the answer has `draft: true`. A measure on a model is also compiled the way publishing would, and planned the way a model query would be: a measure whose aggregates join facts with no path between them is `DRS-9156` while it is written. Always `200` |
 
 The validate answer (captured; `rita` on the test model `lang-model`):
@@ -1854,35 +1853,10 @@ underlines it and offers the fix as a button (captured):
 {"expr": "count(trades, where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
  "problems": [{"code": "DRS-9161", "level": "error", "message": "'trades.mtm' is masked for you: a filter on it (<) is refused",
                "fix": "filter on a field that is not masked", "at": {"start": 20, "end": 30}}], ...}
-{"expr": "[Notional] / [Trades]", "scope": "aggregate", "type": "decimal", "syntax": "legacy", "converted": "measure('Notional') / measure('Trades')", "valid": true,
- "problems": [{"code": "DRS-9100", "level": "warning", "message": "old expression syntax: run the converter",
-               "fix": "write: measure('Notional') / measure('Trades')", "at": {"start": 0, "end": 21}}], ...}
 ```
 
-`syntax` is `del2` or `legacy` (the old syntax: refused with `DRS-9100` and `valid: false` by default, with `converted` holding the DEL v2 text; while a
-site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the check runs on the converted text). The codes are in [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). The CLI:
-`drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
-([CLI_REFERENCE.md](CLI_REFERENCE.md)).
-
-## 7. BI migrations: `/api/v1/bi/migrate`
-
-Migrations ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)): migrations of the server's **stored** BI items. The
-server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
-these endpoints let a **bi-admin** see what would change and run them again. Every run is idempotent and audited; the text before stays in each item's
-history; an item that cannot be converted is never changed and is listed in `problems`.
-
-| Method | Path | What it does |
-|---|---|---|
-| `POST` | `/api/v1/bi/migrate/boards` | body `{dryRun?}`: the stored 2.3 boards to reports with board pages ([README.md](bi/README.md)); the id is kept. Answer: `step` (`boards`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count), `items` (per board `id`, `title`, `kind`, `workspace`, `status`, `state`; after a run `before` and `publishedVersion`) |
-| `GET` | `/api/v1/bi/migrate/problems` | the stored items a migration left as they were: `count` and `problems` (`step`, `item`, `title`, `kind`, `where`, `problem`, `since`). The same list is `migrationProblems` in `GET /bi/settings` and, for one item, in `GET /bi/items/{id}` |
-
-The problems answer (captured):
-
-```json
-{"count": 1, "problems": [{"step": "expressions", "item": "it-broken", "title": "it-broken", "kind": "dataset", "where": "measures.Per.expr",
-  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum(), but the expression ends there (sum(trades.mtm)",
-  "since": "2026-10-13T02:35:52.717930195Z"}]}
-```
+`syntax` is `rachana`; a text in another syntax is not read (`valid: false`). The codes are in [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions). The CLI:
+`drishti.py bi expr functions|validate` ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ## 8. Drishti SQL: `/api/v1/bi/sql`
 
@@ -3454,9 +3428,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9164 | 422 | Parameter | (`mq: 2`) A `params` value the model does not take: an unknown parameter, the wrong kind, outside `min`..`max`, not one of its `values`, a field parameter's value not one of its `fields` (*metric is one of its choices [MTM, NOTIONAL], not 'PV'*), `param.x` in `select.fields` that is not a field parameter, or a field parameter in the wrong list (*'param.metric' chooses among MTM, NOTIONAL: measures, so it goes in select.measures*) |
 | DRS-9165 | 422 | Calculation group | (`mq: 2`) A `calc` group or item the model does not have (with `fix`: its groups or items), or a Python measure under a calculation group |
 | DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
-| DRS-9190 | 422 | Not converted | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) |
-| DRS-9195 | — | Not migrated | `drishti.py tables migrate` could not migrate an item or an expression and wrote nothing for it: the report names the item, the key and why (a construct that waits for the DEL translator, a name two items give, a pack-generated dataset, which is regenerated) ([TABLES_AND_MODELS.md section 9](bi/TABLES_AND_MODELS.md#9-the-migration-tables-migrate)) |
-| DRS-9196 | — | Migrate first | (planned with the switch) a server found a dataset or model file in BI's old form where the table layer reads and refused that file; run `drishti.py tables migrate --dry-run`, then without it |
+| DRS-9196 | — | Old form | a dataset or model file is in BI's old form, which is not read: write it as a table or a model of the table layer ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)) |
 | DRS-9600 | — | Table definition unreadable | a `.table.yaml` or `.model.yaml` that is not YAML, has an unknown key, misses a required key, or a value of the wrong shape; also an expression that does not read ([TABLES_AND_MODELS.md section 10](bi/TABLES_AND_MODELS.md#10-problem-codes)) |
 | DRS-9601 | — | Table name | a table's name is not `<domain>.<name>` (lower case, letters, digits, underscores), or its file is not in its domain's folder |
 | DRS-9602 | — | Built-in column | `id`, `business_date`, `index`, `update_seq` or `updated_at` declared: every table has them |

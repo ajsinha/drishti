@@ -24,7 +24,7 @@
    The figures are the server's: VaR, ES and EEPE come in the spec or the rows (var, es, eepe: a number or a field). Only a page with no
    server (the gallery, a standalone app) leaves them out, and then they are computed from the rows given and the card says so. */
 import { buildLimitLadder, buildVarAttribution, buildScenarioMatrix } from './drishti_risk-kinds2.js';
-import { buildHistogram, buildSeriesChart, buildWaterfall, quantile, num, fieldOf, registerKind, kindOf, toneColour } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-chart/src/drishti_index.js';
+import { buildHistogram, buildSeriesChart, buildWaterfall, quantile, num, fieldOf, registerKind, kindOf, toneColour } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-chart/src/drishti_index.js';
 
 /** The Basel backtest zones over 250 days: exceptions to the zone, and the plus factor of each count. */
 export const TRAFFIC_LIGHT = Object.freeze({ green: [0, 4], amber: [5, 9], red: [10, Infinity],

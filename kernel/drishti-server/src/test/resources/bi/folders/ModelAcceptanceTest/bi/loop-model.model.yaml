@@ -1,0 +1,7 @@
+rachana: 3
+model: loop-model
+version: 1.0.0
+tables:
+  a: { table: bi.loop_a, role: fact }
+measures:
+  Total: { expr: sum(a.total) }

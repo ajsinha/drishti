@@ -146,7 +146,6 @@ class Library:
         pages = {str(sec.get("id")): sec for sec in [*(data.get("sections") or []), *modules.help_pages()]}
         self.categories = []
         self.guides: dict[str, Guide] = {}
-        self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}
         self.documents = {str(k): str(v) for k, v in (data.get("documents") or {}).items()}
         for head in sections:
             sec = {**pages.get(str(head["id"]), {}), **head}
@@ -178,14 +177,13 @@ class Library:
                                     "guides": [g for grp in groups for g in grp["guides"]]})
         cats = {c["id"]: c for c in self.categories}
         self.contextual = dict(data.get("contextual", {}))
-        self.moved = dict(data.get("moved", {}))
         self.most_used = [dict(m) for m in data.get("most-used") or [] if isinstance(m, dict) and m.get("slug")]
         pack_group = str(data.get("pack-group") or "From the packs")
         for pack in packs or []:
             for g in pack.get("guides", []):
                 if not g["path"].exists() or g["slug"] in self.guides:
                     continue
-                cat = cats.get(self.section_id(str(g.get("category") or ""))) or cats.get(self.section_id("start")) or self.categories[0]
+                cat = cats.get(str(g.get("category") or "")) or cats.get("get-started") or self.categories[0]
                 grp = next((x for x in cat["groups"] if x["title"] == pack_group), None)
                 if grp is None:
                     grp = {"title": pack_group, "words": [], "guides": []}
@@ -200,14 +198,9 @@ class Library:
         self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles and not g.parent)      # a guide folder's subpages are part of its one page
         self._documents(cats)
 
-    def section_id(self, name: str) -> str:
-        """A section's id from its id or an old name (help.yaml ``aliases:``: a pack guide's category, an edition's help.categories, the
-        old ``/help#cat-<id>``)."""
-        return self.aliases.get(name, name)
-
     def section(self, sid: str) -> dict | None:
-        """The section of that id or old name, or None."""
-        return next((c for c in self.categories if c["id"] == self.section_id(sid)), None)
+        """The section of that id, or None."""
+        return next((c for c in self.categories if c["id"] == sid), None)
 
     def _documents(self, cats: dict) -> None:
         """Every repository document not in the catalogue, unlisted, at a slug made from its path (DOC-18)."""

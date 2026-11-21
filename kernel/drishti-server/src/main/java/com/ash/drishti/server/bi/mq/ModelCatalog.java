@@ -625,7 +625,7 @@ public final class ModelCatalog {
         }
         // the compatibility reader is gone (2.2, docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8.4): a 2.1 dataset is never read as a model
         throw new MqException(MqException.Problem.of("DRS-9151", "model", "'" + readable.title() + "' is a rachana: 1 dataset, no longer read as a model: "
-                + "drishti.py bi migrate --models converts it to datasets and a model of the same name (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 8.3)"));
+                + "write it as tables and a model (docs/guides/bi/TABLES_AND_MODELS.md)"));
     }
 
     /** True for a {@code rachana: 1} dataset item (a live report's dataset until wave W3): asked through the engine as before, never as a model. */

@@ -1,0 +1,8 @@
+rachana: 3
+model: lang-bucket-view
+version: 1.0.0
+tables:
+  trades: { table: bi.lang_bucketed, role: fact }
+measures:
+  Trades: { expr: count(trades) }
+  K:      { expr: sum(trades.notionalK) }

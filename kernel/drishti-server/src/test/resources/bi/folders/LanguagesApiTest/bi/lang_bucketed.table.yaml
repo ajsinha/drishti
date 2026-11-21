@@ -1,0 +1,9 @@
+rachana: 3
+table: bi.lang_bucketed
+was: lang-bucketed
+version: 1.0.0
+from: { table: bi.lang_trade }
+columns:
+  bucket:    { python: { item: notional-bucket, inputs: [notional] }, type: string }
+  notionalK: { expr: "$.notional / 1000", type: decimal }
+materialize: on-load

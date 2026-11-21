@@ -1,0 +1,10 @@
+rachana: 3
+model: dist-lake
+version: 1.0.0
+title: Lake for distribution
+tables:
+  trades: { table: bi.dist_lake_trades, role: fact }
+measures:
+  Notional: { expr: sum(trades.notional) }
+  Trades:   { expr: count(trades) }
+  MTM:      { expr: sum(trades.mtm) }

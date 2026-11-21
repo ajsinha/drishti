@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -61,7 +61,7 @@ class QueryEngineTest {
             service.close();
         }
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        DatasetParser.Result r = Layered.dataset(TestLake.yaml());
+        DatasetParser.Result r = TestLake.dataset();
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
     }
@@ -214,8 +214,8 @@ class QueryEngineTest {
 
     @Test
     void measuresFromTwoUnconnectedTablesAreAskedSeparatelyAndShownSideBySide() {
-        DatasetParser.Result two = Layered.dataset(TestLake.yaml().replace("relationships:", "  curves:\n    source: { connector: desk-lake, kind: desk }\n    columns: { point: string }\nrelationships:")
-                .replace("  Names:", "  RegionCount: { expr: \"count(curves)\" }\n  Names:"));
+        DatasetParser.Result two = TestLake.dataset(TestLake.withTable(TestLake.model(), "curves").replace("  Names:", "  RegionCount: { expr: count(curves) }\n  Names:"), TestLake.trades(),
+                TestLake.table("curves", "desk", "desk-lake", "  point: { path: \"$.point\", type: string }\n"));
         assertThat(two.ok()).as(two.firstError()).isTrue();
         QueryService.Loaded d2 = new QueryService.Loaded("x", "x", two.dataset(), "h");
         QueryService.Result both = service.query(d2, q("{\"measures\":[\"Trades\",\"RegionCount\"]}"), risk(), false);
@@ -374,25 +374,41 @@ class QueryEngineTest {
 
     @Test
     void aTableOverAnArrayHasOneRowPerElementAndJoinsToItsParent() {
-        String yaml = """
-                dataset: legs
+        String model = """
+                rachana: 3
+                model: legs
+                version: 1.0.0
                 tables:
-                  trades:
-                    source: { connector: trading-lake, kind: trade }
-                    columns: { desk: string }
-                  legs:
-                    source: { connector: trading-lake, kind: trade, each: legs }
-                    columns:
-                      payReceive: string
-                      notional: decimal
-                      currency: string
+                  trades: { table: bi.legs_trades, role: fact }
+                  legs:   { table: bi.legs_legs, role: fact }
                 relationships:
-                  - { from: legs.id, to: trades.id, cardinality: many-to-one }
+                  - { from: legs.id, to: trades.id }
                 measures:
-                  LegNotional: { expr: "sum(legs.notional)" }
-                  Legs: { expr: "count(legs)" }
+                  LegNotional: { expr: sum(legs.notional) }
+                  Legs:        { expr: count(legs) }
                 """;
-        QueryService.Loaded legs = new QueryService.Loaded("legs", "legs", Layered.dataset(yaml).dataset(), "h");
+        String trades = """
+                rachana: 3
+                table: bi.legs_trades
+                version: 1.0.0
+                from: { kind: trade, connector: trading-lake }
+                columns:
+                  desk: { path: "$.desk", type: string }
+                materialize: on-load
+                """;
+        String legsTable = """
+                rachana: 3
+                table: bi.legs_legs
+                version: 1.0.0
+                from: { kind: trade, connector: trading-lake }
+                grain: "$.legs[*]"
+                columns:
+                  payReceive: { path: "@.payReceive", type: string }
+                  notional:   { path: "@.notional", type: decimal }
+                  currency:   { path: "@.currency", type: string }
+                materialize: on-load
+                """;
+        QueryService.Loaded legs = new QueryService.Loaded("legs", "legs", Tables.flatten(model, List.of(trades, legsTable)).dataset(), "h");
         QueryService.Result r = service.query(legs, q("{\"fields\":[\"trades.desk\",\"legs.payReceive\"],\"measures\":[\"Legs\",\"LegNotional\"],\"dates\":{\"from\":\"2026-10-09\"}}"), risk(), true);
         assertThat(r.rows()).isEqualTo(6);
         assertThat(rows(r, "trades.desk", "Legs").values()).allMatch(v -> ((Long) v) >= 13);
@@ -493,8 +509,8 @@ class QueryEngineTest {
         int before = lake.scans.get();
         run(body, risk());
         assertThat(lake.scans.get()).isEqualTo(before);                       // reused from disk
-        String changed = TestLake.yaml().replace("notional: decimal\n", "notional: { path: notional, type: integer }\n");
-        QueryService.Loaded d2 = new QueryService.Loaded(ds.id(), ds.key(), Layered.dataset(changed).dataset(), "h2");
+        String changed = TestLake.trades().replace("type: decimal }\n  mtm:", "type: integer }\n  mtm:");
+        QueryService.Loaded d2 = new QueryService.Loaded(ds.id(), ds.key(), TestLake.dataset(TestLake.model(), changed).dataset(), "h2");
         service.query(d2, q(body), risk(), true);
         assertThat(lake.scans.get()).isGreaterThan(before);                   // a different signature: read again
     }
@@ -538,7 +554,7 @@ class QueryEngineTest {
 
     @Test
     void aLiveTableIsASnapshotOfTheCurrentStateServedForTheTtl() throws Exception {
-        DatasetParser.Result live = Layered.dataset(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live"));
+        DatasetParser.Result live = TestLake.dataset(TestLake.model(), TestLake.liveTrades(""));
         QueryService.Loaded l = new QueryService.Loaded("live", "live", live.dataset(), "h");
         QueryService.Result a = service.query(l, q("{\"measures\":[\"Trades\"]}"), risk(), true);
         assertThat(a.meta().layer()).isEqualTo("live");
@@ -581,20 +597,31 @@ class QueryEngineTest {
         };
         lake = direct;
         start(QueryProperties.defaults(store.toString()));
-        String yaml = """
-                dataset: direct
+        String model = """
+                rachana: 3
+                model: direct
+                version: 1.0.0
                 tables:
-                  trades:
-                    source: { connector: trading-lake, kind: trade }
-                    mode: direct
-                    columns: { desk: string, currency: { path: ccy, type: string }, notional: decimal, mtm: decimal }
+                  trades: { table: bi.direct_trades, role: fact }
                 measures:
-                  Notional: { expr: "sum(trades.notional)" }
-                  MTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
-                security:
-                  rows: [ { role: desk-head, where: "trades.desk in user.desks" } ]
+                  Notional: { expr: sum(trades.notional) }
+                  MTM:      { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
                 """;
-        QueryService.Loaded d = new QueryService.Loaded("direct", "direct", Layered.dataset(yaml).dataset(), "h");
+        String table = """
+                rachana: 3
+                table: bi.direct_trades
+                version: 1.0.0
+                from: { kind: trade, connector: trading-lake }
+                columns:
+                  desk:     { path: "$.desk", type: string }
+                  currency: { path: "$.ccy", type: string }
+                  notional: { path: "$.notional", type: decimal }
+                  mtm:      { path: "$.mtm", type: decimal }
+                rules:
+                  - { role: desk-head, where: "$.desk in user.desks" }
+                materialize: none
+                """;
+        QueryService.Loaded d = new QueryService.Loaded("direct", "direct", Tables.flatten(model, List.of(table)).dataset(), "h");
         QueryService.Result r = service.query(d, q("{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"filters\":[{\"field\":\"trades.currency\",\"op\":\"in\",\"values\":[\"USD\",\"EUR\"]}]}"),
                 who("hana", true, "DESK-A", "desk-head"), true);
         assertThat(r.meta().layer()).isEqualTo("direct");
@@ -603,9 +630,8 @@ class QueryEngineTest {
         assertThat(r.meta().sql()).contains("FROM entities").contains("\"kind\"".replace("\"", "")).doesNotContain("USD");
         assertThat(lake.scans.get()).isZero();                                // the source was never scanned: the store ran the query
         // a connector that is not a SQL store cannot serve a direct table
-        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", Layered.dataset(yaml.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk")
-                .replace("columns: { desk: string, currency: { path: ccy, type: string }, notional: decimal, mtm: decimal }", "columns: { desk: string }")
-                .replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, where=trades.currency == 'EUR')", "count(trades)")).dataset(), "h");
+        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", Tables.flatten(model.replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, where=trades.currency == 'EUR')", "count(trades)"),
+                List.of(table.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk").replace("  currency: { path: \"$.ccy\", type: string }\n  notional: { path: \"$.notional\", type: decimal }\n  mtm:      { path: \"$.mtm\", type: decimal }\n", ""))).dataset(), "h");
         assertThatThrownBy(() -> service.query(bad, q("{\"measures\":[\"Notional\"]}"), risk(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("not a SQL store");
         engine.close();
     }

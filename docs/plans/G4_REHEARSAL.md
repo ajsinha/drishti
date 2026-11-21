@@ -201,13 +201,13 @@ bar, column, line, area, pie and doughnut (any other visual is columns), as befo
 | # | Finding | Action |
 |---|---|---|
 | T1 | The FRTB playground wrote some cells of a row out of column order (the Classes header row's term cells, the Curvature bucket header and term cells): invalid for the file format, accepted by the old writer | fixed in `FrtbPlaygroundBook`; the shared writer refuses it, so any new book is caught |
-| T2 | The FRTB Config sheet's row order changes from run to run (a set's iteration order; the workbook is right either way) | not changed; a book's bytes are not reproducible for FRTB; worth an ordered set |
+| T2 | The FRTB Config sheet's row order changed from run to run | **fixed** (`g4/fixes-1`): the fixed parameters are in declaration order, the risk-weight rows (which follow the data) are collected in a sorted set and written after them in key order; a test holds it; the comparison tool's by-name matching of Config rows is removed |
 | T3 | Tests that assert the old writer's raw XML (`s="3"`, `<v>92000.0</v>`, `chart2.xml`) | made independent of style indexes and part numbers (`DistApiTest`, `PivotExportTest`, `XlsxChartsTest`) |
-| T4 | The settings catalogue (`tools/settings_catalogue.py`) read `TlsSettings.java` and `ProxySettings.java` from `drishti-api`; they are in the tools now | reads a checkout of Drishti Tools (`DRISHTI_TOOLS_HOME`, else the folder next to this repository); the two texts the tools parametrise are filled with Drishti's names. `--check` was not run: it needs the kernel jar |
-| T5 | The SDK's `repo/` (a file repository of `drishti-api` and what it needs) must now carry the tools jars | **open**: `tools/launch/sdkbuild.py` lost its `drishti-settingsfile` entry; copying `com/ash/tools/*` from the build's repository into `repo/` needs a decision on how the tools are distributed |
+| T4 | The settings catalogue read `TlsSettings.java` and `ProxySettings.java` from `drishti-api`; they are in the tools now | reads a checkout of Drishti Tools (`DRISHTI_TOOLS_HOME`, else the folder next to this repository). **`--check` run** against the built kernel jar (`g4/fixes-1`): three variables missing from the index (`DRISHTI_TOOLS_HOME`, `DRISHTI_XLSX_CAPTURE`, `DRISHTI_LOCAL_MAVEN_REPO`) added to `tools/settings_schemas.yaml`, `docs/admin/CONFIGURATION.md` regenerated; `--check` is current |
+| T5 | The SDK's `repo/` must carry the tools jars | **fixed** (`g4/fixes-1`), one rule for all products: `repo/` carries every jar and pom of drishti-rachana, drishti-lake and drishti-tools at the versions the root pom pins, copied from the local Maven repository (`DRISHTI_LOCAL_MAVEN_REPO`, else `-Dmaven.repo.local` of `MAVEN_ARGS`, else `~/.m2/repository`); a product not installed there is refused by name; `build sdk` never builds them (`sdkbuild.py`, `test_sdkbuild_folder.py`) |
 | T6 | `Secrets` outside TLS throws the tools' `SettingException`, not `TlsException` | no caller catches the old type (the build and the tests show it) |
 | T7 | Tools has no tag: `1.0.0-SNAPSHOT` from a scratch repository, as Rachana and Lake | pin to the tag when it exists |
-| T8 | `SimmPlaygroundWorkbookTest` fails in `setUp` alone (the banking module is not among the modules the boot gave the process); `TestPathsGuardTest` (`LanguageLevelGuardTest` builds a path from `..`) and `PivotFormulaMigrationTest` (the printer writes `and` for `&&`) fail | unrelated to this pass (they name `LanguageLevelGuardTest` and the Rachana printer, P10 above); `SimmPlaygroundWorkbookTest` failed the same way before it; none touched |
+| T8 | Four tests failed | **all four fixed at their cause** (`g4/fixes-1`): `TestPathsGuardTest` named `LanguageLevelGuardTest`, which built its root from `Path.of("..", "..")`; it now uses `drishti.repo.root`. `SimmServiceTest` and `SimmPlaygroundWorkbookTest`: no SIMM bug; `SimmTestData` built `FrtbProperties.defaults()`, which resolves banking's folder from the module boot (none in a unit test); it now names the parameters folder as `FrtbTestData` does (SIMM code and goldens unchanged). `PivotFormulaMigrationTest`: Rachana's reader now accepts `and`, `or`, `not` and `where=`, so those saved formulas need no migration; the five parity-set rows that expected the old printer's text lose their `rachana:` expectation (the text itself is expected); the other 14 migrate to the same text as before and `PivotFormulaParityTest` (the answers) is green. P10's open question is settled for the test by Core's reading; the migrator itself goes with the DEL reader in 2.9.14 (Q24; `I7B_DUPLICATES.md` is not in this branch) |
 
 Green: the TLS and proxy tests of the connectors, lake storage and AI, the settings and placeholder tests, the loaders, `NamedResources`, the settings catalogue,
 the pivot and export tests, the capacity workbook, the VaR, FRTB, SIMM playground and API tests, `SharedToolsGuardTest`; the VaR and ES goldens are untouched (no
@@ -258,10 +258,165 @@ Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. 
 
 | # | Symptom | Cause | Who |
 |---|---|---|---|
-| P10 | `PivotFormulaMigrationTest`: `sum(PNL, where=DESK == 'RATES' and PNL > 0)` is kept as written, the test expects the 1.0 text with `&&` | checked mode now reads Python's `and`, so the text is already a formula and is not migrated | owner decision (keep, or migrate to 1.0 text) |
+| P10 | `PivotFormulaMigrationTest` | fixed in `g4/fixes-1` (see T8 of the tools pass): Core's reader accepts `and`/`or`/`not`, the five parity rows expect their own text | done |
 | P14 | `WindowFunctionsTest`: `rank(sum(trades.mtm), 'sideways')` no longer refused | Rachana's checked mode changed (CF fixes) | Rachana to confirm, or the test changes |
 | P15 | `el/limits#call-chain-past-the-depth`: `RCH-2101` on the reference instance, `StackOverflowError` on Drishti's | not found; the depth refusal comes too late on Drishti's instance | investigate (Drishti or Rachana) |
 | P2 | a compiler taken early never sees a module loaded later (`ElCompiler` bean, `RowPredicate`, `DocPath`) | per-instance function table | Drishti, unchanged |
 | P12, P13 | `AbandonedReadsTest`, `NetForwardTest`, `VarShardClusterTest` (timing); `PythonPathEqualityTest`, `DomainPacksTest` (demo data for the business day) | not the rehearsal | rerun quiet; triage |
 | R-1 | Rachana's ViewModel schema has no data record for the level-1.2 `form` kind (`PanelData.FormPanel`) | schema gap | Rachana |
 | R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
+
+Note (g4/fixes-1): `drishti.py build jar` ran the server's tests and `LiveTablesAdapterTest` failed (4 tests: no table `position`, RCH-2081 on `TRADE_ID`, a problem-message text) against the lake lane's Rachana snapshot; not one of the four above, not investigated, not changed here.
+
+## Pass 3: shims (2026-11-21), on `g4/shims` from `wip/g4-rehearsal-rx` (`fd1b4a847`)
+
+Owner direction: no customers, so no compatibility code. Removed from the product (rows S1 to S7 of `I7B_DUPLICATES.md`; level 1.0 and Lake's LZ4 reader kept as listed there).
+
+| Row | Removed | Lines |
+|---|---|---|
+| S1 | `tables/migrate` (9 classes), `bi/migrate` (7), `StoredTablesMigration`, `PivotFormulaMigration`, the `migrate` command of `TablesCli` and `tablescli.py`, `bi migrate` of `bilang.py`, the setting `drishti.bi.migrate.*`; `PivotFormulaMigrationTest`, `StoredTablesMigrationTest`, `TablesMigratorTest`, `NullRuleTest`, `BoardMigrationApiTest` | about 4,300 |
+| S2 | the DEL reader: `DelParser`, `DelToRachana`, `DelAst`, `DelTablesTranslator`, the `Legacy` mode of `Expressions`, the setting `drishti.bi.expr.legacy`, `OLD_SYNTAX` | about 1,100 |
+| S3 | `LegacyNames` and its calls (`.uploads`, `.previous`) | 134 |
+| S4 | `LakeRelocateOnStart`, `tools/lake/relocate.py`, `lake relocate`, `drishti.lakes.relocate-on-start` | 330 |
+| S5 | `ApiAlias`, `ApiAliasFilter`, `api.legacy`, `EngineKeyAliases` (it aliased names nothing read) | 250 |
+| S6 | `lake migrate-config` (Python side) | 50 |
+| S7 | `LegacyImport` (users.json), `NoteImport`, `SharedLib.migrate` / `previousDefault` and its test, the `plugin-dir` default | 650 |
+
+**Messages kept (one line, what to do):** an old-form BI dataset or model (`DRS-9196`, `DRS-9614`) says to write it as a table or model; `drishti.sources.plugin-dir` and `drishti.external-lib`, when still set, log that they are no longer read; `lake build` says to delete a demo lake left in the older layout and build again.
+
+### Part 2 (2026-11-21): the test fixtures, the notes table, the console redirect, Help's old names, the lake's migration code
+
+Owner rule restated: no shim is kept "for tests" either. What was left in part 1 is now done, except the two items named at the end.
+
+| Row | Removed | Lines |
+|---|---|---|
+| S1 (tests) | the test-scope migrator (`tables/migrate`, 8 classes), the DEL reader (`DelAst`, `DelParser`, `DelToRachana`, `DelTablesTranslator`), `Layered` and the old `TablesFolder`; `EquivalenceTest` and `NoMoreRowsAfterMigrationTest` (both compared old forms with the migrated ones) and the `before-tables` and `samples-2.1` fixtures | about 4,000 |
+| S1 (fixtures) | the 55 server tests that went through `Layered` or `TablesFolder` now hold tables and models of the layer: `Tables` (read a model over its tables), `TestLake` (the shared model, its two tables, `liveTrades`, `table`, `withTable`), `TablesFolder.place` (a folder case's tables and models are files in `src/test/resources/bi/folders/<case>`), `bi/samples` (the 2.1 samples as models, tables and rebound reports). Each fixture was written by running the old migrator once over it and keeping the output (read, not trusted: five hand repairs, three tests whose assertions were about the old forms rewritten for the current checks) | +2,400 |
+| S7 | `NoteStore`, `NoteEntity`, `linkNote` and its three implementations, `drishti_note` and `drishti_note_link` in both schema files (the two files change together; no migration, as the database rules say) and their tests | 300 |
+| S7 | `FormatSchemas.LEGACY`: a bad value of any format key is an error (`DRS-9032`), not a warning for the keys a 2.3 report could hold | 20 |
+| S7 | the console's `/bi/b/<id>` redirect (alerts and runs already link to `/bi/r/<id>`; the fixtures that held the old address changed first), Help's `aliases:` (pack guides name their section by its id: 30 `help.yaml` files) and `moved:` (about 400 lines) with `section_id`, `lib.moved`, the settings catalogue rows and the tests of the old addresses; the links of `developer.md` that used old slugs | 520 |
+| S7 | `LegacyListAggregates` (the "before" oracle): `SutraAggregateParityTest` compares the engine with Rachana Core (`new ElCompiler()`, no host function) over the same Sutras and cases | 143 |
+| S6 (Lake) | `LakesCli migrate-config`, `LakeFiles.migrate`, `adoptDemo`, `demoRoot` and their helpers, `ConnectorLake.legacy` and its `LakeCheck` note; `api-surface.txt` and CHANGELOG; Drishti's three tests of the same code; `tools/ci/check.py` **green** (build, delta-rs interop 3+3+2 with none skipped, Python tests, parity kit twice, coverage gates, equal to the reference). drishti-lake `main` `94dd281` | 497 |
+
+Also fixed at the cause: `NodeLowering` threw a null pointer for `rank()` (a window function with no measure); it now refuses with a message (the DEL reader used to catch this before Rachana's lowering saw it). The window test's `rank(x, 'sideways')` case is dropped: the current checker accepts it (a Rachana question, not a shim).
+
+**ArchitectureRulesTest and OneGrammarRulesTest were already failing on the base branch** (`wip/g4-rehearsal-rx`; the classes came in with the 8.3e and 8.3g commits). `noSerializable` now exempts Jackson's extension points (`SimpleModule`, `AnnotationIntrospector`, `BeanSerializerModifier`, `BeanPropertyWriter`: Serializable by their base classes, the rule's existing kind of exemption); `onlyTheEngineAddsFunctionsToRachana` exempts the module host's `RachanaFunctions` (a started module's scalar functions; the engine stays the only source of aggregates).
+
+**Not done, and why (named, not deferred silently):**
+
+- S6 `ConnectorManager`'s connectors defined in `application.yaml`: the seven profile files (`application-{postgres,files,mongodb,redis,duckdb,aerospike,iceberg}.yaml`) define their connectors there, and `props.connectors()` is also the map the connector files are loaded into. Removing the path means writing those profiles as connector templates of a module (a design step, not a deletion). Left as it was.
+- Lake `PersistedNames` read-both (`drishti.*` then `lake.*`): the check of the owner's Linux stack lake folders (read-only) was refused by the sandbox, so whether those lakes carry the old names is not known. Not removed.
+- `LoadConfig`'s "target.lake is a folder: read this way for one more release" and `CollabImport` (the jpa and file stores into the content store) are further shims of the same kind: not in the list; named here.
+
+## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
+
+The switch of Drishti's LiveSet engine to Rachana's live tables (I7B_DUPLICATES L1, DD-6, LIVE_TABLES section 11), front-loaded into G4
+with its entry check first. Rachana as pinned for the rehearsal: `0.11.0-SNAPSHOT` from the lake lane's scratch repository (`417f6af9`; its
+`rachana-live`, `rachana-data` and `conformance` are identical to drishti-rachana `develop` `86862e17`).
+
+### What was done (additive; nothing deleted)
+
+- `kernel/drishti-server` `com.ash.drishti.server.live`, the adapter (1,313 lines with headers and comments): `KindBindings` (what the bindings give one kind:
+  the columnar store, documents, records by id, the `live:` binding, its pause), `KindSnapshot` (`SnapshotSource`: tier `columns` when a lake
+  keeps the kind as columns, asked only for the columns it keeps, else `whole`), `KindStream` (`LiveStream` over `router.subscribeKind`),
+  `KindRows`, `DrishtiAuthoriser` (kind access as `unknown`, row rules as `rowTest`, the redactor as `redact` plus `maskedColumns`, editable
+  columns by `roles` / `editable-by`, read-only reasons), `DrishtiChangeSink` (the write-back's `EditService.submit` as the person, form
+  `live:<table>`, change id passed through, `awaiting` answered `held`), `DrishtiLiveTables` (configuration, `*.live.yaml` loading with
+  Drishti's profile keys, the extra checks, default declarations `kind-<kind>` with `narrow:` from a kind's `list: requires`, the write-back's
+  rules) and `LiveTablesController` (the Data Protocol at `/api/v1/rdp`, SSE changes, windows owned by their caller).
+- Switched off by default: `drishti.live-sets.engine: rachana` turns it on (CONFIGURATION.md row). No second wire runs in the product.
+- `LiveTablesAdapterTest`: the eleven scenarios of `LiveSetTest` (8) and `StorePagesTest` (3), each under its old name, on `rachana-live`
+  through the adapter fed with Drishti's `EntityDocument`s.
+
+### Entry check (DD-6, section 4) and the cut line
+
+| Entry fact | State |
+|---|---|
+| The 11 ported LiveSet scenarios on `rachana-live` with Drishti's adapter | **pass, 11 of 11** (the million-record case at 100,000 locally: first page 500 ms, half-way page 0 ms, first sorted page 712 ms, a page after a live change 2 ms, 399 records fetched) |
+| `rachana-live` in a tagged Rachana | **missing**: neither `v0.10.0` nor `v0.11.0` holds it; the branch pins `0.11.0-SNAPSHOT` |
+| The grid's live-mode edit UI (L8) | built in Elements 3.2.0 (`834ef87`); the console vendors the 3.1.0 tree, whose grid speaks `/api/live` (LiveSetGrid) |
+| `live/*`, `protocol/window`, `write`, `approve` suites verified | **missing**: all "unverified" (green on Rachana's reference host only) |
+| The scale run | 100,000 rows done in Rachana; 1.3 million not run |
+
+**Cut line DC1 applies**: two entry facts are missing, so nothing is deleted. `server/liveset/*`, `/api/v1/live/*`, `trade.blotter.yaml`, the
+console's `live_results.py`, `live_routes.py`, `drishti_live-page.js` and `drishti_records.js` stay, and the console keeps painting through
+them. Lines removed: 0.
+
+### Findings for the switch itself
+
+| # | Finding | Where it lands |
+|---|---|---|
+| LV1 | A FORM result is filled today from the **search API** (masks, edition, Drishti*net scatter across nodes, relevance order, `limit`, labels). LT-5 makes it "a query with a filter on the kind's table", but Drishti has **no search-grammar to filter-tree compiler**, and a live table is per node: fan-out and as-of dates must move into `KindSnapshot` (i8 steps 2 and 4). This is the largest piece and is not started | the switch-over lane |
+| LV2 | Rachana refuses an edit field bound to the key (`RCH-2081`); `trade.blotter.yaml` has `{ id: trade_id, bind: TRADE_ID, readonly: true }` and `key: trade_id`. The `.live.yaml` drops both (the table's key names the row) | declaration rewrite |
+| LV3 | Drishti's row rules read nested fields and `$user` attributes: they go as `rowTest` (not pushed down). On a `columns`-tier table the engine tests the rule on the scanned columns only, so a rule on a field that is not a column hides the row (fails closed) | the authoriser; or rules' fields added to the scan |
+| LV4 | `ChangeSink.accept` carries no caller; the write-back submits as a person, so the mount marks the request's person for the write (`DrishtiChangeSink.as`). Four eyes stays Drishti's approvals (`held`); the tray's release/reject is not wired (`holds()` false) | adapter; a Rachana SPI change would remove the mark |
+| LV5 | `ProtocolHost.keys` is package-private: the Spring mount copies it (10 lines) | Rachana: make it public |
+| LV6 | `bi/engine/LiveTable` (636, with `LiveTables` 330, `LiveAggregate` 393): **stays**. It keeps a kind's current state as a table *inside the analytic engine* so BI and MQ answer SQL (group, join, standing queries, `updateSeq`) over it; Rachana's live table holds rows in memory for pages and patches and answers no SQL. Different job, not a duplicate; only the name clashes (rename to `EngineLiveTable` when it is next touched) | closes I7B_DUPLICATES R13 |
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11) | pass on Rachana `417f6af9` and again on drishti-rachana `develop` `6ae430bc` (api, core, data, live built into the lane's scratch repository `~/.cache/drishti-lanes/g4-live/m2`), on the tree merged with the lake and binder passes |
+| `LiveSetTest` (8), `StorePagesTest` (3), `LiveIsolationTest` (3), `LiveQueryTest` (5), `LiveBlotterBrokerAbsentTest` (1): the engine that still serves | pass |
+| VaR/ES goldens | not affected (no engine or test-data file changed; not run) |
+
+
+## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
+
+G4 item 10 (I7B_DUPLICATES U1, B6; DD-7: Jinja stays). Branch `g4/renderer` from `wip/g4-rehearsal-rx` `fd1b4a847`. Drishti Elements
+**pinned at 3.2.0**: the release tree of the `v3.2.0` tag (`787f97d`, built by `tools/elements/cli.py dist` in a fresh clone), its SHA-384
+manifest unchanged; `drishti.elements.version` 3.2.0, every module's range `>=3.2 <4`, every pinned path, Drishti's two libraries rebuilt.
+The data tables (`world-regions.yaml`, `formats.yaml`) are byte-identical to the 3.1.0 tree, so the server jar's behaviour is unchanged.
+
+### What was done
+
+| Item | Result |
+|---|---|
+| The entry | `static/render/3.2.0/drishti-render.js` keeps the API (`render`, `patch`, `subscribe`, the `Handle`, `<drishti-screen>`, `window.DrishtiRender`) and `drishti-elements.js` the embed elements 2.x (`<drishti-view>`, `<drishti-panel>`): same options, events, attributes and contract. |
+| Every panel | drawn by `drishti-views` `paint()` (`shadow: false` inside the host's shadow root): the title line, strip, freshness line, keys, every kind; drishti-chart, drishti-graph, drishti-data, drishti-inputs and the geo part handed to it from the same module graph. |
+| Host part (Drishti's) | `render/3.2.0/m/`, 10 modules, 1,598 lines: where the ViewModel comes from (`/api/view`, embed v2, the token, the sign-in window), navigation in place with its own Back bar (links are real `/v/…` addresses; the painter's cancelable `link` event opens them), About this page, live frames handed to the painter, the stream over drishti-events. |
+| CSP | the sheet (`drishti-render.css`, generated from Elements' tokens with every theme and the painter's sheets, 1,579 lines, was 3,292) is adopted by the shadow root; the loader's page links for those sheets are claimed without a request, so a host page with `style-src 'self'` loads no stylesheet and reports no violation. No inline styles. |
+| Explain | unchanged code: its `paintPanels` calls the same `render()`; Why it moved (drawer, its three views, the full page) is the painter's. |
+| Deleted | the `drishti-renderer` library (17 modules 2,783 lines, its bundle 1,972, harness and fixtures 134), `tools/renderer_fixtures.py`, `renderer.test.mjs`, `test_elements_renderer_browser.py`; `render/3.1.0/` (its paths answer 308 to 3.2.0 for one release). Not ported (DD-10, DD-11): GenUI stream messages, `facets`, `behaviours: 'console'` (accepted; the painter's tables), the `draw*` parts of the handle (no caller). |
+| Fixed on the way | `/embed/v2/elements/2/` resolved to the frozen 1.2.0 and `/embed/v2/render/2/` to nothing (pre-existing, two failing tests): the element API 2.4.0 maps to the current renderer, the alias is the major; embed v2 serves drishti-views and drishti-events modules; `elements_pin.LIBRARIES` holds all ten. |
+
+Lines: the renderer library and its harness 4,889 deleted, the host part 1,598 added (about 700 of it the old library's sign-in, token, net and About modules, moved); the generated sheet 3,292 to 1,579; tests and tools 213 deleted. The branch, without the vendored tree: +2,520, −7,938.
+
+### Proof
+
+| Check | Result |
+|---|---|
+| Embed and Explain browser tests, Playwright 1.64.1 pinned (Chromium 1248): `test_explain_browser` (4), `test_embed_elements2_browser` (5), `test_render_sign_in_browser` (6) | **15 passed** (before: Explain 4 passed, Elements 2: 3 passed, 2 failed on the alias bug) |
+| Renderer browser suites: `test_render_library_browser` (14), `test_render_behaviours_browser` (4 + 1 xfail E11), `test_render_parity_browser` without the pack Sutras (32: the console's macros against the painter, content: every cell, field and strip text, every entity link, every chart's series values) | pass |
+| Console Node tests (`tests/elements`, `test_elements_node.py`), the render, elements and embed v2 Python tests, the quick file checks | pass, but the six failing on the base commit too (`test_docs_pdfs` 4, `test_code_volume`, `test_docs_ready_example`) |
+| Console errors | none on any page; the painter warns (a warning, by design) on the two edge-case ViewModels that are invalid on purpose (`states`, `more-shapes`) |
+| VaR/ES goldens (`VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`) | **pass, untouched** (no Java changed) |
+
+**Before and after screenshots**: 14 ViewModels (6 captured views, 8 edge cases) × 2 themes (terminal, light) × 2 widths (1280, 390) drawn through
+the public entry, and the Explain test's 7 pages. Pixel diff: a pixel differs when a channel differs by more than **24/255**; compared at the
+larger size. Embed pages: 12.1 % to 74.7 % of pixels differ (median 25.6 %); Explain: preview and phone 0 %, the drawer's Why it moved
+0.8 % to 1.5 %, the full pages 23.9 % (page) and 26.4 % (Why it moved as a page). Every difference, with its reason (the content is the
+same: the parity suite):
+
+| Difference | Reason |
+|---|---|
+| Type: figures in the sans face (the old renderer set strip, fields and tables in the mono face in the terminal theme); smaller title | the painter's typography (Elements' tokens) |
+| Panel header: no accent bar, no per-panel `?` help button; a code tag (`CRV`, `REFS`) as a chip | the painter's frame; the console's help `?` is console chrome |
+| Strip: an emphasised figure is coloured text, not a filled box; no "with" before the counterparty | the painter's cell tones |
+| Freshness line (`live · aero-risk`) and the function keys row (`F2 Legs …`) drawn under the strip | the painter draws them (the old renderer did not show them) |
+| Key-value panels: values beside labels, left-aligned, one column at 1280 | the painter's field list |
+| Tables: a "Filter the rows" box and pages on long tables; tree tables open one level; a dash in an empty cell | the painter's tables |
+| Each chart: a "Data table" disclosure under it, a legend under donuts | the painter's chart frame |
+| Timeline, ladder status chips, gauge bar width | the painter's kinds |
+| The element sizes to its content (the old one filled the viewport with the theme's background) | an embed's height is its content; below it the host page shows |
+| Explain drawer: the metric panels' header without the accent bar; the change under the figure instead of beside it | the painter's metric kind |
+| Candlestick Data table: the raw numbers instead of the server's `openText`… | Elements finding E11 (below) |
+
+### Findings
+
+| # | Finding | Who |
+|---|---|---|
+| E11 | `drishti-views`' candlestick Data table prints `str(c.open)`, not the producer's `openText`/`highText`/`lowText`/`closeText` the contract carries (test `test_the_candles_print_the_servers_texts`, xfail strict) | Elements |
+| E12 | the painter cannot take a host's sheets: with a shadow root it links each library sheet into it, without one into the page; a cross-origin host with `style-src 'self'` refuses both. Drishti claims the loader's links and adopts its own sheet; an option for adopted sheets (or a pack sheet as a `CSSStyleSheet`) would remove the claim | Elements |
+| E13 | the chart kinds need `window.echarts` before they draw (`engine: () => win.echarts`); the host loads it. The painter's own loading would match its words ("the chart engine loaded only when a view has a chart") | Elements |
+| E14 | the painter's validation warns on ViewModels without `contract`; Drishti sets `1.x` (VIEWMODEL.md section 8) | Drishti, done |
+| D1 | the server-side parity check of every pack Sutra (`test_every_pack_sutra_on_its_sample_is_the_same`) still skips: the server's preview answers 422 for those Sutras (as on the base commit) | Drishti, triage |

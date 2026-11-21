@@ -36,8 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Rachana, BI's expression language, over HTTP (docs/guides/API_REFERENCE.md "Expressions", docs/guides/RACHANA_REFERENCE.md): the function catalogue the expression
  * editor completes from ({@code GET /bi/expr/functions}), checking one expression in its scope against a model as the caller sees it
- * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses). Nothing here reads data or stores anything;
- * a text in an older syntax is migrated by {@code drishti.py tables migrate}.
+ * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses). Nothing here reads data or stores anything.
  */
 @RestController
 @RequestMapping("/api/v1/bi/expr")

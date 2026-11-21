@@ -73,14 +73,4 @@ public interface ThreadStore {
     List<Mention> mentionsOf(Collection<String> targets, int limit, String beforeCommentId);
 
     List<Mention> mentions(String commentId);
-
-    /** Records that legacy note {@code noteId} is (now) {@code commentId}. */
-    void linkNote(long noteId, String commentId);
-
-    Optional<String> commentOfNote(long noteId);
-
-    Optional<Long> noteOfComment(String commentId);
-
-    /** Notes already linked (the import skips them). */
-    Set<Long> linkedNotes();
 }

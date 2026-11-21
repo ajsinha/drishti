@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.runs;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -67,7 +67,7 @@ class RunPlannerTest {
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         history = new RunHistory();
         service.history(history);
-        ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), Layered.dataset(TestLake.yaml()).dataset(), "h1");
+        ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), TestLake.dataset().dataset(), "h1");
     }
 
     @AfterEach

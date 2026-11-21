@@ -13,4 +13,4 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 guides:
-  - { slug: logistics-pack, category: start, title: "The logistics pack", kind: guide, icon: truck, file: guides/logistics.md, summary: "Shipments, reefer containers, vessels and ports: a second industry on the same core." }
+  - { slug: logistics-pack, category: get-started, title: "The logistics pack", kind: guide, icon: truck, file: guides/logistics.md, summary: "Shipments, reefer containers, vessels and ports: a second industry on the same core." }

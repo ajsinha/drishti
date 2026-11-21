@@ -41,65 +41,69 @@ import org.junit.jupiter.api.io.TempDir;
 class MqEngineTest {
 
     static final String TRADES = """
-            rachana: 2
-            dataset: trades
+            rachana: 3
+            table: bi.trades
+            was: trades
             version: 1.0.0
-            source: { connector: trading-lake, kind: trade }
-            grain: { keys: [id] }
+            from: { kind: trade, connector: trading-lake }
+            keys: [id]
             columns:
-              desk:      { type: string, references: desk }
-              currency:  { type: string, path: ccy }
-              cpty:      { type: string, path: counterparty.id }
-              notional:  { type: decimal, unit: { currency: currency }, aggregate: sum }
-              mtm:       { type: decimal, unit: { currency: USD }, aggregate: sum }
-              tradeDate: { type: date }
-            security:
-              masked: [cpty]
+              desk:      { path: "$.desk", type: string, references: desk }
+              currency:  { path: "$.ccy", type: string }
+              cpty:      { path: "$.counterparty.id", type: string, masked: true }
+              notional:  { path: "$.notional", type: decimal, unit: currency, aggregate: sum }
+              mtm:       { path: "$.mtm", type: decimal, unit: USD, aggregate: sum }
+              tradeDate: { path: "$.tradeDate", type: date }
+            materialize: on-load
             """;
     static final String DESKS = """
-            rachana: 2
-            dataset: desks
+            rachana: 3
+            table: bi.desks
+            was: desks
             version: 1.0.0
-            source: { connector: desk-lake, kind: desk }
-            grain: { keys: [desk] }
+            from: { kind: desk, connector: desk-lake }
+            keys: [desk]
             columns:
-              desk:   { type: string, role: key }
-              region: { type: string }
+              desk:   { path: "$.desk", type: string, role: key, key: true }
+              region: { path: "$.region", type: string }
+            materialize: on-load
             """;
     static final String LIMITS = """
-            rachana: 2
-            dataset: limits
+            rachana: 3
+            table: bi.limits
+            was: limits
             version: 1.0.0
-            source: { connector: limit-lake, kind: limit }
+            from: { kind: limit, connector: limit-lake }
             columns:
-              desk:   { type: string }
-              amount: { type: decimal, aggregate: sum, additive: { over-time: last } }
+              desk:   { path: "$.desk", type: string }
+              amount: { path: "$.amount", type: decimal, aggregate: sum }
+            materialize: on-load
             """;
     static final String MODEL = """
-            rachana: 2
+            rachana: 3
             model: desk-risk
             version: 1.0.0
-            datasets:
-              trades: { dataset: trades, role: fact }
-              limits: { dataset: limits, role: fact }
-              desks:  { dataset: desks, role: dimension }
+            tables:
+              trades: { table: bi.trades, role: fact }
+              limits: { table: bi.limits, role: fact }
+              desks:  { table: bi.desks, role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
               - { id: r_2, from: limits.desk, to: desks.desk }
             measures:
-              MTM:      { id: m_mtm, expr: "sum(trades.mtm)" }
-              Notional: { id: m_notional, expr: "sum(trades.notional)" }
-              Trades:   { id: m_trades, expr: "count(trades)" }
-              AvgMTM:   { id: m_avg, expr: "avg(trades.mtm)" }
-              Limit:    { id: m_limit, expr: "sum(limits.amount)" }
-              Usage:    { id: m_usage, expr: "measure('Notional') / measure('Limit')" }
-              Vol:      { id: m_vol, python: desk-vol, inputs: [trades.mtm], by: [trades.desk] }
+              MTM:      { expr: sum(trades.mtm), id: m_mtm }
+              Notional: { expr: sum(trades.notional), id: m_notional }
+              Trades:   { expr: count(trades), id: m_trades }
+              AvgMTM:   { expr: avg(trades.mtm), id: m_avg }
+              Limit:    { expr: sum(limits.amount), id: m_limit }
+              Usage:    { expr: "measure('Notional') / measure('Limit')", id: m_usage }
+              Vol:      { python: desk-vol, inputs: [trades.mtm], by: [trades.desk], id: m_vol }
             hierarchies:
               Desk: [desks.region, desks.desk]
             security:
               rows:
                 trades:
-                  - { role: desk-head, where: "trades.desk in user.desks" }
+                  - { role: desk-head, where: trades.desk in user.desks }
                   - { role: [risk, analyst, emea], where: "true" }
                 desks:
                   - { role: emea, where: "desks.region == 'EMEA'" }

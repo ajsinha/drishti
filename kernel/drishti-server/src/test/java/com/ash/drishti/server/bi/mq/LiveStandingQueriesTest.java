@@ -48,29 +48,29 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class LiveStandingQueriesTest {
 
-    static final String TRADES = MqEngineTest.TRADES.replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\ntime: { mode: live }")
-            .replace("security:\n  masked: [cpty]\n", "");
+    static final String TRADES = MqEngineTest.TRADES.replace("materialize: on-load", "materialize: { live: {} }")
+            .replace(", masked: true", "");
     static final String MODEL = """
-            rachana: 2
+            rachana: 3
             model: live-desks
             version: 1.0.0
-            datasets:
-              trades: { dataset: trades, role: fact }
-              desks:  { dataset: desks, role: dimension }
+            tables:
+              trades: { table: bi.trades, role: fact }
+              desks:  { table: bi.desks, role: dimension }
             relationships:
               - { id: r_1, from: trades.desk, to: desks.desk }
             measures:
-              MTM:     { expr: "sum(trades.mtm)" }
-              Trades:  { expr: "count(trades)" }
-              AvgMTM:  { expr: "avg(trades.mtm)" }
+              MTM:      { expr: sum(trades.mtm) }
+              Trades:   { expr: count(trades) }
+              AvgMTM:   { expr: avg(trades.mtm) }
               PerTrade: { expr: "measure('MTM') / measure('Trades')" }
-              Biggest: { expr: "max(trades.notional)" }
-              Pct:     { expr: "share_of(measure('MTM'), over=ALL)" }
-              Big MTM: { expr: "sum(trades.mtm, where=trades.notional > 1000)" }
+              Biggest:  { expr: max(trades.notional) }
+              Pct:      { expr: "share_of(measure('MTM'), over = ALL)" }
+              Big MTM:  { expr: "sum(trades.mtm, where = trades.notional > 1000)" }
             security:
               rows:
                 trades:
-                  - { role: desk-head, where: "trades.desk in user.desks" }
+                  - { role: desk-head, where: trades.desk in user.desks }
                   - { role: [risk, analyst], where: "true" }
             """;
 

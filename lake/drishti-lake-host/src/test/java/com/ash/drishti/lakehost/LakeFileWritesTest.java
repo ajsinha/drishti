@@ -74,78 +74,6 @@ class LakeFileWritesTest {
     }
 
     @Test
-    void aStartAfterTheMoveLeavesACompleteDemoLakeFileByteForByte() throws Exception {
-        Path lakes = Files.createDirectories(tmp.resolve("lakes"));
-        Path conns = Files.createDirectories(tmp.resolve("connectors"));
-        Files.copy(DEMO, lakes.resolve("demo.yaml"));
-        byte[] before = Files.readAllBytes(lakes.resolve("demo.yaml"));
-        // connector files in the form every shipped template had before the lake form: the old default root, its domain and kinds
-        int n = 0;
-        for (Path pack : shippedPackFiles()) {
-            JsonNode m = YAML.readTree(Files.readString(pack));
-            for (var it = m.path("connectors").fields(); it.hasNext(); ) {
-                var c = it.next();
-                JsonNode st = c.getValue().path("settings");
-                if (!"delta".equals(c.getValue().path("plugin").asText()) || !"demo".equals(st.path("lake").asText())) {
-                    continue;
-                }
-                StringBuilder y = new StringBuilder("# Generated at first start from the connector template of pack 'x'.\nplugin: delta\nkinds:\n");
-                StringBuilder s = new StringBuilder("settings:\n  root: ${DRISHTI_DELTA_ROOT:./data/delta}\n");
-                String domain = null;
-                for (String t : st.path("lake-tables").asText().split(",")) {
-                    String name = t.strip();
-                    String folder = name.substring(name.indexOf('.') + 1);
-                    String kind = m.path("lake").path("tables").path(name).path("kind").asText(folder);
-                    domain = name.substring(0, name.indexOf('.'));
-                    y.append("- ").append(kind).append('\n');
-                    if (!kind.equals(folder)) {
-                        s.append("  table.").append(kind).append(": ").append(folder).append('\n');
-                    }
-                }
-                s.append("  domain: ").append(domain).append('\n');
-                Files.writeString(conns.resolve(c.getKey() + ".yaml"), y.append(s).toString());
-                n++;
-            }
-        }
-        assertTrue(n > 10, n + " connector files");
-        LakeFiles.Migration m = LakeFiles.adoptDemo(DrishtiLake.runtime(), conns, lakes, true);
-        assertEquals(n, m.connectorFiles().size(), m.notes().toString());
-        assertTrue(m.lakeFiles().isEmpty(), "nothing to add: " + m.lakeFiles().keySet());
-        assertEquals(new String(before), Files.readString(lakes.resolve("demo.yaml")));
-        // a second start: the connectors read lake: demo already; nothing is written at all
-        LakeFiles.Migration again = LakeFiles.adoptDemo(DrishtiLake.runtime(), conns, lakes, true);
-        assertTrue(again.lakeFiles().isEmpty() && again.connectorFiles().isEmpty(), again.notes().toString());
-        assertEquals(new String(before), Files.readString(lakes.resolve("demo.yaml")));
-    }
-
-    @Test
-    void aSitesOwnConnectorAddsOnlyItsEntryAndKeepsEveryOtherLine() throws Exception {
-        Path lakes = Files.createDirectories(tmp.resolve("lakes"));
-        Path conns = Files.createDirectories(tmp.resolve("connectors"));
-        Files.copy(DEMO, lakes.resolve("demo.yaml"));
-        String before = Files.readString(lakes.resolve("demo.yaml"));
-        Files.writeString(conns.resolve("site-store.yaml"), """
-                plugin: delta
-                kinds: [site-thing, var]
-                settings:
-                  root: ${DRISHTI_DELTA_ROOT:./data/delta}
-                  domain: risk
-                  layout.site-thing.columns: THING_ID,NAME
-                """);
-        LakeFiles.adoptDemo(DrishtiLake.runtime(), conns, lakes, true);
-        String after = Files.readString(lakes.resolve("demo.yaml"));
-        assertTrue(after.startsWith(before), "every line of the file is kept, the entries come after them");
-        assertEquals("  risk.site-thing: {promote: [THING_ID, NAME]}\n  risk.var: {}\n", after.substring(before.length()));
-        Lake l = Lakes.readFile(lakes.resolve("demo.yaml"), k -> null);
-        assertEquals(List.of("THING_ID", "NAME"), l.require("risk", "site-thing").promote());
-        // the connector file is a site file: kept beside it, rewritten to the lake form
-        try (var s = Files.list(conns)) {
-            assertTrue(s.anyMatch(p -> p.getFileName().toString().startsWith("site-store.yaml.before-lake-")));
-        }
-        assertEquals("risk.site-thing,risk.var", YAML.readTree(Files.readString(conns.resolve("site-store.yaml"))).path("settings").path("lake-tables").asText());
-    }
-
-    @Test
     void anEntryIsAddedInTheFilesStyleAndAnEmptyLakeKeepsItsComments() throws Exception {
         Path f = tmp.resolve("risklake.yaml");
         String empty = """
@@ -194,22 +122,6 @@ class LakeFileWritesTest {
         Lake l = Lakes.readFile(f, k -> null);
         assertEquals(30, l.require("risk", "wide").promote().size());
         assertEquals("TRADE_ID", l.require("trading", "trade", "trade_endur").id());
-    }
-
-    @Test
-    void theOfficialResultsReaderIsNotMovedIntoTheDemoLake() throws Exception {
-        Path lakes = Files.createDirectories(tmp.resolve("lakes"));
-        Path conns = Files.createDirectories(tmp.resolve("connectors"));
-        for (String n : List.of("demo.yaml", "banking/var-official.yaml")) {         // the banking lakes in their module's folder
-            Files.copy(REPO.resolve("config/lakes").resolve(n), Files.createDirectories(lakes.resolve(n).getParent()).resolve(Path.of(n).getFileName()));
-        }
-        String results = "plugin: delta\nkinds:\n- var-official\nsettings:\n  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n"
-                + "  domain: risk-results\n";
-        Files.writeString(conns.resolve("var-results.yaml"), results);
-        LakeFiles.Migration m = LakeFiles.adoptDemo(DrishtiLake.runtime(), conns, lakes, true);
-        assertTrue(m.connectorFiles().isEmpty() && m.lakeFiles().isEmpty(), m.notes().toString());
-        assertEquals(results, Files.readString(conns.resolve("var-results.yaml")));
-        assertEquals(Files.readString(DEMO), Files.readString(lakes.resolve("demo.yaml")));
     }
 
     @Test

@@ -1,0 +1,7 @@
+rachana: 3
+model: desk-notional-prep
+version: 1.0.0
+tables:
+  desks: { table: bi.desk_notional_prep, role: fact }
+measures:
+  Notional: { expr: sum(desks.notional) }

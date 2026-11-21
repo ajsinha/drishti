@@ -512,7 +512,6 @@ also checks at start that its entities match the tables, and refuses to start, n
 | `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), scopes, created, expires, last used, revoked |
 | `drishti_session` | console sign-in sessions: a SHA-256 of the session id (never the id), user, created, expires. A row is removed at sign-out, when the user is disabled, deleted or has their password reset, and (hourly) once expired |
 | `drishti_access` | the access log: when, who, action (view, raw, history, search, export), kind, id, search text or field, business date |
-| `drishti_note` | notes on entities and their fields: entity, field path, author, text, created, edited. Kept when their author is deleted |
 | `drishti_switch` · `drishti_switch_log` | the command and pack switches and every change to them ([section 20.6](#206-where-it-is-kept)) |
 
 Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`), and their saved documents too.
@@ -1305,7 +1304,7 @@ WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in
       Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
 ```
 
-`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` are read as `drishti.sensitivities.*`. The in-memory lake is on when its
+`drishti.sensitivities.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings. The in-memory lake is on when its
 stores are configured in `application.local.yaml` (`drishti.lake.memory.stores`) and nothing sets its switch. To tidy up, move the engine
 keys from `application.local.yaml` to the engine's file; `drishti.py server engines show var --sources` says where each key comes from.
 
