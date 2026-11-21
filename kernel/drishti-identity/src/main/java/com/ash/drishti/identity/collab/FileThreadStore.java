@@ -47,8 +47,7 @@ import java.util.stream.Stream;
 
 /**
  * Comment threads as files: {@code <dir>/threads/<kind>/<sha1 of the entity id>.jsonl}, one append-only log per entity holding every
- * thread, comment (with its sealed revision and mentions) and follow event, folded into memory once at first use; and
- * {@code <dir>/threads/note-links.jsonl} for the legacy-note links. Every append is fsync'd. One server only (the server refuses a file
+ * thread, comment (with its sealed revision and mentions) and follow event, folded into memory once at first use. Every append is fsync'd. One server only (the server refuses a file
  * store beside a shared database). All access is serialised by one {@link ReentrantLock}; nothing is held across anything but the
  * append itself.
  */
@@ -68,7 +67,6 @@ public final class FileThreadStore implements ThreadStore {
     private final Map<String, Set<String>> mentionTargets = new HashMap<>();
     private final List<Mention> mentionList = new ArrayList<>();
     private final Map<String, Follow> follows = new HashMap<>();
-    private final Map<Long, String> noteLinks = new TreeMap<>();
 
     public FileThreadStore(Path dir) {
         this.root = dir.toAbsolutePath().normalize().resolve("threads");
@@ -110,7 +108,6 @@ public final class FileThreadStore implements ThreadStore {
                 follows.put(f.threadId() + "\u0000" + f.username(), f);
             }
             case "unfollow" -> follows.remove(e.path("threadId").asText() + "\u0000" + e.path("username").asText());
-            case "note-link" -> noteLinks.put(e.path("noteId").asLong(), e.path("commentId").asText());
             default -> { }
         }
     }
@@ -272,7 +269,6 @@ public final class FileThreadStore implements ThreadStore {
                     comments.remove(c);
                     revisions.remove(c);
                     mentionTargets.remove(c);
-                    noteLinks.values().removeIf(c::equals);
                 }
                 mentionList.removeIf(m -> cids.contains(m.commentId()));
             }
@@ -336,7 +332,6 @@ public final class FileThreadStore implements ThreadStore {
             mentionTargets.clear();
             mentionList.clear();
             follows.clear();
-            noteLinks.clear();
             loaded = false;
             load();
         } finally {
@@ -468,54 +463,6 @@ public final class FileThreadStore implements ThreadStore {
         try {
             load();
             return mentionList.stream().filter(m -> m.commentId().equals(commentId)).toList();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public void linkNote(long noteId, String commentId) {
-        lock.lock();
-        try {
-            load();
-            ObjectNode e = event("note-link");
-            e.put("noteId", noteId);
-            e.put("commentId", commentId);
-            append(root.resolve("note-links.jsonl"), e);
-            noteLinks.put(noteId, commentId);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public Optional<String> commentOfNote(long noteId) {
-        lock.lock();
-        try {
-            load();
-            return Optional.ofNullable(noteLinks.get(noteId));
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public Optional<Long> noteOfComment(String commentId) {
-        lock.lock();
-        try {
-            load();
-            return noteLinks.entrySet().stream().filter(e -> e.getValue().equals(commentId)).map(Map.Entry::getKey).findFirst();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public Set<Long> linkedNotes() {
-        lock.lock();
-        try {
-            load();
-            return Set.copyOf(noteLinks.keySet());
         } finally {
             lock.unlock();
         }

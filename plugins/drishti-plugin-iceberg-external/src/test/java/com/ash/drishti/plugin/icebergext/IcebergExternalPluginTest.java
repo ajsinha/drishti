@@ -265,8 +265,10 @@ class IcebergExternalPluginTest {
             var schemas = p.starterSchemas();
             assertThat(schemas.get("trade").path("properties").path("COUNTERPARTY").path("x-drishti-link").asText()).isEqualTo("counterparty");
             assertThat(schemas.get("counterparty").path("properties").path("CPTY_ID").path("x-drishti-role").asText()).isEqualTo("key");
-            // the read API reports flat columns: a partition-spec date and a nested struct's fields are not described (a date column named by tables.<kind>.date is)
-            assertThat(schemas.get("counterparty").path("properties").has("ADDRESS")).isTrue();
+            // a nested struct is described with its fields
+            assertThat(schemas.get("counterparty").path("properties").path("ADDRESS").toString()).as("nested").contains("properties");
+            // the business date named by the table's day partition (no tables.<kind>.date) is the date role
+            assertThat(schemas.get("trade").path("properties").toString()).as("partition-spec date").contains("\"x-drishti-role\":\"date\"");
         } finally {
             p.close();
         }
@@ -295,8 +297,9 @@ class IcebergExternalPluginTest {
         try {
             IcebergExternalPlugin p = plugin(ghost);
             try {
-                assertThat(p.health()).startsWith("DEGRADED: ").contains("qa-ghost: no table qa.ghost");
-                assertThat(p.notServed().get("qa-ghost")).contains("no table qa.ghost");
+                assertThat(p.health()).startsWith("DEGRADED: ").contains("qa-ghost: no table ghost: looked in")
+                        .contains("version-hint.text").contains("(the folder is empty)");
+                assertThat(p.notServed().get("qa-ghost")).contains("looked in").contains("version-hint.text");
                 assertThat(p.fetch(EntityRef.of("currency", "JPY"), AsOf.of(LocalDate.of(2020, 1, 1)))).as("the other tables still served").isPresent();
             } finally {
                 p.close();

@@ -1,0 +1,8 @@
+rachana: 3
+model: rows-model
+version: 1.0.0
+tables:
+  trade: { table: bi.rows_trade, role: fact }
+measures:
+  NOTIONAL: { expr: sum(trade.NOTIONAL) }
+  Trades:   { expr: count(trade) }

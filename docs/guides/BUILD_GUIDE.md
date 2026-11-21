@@ -1709,7 +1709,7 @@ A pack's help appears in the help centre (`/help`) next to the core guides. `con
 
 ```yaml
 guides:
-  - { slug: helpdesk-pack, category: start, title: "The help-desk pack", kind: guide, icon: headset,
+  - { slug: helpdesk-pack, category: get-started, title: "The help-desk pack", kind: guide, icon: headset,
       file: guides/helpdesk.md, summary: "Tickets, agents and clients." }
 contextual:                     # optional: which guide F1 opens on a screen
   terminal: helpdesk-pack
@@ -1718,7 +1718,7 @@ contextual:                     # optional: which guide F1 opens on a screen
 | Key | Meaning |
 |---|---|
 | `slug` | the guide's address: `/help/helpdesk-pack`. Unique across all packs |
-| `category` | the help section the guide joins, in its group *From the packs*: a section id of `drishti-console/config/help.yaml` (`get-started`, `data`, `build`, …) or a name its `aliases:` maps (`start`, `packs`, `layouts`); the shipped packs use `packs` (the **Data** section) |
+| `category` | the help section the guide joins, in its group *From the packs*: a section id of `drishti-console/config/help.yaml` (`get-started`, `data`, `build`, …); the shipped packs use `data` |
 | `title`, `summary`, `icon` | the card; `icon` is a Bootstrap Icons name without the `bi-` prefix |
 | `kind` | `guide` or `tutorial`: the badge beside the title |
 | `file` | the Markdown file, relative to the pack folder |

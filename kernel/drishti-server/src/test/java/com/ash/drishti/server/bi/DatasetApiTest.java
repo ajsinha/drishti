@@ -71,7 +71,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DatasetApiTest {
 
-    /** The trades of lake-test as tables migrate wrote them: a table of the layer (its model is lake-test). */
+    /** The trades of lake-test a table of the layer (its model is lake-test). */
     static final String DS = "file:table:bi.lake_test_trades";
     static Path root;
 
@@ -111,47 +111,8 @@ class DatasetApiTest {
         try {
             Path datasets = com.ash.drishti.server.TestRun.root().resolve("bi-dataset-folder/datasets");
             Files.createDirectories(datasets);
-            Files.writeString(datasets.resolve("lake-test.dataset.yaml"), """
-                    rachana: 1
-                    dataset: lake-test
-                    title: Lake test
-                    description: Trades read through a file connector, for the API test.
-                    tables:
-                      trades:
-                        source: { connector: test-lake, kind: trade }
-                        columns:
-                          desk: string
-                          book: string
-                          currency: string
-                          counterpartyId: { path: counterparty.id, type: string }
-                          notional: decimal
-                          mtm: decimal
-                          tradeDate: date
-                      books:
-                        source: { connector: test-ref, kind: book }
-                        columns:
-                          name: string
-                          desk: string
-                    relationships:
-                      - { from: trades.book, to: books.id, cardinality: many-to-one }
-                    measures:
-                      Notional: { expr: "sum(trades.notional)" }
-                      MTM: { expr: "sum(trades.mtm)" }
-                      Trades: { expr: "count(trades)" }
-                    security:
-                      rows:
-                        - { role: desk-head, where: "trades.desk in user.desks" }
-                        - { role: bi-risk, where: "true" }
-                        - { role: bi-analyst, where: "true" }
-                        - { role: admin, where: "true" }
-                      masked: [mtm]
-                    rollups:
-                      - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
-                    """);
-            // a dataset is asked through its model: tables migrate writes lake-test's tables and model under tables/ (docs/architecture/ARCHITECTURE.md §28 4.3)
-            Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "rachana: 2\ndataset: hidden-sample\nversion: 1.0.0\ntitle: A sample\nsample: true\n"
-                    + "source: { kind: trade }\ncolumns:\n  desk: { type: string }\n");
-            TablesFolder.migrate(datasets.getParent());
+            // a dataset is asked through its model: lake-test.s tables and model are under tables/
+            com.ash.drishti.server.bi.TablesFolder.place(datasets.getParent(), "DatasetApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -341,7 +302,7 @@ class DatasetApiTest {
         // BI's old dataset form is refused with the migration's command
         JsonNode old = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n")));
         assertThat(old.path("valid").asBoolean()).isFalse();
-        assertThat(old.path("problems").toString()).contains("DRS-9196").contains("tables migrate");
+        assertThat(old.path("problems").toString()).contains("DRS-9196").contains("write it as a table");
     }
 
     @Test @Order(4)

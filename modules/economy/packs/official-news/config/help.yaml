@@ -14,4 +14,4 @@
 
 
 guides:
-  - { slug: official-news-pack, category: packs, title: "The official-news pack", kind: guide, icon: newspaper, file: guides/official-news.md, summary: "Press releases and notices of central banks, regulators and governments from their own feeds (Fed, ECB, BoC, BoE, SEC, OSFI, Federal Register, Canada Gazette), filled daily by the official-news feed into newslake, each publisher's terms recorded. Type PRESS PRESS-FED." }
+  - { slug: official-news-pack, category: data, title: "The official-news pack", kind: guide, icon: newspaper, file: guides/official-news.md, summary: "Press releases and notices of central banks, regulators and governments from their own feeds (Fed, ECB, BoC, BoE, SEC, OSFI, Federal Register, Canada Gazette), filled daily by the official-news feed into newslake, each publisher's terms recorded. Type PRESS PRESS-FED." }

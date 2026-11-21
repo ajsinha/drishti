@@ -38,18 +38,20 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Parity (docs/architecture/ARCHITECTURE.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana's own
- * list aggregates before they were removed. Every call of {@code sum}, {@code min}, {@code max} and {@code group} in every Sutra and
+ * Parity (docs/architecture/ARCHITECTURE.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana Core's own
+ * aggregates. Every call of {@code sum}, {@code min}, {@code max} and {@code group} in every Sutra and
  * fragment of {@code modules/<module>/packs/<pack>/sutras} is evaluated on every test case of the pack ({@code modules/<module>/packs/<pack>/tests/<sutra>/
  * cases.jsonl}), at the document's root and, for a call that reads {@code @}, on every element of every list in the document (the rows
- * a panel binds); the figure from the engine is compared with the figure from {@link LegacyListAggregates} (the old code, unchanged)
- * on the same evaluated arguments. Equal means equal, or, for a total of fractional numbers, equal to 12 significant digits: the
- * engine's sum is compensated (Neumaier), so it may differ from the old plain sum in the last binary digit, never in a figure shown.
+ * a panel binds); the figure from the engine is compared with the figure from Rachana Core ({@code new ElCompiler()}, no host functions)
+ * on the same document. Equal means equal, or, for a total of fractional numbers, equal to 12 significant digits: the
+ * engine's sum is compensated (Neumaier), so it may differ from Core's in the last binary digit, never in a figure shown.
  */
 class SutraAggregateParityTest {
 
     static final Path PACKS = Path.of(TestRoots.repo(), "config", "packs");
     static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
+    /** Rachana Core's own aggregates, with no host function on top. */
+    static final ElCompiler CORE = new ElCompiler();
     static final Formats F = Formats.load(null, List.of("../../examples/packs/finance/config/formats.yaml"));
     static final Pattern CALL = Pattern.compile("(?<![A-Za-z0-9_.$@])(sum|min|max|group)\\(");
     static final int MAX_ROWS_PER_DOCUMENT = 5_000;
@@ -72,12 +74,12 @@ class SutraAggregateParityTest {
                 calls += found.size();
                 for (Call call : found) {
                     Expr whole = EL.compile(call.text());
-                    List<Expr> args = call.args().stream().map(EL::compile).toList();
+                    Expr core = CORE.compile(call.text());
                     boolean rows = call.text().contains("@");
                     for (DataNode doc : docs) {
                         for (EvalContext ctx : contexts(doc, rows)) {
                             Object after = evaluate(whole, ctx);
-                            Object before = legacy(call.name(), args, ctx);
+                            Object before = evaluate(core, ctx);
                             comparisons++;
                             if (isFigure(after)) {
                                 figures++;
@@ -99,7 +101,7 @@ class SutraAggregateParityTest {
         System.out.printf("Sutra parity: %d aggregate calls, %d comparisons, %d with a figure, %d equal only to 12 digits, skipped %s%n",
                 calls, comparisons, figures, lastDigit.size(), skipped);
         lastDigit.forEach(l -> System.out.println("  last binary digit: " + l));
-        assertThat(mismatches).as("figures that differ between Rachana's old list aggregates and the engine's").isEmpty();
+        assertThat(mismatches).as("figures that differ between Rachana Core's aggregates and the engine's").isEmpty();
         assertThat(calls).as("the shipped Sutras' aggregate calls").isGreaterThan(30);
         assertThat(figures).as("comparisons with a figure (not empty, not 0)").isGreaterThan(50);
     }
@@ -236,30 +238,6 @@ class SutraAggregateParityTest {
         } catch (ElException ex) {
             return new Failed(ex.getMessage());
         }
-    }
-
-    /** What the old code gave: the same arguments evaluated the same way, then the old function (a masked argument masks the call). */
-    static Object legacy(String name, List<Expr> args, EvalContext ctx) {
-        List<Object> values = new ArrayList<>(args.size());
-        for (Expr a : args) {
-            Object v;
-            try {
-                v = a.eval(ctx);
-            } catch (ElException ex) {
-                return new Failed(ex.getMessage());
-            }
-            if (Values.masked(v)) {
-                return Values.mask();
-            }
-            values.add(v);
-        }
-        Object out = switch (name) {
-            case "sum" -> LegacyListAggregates.sum(values);
-            case "min" -> LegacyListAggregates.lenient(values, true);
-            case "max" -> LegacyListAggregates.lenient(values, false);
-            default -> LegacyListAggregates.group(values);
-        };
-        return Values.simplify(out);
     }
 
     /** A problem raised while evaluating (compared by its being a problem, both sides). */

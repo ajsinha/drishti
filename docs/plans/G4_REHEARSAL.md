@@ -1,3 +1,18 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
 
 ## Pass 2 (2026-11-21): Rachana profile and Elements 3.x, on `wip/g4-rehearsal-rx`
 
@@ -128,6 +143,17 @@ Python: the tests that cross-checked Java source or fixtures of the deleted modu
 Two failures are older than this branch (`test_memory_caps` run-config check, `test_lake_paths` clusterctl path): same result at `48f7b9931`.
 
 
+### Pass 3 lake closure (2026-11-21, on `g4/lake-close`, against Drishti Lake `cbd329d`)
+
+| # | State | What was done |
+|---|---|---|
+| R5 (the two differences) | closed | Both were generic, so both are Drishti Lake's. `TableReader.absence()` says why a table has no snapshot (a foreign Iceberg table: the catalog's account, for a path-based one the files looked for and what the folder holds; a Delta table: no log; files: no folder), and `TableSnapshot.documentFields()` lists a shaped table's documents' fields with nested fields and the id and date roles, the date also when it is the table's day partition (`DocumentField`; additive, `api-surface.txt` extended; `ShapedReadTest`). The connector's health says `no table ghost: looked in ... for version-hint.text, v<N>.metadata.json ... (the folder is empty)` again; `StarterSchemas` writes nested objects, lists, maps and `x-drishti-role: date` from the partition spec again (tests in `IcebergExternalPluginTest`) |
+| R8 | closed | Decided one by one against Drishti Lake `cbd329d`. Kept as Drishti's own, now said in each file: `jsonstream` (Drishti Lake's loader reads JSON Lines; JSON arrays of any size are the exports `lake build`, `lake scan` and `convert` take; a Lake item if the loader should read arrays), `scan` (profiles an export for `lake build`), `ownership` (the record of the tables `lake build` made, for Drishti's maintenance), `compare_lakes` (an acceptance check by an independent reader, delta-rs, on purpose), `memory_caps` (the launchers' JVM sizing before any JVM starts) and `memory_cli` (the server's admin REST API). None duplicates a Lake capability. `data load --store iceberg` works through the one loader: `samplegen/load_rows.py --format iceberg` (the samples and the book in one run, the layout's promoted columns, the corrections applied before the one load a table, each business date replaced) on `DrishtiLakeCli load`; its options are the loader's settings (`--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--set KEY=VALUE`). Run end to end on the shipped samples (25,430 rows, 29 tables, 10 business days; the working folders removed) |
+| Delta upkeep | Lake gap | Drishti Lake has no Delta compaction (OPTIMIZE), explicit checkpoint or VACUUM: `maintain` is Iceberg only (`IcebergMaintenance`), `LakeRetention` removes dates and rows, the Delta writer checkpoints on its own cadence only. `tools/lake/maintain.py` keeps delta-rs for those three until Drishti Lake has them (the item for the lead: `lake maintain` on a Delta table: compact small files per date, checkpoint, vacuum with the retention floor and the ownership rule; then `maintain.py` calls it and delta-rs leaves the tools) |
+| Lake items found | open | (1) the date guard (`--future-days`, `--zone`) and the retention guard (`--max-drop-share`, `--force-drop`) the old Iceberg loader had are not in the one loader; `data load --store iceberg` takes neither (Delta never had them there). (2) JSON-array input in the loader (above). (3) the archive rule of `tools/lake/archives.py` (451 lines, with the `rows` layout `load_rows.py` reads) and `drishti_lake.archives` (the feed layout only) are two copies of one rule: to be one when Lake's gets the `rows` layout |
+| Python | closed | `test_memory_caps` (the IDE launchers name the JVM options file `serverstart.jvm_flags` writes; the exec jar's manifest grants native access, so no `--add-opens` is passed: the test asked for the old flags) and `test_lake_paths` (`clusterctl` spelled `data/delta/demo`: it asks `lakeconfig.default_root`) fixed at their cause; `drill-java25.txt` no longer names the nine tests that moved to Drishti Lake; the planner's `JvmFooter` flag is `lake.parquet.footer-cache-mb` (the rename left it behind; workbook and test vectors regenerated); `test_maintain_iceberg` knows the lake-files reader's new main; `test_launcher_memory` asks `loaderows` for the Iceberg loader's JVM |
+| Results (after the last edit) | | Python `tools` (1,352 tests): 1,341 pass, 11 fail, none lake: `test_config_readers_guard` (`tools/mrloader/contract.py` and `test_launchers.py` name the packs folders: older than this branch), `test_sdk_builds_genomics` (starts Maven offline), and the contracts' eight and `test_pack_new` pass with `jsonschema` installed (25 of 25). Java: `IcebergExternalPluginTest` 7, Iceberg plugin 49, Delta plugin 94 (`DeltaAfterMaintenanceTest` skipped: no deltalake in the Python it starts), `ArchitectureRulesTest` 30 (the rule's Jackson exemptions are the only change), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` and `PackagedVarGoldenTest` (2 of 2) pass: the goldens are bit-identical |
+
 ## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
 
 ### What was done
@@ -241,6 +267,47 @@ Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. 
 | R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
 
 Note (g4/fixes-1): `drishti.py build jar` ran the server's tests and `LiveTablesAdapterTest` failed (4 tests: no table `position`, RCH-2081 on `TRADE_ID`, a problem-message text) against the lake lane's Rachana snapshot; not one of the four above, not investigated, not changed here.
+
+## Pass 3: shims (2026-11-21), on `g4/shims` from `wip/g4-rehearsal-rx` (`fd1b4a847`)
+
+Owner direction: no customers, so no compatibility code. Removed from the product (rows S1 to S7 of `I7B_DUPLICATES.md`; level 1.0 and Lake's LZ4 reader kept as listed there).
+
+| Row | Removed | Lines |
+|---|---|---|
+| S1 | `tables/migrate` (9 classes), `bi/migrate` (7), `StoredTablesMigration`, `PivotFormulaMigration`, the `migrate` command of `TablesCli` and `tablescli.py`, `bi migrate` of `bilang.py`, the setting `drishti.bi.migrate.*`; `PivotFormulaMigrationTest`, `StoredTablesMigrationTest`, `TablesMigratorTest`, `NullRuleTest`, `BoardMigrationApiTest` | about 4,300 |
+| S2 | the DEL reader: `DelParser`, `DelToRachana`, `DelAst`, `DelTablesTranslator`, the `Legacy` mode of `Expressions`, the setting `drishti.bi.expr.legacy`, `OLD_SYNTAX` | about 1,100 |
+| S3 | `LegacyNames` and its calls (`.uploads`, `.previous`) | 134 |
+| S4 | `LakeRelocateOnStart`, `tools/lake/relocate.py`, `lake relocate`, `drishti.lakes.relocate-on-start` | 330 |
+| S5 | `ApiAlias`, `ApiAliasFilter`, `api.legacy`, `EngineKeyAliases` (it aliased names nothing read) | 250 |
+| S6 | `lake migrate-config` (Python side) | 50 |
+| S7 | `LegacyImport` (users.json), `NoteImport`, `SharedLib.migrate` / `previousDefault` and its test, the `plugin-dir` default | 650 |
+
+**Messages kept (one line, what to do):** an old-form BI dataset or model (`DRS-9196`, `DRS-9614`) says to write it as a table or model; `drishti.sources.plugin-dir` and `drishti.external-lib`, when still set, log that they are no longer read; `lake build` says to delete a demo lake left in the older layout and build again.
+
+### Part 2 (2026-11-21): the test fixtures, the notes table, the console redirect, Help's old names, the lake's migration code
+
+Owner rule restated: no shim is kept "for tests" either. What was left in part 1 is now done, except the two items named at the end.
+
+| Row | Removed | Lines |
+|---|---|---|
+| S1 (tests) | the test-scope migrator (`tables/migrate`, 8 classes), the DEL reader (`DelAst`, `DelParser`, `DelToRachana`, `DelTablesTranslator`), `Layered` and the old `TablesFolder`; `EquivalenceTest` and `NoMoreRowsAfterMigrationTest` (both compared old forms with the migrated ones) and the `before-tables` and `samples-2.1` fixtures | about 4,000 |
+| S1 (fixtures) | the 55 server tests that went through `Layered` or `TablesFolder` now hold tables and models of the layer: `Tables` (read a model over its tables), `TestLake` (the shared model, its two tables, `liveTrades`, `table`, `withTable`), `TablesFolder.place` (a folder case's tables and models are files in `src/test/resources/bi/folders/<case>`), `bi/samples` (the 2.1 samples as models, tables and rebound reports). Each fixture was written by running the old migrator once over it and keeping the output (read, not trusted: five hand repairs, three tests whose assertions were about the old forms rewritten for the current checks) | +2,400 |
+| S7 | `NoteStore`, `NoteEntity`, `linkNote` and its three implementations, `drishti_note` and `drishti_note_link` in both schema files (the two files change together; no migration, as the database rules say) and their tests | 300 |
+| S7 | `FormatSchemas.LEGACY`: a bad value of any format key is an error (`DRS-9032`), not a warning for the keys a 2.3 report could hold | 20 |
+| S7 | the console's `/bi/b/<id>` redirect (alerts and runs already link to `/bi/r/<id>`; the fixtures that held the old address changed first), Help's `aliases:` (pack guides name their section by its id: 30 `help.yaml` files) and `moved:` (about 400 lines) with `section_id`, `lib.moved`, the settings catalogue rows and the tests of the old addresses; the links of `developer.md` that used old slugs | 520 |
+| S7 | `LegacyListAggregates` (the "before" oracle): `SutraAggregateParityTest` compares the engine with Rachana Core (`new ElCompiler()`, no host function) over the same Sutras and cases | 143 |
+| S6 (Lake) | `LakesCli migrate-config`, `LakeFiles.migrate`, `adoptDemo`, `demoRoot` and their helpers, `ConnectorLake.legacy` and its `LakeCheck` note; `api-surface.txt` and CHANGELOG; Drishti's three tests of the same code; `tools/ci/check.py` **green** (build, delta-rs interop 3+3+2 with none skipped, Python tests, parity kit twice, coverage gates, equal to the reference). drishti-lake `main` `94dd281` | 497 |
+
+Also fixed at the cause: `NodeLowering` threw a null pointer for `rank()` (a window function with no measure); it now refuses with a message (the DEL reader used to catch this before Rachana's lowering saw it). The window test's `rank(x, 'sideways')` case is dropped: the current checker accepts it (a Rachana question, not a shim).
+
+**ArchitectureRulesTest and OneGrammarRulesTest were already failing on the base branch** (`wip/g4-rehearsal-rx`; the classes came in with the 8.3e and 8.3g commits). `noSerializable` now exempts Jackson's extension points (`SimpleModule`, `AnnotationIntrospector`, `BeanSerializerModifier`, `BeanPropertyWriter`: Serializable by their base classes, the rule's existing kind of exemption); `onlyTheEngineAddsFunctionsToRachana` exempts the module host's `RachanaFunctions` (a started module's scalar functions; the engine stays the only source of aggregates).
+
+**Not done, and why (named, not deferred silently):**
+
+- S6 `ConnectorManager`'s connectors defined in `application.yaml`: the seven profile files (`application-{postgres,files,mongodb,redis,duckdb,aerospike,iceberg}.yaml`) define their connectors there, and `props.connectors()` is also the map the connector files are loaded into. Removing the path means writing those profiles as connector templates of a module (a design step, not a deletion). Left as it was.
+- Lake `PersistedNames` read-both (`drishti.*` then `lake.*`): the check of the owner's Linux stack lake folders (read-only) was refused by the sandbox, so whether those lakes carry the old names is not known. Not removed.
+- `LoadConfig`'s "target.lake is a folder: read this way for one more release" and `CollabImport` (the jpa and file stores into the content store) are further shims of the same kind: not in the list; named here.
+
 ## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
 
 The switch of Drishti's LiveSet engine to Rachana's live tables (I7B_DUPLICATES L1, DD-6, LIVE_TABLES section 11), front-loaded into G4

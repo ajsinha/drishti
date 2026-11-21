@@ -13,4 +13,4 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 guides:
-  - { slug: gleif-pack, category: packs, title: "The gleif pack", kind: guide, icon: building, file: guides/gleif.md, summary: "Legal Entity Identifiers from GLEIF (CC0): the ownership groups of the us-equities companies and of the large banks, insurers and asset managers, with parents, children, renewals, BICs and ISINs. Type LEI 8I5DZWZKVSZI1NUHU748, LEIG ALL, LEIC GB or LEIM with a BIC." }
+  - { slug: gleif-pack, category: data, title: "The gleif pack", kind: guide, icon: building, file: guides/gleif.md, summary: "Legal Entity Identifiers from GLEIF (CC0): the ownership groups of the us-equities companies and of the large banks, insurers and asset managers, with parents, children, renewals, BICs and ISINs. Type LEI 8I5DZWZKVSZI1NUHU748, LEIG ALL, LEIC GB or LEIM with a BIC." }

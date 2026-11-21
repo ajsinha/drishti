@@ -113,13 +113,11 @@ schemas:
     file: drishti-console/config/help.yaml
     applies: console
     change: live
-    maps: [contextual, knowledge, moved, aliases, documents]
+    maps: [contextual, knowledge, documents]
     keys:
       - { key: most-used, type: list, default: shipped, meaning: "The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out)" }
       - { key: "most-used[].slug", type: string, meaning: "The page" }
       - { key: "most-used[].label", type: string, default: "its title", meaning: "A shorter name on its chip" }
-      - { key: aliases, type: map, default: shipped, meaning: "Old section names to the section that took them over (a pack guide's category, an edition's help.categories, /help#cat-<id>)" }
-      - { key: "aliases.<name>", type: string, meaning: "One old name and its section's id" }
       - { key: documents, type: map, default: shipped, meaning: "An unlisted document's section by its top folder under docs/ (\"\" the top-level *.md, default any other)" }
       - { key: "documents.<name>", type: string, meaning: "One folder and its section's id" }
       - { key: pack-group, type: string, default: "From the packs", meaning: "The group a pack's own guides join, at the end of their section" }
@@ -147,8 +145,6 @@ schemas:
       - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
       - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
-      - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
-      - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
       - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
       - { key: contextual, type: map, default: shipped, meaning: "F1: screen -> the guide it opens" }
@@ -488,7 +484,6 @@ env:
   - { name: DRISHTI_XLSX_CAPTURE, by: tools, default: "(none)", sets: "the workbook capture folder", meaning: "Where the temporary test patch of tools/xlsx_before_after/ writes every workbook a test makes, to compare two builds cell by cell (never set in a normal test run)" }
   # the packs' connectors (modules/<module>/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "<data>/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
-  - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
   - { name: LAKE_LAKES_DIR, by: server, default: "<config>/lakes", sets: "lake.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }

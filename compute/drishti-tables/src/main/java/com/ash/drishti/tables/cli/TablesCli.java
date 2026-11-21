@@ -23,8 +23,6 @@ import com.ash.drishti.tables.catalog.Lineage;
 import com.ash.drishti.tables.def.ModelDef;
 import com.ash.drishti.tables.def.TableDef;
 import com.ash.drishti.tables.lang.LateBound;
-import com.ash.drishti.tables.migrate.MigrationAudit;
-import com.ash.drishti.tables.migrate.TablesMigrator;
 import com.ash.drishti.tables.preview.Preview;
 import com.ash.drishti.tables.preview.RowEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +31,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,17 +39,16 @@ import java.util.Optional;
 
 /**
  * The table layer's command line, run as {@code java -jar drishti-server-*-exec.jar tables <command>} (no engine, no Spring: definitions
- * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/bi/README.md, docs/guides/CLI_REFERENCE.md):
+ * and sample files only) and through {@code drishti.py tables} (docs/guides/bi/README.md, docs/guides/CLI_REFERENCE.md):
  *
  * <pre>
  * tables list     [--root DIR] [--json]
  * tables check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--json]          exit 1 on an error
  * tables preview  TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N] [--root DIR] [--json]
  * tables lineage  NAME [--root DIR] [--json]
- * tables migrate  [--bi DIR] [--root DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
  * </pre>
  *
- * {@code --root} is {@code config/tables} by default and {@code --bi} {@code config/bi}, both under the working folder. Exit codes: 0 done,
+ * {@code --root} is {@code config/tables} by default, under the working folder. Exit codes: 0 done,
  * 1 problems found (or, with {@code --check}, something would change), 2 a usage error.
  */
 public final class TablesCli {
@@ -62,7 +58,7 @@ public final class TablesCli {
     public static final int USAGE = 2;
 
     private static final String HELP = """
-            usage: tables list|check|preview|lineage|offer|migrate [options]
+            usage: tables list|check|preview|lineage|offer [options]
               list     [--root DIR] [--json]                                every table and model, with its source and materialisation
               check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
                        every definition and the catalogue checked; --sample adds the sample checks; --stored refuses a stored table's name
@@ -70,24 +66,16 @@ public final class TablesCli {
                        the table's first rows over sample documents (JSONL, .gz too); related() reads the other tables' samples, fx() the spot rates
               lineage  NAME [--json]                                         who uses a table or a model
               offer    NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
-                       the flat virtual table offered for a new table, columns from the sample; --write accepts it (a new file only)
-              migrate  [--bi DIR] [--dry-run|--check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
-                       BI's datasets and models into tables and models of the layer, DEL into Rachana (dry run: the diff, nothing written)""";
+                       the flat virtual table offered for a new table, columns from the sample; --write accepts it (a new file only)""";
 
     private final PrintStream out;
     private final PrintStream err;
     private final Path cwd;
-    private final com.ash.drishti.tables.migrate.DelTranslator translator;
 
-    /**
-     * @param translator DEL into Rachana for {@code migrate} (the server's, over part A's mapping); null where DEL cannot be read, and
-     *     {@code migrate} then says so
-     */
-    public TablesCli(PrintStream out, PrintStream err, Path cwd, com.ash.drishti.tables.migrate.DelTranslator translator) {
+    public TablesCli(PrintStream out, PrintStream err, Path cwd) {
         this.out = out;
         this.err = err;
         this.cwd = cwd;
-        this.translator = translator;
     }
 
     /** Runs one command ({@code args} without the leading {@code tables}). */
@@ -111,7 +99,6 @@ public final class TablesCli {
                 case "preview" -> preview(a);
                 case "lineage" -> lineage(a);
                 case "offer" -> offer(a);
-                case "migrate" -> migrate(a);
                 default -> {
                     err.println("tables: unknown command '" + a.command + "'");
                     err.println(HELP);
@@ -311,58 +298,6 @@ public final class TablesCli {
         return OK;
     }
 
-    private int migrate(Args a) throws IOException {
-        Path bi = cwd.resolve(a.value("--bi", "config/bi"));
-        Path root = root(a);
-        if (!Files.isDirectory(bi)) {
-            err.println("tables migrate: no BI folder " + bi);
-            return USAGE;
-        }
-        if (translator == null) {
-            err.println("tables migrate: run it from the server's exec jar (java -jar drishti-server-*-exec.jar tables migrate), which reads DEL");
-            return USAGE;
-        }
-        TablesMigrator.Plan plan = new TablesMigrator(translator).plan(bi, root);
-        String report = TablesMigrator.report(plan);
-        if (a.value("--report", null) != null) {
-            Files.writeString(cwd.resolve(a.value("--report", null)), report);
-        }
-        boolean dry = a.flag("--dry-run") || a.flag("--check");
-        if (a.flag("--json")) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("items", plan.items());
-            m.put("changes", plan.changes());
-            m.put("writes", plan.writes().keySet());
-            m.put("problems", plan.problems());
-            m.put("written", dry ? List.of() : TablesMigrator.write(plan, root, bi, movedTo(a), audit(a), a.value("--who", "system")));
-            json(m);
-        } else if (a.flag("--check")) {
-            out.println(plan.anyWrite() ? plan.writes().size() + " file(s) would change: run tables migrate --dry-run to see them" : "nothing to migrate");
-        } else if (dry) {
-            out.print(plan.diff());
-            out.println(report);
-        } else {
-            List<String> written = TablesMigrator.write(plan, root, bi, movedTo(a), audit(a), a.value("--who", "system"));
-            out.println(report);
-            out.println(written.size() + " file(s) written under " + root);
-        }
-        plan.problems().stream().filter(Problem::isError).forEach(p -> err.println(p.line()));
-        if (a.flag("--check")) {
-            return plan.anyWrite() ? PROBLEMS : OK;
-        }
-        return plan.count("refused") > 0 ? PROBLEMS : OK;
-    }
-
-    private Path movedTo(Args a) {
-        String m = a.value("--moved-to", null);
-        return m == null ? null : cwd.resolve(m);
-    }
-
-    private MigrationAudit audit(Args a) {
-        String f = a.value("--audit", null);
-        return f == null ? MigrationAudit.NONE : MigrationAudit.jsonl(cwd.resolve(f), Clock.systemUTC());
-    }
-
     private static List<String> stored(Args a) {
         List<String> out = new ArrayList<>();
         a.values("--stored").forEach(v -> java.util.Arrays.stream(v.split(",")).map(String::strip).filter(x -> !x.isEmpty()).forEach(out::add));
@@ -431,7 +366,7 @@ public final class TablesCli {
         final Map<String, List<String>> options = new LinkedHashMap<>();
 
         private static final java.util.Set<String> FLAGS = java.util.Set.of("--json", "--dry-run", "--check", "--write");
-        private static final java.util.Set<String> OPTIONS = java.util.Set.of("--root", "--bi", "--sample", "--limit", "--report", "--audit", "--who", "--moved-to",
+        private static final java.util.Set<String> OPTIONS = java.util.Set.of("--root", "--sample", "--limit",
                 "--stored", "--kind", "--lake", "--table", "--grain", "--related", "--fx");
 
         static Args parse(List<String> args) {

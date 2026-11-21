@@ -1,0 +1,14 @@
+rachana: 3
+table: bi.lake_test_books
+version: 1.0.0
+title: Lake test
+from: { kind: book, connector: test-ref }
+columns:
+  name: { path: "$.name", type: string }
+  desk: { path: "$.desk", type: string }
+rules:
+  - { role: desk-head, where: "related_rows('trades')" }
+  - { role: bi-risk, where: "true" }
+  - { role: bi-analyst, where: "true" }
+  - { role: admin, where: "true" }
+materialize: on-load

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py bi expr|migrate|sql` (tools/bilang.py) against an in-process stand-in for the server."""
+"""Tests of `drishti.py bi expr|sql` (tools/bilang.py) against an in-process stand-in for the server."""
 import json
 import pathlib
 import shutil
@@ -66,14 +66,6 @@ class BiLang(unittest.TestCase):
         self.assertIn("fix: wrap it: sum(trades.mtm)", out)
         body = json.loads(FakeServer.requests[0][5])
         self.assertEqual({"expr": "trades.mtm * 2", "scope": "aggregate", "model": "trading-risk@1"}, body)
-
-    def test_migrate_boards_without_files_works_on_the_stored_boards(self):
-        FakeServer.routes[("POST", "/api/v1/bi/migrate/boards")] = (200, {"scanned": 1, "wouldConvert": 1, "problems": 0, "items": [
-            {"id": "b1", "title": "Desk board", "status": "published", "state": "would become a report"}]})
-        code, out, _ = self.go("bi", "migrate", "--boards", "--dry-run")
-        self.assertEqual(0, code)
-        self.assertIn("1 stored board(s), 1 would become reports", out)
-        self.assertEqual({"dryRun": True}, json.loads(FakeServer.requests[0][5]))
 
     def test_the_old_migrations_are_gone(self):
         code, _, err = self.go("bi", "migrate", "--expressions")

@@ -12,8 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """The table layer on the command line (docs/guides/bi/README.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
-under config/tables, checked, previewed over sample documents, traced (lineage), offered for new tables, and BI's datasets and models
-migrated into them.
+under config/tables, checked, previewed over sample documents, traced (lineage) and offered for new tables.
 
   tables list    [--root DIR] [--json]                                 every table and model, its source and materialisation
   tables check   [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
@@ -23,10 +22,9 @@ migrated into them.
   tables lineage NAME [--json]                                        who uses a table or a model
   tables offer   NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
                                                                       the flat virtual table offered for a new table (columns from a sample)
-  tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
 
 The commands run in Java from the server's exec jar (java -jar drishti-server-*-exec.jar tables ...), without starting a server: they
-read definitions and sample files only. Paths are read from the folder you run them in (config/tables and config/bi by default)."""
+read definitions and sample files only. Paths are read from the folder you run them in (config/tables by default)."""
 from __future__ import annotations
 
 import argparse
@@ -37,7 +35,7 @@ from javacmd import cli_tmp, java_cmd
 
 def register(groups, ctx: dict) -> None:
     """Adds the `tables` group; ctx holds find_java, find_jar and CliError of drishti.py."""
-    t = groups.add_parser("tables", help="Virtual tables and models: list, check, preview, lineage, offer, migrate (BI's datasets and models)",
+    t = groups.add_parser("tables", help="Virtual tables and models: list, check, preview, lineage, offer",
                           description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1], formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = t.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
 
@@ -45,7 +43,7 @@ def register(groups, ctx: dict) -> None:
         args = [a.cmd]
         if getattr(a, "name", None):
             args.append(a.name)
-        for flag in ("root", "bi", "limit", "report", "audit", "who", "moved_to", "kind", "lake", "table", "grain", "fx"):
+        for flag in ("root", "limit", "kind", "lake", "table", "grain", "fx"):
             v = getattr(a, flag, None)
             if v is not None:
                 args += ["--" + flag.replace("_", "-"), str(v)]
@@ -55,7 +53,7 @@ def register(groups, ctx: dict) -> None:
             args += ["--stored", s]
         for s in getattr(a, "related", None) or []:
             args += ["--related", s]
-        for flag in ("json", "dry_run", "check", "write"):
+        for flag in ("json", "write"):
             if getattr(a, flag, False):
                 args.append("--" + flag.replace("_", "-"))
         java, jar = ctx["find_java"](getattr(a, "java", None)), ctx["find_jar"](getattr(a, "jar", None))
@@ -104,14 +102,3 @@ def register(groups, ctx: dict) -> None:
     p.add_argument("--grain", help="one row per element of this list instead ($.LEGS[*]); the offer names the lists the sample holds")
     p.add_argument("--stored", action="append", metavar="NAME,...", help="stored tables' names the new name must not take")
     p.add_argument("--write", action="store_true", help="accept: write the offer to a new file (refused when the name is taken)")
-    p = add("migrate", "BI's datasets and models into tables and models of the layer, DEL into Rachana (--dry-run: the diff, nothing written)",
-            "examples:\n  drishti.py tables migrate --dry-run\n  drishti.py tables migrate --check        # CI: exit 1 when something would change\n"
-            "  drishti.py tables migrate --report migration.txt --audit data/audit/tables-migrate.jsonl")
-    p.add_argument("--bi", help="the BI folder (default config/bi)")
-    mode = p.add_mutually_exclusive_group()
-    mode.add_argument("--dry-run", action="store_true", help="print the diff and the report; write nothing")
-    mode.add_argument("--check", action="store_true", help="exit 1 when anything would change; write nothing")
-    p.add_argument("--report", help="write the report (every item, every expression before and after) to this file")
-    p.add_argument("--audit", help="append one audit line per file written (JSON Lines)")
-    p.add_argument("--who", help="the person named in the audit (default system)")
-    p.add_argument("--moved-to", help="move the migrated BI files here (an installation's <data>/migrated/2.9.11.e/); default: left in place")

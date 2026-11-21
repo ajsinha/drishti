@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
@@ -46,73 +46,106 @@ import org.junit.jupiter.api.io.TempDir;
 class DerivationTest {
 
     static final String TOP_PER_DESK = """
-            rachana: 2
-            expressions: 2
-            dataset: top-per-desk
+            rachana: 3
+            table: bi.top_per_desk
+            was: top-per-desk
             version: 1.0.0
-            extends: trades@1
-            columns: [desk, currency, notional, mtm]
-            where: "notional > 0"
-            grain: { one-row-per: desk, keep: latest by notional }
-            derive:
-              notionalK: { expr: "notional / 1000", type: decimal }
-              region:    { expr: "related(desk.region)", type: string }
+            from: { table: bi.trades }
+            filter: "$.notional > 0"
+            keys: [desk]
+            keep: { latest: notional }
+            columns:
+              desk:      { path: "$.desk" }
+              currency:  { path: "$.currency" }
+              notional:  { path: "$.notional" }
+              mtm:       { path: "$.mtm" }
+              notionalK: { expr: "$.notional / 1000", type: decimal }
+              region:    { expr: "related($.desk.region)", type: string }
+            materialize: on-load
             """;
 
     static final String DESK_CCY = """
-            rachana: 2
-            expressions: 2
-            dataset: desk-ccy
+            rachana: 3
+            table: bi.desk_ccy
+            was: desk-ccy
             version: 1.0.0
-            extends: trades@1
-            derive:
-              notionalK: { expr: "notional / 1000", type: decimal }
-            group:
-              by: [desk, currency]
-              columns: { notional: sum, notionalK: sum, mtm: sum, trades: count }
-              grain: { says: One row per desk and currency }
-            security:
-              rows:
-                - { role: desk-head, where: "desk in user.desks" }
-                - { role: [risk, analyst], where: "true" }
+            from: { model: "table:bi.desk_ccy_rows", query: { select: { fields: [desk_ccy_rows.desk, desk_ccy_rows.currency], measures: [notional, notionalK, mtm, trades] }, define: { notional: sum(desk_ccy_rows.notional), notionalK: sum(desk_ccy_rows.notionalK), mtm: sum(desk_ccy_rows.mtm), trades: count(desk_ccy_rows) } } }
+            says: One row per desk and currency
+            keys: [desk, currency]
+            columns:
+              desk:      {}
+              currency:  {}
+              notional:  { type: decimal }
+              notionalK: { type: decimal }
+              mtm:       { type: decimal }
+              trades:    { type: integer }
+            rules:
+              - { role: desk-head, where: $.desk in user.desks }
+              - { role: [risk, analyst], where: "true" }
+            materialize: on-load
             """;
 
-    /** A where on a column the grouping drops: it filters the rows that are grouped, never the groups (the console's wizard found it applied after). */
-    static final String DESK_USD = """
-            rachana: 2
-            expressions: 2
-            dataset: desk-usd
+    static final String DESK_CCY_ROWS = """
+            rachana: 3
+            table: bi.desk_ccy_rows
             version: 1.0.0
-            extends: trades@1
-            where: "currency == 'USD'"
-            group:
-              by: [desk]
-              columns: { notional: sum, trades: count }
+            title: The rows of desk-ccy
+            from: { table: bi.trades }
+            columns:
+              notionalK: { expr: notional / 1000, type: decimal }
+            rules:
+              - { role: desk-head, where: $.desk in user.desks }
+              - { role: [risk, analyst], where: "true" }
+            materialize: none
+            """;
+
+    /** A filter on a column the grouping drops: it filters the rows that are grouped, never the groups. */
+    static final String DESK_USD = """
+            rachana: 3
+            table: bi.desk_usd
+            was: desk-usd
+            version: 1.0.0
+            from: { model: "table:bi.desk_usd_rows", query: { select: { fields: [desk_usd_rows.desk], measures: [notional, trades] }, define: { notional: sum(desk_usd_rows.notional), trades: count(desk_usd_rows) } } }
+            keys: [desk]
+            columns:
+              desk:     {}
+              notional: { type: decimal }
+              trades:   { type: integer }
+            materialize: on-load
+            """;
+
+    static final String DESK_USD_ROWS = """
+            rachana: 3
+            table: bi.desk_usd_rows
+            version: 1.0.0
+            title: The rows of desk-usd
+            from: { table: bi.trades }
+            filter: "currency == 'USD'"
+            materialize: none
             """;
 
     static final String MODEL = """
-            rachana: 2
-            expressions: 2
+            rachana: 3
             model: derived
             version: 1.0.0
-            datasets:
-              top:    { dataset: top-per-desk, role: fact }
-              groups: { dataset: desk-ccy, role: fact }
-              trades: { dataset: trades, role: fact }
-              usd:    { dataset: desk-usd, role: fact }
+            tables:
+              top:    { table: bi.top_per_desk, role: fact }
+              groups: { table: bi.desk_ccy, role: fact }
+              trades: { table: bi.trades, role: fact }
+              usd:    { table: bi.desk_usd, role: fact }
             measures:
-              Top notional:    { expr: "sum(top.notional)" }
-              Top rows:        { expr: "count(top)" }
-              Top K:           { expr: "sum(top.notionalK)" }
-              Group notional:  { expr: "sum(groups.notional)" }
-              Group K:         { expr: "sum(groups.notionalK)" }
-              Group trades:    { expr: "sum(groups.trades)" }
-              Group rows:      { expr: "count(groups)" }
-              Notional:        { expr: "sum(trades.notional)" }
-              Trades:          { expr: "count(trades)" }
-              Biggest:         { expr: "max(trades.notional)" }
-              USD notional:    { expr: "sum(usd.notional)" }
-              USD trades:      { expr: "sum(usd.trades)" }
+              Top notional:   { expr: sum(top.notional) }
+              Top rows:       { expr: count(top) }
+              Top K:          { expr: sum(top.notionalK) }
+              Group notional: { expr: sum(groups.notional) }
+              Group K:        { expr: sum(groups.notionalK) }
+              Group trades:   { expr: sum(groups.trades) }
+              Group rows:     { expr: count(groups) }
+              Notional:       { expr: sum(trades.notional) }
+              Trades:         { expr: count(trades) }
+              Biggest:        { expr: max(trades.notional) }
+              USD notional:   { expr: sum(usd.notional) }
+              USD trades:     { expr: sum(usd.trades) }
             security:
               may-see-all: { top: [desk-head], trades: [desk-head], usd: [desk-head] }
             """;
@@ -125,7 +158,7 @@ class DerivationTest {
     MqService mq = new MqService(MqProperties.defaults());
 
     static Function<String, Optional<DatasetDef>> kinds() {
-        DatasetDef desks = Layered.tableDef(MqEngineTest.DESKS).dataset();
+        DatasetDef desks = Tables.tableDef(MqEngineTest.DESKS).dataset();
         return k -> "desk".equals(k) ? Optional.of(desks) : Optional.empty();
     }
 
@@ -135,7 +168,7 @@ class DerivationTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         h = new MqHarness(service, TestLake.DAY2);
-        model = MqHarness.model(MODEL, kinds(), MqEngineTest.TRADES, TOP_PER_DESK, DESK_CCY, DESK_USD);
+        model = MqHarness.model(MODEL, kinds(), MqEngineTest.TRADES, TOP_PER_DESK, DESK_CCY, DESK_CCY_ROWS, DESK_USD, DESK_USD_ROWS);
     }
 
     @AfterEach
@@ -182,22 +215,18 @@ class DerivationTest {
 
     @Test
     void checkRefusesWhatADerivationCannotDo() {
-        DatasetDef base = Layered.tableDef(MqEngineTest.TRADES).dataset();
-        assertThat(codes(TOP_PER_DESK.replace("columns: [desk, currency, notional, mtm]", "columns: [desk, nope]"), base)).as("a column the base lacks").isNotEmpty();
-        assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: latest by ghost"), base)).contains("DRS-9104");
-        assertThat(codes(TOP_PER_DESK.replace("keep: latest by notional", "keep: whichever"), base)).contains("DRS-9104");
-        assertThat(codes(TOP_PER_DESK.replace("related(desk.region)", "related(currency.region)"), base)).contains("DRS-9101");
-        assertThat(codes(TOP_PER_DESK.replace("related(desk.region)", "related(desk.planet)"), base)).contains("DRS-9101");
-        assertThat(codes(DESK_CCY.replace("desk in user.desks", "notional > 0"), base)).contains("DRS-9106");
-        assertThat(codes(DESK_CCY.replace("trades: count", "trades: median"), base)).contains("DRS-9101");
-        assertThat(codes(TOP_PER_DESK.replace("notionalK: { expr: \"notional / 1000\", type: decimal }", "notionalK: { expr: \"sum(notional)\", type: decimal }"), base))
-                .contains("DRS-9127");                                                         // Rachana: an aggregate in a row
-        assertThat(Layered.tableDef(DESK_CCY).dataset().columns().keySet())                       // a grouping is a summary table of its rows' model: its own columns
+        DatasetDef base = Tables.tableDef(MqEngineTest.TRADES).dataset();
+        assertThat(codes(TOP_PER_DESK.replace("mtm:       { path: \"$.mtm\" }", "mtm:       { path: \"$.nope\" }"), base)).as("a column the base lacks").contains("DRS-9105");
+        assertThat(codes(TOP_PER_DESK.replace("keep: { latest: notional }", "keep: { latest: ghost }"), base)).contains("DRS-9104");
+        assertThat(codes(TOP_PER_DESK.replace("related($.desk.region)", "related($.currency.region)"), base)).contains("DRS-9101");
+        assertThat(codes(TOP_PER_DESK.replace("related($.desk.region)", "related($.desk.planet)"), base)).contains("DRS-9101");
+        assertThat(codes(TOP_PER_DESK.replace("\"$.notional / 1000\"", "\"sum($.notional)\""), base)).contains("DRS-9127");     // Rachana: an aggregate in a row
+        assertThat(Tables.tableDef(DESK_CCY).dataset().columns().keySet())                       // a grouping is a summary table of its rows' model: its own columns
                 .containsExactly("desk", "currency", "notional", "notionalK", "mtm", "trades");
     }
 
     static List<String> codes(String yaml, DatasetDef base) {
-        DatasetDefParser.Result r = Layered.tableDef(yaml);
+        DatasetDefParser.Result r = Tables.tableDef(yaml);
         List<String> out = new java.util.ArrayList<>(r.problems().stream().filter(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::error)
                 .map(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::code).toList());
         if (r.dataset() != null) {

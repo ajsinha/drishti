@@ -1,0 +1,16 @@
+rachana: 3
+model: restricted
+version: 1.0.0
+title: Restricted
+audience: { roles: [bi-risk] }
+tables:
+  trades: { table: bi.restricted_trades, role: fact }
+measures:
+  Notional:         { expr: sum(trades.notional) }
+  MTM:              { expr: sum(trades.mtm) }
+  Trades:           { expr: count(trades) }
+  Average notional: { expr: avg(trades.notional) }
+  Largest:          { expr: max(trades.notional) }
+  Notional ytd:     { expr: "ytd(sum(trades.notional), trades.tradeDate)" }
+hierarchies:
+  Desk and book: [trades.desk, trades.book]

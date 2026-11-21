@@ -20,9 +20,7 @@ connector reads (docs/guides/DATA_GUIDE.md section 11; the store's plugin README
     python tools/drishti.py data load --store files [root] [--future-days N] [--zone Z]
     python tools/drishti.py data load --store postgres [jdbc-url] [--user U --password P --keep-months N --writers N --batch N]
     python tools/drishti.py data load --store duckdb [database] [--keep-days N --memory-limit M --parsers N --threads N]
-    python tools/drishti.py data load --store iceberg [root] [--engine E --catalog rest --uri U --warehouse W --credential C --token T
-                                                            --keep-days N --spill-dir DIR --set k=v --threads N --buffer-mb N --file-rows N
-                                                            --row-group-mb N]
+    python tools/drishti.py data load --store iceberg [root] [--catalog rest --uri U --warehouse W --credential C --token T --set k=v]
     python tools/drishti.py data load --store mongodb [uri] [database] [--keep-days N | --ttl-days N --doc-format string|bson --batch N --in-flight N]
     python tools/drishti.py data load --store redis [uri] [--ttl-days N --codec C --level N --chunk-rows N --in-flight N --threads N
                                                           --keep-replaced-seconds N --cluster --publish --retrain --replace --merge]
@@ -31,12 +29,14 @@ connector reads (docs/guides/DATA_GUIDE.md section 11; the store's plugin README
                                                           --keep-days N --buckets N|KIND=N --in-flight N --batch-rows N --consistency C
                                                           --username U --password P --setting k=v --max-drop-share F --force-drop]
 
-Every store but delta also takes the date guard's ``--future-days N``, ``--zone Z`` and (not files, aerospike) ``--max-drop-share F``
+Every store but delta and iceberg also takes the date guard's ``--future-days N``, ``--zone Z`` and (not files, aerospike) ``--max-drop-share F``
 and ``--force-drop``. The steps: ``make_data.py --jsonl`` writes the samples as a tar of ``<kind>/<YYYY-MM-DD>/`` folders under
 ``<data>/build/loader-rows`` (``bulk_trades.py --jsonl`` the book beside it), then the store's loader, a main class of the server's exec jar
 (``-Dloader.main``, started through javacmd: heap ``DRISHTI_LOADER_HEAP``, default 4g), loads them; the folder is removed afterwards.
-Iceberg and Cassandra load both tars in one run (each business day written once); the others load the samples, then the book. Delta
-needs no Java: ``make_data.py --lake --no-load``, ``samplegen/load_rows.py``, then ``bulk_trades.py --root``. ``--dry-run`` prints the
+Cassandra loads both tars in one run (each business day written once); the others load the samples, then the book. Delta needs no Java:
+``make_data.py --lake --no-load``, ``samplegen/load_rows.py``, then ``bulk_trades.py --root``. Iceberg is written by Drishti Lake's one loader
+(``samplegen/load_rows.py --format iceberg``, ``DrishtiLakeCli load`` in the exec jar, one load a table, each business day replaced, both tars in one
+run); its options are the loader's settings: ``--catalog rest --uri U --warehouse W --credential C --token T`` and ``--set KEY=VALUE`` (``s3.region=..``). ``--dry-run`` prints the
 steps. A relative path means what it means where the command is typed."""
 from __future__ import annotations
 
@@ -76,6 +76,9 @@ class Store:
     paths: bool = False                                  # the targets are file paths (made absolute where typed)
 
 
+#: Iceberg's options: each a setting of Drishti Lake's loader (``--catalog rest`` is ``catalog=rest``; ``--set KEY=VALUE`` any other)
+ICEBERG_SETTINGS = ("--catalog", "--uri", "--warehouse", "--credential", "--token", "--set")
+
 #: the nine stores' differences; a default "<data>/x" is under the data folder, "$VAR|fallback" an environment variable first
 STORES: dict[str, Store] = {
     "delta": Store("", (("root", "$DRISHTI_DELTA_ROOT|<data>/delta/demo"),), paths=True),
@@ -86,9 +89,7 @@ STORES: dict[str, Store] = {
     "duckdb": Store("com.ash.drishti.plugin.duckdb.DuckDbLoader", (("database", "$DRISHTI_DUCKDB_PATH|<data>/duckdb/drishti.duckdb"),),
                     ("--keep-days", "--memory-limit", "--parsers", "--threads", *GUARD, *DROP), ("--force-drop",),
                     sample_args=("--recreate",), paths=True),
-    "iceberg": Store("com.ash.drishti.plugin.iceberg.IcebergLoader", (("root", "<data>/iceberg"),),
-                     ("--engine", "--catalog", "--uri", "--warehouse", "--credential", "--token", "--keep-days", "--spill-dir", "--set",
-                      "--threads", "--buffer-mb", "--file-rows", "--row-group-mb", *GUARD, *DROP), ("--force-drop",), together=True, paths=True),
+    "iceberg": Store("", (("root", "<data>/iceberg"),), ICEBERG_SETTINGS, together=True, paths=True),
     "mongodb": Store("com.ash.drishti.plugin.mongodb.MongoLoader", (("uri", "mongodb://localhost:27017"), ("database", "drishti")),
                      ("--keep-days", "--ttl-days", "--doc-format", "--batch", "--in-flight", *GUARD, *DROP), ("--force-drop",)),
     "redis": Store("com.ash.drishti.plugin.redis.RedisLoader", (("uri", "redis://localhost:6379"),),
@@ -100,9 +101,6 @@ STORES: dict[str, Store] = {
                        ("--create-keyspace", "--keyspace", "--ttl-days", "--keep-days", "--buckets", "--in-flight", "--batch-rows", "--consistency",
                         "--username", "--password", "--setting", *GUARD, *DROP), ("--create", "--force-drop"), together=True),
 }
-
-#: the stores whose own loader class is gone (Drishti Lake's loader writes them): store -> what to use meanwhile
-MOVED = {"iceberg": "Use `lake build --format iceberg` (or `lake demo --store`) for Iceberg."}
 
 URI = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+://")
 
@@ -181,6 +179,17 @@ def plan(store: str, given: list[str], trades: int | None, days: int | None, ext
 
     gen_samples = [py, str(MAKE_DATA), "--jsonl", str(samples)]
     gen_book = [py, str(BULK), "--trades", str(trades), "--days", str(days), "--jsonl", str(book)]
+    if store == "iceberg":                               # the samples and the book through Drishti Lake's one loader, one load a table
+        words, i = [], 0
+        while i < len(opts):
+            name, eq, val = opts[i].partition("=")
+            if not eq:
+                val, i = opts[i + 1], i + 1
+            words += ["--iceberg-set", val if name == "--set" else f"{name[2:]}={val}"]
+            i += 1
+        load = [py, str(LOAD_ROWS), "--format", "iceberg", "--root", tg[0], "--work", str(data / "build" / "iceberg-work"), "--jar", jar,
+                "--java", java, "--rows", str(samples), *(["--rows", str(book)] if trades else []), *words]
+        return rows, [gen_samples, *([gen_book] if trades else []), load]
     if s.together:                                       # one input: each business day of a table written once, holding both
         return rows, [gen_samples, *([gen_book] if trades else []), loader(rows, *opts)]
     first = list(s.sample_args) + opts
@@ -195,10 +204,6 @@ def plan(store: str, given: list[str], trades: int | None, days: int | None, ext
 def run(store: str, given: list[str], trades: int | None, days: int | None, extra: list[str], *, dry_run: bool = False,
         java: str | None = None, jar: str | None = None, say=print) -> int:
     """Runs one load (or prints its steps with ``dry_run``); 0 done, 1 a step failed (its own message above), 2 usage."""
-    if store in MOVED and not dry_run:
-        say(f"data load: --store {store} loaded through its own loader class, which moved into Drishti Lake's one loader (loader rows, one table a "
-            f"load); this command is not rebuilt on it yet. {MOVED[store]}", file=sys.stderr)
-        return 2
     env = dict(os.environ)
     data = javacmd.launch_roots(env=env)["data"][0]
     env["DRISHTI_DATA_DIR"] = str(data)                  # the generators, the loader and its temp folder: one data folder

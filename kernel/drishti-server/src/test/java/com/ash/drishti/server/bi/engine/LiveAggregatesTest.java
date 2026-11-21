@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -66,8 +66,7 @@ class LiveAggregatesTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofHours(1)).withIncrementalAggregates(incremental);
         service = new QueryService(props, live, new DuckDbEngine(props), lake, new LiveTablesTest.TestClock());
-        String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + liveBlock);
-        DatasetParser.Result r = Layered.dataset(yaml);
+        DatasetParser.Result r = TestLake.dataset(TestLake.model(), TestLake.liveTrades(liveBlock));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return new QueryService.Loaded("file:dataset:live-agg", Layers.key("file:dataset:live-agg"), r.dataset(), "h1");
     }
@@ -187,7 +186,7 @@ class LiveAggregatesTest {
 
     @Test
     void retentionEvictionTakesTheEvictedRowsOutOfTheirGroups() {
-        QueryService.Loaded ds = start(true, "\n    live: { rows: 15 }");
+        QueryService.Loaded ds = start(true, "rows: 15");
         QueryService.Caller risk = who(true, "", "risk");
         run(ds, body("auto", MEASURES), risk);
         LiveTable t = service.live().find(ds.key(), "trades").orElseThrow();

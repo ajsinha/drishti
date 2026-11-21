@@ -75,6 +75,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hostaddr  # noqa: E402
 import javacmd  # noqa: E402
 import procs  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import lakeconfig  # noqa: E402  (where a lake is: the one place the demo lake's folder is spelled)
 try:
     import clusterlakes  # noqa: E402  (PyYAML: the console's Python has it)
 except ImportError:                              # load_stack says what to do
@@ -134,13 +136,15 @@ def settings_for(stack: dict, node: dict | None = None) -> str:
 
 def business_today(stack: dict) -> None:
     """The cluster's business day, DRISHTI_BUSINESS_TODAY: the environment's when set, else the newest business date of the demo lake
-    (<data>/delta/demo, where lake demo builds it), so the synthetic lakes and every server agree with the lake; nothing when it has none."""
+    (the demo lake's folder under the cluster's data folder, where lake demo builds it: lakeconfig.default_root), so the synthetic lakes and
+    every server agree with the lake; nothing when it has none."""
     if os.environ.get(clusterlakes.TODAY_ENV):
         return
-    day = clusterlakes.last_day(at.data / "delta" / "demo")
+    demo = lakeconfig.default_root("demo", at.data)
+    day = clusterlakes.last_day(demo)
     if day:
         stack.setdefault("settings", {})[clusterlakes.TODAY_ENV] = day
-        say(f"business today {day}: the newest business date of {at.data / 'delta' / 'demo'}")
+        say(f"business today {day}: the newest business date of {demo}")
 
 
 def python() -> str:

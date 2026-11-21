@@ -1,0 +1,11 @@
+rachana: 3
+table: bi.lang_desk_sql
+was: lang-desk-sql
+version: 1.0.0
+from: { model: "lang-model@1", query: { sql: "SELECT trades.desk AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.desk" } }
+keys: [desk]
+columns:
+  desk:     { path: "$.desk", type: string, role: key, key: true }
+  notional: { path: "$.notional", type: decimal, aggregate: sum }
+  trades:   { path: "$.trades", type: integer, aggregate: sum }
+materialize: none

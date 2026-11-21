@@ -90,7 +90,6 @@ public final class CollabImport {
                     d.follows.addAll(from.threads().followers(t.id()));
                     for (Comment c : d.comments) {
                         d.mentions.addAll(from.threads().mentions(c.id()));
-                        from.threads().noteOfComment(c.id()).ifPresent(note -> d.notes.put(c.id(), note));
                     }
                     to.threads().importThread(d);
                     n++;

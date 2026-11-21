@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.report;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -92,37 +92,63 @@ class PythonBiTest {
     }
 
     static final String DATASET = """
-            dataset: d
+            rachana: 3
+            model: d
+            version: 1.0.0
             tables:
-              trade:
-                source: { kind: trade }
-                columns: { DESK: string, PNL_1D: decimal, other: string }
-              leg:
-                source: { kind: leg }
-                columns: { x: decimal }
+              trade: { table: bi.d_trade, role: fact }
+              leg:   { table: bi.d_leg, role: fact }
             measures:
-              N: { expr: "count(trade)" }
+              "N": { expr: count(trade) }
               Vol: { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK] }
             """;
+    static final String[] TABLES = {
+            """
+            rachana: 3
+            table: bi.d_trade
+            version: 1.0.0
+            title: d.trade
+            from: { kind: trade }
+            columns:
+              DESK:   { path: "$.DESK", type: string }
+              PNL_1D: { path: "$.PNL_1D", type: decimal }
+              other:  { path: "$.other", type: string }
+            materialize: on-load
+            """,
+            """
+            rachana: 3
+            table: bi.d_leg
+            version: 1.0.0
+            title: d.leg
+            from: { kind: leg }
+            columns:
+              x: { path: "$.x", type: decimal }
+            materialize: on-load
+            """
+    };
+
+    static DatasetParser.Result dataset(String model) {
+        return Tables.flatten(model, java.util.List.of(TABLES));
+    }
 
     @Test
     void aPythonMeasureNamesItsItemItsInputsAndItsGroups() {
-        Dataset ds = Layered.dataset(DATASET).dataset();
+        Dataset ds = dataset(DATASET).dataset();
         Dataset.Measure vol = ds.measures().get("Vol");
         assertThat(vol.expr()).isNull();
         assertThat(vol.python()).isEqualTo("desk-pnl-volatility");
         assertThat(vol.inputs()).containsExactly("trade.PNL_1D");
         assertThat(vol.by()).containsExactly("trade.DESK");
-        assertThat(Layered.dataset(DATASET.replace("Vol: {", "Vol: { expr: \"sum(trade.PNL_1D)\",")).ok()).as("expr and python together").isFalse();
+        assertThat(dataset(DATASET.replace("Vol: {", "Vol: { expr: \"sum(trade.PNL_1D)\",")).ok()).as("expr and python together").isFalse();
     }
 
     @Test
     void aPythonMeasureIsCheckedAgainstTheModelAndWarnsThatAQueryRefusesIt() throws IOException {
-        DatasetParser.Result good = Layered.dataset(DATASET);
+        DatasetParser.Result good = dataset(DATASET);
         assertThat(good.problems()).filteredOn(p -> p.path().equals("measures.Vol")).extracting(p -> p.level()).containsExactly("warning");
-        assertThat(Layered.dataset(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: [trade.nope]")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs") && "error".equals(p.level()));
-        assertThat(Layered.dataset(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs"));
-        assertThat(Layered.dataset(DATASET.replace("by: [trade.DESK]", "by: [leg.x]")).problems()).anyMatch(p -> p.path().equals("measures.Vol") && p.message().contains("one table"));
+        assertThat(dataset(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: [trade.nope]")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs") && "error".equals(p.level()));
+        assertThat(dataset(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs"));
+        assertThat(dataset(DATASET.replace("by: [trade.DESK]", "by: [leg.x]")).problems()).anyMatch(p -> p.path().equals("measures.Vol") && p.message().contains("one table"));
         assertThat(ReportParserTest.dataset("trades-basic").measures().get("Desk P&L volatility").python()).isEqualTo("desk-pnl-volatility");
     }
 

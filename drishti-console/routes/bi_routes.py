@@ -148,13 +148,6 @@ def _board_as_report(item: str) -> str:
     return "file:report:" + item[len("file:board:"):] if item.startswith("file:board:") else item
 
 
-@router.get("/bi/b/{item}")
-async def board(request: Request, item: str):
-    """A 2.3 board's address: the report viewer draws its board pages (tiles, kiosk, rotation), so this sends people there, ``?kiosk=1`` and the page kept."""
-    query = ("?" + request.url.query) if request.url.query else ""
-    return RedirectResponse("/bi/r/" + quote(_board_as_report(item), safe=":") + query, status_code=307)
-
-
 @router.get("/bi/designer")
 async def designer(request: Request):
     """The designer's start: your report drafts, and a new report on a dataset."""
@@ -275,9 +268,9 @@ async def open_run(request: Request, run_id: str):
     except BackendError:
         return RedirectResponse(fallback, status_code=303)
     href = str(((run or {}).get("source") or {}).get("href") or "")
-    # a report's or a board's page with ?run=, never a full URL; the server's href of an MQ or SQL run (/bi/runs/<id>, the result grid of ARCHITECTURE.md §28 7.3)
+    # a report's page with ?run=, never a full URL; the server's href of an MQ or SQL run (/bi/runs/<id>, the result grid of ARCHITECTURE.md §28 7.3)
     # is not a console page yet, so such a run opens in the Runs tab with its drawer (BIR-02)
-    ok = href.startswith(("/bi/r/", "/bi/b/")) and "//" not in href
+    ok = href.startswith("/bi/r/") and "//" not in href
     return RedirectResponse(href if ok else fallback, status_code=303)
 
 

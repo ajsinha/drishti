@@ -1055,7 +1055,7 @@ class FakeBackend:
             raise BackendError(403, "DRS-5002", "administrators only")
         boards = [{"name": "t1", "owner": "ash", "title": "Desk wall · Net exposure", "severity": "critical", "board": {"board": "desk-wall", "page": "p1", "tile": "t1"},
                    "describe": "reaches crit", "delivery": {"inbox": True, "email": True, "bridge": False}, "trigger": {"mode": "live", "debounce": "10s"}, "activeFor": 2,
-                   "link": "/bi/b/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
+                   "link": "/bi/r/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
         platform = {"enabled": True, "member": "node-a", "file": "config/alerts/platform-alerts.yaml",
                     "open": [{"rule": "disk-free-near-guard", "severity": "warn", "summary": "free disk is 1.8 times the guard", "openedAt": "2026-10-11T14:00:00Z"}]}
         return {"rules": list(self.alerts_kept.values()), "boards": boards, "platform": platform}

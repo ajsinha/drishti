@@ -90,7 +90,7 @@ public record ModuleManifest(String id, String domain, String title, String abou
     /**
      * A {@code .dmod} manifest ({@code module.yaml} of a package, KERNEL_AND_MODULES.md section 3.3) as the registry reads it: the module's
      * packages ({@code java.packages}), engines ({@code compute.engines}), connectors ({@code compute.connectors}), packs
-     * ({@code packs.list}), its API namespace with the old prefixes it still answers ({@code api.legacy}) and its functions.
+     * ({@code packs.list}), its API namespace and its functions.
      */
     @SuppressWarnings("unchecked")
     static ModuleManifest ofDmod(Map<String, Object> m, boolean installed, String source) {
@@ -123,7 +123,6 @@ public record ModuleManifest(String id, String domain, String title, String abou
         if (api.get("prefix") != null) {
             paths.add("/api/v1/" + api.get("prefix"));
         }
-        paths.addAll(list(api.get("legacy")));
         return new ModuleManifest(String.valueOf(id), str(m.get("domain")), str(m.get("title")), str(m.get("about")), str(m.get("version")),
                 requires, str(licence.get("feature")), m.get("java") != null, true, installed, list(java.get("packages")), engines,
                 list(packs.get("list")), list(compute.get("connectors")), paths, functions(m.get("functions")), source);

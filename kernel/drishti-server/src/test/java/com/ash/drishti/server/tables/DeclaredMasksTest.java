@@ -16,7 +16,7 @@
 package com.ash.drishti.server.tables;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -109,7 +109,7 @@ class DeclaredMasksTest {
 
     @Test
     void aBiDatasetsMaskedColumnHoldsTheSameWay() throws Exception {
-        Dataset ds = Layered.dataset(Files.readString(Path.of(TestRoots.repo(), "config", "tables", "banking", "trading_risk_counterparties.table.yaml"))).dataset();
+        Dataset ds = Tables.dataset(Files.readString(Path.of(TestRoots.repo(), "config", "tables", "banking", "trading_risk_counterparties.table.yaml"))).dataset();
         String table = ds.tables().keySet().iterator().next();
         assertThat(datasets.masks(new Principal("u-plain", List.of("plain")), ds).masked(table, "NAME")).isTrue();
         assertThat(datasets.masks(new Principal("u-plain", List.of("plain")), ds).masked(table, "SECTOR")).isFalse();

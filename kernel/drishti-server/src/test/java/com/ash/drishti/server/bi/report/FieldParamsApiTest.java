@@ -107,39 +107,6 @@ class FieldParamsApiTest {
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));
-            Files.writeString(datasets.resolve("fp-trade.dataset.yaml"), """
-                    rachana: 2
-                    dataset: fp-trade
-                    version: 1.0.0
-                    source: { connector: fp-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      TRADE_ID:     { type: string }
-                      DESK:         { type: string }
-                      PORTFOLIO:    { type: string }
-                      LEGAL_ENTITY: { type: string }
-                      NOTIONAL:     { type: decimal, aggregate: sum }
-                      MTM:          { type: decimal, aggregate: sum }
-                    security:
-                      rows:
-                        - { role: [fp-risk, fp-analyst, fp-author, admin], where: "true" }
-                      masked: [MTM]
-                    """);
-            Files.writeString(models.resolve("fp-model.model.yaml"), """
-                    rachana: 2
-                    model: fp-model
-                    version: 1.0.0
-                    datasets:
-                      trade: { dataset: fp-trade, role: fact }
-                    measures:
-                      MTM:      { expr: "sum(trade.MTM)" }
-                      NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
-                      Trades:   { expr: "count(trade)" }
-                    parameters:
-                      breakdown: { kind: field, fields: [trade.DESK, trade.PORTFOLIO], default: trade.DESK, title: Break down by }
-                      metric:    { kind: field, fields: [MTM, NOTIONAL], default: MTM, title: Show }
-                      shock:     { kind: number, default: 0, min: -1, max: 1, step: 0.1 }
-                    """);
             Files.writeString(reports.resolve("fp-report.report.yaml"), """
                     report: fp-report
                     title: Field parameters
@@ -153,7 +120,7 @@ class FieldParamsApiTest {
                           - { id: count, type: card, title: Trades, at: { x: 8, y: 0, w: 4, h: 2 }, wells: { values: [Trades] } }
                           - { id: tbl, type: table, title: Table, at: { x: 0, y: 5, w: 8, h: 5 }, wells: { columns: [param.breakdown, param.metric] } }
                     """);
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "FieldParamsApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

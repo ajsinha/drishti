@@ -176,12 +176,6 @@
   module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.once(java.lang.String,java.util.function.Supplier<V>)
   module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.put(java.lang.String,V)
   module.PersonCache public abstract void com.ash.drishti.kernel.api.module.PersonCache.clear()
-  modules.ApiAlias public final boolean com.ash.drishti.kernel.api.modules.ApiAlias.equals(java.lang.Object)
-  modules.ApiAlias public final int com.ash.drishti.kernel.api.modules.ApiAlias.hashCode()
-  modules.ApiAlias public final java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.toString()
-  modules.ApiAlias public java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.from()
-  modules.ApiAlias public java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.rewrite(java.lang.String)
-  modules.ApiAlias public java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.to()
   official.OfficialResults public abstract java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.official.OfficialResults.kinds()
   official.OfficialResults public abstract java.util.Map<java.lang.String, java.lang.String> com.ash.drishti.kernel.api.official.OfficialResults.lakes()
   pivot.AggFunction public abstract S com.ash.drishti.kernel.api.pivot.AggFunction.add(S,com.ash.drishti.kernel.api.pivot.Batch)
@@ -655,7 +649,6 @@ module.ModuleContext$KindWriter
 module.ModuleContext$Kinds
 module.ModuleSettings
 module.PersonCache
-modules.ApiAlias
 official.OfficialResults
 pivot.AggFunction
 pivot.AggregationPlan

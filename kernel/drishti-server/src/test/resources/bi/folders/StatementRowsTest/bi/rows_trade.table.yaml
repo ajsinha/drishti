@@ -1,0 +1,11 @@
+rachana: 3
+table: bi.rows_trade
+was: rows-trade
+version: 1.0.0
+from: { kind: trade, connector: rows-lake }
+keys: [id]
+columns:
+  TRADE_ID: { path: "$.TRADE_ID", type: string }
+  DESK:     { path: "$.DESK", type: string }
+  NOTIONAL: { path: "$.NOTIONAL", type: decimal, aggregate: sum }
+materialize: on-load

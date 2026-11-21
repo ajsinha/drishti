@@ -135,11 +135,7 @@ economy (markets and news).
 top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/` ...) and, only with code, its Maven projects under `java/` (banking's
 `java/banking-compute` is `drishti-compute-banking` above, `java/banking-service` is `drishti-banking`) with the aggregating `pom.xml`.
 
-The old API prefixes (`/api/v1/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors`, `/pivot/mr`) are **answered as the new
-ones for this release** (`ApiAlias` beans of the module, applied by the core's `ApiAliasFilter` before every other filter: the request is the
-same request under the new path, answered with `Deprecation: true` and `Link: <new path>; rel="successor-version"`), then removed. A
-rewrite rather than a `308` (D5): the console's HTTP client follows no redirect, and the console moves to the new paths with its plugin in
-phase 2; a rewrite keeps every client, the method and the body unchanged.
+The API is under `/api/v1/risk` (`/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors`, `/mr`); the old prefixes are not answered.
 
 ## 4. The dependency rules
 

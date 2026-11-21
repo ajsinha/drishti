@@ -149,7 +149,7 @@ class RunTest(unittest.TestCase):
             seen = []
 
             def fake_run(cmd, **kw):
-                if any("LakesCli" in str(c) for c in cmd):      # the lake files read (config/lakes/): none here
+                if any("LakesCli" in str(c) or "DrishtiLakeCli" in str(c) for c in cmd):      # the lake files read (config/lakes/): none here
                     return subprocess.CompletedProcess(cmd, 0, "{}\n", "")
                 if "-XshowSettings:properties" in cmd:          # javacmd asking the JVM's version (when a lake reader is found)
                     return subprocess.CompletedProcess(cmd, 0, "", "java.specification.version = 21\n")

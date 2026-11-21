@@ -1,0 +1,10 @@
+rachana: 3
+model: acc-trades
+version: 1.0.0
+title: Acceptance trades
+tables:
+  trades: { table: bi.acc_trades_trades, role: fact }
+measures:
+  Notional: { expr: sum(trades.notional) }
+  MTM:      { expr: sum(trades.mtm) }
+  Trades:   { expr: count(trades) }

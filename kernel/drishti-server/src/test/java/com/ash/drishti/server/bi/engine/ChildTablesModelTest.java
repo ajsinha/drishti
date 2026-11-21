@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +62,7 @@ class ChildTablesModelTest {
     }
 
     private static Dataset model() throws IOException {
-        DatasetParser.Result r = Layered.flatten(fixture("deals.model.yaml"), List.of(fixture("deals.table.yaml"), fixture("deal_legs.table.yaml")));
+        DatasetParser.Result r = Tables.flatten(fixture("deals.model.yaml"), List.of(fixture("deals.table.yaml"), fixture("deal_legs.table.yaml")));
         assertThat(r.problems().stream().filter(p -> "error".equals(p.level())).toList()).isEmpty();
         return r.dataset();
     }

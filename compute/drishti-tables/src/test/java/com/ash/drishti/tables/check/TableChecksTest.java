@@ -162,7 +162,7 @@ class TableChecksTest {
         TableDef t = TableYaml.read(TRADES).table();
         assertThat(new TableChecks().check(t, "trading")).anyMatch(p -> p.code().equals(TableCodes.NAME) && p.message().contains("folder"));
         assertThat(TableYaml.read("rachana: 2\ndataset: x\n").problems()).anyMatch(p -> p.code().equals(TableCodes.OLD_FORM)
-                && p.message().contains("tables migrate"));
+                && p.message().contains("table of the layer"));
         assertThat(TableYaml.read("rachana: 2\ntable: a.b\nfrom: { kind: k }\ncolumns: { X: $.X }\n").problems())
                 .anyMatch(p -> p.code().equals(TableCodes.OLD_FORM));
     }

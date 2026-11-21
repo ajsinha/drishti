@@ -155,7 +155,11 @@ public final class NodeLowering {
         List<Node> args = new ArrayList<>();
         if ("windows".equals(f.family())) {
             if (RANKS.contains(name)) {
-                args.add(node(value(c, params, 0)));
+                Expr ranked = value(c, params, 0);
+                if (ranked == null) {
+                    throw refused(c, name + " ranks a measure: name it as the first argument");
+                }
+                args.add(node(ranked));
                 Expr desc = value(c, params, 1);
                 List<Node> partition = fields(value(c, params, 2));
                 if (desc != null || !partition.isEmpty()) {

@@ -1,0 +1,14 @@
+rachana: 3
+table: bi.acc_trade
+was: acc-trade
+version: 1.0.0
+from: { kind: trade, connector: acc-lake }
+keys: [id]
+columns:
+  desk:     { path: "$.desk", type: string }
+  notional: { path: "$.notional", type: decimal, aggregate: sum }
+  mtm:      { path: "$.mtm", type: decimal, aggregate: sum, masked: true }
+rules:
+  - { role: desk-head, where: "$.desk in user.desks" }
+  - { role: [bi-risk, bi-analyst, report-author, admin], where: "true" }
+materialize: on-load

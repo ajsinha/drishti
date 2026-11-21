@@ -237,7 +237,6 @@
      *  expression; a `fragment` in the fix put in place of the problem's span (at.start..at.end), e.g. "wrap it: `sum(trades.mtm)`". */
     function fixed(r, p) {
       const text = input.value.trim(), fix = typeof p.fix === 'string' ? p.fix : '', at = p.at || {};
-      if (r && r.converted && (p.code === 'DRS-9100' || r.syntax === 'legacy')) { return r.converted; }
       // "write: X", "wrap it: X" (or X in backticks): X replaces the problem's span (at.start..at.end), or the whole expression when the span is all of it
       const said = /`([^`]+)`/.exec(fix) || /^[A-Za-z][A-Za-z ]{0,20}:\s*(.+)$/.exec(fix);
       if (!said) { return ''; }
@@ -251,7 +250,7 @@
       const msg = String(p.message || '') + ' ' + String(typeof p.fix === 'string' ? p.fix : '');
       let open = 0, quote = '';
       for (const c of text) { if (quote) { if (c === quote) { quote = ''; } } else if (c === '\'' || c === '"') { quote = c; } else if (c === '(') { open++; } else if (c === ')') { open--; } }
-      if (open > 0 && (/\)|paren|unclosed|end of (the )?(expression|input)|expected/i.test(msg) || p.code === 'DRS-9101' || p.code === 'DRS-9100')) { return { text: text + ')'.repeat(open), why: 'close the bracket' }; }
+      if (open > 0 && (/\)|paren|unclosed|end of (the )?(expression|input)|expected/i.test(msg) || p.code === 'DRS-9101')) { return { text: text + ')'.repeat(open), why: 'close the bracket' }; }
       const eq = text.replace(/(\b[A-Za-z_]\w*\.[A-Za-z_]\w*\s*)=(?!=)/g, '$1==');
       if (eq !== text && /=|compar|assign|syntax|expected/i.test(msg)) { return { text: eq, why: 'compare with ==' }; }
       if (p.code === 'DRS-9152') {

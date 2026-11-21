@@ -74,12 +74,12 @@ class ReportSchemaV2Test {
     }
 
     @Test
-    void aWrongNewValueIsAnErrorAWrongTwoThreeValueAWarningAndAnUnknownKeyAWarning() throws IOException {
+    void aWrongValueIsAnErrorAndAnUnknownKeyAWarning() throws IOException {
         List<Problem> p = all(page("      - { id: c, type: column, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] },\n"
                 + "          format: { valueAxis: { min: low }, legend: sideways, sparkle: true, padding: 99 } }\n"));
         assertThat(p).anyMatch(x -> x.error() && x.path().equals("pages[0].visuals[0].format.valueAxis.min"));
         assertThat(p).anyMatch(x -> x.error() && x.path().equals("pages[0].visuals[0].format.padding"));
-        assertThat(p).anyMatch(x -> !x.error() && x.path().equals("pages[0].visuals[0].format.legend") && x.message().contains("ignored"));
+        assertThat(p).anyMatch(x -> x.error() && x.path().equals("pages[0].visuals[0].format.legend"));
         assertThat(p).anyMatch(x -> !x.error() && x.path().equals("pages[0].visuals[0].format.sparkle"));
     }
 

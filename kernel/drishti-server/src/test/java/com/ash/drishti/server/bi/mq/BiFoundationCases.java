@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.mq;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
@@ -147,7 +147,7 @@ public final class BiFoundationCases {
                 continue;
             }
             String y = Files.readString(f);
-            String name = Layered.modelDef(y).model() == null ? f.getFileName().toString() : Layered.modelDef(y).model().name();
+            String name = Tables.modelDef(y).model() == null ? f.getFileName().toString() : Tables.modelDef(y).model().name();
             try {
                 models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
             } catch (RuntimeException e) {

@@ -100,14 +100,18 @@ class LauncherMemory(unittest.TestCase):
         import storeload
         javacmd._VERSIONS.setdefault("java", 21)            # no java is run: the command line is only built
         for store in sorted(storeload.STORES):
-            if store == "delta":
-                continue                                    # Python only, no JVM
+            if store in ("delta", "iceberg"):
+                continue                                    # Python only, no JVM (iceberg: load_rows starts the one loader, below)
             with self.subTest(store):
                 _, steps = storeload.plan(store, [], 10, 1, [], data=ROOT / "data", env={}, cwd=ROOT, java="java", jar="drishti-server-exec.jar")
                 javas = [s for s in steps if s[0] == "java"]
                 self.assertEqual(len(javas), 1 if storeload.STORES[store].together else 2)
                 for s in javas:
                     self.assertIn("-Djdk.nio.maxCachedBufferSize=262144", s)
+
+    def test_the_iceberg_loader_starts_through_javacmd_too(self):
+        text = (ROOT / "tools/lake/loaderows.py").read_text(encoding="utf-8")        # data load --store iceberg: load_rows.py -> loaderows.load
+        self.assertIn("java_cmd(java_bin", text)
 
     def test_the_stack_starts_each_server_with_them(self):
         """drishti.py start cluster starts every node through drishti.py start server, which sets them (one launcher, not two)."""

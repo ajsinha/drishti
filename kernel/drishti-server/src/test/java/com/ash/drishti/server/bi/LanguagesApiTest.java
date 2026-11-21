@@ -95,65 +95,6 @@ class LanguagesApiTest {
             Path folder = com.ash.drishti.server.TestRun.root().resolve("lang-api-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
-            Files.writeString(datasets.resolve("lang-trade.dataset.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    dataset: lang-trade
-                    version: 1.0.0
-                    source: { connector: lang-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      desk:      { type: string }
-                      book:      { type: string }
-                      currency:  { type: string }
-                      notional:  { type: decimal, aggregate: sum }
-                      mtm:       { type: decimal, aggregate: sum }
-                      tradeDate: { type: date }
-                    security:
-                      rows:
-                        - { role: desk-head, where: "desk in user.desks" }
-                        - { role: [bi-risk, bi-analyst, admin], where: "true" }
-                      masked: [mtm]
-                      hidden-for: { roles: [bi-analyst], columns: [book] }
-                    """);
-            Files.writeString(models.resolve("lang-model.model.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    model: lang-model
-                    version: 1.0.0
-                    datasets:
-                      trades: { dataset: lang-trade, role: fact }
-                    measures:
-                      Notional: { id: m_notional, expr: "sum(trades.notional)" }
-                      MTM:      { id: m_mtm, expr: "sum(trades.mtm)" }
-                      Trades:   { id: m_trades, expr: "count(trades)" }
-                      Open MTM: { id: m_open, expr: "sum(trades.mtm, where=trades.currency == 'USD')" }
-                      Per trade: { id: m_per, expr: "measure('m_notional') / measure('Trades')" }
-                    fields:
-                      trades.desk:     { display: Desk, folder: Organisation, description: The trading desk, category: none }
-                      trades.notional: { display: Notional amount, format: amount0, folder: Amounts, summarise: sum }
-                    perspectives:
-                      desk-view: { title: Desk view, fields: [trades.desk, trades.notional], measures: [Notional, Trades] }
-                    security:
-                      hidden-for: { roles: [bi-analyst], fields: [trades.currency], measures: [Open MTM] }
-                    tests:
-                      - { name: DESK-A notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.desk = 'DESK-A' AS OF DATE '2026-10-08'", expect: 92000, role: bi-risk }
-                      - { name: by desk, sql: "SELECT trades.desk, MEASURE('Trades') AS n FROM trades GROUP BY trades.desk AS OF DATE '2026-10-08'", row: { trades.desk: DESK-B }, column: n, expect: 8, role: bi-risk }
-                    """);
-            Files.writeString(datasets.resolve("lang-desk-sql.dataset.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    dataset: lang-desk-sql
-                    version: 1.0.0
-                    source:
-                      model: lang-model@1
-                      sql: "SELECT trades.desk AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.desk"
-                    grain: { keys: [desk] }
-                    columns:
-                      desk:     { type: string, role: key }
-                      notional: { type: decimal, aggregate: sum }
-                      trades:   { type: integer, aggregate: sum }
-                    """);
             Path python = Files.createDirectories(folder.resolve("python"));
             Files.writeString(python.resolve("notional-bucket.python.yaml"), """
                     rachana: 1
@@ -169,39 +110,6 @@ class LanguagesApiTest {
                           out = rows.copy()
                           out[params["column"]] = (out["notional"] >= 12000).map({True: "big", False: "small"})
                           return out
-                    """);
-            Files.writeString(datasets.resolve("lang-bucketed.dataset.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    dataset: lang-bucketed
-                    version: 1.0.0
-                    extends: lang-trade@1
-                    derive:
-                      bucket:    { python: notional-bucket, inputs: [notional], type: string }
-                      notionalK: { expr: "notional / 1000", type: decimal }
-                    """);
-            Files.writeString(models.resolve("lang-bucket-view.model.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    model: lang-bucket-view
-                    version: 1.0.0
-                    datasets:
-                      trades: { dataset: lang-bucketed, role: fact }
-                    measures:
-                      Trades: { expr: "count(trades)" }
-                      K:      { expr: "sum(trades.notionalK)" }
-                    """);
-            Files.writeString(models.resolve("lang-guarded.model.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    model: lang-guarded
-                    version: 1.0.0
-                    audience: { roles: [bi-risk, admin] }
-                    datasets:
-                      trades: { dataset: lang-trade, role: fact }
-                    measures:
-                      Notional: { id: m_notional, expr: "sum(trades.notional)" }
-                      Trades:   { id: m_trades, expr: "count(trades)" }
                     """);
             Path reports = Files.createDirectories(folder.resolve("reports"));
             Files.writeString(reports.resolve("lang-guarded-report.report.yaml"), """
@@ -228,17 +136,7 @@ class LanguagesApiTest {
                         visuals:
                           - { id: by-desk, type: table, title: By desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { columns: [trades.desk, Notional, Half notional] } }
                     """);
-            Files.writeString(models.resolve("lang-desk-view.model.yaml"), """
-                    rachana: 2
-                    expressions: 2
-                    model: lang-desk-view
-                    version: 1.0.0
-                    datasets:
-                      desks: { dataset: lang-desk-sql, role: fact }
-                    measures:
-                      Desk notional: { expr: "sum(desks.notional)" }
-                    """);
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "LanguagesApiTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -605,7 +503,7 @@ class LanguagesApiTest {
 
         JsonNode old = validate("rita", "[Notional] / [Trades]", "aggregate");
         assertThat(old.path("syntax").asText()).isEqualTo("rachana");
-        assertThat(old.path("valid").asBoolean()).as("another syntax is not read: tables migrate rewrites it").isFalse();
+        assertThat(old.path("valid").asBoolean()).as("another syntax is not read").isFalse();
     }
 
     /** A report's own measures travel as the model query's define, and its perspective narrows its Fields pane. */

@@ -114,8 +114,7 @@ documents. The pack declares the layout ([Declaring the layout in a pack](#decla
 **The lake file.** A lake's root, storage, table folders, partitions, promoted columns and vectors are described once in
 `config/lakes/<lake>.yaml` and the connector names it with `lake:` (and `lake-tables:` where a kind has several tables)
 ([DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)). Giving `root`, `domain`, `table.<kind>` and `layout.<kind>.*` in the
-connector file instead is the form for tables no lake file describes (a vendor's table on S3); `drishti.py lake migrate-config` moves
-such connectors into a lake file ([DATA_LAKE_GUIDE.md section 12](../../docs/guides/DATA_LAKE_GUIDE.md#12-other-lakes-packs-and-older-installations)).
+connector file instead is the form for tables no lake file describes (a vendor's table on S3).
 A Delta connector never writes per edit: write-back keeps corrections as overlays and the loader folds approved ones into the next build
 ([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 

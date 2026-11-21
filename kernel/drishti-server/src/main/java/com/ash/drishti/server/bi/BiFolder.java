@@ -220,8 +220,8 @@ public final class BiFolder implements AutoCloseable {
                     for (Path f : files.filter(p -> p.getFileName().toString().endsWith(".yaml")).sorted().toList()) {
                         String key = old + "/" + f.getFileName();
                         Entry was = entries.get(key);
-                        next.put(key, new Entry(0, 0, null, MIGRATE_FIRST + ": a " + old.substring(0, old.length() - 1) + " file in BI's old form is not read; run "
-                                + "drishti.py tables migrate --dry-run, then without it (the tables and models are written under the table layer's folder)",
+                        next.put(key, new Entry(0, 0, null, MIGRATE_FIRST + ": a " + old.substring(0, old.length() - 1) + " file in BI's old form is not read: "
+                                + "write it as tables and a model under the table layer's folder (TABLES_AND_MODELS.md)",
                                 was != null && was.problemSince() != null ? was.problemSince() : Instant.now()));
                     }
                 } catch (IOException e) {
@@ -359,7 +359,7 @@ public final class BiFolder implements AutoCloseable {
             if (converted == null) {
                 LOG.warn("BI folder: {} is a 2.3 board that does not parse, so it is not read as a report with board pages; its problems show on its item page", file.getFileName());
             } else {
-                LOG.info("BI folder: {} is a 2.3 board, read as the report file:report:{} (convert the file with drishti.py bi migrate --boards {})", file.getFileName(), name, file);
+                LOG.info("BI folder: {} is a 2.3 board, read as the report file:report:{}", file.getFileName(), name);
                 kind = "report";
                 text = converted;
             }

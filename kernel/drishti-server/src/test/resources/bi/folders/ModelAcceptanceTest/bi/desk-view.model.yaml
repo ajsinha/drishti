@@ -1,0 +1,8 @@
+rachana: 3
+model: desk-view
+version: 1.0.0
+tables:
+  books: { table: bi.desk_book, role: fact }
+measures:
+  Book notional: { expr: sum(books.notional) }
+  Book trades:   { expr: sum(books.trades) }

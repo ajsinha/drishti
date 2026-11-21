@@ -1,0 +1,11 @@
+rachana: 3
+table: bi.lake_report_trades
+version: 1.0.0
+title: Lake for reports
+from: { kind: trade, connector: rep-lake }
+keys: [TRADE_ID]
+columns:
+  TRADE_ID: { path: "$.TRADE_ID", type: string, key: true }
+  DESK:     { path: "$.DESK", type: string }
+  NOTIONAL: { path: "$.NOTIONAL", type: decimal }
+materialize: on-load

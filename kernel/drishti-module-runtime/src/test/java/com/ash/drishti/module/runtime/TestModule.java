@@ -134,14 +134,14 @@ final class TestModule {
                 package %s;
                 import org.springframework.context.annotation.Bean;
                 import org.springframework.context.annotation.Configuration;
-                import com.ash.drishti.kernel.api.modules.ApiAlias;
+                import com.ash.drishti.kernel.api.services.InlineRequest;
                 @Configuration
                 public class HelloConfig {
                     @Bean public String greeting() { return "hello from %s"; }
-                    @Bean public ApiAlias helloAlias() { return new ApiAlias("/api/v1/old-%s", "/api/v1/%s"); }
+                    @Bean public InlineRequest helloRequest() { return new InlineRequest(null, null, java.util.Map.of("id", "%s")); }
                     @Bean public Greeter greeter() { return new Greeter(); }
                 }
-                """.formatted(pkg, id, id, id));
+                """.formatted(pkg, id, id));
         sources.put(pkg.replace('.', '/') + "/Greeter.java", """
                 package %s;
                 public class Greeter implements java.util.function.Supplier<String> {

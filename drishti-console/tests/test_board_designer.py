@@ -36,11 +36,7 @@ def client():
     return TestClient(app)
 
 
-def test_a_two_three_board_address_opens_the_report_viewer_and_the_report_designer(client):
-    view = client.get("/bi/b/file:board:desk-wall?kiosk=1", follow_redirects=False)
-    assert view.status_code == 307 and view.headers["location"] == "/bi/r/file:report:desk-wall?kiosk=1"
-    stored = client.get("/bi/b/bi-1234", follow_redirects=False)
-    assert stored.headers["location"] == "/bi/r/bi-1234"
+def test_a_board_address_opens_the_report_designer(client):
     design = client.get("/bi/design/board/file:board:desk-wall", follow_redirects=False)
     assert design.status_code == 307 and design.headers["location"] == "/bi/design/file:report:desk-wall"
     for gone in ("board.html", "design_board.html"):

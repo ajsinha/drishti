@@ -70,30 +70,6 @@ class RunClusterTest {
     static void bi(Path folder, Path lake) throws Exception {
         Files.createDirectories(folder.resolve("datasets"));
         Files.createDirectories(folder.resolve("models"));
-        Files.writeString(folder.resolve("datasets/lake-trade.dataset.yaml"), """
-                rachana: 2
-                dataset: lake-trade
-                version: 1.0.0
-                source: { connector: run-lake, kind: trade }
-                grain: { keys: [id] }
-                columns:
-                  DESK:     { type: string }
-                  TRADER:   { type: string }
-                  NOTIONAL: { type: decimal, aggregate: sum }
-                security:
-                  rows:
-                    - { role: [bi-raw, bi-masked, admin], where: "true" }
-                  masked: [TRADER]
-                """);
-        Files.writeString(folder.resolve("models/lake-runs.model.yaml"), """
-                rachana: 2
-                model: lake-runs
-                version: 1.0.0
-                datasets:
-                  trades: { dataset: lake-trade, role: fact }
-                measures:
-                  Notional: { expr: "sum(trades.NOTIONAL)" }
-                """);
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
             lines.add("{\"TRADE_ID\":\"RL-" + i + "\",\"DESK\":\"DESK-" + (i % 3) + "\",\"TRADER\":\"Trader " + (char) ('A' + i % 4) + "\",\"NOTIONAL\":"
@@ -109,7 +85,7 @@ class RunClusterTest {
         Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "runs-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
-        com.ash.drishti.server.bi.TablesFolder.migrate(root.resolve("bi"));     // tables migrate: the datasets and models become the layer's
+        com.ash.drishti.server.bi.TablesFolder.place(root.resolve("bi"), "RunClusterTest");
         Files.writeString(root.resolve("runs.yaml"), "enabled: true\nlease:\n  renew: 500ms\n  ttl: 2s\n");
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));

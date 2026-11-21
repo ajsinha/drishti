@@ -122,29 +122,8 @@ class StatementRowsTest {
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));
-            Files.writeString(datasets.resolve("rows-trade.dataset.yaml"), """
-                    rachana: 2
-                    dataset: rows-trade
-                    version: 1.0.0
-                    source: { connector: rows-lake, kind: trade }
-                    grain: { keys: [id] }
-                    columns:
-                      TRADE_ID: { type: string }
-                      DESK:     { type: string }
-                      NOTIONAL: { type: decimal, aggregate: sum }
-                    """);
-            Files.writeString(models.resolve("rows-model.model.yaml"), """
-                    rachana: 2
-                    model: rows-model
-                    version: 1.0.0
-                    datasets:
-                      trade: { dataset: rows-trade, role: fact }
-                    measures:
-                      NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
-                      Trades:   { expr: "count(trade)" }
-                    """);
             Files.writeString(reports.resolve("rows-statement.report.yaml"), STATEMENT);
-            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
+            com.ash.drishti.server.bi.TablesFolder.place(folder, "StatementRowsTest");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

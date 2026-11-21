@@ -1,0 +1,15 @@
+rachana: 3
+model: lake-test
+version: 1.0.0
+title: Lake test
+description: "Trades read through a file connector, for the API test."
+tables:
+  trades: { table: bi.lake_test_trades, role: fact }
+  books:  { table: bi.lake_test_books, role: fact }
+relationships:
+  - { from: trades.book, to: books.id }
+measures:
+  Notional: { expr: sum(trades.notional) }
+  MTM:      { expr: sum(trades.mtm) }
+  Trades:   { expr: count(trades) }
+rollups: [{ name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }]

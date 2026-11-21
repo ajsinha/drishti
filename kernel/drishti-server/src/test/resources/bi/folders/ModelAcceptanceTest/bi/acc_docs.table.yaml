@@ -1,0 +1,10 @@
+rachana: 3
+table: bi.acc_docs
+was: acc-docs
+version: 1.0.0
+from: { kind: trade, connector: acc-lake }
+keys: [id]
+columns:
+  desk:   { path: "$.desk", type: string }
+  trader: { path: "$.trader", type: string }
+materialize: on-load

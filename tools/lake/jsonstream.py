@@ -12,6 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+# Drishti's own, no Lake equivalent: Drishti Lake's loader reads JSON Lines (its Python path: drishti_lake.inputs); JSON arrays of any size, streamed, are
+# the exports `lake build`, `lake scan` and `convert` take. (A Lake item: JSON-array input in the loader would retire this reader's array half.)
 """Documents from JSON files of any size, one at a time, so memory stays flat however large the input is.
 
 A file is read as a stream of documents:

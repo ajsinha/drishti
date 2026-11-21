@@ -1,0 +1,8 @@
+rachana: 3
+model: acc-model
+version: 1.0.0
+tables:
+  trades: { table: bi.acc_trade, role: fact }
+measures:
+  Notional: { expr: sum(trades.notional) }
+  Trades:   { expr: count(trades) }

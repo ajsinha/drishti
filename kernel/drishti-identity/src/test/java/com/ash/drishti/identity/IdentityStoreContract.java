@@ -345,27 +345,6 @@ abstract class IdentityStoreContract {
     }
 
     @Test
-    void notesBelongToTheirEntityAndOnlyTheirAuthorEditsThem() {
-        NoteStore n = bean(NoteStore.class);
-        NoteStore.Note a = n.add("trade", "T-NOTE-1", null, "tess", "  Restated on 28 Sep after the fixing correction. ");
-        NoteStore.Note b = n.add("trade", "T-NOTE-1", "$.mtm", "ravi", "MTM includes the CVA adjustment");
-        n.add("trade", "T-NOTE-2", null, "tess", "another trade");
-        assertThat(n.of("trade", "T-NOTE-1")).extracting(NoteStore.Note::body)
-                .containsExactly("Restated on 28 Sep after the fixing correction.", "MTM includes the CVA adjustment");
-        assertThat(n.of("trade", "T-NOTE-1").get(1).path()).isEqualTo("$.mtm");
-        assertThatThrownBy(() -> n.edit(a.id(), "ravi", "mine now")).isInstanceOf(DrishtiException.class);
-        assertThat(n.edit(a.id(), "tess", "Restated twice").body()).isEqualTo("Restated twice");
-        assertThatThrownBy(() -> n.delete(b.id(), "tess", false)).isInstanceOf(DrishtiException.class);
-        n.delete(b.id(), "tess", true);                                         // an administrator may
-        assertThat(n.of("trade", "T-NOTE-1")).hasSize(1);
-        assertThatThrownBy(() -> n.add("trade", "T-NOTE-1", null, "tess", "  ")).isInstanceOf(DrishtiException.class);
-        assertThatThrownBy(() -> n.add("trade", "T-NOTE-1", "mtm", "tess", "x")).isInstanceOf(DrishtiException.class);
-        assertThatThrownBy(() -> n.add("trade", "T-NOTE-1", null, "tess", "x".repeat(2001))).isInstanceOf(DrishtiException.class);
-        assertThat(bean(JpaAuditLog.class).recent(50, "trade/T-NOTE-1")).extracting(AuditLog.Event::action)
-                .contains("note.add", "note.edit", "note.delete");
-    }
-
-    @Test
     void theAccessLogRecordsReadsAndFindsThemByEntityUserAndTime() {
         AccessLog log = bean(AccessLog.class);
         java.time.Instant t0 = java.time.Instant.parse("2026-09-30T14:00:00Z");

@@ -148,7 +148,7 @@ public final class PackDeployService {
         out.put("size", data.length);
         out.put("sha256", sha);
         checks.add(Check.ok("archive", data.length + " bytes, sha256 " + sha.substring(0, 16) + "..."));
-        Path dir = com.ash.drishti.common.LegacyNames.migrate(installed, ".uploads", "uploads-awaiting-deploy").resolve(id);
+        Path dir = installed.resolve("uploads-awaiting-deploy").resolve(id);
         boolean keep = false;
         try {
             if (expectedSha != null && !expectedSha.isBlank() && !expectedSha.trim().equalsIgnoreCase(sha)) {
@@ -571,14 +571,14 @@ public final class PackDeployService {
     // -- helpers -----------------------------------------------------------------------------------------------------
 
     private Path keep(String name, String version, Path dir) throws IOException {
-        Path keepDir = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name).resolve(version + "-" + System.currentTimeMillis());
+        Path keepDir = installed.resolve("previous-versions").resolve(name).resolve(version + "-" + System.currentTimeMillis());
         Files.createDirectories(keepDir.getParent());
         Files.move(dir, keepDir, StandardCopyOption.ATOMIC_MOVE);
         return keepDir;
     }
 
     private List<Path> keptDirs(String name) {
-        Path d = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name);
+        Path d = installed.resolve("previous-versions").resolve(name);
         if (!Files.isDirectory(d)) {
             return List.of();
         }

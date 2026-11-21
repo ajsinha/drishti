@@ -1,0 +1,17 @@
+rachana: 3
+table: bi.st_trade
+was: st-trade
+version: 1.0.0
+from: { kind: trade, connector: stmt-lake }
+keys: [id]
+columns:
+  TRADE_ID:     { path: "$.TRADE_ID", type: string }
+  DESK:         { path: "$.DESK", type: string }
+  PORTFOLIO:    { path: "$.PORTFOLIO", type: string }
+  LEGAL_ENTITY: { path: "$.LEGAL_ENTITY", type: string }
+  NOTIONAL:     { path: "$.NOTIONAL", type: decimal, aggregate: sum }
+  MTM:          { path: "$.MTM", type: decimal, aggregate: sum, masked: true }
+rules:
+  - { role: st-head, where: "$.DESK in user.desks" }
+  - { role: [st-analyst, st-author, admin], where: "true" }
+materialize: on-load

@@ -13,6 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
+# Drishti's own: the Drishti server's admin REST API for the in-memory lake (`lake memory`); not a Lake capability.
 """`drishti.py lake memory status|jobs|refill`: the in-memory lake over REST (administrators; docs/guides/DATA_LAKE_GUIDE.md).
 
     status   every memory store (cap, use, contract, refusals) and table (state, bytes, rows, version, refills, evictions, ratio), health

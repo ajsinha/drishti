@@ -93,7 +93,7 @@ def live():
 
 def test_every_bi_page_has_the_strict_policy_even_with_a_2_1_perspective_visual(live):
     """Wave B (ARCHITECTURE.md §28 P3): no BI page compiles WebAssembly; a 2.1 report with a Perspective visual is drawn as Drishti's own grid of the server's answer."""
-    for path in (f"/bi/r/{LIVE}", f"/bi/r/{PLAIN}", f"/bi/b/{BOARD}", "/bi/catalogue", "/bi/datasets", "/bi/designer", "/bi/notebook"):
+    for path in (f"/bi/r/{LIVE}", f"/bi/r/{PLAIN}", f"/bi/r/{BOARD}", "/bi/catalogue", "/bi/datasets", "/bi/designer", "/bi/notebook"):
         page = live.get(path)
         assert page.status_code == 200, path
         csp = page.headers["content-security-policy"]
@@ -103,9 +103,7 @@ def test_every_bi_page_has_the_strict_policy_even_with_a_2_1_perspective_visual(
 
 
 def test_a_board_is_a_report_with_board_pages_and_keeps_the_strict_policy(live):
-    moved = live.get(f"/bi/b/{BOARD}", follow_redirects=False)                       # 2.4.0 (R7): the report viewer draws board pages
-    assert moved.status_code == 307 and moved.headers["location"].startswith("/bi/r/")
-    page = live.get(moved.headers["location"])
+    page = live.get(f"/bi/r/{BOARD}")                                                 # the report viewer draws board pages
     assert page.headers["content-security-policy"] == CSP and 'data-bi-page="report"' in page.text and "/static/js/drishti_bi-report-board.js" in page.text
 
 

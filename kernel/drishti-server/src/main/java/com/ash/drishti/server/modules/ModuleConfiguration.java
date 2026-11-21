@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.modules;
 
-import com.ash.drishti.kernel.api.modules.ApiAlias;
 import com.ash.drishti.packs.Modules;
 import com.ash.drishti.registry.AccessRegistry;
 import com.ash.drishti.registry.EmbeddedAccessRegistry;
@@ -34,8 +33,7 @@ import org.springframework.core.env.Environment;
 
 /**
  * The access registry in the server (docs/architecture/ACCESS_MODEL.md): the one {@link AccessRegistry} (the environment's, the same the
- * packs' start and the modules' conditions asked), watched for changes; which modules were loaded at this start; the old API paths the
- * modules still answer ({@link ApiAliasFilter}); and the gate that answers a module's API with {@code 404 DRS-1025} when it is off.
+ * packs' start and the modules' conditions asked), watched for changes; which modules were loaded at this start; and the gate that answers a module's API with {@code 404 DRS-1025} when it is off.
  */
 @Configuration
 public class ModuleConfiguration {
@@ -84,16 +82,6 @@ public class ModuleConfiguration {
             com.ash.drishti.server.modules.ModuleNode n = node.getIfAvailable();
             return n != null && n.runtime() != null && n.runtime().loaded(id).isPresent();
         });
-    }
-
-    /** Outermost of the server's own filters: an old path is the new one from here on. */
-    @Bean
-    public FilterRegistrationBean<ApiAliasFilter> apiAliasFilter(ObjectProvider<ApiAlias> aliases) {
-        List<ApiAlias> all = aliases.orderedStream().toList();
-        FilterRegistrationBean<ApiAliasFilter> r = new FilterRegistrationBean<>(new ApiAliasFilter(all));
-        r.addUrlPatterns("/api/*");
-        r.setOrder(-30);
-        return r;
     }
 
     /** Just before the engine gate (4), after the caller is known: a module that is not loaded here says so, before its engines are asked. */

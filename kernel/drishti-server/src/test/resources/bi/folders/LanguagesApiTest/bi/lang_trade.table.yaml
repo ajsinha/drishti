@@ -1,0 +1,17 @@
+rachana: 3
+table: bi.lang_trade
+was: lang-trade
+version: 1.0.0
+from: { kind: trade, connector: lang-lake }
+keys: [id]
+columns:
+  desk:      { path: "$.desk", type: string }
+  book:      { path: "$.book", type: string, hidden-for: [bi-analyst] }
+  currency:  { path: "$.currency", type: string }
+  notional:  { path: "$.notional", type: decimal, aggregate: sum }
+  mtm:       { path: "$.mtm", type: decimal, aggregate: sum, masked: true }
+  tradeDate: { path: "$.tradeDate", type: date }
+rules:
+  - { role: desk-head, where: "$.desk in user.desks" }
+  - { role: [bi-risk, bi-analyst, admin], where: "true" }
+materialize: on-load

@@ -1,0 +1,10 @@
+rachana: 3
+table: bi.desk_notional_prep
+was: desk-notional-prep
+version: 1.0.0
+from: { python: desk-notional-prep, inputs: { trades: { kind: trade, connector: tin-lake, fields: [desk, notional] } } }
+keys: [desk]
+columns:
+  desk:     { path: "$.desk", type: string, role: key, key: true }
+  notional: { path: "$.notional", type: decimal, aggregate: sum }
+materialize: none

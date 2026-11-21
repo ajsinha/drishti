@@ -400,7 +400,7 @@ def build_parser(h) -> argparse.ArgumentParser:
             if noun == "catalogue" and act == "publish":
                 p.add_argument("--note", help="why this version")
     runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, ARCHITECTURE.md §28)
-    load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi migrate, bi sql
+    load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi sql
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})  # bi model, bi mq
     runs.register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})
     load_module("biitem", "biitem.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})    # bi item, bi dataset
@@ -422,7 +422,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     load_module("calcruntime", "calcruntime.py").register(groups)                                                    # calc install (Pyodide for Calc)
     load_module("bicompute_unit", "dev/bicompute_unit.py").register(groups)                                          # dev bicompute-unit
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
-    load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|migrate (2.9.11.e)
+    load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|offer (2.9.11.e)
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
         p = add(vw, name, h.cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")

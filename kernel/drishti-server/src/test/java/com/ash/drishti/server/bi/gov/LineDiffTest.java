@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.gov;
 
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -53,13 +53,31 @@ class LineDiffTest {
 
     @Test
     void aFieldRemovedFromADatasetIsFoundByName() {
-        String before = "dataset: d\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string, b: string }\nmeasures:\n  N: { expr: \"count(t)\" }\n";
-        String after = before.replace("b: string", "c: string");
-        Surface.Change c = Surface.change(Surface.Offer.of(Layered.dataset(before).dataset()), Surface.Offer.of(Layered.dataset(after).dataset()));
+        String model = """
+                rachana: 3
+                model: d
+                version: 1.0.0
+                tables:
+                  t: { table: bi.d_t, role: fact }
+                measures:
+                  "N": { expr: count(t) }
+                """;
+        String before = """
+                rachana: 3
+                table: bi.d_t
+                version: 1.0.0
+                from: { kind: trade }
+                columns:
+                  a: { path: "$.a", type: string }
+                  b: { path: "$.b", type: string }
+                materialize: on-load
+                """;
+        String after = before.replace("b: { path: \"$.b\"", "c: { path: \"$.c\"");
+        Surface.Change c = Surface.change(Surface.Offer.of(Tables.dataset(model, before).dataset()), Surface.Offer.of(Tables.dataset(model, after).dataset()));
         assertThat(c.breaking()).isTrue();
         assertThat(c.removedFields()).containsExactly("t.b");
         assertThat(c.addedFields()).containsExactly("t.c");
         assertThat(c.removedMeasures()).isEmpty();
-        assertThat(Surface.change(Surface.Offer.of(Layered.dataset(after).dataset()), Surface.Offer.of(Layered.dataset(before).dataset())).removedFields()).containsExactly("t.c");
+        assertThat(Surface.change(Surface.Offer.of(Tables.dataset(model, after).dataset()), Surface.Offer.of(Tables.dataset(model, before).dataset())).removedFields()).containsExactly("t.c");
     }
 }

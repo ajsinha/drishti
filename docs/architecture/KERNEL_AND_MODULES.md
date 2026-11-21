@@ -218,7 +218,7 @@ the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (
 Built in `drishti-kernel-api` (kernel API **0.1**; the jar is on the class path of the kernel modules, `ApiSurfaceTest` pins its surface):
 `PivotProvider` and `PivotSourceProvider` with their value types (`kernel.api.pivot`), `ViewAugmenter`
 (`kernel.api.view`), `Explainer`, `ExplainRequest`, `Explanation` (`kernel.api.explain`), `Principal` (`kernel.api.security`), `ShardedMeasure` and
-`ShardGather` (`kernel.api.shard`), `CapacityFigures`, `HealthFigures`, `ApiAlias`, `OfficialResults`, and the new `DomainVocabulary` (`kernel.api.vocabulary`).
+`ShardGather` (`kernel.api.shard`), `CapacityFigures`, `HealthFigures`, `OfficialResults`, and the new `DomainVocabulary` (`kernel.api.vocabulary`).
 Still at their old homes and to move with i2: `FunctionProvider` (its `EvalContext` carries the formats), `CacheGroup`/`CacheReport` (Caffeine and
 `MemoryBudget` in their shape), `ApprovalSource`, `FlightForm` (Arrow types); `SourcePlugin`, `StorageProvider` and `ProviderFactory` stay kernel-only, off this jar.
 
@@ -237,7 +237,6 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 | `CapacityFigures` (`server.capacity`) | its rows in the capacity planner | VaR memory and time per date |
 | `HealthFigures` (`server.api`) | figures in Health | hierarchies skipped |
 | `OfficialReaders.OfficialResults` (`drishti-packs`) | published results lakes it reads | `var-official`, `ccr-official` |
-| `ApiAlias` (`server.modules`) | old paths answered as new for one release | `/api/v1/var` → `/api/v1/risk/var` |
 | `SourcePlugin` (`drishti-api`) | **kernel only from P1** (section 5.7): banking's `VarPositionsPlugin` and `VarPvStreamPlugin` become `KindProvider`s | — |
 | `StorageProvider` (`lake-io`), `ProviderFactory` (`drishti-ai`) | **kernel only** (storage back-ends, LLM providers) | — |
 
@@ -446,7 +445,7 @@ the registry (other kernel parts ask the registry). Every field:
 | `python` | no | `version:` (the least Python), `path:` (package folders, default `python`), `wheels:` (the vendored wheels folder, default `python/wheels`), `requires:` (each needs a pure-Python wheel in it), `engines:` (`module:Class` entry points), `pool:` (the module's pool settings). Built: section 4.6 |
 | `packs` | no | its packs (folders under `packs/`) and which are on by default |
 | `data` | no | `needs:` file (`data/needs.yaml`, section 5) |
-| `api` | no | `prefix:` (its REST namespace), `aliases:` (old paths answered for one release), `tokens:` |
+| `api` | no | `prefix:` (its REST namespace), `tokens:` |
 | `console` | no | `plugin:` (`console/plugin.yaml`, format 2: routes, aliases, words, menus; section 9), `handlers:` the context-builder jar under `console/java/` (Java, section 10.4), `elements:` libraries it ships |
 | `functions` | no | `functions.yaml` (or inline): words, their APIs, their module |
 | `lenses`, `home` | no | `lenses/lenses.yaml`; Home cards and chips per lens |
@@ -779,7 +778,7 @@ prints `N library warnings (M kernel libraries compared)` (`--json`: `libraryWar
 The module's controllers (`@ModuleApi`) are mounted by the kernel under `/api/v1/<prefix>/`, behind the kernel's filters in this order:
 TLS/identity → module gate (`DRS-1025` when off) → function gate (`DRS-1026`) → permission (`DRS-1027`) → audit → the module's
 `DispatcherServlet` (one per module, bound to its child context). A module cannot register a filter, a servlet or a path outside its
-prefix. `ApiAlias` keeps working for one release.
+prefix.
 
 ### 4.6 Python compute
 
