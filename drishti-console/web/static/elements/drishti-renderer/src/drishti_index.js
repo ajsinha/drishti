@@ -16,7 +16,7 @@
 /* drishti-renderer (Drishti Elements library 7; CLIENT_RENDERER.md): Drishti screens from a static, live or streamed
    (GenUI) ViewModel, drawn with the shared libraries: drishti-grid (tables, trees, drills, pivots; the nested pivot's tree data),
    drishti-chart (every chart, the only place an engine is called), drishti-core (the element maker and its rules for untrusted data,
-   formats half up, the API client), drishti-data (the live client for streams and Elements' one connection per page); the insight
+   formats half up, the API client), drishti-events (the connection for streams and Elements' one connection per page); the insight
    components through hooks (options.insight). Elements 2.3 (<drishti-view>, <drishti-panel>, <drishti-screen>) is part of it.
    Hosts import the public entry static/render/<version>/drishti-render.js, which says where the files are and installs the names. */
 export { VERSION, CONTRACTS, render, patch, subscribe, defineScreen, installRender } from './drishti_render.js';

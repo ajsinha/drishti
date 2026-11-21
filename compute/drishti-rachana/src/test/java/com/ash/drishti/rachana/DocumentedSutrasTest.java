@@ -46,7 +46,7 @@ class DocumentedSutrasTest {
                         .forEach(files::add);
             }
         }
-        SutraParser parser = new SutraParser();
+        SutraParser parser = com.ash.drishti.rachana.DrishtiRachana.parser();
         SutraExpressions check = new SutraExpressions(new ElCompiler());
         int checked = 0;
         for (Path f : files) {

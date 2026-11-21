@@ -44,8 +44,8 @@ class PackSutrasTest {
 
     @AfterEach
     void noKit() {
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(null);
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
+        com.ash.drishti.rachana.DrishtiRachana.blocks().kit(null);
+        com.ash.drishti.rachana.DrishtiRachana.blocks().load(List.of());
     }
 
     @ParameterizedTest
@@ -55,13 +55,13 @@ class PackSutrasTest {
         try (Stream<Path> s = Files.walk(pack.resolve("sutras"))) {
             files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(KIT);
+        com.ash.drishti.rachana.DrishtiRachana.blocks().kit(KIT);
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                 null, null, null, null, null, null, null, null), new ElCompiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);
-            assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();
-            assertThat(com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()).as(pack.getFileName() + " names no block like a kit fragment").isEmpty();
+            assertThat(com.ash.drishti.rachana.DrishtiRachana.blocks().find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();
+            assertThat(com.ash.drishti.rachana.DrishtiRachana.blocks().clashes()).as(pack.getFileName() + " names no block like a kit fragment").isEmpty();
         }
     }
 }

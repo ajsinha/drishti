@@ -65,7 +65,7 @@ public class LayoutController {
     private final SutraRegistry sutras;
     private final SutraGovernance governance;
     private final RachanaProperties rachana;
-    private final SutraLayoutEditor editor = new SutraLayoutEditor();
+    private final SutraLayoutEditor editor = new SutraLayoutEditor(com.ash.drishti.rachana.DrishtiRachana.parser());
 
     public LayoutController(LayoutProperties props, Entitlements entitlements, PreferenceStore store, SutraRegistry sutras,
             SutraGovernance governance, RachanaProperties rachana) {

@@ -31,6 +31,7 @@
         "drishti-grid",
         "drishti-chart",
         "drishti-data",
+        "drishti-events",
         "drishti-graph",
         "drishti-tree"
       ],

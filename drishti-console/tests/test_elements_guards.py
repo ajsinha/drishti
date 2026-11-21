@@ -18,7 +18,7 @@ implementation of each thing, in the libraries (the vendored Drishti Elements an
 * builds its own grid: sorting a table's rows by its headings (aria-sort) is drishti-grid's (the grid, or its document tables);
 * formats numbers on its own (Intl.NumberFormat, toFixed, toPrecision, a number's toLocaleString): numbers are drishti-core's
   (formatNumber, formatCompact, formatPercent, formatNamed: the server's rules, half up);
-* opens its own EventSource or WebSocket: the connection has one home, drishti-data's LiveClient.
+* opens its own EventSource or WebSocket: the connection has one home, drishti-events.
 
 ALLOWED lists the files other builders are still moving, each with the branch moving it. It only shrinks: an entry whose file is gone,
 or no longer breaks the rule, fails the check, so the list stays true. The geometry of a hand-drawn SVG (a coordinate) is not a number
@@ -42,7 +42,7 @@ RULES = {
     "numbers": (re.compile(r"Intl\.NumberFormat|\.toFixed\s*\(|\.toPrecision\s*\(|\.toLocaleString\s*\("),
                 "formats numbers itself: use drishti-core's formatNumber, formatCompact, formatPercent or formatNamed"),
     "live": (re.compile(r"\bnew\s+(?:[\w$.]*\.)?(?:EventSource|WebSocket)\b|\b(?:window|self|globalThis)\.(?:EventSource|WebSocket)\s*="),
-             "opens its own EventSource or WebSocket: use drishti-data's LiveClient"),
+             "opens its own EventSource or WebSocket: use drishti-events (connect)"),
     "visual": (re.compile(r"createElementNS\(|getContext\(\s*['\"]2d|<svg\b"),
                "draws a visual by hand: every visual lives in a Drishti Elements library (a domain visual in the domain's library)"),
     "inputs": (re.compile(r"drishtiModules\.multiselect|\bms-(?:box|pop|sum|q)\b|Drishti\.People\.attach\(\s*[\w$.]+\s*,\s*[^{\s][^,{]*,"),

@@ -79,7 +79,7 @@ class StudioTest {
     void startFromInferenceGivesAValidSutra() throws Exception {
         String yaml = mvc.perform(get("/api/v1/studio/inferred/trade/IRS-47102").param("name", "irs-plain"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        var s = new SutraParser().parse(yaml, "x.yaml", "rates");
+        var s = com.ash.drishti.rachana.DrishtiRachana.parser().parse(yaml, "x.yaml", "rates");
         assertThat(s.name()).isEqualTo("irs-plain");
         assertThat(s.strip()).isNotEmpty();
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)

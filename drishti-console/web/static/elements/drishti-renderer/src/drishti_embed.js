@@ -15,9 +15,9 @@
  */
 /* Elements 2.x's page-wide parts (CLIENT_RENDERER.md sections 10.1 and 13): the host's token provider (asked once per token, kept until
    shortly before it expires, renewed after a 401), the sign-in window of auth 'popup', resolving a typed command, and one live connection
-   per page and server: /embed/v2/channel, read by drishti-data's live client over fetch (an EventSource cannot send the bearer), its
-   subscriptions added and removed by POST as elements come and go, reconnected with drishti-data's back-off. */
-import { LiveClient } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-data/src/drishti_index.js';
+   per page and server: /embed/v2/channel, read by drishti-events (raw mode) over fetch (an EventSource cannot send the bearer), its
+   subscriptions added and removed by POST as elements come and go, reconnected with drishti-events' back-off. */
+import { connect } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-events/src/drishti_index.js';
 import { signInFor } from './drishti_signin.js';
 import { statics } from './drishti_assets.js';
 import { url as drishtiUrl, ELEMENTS_VERSION as ONE_VERSION } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
@@ -139,18 +139,19 @@ class Connection {
     } catch (e) { this.loss(); }
   }
   open() {
-    this.client = new LiveClient({
-      transport: 'fetch', credentials: 'omit', events: ['channel', 'token', 'gone', 'frame', 'view'], eventField: '$event', heartbeatMs: 0,
-      backoff: { baseMs: cfg.retryMinMs, maxMs: cfg.retryMaxMs },
-      url: () => { const keys = [...this.keys.keys()]; this.synced = new Set(keys); this.cid = null; return this.server + API + '/channel?' + keys.map((k) => 's=' + encodeURIComponent(k)).join('&'); },
-      headers: async (info) => {
-        if (info.status === 401) { needers.forEach((fn) => fn(cfg.tokenProvider ? 'refused' : 'missing')); }
-        const t = await getToken(info.status === 401);
-        return t ? { Authorization: 'Bearer ' + t } : {};
-      }
-    });
-    this.client.on('state', (s) => { if (s.state === 'reconnecting') { this.dropped(); } });
-    this.client.subscribe((m) => { const ev = m.$event; delete m.$event; this.dispatch(ev, m); });
+    const opts = {
+      protocol: 'raw', transport: 'fetch', credentials: 'omit', events: ['channel', 'token', 'gone', 'frame', 'view'], recorder: false,
+      backoff: { baseMs: cfg.retryMinMs, maxMs: cfg.retryMaxMs }, idOf: () => undefined, seqOf: () => undefined
+    };
+    if (cfg.tokenProvider) {                                          // the token before every connect, a new one after a refusal
+      opts.auth = async (info) => {
+        if (info.status === 401) { needers.forEach((fn) => fn('refused')); }
+        return { token: await getToken(info.status === 401 || info.reason === 'refused'), expiresAt: 0 };
+      };
+    }
+    this.client = connect(() => { const keys = [...this.keys.keys()]; this.synced = new Set(keys); this.cid = null; return this.server + API + '/channel?' + keys.map((k) => 's=' + encodeURIComponent(k)).join('&'); }, opts);
+    this.client.on('$events.state', (m) => { if (m.data.state === 'reconnecting') { this.dropped(); } else if (m.data.state === 'refused' && !cfg.tokenProvider) { needers.forEach((fn) => fn('missing')); } });
+    this.client.on('feed', (e) => this.dispatch(e.kind, e.data || {}));
   }
   dropped() { this.cid = null; this.synced = new Set(); this.lost = true; this.each((h) => h.state && h.state('reconnecting')); }
   loss() { if (!this.client) { return; } this.dropped(); this.client.reconnect(); }

@@ -221,29 +221,29 @@
       .catch(function () { /* the connection's own reconnect resyncs */ });
   };
 
-  // The connection is drishti-data's LiveClient (Drishti Elements: the one home of a live connection): Server-Sent Events, the
-  // address asked at every connect (the keys wanted then), each message's event name kept, a dropped or refused connection opened again
-  // after a back-off. The console's channel keeps itself alive with comments, which an EventSource does not show: no watchdog here.
+  // The connection is drishti-events (Drishti Elements: the one home of a live connection) in raw mode: Server-Sent Events, the address
+  // asked at every connect (the keys wanted then), each message's event name its kind, a dropped or refused connection opened again after
+  // a back-off. The console's channel keeps itself alive with comments, which an EventSource does not show: no watchdog here.
   Hub.prototype.client = function () {
-    var self = this, Live = liveLib(this.o);
+    var self = this, Ev = eventsLib(this.o), clock;
     if (this.live) { return this.live; }
-    this.live = new Live.LiveClient({
-      url: function () { return self.url + '?' + self.wanted().map(function (k) { return 's=' + encodeURIComponent(k); }).join('&'); },
-      transport: 'sse', EventSource: this.o.EventSource, events: ['channel', 'end'].concat(TYPES), eventField: '__event', heartbeatMs: 0,
+    clock = { now: function () { return self.now(); }, setTimeout: function (fn, ms) { return self.later(fn, ms); }, clearTimeout: function (t) { self.cancel(t); },
+      requestFrame: function (fn) { return self.later(fn, 16); }, cancelFrame: function (t) { self.cancel(t); }, random: function () { return 0.5; }, hidden: function () { return false; } };
+    this.live = Ev.connect(function () { return self.url + '?' + self.wanted().map(function (k) { return 's=' + encodeURIComponent(k); }).join('&'); }, {
+      protocol: 'raw', transport: 'sse', events: ['channel', 'end'].concat(TYPES), recorder: false,
       backoff: { baseMs: this.o.retryMs || 2000, maxMs: this.o.maxRetryMs || 30000, jitter: false },
-      setTimeout: function (fn, ms) { return self.later(fn, ms); }, clearTimeout: function (t) { self.cancel(t); }, window: root
+      env: { EventSource: this.o.EventSource, window: root }, clock: clock
     });
-    this.live.on('state', function (s) {
-      if (s.state === 'reconnecting') { self.id = null; self.toAll({ t: 'error' }); }   // every tab hears it; the client opens it again
+    this.live.on('$events.state', function (m) {
+      if (m.data.state === 'reconnecting') { self.id = null; self.toAll({ t: 'error' }); }   // every tab hears it; the connection opens it again
     });
-    this.live.on('message', function (e) { self.message(e.message); });
+    this.live.on('feed', function (m) { var v = m.data || {}; v.__event = m.kind; self.message(v); });
     return this.live;
   };
 
   Hub.prototype.open = function () {
     if (!this.wanted().length || !this.o.EventSource) { return; }
     this.es = this.client();
-    this.es.open();
     this.armConnectTimer();
   };
 
@@ -292,8 +292,8 @@
 
   Hub.prototype.close = function () {
     this.cancel(this.connectTimer); this.connectTimer = null;
-    if (this.es) { this.es.close(); }
-    this.es = null; this.id = null; this.serverSubs = [];
+    if (this.es) { this.es.destroy(); }
+    this.live = null; this.es = null; this.id = null; this.serverSubs = [];
   };
 
   Hub.prototype.reopen = function () {
@@ -302,23 +302,23 @@
     if (this.wanted().length) { this.open(); }
   };
 
-  /** drishti-data (its LiveClient): the page's or the worker's, else loaded beside this script (a SharedWorker), or required (Node). */
-  function liveLib(o) {
+  /** drishti-events: the page's or the worker's, else loaded beside this script (a SharedWorker), or required (Node). */
+  function eventsLib(o) {
     var E = root.Drishti && root.Drishti.elements;
     if (o.live) { return o.live; }
-    if (E && E.data) { return E.data; }
+    if (E && E.events) { return E.events; }
     if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {   // the vendored Drishti Elements beside static/js (one folder: the pin)
       var vendor = require('path').join(__dirname, '..', 'vendor', 'drishti-elements');
-      return require(require('path').join(vendor, require('fs').readdirSync(vendor)[0], 'elements', 'drishti-data', 'drishti_data.js'));
+      return require(require('path').join(vendor, require('fs').readdirSync(vendor)[0], 'elements', 'drishti-events', 'drishti_events.js'));
     }
     if (typeof root.importScripts === 'function' && root.location) {
       // Drishti Elements' root: the page's drishti-core told it (drishti_channel.js adds elements=), else the static root beside this script
       var href = String(root.location.href), el = /[?&]elements=([^&]+)/.exec(href), v = /[?&]v=([^&]+)/.exec(href);
       var base = el ? decodeURIComponent(el[1]) : href.replace(/js\/(?:drishti_)?live-hub\.js.*$/, '');
-      root.importScripts(base + 'elements/drishti-core/drishti_core.js' + (v ? '?v=' + v[1] : ''), base + 'elements/drishti-data/drishti_data.js' + (v ? '?v=' + v[1] : ''));
-      return root.Drishti.elements.data;
+      root.importScripts(base + 'elements/drishti-core/drishti_core.js' + (v ? '?v=' + v[1] : ''), base + 'elements/drishti-events/drishti_events.js' + (v ? '?v=' + v[1] : ''));
+      return root.Drishti.elements.events;
     }
-    throw new Error('the live hub needs drishti-data: load it first');
+    throw new Error('the live hub needs drishti-events: load it first');
   }
 
   (root.Drishti = root.Drishti || {}).LiveHub = Hub;

@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../../vendor/drishti-elements/3.1.0/elements/drishti-core/drishti_core.js", "drishti-grid": "../../vendor/drishti-elements/3.1.0/elements/drishti-grid/drishti_grid.js", "drishti-chart": "../../vendor/drishti-elements/3.1.0/elements/drishti-chart/drishti_chart.js", "drishti-data": "../../vendor/drishti-elements/3.1.0/elements/drishti-data/drishti_data.js", "drishti-graph": "../../vendor/drishti-elements/3.1.0/elements/drishti-graph/drishti_graph.js", "drishti-tree": "../../vendor/drishti-elements/3.1.0/elements/drishti-tree/drishti_tree.js"};
+  var needs = {"drishti-core": "../../vendor/drishti-elements/3.1.0/elements/drishti-core/drishti_core.js", "drishti-grid": "../../vendor/drishti-elements/3.1.0/elements/drishti-grid/drishti_grid.js", "drishti-chart": "../../vendor/drishti-elements/3.1.0/elements/drishti-chart/drishti_chart.js", "drishti-data": "../../vendor/drishti-elements/3.1.0/elements/drishti-data/drishti_data.js", "drishti-events": "../../vendor/drishti-elements/3.1.0/elements/drishti-events/drishti_events.js", "drishti-graph": "../../vendor/drishti-elements/3.1.0/elements/drishti-graph/drishti_graph.js", "drishti-tree": "../../vendor/drishti-elements/3.1.0/elements/drishti-tree/drishti_tree.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -377,7 +377,7 @@
   /* ---- src/drishti_net.js ---- */
   __m["src/drishti_net.js"] = (function () {
     var createClient = __lib("drishti-core").createClient, AS_OF_HEADER = __lib("drishti-core").AS_OF_HEADER, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
-    var LiveClient = __lib("drishti-data").LiveClient;
+    var connect = __lib("drishti-events").connect;
     const FIXES = {
       401: 'Sign in to the console, or give render() a token: { token: () => fetchMyDrishtiToken() }.',
       403: 'Your role may not open this kind; ask an administrator, or show another entity.',
@@ -440,17 +440,17 @@
     function openStream(o, refOrUrl, on) {
       const url = streamUrl(o, refOrUrl);
       const ES = typeof o.eventSource === 'function' ? function HostEventSource(u) { return o.eventSource(u); } : undefined;
-      const client = new LiveClient({ url, transport: 'sse', EventSource: ES, events: STREAM_EVENTS, eventField: '$event', withCredentials: !!o.server,
-        heartbeatMs: 0, backoff: { baseMs: 3000, maxMs: 30000 } });
+      const events = connect(url, { protocol: 'raw', transport: 'sse', env: ES ? { EventSource: ES } : undefined, events: STREAM_EVENTS, recorder: false,
+        credentials: o.server ? 'include' : 'same-origin', backoff: { baseMs: 3000, maxMs: 30000 },
+        idOf: () => undefined, seqOf: () => undefined });                 // a frame's own id or seq is the view's, not the connection's
       let off = null;
       const stop = () => { if (off) { off(); off = null; } };
-      off = client.subscribe((m) => {
-        const type = m.$event;
-        delete m.$event;
+      off = events.on('feed', (e) => {
+        const type = e.kind, m = e.data || {};
         if (type === 'gone') { stop(); on.gone(problem(m.code || 'DRS-5003', m.detail || 'the stream ended')); return; }
         if (type === 'view') { on.view(m); } else if (type === 'frame') { on.frame(m); } else { on.message(m); }
       });
-      return () => { stop(); client.destroy(); };
+      return () => { stop(); events.destroy(); };
     }
     return { "fixFor": fixFor, "problem": problem, "personHeaders": personHeaders, "personFetch": personFetch, "viewUrl": viewUrl, "fetchView": fetchView, "streamUrl": streamUrl, "openStream": openStream };
   })();
@@ -1720,7 +1720,7 @@
   })();
   /* ---- src/drishti_embed.js ---- */
   __m["src/drishti_embed.js"] = (function () {
-    var LiveClient = __lib("drishti-data").LiveClient;
+    var connect = __lib("drishti-events").connect;
     var signInFor = __m["src/drishti_signin.js"].signInFor;
     var statics = __m["src/drishti_assets.js"].statics;
     var drishtiUrl = __lib("drishti-core").url, ONE_VERSION = __lib("drishti-core").ELEMENTS_VERSION;
@@ -1798,18 +1798,19 @@
         } catch (e) { this.loss(); }
       }
       open() {
-        this.client = new LiveClient({
-          transport: 'fetch', credentials: 'omit', events: ['channel', 'token', 'gone', 'frame', 'view'], eventField: '$event', heartbeatMs: 0,
-          backoff: { baseMs: cfg.retryMinMs, maxMs: cfg.retryMaxMs },
-          url: () => { const keys = [...this.keys.keys()]; this.synced = new Set(keys); this.cid = null; return this.server + API + '/channel?' + keys.map((k) => 's=' + encodeURIComponent(k)).join('&'); },
-          headers: async (info) => {
-            if (info.status === 401) { needers.forEach((fn) => fn(cfg.tokenProvider ? 'refused' : 'missing')); }
-            const t = await getToken(info.status === 401);
-            return t ? { Authorization: 'Bearer ' + t } : {};
-          }
-        });
-        this.client.on('state', (s) => { if (s.state === 'reconnecting') { this.dropped(); } });
-        this.client.subscribe((m) => { const ev = m.$event; delete m.$event; this.dispatch(ev, m); });
+        const opts = {
+          protocol: 'raw', transport: 'fetch', credentials: 'omit', events: ['channel', 'token', 'gone', 'frame', 'view'], recorder: false,
+          backoff: { baseMs: cfg.retryMinMs, maxMs: cfg.retryMaxMs }, idOf: () => undefined, seqOf: () => undefined
+        };
+        if (cfg.tokenProvider) {                                          // the token before every connect, a new one after a refusal
+          opts.auth = async (info) => {
+            if (info.status === 401) { needers.forEach((fn) => fn('refused')); }
+            return { token: await getToken(info.status === 401 || info.reason === 'refused'), expiresAt: 0 };
+          };
+        }
+        this.client = connect(() => { const keys = [...this.keys.keys()]; this.synced = new Set(keys); this.cid = null; return this.server + API + '/channel?' + keys.map((k) => 's=' + encodeURIComponent(k)).join('&'); }, opts);
+        this.client.on('$events.state', (m) => { if (m.data.state === 'reconnecting') { this.dropped(); } else if (m.data.state === 'refused' && !cfg.tokenProvider) { needers.forEach((fn) => fn('missing')); } });
+        this.client.on('feed', (e) => this.dispatch(e.kind, e.data || {}));
       }
       dropped() { this.cid = null; this.synced = new Set(); this.lost = true; this.each((h) => h.state && h.state('reconnecting')); }
       loss() { if (!this.client) { return; } this.dropped(); this.client.reconnect(); }

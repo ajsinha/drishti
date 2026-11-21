@@ -42,12 +42,12 @@ class UnderConstructionTest {
 
     @AfterEach
     void noKit() {
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(null);
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(List.of());
+        com.ash.drishti.rachana.DrishtiRachana.blocks().kit(null);
+        com.ash.drishti.rachana.DrishtiRachana.blocks().load(List.of());
     }
 
     private static SutraRegistry packs() {
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(Path.of(TestRoots.repo(), "config", "ui-kit"));
+        com.ash.drishti.rachana.DrishtiRachana.blocks().kit(Path.of(TestRoots.repo(), "config", "ui-kit"));
         List<String> dirs = new ArrayList<>();
         for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
             dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());

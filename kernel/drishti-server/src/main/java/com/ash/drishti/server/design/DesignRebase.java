@@ -50,7 +50,7 @@ public class DesignRebase {
 
     private final DesignService designs;
     private final SutraRegistry sutras;
-    private final OpApplier applier = new OpApplier();
+    private final OpApplier applier = new OpApplier(com.ash.drishti.rachana.DrishtiRachana.parser());
 
     public DesignRebase(DesignService designs, SutraRegistry sutras) {
         this.designs = designs;

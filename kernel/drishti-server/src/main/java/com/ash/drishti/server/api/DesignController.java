@@ -103,7 +103,7 @@ public class DesignController {
     private final BuilderProperties limits;
     private final ObjectMapper mapper;
     private final SampleCheckService checks;
-    private final OpApplier applier = new OpApplier();
+    private final OpApplier applier = new OpApplier(com.ash.drishti.rachana.DrishtiRachana.parser());
     private final DesignRebase rebase;
     private final com.ash.drishti.server.design.PackSamplePicker picker;
 
@@ -288,7 +288,7 @@ public class DesignController {
         StoredDesign d = designs.get(who.user(), id);
         ObjectNode out = mapper.createObjectNode();
         ArrayNode uses = out.putArray("uses");
-        for (var u : com.ash.rachana.parse.BlockUses.of(d.sutra, com.ash.drishti.rachana.DrishtiBlocks.LIBRARY)) {
+        for (var u : com.ash.rachana.parse.BlockUses.of(d.sutra, com.ash.drishti.rachana.DrishtiRachana.blocks())) {
             ObjectNode n = uses.addObject().put("item", u.item()).put("at", u.at()).put("line", u.line()).put("column", u.column())
                     .put("ref", u.ref()).put("name", u.name()).put("description", u.description());
             if (u.version() != null) {

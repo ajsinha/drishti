@@ -16,7 +16,7 @@
 to the console. These run the hub in Node with a stand-in EventSource, fetch and clock, and check the protocol: keys
 shared by tabs are subscribed once, later tabs get what a fresh stream starts with, changes go over the open channel,
 pages of another session get nothing, and dropped connections, quiet tabs and ended channels are handled. The connection itself is
-drishti-data's LiveClient (Drishti Elements), on the harness's clock."""
+drishti-events' raw connection (Drishti Elements), on the harness's clock."""
 import json
 import shutil
 import subprocess

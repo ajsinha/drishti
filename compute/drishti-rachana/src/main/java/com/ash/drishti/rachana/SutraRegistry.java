@@ -66,7 +66,7 @@ public final class SutraRegistry implements AutoCloseable {
     private record Snapshot(Map<String, NavigableMap<Integer, Sutra>> byName, Map<String, List<SutraProblem>> problems,
             Map<String, String> sources, Map<String, Path> fileOf) {}
 
-    private final SutraParser parser = new SutraParser();
+    private final SutraParser parser = com.ash.drishti.rachana.DrishtiRachana.parser();
     private volatile RachanaProperties props;
     private final SutraExpressions expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
@@ -146,7 +146,7 @@ public final class SutraRegistry implements AutoCloseable {
         Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
         List<SutraProblem> problems = expressions.check(s);
         if (!problems.isEmpty()) {
-            throw new SutraException(problems);
+            throw new SutraException(DrishtiRachana.drs(problems));
         }
         if (props.dirs().isEmpty()) {
             throw new SutraException(List.of(new SutraProblem("DRS-2020", "no site Sutra directory to save into (drishti.rachana.dirs)", s.location())));
@@ -176,7 +176,7 @@ public final class SutraRegistry implements AutoCloseable {
         Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
         List<SutraProblem> problems = expressions.check(s);
         if (!problems.isEmpty()) {
-            throw new SutraException(problems);
+            throw new SutraException(DrishtiRachana.drs(problems));
         }
         return s;
     }
@@ -197,7 +197,7 @@ public final class SutraRegistry implements AutoCloseable {
                 out = out.replace(root + java.io.File.separator, "").replace(root, ".");
             }
         }
-        java.util.Optional<Path> kit = DrishtiBlocks.LIBRARY.kit();   // the Drishti UI kit: ui-kit/fragments/x
+        java.util.Optional<Path> kit = DrishtiRachana.blocks().kit();   // the Drishti UI kit: ui-kit/fragments/x
         if (kit.isPresent() && kit.get().getParent() != null) {
             out = out.replace(kit.get().getParent().toString() + java.io.File.separator, "");
         }
@@ -259,11 +259,11 @@ public final class SutraRegistry implements AutoCloseable {
         List<Path> files = files();
         lastGood.keySet().retainAll(files);
         // the shared panel blocks first (<name>.v<N>.block.yaml): a Sutra's { use: <block> } reads them while it is parsed
-        for (SutraProblem p : DrishtiBlocks.LIBRARY.load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
-            problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(p);
+        for (SutraProblem p : DrishtiRachana.blocks().load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
+            problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(DrishtiRachana.drs(p));
         }
         // a pack (or site) block named like a Drishti UI kit fragment: the kit's wins, the pack's answers only to pack/name
-        DrishtiBlocks.LIBRARY.clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
+        DrishtiRachana.blocks().clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
         for (Path f : files) {
             Sutra s;
             String fname = f.getFileName().toString();
@@ -282,11 +282,11 @@ public final class SutraRegistry implements AutoCloseable {
                 s = parser.parse(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), domain);
                 List<SutraProblem> exprProblems = expressions.check(s);
                 if (!exprProblems.isEmpty()) {
-                    throw new SutraException(exprProblems);
+                    throw new SutraException(DrishtiRachana.drs(exprProblems));
                 }
                 lastGood.put(f, s);
             } catch (SutraException e) {
-                problems.put(f.toString(), e.problems());
+                problems.put(f.toString(), DrishtiRachana.drs(e.problems()));
                 s = lastGood.get(f);
             } catch (IOException e) {
                 problems.put(f.toString(), List.of(new SutraProblem("DRS-2001", e.getMessage(), new SourceLocation(f.toString(), 0, 0))));

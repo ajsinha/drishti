@@ -155,7 +155,7 @@ test('query builder text: conditions round-trip, quoted values, lists, and the e
   assert.throws(() => I.parseQuery('just words', fields), /field operator value/);
 });
 
-test('data: bins are counted once (page or worker), a worker-less page still answers, a feed says its gaps and its quiet', async () => {
+test('data: bins are counted once (page or worker), a worker-less page still answers', async () => {
   const D = await import('../../web/static/vendor/drishti-elements/3.1.0/elements/drishti-data/src/drishti_index.js');
   const r = D.binCounts(new Float64Array([0, 1, 1, 2, 9, NaN]), { bins: 5, extent: [0, 10] });
   assert.deepEqual(Array.from(r.counts), [3, 1, 0, 0, 1]);
@@ -166,20 +166,6 @@ test('data: bins are counted once (page or worker), a worker-less page still ans
   const f = D.frameFromWorker({ names: ['a', 'b'], length: 2, columns: [{ name: 'a', type: 'number', data: new Float64Array([1, 2]) }, { name: 'b', type: 'text', data: ['x', 'y'] }], meta: {}, bytes: 3 });
   assert.equal(f.length, 2);
   assert.deepEqual(Array.from(f.column('a')), [1, 2]);
-
-  let t = 1000;
-  const m = new D.FeedMonitor({ staleMs: 5000, now: () => t });
-  const seen = [];
-  m.on((name, d) => seen.push(name + (d.missed ? ':' + d.missed : '')));
-  [1, 2, 3, 6, 6, 4, 7].forEach((seq) => m.receive({ seq: seq }));
-  assert.deepEqual(seen, ['gap:2', 'repeat', 'order']);
-  assert.deepEqual(m.stats, { received: 7, gaps: 1, missed: 2, outOfOrder: 1, repeats: 1 });
-  assert.equal(m.check(), false);
-  t += 6000;
-  assert.equal(m.check(), true);
-  assert.equal(seen[seen.length - 1], 'stale');
-  m.receive({ seq: 8 });
-  assert.equal(seen[seen.length - 1], 'fresh');
 });
 
 test('grid master-detail: Alt+Down opens the focused row\'s detail and Alt+Up closes it, only when the grid has a detail', async () => {

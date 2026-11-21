@@ -93,11 +93,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(SutraException.class)
     ProblemDetail sutra(SutraException e) {
         LOG.info("Sutra rejected: {}", e.getMessage());
-        List<SutraProblem> shown = sutras.relative(e.problems());
-        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST /* G4: RachanaCode has no httpStatus; the host maps it */,
+        List<SutraProblem> shown = sutras.relative(com.ash.drishti.rachana.DrishtiRachana.drs(e.problems()));
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(ErrorCode.SUTRA_INVALID.httpStatus()),   // Core's code carries no status: the host's table does
                 shown.size() + " problem(s): " + shown);
-        p.setTitle(e.code().name().toLowerCase().replace('_', ' '));
-        p.setProperty("code", e.code().code());
+        p.setTitle(ErrorCode.SUTRA_INVALID.name().toLowerCase().replace('_', ' '));
+        p.setProperty("code", ErrorCode.SUTRA_INVALID.code());
         p.setProperty("problems", shown);
         return p;
     }

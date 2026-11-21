@@ -49,7 +49,7 @@ class MetricPanelTest {
     @Autowired JsonCodec codec;
 
     private static Sutra sutra(String panel) {
-        return new SutraParser().parse("""
+        return com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
                 rachana: 1
                 sutra: metric-demo
                 version: 1

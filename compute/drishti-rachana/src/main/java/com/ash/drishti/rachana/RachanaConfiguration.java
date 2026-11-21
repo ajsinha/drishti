@@ -28,7 +28,8 @@ public class RachanaConfiguration {
 
     @Bean
     public ElCompiler elCompiler(RachanaProperties props) {
-        return new ElCompiler(props.expressionCacheSize(), props.expressionLimits());
+        DrishtiRachana.configure(DrishtiRachana.optionsOf(props), null);       // the drishti profile's instance, from the settings (8.3b)
+        return DrishtiRachana.compiler();
     }
 
     /** The packs' about text (About this page, layer 1). */
@@ -39,7 +40,7 @@ public class RachanaConfiguration {
 
     @Bean
     public Formats formats(RachanaProperties props) {
-        return Formats.load(props.formatsFile(), props.packFormatsFiles());
+        return DrishtiRachana.current().formats();
     }
 
     /**
@@ -55,7 +56,7 @@ public class RachanaConfiguration {
             org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
                     + "DRISHTI_UI_KIT_DIR): screens that use its fragments do not draw", kit);
         }
-        DrishtiBlocks.LIBRARY.kit(kit);
+        DrishtiRachana.blocks().kit(kit);
         return new SutraRegistry(props, elCompiler);
     }
 

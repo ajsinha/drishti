@@ -43,7 +43,7 @@ class DrillPanelTest {
     @Autowired ViewPipeline pipeline;
     @Autowired JsonCodec codec;
 
-    static final Sutra SUTRA = new SutraParser().parse("""
+    static final Sutra SUTRA = com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
             rachana: 1
             sutra: deep-deal
             version: 1

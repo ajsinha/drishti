@@ -76,7 +76,7 @@ class ViewModelSchemaTest {
     }
 
     private Sutra showcase() throws Exception {
-        return new SutraParser().parse(Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml")), "all-panels-showcase.sutra.yaml", "test");
+        return com.ash.drishti.rachana.DrishtiRachana.parser().parse(Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml")), "all-panels-showcase.sutra.yaml", "test");
     }
 
     private EntityDocument showcaseDoc(long generation, UnaryOperator<String> edit) throws Exception {

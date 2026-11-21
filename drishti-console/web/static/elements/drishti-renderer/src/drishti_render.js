@@ -16,7 +16,7 @@
 /* drishti-renderer, the client-side renderer (docs/architecture/CLIENT_RENDERER.md; Drishti Elements library 7): paints a Drishti screen
    from the server's ViewModel JSON, in the browser, with no build step and no framework, drawing every panel with the shared libraries:
    tables, trees, drills and pivots with drishti-grid, charts with drishti-chart, formats, the element maker, keys and the API client
-   with drishti-core, live streams with drishti-data's live client. One import, one call:
+   with drishti-core, live streams with drishti-events (raw mode). One import, one call:
 
      <script type="module">
        import { render } from 'https://drishti.bank.example/static/render/<version>/drishti-render.js';

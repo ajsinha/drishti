@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 class PhoneViewTest {
 
     private static Sutra parse(String text) {
-        return new SutraParser().parse(text, "t.sutra.yaml", "x");
+        return com.ash.drishti.rachana.DrishtiRachana.parser().parse(text, "t.sutra.yaml", "x");
     }
 
     @Test

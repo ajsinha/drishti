@@ -201,7 +201,7 @@ public final class SutraCli {
             undocumented += a.docs() ? docWarnings(u) : 0;
         }
         if (a.docs()) {
-            com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.warnings().forEach(w -> err.println(w.location().file() + ":"
+            com.ash.drishti.rachana.DrishtiRachana.blocks().warnings().forEach(w -> err.println(w.location().file() + ":"
                     + w.location().line() + " warning " + w.code() + " " + w.message()));   // an older block's doc
         }
         if (undocumented > 0) {          // a warning only, even with --strict, until the Sutras carry their docstrings
@@ -642,12 +642,12 @@ public final class SutraCli {
             }
         }
         Path kit = uiKit(dirs);                                       // the Drishti UI kit: always loaded, whatever the paths
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.kit(kit);
+        com.ash.drishti.rachana.DrishtiRachana.blocks().kit(kit);
         if (kit != null || dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
-            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
+            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiRachana.blocks().load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
             }
-            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.clashes()) {
+            for (com.ash.rachana.SutraProblem p : com.ash.drishti.rachana.DrishtiRachana.blocks().clashes()) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " warning: " + p.message());
             }
         }

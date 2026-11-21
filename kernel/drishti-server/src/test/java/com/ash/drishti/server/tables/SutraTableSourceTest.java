@@ -98,7 +98,7 @@ class SutraTableSourceTest {
         r.add("drishti.tables.root", ROOT::toString);
     }
 
-    static final Sutra SUTRA = new SutraParser().parse("""
+    static final Sutra SUTRA = com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
             rachana: 1
             sutra: book-page
             version: 1

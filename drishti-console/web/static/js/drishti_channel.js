@@ -19,7 +19,7 @@
    bell, monitors and every workspace pane subscribe here (panes through their parent window); every tab's
    subscriptions go to one hub (drishti_live-hub.js) that holds the browser's single channel to the console:
 
-     1. a SharedWorker (one per origin and browser profile), when it can hold an EventSource (the connection is drishti-data's LiveClient);
+     1. a SharedWorker (one per origin and browser profile), when it can hold an EventSource (the connection is drishti-events, raw mode);
      2. otherwise the tab holding the "drishti-live" Web Lock, relaying to the others over a BroadcastChannel (when it
         closes, the next tab takes over);
      3. otherwise (very old browsers) a hub inside this tab.
@@ -51,7 +51,7 @@
   // the hub beside this script (its src carries the console's base path), else the base-path URL drishti-core gives
   var HUB_URL = me && me.src ? me.src.replace(/(?:drishti_)?channel\.js(\?|$)/, 'drishti_live-hub.js$1')
     : drishti_url('/static/js/drishti_live-hub.js');
-  // the hub loads drishti-core and drishti-data from the vendored Drishti Elements: its root, as the page's drishti-core knows it
+  // the hub loads drishti-core and drishti-events from the vendored Drishti Elements: its root, as the page's drishti-core knows it
   var ELEMENTS = window.Drishti && window.Drishti.elements && window.Drishti.elements.core ? window.Drishti.elements.core.staticUrl('') : '';
   if (ELEMENTS) { HUB_URL += (HUB_URL.indexOf('?') < 0 ? '?' : '&') + 'elements=' + encodeURIComponent(ELEMENTS); }
   var meta = document.querySelector('meta[name="drishti-live"]');

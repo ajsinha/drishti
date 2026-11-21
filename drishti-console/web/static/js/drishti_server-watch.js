@@ -121,7 +121,7 @@
     });
     return xsend.apply(this, arguments);
   };
-  // ... and the live connection (drishti-data's LiveClient reconnects by itself; the channel says when it dropped: the banner only says why
+  // ... and the live connection (drishti-events reconnects by itself; the channel says when it dropped: the banner only says why
   // it is quiet)
   window.addEventListener('drishti:live-error', function () {
     if (!realFetch || down) { return; }

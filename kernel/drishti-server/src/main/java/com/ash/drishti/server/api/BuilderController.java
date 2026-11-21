@@ -86,7 +86,7 @@ public class BuilderController {
     private final Entitlements entitlements;
     private final ObjectMapper mapper;
     private final SampleCheckService checks;
-    private final OpApplier applier = new OpApplier();
+    private final OpApplier applier = new OpApplier(com.ash.drishti.rachana.DrishtiRachana.parser());
 
     public BuilderController(ShapeService shapes, Entitlements entitlements, AutoDesigner designer, ViewPipeline pipeline,
             SutraRegistry sutras, com.ash.drishti.common.JsonCodec codec, SampleCheckService checks) {

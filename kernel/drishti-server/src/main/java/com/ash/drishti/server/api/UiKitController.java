@@ -66,9 +66,9 @@ public class UiKitController {
     public Map<String, Object> summary() {
         List<Map<String, Object>> fragments = new ArrayList<>();
         List<Map<String, Object>> packFragments = new ArrayList<>();
-        for (SutraBlocks.Block b : com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks()) {
+        for (SutraBlocks.Block b : com.ash.drishti.rachana.DrishtiRachana.blocks().blocks()) {
             if (b.fragment()) {
-                (com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.fromKit(b) ? fragments : packFragments).add(library.describe(b, false));
+                (com.ash.drishti.rachana.DrishtiRachana.blocks().fromKit(b) ? fragments : packFragments).add(library.describe(b, false));
             }
         }
         List<Map<String, Object>> assets = new ArrayList<>();

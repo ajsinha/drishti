@@ -15,11 +15,11 @@
  */
 /* Where ViewModels and frames come from (CLIENT_RENDERER.md section 10): the console's own JSON (/api/view/{kind}/{id}, the person's
    session) by default, with a bearer token when the host gives a token provider (the token exchange), and the device class
-   (X-Drishti-Device) when the host says it. A view is read with drishti-core's API client and a stream is followed with drishti-data's
-   live client (reconnect with back-off, resume from the last event id); the renderer keeps only what a ViewModel needs: its addresses,
+   (X-Drishti-Device) when the host says it. A view is read with drishti-core's API client and a stream is followed with drishti-events'
+   raw connection (reconnect with back-off, resume from the last event id); the renderer keeps only what a ViewModel needs: its addresses,
    and every failure as a problem with a DRS code, words and the fix. */
 import { createClient, AS_OF_HEADER, basePath, url as drishtiUrl } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
-import { LiveClient } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-data/src/drishti_index.js';
+import { connect } from '../../../vendor/drishti-elements/3.1.0/elements/drishti-events/src/drishti_index.js';
 
 const FIXES = {
   401: 'Sign in to the console, or give render() a token: { token: () => fetchMyDrishtiToken() }.',
@@ -136,7 +136,7 @@ export function streamUrl(o, ref) {
 const STREAM_EVENTS = ['view', 'frame', 'message', 'gone'];
 
 /**
- * Follows a stream of Server-Sent Events with drishti-data's live client: `view` (a whole ViewModel), `frame` (live patches), `message`
+ * Follows a stream of Server-Sent Events with drishti-events (raw mode): `view` (a whole ViewModel), `frame` (live patches), `message`
  * (a GenUI stream message: skeleton, panel-add, panel-replace, patch, done, error) and `gone`. options.eventSource(url) makes the
  * EventSource when the host needs its own (headers, a polyfill). A stream that is gone is closed; a dropped one is opened again after a
  * back-off (from 3 s, as a browser's own EventSource waits) and resumes from the last event id.
@@ -148,15 +148,15 @@ const STREAM_EVENTS = ['view', 'frame', 'message', 'gone'];
 export function openStream(o, refOrUrl, on) {
   const url = streamUrl(o, refOrUrl);
   const ES = typeof o.eventSource === 'function' ? function HostEventSource(u) { return o.eventSource(u); } : undefined;
-  const client = new LiveClient({ url, transport: 'sse', EventSource: ES, events: STREAM_EVENTS, eventField: '$event', withCredentials: !!o.server,
-    heartbeatMs: 0, backoff: { baseMs: 3000, maxMs: 30000 } });
+  const events = connect(url, { protocol: 'raw', transport: 'sse', env: ES ? { EventSource: ES } : undefined, events: STREAM_EVENTS, recorder: false,
+    credentials: o.server ? 'include' : 'same-origin', backoff: { baseMs: 3000, maxMs: 30000 },
+    idOf: () => undefined, seqOf: () => undefined });                 // a frame's own id or seq is the view's, not the connection's
   let off = null;
   const stop = () => { if (off) { off(); off = null; } };
-  off = client.subscribe((m) => {
-    const type = m.$event;
-    delete m.$event;
+  off = events.on('feed', (e) => {
+    const type = e.kind, m = e.data || {};
     if (type === 'gone') { stop(); on.gone(problem(m.code || 'DRS-5003', m.detail || 'the stream ended')); return; }
     if (type === 'view') { on.view(m); } else if (type === 'frame') { on.frame(m); } else { on.message(m); }
   });
-  return () => { stop(); client.destroy(); };
+  return () => { stop(); events.destroy(); };
 }

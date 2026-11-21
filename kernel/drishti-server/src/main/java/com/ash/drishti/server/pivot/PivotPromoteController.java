@@ -52,7 +52,7 @@ public class PivotPromoteController {
     private final SutraRegistry sutras;
     private final SutraGovernance governance;
     private final RachanaProperties rachana;
-    private final SutraPivotEditor editor = new SutraPivotEditor();
+    private final SutraPivotEditor editor = new SutraPivotEditor(com.ash.drishti.rachana.DrishtiRachana.parser());
 
     public PivotPromoteController(Entitlements entitlements, SutraRegistry sutras, SutraGovernance governance, RachanaProperties rachana) {
         this.entitlements = entitlements;

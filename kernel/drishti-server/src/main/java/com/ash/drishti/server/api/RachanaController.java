@@ -18,7 +18,6 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.rachana.RachanaSchema;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.rachana.format.Formats;
 import com.ash.rachana.parse.SutraBlocks;
@@ -48,27 +47,30 @@ public class RachanaController {
         this.formats = formats;
         this.packs = packs;
         this.sutras = sutras;
+        com.ash.drishti.rachana.DrishtiRachana.servedKinds(() -> {          // the schema's match.kind list: the kinds the enabled packs serve
+            TreeSet<String> kinds = new TreeSet<>();
+            packs.packs().forEach(p -> kinds.addAll(p.kinds()));
+            return kinds;
+        });
     }
 
     @GetMapping(path = "/schema", produces = "application/schema+json")
     public Map<String, Object> schema() {
-        TreeSet<String> kinds = new TreeSet<>();
-        packs.packs().forEach(p -> kinds.addAll(p.kinds()));
-        return com.ash.rachana.Rachana.core().schema(formats.names());   // G4: kinds come through the profile (8.3d)
+        return com.ash.drishti.rachana.DrishtiRachana.current().schema(formats.names());
     }
 
     /** The shared panel blocks loaded ({@code <name>.v<N>.block.yaml}): name, version, description, parameters and file, no text. */
     @GetMapping("/blocks")
     public Map<String, Object> blocks() {
         List<Map<String, Object>> out = new ArrayList<>();
-        com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.blocks().forEach(b -> out.add(describe(b, false)));     // each once (a pack's block answers to two names)
+        com.ash.drishti.rachana.DrishtiRachana.blocks().blocks().forEach(b -> out.add(describe(b, false)));     // each once (a pack's block answers to two names)
         return Map.of("blocks", out);
     }
 
     /** One shared block with its text, for the designer's read-only view (a block is edited in its file). */
     @GetMapping("/blocks/{name}/{version}")
     public Map<String, Object> block(@PathVariable String name, @PathVariable int version) {
-        return com.ash.drishti.rachana.DrishtiBlocks.LIBRARY.find(name + "@" + version).map(b -> describe(b, true))
+        return com.ash.drishti.rachana.DrishtiRachana.blocks().find(name + "@" + version).map(b -> describe(b, true))
                 .orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no shared block " + name + "@" + version));
     }
 
