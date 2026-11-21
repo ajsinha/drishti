@@ -237,6 +237,10 @@ class ArchitectureRulesTest {
             .and().areNotAnnotatedWith(jakarta.persistence.Embeddable.class)   // JPA requires composite keys to be Serializable
             .and().areNotAssignableTo("org.apache.iceberg.io.FileIO")            // Iceberg requires its FileIO (and the client supplier it holds) to be Serializable
             .and().areNotAssignableTo("org.apache.iceberg.util.SerializableSupplier")
+            .and().areNotAssignableTo("com.fasterxml.jackson.databind.module.SimpleModule")           // Jackson's own bases are Serializable: the server's
+            .and().areNotAssignableTo("com.fasterxml.jackson.databind.AnnotationIntrospector")   // Rachana-aware module, introspector, modifier and
+            .and().areNotAssignableTo("com.fasterxml.jackson.databind.ser.BeanSerializerModifier")          // property writer (JsonConfiguration) inherit it
+            .and().areNotAssignableTo("com.fasterxml.jackson.databind.ser.PropertyWriter")
             .should().implement(java.io.Serializable.class)
             .allowEmptyShould(true);
 

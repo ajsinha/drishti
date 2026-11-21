@@ -1,3 +1,18 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
 
 ## Pass 2 (2026-11-21): Rachana profile and Elements 3.x, on `wip/g4-rehearsal-rx`
 
@@ -127,6 +142,16 @@ Python: the tests that cross-checked Java source or fixtures of the deleted modu
 (`tools/lake/testdata/childkinds`) or `LAKE_HOME` (the ready keys); `test_delta_interop` compiles its reader against `lake-delta`.
 Two failures are older than this branch (`test_memory_caps` run-config check, `test_lake_paths` clusterctl path): same result at `48f7b9931`.
 
+
+### Pass 3 lake closure (2026-11-21, on `g4/lake-close`, against Drishti Lake `cbd329d`)
+
+| # | State | What was done |
+|---|---|---|
+| R5 (the two differences) | closed | Both were generic, so both are Drishti Lake's. `TableReader.absence()` says why a table has no snapshot (a foreign Iceberg table: the catalog's account, for a path-based one the files looked for and what the folder holds; a Delta table: no log; files: no folder), and `TableSnapshot.documentFields()` lists a shaped table's documents' fields with nested fields and the id and date roles, the date also when it is the table's day partition (`DocumentField`; additive, `api-surface.txt` extended; `ShapedReadTest`). The connector's health says `no table ghost: looked in ... for version-hint.text, v<N>.metadata.json ... (the folder is empty)` again; `StarterSchemas` writes nested objects, lists, maps and `x-drishti-role: date` from the partition spec again (tests in `IcebergExternalPluginTest`) |
+| R8 | closed | Decided one by one against Drishti Lake `cbd329d`. Kept as Drishti's own, now said in each file: `jsonstream` (Drishti Lake's loader reads JSON Lines; JSON arrays of any size are the exports `lake build`, `lake scan` and `convert` take; a Lake item if the loader should read arrays), `scan` (profiles an export for `lake build`), `ownership` (the record of the tables `lake build` made, for Drishti's maintenance), `compare_lakes` (an acceptance check by an independent reader, delta-rs, on purpose), `memory_caps` (the launchers' JVM sizing before any JVM starts) and `memory_cli` (the server's admin REST API). None duplicates a Lake capability. `data load --store iceberg` works through the one loader: `samplegen/load_rows.py --format iceberg` (the samples and the book in one run, the layout's promoted columns, the corrections applied before the one load a table, each business date replaced) on `DrishtiLakeCli load`; its options are the loader's settings (`--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--set KEY=VALUE`). Run end to end on the shipped samples (25,430 rows, 29 tables, 10 business days; the working folders removed) |
+| Delta upkeep | Lake gap | Drishti Lake has no Delta compaction (OPTIMIZE), explicit checkpoint or VACUUM: `maintain` is Iceberg only (`IcebergMaintenance`), `LakeRetention` removes dates and rows, the Delta writer checkpoints on its own cadence only. `tools/lake/maintain.py` keeps delta-rs for those three until Drishti Lake has them (the item for the lead: `lake maintain` on a Delta table: compact small files per date, checkpoint, vacuum with the retention floor and the ownership rule; then `maintain.py` calls it and delta-rs leaves the tools) |
+| Lake items found | open | (1) the date guard (`--future-days`, `--zone`) and the retention guard (`--max-drop-share`, `--force-drop`) the old Iceberg loader had are not in the one loader; `data load --store iceberg` takes neither (Delta never had them there). (2) JSON-array input in the loader (above). (3) the archive rule of `tools/lake/archives.py` (451 lines, with the `rows` layout `load_rows.py` reads) and `drishti_lake.archives` (the feed layout only) are two copies of one rule: to be one when Lake's gets the `rows` layout |
+| Python | closed | `test_memory_caps` (the IDE launchers name the JVM options file `serverstart.jvm_flags` writes; the exec jar's manifest grants native access, so no `--add-opens` is passed: the test asked for the old flags) and `test_lake_paths` (`clusterctl` spelled `data/delta/demo`: it asks `lakeconfig.default_root`) fixed at their cause; `drill-java25.txt` no longer names the nine tests that moved to Drishti Lake; the planner's `JvmFooter` flag is `lake.parquet.footer-cache-mb` (the rename left it behind; workbook and test vectors regenerated); `test_maintain_iceberg` knows the lake-files reader's new main; `test_launcher_memory` asks `loaderows` for the Iceberg loader's JVM |
 
 ## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
 

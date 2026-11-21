@@ -157,7 +157,7 @@ coefficients:
   - {name: "BaseTradeRows", value: 20000, unit: "rows a day", status: "calibrated",
      source: "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."}
   - {name: "FooterCacheDefaultMB", value: 64, unit: "MB", status: "formula",
-     source: "CLUSTER_GUIDE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."}
+     source: "CLUSTER_GUIDE.md 3.5: -Dlake.parquet.footer-cache-mb, 64 MB by default."}
   - {name: "FooterBytesPerChunk", value: 700, unit: "bytes", status: "measured",
      source: "CLUSTER_GUIDE.md 3.5: about 700 bytes a column chunk of a Parquet footer."}
   - {name: "RowsPerRowGroup", value: 128000, unit: "rows", status: "estimate",
@@ -666,8 +666,8 @@ jvm:
   - {name: "JvmTmp", flag: "-Djava.io.tmpdir", source: "documented", condition: "always",
      expression: "\"-Djava.io.tmpdir=\"&DataFolder&\"/tmp/server\"",
      why: "Native libraries unpack and temporary files go under the data folder."}
-  - {name: "JvmFooter", flag: "-Ddrishti.parquet.footer-cache-mb", source: "documented", condition: "always",
-     expression: "\"-Ddrishti.parquet.footer-cache-mb=\"&FooterCacheMB",
+  - {name: "JvmFooter", flag: "-Dlake.parquet.footer-cache-mb", source: "documented", condition: "always",
+     expression: "\"-Dlake.parquet.footer-cache-mb=\"&FooterCacheMB",
      why: "The Parquet footer cache computed above."}
   - {name: "JvmGrace", flag: "-Ddrishti.open-dates.net-grace-seconds", source: "documented", condition: "always",
      expression: "\"-Ddrishti.open-dates.net-grace-seconds=\"&NetGraceSeconds",
