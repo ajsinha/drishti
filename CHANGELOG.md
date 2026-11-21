@@ -24,7 +24,7 @@
   page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
   filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` draws with the painter's tables (no column
   funnels or Chart any table inside an embed); a GenUI stream's messages are not drawn. The old `drishti-renderer` library, its harness
-  and fixtures are deleted; `/static/render/3.1.0/` and `/embed/v2/render/3.1.0/` answer `308` to 3.2.0 for one release, and
+  and fixtures are deleted, and the `3.1.0` paths with them (no redirect: `/embed/v2/render/3.1.0/` answers `410`); and
   `/embed/v2/elements/2/` is the current renderer again.
 - **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
   snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row

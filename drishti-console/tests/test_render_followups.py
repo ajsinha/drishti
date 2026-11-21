@@ -104,7 +104,7 @@ def test_the_playground_names_no_made_up_entity_and_shows_the_lens():
 
 def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, client):
     """One page renderer (Jinja); the client-side renderer draws embeds and Explain: the one Elements version (Drishti's host part in m/, every panel
-    drawn by Elements' painter, drishti-views) and 1.2.0 frozen beside it for one release; 0.1.0 to 1.1.0 are retired, 2.0.0 and 3.1.0 redirect."""
+    drawn by Elements' painter, drishti-views) and 1.2.0 frozen beside it for one release; 0.1.0 to 1.1.0 and 3.1.0 (the previous pin) are gone, 2.0.0 redirects."""
     V = rd.VERSION          # the one Elements version (drishti_elements.json)
     assert rd.versions() == ["1.2.0", V] and rd.FROZEN == ("1.2.0",)
     for v in ("0.1.0", "1.0.0", "1.1.0"):
@@ -120,8 +120,9 @@ def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, cli
     assert lib.status_code == 200 and "drishti-views" in lib.text
     assert embed.get("/embed/v2/elements/drishti-renderer/src/drishti_index.js").status_code == 404          # the old renderer library is gone
     assert embed.get("/embed/v2/elements/drishti-views/src/../../../js/drishti_app.js").status_code == 404
-    prev = embed.get("/embed/v2/render/3.1.0/drishti-render.js", follow_redirects=False)   # the previous pin: one release of redirect
-    assert prev.status_code == 308 and prev.headers["location"] == f"/embed/v2/render/{V}/drishti-render.js"
+    prev = embed.get("/embed/v2/render/3.1.0/drishti-render.js", follow_redirects=False)   # the previous pin: gone, no redirect (no shim)
+    assert prev.status_code == 410 and prev.json()["code"] == "DRS-8006" and V in prev.json()["detail"]
+    assert client.get("/static/render/3.1.0/drishti-render.js", follow_redirects=False).status_code == 404
     for old in ("2.1", "2.0.0"):
         r = embed.get(f"/embed/v2/elements/{old}/drishti-elements.js", follow_redirects=False)
         assert r.status_code in (404, 410) and r.json()["code"] == "DRS-8006", old

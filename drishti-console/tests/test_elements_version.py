@@ -72,7 +72,7 @@ def _texts():
 
 def test_the_retired_renderer_path_redirects_and_says_so():
     from core import render_dist as rd
-    assert rd.RETIRED == ("2.0.0", "3.1.0") and VERSION not in rd.RETIRED and "after i6" in rd.DEPRECATION   # 3.1.0: the previous pin
+    assert rd.RETIRED == ("2.0.0",) and VERSION not in rd.RETIRED and "after i6" in rd.DEPRECATION   # 3.1.0, the previous pin, is gone: no shim
 
 
 def test_nothing_names_another_elements_version():

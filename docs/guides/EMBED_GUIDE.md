@@ -970,7 +970,7 @@ Drishti Elements libraries it imports instead.
 attributes and the contract are the same. What you may see: the painter's look (its title line, freshness line and function keys, a
 filter box and pages on long tables, a Data table under each chart), a dash in an empty cell, a pivot's corner in its fields' own case;
 `behaviours: 'console'` draws with the painter's tables (no column funnels, no Chart any table); a GenUI stream's messages are not drawn.
-The `3.1.0` paths answer `308` to `3.2.0` for one release.
+The `3.1.0` paths are gone (`410` with `DRS-8006` under `/embed/v2/`): pin `3.2.0`.
 
 **Moving from Elements 1.x to 2.x.** Change the script line ([chapter 3](#3-five-minutes-a-static-page)); the token exchange, the
 attributes, the events and the slots are the same. Keep `<drishti-report>`, `<drishti-about>` and `<drishti-search>` pages on 1.x.
