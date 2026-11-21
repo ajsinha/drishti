@@ -30,14 +30,20 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 /**
- * A lake maintained by tools/lake/maintain.py (compacted, checkpointed, vacuumed) still reads the same through Delta
- * Kernel, with either engine: the two agree on the files they write and read. Skipped where uv (to run the tool) is not installed.
+ * A lake maintained by tools/lake/maintain.py (compacted, checkpointed, vacuumed) still reads the same through the product's Delta reader.
+ * Skipped where uv (to run the tool) is not installed, or the drishti-lake wheel (lib/wheels, or LAKE_PYTHON: tools/lake/lakewheel.py) is not at hand.
  */
 class DeltaAfterMaintenanceTest {
 
     @Test
     void theJavaReaderReadsALakeTheMaintenanceJobCompactedAndVacuumed() throws Exception {
         assumeTrue(new ProcessBuilder("uv", "--version").start().waitFor(30, TimeUnit.SECONDS), "uv is not installed");
+        Path repo = Path.of(TestRoots.repo());
+        boolean wheel = System.getenv("LAKE_PYTHON") != null;
+        try (var wheels = Files.isDirectory(repo.resolve("lib/wheels")) ? Files.list(repo.resolve("lib/wheels")) : java.util.stream.Stream.<Path>empty()) {
+            wheel |= wheels.anyMatch(f -> f.getFileName().toString().startsWith("drishti_lake-"));
+        }
+        assumeTrue(wheel, "the drishti-lake wheel is not in lib/wheels (and LAKE_PYTHON is not set)");
         Path root = Files.createTempDirectory("drishti-maintained");
         Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake");
         try (var files = Files.walk(src)) {
@@ -59,21 +65,18 @@ class DeltaAfterMaintenanceTest {
         Process p = pb.start();
         assertThat(p.waitFor(5, TimeUnit.MINUTES) && p.exitValue() == 0).as("maintenance ran").isTrue();
         assertThat(Files.list(root.resolve("desk/trade/_delta_log")).anyMatch(f -> f.toString().endsWith(".checkpoint.parquet"))).isTrue();
-        for (String engine : new String[] {"native"}) {                  // both engines read the checkpoint
-            DeltaSourcePlugin plugin = new DeltaSourcePlugin();
-            plugin.start(DatedSourceContract.context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective",
-                    "engine", engine)));
-            try {
-                for (LocalDate d : new LocalDate[] {DatedSourceContract.D1, DatedSourceContract.D2, DatedSourceContract.D3}) {
-                    String expected = DatedSourceContract.ROWS.stream().filter(r -> r.kind().equals("trade") && r.id().equals("T-1") && r.date().equals(d))
-                            .findFirst().orElseThrow().json();
-                    double mtm = new com.fasterxml.jackson.databind.ObjectMapper().readTree(expected).get("mtm").asDouble();
-                    assertThat(plugin.fetch(EntityRef.of("trade", "T-1"), new AsOf(d, null)).orElseThrow().data().get("mtm").asDouble())
-                            .as(engine + ": T-1 on " + d).isEqualTo(mtm);
-                }
-            } finally {
-                plugin.close();
+        DeltaSourcePlugin plugin = new DeltaSourcePlugin();
+        plugin.start(DatedSourceContract.context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective")));
+        try {
+            for (LocalDate d : new LocalDate[] {DatedSourceContract.D1, DatedSourceContract.D2, DatedSourceContract.D3}) {
+                String expected = DatedSourceContract.ROWS.stream().filter(r -> r.kind().equals("trade") && r.id().equals("T-1") && r.date().equals(d))
+                        .findFirst().orElseThrow().json();
+                double mtm = new com.fasterxml.jackson.databind.ObjectMapper().readTree(expected).get("mtm").asDouble();
+                assertThat(plugin.fetch(EntityRef.of("trade", "T-1"), new AsOf(d, null)).orElseThrow().data().get("mtm").asDouble())
+                        .as("T-1 on " + d).isEqualTo(mtm);
             }
+        } finally {
+            plugin.close();
         }
     }
 }

@@ -647,7 +647,7 @@ scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI
 | **Exposure server** | `counterparty-risk` | `drishti.ccr.exposure.*` | 1 / 1 / 1 (exposure runs on one server) | VaR owners (page cache) |
 | **BI and reporting** | Rūpaka, BI runs, scheduled reports | `config/runs/runs.yaml` workers, `drishti.bi.query.*` | 0 / 2 / 3 | VaR owners |
 | **Data-serving** | entity pages, search, type-ahead, data map, World, Market | connector caches, `index.max-disk` | 0 / 2 / 3 | VaR owners |
-| **Loader** | `drishti-lakeload` jobs, `lake maintain` | `memory.budget-mb`, `parallel.writers`, spill on NVMe | 1 / 1 + standby / 2 + standby | any server, during the load window |
+| **Loader** | `lake-load` jobs, `lake maintain` | `memory.budget-mb`, `parallel.writers`, spill on NVMe | 1 / 1 + standby / 2 + standby | any server, during the load window |
 | **Python compute** | `config/compute/compute.yaml` pools (`risk`, `exposure`) | `workers`, `memory` per worker | on servers / on the exposure server / hosts of their own | VaR owners |
 | **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `DRISHTI_IDENTITY_DB_URL`; pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | app servers |
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — |
@@ -729,7 +729,7 @@ set both). The free-space guard and every cap: section 15.8.
 | `exp-1` | 1 | 16 / 128 GB / 2 TB NVMe | counterparty-risk |
 | `bi-1..2` | 2 | 16 / 64 GB / 500 GB | Rūpaka, `config/runs/runs.yaml` workers 2–4 |
 | `data-1..2` | 2 | 16 / 64 GB / 1 TB NVMe | entity pages, search, World, Market |
-| `load-1` (+ standby) | 1 + 1 | 32 / 64 GB / 100 GB NVMe | `drishti-lakeload`, cron or the bank's scheduler |
+| `load-1` (+ standby) | 1 + 1 | 32 / 64 GB / 100 GB NVMe | `lake-load`, cron or the bank's scheduler |
 | `pg-1`, `pg-2` | 2 | 8 / 32 GB / 500 GB SSD | PostgreSQL 16, streaming replication, Patroni |
 
 ```yaml
@@ -1321,7 +1321,6 @@ settings:
   domain: trading
   union: true
   table: {trade: trade_endur}
-  engine: native
   s3.region: eu-west-2
 ```
 
@@ -1675,7 +1674,7 @@ s3://acme-drishti-prod-lake/lake/                 LAKE_PREFIX: DRISHTI_DELTA_ROO
 |---|---|---|
 | rows per file | `layout.<kind>.file-rows` (250,000) | few files a day, each hundreds of MB |
 | row group | **1 MB** on AWS (`LAKE_ROW_GROUP_KB=1024`; [row-group sizes](../../plugins/drishti-plugin-delta/README.md#row-group-size)); pages 64 KB | a single read fetches one row group: 1 MB balances bytes against GETs |
-| compression | Snappy (the native engine also reads ZSTD, GZIP, LZ4_RAW) | |
+| compression | Snappy (the reader also reads ZSTD, GZIP, LZ4_RAW) | |
 | checkpoint | every 10 commits (`delta.checkpointInterval`) and after every maintenance run | a reader replays at most a few commits |
 | log retention | 30 days (`delta.logRetentionDuration`) | |
 | removed files kept | 7 days (`delta.deletedFileRetentionDuration`, `LAKE_VACUUM_HOURS` 168) | readers in flight and *known at* reach back a week |

@@ -143,7 +143,7 @@ apply` refuse a credential written in clear. There is no loader for these files:
 | `cassandra-tls.yaml` | `cassandra` | the plugin's own | Trades in Cassandra over mutual TLS |
 | `customer-lake.yaml` | `delta` | the plugin's own | Customer tables in the data lake |
 | `delta-private-ca.yaml` | `delta` | the plugin's own | Customer tables in the data lake over TLS |
-| `iceberg-external-risk-mart.yaml` | `iceberg-external` | the plugin's own | risk-mart tables written by Spark, read through drishti-iceberg (no Hadoop) |
+| `iceberg-external-risk-mart.yaml` | `iceberg-external` | the plugin's own | risk-mart tables written by Spark, read through lake-iceberg (no Hadoop) |
 | `iceberg-rest-private-ca.yaml` | `iceberg` | the plugin's own | Iceberg tables behind a REST catalog, object store over TLS |
 | `kafka-confluent-cloud.yaml` | `kafka` | the plugin's own | Trades from Confluent Cloud, Avro through Schema Registry |
 | `kafka-mtls-pem.yaml` | `kafka` | the plugin's own | Trades over mutual TLS, PEM certificates |

@@ -101,6 +101,9 @@ STORES: dict[str, Store] = {
                         "--username", "--password", "--setting", *GUARD, *DROP), ("--create", "--force-drop"), together=True),
 }
 
+#: the stores whose own loader class is gone (Drishti Lake's loader writes them): store -> what to use meanwhile
+MOVED = {"iceberg": "Use `lake build --format iceberg` (or `lake demo --store`) for Iceberg."}
+
 URI = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]+://")
 
 
@@ -192,6 +195,10 @@ def plan(store: str, given: list[str], trades: int | None, days: int | None, ext
 def run(store: str, given: list[str], trades: int | None, days: int | None, extra: list[str], *, dry_run: bool = False,
         java: str | None = None, jar: str | None = None, say=print) -> int:
     """Runs one load (or prints its steps with ``dry_run``); 0 done, 1 a step failed (its own message above), 2 usage."""
+    if store in MOVED and not dry_run:
+        say(f"data load: --store {store} loaded through its own loader class, which moved into Drishti Lake's one loader (loader rows, one table a "
+            f"load); this command is not rebuilt on it yet. {MOVED[store]}", file=sys.stderr)
+        return 2
     env = dict(os.environ)
     data = javacmd.launch_roots(env=env)["data"][0]
     env["DRISHTI_DATA_DIR"] = str(data)                  # the generators, the loader and its temp folder: one data folder

@@ -98,6 +98,12 @@ public final class DrishtiLakeCatalog implements LakeCatalog {
         return Extensions.of(type);
     }
 
+    /** The inbox's loader child process is {@link DrishtiLakeLoad}: {@code LakeLoad} reading with this catalog. */
+    @Override
+    public String loaderMain() {
+        return DrishtiLakeLoad.class.getName();
+    }
+
     /** The module boot's result ({@code drishti.module.homes}, {@code drishti.module.dir.*}, {@code drishti.modules.dev}) and the settings file. */
     @Override
     public Map<String, String> childProcessSettings() {

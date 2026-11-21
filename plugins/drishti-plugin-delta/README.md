@@ -33,8 +33,6 @@ settings:
 - mode.*
 - layout.*
 - table.*
-- hadoop.*
-- engine
 - date-column
 - id-column
 - doc-column
@@ -59,8 +57,6 @@ settings:
 - id-map-disk.idle-release
 - columns-cache-mb
 - id-map-mb
-- lz4-via-native
-- lz4-decoder
 - s3.endpoint
 - s3.region
 - s3.path-style
@@ -77,9 +73,9 @@ settings:
 - index.kinds.*
 - tls.*
 - proxy.*
-auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:) or the AWS credential chain; a private CA or client certificate through tls.* (native engine only); an outbound proxy through proxy.*.
-licence: Drishti's own native Delta engine (drishti-deltalake) with Delta Kernel, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows with engine native (the default), local folders and S3 alike; engine hadoop needs winutils.exe, so it is not for the Windows QA machine. Loader `python tools/drishti.py lake demo --engine java`.
+auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:) or the AWS credential chain; a private CA or client certificate through tls.*; an outbound proxy through proxy.*.
+licence: Reads through Drishti Lake (its own Delta reader over Delta Kernel, and the AWS SDK for Java v2; Apache-2.0), bundled. No Hadoop.
+windows: Works on Windows, local folders and S3 alike (no Hadoop, no winutils.exe). Loader `python tools/drishti.py lake demo --engine java`.
 doc: plugins/drishti-plugin-delta/README.md
 ---
 # The delta connector
@@ -95,8 +91,8 @@ tables, with or without Unity Catalog:
 A lake root (`./data/delta` or `s3://bucket/prefix`) holds a folder per data domain (`domain`), and under it one Delta table per kind
 (or per `table.<kind>` when several connectors serve one kind, such as the trading pack's `trade_endur`, `trade_calypso` and
 `trade_murex`, joined by `union: true`). The tables are listed at start and at every re-index, so a table added while the server
-runs is found without a restart. Two engines: `native` (the default; `java.nio` and the AWS SDK, no Hadoop) and `hadoop` (also
-`abfs://` and `gs://`). It only reads: whatever writes the lake must follow the layout below.
+runs is found without a restart. The reader is Drishti Lake's (local disk through `java.nio`, S3 through the AWS SDK; no Hadoop; there is
+no choice of engine). It only reads: whatever writes the lake must follow the layout below.
 
 **The principle: never load a day.** A trade document is 6–7 KB of JSON; a day of a million is about 7 GB of text (1.7 GB of Parquet).
 Every question needs very little of it:
@@ -137,8 +133,6 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `mode.*` | string |  | Per-kind read mode |
 | `layout.*` | string |  | Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id) |
 | `table.*` | string |  | Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur) |
-| `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
-| `engine` | string | `native` | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI_DELTA_ENGINE, else native |
 | `date-column` | string | `business_date` | Business date column |
 | `id-column` | string | `id` | Entity id column |
 | `doc-column` | string | `doc` | Document column |
@@ -163,11 +157,9 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS_GUIDE.md section 12.3) |
 | `columns-cache-mb` | int |  | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `id-map-mb` | int |  | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
-| `lz4-via-native` | boolean | `true` | hadoop engine only: read LZ4 files through the native engine's decoder |
-| `lz4-decoder` | one of safe, fast | `safe` | native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available) |
 | `s3.endpoint` | string |  | An S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme |
 | `s3.region` | string |  | S3 region |
-| `s3.path-style` | boolean | `true` | Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always |
+| `s3.path-style` | boolean | `true` | Path-style S3 addressing; not set: used only with s3.endpoint |
 | `s3.access-key` | string |  | S3 access key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |
@@ -292,7 +284,6 @@ settings:
   # s3.access-key: ${LAKE_ACCESS_KEY}
   # s3.secret-key: ${LAKE_SECRET_KEY}
   # an S3-compatible store: s3.endpoint: https://minio.bank.example   (path-style; TLS when https)
-  # any Hadoop setting (engine: hadoop): hadoop.fs.s3a.connection.maximum: "200"
 ```
 
 `DRISHTI_DELTA_ROOT=s3://risk-lake/banking` moves every pack's lake at once. Ready-made files: `config/connectors.examples/other/customer-lake.yaml`
@@ -404,7 +395,7 @@ liquid clustering on `id` keeps the order. A replaced date stays readable throug
 
 ## How the connector reads
 
-Through Delta Kernel, without Spark and (native engine) without Hadoop.
+Through Delta Kernel, without Spark and without Hadoop.
 
 - **The file list.** Every `refresh-seconds` (10) the connector asks for the table's latest version and its files by business date,
   replaying the log from the last checkpoint: seven years (7,200 files) list in 84 ms. It also notes files carrying deletion vectors.
@@ -538,36 +529,27 @@ S3 lifecycle **expiry** on a Delta table (it deletes files the log still points 
 - **Live overlays are not in column searches:** with a live source serving the kind ahead of the lake, a view shows the live document
   while a column search reads the lake's day.
 
-## Engines: native and Hadoop
+## The reader: Drishti Lake
 
-Delta Kernel does no I/O itself; an *engine* lists the log, reads commits and Parquet and evaluates expressions. `engine` (or
-`DRISHTI_DELTA_ENGINE` for every connector) picks one:
-
-| `engine` | What reads the lake | Reads | Use it for |
-|---|---|---|---|
-| `native` (default) | `drishti-deltalake`: `java.nio` locally, the AWS SDK v2 for S3, its own Parquet handler | local paths, `file:` URIs (Windows drive letters, UNC), `s3://`, `s3a://` | everything, and Windows (no `winutils.exe`) |
-| `hadoop` | Kernel's default engine over Hadoop's `FileSystem` | the above (S3 through S3A), plus `abfs://`, `gs://`, HDFS | lakes in Azure, Google Cloud Storage or HDFS |
-| `auto` | `native` on Windows, `hadoop` elsewhere | | a configuration shared by Windows and Linux |
-
-The native engine reads each footer once, prunes row groups by the predicate's statistics, decodes only the asked columns and loads no
-Hadoop class. Both engines read checkpoints, time travel, deletion vectors and partition values the same, and every Delta test runs on
-both; reads are equal within noise, the native one starts a table's first read faster. On S3 the native engine uses one pooled client
-per connector, `ListObjectsV2` and ranged GETs (a small read fetches at least `s3.read-block-kb`, 1 MiB, and serves the next small reads
-from it). A native connector with an `abfs://` or `gs://` root refuses to start, naming `hadoop`. Iceberg has its own engines
-([ICEBERG_CONNECTOR.md section 17](../drishti-plugin-iceberg/README.md#engines-and-caches)).
+The connector reads through Drishti Lake's public read API (`LakeReader`, `TableSnapshot`, `DayFiles`, `IdMap`: no Delta Kernel type
+reaches the connector). The Delta reader lists the log, reads commits and Parquet and evaluates expressions itself, over Delta Kernel:
+`java.nio` for local paths and `file:` URIs (Windows drive letters, UNC), the AWS SDK v2 for `s3://` and `s3a://`, its own Parquet
+handler. It reads each footer once, prunes row groups by the predicate's statistics, decodes only the asked columns and loads no Hadoop
+class; checkpoints, time travel, deletion vectors and partition values are read as the protocol says. On S3 it uses one pooled client per
+connector, `ListObjectsV2` and ranged GETs (a small read fetches at least `s3.read-block-kb`, 1 MiB, and serves the next small reads from
+it). The reader reads local disk and S3-compatible storage only: a root with another scheme (`abfs://`, `gs://`, `hdfs://`) is refused at
+start, naming the schemes that are read. Iceberg has its own reader ([ICEBERG_CONNECTOR.md section 17](../drishti-plugin-iceberg/README.md#the-reader-and-caches)).
 
 ### Parquet codecs
 
-| Codec | `native` | `hadoop` |
-|---|---|---|
-| UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW | read | read |
-| LZ4 (the deprecated codec: Hadoop-framed pages or a raw block) | read | read, through the native decoder |
-| BROTLI, LZO | refused, naming table, file and codec | refused |
+| Codec | Reads |
+|---|---|
+| UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW | yes |
+| LZ4 (the deprecated codec: Hadoop-framed pages or a raw block) | yes |
+| BROTLI, LZO | refused, naming table, file and codec |
 
-For LZ4 the native decoder accepts Hadoop's framing only when the lengths add up exactly to the page, else decodes a single raw block, as
-Arrow does; `lz4-decoder: fast` uses JNI where it loads. Hadoop's own LZ4 codec fails on raw blocks, so the `hadoop` engine reads each
-file's footer once and routes LZ4 files on local disk or S3 to the native decoder (`lz4-via-native: false` turns it off); on `abfs://`,
-`gs://` and HDFS rewrite them. A date that cannot be read (BROTLI, a corrupt page, a truncated file) fails its reads with
+For LZ4 the decoder accepts Hadoop's framing only when the lengths add up exactly to the page, else decodes a single raw block, as
+Arrow does. A date that cannot be read (BROTLI, a corrupt page, a truncated file) fails its reads with
 `DRS-1003 … cannot be read: … rewrite the date with Snappy or ZSTD`, its searches say `partial`, and Health shows `DEGRADED`. Rewrite a
 date with `maintain.py relayout --root data/delta/demo --domain trading --kind trade --dates 2026-09-30 --force`.
 
@@ -582,7 +564,6 @@ kinds: [pnl-vector, scenario-pv, var-limit]
 settings:
   root: s3://${DRISHTI_DELTA_S3_BUCKET:drishti-lake}/${DRISHTI_DELTA_S3_PREFIX:delta}
   domain: risk
-  engine: native
   s3.region: ${AWS_REGION:us-east-1}
   layout.pnl-vector.vectors: PNL
 ```
@@ -598,12 +579,12 @@ settings:
   [CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). A production lake
   past 200 TB (KMS, VPC endpoint, tiers, loads, maintenance, alarms):
   [CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale).
-- **Tested** against S3Mock with the shipped template's settings, and with `s3a://` on both engines; not yet run against a live AWS account.
+- **Tested** against S3Mock with the shipped template's settings, and with `s3a://`; not yet run against a live AWS account.
 
 ## Security: TLS and credentials
 
 A store with a certificate from a private CA (MinIO, Ceph, an internal gateway) takes the shared `tls.*` settings
-([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings)), read by the **native engine** only:
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings)), read by Drishti Lake's reader:
 
 | Setting | Meaning |
 |---|---|
@@ -613,14 +594,13 @@ A store with a certificate from a private CA (MinIO, Ceph, an internal gateway) 
 | `tls.verify-hostname: false` | the chain is verified, the name is not (a warning at every start) |
 | `s3.access-key`, `s3.secret-key` | `${ENV}` or `file:` references, or the AWS credential chain |
 
-With `engine: hadoop` (S3A has no per-connector CA) `tls.*` is refused at start; import the CA into the JVM truststore instead. Health
+Health
 notes a certificate with under 30 days left: `UP (engine: native; TLS certificate CN=drishti (tls.cert-file) expires in 19 days …)`.
 Check a store with `openssl s_client -connect minio.example.com:9000 -CAfile ca.pem -verify_return_error </dev/null`.
 
 | Message | Cause |
 |---|---|
 | `tls.* is set but s3.endpoint is not https://` (or `tls.enabled is true but …`) | `tls.*` with no endpoint or an `http://` one |
-| `tls.* is read by the native engine only: …` | `engine: hadoop` with `tls.*` |
 | `tls.ca-file '…': file not found` | a wrong path |
 | `PKIX path building failed … unable to find valid certification path` in the table's problem text | the store's certificate is not signed by a CA in `tls.ca-file` |
 
@@ -628,8 +608,7 @@ Check a store with `openssl s_client -connect minio.example.com:9000 -CAfile ca.
 
 The `proxy.*` settings are shared by every HTTP-based connector
 ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)); `proxy: none` overrides
-the site default. The native engine uses the AWS SDK's proxy configuration; the Hadoop engine gets `fs.s3a.proxy.*` (no no-proxy list:
-set only when the endpoint is not on it). `https://` endpoints are tunnelled with `CONNECT` and keep `tls.*`. Health adds
+the site default. The reader uses the AWS SDK's proxy configuration (no no-proxy list: set only when the endpoint is not on it). `https://` endpoints are tunnelled with `CONNECT` and keep `tls.*`. Health adds
 `via proxy host:port (source)`.
 
 ## Checklist for production

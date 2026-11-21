@@ -140,7 +140,6 @@ class VarFormatEqualityTest {
                 + "  root: " + root + "\n"
                 + "  domain: risk\n"
                 + "  refresh-seconds: 1\n"
-                + "  engine: native\n"
                 + ("iceberg".equals(plugin) ? "  id-map-disk.dir: " + BASE.resolve("cache/idmaps") + "\n  doc-disk-cache.dir: " + BASE.resolve("cache/docs") + "\n" : "")
                 + "  layout.pnl-vector.columns: " + PNL_COLUMNS + "\n"
                 + "  layout.pnl-vector.vectors: PNL\n"

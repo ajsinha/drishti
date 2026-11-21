@@ -553,14 +553,13 @@ env:
   - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "drishti.py node", meaning: "The server drishti.py node drains and checks" }
   - { name: DRISHTI_HEARTBEAT_SECONDS, by: tools, default: "30", sets: "build_demo_lakes.py", meaning: "How often a long lake build prints that it is alive" }
   - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
-  - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }
+  - { name: LAKE_CLASSPATH, by: tools, default: ~, sets: "every Java lake tool the command line starts (lake load, check, undo, retention, relocate, maintain, lakes)", meaning: "Development: the class path of Drishti Lake (and of drishti-lake-host, for the loader with Drishti's catalog) the tools start their Java mains on, instead of the server's exec jar; the same variable Drishti Lake's own Python tools read" }
   - { name: DRISHTI_LAKE_HEAP, by: tools, default: ~, sets: "lake build", meaning: "The Java lake writer's heap" }
   - { name: LAKE_ARCHIVE_MAX_MB, by: tools, default: "102400", sets: "the loaders' archives (lake build, lake load, load_rows.py, convert; the Java loader's source.archive.max-mb)", meaning: "The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA_GUIDE.md section 2.7)" }
   - { name: LAKE_ARCHIVE_MAX_RATIO, by: tools, default: "200", sets: "the loaders' archives (source.archive.max-ratio)", meaning: "The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard" }
   - { name: LAKE_ARCHIVE_MAX_MEMBERS, by: tools, default: "100000", sets: "the loaders' archives (source.archive.max-members)", meaning: "The most entries an archive may hold" }
   - { name: DRISHTI_LOADER_HEAP, by: tools, default: 4g, sets: "drishti.py data load (the store loaders)", meaning: "The heap of the Java store loaders (Iceberg, PostgreSQL, ...)" }
   - { name: DRISHTI_M2_VERSION, by: tools, default: ~, sets: "drishti.py dev bicompute-unit", meaning: "The installed release in ~/.m2 the pivot engine's quick check compiles against (default: the newest drishti-common there)" }
-  - { name: DRISHTI_ICEBERG_CLASSPATH, by: tools, default: ~, sets: "Iceberg loader", meaning: "The class path of the Iceberg loader" }
   - { name: DRISHTI_TOOLS_CACHE, by: tools, default: ~, sets: "tools", meaning: "Where tools keep downloads (the MinIO binary, ...)" }
   - { name: DRISHTI_MINIO_BIN, by: tools, default: ~, sets: "S3 simulator tests", meaning: "A MinIO server binary for the lake tools' S3 tests" }
   - { name: DRISHTI_MINIO_URL, by: tools, default: ~, sets: "S3 simulator tests", meaning: "Where that binary is downloaded from" }

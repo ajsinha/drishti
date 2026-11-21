@@ -67,6 +67,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import archives  # noqa: E402
 import feedroute  # noqa: E402
+import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate
 import hostdates  # noqa: E402
 import jsonstream  # noqa: E402

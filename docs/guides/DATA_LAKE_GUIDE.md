@@ -521,7 +521,7 @@ report: {summary: runs/scenario-pv.summary.json}
 ```
 
 ```bash
-java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar lib/drishti-server-<version>-exec.jar \
+java -Xmx2g -Dloader.main=com.ash.drishti.lakehost.DrishtiLakeCli -jar lib/drishti-server-<version>-exec.jar \
     --config load-scenario-pv.yaml
 ```
 
@@ -539,7 +539,7 @@ documents read: 300, rows written: 300, rejected: 0
 On Windows, the same command in PowerShell with the jar's path; nothing else is needed. Command-line options over the file: `--as-of`,
 `--table`, `--pack`, `--kind`, `--mode append|replace`, `--key`, `--date-from`, `--plan`, `--set key.path=value`. Every key of a load
 file, with S3 and Iceberg examples, is [CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader); the design and the memory model
-are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
+are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load).
 
 ### 3.4 Pushing data from your own programs
 
@@ -863,7 +863,7 @@ python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lak
 ```
 
 ```bash
-java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-*-exec.jar --config load-trades.yaml
+java -Xmx4g -Dloader.main=com.ash.drishti.lakehost.DrishtiLakeCli -jar drishti-server-*-exec.jar --config load-trades.yaml
 ```
 
 #### (c) Where the inbox is, and watching it load
@@ -975,7 +975,7 @@ and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
 Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
 need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
-(`ReadyNote.KEYS` in drishti-lakeload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+(`ReadyNote.KEYS` in lake-load, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
 by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
@@ -1618,7 +1618,7 @@ each) starts to earn its folders.
 ## 10. Connecting to an existing lakehouse (Databricks, Unity Catalog)
 
 When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino or Snowflake writes, Drishti reads them in place, with its
-own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
+own readers inside the server (Delta Kernel and lake-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
 tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
 [DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake). Each day sorted by `id` (on Databricks,
 `OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest. Drishti's lakes follow the Delta protocol's path encoding and are
@@ -1626,11 +1626,10 @@ tested against delta-rs both ways; the table features each reader supports are i
 
 ### 10.1 Built
 
-**Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` (the default `native` engine),
-or `abfs://…` (Azure) and `gs://…` (Google Cloud) with the connector setting `engine: hadoop`
-([DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop)). Credentials: S3 from the AWS default
-chain (a task or instance role) or `${ENV}` references; Azure and Google Cloud through `hadoop.<key>` settings; a private CA through
-`tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage.
+**Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` or a local folder. The reader
+is Drishti Lake's (local disk and S3-compatible storage; `abfs://`, `gs://` and `hdfs://` are not read). Credentials: S3 from the AWS default
+chain (a task or instance role) or `${ENV}` references; a private CA through `tls.*`. With Unity Catalog, point the root at an external
+table's location and give the server read access to that storage.
 
 ```yaml
 # config/lakes/bank-lakehouse.yaml
@@ -1639,17 +1638,6 @@ root: s3://bank-lakehouse/delta
 storage: {region: eu-west-2}                 # no keys: the task role
 tables:
   trading.trade_endur: {kind: trade, promote: [TRADE_ID, PRODUCT_TYPE, DESK, BOOK, COUNTERPARTY_ID], id: TRADE_ID}
-```
-
-```yaml
-# config/connectors/trade-endur.yaml, Delta on Azure (ADLS Gen2)
-plugin: delta
-settings:
-  root: abfs://lake@riskstorage.dfs.core.windows.net/delta
-  engine: hadoop                             # abfs:// needs the hadoop engine
-  domain: trading
-  hadoop.fs.azure.account.key.riskstorage.dfs.core.windows.net: ${AZURE_STORAGE_KEY}
-  layout.trade.columns: TRADE_ID,PRODUCT_TYPE,DESK,BOOK,COUNTERPARTY_ID
 ```
 
 **Iceberg through Unity Catalog's REST endpoint.** A Delta table with UniForm (Iceberg reads enabled) is read as Iceberg through Unity
@@ -2018,7 +2006,7 @@ the loader) are in [DATA_ARCHITECTURE.md sections 8–10](../architecture/DATA_A
 | Path | Library | Writes | Reads |
 |---|---|---|---|
 | Java writer (`lake build --engine drishti`) and the parallel loader (`--engine java`, the data inbox's large loads) | Delta Kernel 4.4.0 with Drishti's file access | protocol `{"minReaderVersion":1,"minWriterVersion":2}`, no table features; a classic checkpoint every `delta.checkpointInterval` commits (10) | |
-| Java reader (the server's Delta connector) | Delta Kernel 4.4.0 on Drishti's native engine (no Hadoop) | | the features in 14.3's Java column |
+| Java reader (the server's Delta connector) | Delta Kernel 4.4.0 in Drishti Lake's reader (no Hadoop) | | the features in 14.3's Java column |
 | Python writer (`lake build --engine deltalake`) | delta-rs 1.6.6 | the protocol delta-rs writes | |
 | Python reader (`tools/lake/deltaread.py`: `lake maintain`'s relayout, the Delta-to-Iceberg copy) | delta-rs 1.6.6, or Delta Kernel through the server's exec jar when delta-rs would not read the table completely | | the features in 14.3's Python column |
 
@@ -2133,7 +2121,7 @@ Section 10 is the other way round: Drishti reading the tables a lakehouse writes
 Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
 [Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
 Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
-The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop);
+The design is in [DATA_ARCHITECTURE.md › lake-iceberg](../architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop);
 the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
 [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
 
@@ -2141,7 +2129,7 @@ the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/R
 
 | Engine | Where | Reads | Writes |
 |---|---|---|---|
-| **Apache Iceberg `iceberg-core` with Drishti's file access and Parquet reader** | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | everything below | everything below |
+| **Apache Iceberg `iceberg-core` with Drishti's file access and Parquet reader** | inside the server, the loader (Drishti Lake's, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | everything below | everything below |
 | **Python** (`tools/lake`) | `lake build --format iceberg` streams rows to the loader above; `lake maintain` and Admin → Lakes read the metadata JSON for the figures, then run `IcebergMaintenance` | | no Iceberg writer of its own |
 
 ### 15.2 File paths and partition values
@@ -2197,11 +2185,11 @@ the form the library uses.
 A table or file outside the feature table stops the read with this message (`[…]` names the table or file where it was met). Rewrite such a table without the feature, with the engine that wrote it, and Drishti reads it:
 
 ```text
-drishti-iceberg does not read format version 3 tables; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<table>]
-drishti-iceberg does not read ORC data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the .orc file>]
-drishti-iceberg does not read the Iceberg type 'variant' (format version 3); this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
-drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
-drishti-iceberg does not read encrypted data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the file>]
+lake-iceberg does not read format version 3 tables; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<table>]
+lake-iceberg does not read ORC data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the .orc file>]
+lake-iceberg does not read the Iceberg type 'variant' (format version 3); this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+lake-iceberg does not read column defaults (format version 3) on NOTIONAL; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+lake-iceberg does not read encrypted data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the file>]
 ```
 
 A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):

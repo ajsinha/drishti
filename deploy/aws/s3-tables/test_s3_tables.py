@@ -14,7 +14,7 @@
 
 """s3_tables.py without an AWS account: the S3 Tables, IAM and STS calls answered by botocore's Stubber (each call and its parameters
 checked, in order), the table's files by an in-memory S3 (ranged GETs), the Iceberg REST endpoint by a fake that checks the SigV4
-signature, and the signatures against the ones recorded for drishti-iceberg's Java signer (one fixture for both languages).
+signature, and the signatures against the ones recorded for lake-iceberg's Java signer (one fixture for both languages).
 
     python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables
 """

@@ -94,7 +94,7 @@ copy that template as `trade-endur.yaml` to replace the Delta connector of Endur
 
 - `DOWN: no Iceberg tables under …`: that domain was not loaded, or `DRISHTI_ICEBERG_ROOT` points elsewhere.
 - `DOWN: cannot reach …`: the root, bucket or catalog is not reachable; check the variables above and `s3.*`.
-- On Windows keep the default `engine: native`; `engine: library` needs `winutils.exe`.
+- On Windows nothing is needed beyond Java: the reader is Drishti Lake's (no Hadoop, no `winutils.exe`).
 
 ## See also
 

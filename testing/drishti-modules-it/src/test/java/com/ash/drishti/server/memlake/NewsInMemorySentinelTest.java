@@ -292,6 +292,6 @@ class NewsInMemorySentinelTest {
         leaks.addAll(found(com.ash.drishti.common.TempFiles.root()));
         assertThat(leaks).as("files holding a marker").isEmpty();
         assertThat(output.getAll()).as("the logs").doesNotContain(MARK);
-        assertThat(com.ash.lake.memory.store.MemoryStores.store("news").pool().inUseBytes()).isGreaterThan(0);
+        assertThat(com.ash.lake.memory.store.MemoryStores.of(com.ash.drishti.lakehost.DrishtiLake.runtime()).store("news").pool().inUseBytes()).isGreaterThan(0);
     }
 }

@@ -24,5 +24,4 @@ description: trades (Endur) read from Delta Lake on AWS S3
 settings:
   lake: s3
   lake-tables: trading.trade_endur
-  engine: native
   source-name: trade-endur

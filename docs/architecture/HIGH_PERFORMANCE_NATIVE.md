@@ -339,7 +339,7 @@ with both.
 | Java loader: parse | `RowParser`, `ParseWorker` (Jackson streaming, fast double parser) | compute, 165 MB/s a thread | no tree, no boxing | simdjson-java (pure Java, SIMD) or native simdjson (P4) |
 | Java loader: write | `DateWriter`, `DeltaTarget`, `IcebergTarget`, `NativeCodecs` (Snappy, ZSTD via JNI) | compute | Parquet encoding, BYTE_STREAM_SPLIT, ZSTD | native already for codecs; encoding is Java |
 | Python loader path | `tools/lake/build.py`, `stage.py`, `jsonstream.py`, writers | **single-threaded Python** | 68 s against the Java loader's 7.7 s | make the Java loader the default where a JVM exists; Polars for the no-JVM case (section 7) |
-| Lake reads (Parquet pages) | `drishti-lakeio` (`ParquetInput`, `PageCodec`, `Lz4Pages`, `NativeCodecs`), the Delta and Iceberg readers | compute (decompress, decode) | ZSTD and Snappy native (JNI), LZ4 pure Java | already native where it pays; Arrow C Data from DuckDB or DataFusion for scans (section 7) |
+| Lake reads (Parquet pages) | `lake-io` (`ParquetInput`, `PageCodec`, `Lz4Pages`, `NativeCodecs`), the Delta and Iceberg readers | compute (decompress, decode) | ZSTD and Snappy native (JNI), LZ4 pure Java | already native where it pays; Arrow C Data from DuckDB or DataFusion for scans (section 7) |
 | Disk cache and message stores | `DiskCache`, `SortedStore` (RocksDB) | I/O and compute | RocksDB (native, JNI) | already native; its compression set to LZ4/ZSTD |
 | BI queries | `DuckDbEngine`, `QueryService`, `ArrowIpcWriter`, `ArrowAnswers` | compute in DuckDB; **row-by-row JDBC** to Arrow | `ResultSet` read value by value into columns, then written as Arrow IPC | DuckDB's Arrow export (C Data Interface) straight into the Arrow answer (P4) |
 | BI row evaluation | `RowEval`, `SqlCompiler` | compute | interpreted per row | compiled with the Class-File API (P2) |
@@ -558,7 +558,7 @@ The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstr
 `deltalake`) commits the table; that staging is one Python thread, hence the 9 times gap. Two routes close it:
 
 1. **Where a JVM exists** (the server's machine, the drill, AWS loaders): make `--engine java` (the parallel loader,
-   [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
+   [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
 2. **Where no JVM exists** (an analyst's Python environment): a Polars staging path. `pl.scan_ndjson` reads JSON Lines on every core into
    Arrow, the reject rules of `stage.py` become Polars expressions, and `deltalake.write_deltalake` commits the Arrow table. The rules must
    give exactly the same rows and rejects as `stage.py` (a parity test over the test data). Expected: within about 2 times of the Java

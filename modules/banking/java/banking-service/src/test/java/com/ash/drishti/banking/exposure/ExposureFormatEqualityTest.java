@@ -100,7 +100,6 @@ class ExposureFormatEqualityTest {
                 + "  root: " + root + "\n"
                 + "  domain: risk\n"
                 + "  refresh-seconds: 1\n"
-                + "  engine: native\n"
                 + ("iceberg".equals(plugin) ? "  id-map-disk.dir: " + BASE.resolve("cache/idmaps") + "\n  doc-disk-cache.dir: " + BASE.resolve("cache/docs") + "\n" : "")
                 + "  layout.exposure-path.columns: TRADE_ID,NETTING_SET,COUNTERPARTY,LEGAL_ENTITY,DESK,TT_BOOK,LIMIT_LETTER,ASSET_CLASS,PRODUCT,"
                 + "SOURCE_SYSTEM,MATURITY_DATE,NOTIONAL,GRID_INDEX,GRID_DATE,RUN_ID,BATCH_ID,STATUS\n"

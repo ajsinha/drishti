@@ -38,7 +38,7 @@ import java.util.function.ToIntFunction;
 
 /**
  * A business date's id map in a file, read through a memory map (the Delta and Iceberg connectors' {@code cache/<connector>/idmaps}): the
- * ids sorted by their UTF-8 bytes, an offset per id and the index of the data file holding each. A lookup is a binary search over the
+ * ids sorted, an end offset per id and the index of the data file holding each. A lookup is a binary search over the
  * map; the heap holds nothing per id.
  *
  * <p><b>Released, not left to the collector (2.9.7, CLUSTER_GUIDE.md section 7.3).</b> Before 2.9.7 a mapping was never unmapped:
@@ -46,7 +46,9 @@ import java.util.function.ToIntFunction;
  * every read enters a guard; {@link #close} unmaps once no reader is inside (a later read gets {@link Closed}: "ask again"), and
  * {@link #release(Path, boolean)} unmaps a file's mapping before deleting it. One mapping per file at a time ({@link #open} shares it).
  *
- * <p>Layout (little endian): {@code MAGIC, n, files[n], offsets[n + 1], bytes}.
+ * <p>The file format is Drishti Lake's one ({@code com.ash.lake.read.IdMaps}, little endian): {@code LKIDMAP1, n, files[n], ends[n],
+ * the ids' UTF-8 bytes}, the ids in String order; a file written by either is read by the other. What is Drishti's here is the lifecycle
+ * the format does not have (the reader guard, the release, the registry).
  */
 public final class MappedIdFile {
 
@@ -57,7 +59,7 @@ public final class MappedIdFile {
         }
     }
 
-    private static final int MAGIC = 0x44494d31;                       // "DIM1"
+    private static final byte[] MAGIC = "LKIDMAP1".getBytes(StandardCharsets.US_ASCII);   // Drishti Lake's id-map format (com.ash.lake.read.IdMaps)
     private static final Map<Path, MappedIdFile> OPEN = new ConcurrentHashMap<>();
     /** Files being dropped (unmapped, then deleted): not mapped again until written again (2.9.7, {@link IdMapFolder}). */
     private static final java.util.Set<Path> DOOMED = ConcurrentHashMap.newKeySet();
@@ -67,7 +69,7 @@ public final class MappedIdFile {
     private volatile ByteBuffer map;
     private final int n;
     private final int filesAt;
-    private final int offsetsAt;
+    private final int endsAt;
     private final int bytesAt;
     private final long fileBytes;
     private final AtomicInteger readers = new AtomicInteger();
@@ -83,14 +85,22 @@ public final class MappedIdFile {
         this.map = mapping.buffer();
         this.fileBytes = fileBytes;
         ByteBuffer m = map;
-        if (m.capacity() < 8 || m.getInt(0) != MAGIC) {
+        byte[] magic = new byte[MAGIC.length];
+        if (m.capacity() < MAGIC.length + 4) {
             throw new IOException("not an id map");
         }
-        this.n = m.getInt(4);
-        this.filesAt = 8;
-        this.offsetsAt = filesAt + 4 * n;
-        this.bytesAt = offsetsAt + 4 * (n + 1);
-        if (n < 0 || (long) bytesAt + m.getInt(offsetsAt + 4 * n) > m.capacity()) {
+        m.get(0, magic);
+        if (!Arrays.equals(magic, MAGIC)) {
+            throw new IOException("not an id map");
+        }
+        this.n = m.getInt(MAGIC.length);
+        this.filesAt = MAGIC.length + 4;
+        if (n < 0 || (long) filesAt + 8L * n > m.capacity()) {
+            throw new IOException("a truncated id map");
+        }
+        this.endsAt = filesAt + 4 * n;
+        this.bytesAt = endsAt + 4 * n;
+        if ((long) bytesAt + (n == 0 ? 0 : m.getInt(endsAt + 4 * (n - 1))) > m.capacity()) {
             throw new IOException("a truncated id map");
         }
     }
@@ -151,22 +161,25 @@ public final class MappedIdFile {
             order[i] = i;
             total += ids[i].length;
         }
-        Arrays.sort(order, (a, b) -> Arrays.compareUnsigned(ids[a], ids[b]));
-        long size = 8L + 4L * n + 4L * (n + 1) + total;
+        String[] text = new String[n];
+        for (int i = 0; i < n; i++) {
+            text[i] = id.apply(i);
+        }
+        Arrays.sort(order, (a, b) -> text[a].compareTo(text[b]));     // the product's order: String order, as IdMaps' reader searches
+        long size = MAGIC.length + 4L + 8L * n + total;
         if (size > Integer.MAX_VALUE) {
             throw new IOException("an id map over 2 GB");
         }
         ByteBuffer out = ByteBuffer.allocate((int) size).order(ByteOrder.LITTLE_ENDIAN);
-        out.putInt(MAGIC).putInt(n);
+        out.put(MAGIC).putInt(n);
         for (int i = 0; i < n; i++) {
-            out.putInt(fileOf.applyAsInt(id.apply(order[i])));
+            out.putInt(fileOf.applyAsInt(text[order[i]]));
         }
         int off = 0;
         for (int i = 0; i < n; i++) {
-            out.putInt(off);
             off += ids[order[i]].length;
+            out.putInt(off);                                           // the id's end offset
         }
-        out.putInt(off);
         for (int i = 0; i < n; i++) {
             out.put(ids[order[i]]);
         }
@@ -209,9 +222,9 @@ public final class MappedIdFile {
         }
     }
 
-    private static byte[] bytesOf(ByteBuffer m, int offsetsAt, int bytesAt, int i) {
-        int from = m.getInt(offsetsAt + 4 * i);
-        int to = m.getInt(offsetsAt + 4 * (i + 1));
+    private static byte[] bytesOf(ByteBuffer m, int endsAt, int bytesAt, int i) {
+        int from = i == 0 ? 0 : m.getInt(endsAt + 4 * (i - 1));
+        int to = m.getInt(endsAt + 4 * i);
         byte[] b = new byte[to - from];
         m.get(bytesAt + from, b);
         return b;
@@ -226,7 +239,7 @@ public final class MappedIdFile {
     public String id(int i) {
         ByteBuffer m = enter();
         try {
-            return new String(bytesOf(m, offsetsAt, bytesAt, i), StandardCharsets.UTF_8);
+            return new String(bytesOf(m, endsAt, bytesAt, i), StandardCharsets.UTF_8);
         } finally {
             exit();
         }
@@ -234,14 +247,13 @@ public final class MappedIdFile {
 
     /** The index of the data file holding {@code id}, or -1. */
     public int file(String id) {
-        byte[] key = id.getBytes(StandardCharsets.UTF_8);
         ByteBuffer m = enter();
         try {
             int lo = 0;
             int hi = n - 1;
             while (lo <= hi) {
                 int mid = (lo + hi) >>> 1;
-                int c = Arrays.compareUnsigned(bytesOf(m, offsetsAt, bytesAt, mid), key);
+                int c = new String(bytesOf(m, endsAt, bytesAt, mid), StandardCharsets.UTF_8).compareTo(id);
                 if (c < 0) {
                     lo = mid + 1;
                 } else if (c > 0) {

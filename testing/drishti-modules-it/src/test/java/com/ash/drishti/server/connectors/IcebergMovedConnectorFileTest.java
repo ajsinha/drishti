@@ -26,11 +26,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,11 +85,34 @@ class IcebergMovedConnectorFileTest {
                     rows(rows, "market", kind, d);
                 }
             }
-            // the rows as drishti.py data load --store iceberg gives them: a tar of <kind>/<YYYY-MM-DD>/ folders (the load rules: each row under its folder's date)
-            lines = com.ash.drishti.testkit.LoaderRows.write(base.resolve("rows"), List.of(rows.toString().split("\n")));
-            // the loader drishti.py data load --store iceberg runs, with the options QA gave it
-            com.ash.lake.iceberg.table.IcebergLoader.main(new String[] {lines.toString(), base.resolve("ice1").toString(), "--engine", "native",
-                "--spill-dir", base.resolve("spill").toString()});
+            // the rows loaded by Drishti Lake's one loader (source.format: loader-rows, one table a load, each business date replaced)
+            Map<String, List<String>> byTable = new java.util.TreeMap<>();
+            for (String line : rows.toString().split("\n")) {
+                com.fasterxml.jackson.databind.JsonNode n = new com.fasterxml.jackson.databind.ObjectMapper().readTree(line);
+                byTable.computeIfAbsent(n.path("domain").asText() + "/" + n.path("kind").asText(), k -> new ArrayList<>()).add(line);
+            }
+            int loads = 0;
+            for (Map.Entry<String, List<String>> e : byTable.entrySet()) {
+                String domain = e.getKey().substring(0, e.getKey().indexOf('/'));
+                String kind = e.getKey().substring(e.getKey().indexOf('/') + 1);
+                Path in = Files.createDirectories(base.resolve("rows-" + (loads++)));
+                Map<String, List<String>> byDate = new java.util.TreeMap<>();
+                for (String line : e.getValue()) {
+                    byDate.computeIfAbsent(new com.fasterxml.jackson.databind.ObjectMapper().readTree(line).path("date").asText(), k -> new ArrayList<>()).add(line);
+                }
+                for (Map.Entry<String, List<String>> day : byDate.entrySet()) {
+                    Files.write(in.resolve(kind + "." + day.getKey() + ".jsonl"), day.getValue());
+                }
+                Path config = base.resolve("load-" + loads + ".yaml");
+                Files.writeString(config, "source:\n  files: '" + in + "/*'\n  format: loader-rows\ntarget:\n  format: iceberg\n  lake: '" + base.resolve("ice1")
+                        + "'\n  domain: " + domain + "\n  kind: " + kind + "\n  mode: replace-date\n");
+                ByteArrayOutputStream said = new ByteArrayOutputStream();
+                int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
+                        new java.io.PrintStream(said, true, java.nio.charset.StandardCharsets.UTF_8));
+                if (code != 0) {
+                    throw new IllegalStateException("the loader failed (" + code + "): " + said.toString(java.nio.charset.StandardCharsets.UTF_8));
+                }
+            }
             Files.move(base.resolve("ice1"), base.resolve("ice2"));
             Path connectors = com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors");
             if (Files.isDirectory(connectors)) {
@@ -101,7 +127,7 @@ class IcebergMovedConnectorFileTest {
             Files.writeString(connectors.resolve("credit-store.yaml"), "plugin: delta\nenabled: false\nsettings:\n  root: " + base.resolve("delta")
                     + "\n  domain: credit\n");
             Files.writeString(connectors.resolve("qa-ice-moved.yaml"), "plugin: iceberg\nsettings: {root: " + base.resolve("ice2")
-                    + ", domain: credit, engine: native}\n");
+                    + ", domain: credit}\n");
             // the kind bound to it (config/bindings.yaml, beside the connectors' folder): a connector file names no kinds
             Files.writeString(connectors.resolveSibling("iceberg-moved-connectors-bindings.yaml"),
                     "format: 1\nbindings:\n  credit-limit: { read: [qa-ice-moved] }\n");

@@ -45,7 +45,6 @@ allows lower-case letters, digits and underscores only. Nothing is written by th
 | `catalog` | `s3tables` | AWS S3 Tables through its Iceberg REST endpoint |
 | `DRISHTI_S3TABLES_ARN` (`table-bucket-arn`) | empty: the connector stays idle until it is set | The table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>` |
 | `domain` | `risk`, `trading` | The namespace (as an S3 Tables name) |
-| `engine` | `native` | S3 Tables is read by the native engine only |
 | `uri` | `https://s3tables.<region>.amazonaws.com/iceberg`, from the ARN | Give it for a VPC interface endpoint |
 | `layout.<kind>.*` | the packs' promoted columns, vectors and file layout | As for every Iceberg connector |
 
@@ -87,7 +86,6 @@ deploy/aws/s3-tables/s3-tables.sh check --bucket drishti-risk --namespace risk -
 - `HTTP 403` from `s3tables.<region>.amazonaws.com`: the principal lacks the policy of `s3-tables.sh create` (`s3tables:Get*`,
   `s3tables:GetTableData`); `s3-tables.sh check` names the step.
 - `no table pnl_vector`: the loader has not written that kind yet, or wrote it under another namespace.
-- `engine: library` is refused: S3 Tables is read by the native engine.
 
 ## See also
 

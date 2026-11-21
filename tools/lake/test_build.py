@@ -419,7 +419,7 @@ class BuildTest(unittest.TestCase):
         self.assertFalse(stamp.exists())
 
 
-@unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set DRISHTI_LAKE_CLASSPATH")
+@unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set LAKE_CLASSPATH")
 class DrishtiEngineTest(BuildTest):
     """The same runs through Drishti's Java writer; deltalake reads what it wrote (the two engines agree on the table)."""
 

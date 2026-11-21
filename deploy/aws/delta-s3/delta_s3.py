@@ -71,7 +71,7 @@ def policy_name(args) -> str:
 
 
 def connector_yaml(bucket: str, prefix: str, region: str) -> str:
-    return (f"plugin: delta\nkinds: [...]\nsettings:\n  root: s3://{bucket}/{prefix}\n  domain: risk\n  engine: native\n"
+    return (f"plugin: delta\nkinds: [...]\nsettings:\n  root: s3://{bucket}/{prefix}\n  domain: risk\n"
             f"  s3.region: {region}\n")
 
 

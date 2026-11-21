@@ -96,7 +96,6 @@ class VarShardClusterTest {
                 + "  root: " + lake + "\n"
                 + "  domain: risk\n"
                 + "  refresh-seconds: 1\n"
-                + "  engine: native\n"
                 + ("iceberg".equals(plugin) ? "  id-map-disk.dir: " + node.resolve("cache/idmaps") + "\n  doc-disk-cache.dir: "
                         + node.resolve("cache/docs") + "\n" : "")
                 + "  layout.pnl-vector.columns: " + PNL_COLUMNS + "\n"

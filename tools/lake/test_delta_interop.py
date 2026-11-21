@@ -16,7 +16,7 @@
 both ways, with partition values that need escaping (a space, ``%``, ``:``, ``/``, ``=``, ``#``, ``?``, quotes, non-ASCII, an empty
 string, a null) and a date partition (``business_date``).
 
-1. delta-rs writes, Drishti's Java reader reads (Delta Kernel on Drishti's ``NativeEngine``, the server's lake reader): every row and
+1. delta-rs writes, Drishti's Java reader reads (Delta Kernel on Drishti Lake's ``NativeEngine``, the server's lake reader): every row and
    every partition value equal.
 2. Drishti writes, delta-rs (``DeltaTable``) and ``pyarrow.dataset`` over the files read: every row equal. Drishti's writers are the
    Java lake writer (``lake build --engine drishti``), the parallel Java loader (``--engine java``) and the Python path
@@ -82,7 +82,7 @@ def norm(v):
 # ---- the Java reader ----------------------------------------------------------------------------------------------------------------
 
 READER = r'''
-import com.ash.drishti.deltalake.NativeEngine;
+import com.ash.lake.delta.NativeEngine;
 import io.delta.kernel.Scan;
 import io.delta.kernel.Table;
 import io.delta.kernel.data.FilteredColumnarBatch;
@@ -108,7 +108,7 @@ import java.util.TreeMap;
 public final class DeltaInteropRead {
     public static void main(String[] args) throws Exception {
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        Engine engine = NativeEngine.create();
+        Engine engine = NativeEngine.create(com.ash.lake.LakeRuntime.fromProcess());
         Scan scan = Table.forPath(engine, args[0]).getLatestSnapshot(engine).getScanBuilder().build();
         Row state = scan.getScanState(engine);
         StructType physical = ScanStateRow.getPhysicalDataReadSchema(state);
@@ -187,8 +187,7 @@ def java_reader(tmp_path_factory):
     with zipfile.ZipFile(jar) as z:
         for n in z.namelist():
             base = n.rsplit("/", 1)[-1]
-            if n.startswith("BOOT-INF/lib/") and base.startswith(("delta-kernel-api-", "drishti-deltalake-", "drishti-api-",
-                                                                   "drishti-lakeio-")):
+            if n.startswith("BOOT-INF/lib/") and base.startswith(("delta-kernel-api-", "lake-delta-", "lake-api-")):
                 (libs / base).write_bytes(z.read(n))
     src = work / "DeltaInteropRead.java"
     src.write_text(READER, encoding="utf-8")

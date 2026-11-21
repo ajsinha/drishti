@@ -15,14 +15,15 @@
  */
 package com.ash.drishti.lakehost;
 
+import com.ash.lake.config.LakesCli;
 import com.ash.lake.load.LakeCheck;
 import com.ash.lake.load.LakeLoad;
 import java.util.Arrays;
 
 /**
  * Drishti Lake's commands with Drishti's runtime ({@link DrishtiLake#runtime()}: its catalog, so the shipped lakes, the packs and the
- * connector templates are seen as the server sees them): {@code load} (the loader, {@code LakeLoad}) and {@code check}
- * ({@code LakeCheck}). The server's loader child process and {@code tools/drishti.py lake} start this class.
+ * connector templates are seen as the server sees them): {@code load} (the loader, {@code LakeLoad}) {@code check}
+ * ({@code LakeCheck}) and {@code lakes} (the lake files' reader, {@code LakesCli}). The server's loader child process and {@code tools/drishti.py lake} start this class.
  */
 public final class DrishtiLakeCli {
 
@@ -42,8 +43,9 @@ public final class DrishtiLakeCli {
         return switch (args[0]) {
             case "load" -> LakeLoad.run(DrishtiLake.runtime(), rest, System.out);
             case "check" -> LakeCheck.run(DrishtiLake.runtime(), rest, System.out);
+            case "lakes" -> LakesCli.run(DrishtiLake.runtime(), rest, System.out);
             default -> {
-                System.err.println("unknown command " + args[0] + ": load or check");
+                System.err.println("unknown command " + args[0] + ": load, check or lakes");
                 yield 2;
             }
         };
