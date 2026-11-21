@@ -3339,14 +3339,14 @@ column, so one table can never be described in several places that disagree.
 | Admin → Lakes | every lake and table, read-only (`GET /api/v1/admin/lakes/files`) |
 
 A connector may also name tables by path (`root`, `domain`, `table.<kind>`, `layout.<kind>.*`), for tables no lake file describes; both
-forms are permanent. `drishti.py lake migrate-config` writes lake files from path-form connectors on request.
+forms are permanent.
 
 ### 8.3 How it is built
 
 | Part | Where | Why this way |
 |---|---|---|
 | The reader | the lake core `lake-io`, package `lakeconfig` (`Lakes`, `Lake`, `LakeTable`, `LakeCheck`, `LakeFiles`, `ConnectorLake`, `PackEntry`, `LakesCli`) | a module of its own with Jackson as its only dependency: its users sit on both sides of the plugin boundary (the source registry, the loader run alone, the data inbox, the in-memory lake, the server); drishti-api stays dependency-free and drishti-common brings Spring |
-| Python | `tools/lake/lakeconfig.py` runs `LakesCli` (`dump`, `table`, `check`, `migrate-config`, `add-entry`) and reads its JSON | one reader, the Java one. The one exception is `tools/lake/memory_caps.py`, which sizes the JVM before any JVM runs and reads two keys (`root`, `memory.max-mb`) |
+| Python | `tools/lake/lakeconfig.py` runs `LakesCli` (`dump`, `table`, `check`, `add-entry`) and reads its JSON | one reader, the Java one. The one exception is `tools/lake/memory_caps.py`, which sizes the JVM before any JVM runs and reads two keys (`root`, `memory.max-mb`) |
 | Several tables of one kind | an entry is `<domain>.<table>` with `kind:` (`trading.trade_endur`, `kind: trade`); connectors name entries with `lake-tables:`; the loader picks with `target.table` | the demo lake has three trade tables (ENDUR, CALYPSO, MUREX); a kind with several tables is never guessed |
 | Readers | `SourceRegistry.ownSettings` expands `lake:` into the settings the plugins already read (`root`, `domain`, `table.<kind>`, `layout.<kind>.columns`, `layout.<kind>.vectors`, `s3.<key>`, `catalog`, `uri`, `warehouse`) | one point every connector's settings pass, whatever file or template they came from; the plugins keep one way of reading. A connector that names a lake and also sets one of those keys is refused |
 | Writers | `LoadConfig` (`target.lake`), `LoaderProcess` (the inbox), `lake build --lake NAME [--lake-root DIR]`, `lake demo --lake-name demo`, `build_demo_lakes.py` | `--lake-root` lets a scratch or test lake take a lake's layout |

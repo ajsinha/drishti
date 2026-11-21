@@ -39,13 +39,13 @@ About 1 h 45 min in all; each part can be done on its own day.
   `dataload` commands are for administrators).
 - Run the commands from the server's working folder (the repository): the lake files are in `config/lakes/`, the inbox in
   `data/dataload/`.
-- The data inbox on ([Part C](#part-c--load-files-automatically-with-the-data-inbox), step 14): Admin → Engines → **Data inbox** → On, or
+- The data inbox on ([Part C](#part-c--load-files-automatically-with-the-data-inbox), step 13): Admin → Engines → **Data inbox** → On, or
   `python3 tools/drishti.py server engines on dataload --reason "tutorial 16"`.
 
 **Part B · One file per lake.**
 
 - Sign in as an administrator (Admin → Lakes and the `lake check` command are for administrators).
-- A scratch folder for steps 11 to 13, so nothing under `data/` changes: `export SCRATCH=$(mktemp -d)` (remove it at the end).
+- A scratch folder for steps 11 and 12, so nothing under `data/` changes: `export SCRATCH=$(mktemp -d)` (remove it at the end).
 
 **Part C · Load files automatically with the data inbox.**
 
@@ -82,7 +82,7 @@ The reference for every step is the [data lake and data load guide](../guides/DA
 - how a connector names a lake (`lake:`, `lake-tables:`) and keeps only reading concerns;
 - how a load takes its layout from the lake file, and why a contradicting `--partition-by` is refused;
 - replace and append, and how a batch is never appended twice;
-- the checks, Admin → Lakes, and migrating an older connector file.
+- the checks and Admin → Lakes.
 
 **Part C · Load files automatically with the data inbox**
 
@@ -488,7 +488,7 @@ rm -rf data/delta/risklake config/lakes/risklake.yaml
 A lake is described once, in its own file, and everyone refers to it: the connectors that read it, the loader and the data inbox that
 write it, `lake build` and the demo lakes. In this part you read the demo lake's file, see a connector name it, load a day through
 it, watch a load that contradicts it being refused, add an append table and load the same batch twice, check the lake files against the
-tables on disk, and migrate an older connector file. Each step shows the UI, the command line and the YAML behind it. The guide is
+tables on disk. Each step shows the UI, the command line and the YAML behind it. The guide is
 [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md).
 
 ## Step 8 · Read the demo lake's file
@@ -688,60 +688,6 @@ append per business date, each recorded as `drishti-batch:intraday-0915:<date>` 
 
 **You should see** the same batch never appended twice; a new `--batch-id` adds its rows, the earlier ones kept.
 
-## Step 13 · Migrate an older connector file
-
-**The YAML.** A connector that still describes its lake itself:
-
-```bash
-mkdir -p $SCRATCH/connectors && cat > $SCRATCH/connectors/old-store.yaml <<EOF
-plugin: delta
-settings:
-  root: $SCRATCH/lake
-  domain: risk
-  layout.pnl-vector.columns: VALUE_TYPE,TRADE_ID
-  layout.pnl-vector.vectors: PNL
-EOF
-```
-
-**The command line.** A dry run first, then write:
-
-```bash
-python3 tools/drishti.py lake migrate-config --connectors-dir $SCRATCH/connectors --dir $SCRATCH/lakes
-python3 tools/drishti.py lake migrate-config --connectors-dir $SCRATCH/connectors --dir $SCRATCH/lakes --write
-```
-
-```text
-  old-store.yaml: now lake: lake (1 tables)
-
---- $SCRATCH/lakes/lake.yaml (would be written)
-# lake.yaml: written by drishti.py lake migrate-config from the connector files (docs/guides/DATA_LAKE_GUIDE.md); edit here from now on
-lake: lake
-format: delta
-root: $SCRATCH/lake
-tables:
-  risk.pnl-vector:
-    promote:
-    - VALUE_TYPE
-    - TRADE_ID
-    vectors:
-    - PNL
-
---- $SCRATCH/connectors/old-store.yaml (would be written)
-plugin: delta
-settings:
-  lake: lake
-
-lake migrate-config: a dry run; nothing written (add --write)
-
-  old-store.yaml: now lake: lake (1 tables)
-lake migrate-config: wrote 1 lake files and rewrote 1 connector files; restart the server (or let it reload the connectors) and run drishti.py lake check
-```
-**The UI.** Admin → Lakes shows the same lake once the server reads the written lake file (`config/lakes/`); on a real installation the dry run is the place to read what `--write` will do.
-
-![Admin → Lakes: a lake written by the migration (a server whose LAKE_LAKES_DIR is $SCRATCH/lakes)](img/t34/06-migrated-lake.jpg)
-
-**You should see** the connector file keep only `lake:` (and its own reading settings); nothing in the lake's folder changed.
-
 #### Clean up
 
 ```bash
@@ -756,7 +702,7 @@ drop a day of Endur trades with its `.ready` marker, watch it on the Inbox scree
 *loading* to *loaded*, release two files at once with `ready.all`, see a file fail, fix the rules and Retry it, and read the outbox's
 reports. Each step shows the UI, the command line (`drishti.py dataload status|run|retry`) and the YAML behind it.
 
-## Step 14 · Turn the inbox on
+## Step 13 · Turn the inbox on
 
 The inbox is an engine, off as shipped.
 
@@ -817,7 +763,7 @@ inbox  ledger
 
 ![Admin → Engines: the data inbox switched on](img/t36/01-engine-on.jpg)
 
-## Step 15 · Write a routing rule
+## Step 14 · Write a routing rule
 
 A file goes to the table its rule names. The shipped `config/dataload.yaml` has no rules (`rules: []`), so every file would fail: a
 file is **never guessed**.
@@ -848,7 +794,7 @@ trading / trade · trade-endur · from the name (required)*, then *anything else
 
 ![The Inbox screen: the routing rules in effect](img/t36/02-rules.jpg)
 
-## Step 16 · Drop a file, then its marker
+## Step 15 · Drop a file, then its marker
 
 **The command line.** Copy one day of Endur trades from the demo data into the inbox under a name the rule matches:
 
@@ -923,7 +869,7 @@ sha256: ...
 rows: 2
 ```
 
-## Step 17 · Load now and watch it load
+## Step 16 · Load now and watch it load
 
 A cycle runs every ten minutes; you need not wait.
 
@@ -958,7 +904,7 @@ Admin → Data loads made by `dataload` (*inbox:* and its file).
 
 ![The Inbox screen: the run loading, table by table](img/t36/04-loading.jpg)
 
-## Step 18 · Release several files at once with ready.all
+## Step 17 · Release several files at once with ready.all
 
 **The command line.** Drop two days without markers, then one `ready.all`:
 
@@ -987,7 +933,7 @@ to one loader run (one table), each business date one commit. `ready.all` moves 
 
 **You should see** one run with two files and two dates in **Last cycles**, and `ready.all` gone from the inbox.
 
-## Step 19 · A file that fails, and Retry
+## Step 18 · A file that fails, and Retry
 
 **The command line.** Drop a file whose name no rule matches:
 
@@ -1040,12 +986,12 @@ Load now: a cycle started (drishti.py dataload status shows it).
 ```
 
 **You should see** the file back in **Waiting**, then loaded in the next run (*1 loaded*) and gone from **Failures**. Drop
-the first file again (Step 16) and it is not loaded twice: it goes straight to the outbox as *already loaded in run …*, listed under
+the first file again (Step 15) and it is not loaded twice: it goes straight to the outbox as *already loaded in run …*, listed under
 **Duplicates today**.
 
 ![The Inbox screen: a failure with its reason and Retry (here a second file, endur.2026-09-24.jsonl.gz, dropped before rule 2)](img/t36/05-failure.jpg)
 
-## Step 20 · The outbox, the reports and the ledger
+## Step 19 · The outbox, the reports and the ledger
 
 Every loaded file ends in `outbox/<day>/<run>/` with its marker and its report; a failed one in `failed/<day>/<run>/` with
 `<file>.failed.json`; every step of every file is a line of the ledger.
@@ -1107,7 +1053,7 @@ ledger listing every step of all four files.
 
 ![The Inbox screen: duplicates, the routing rules and settings](img/t36/06-last-cycles.jpg)
 
-## Step 21 · Tidy up
+## Step 20 · Tidy up
 
 ```bash
 rm -rf data/tutorial-36                    # the scratch lake
@@ -1134,7 +1080,7 @@ listed companies) from the disk lake into the server's memory, watch the repleni
 refuses and what it allows, and go back. Each step shows the UI, the command line and the YAML behind it. The figures are those of the
 committed snapshot (71 headline sets, 20 quotes, 15 topics, 20 companies).
 
-## Step 22 · Point the news connector at memory
+## Step 21 · Point the news connector at memory
 
 **The YAML.** The store is a lake of its own (docs/guides/DATA_LAKE_GUIDE.md): copy its lake file, and the example connector over
 the pack's own:
@@ -1172,9 +1118,9 @@ reads *mem://news is held in memory only and is empty now*.
 
 ![Admin → Connectors: news-store reading mem://news](img/t31/01-connector.jpg)
 
-## Step 23 · Define the four tables' replenish jobs
+## Step 22 · Define the four tables' replenish jobs
 
-**The YAML.** The store's cap and contract are in its lake file (step 22). Append the jobs that fill its tables to `application.local.yaml`
+**The YAML.** The store's cap and contract are in its lake file (step 21). Append the jobs that fill its tables to `application.local.yaml`
 in the server's working folder (the repository, for the scripts):
 
 ```bash
@@ -1209,7 +1155,7 @@ python3 tools/lake/memory_caps.py
 
 **You should see** `memory_caps.py` print 512 (the server's own 256 MB plus the store's 256 MB) and the server start again with no error about the direct-memory limit.
 
-## Step 24 · Watch the warm-up fill the tables
+## Step 23 · Watch the warm-up fill the tables
 
 **The command line.**
 
@@ -1248,7 +1194,7 @@ memory, how much smaller they are than their rows, the version and the next refi
 
 ![Admin → Lakes, Held in memory only: the news store and its four tables](img/t31/02-lakes.jpg)
 
-## Step 25 · Read it as before
+## Step 24 · Read it as before
 
 **The UI.** Type `NEWS Apple`, `QUOTE AAPL`, `CO AAPL`: the pages are the same. Export data (`DATA`) lists the four datasets and
 downloads a day as `.jsonl.gz`, streamed from memory with no temporary file, audited as `data.download … memory-only data`.
@@ -1267,7 +1213,7 @@ python3 tools/drishti.py view get listed-company/CO-AAPL
 
 ![Export data: the news datasets, a day downloaded from memory](img/t31/05-data.jpg)
 
-## Step 26 · What the guard refuses
+## Step 25 · What the guard refuses
 
 **The UI.** Save a scheduled report on `NEWS where COUNT > 1` (My reports → New): it is refused, in words:
 
@@ -1289,7 +1235,7 @@ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appli
 
 **You should see** the save refused with `DRS-5219` and the contract named, and nothing of the news under the data folder.
 
-## Step 27 · Refill on demand, and after a restart
+## Step 26 · Refill on demand, and after a restart
 
 ```bash
 python3 tools/drishti.py lake memory refill news
@@ -1308,7 +1254,7 @@ pinned); while it runs the connector's health and the table's state say *refilli
 
 **You should see** a new run *by* you with the table's version one higher, and after a restart the warm-up runs again with `news` first.
 
-## Step 28 · The cap, eviction and Health
+## Step 27 · The cap, eviction and Health
 
 **The YAML.** Lower the cap to see the ladder: `max-mb: 1`. On the next refill the store frees old versions first, then evicts whole
 unpinned tables, least recently read first (`quote: held in memory only; evicted at 14:52 to make room, a refill is queued`), and
@@ -1323,7 +1269,7 @@ Put `max-mb: 256` back.
 
 ![Admin → Health, Busy protection: the news store's gauge beside the server's own](img/t31/06-health.jpg)
 
-## Step 29 · Go back to the disk lake
+## Step 28 · Go back to the disk lake
 
 ```bash
 rm config/connectors/news-store.yaml       # the pack's own connector reads data/delta/demo/news again
@@ -1348,7 +1294,7 @@ check that VaR is the same to the cent, see each table's format in Admin → Lak
 new format, and go back to Delta. Each step shows the UI, the command line and the YAML behind it; every output was captured on the
 committed test data.
 
-## Step 30 · Build the VaR data into Iceberg
+## Step 29 · Build the VaR data into Iceberg
 
 **From the command line.** The same `--only` list as the VaR tutorial, Part A, with `--store risk=iceberg`:
 
@@ -1392,7 +1338,7 @@ settings:
     …
 ```
 
-**In the UI.** Nothing to do yet; step 33 shows the tables, and [the VaR tutorial, step 26](../guides/VAR_GUIDE.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
+**In the UI.** Nothing to do yet; step 32 shows the tables, and [the VaR tutorial, step 26](../guides/VAR_GUIDE.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
 
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
@@ -1404,12 +1350,12 @@ see [the data lake guide, section 15.5](../guides/DATA_LAKE_GUIDE.md#155-check-i
 [../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:
 [DATA_LAKE_GUIDE.md section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
-## Step 31 · Publish the official results to Iceberg
+## Step 30 · Publish the official results to Iceberg
 
 The server captures every node of every hierarchy officially when a date loads, and appends the figures to
 `<root>/risk-results/var-official` for other systems ([VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)).
 Delta is the default; Iceberg is one setting. **A table keeps the format it was created in**, so give the Iceberg table a root of its
-own; the Iceberg root of step 30 is the natural one.
+own; the Iceberg root of step 29 is the natural one.
 
 **The YAML** (`application.local.yaml` in the server's working folder; [CONFIGURATION.md](../admin/CONFIGURATION.md)):
 
@@ -1439,18 +1385,18 @@ the publish refused in words, in `drishti.py var official` and the log:
 and the official format is iceberg: an official table keeps its format; give the new format another root (drishti.*.official.root)"
 ```
 
-With the root of the YAML above it publishes (step 32). A date already captured is not published again by a restart; the new format
+With the root of the YAML above it publishes (step 31). A date already captured is not published again by a restart; the new format
 applies from the next capture.
 
 **Further:** [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
 
-## Step 32 · Start the server and look at the connectors
+## Step 31 · Start the server and look at the connectors
 
 Start the server and the console as in tutorial 1, Part A, with the samples off (`DRISHTI_DEMO_ENABLED=false`). For Admin → Lakes to list the
 Iceberg tables too, give the console both roots: `DRISHTI_LAKE_ROOTS=data/delta/demo,data/iceberg`.
 
-**In the UI.** **Admin → Connectors**, filter `market-risk`: `risk-store` on **iceberg**, `var-results` on **iceberg** (after step 34).
+**In the UI.** **Admin → Connectors**, filter `market-risk`: `risk-store` on **iceberg**, `var-results` on **iceberg** (after step 33).
 
 ![Admin → Connectors filtered on market-risk: risk-store and var-results on iceberg](img/t29/02-connectors.jpg)
 
@@ -1468,15 +1414,15 @@ $ drishti.py var official
   … "nodes": 131 …, "published": true …
 ```
 
-**The YAML** is step 30's and step 31's.
+**The YAML** is step 29's and step 30's.
 
 **You should see** `risk-store` on `iceberg`, the official capture of 2026-09-30 with 131 nodes **published**, and the table
 `data/iceberg/risk-results/var-official` with its JSON Lines beside it (`data/iceberg/risk-results/jsonl/var-official/2026-09-30/var-official-v1.jsonl`).
-`var-results` still says `delta`: step 34 is about it.
+`var-results` still says `delta`: step 33 is about it.
 
 **Further:** [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (Admin → Connectors).
 
-## Step 33 · Each table's format in Admin → Lakes
+## Step 32 · Each table's format in Admin → Lakes
 
 **In the UI.** **Admin → Lakes**: the tables of both roots with a **Format** column.
 
@@ -1495,7 +1441,7 @@ tables are maintained here like the ones `drishti.py lake build --format iceberg
 
 **Further:** lake maintenance and its schedule are in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
 
-## Step 34 · BI's reader of the official results follows the format
+## Step 33 · BI's reader of the official results follows the format
 
 The market-risk pack's `var-results` connector (BI's `VOFF`) is `plugin: delta` in the pack; with `format: iceberg` the server reads
 that template as `plugin: iceberg` over `${drishti.var.official.root}`. The server reads the template where it is and writes no file:
@@ -1531,7 +1477,7 @@ settings:
 **Further:** [../guides/DATA_GUIDE.md section 9, "Connector layers"](../guides/DATA_GUIDE.md#connector-layers) (templates, overrides,
 files an earlier release left).
 
-## Step 35 · Back to Delta
+## Step 34 · Back to Delta
 
 **From the command line** (server stopped):
 
@@ -1542,7 +1488,7 @@ $ drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --stor
 ```
 
 **The YAML.** `risk-store.yaml` and `exposure-store.yaml` are removed (their text kept in the history), so the packs' own Delta
-connectors serve again; remove the `official` block of step 31 to publish to Delta again (the Iceberg official table stays where it is:
+connectors serve again; remove the `official` block of step 30 to publish to Delta again (the Iceberg official table stays where it is:
 a table keeps its format). A full build without `--store risk=…` also puts the risk domain back in Delta.
 
 **In the UI.** Admin → Connectors: `risk-store` on `delta`.
@@ -1577,9 +1523,9 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | *this Python lacks deltalake* | run the script with the console's Python (Before you start) |
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |
 | `VAR BANK` answers *no P&L vectors in any connector* | the server reads another Iceberg root: set `DRISHTI_ICEBERG_ROOT` to the folder beside your `--lake` |
-| `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 31) |
-| `var-results` stays `delta` | a site override names `plugin`: Admin → Connectors → var-results → **Reset** (step 34) |
-| Admin → Lakes lists no Iceberg table | the console's `DRISHTI_LAKE_ROOTS` lacks `data/iceberg` (step 32) |
+| `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 30) |
+| `var-results` stays `delta` | a site override names `plugin`: Admin → Connectors → var-results → **Reset** (step 33) |
+| Admin → Lakes lists no Iceberg table | the console's `DRISHTI_LAKE_ROOTS` lacks `data/iceberg` (step 31) |
 
 **Part A · A new lake of your own.**
 
@@ -1592,7 +1538,7 @@ More in the guide's [troubleshooting table](../guides/DATA_LAKE_GUIDE.md#8-check
 - A file fails with *... carries none (<table>.<YYYY-MM-DD>.jsonl.gz)*: its rule says `date-from: name` but the name has no date after a dot; rename it, or give `business-date:` in its `.ready`.
 - A file fails because it holds *lake rows* or *loader rows*: the inbox loads documents only (data guide, section 7.3).
 - **Load now** answers *skipped*: a run is still loading, or busy protection says the server is short of memory or disk; the files wait.
-- `drishti.py dataload` exits 3 (`DRS-1020`): the inbox is off on every server; turn it on (Step 14).
+- `drishti.py dataload` exits 3 (`DRS-1020`): the inbox is off on every server; turn it on (Step 13).
 
 **Part D · News held in memory only.**
 

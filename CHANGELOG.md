@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Compatibility shims removed (no customer, no tech debt).** The BI and tables migrators (`tables migrate`, `bi migrate`, the start-up
+  migration of stored items and of saved pivot formulas, `PivotFormulaMigration`), the DEL reader (`DelParser`, `DelToRachana`; the setting
+  `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,
+  `lake migrate-config`, the module API aliases (`ApiAlias`, `api.legacy`) and `EngineKeyAliases`, the users.json and notes imports, and the
+  one-time move of jars into the lib folder are gone. A file in an old form is refused with a message that names what to write instead; a
+  removed setting that is still set says so in one start-up line. The old-form test fixtures are read by a translator that lives in the
+  server's test tree only.
+
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
   taken from `drishti-tools` (`tools-net`, `tools-settings`, `tools-concurrent`, `tools-time`, `tools-testkit`, pinned once as

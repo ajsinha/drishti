@@ -1738,14 +1738,7 @@ results are published.
 load mode), read-only; a lake file the reader refuses is shown as the refusal. The API: `GET /api/v1/admin/lakes/files`
 (`?check=true` adds the comparison with the tables on disk).
 
-**Connectors by path to a lake file.** A connector that names its tables by path keeps working with no warning. To give such tables a
-lake file of their own (`lake migrate-config` is deprecated: a one-time move, retired in the next release):
-
-1. `python3 tools/drishti.py lake migrate-config` prints the lake files it would write (one per distinct root, named after the root's
-   last folder) and each connector rewritten to `lake: <name>`; nothing is written.
-2. `python3 tools/drishti.py lake migrate-config --write` writes them (an existing lake file is never overwritten).
-3. `python3 tools/drishti.py lake check` compares each lake file with its tables on disk.
-4. Restart the server. Nothing under the data folder changes.
+**Connectors by path to a lake file.** A connector that names its tables by path keeps working with no warning; write a lake file for such tables by hand (this section) and run `python3 tools/drishti.py lake check` to compare it with the tables on disk.
 
 ## 13. The in-memory lake
 

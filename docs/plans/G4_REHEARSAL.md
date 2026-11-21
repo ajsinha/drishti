@@ -241,3 +241,25 @@ Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. 
 | R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
 
 Note (g4/fixes-1): `drishti.py build jar` ran the server's tests and `LiveTablesAdapterTest` failed (4 tests: no table `position`, RCH-2081 on `TRADE_ID`, a problem-message text) against the lake lane's Rachana snapshot; not one of the four above, not investigated, not changed here.
+
+## Pass 3: shims (2026-11-21), on `g4/shims` from `wip/g4-rehearsal-rx` (`fd1b4a847`)
+
+Owner direction: no customers, so no compatibility code. Removed from the product (rows S1 to S7 of `I7B_DUPLICATES.md`; level 1.0 and Lake's LZ4 reader kept as listed there).
+
+| Row | Removed | Lines |
+|---|---|---|
+| S1 | `tables/migrate` (9 classes), `bi/migrate` (7), `StoredTablesMigration`, `PivotFormulaMigration`, the `migrate` command of `TablesCli` and `tablescli.py`, `bi migrate` of `bilang.py`, the setting `drishti.bi.migrate.*`; `PivotFormulaMigrationTest`, `StoredTablesMigrationTest`, `TablesMigratorTest`, `NullRuleTest`, `BoardMigrationApiTest` | about 4,300 |
+| S2 | the DEL reader: `DelParser`, `DelToRachana`, `DelAst`, `DelTablesTranslator`, the `Legacy` mode of `Expressions`, the setting `drishti.bi.expr.legacy`, `OLD_SYNTAX` | about 1,100 |
+| S3 | `LegacyNames` and its calls (`.uploads`, `.previous`) | 134 |
+| S4 | `LakeRelocateOnStart`, `tools/lake/relocate.py`, `lake relocate`, `drishti.lakes.relocate-on-start` | 330 |
+| S5 | `ApiAlias`, `ApiAliasFilter`, `api.legacy`, `EngineKeyAliases` (it aliased names nothing read) | 250 |
+| S6 | `lake migrate-config` (Python side) | 50 |
+| S7 | `LegacyImport` (users.json), `NoteImport`, `SharedLib.migrate` / `previousDefault` and its test, the `plugin-dir` default | 650 |
+
+**Messages kept (one line, what to do):** an old-form BI dataset or model (`DRS-9196`, `DRS-9614`) says to write it as a table or model; `drishti.sources.plugin-dir` and `drishti.external-lib`, when still set, log that they are no longer read; `lake build` says to delete a demo lake left in the older layout and build again.
+
+**Not done, and why (named, not deferred silently):**
+
+- The old-form test fixtures (about 55 server tests through `Layered` and `TablesFolder`, the 2.1 samples in `src/test/resources/bi`) are still translated by the migrator and the DEL reader, now **in `kernel/drishti-server/src/test/java` only** (about 3,000 lines, no product jar holds them). Removing them means rewriting those fixtures as tables and models: a lane of its own.
+- S6 `ConnectorManager`'s connectors defined in `application.yaml` (`props.connectors()` is also how the start-up loads connector files); `ConnectorLake.legacy()` and `LakesCli migrate-config` / `PersistedNames` / `LakeFiles` are in the Lake repository.
+- S7: `FormatSchemas` legacy format keys, the `NoteStore` table and `linkNote` (a schema-file change), the console redirects (`/bi/b/<id>` is still the address alerts link to) and `help.yaml` `aliases:`/`moved:`.

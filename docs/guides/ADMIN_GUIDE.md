@@ -1305,7 +1305,7 @@ WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in
       Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
 ```
 
-`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` are read as `drishti.sensitivities.*`. The in-memory lake is on when its
+`drishti.sensitivities.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings. The in-memory lake is on when its
 stores are configured in `application.local.yaml` (`drishti.lake.memory.stores`) and nothing sets its switch. To tidy up, move the engine
 keys from `application.local.yaml` to the engine's file; `drishti.py server engines show var --sources` says where each key comes from.
 
