@@ -292,3 +292,7 @@ as the other two have.
 
 Scratch: `~/.cache/drishti-lanes/fable-g3/` held the four clones, the scratch Maven repository, the probes and the logs; it is
 removed. Nothing was written to `~/.m2`, to `/tmp` by me, or to any product repository.
+
+## Decisions taken (lead, under the owner's delegation, 2026-11-21)
+
+All eight section-6 recommendations are accepted: a fragment used from a Sutra of another level is refused; Elements next is 3.3.0 (v3.2.0 stays at 787f97d); the files store is BUILT on S3 and memory (owner parity rule: build, not declare); Lake's drishti.* read-both is removed now; a lost concurrent replace fails on every store; newest load is by commit order, not clock; rachana-server may use tools-csv (Core stays dependency-free); a short re-check of the Rachana and Lake fix commits before tagging. Tools v1.0.0 is tagged now on a version commit over 3ef8e9d.
