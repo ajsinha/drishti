@@ -389,4 +389,4 @@ contracts lanes run beside it. About **10 to 12 working days** for the product w
 
 ## 14. Decisions taken (lead, under the owner's delegation, 2026-11-21)
 
-LK-1 to LK-8 and LK-10 to LK-16 are **accepted as recommended**. LK-9 (the Delta `hadoop` engine stays out of the product) is accepted **provisionally**: the owner is asked to confirm that no site uses `abfs://`, `gs://` or HDFS through it; until then the engine stays in Drishti untouched. R-1 is recorded in drishti-rachana `docs/design/DECISIONS.md` on `g2/integration` (2026-11-21): released jars into `~/.m2`, installed from the tag only.
+LK-1 to LK-8 and LK-10 to LK-16 are **accepted as recommended**. LK-9 is **confirmed by the owner (2026-11-21)**: the Delta `hadoop` engine (`EngineKind`, `HadoopLake`) is not in the product and is **retired from Drishti in G4** (one way to read Delta); Azure and GCS arrive later as `StorageProvider`s if ever needed. R-1 is recorded in drishti-rachana `docs/design/DECISIONS.md` on `g2/integration` (2026-11-21): released jars into `~/.m2`, installed from the tag only.
