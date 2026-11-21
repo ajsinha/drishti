@@ -400,3 +400,108 @@ bytes).
 4. **The owner** reads the Class B log, spot-checks one case in ten (22 cases), and approves. FORMAT 3 says a person flips it.
 5. A case that cannot be shown right is fixed or withdrawn, never flipped. After the flip the rule of C1 is 0 failing and 0
    unverified at the tag.
+
+## 10. Final confirmation
+
+Run on 2026-11-21, 15:01 to 15:20, on JDK 21, in fresh clones of my own (deleted afterwards). Judged from the code and my own
+runs. No product code was changed. G3 work is in the merged tree; it is judged here only for whether it blocks the G2 freeze.
+
+| Repository | Branch | Commit run |
+|---|---|---|
+| `drishti-rachana` | `g2/integration` | `3cf6fc49` (the head; still the head when I finished) |
+| `drishti-elements` | `g2/integration` | `4b7f406` (the head; still the head when I finished) |
+
+### 10.1 Verdict
+
+**GOLDEN.** Every item of 9.4 is closed in the code, every run is green with nothing skipped, and no case is unverified.
+Nothing in the merged G3 work blocks the freeze. One defect was confirmed in the upgrade tool (10.5); it belongs to G3 and must
+be fixed before G4 runs the upgrade, not before the G2 freeze.
+
+### 10.2 What I ran
+
+| Check | Result |
+|---|---|
+| `./mvnw clean verify` (in `java/`), fresh clone | green in 4 min 47 s: 1,136 Java tests, 44 Node tests, 0 skipped; four lanes green; temp gate green; clone clean afterwards |
+| Conformance lane | 2,685 cases in 133 files. Pass at 1.0: 2,028; at 1.1: 2,308; at 1.2: 2,522. JVM = Node at each level. 0 failing |
+| Protocol lane | reference 57 pass, Python host 57 pass (the 90 others are live-table cases neither serves), live server 147 of 147; 0 fail |
+| Python SDK lane | 98 passed, 0 skipped |
+| Chromium lane | view, forms, state, live edit, paint check, Studio: green (Playwright 1.64.0 pinned, browser installed by the lane) |
+| `tools/js/build_js.py` | green: runtime Brotli 514,869 (guard 537,812), tools 539,799 (guard 563,898); runtime = tools on every case at each level |
+| `tools/libraries/build.py --gallery` | green: LG1 to LG5 and LG8 pass, both libraries packed and verified, gallery 33 + 57 pages |
+| Elements `tools/run_tests.py` | green, nothing skipped: Node 390 + 35 budget tests alone; pytest 188 with `-n 8`, then 4 budget tests alone |
+| Elements pack | rebuilt from Elements `a40ca7e` with the documented command: byte for byte the pack Rachana vendors |
+
+One note on procedure: the Elements run started at machine load 33 (my own gallery build had just ended; I should have waited
+for 16). It was green all the same, which is the F18 failure case of 9.3 passing under the load that broke it.
+
+### 10.3 The items of 9.4 and 9.5
+
+| Item | Status | Evidence |
+|---|---|---|
+| 9.4 (1) F7, `file` on fragment problems | **closed** | 24 expected problems inside a fragment file carry `file` and `path` (`problem/fragments-calls#fragment-reads-only-its-parameters` names `peek.v1.fragment.yaml`, line 9); the lane passes them on every runtime |
+| 9.4 (2) F15, fire fixture | **closed** | the fixture names its Rachana commit (`f7f4cd8`) and is compared with that commit only; `conformance/1/fire` is unchanged from there to `3cf6fc49` |
+| 9.4 (3) F18 and the Playwright pin | **closed** | budget tests run alone after the parallel pass (Node and pytest); `playwright==1.64.0`; a skipped test fails `run_tests.py` |
+| 9.4 (4) F12 (b), F13 | **closed** | one program named `rachana` (the Node command; `pyproject.toml` has no console script); `bundle-size-guard.json` at measured + 5%, read by the build and the lane; the pack's manifest says `3.2.0-dev+a40ca7e`, as its folder does |
+| 9.4 (5) the base | **closed by 10.4** | `FROZEN.sha384` lists all 133 case files (state `pre-release`) |
+| 9.5 verification | **closed** | 0 of 2,685 cases unverified (counted from the files); `VERIFIED.md` logs each; sample below |
+| 9.5 SPEC 4.7, 4.13 (UTF-16 at 1.0), 7.2 (the tools' default), `rachana new` | **closed** | SPEC lines 544, 660 and the paragraph "The level of a Sutra and of a host" |
+| 9.5 the rest | **open, for the tag** | list in 10.6 |
+
+**The sample of the newer cases.** Of the 40 cases the builders verified last (12 `el/numbers-exact`, 16 code-fix and decision
+cases, 12 `el/aggregates-host-values`), I drew 30 at random (seed 20261121) and read each against the section it names, with the
+arithmetic recomputed: SPEC 4.14 rules 1, 2, 6; 4.16 rules 3, 4, 7, 8; 5.1; 2.4; PROTOCOL 3.1, 6.3, 16. **30 of 30 correct.**
+Checked by hand among them: `5 / 3` to 34 digits half to even; the sums `3.35`, `4.85` and the total average `1.8`; a sum of
+nothing `0` and `"0"`; the two error offsets (30 to 33, 16 to 19). With the 40 of 9.6, that is 70 of 70.
+
+### 10.4 The commits to freeze as the G2 base
+
+| Repository | Commit | Why this one |
+|---|---|---|
+| `drishti-rachana` | **`3cf6fc49`** | the commit every run above was made on. G2 was complete at `417f6af9`; the only change since is the libraries' `rachana:` key (92 files, all below `libraries/`) |
+| `drishti-elements` | **`4b7f406`** | the commit the suite ran on. The libraries themselves are unchanged since `a40ca7e`, the pack Rachana vendors |
+
+Put a branch or tag that no lane writes to on each (`g2/base`); G3 goes on from `g2/integration`.
+
+### 10.5 The upgrade tool and a fragment's `rachana:` key
+
+**It is a defect, and G4 needs it fixed before it runs the upgrade. It does not block the G2 freeze** (the tool is G3 work).
+
+What the code does (`Upgrade.java:105`): a Sutra's level is read from its key; a fragment's level is the `--from` option
+(default 1.0), its own key is never read and never written. I ran it on a Sutra and a fragment that calls `range(list, field)`:
+
+1. Run 1: the fragment's text becomes `span(...)` (level 1.2 text); its key still says `rachana: 1`.
+2. Run 2, same command: the fragment is **refused** ("unknown function 'span'" at 1.0), exit 1. The tool is not idempotent for
+   a fragment it rewrote.
+3. Run 3, after a level-1.1 sequence `sum(range(1, 4))` was written into that fragment: the tool **rewrites it to
+   `sum(span(1, 4))` and exits 0**. That changes the meaning of correct 1.2 text, silently.
+
+For Drishti's 42 corpus fragments: all say `rachana: 1`, none needs a rewrite today (6 carry review or info flags), so the first
+G4 run works, and `UpgradeCorpusTest` proves compile and bind identical. But afterwards the 478 Sutras say 1.2 and the 42
+fragments say 1, the 90 library fragments say 1.2 (set by hand), nothing records which fragments were upgraded, every later run
+repeats the flags, and case 3 above waits for the first fragment that uses `range`. The tree also says two things: the rule
+text says "a fragment declares none", and the libraries commit says "libraries declare level 1.2"; the compiler accepts the key
+in a fragment and ignores it; SPEC 2.1 rule 4 speaks of Sutras only.
+
+Recommended fix (one way, small): a fragment's `rachana:` key is the level its text is written for. SPEC 2.1 rule 4 says so;
+the tool reads the level from the key for both kinds, writes the new level into both, and leaves a file already at the target
+alone; `--from` goes. The compiler should then refuse a use across levels that would change meaning (a fragment above its
+Sutra's level is `RCH-2008`; a fragment below it is expanded and read at the Sutra's level today, with other arithmetic).
+Add the three runs above as tests.
+
+### 10.6 Before the Elements 3.2.0 tag and the `v1.0.0` tag
+
+Before **Elements 3.2.0**:
+
+- **Sync the ViewModel schema.** Elements' copy is pinned to Rachana `5d1b116`; Rachana's schema has since gained
+  `LiveRef.edit`, which Elements' own grid edit UI reads. The pin test checks only that the copy equals its pinned commit, so it
+  is green on a stale copy. Sync to the G2 base (`gen.py --sync --commit 3cf6fc49`).
+- **Move the two test pins to the G2 base** and run again: the fire fixture (`f7f4cd8`; cases identical, so only the pin
+  moves) and the live host (`7b1f5e4`, older than the code fixes CF-1 to CF-5 in `rachana-live`).
+- `elements/drishti_elements.json` says `3.1.0`; the changelog's `Unreleased` becomes 3.2.0. Then Rachana vendors the tagged
+  pack (label `3.2.0`).
+
+Before **`v1.0.0`** (unchanged from 9.5, still open): real versions (`0.11.0-SNAPSHOT`, `0.11.0.dev0`); record
+`compat/levels/1.1` and `1.2` and release contracts 1.1 and 1.2; `FROZEN.sha384` to `released` and
+`everyCaseFileOfTheSuiteIsListedAtRelease` made to assert (it still ends in `assertNotNull`); FORMAT 3's sentence on `until`;
+`LIVE_TABLES.md:202` (`RCH-2058` where SPEC says `RCH-2060`); a test with a symbolic link for the static files; the `Map.of`
+guard over `rachana-data` and `rachana-live`; F14; the fix of 10.5.
