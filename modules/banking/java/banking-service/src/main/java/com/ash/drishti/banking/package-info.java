@@ -19,8 +19,7 @@
  * ({@code official}); their maths is in drishti-compute-banking ({@code com.ash.drishti.banking.compute}).
  *
  * <p>The rules (ArchitectureRulesTest): the core never imports this package; this module reaches the core through its SPIs and public
- * services ({@code PivotSourceProvider}, {@code CacheGroup}, {@code CapacityFigures}, {@code HealthFigures}, {@code OfficialResults},
- * {@code ApiAlias}); another domain never imports it. Loaded by {@link com.ash.drishti.banking.BankingAutoConfiguration} only while the
+ * services ({@code PivotSourceProvider}, {@code CacheGroup}, {@code CapacityFigures}, {@code HealthFigures}, {@code OfficialResults}); another domain never imports it. Loaded by {@link com.ash.drishti.banking.BankingAutoConfiguration} only while the
  * access registry says the module is on.
  */
 package com.ash.drishti.banking;

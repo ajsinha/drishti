@@ -28,8 +28,7 @@ import org.springframework.context.annotation.FilterType;
  * switch), nothing below exists: no bean, engine, job or API of VaR, exposure, FRTB-SA, SIMM, sensitivities, the MR cube or the official
  * results.
  *
- * <p>The API moved under {@code /api/v1/risk}; the old prefixes are answered as the new ones for this release ({@link ApiAlias}), then
- * removed.
+ * <p>The API is under {@code /api/v1/risk}.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(RiskLimits.class)         // drishti.risk.limit-near: one rule for every limit (RiskLimits)

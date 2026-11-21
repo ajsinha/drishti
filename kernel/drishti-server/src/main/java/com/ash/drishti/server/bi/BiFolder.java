@@ -359,7 +359,7 @@ public final class BiFolder implements AutoCloseable {
             if (converted == null) {
                 LOG.warn("BI folder: {} is a 2.3 board that does not parse, so it is not read as a report with board pages; its problems show on its item page", file.getFileName());
             } else {
-                LOG.info("BI folder: {} is a 2.3 board, read as the report file:report:{} (convert the file with drishti.py bi migrate --boards {})", file.getFileName(), name, file);
+                LOG.info("BI folder: {} is a 2.3 board, read as the report file:report:{}", file.getFileName(), name);
                 kind = "report";
                 text = converted;
             }
