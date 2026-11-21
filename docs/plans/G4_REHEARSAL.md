@@ -282,6 +282,19 @@ Also fixed at the cause: `NodeLowering` threw a null pointer for `rank()` (a win
 - Lake `PersistedNames` read-both (`drishti.*` then `lake.*`): the check of the owner's Linux stack lake folders (read-only) was refused by the sandbox, so whether those lakes carry the old names is not known. Not removed.
 - `LoadConfig`'s "target.lake is a folder: read this way for one more release" and `CollabImport` (the jpa and file stores into the content store) are further shims of the same kind: not in the list; named here.
 
+### Part 3 (2026-11-21, `g4/shims-3` from `wip/g4-rehearsal-rx` with `g4/shims`, built against Drishti Lake `main` and Rachana `develop` from a scratch repository)
+
+| Item | Done |
+|---|---|
+| S6 connectors in `application*.yaml` | The seven store profiles are deleted. Their connectors already existed as files, one per domain, in `config/connectors.examples/<store>/` (compared setting by setting: the files carry the same values and, besides, the reference kinds' modes and the lake form of Iceberg), so the conversion is the deletion. `drishti.py start server --<store>` and the benchmark scripts (`tools/bench/scale.sh`, `pinning.sh`, whose RabbitMQ connector is now a file of its own) read the folder with `DRISHTI_CONNECTORS_DIR`. The `connectors:` entry and its deprecation text left `application.yaml`; `StoreProfilesTest` reads the postgres example files. Docs: DATA_GUIDE 9.11 and the store sections, OPERATIONS, DEVELOPER, the file connector README, CONFIGURATION (a Stores section; regenerated). |
+| S7 `CollabImport` | Deleted with its test and the DATA_ARCHITECTURE paragraph; the content stores it also held are now `CollabContent`. |
+| S7 `target.lake` as a folder | The Drishti side holds nothing of it (the CLI reference no longer names it). The code is Lake's: `lake-load` `LoadConfig`, the `warnOnce("target.lake ... is a folder ...")` branch: to remove in Drishti Lake. |
+| Help anchors | The 17 broken anchors of `test_help_links` came from five causes: an unclosed code fence in CLI_REFERENCE before section 13 (it swallowed the headings of 13 and 14, so `#13-the-risk-engines-...` and `#var-the-var-engine` vanished); the renamed headings of DATA_ARCHITECTURE 3 and 10, ARCHITECTURE 30.2 and DATA_LAKE_GUIDE 7, now named as they are; DATA_GUIDE no longer linking the `delta` section of CONFIGURATION. `test_help_links` is green. |
+| Lake jars | Drishti builds against Drishti Lake `main` (with `lake-bom`). The one removed API in use was `ConnectorLake.legacy`; its caller `ConnectorLayers` no longer treats a file in the explicit-path form specially. |
+| `rank(x, 'sideways')` | **Not re-added.** Rachana `develop` refuses it only from language level 1.1 (`CatalogueArgs`); the server runs level 1.0 (kept on purpose), which keeps the reference's acceptance. The case returns with the move to level 1.1. |
+
+**Not done, named:** `drishti.sources.connectors.<name>.*` as a property (the overlay the cluster launcher's `enabled=false` flags and about 70 tests use) still binds and still warns; removing it means every one of those tests defining its connector as a file. The other one-time imports (`BiImport`, `DesignImport`, `RunImport`, `ProposalStore`, `LoadsConfig`, `EmbedAppRows`, the audit import) are the same kind of shim as `CollabImport` and are not in this part. `PersistedNames` (Lake) is as in part 2. `test_docs_rot` has five failures that were there before this part (paths and headings moved by earlier passes: the Rachana package paths, `tables migrate` and `bi migrate` still named in two documents, links to removed engine headings).
+
 ## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
 
 The switch of Drishti's LiveSet engine to Rachana's live tables (I7B_DUPLICATES L1, DD-6, LIVE_TABLES section 11), front-loaded into G4
