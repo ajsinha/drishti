@@ -285,8 +285,6 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 plainAll.put(p.manifest().name(), p);
             }
         }
-        // The providers' holder initialised here, once, before the connectors start side by side (a Delta connector's start reads it).
-        LOG.debug("{} storage provider(s) loaded", com.ash.drishti.lakeio.StorageProviders.load());
         // The connectors start side by side on a bounded pool of PLATFORM threads, never virtual ones: a start loads classes
         // from the server jar and initialises holders, and a virtual thread doing either pins its carrier. With as many
         // connectors as carriers (parallelism = the core count), the pinned threads waited on locks held by unmounted

@@ -22,7 +22,7 @@
   the server jar and initialises class holders, and a virtual thread doing either holds its carrier thread, so on a laptop with few cores
   every carrier was held and the start-up stopped after *connector … waits for the modules to load*. `SourceRegistry` now starts the
   connectors on a bounded pool of platform threads (`drishti-source-start-*`), its shared scheduler runs on platform threads, and the
-  storage providers are loaded before the connectors start. A forked-JVM test starts the registry with one carrier thread. The
+  storage providers are loaded with the Delta and Iceberg plugin classes, before the connectors start. A forked-JVM test starts the registry with one carrier thread. The
   workaround for older builds (`-Djdk.virtualThreadScheduler.parallelism=64`, `maxPoolSize=256`) is in IDE_GUIDE and OPERATIONS_GUIDE
   section 21.
 - **CSV loaders, wave 2: the exposure masters (step 5).** Mappings, samples and pages for `counterparty-group`, `counterparty` (KYC as a nested record), `agreement` (elections), `csa` (eligible collateral, optional child file), `netting-set`, `collateral-balance` (holdings), `credit-limit` (tenor buckets) and `trade-valuation`; the links that change a number (a set's CSA and counterparty, a valuation's or a balance's netting set, a limit's counterparty) refuse the day.

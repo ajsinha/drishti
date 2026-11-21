@@ -77,6 +77,10 @@ import java.util.concurrent.TimeUnit;
  */
 public final class DeltaSourcePlugin implements SourcePlugin {
 
+    // The storage providers loaded with this class, on the thread that discovers the plugins, so no connector's start waits on
+    // their holder's initialisation while the connectors start side by side.
+    private static final int PROVIDERS = com.ash.drishti.lakeio.StorageProviders.load();
+
     /**
      * A partition of one table version. The version's commit time is part of the key: a table removed and written again (lake demo, a
      * rebuild) starts its versions at 0 again, so the number alone would serve the old table's ids, documents and columns.

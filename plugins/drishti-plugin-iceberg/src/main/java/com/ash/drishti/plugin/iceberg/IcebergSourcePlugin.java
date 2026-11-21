@@ -92,6 +92,10 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class IcebergSourcePlugin implements SourcePlugin {
 
+    // The storage providers loaded with this class, on the thread that discovers the plugins, so no connector's start waits on
+    // their holder's initialisation while the connectors start side by side.
+    private static final int PROVIDERS = com.ash.drishti.lakeio.StorageProviders.load();
+
     private record SnapKey(String kind, long snapshotId) {}
 
     /** A business date's files of a kind: the key of everything read from them. */
