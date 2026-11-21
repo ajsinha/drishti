@@ -70,11 +70,11 @@ class RachanaListAnalyticsTest {
     }
 
     @Test
-    void theyAreTheEnginesListFunctions() {
+    void theyAreCoresListFunctions() {
         for (String n : List.of("cumsum", "cumprod", "cummax", "cummin", "movsum", "movmean", "movstd", "movmedian", "maxk", "mink", "bounds",
                 "zscore", "rescale", "isoutlier", "polyfit")) {
-            Functions.Entry e = Functions.catalogue().stream().filter(x -> x.name().equals(n)).findFirst().orElseThrow();
-            assertThat(e.source()).as(n).isEqualTo(EngineFunctions.SOURCE);
+            Functions.Entry e = com.ash.drishti.rachana.DrishtiRachana.current().functions().catalogue().stream().filter(x -> x.name().equals(n)).findFirst().orElseThrow();
+            assertThat(e.source()).as(n).isEqualTo(com.ash.rachana.agg.CoreAggregates.INSTANCE.source());   // Core's kernel (8.3h)
             assertThat(e.family()).as(n).isEqualTo("lists");
             assertThat(e.form()).as(n).isEqualTo("list");
         }

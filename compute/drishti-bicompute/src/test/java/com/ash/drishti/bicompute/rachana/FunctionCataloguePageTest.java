@@ -84,7 +84,7 @@ class FunctionCataloguePageTest {
             }
         }
         Set<String> registered = new TreeSet<>();
-        Functions.catalogue().forEach(e -> registered.add(e.name()));
+        com.ash.drishti.rachana.DrishtiRachana.current().functions().catalogue().forEach(e -> registered.add(e.name()));
         Set<String> windows = new TreeSet<>();
         com.ash.drishti.kernel.api.pivot.Windows.FUNCTIONS.forEach(w -> windows.add(w.name()));
         assertThat(windows).as("every share, rank and window of the pivot is in FUNCTION_CATALOGUE.md").allMatch(mentioned::contains);

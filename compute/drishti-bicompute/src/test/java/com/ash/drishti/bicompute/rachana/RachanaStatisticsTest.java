@@ -63,12 +63,11 @@ class RachanaStatisticsTest {
     }
 
     @Test
-    void theStatisticsAreRegisteredFromTheEngine() {
+    void theStatisticsAreCores() {
         for (String n : List.of("nmiss", "range", "mode", "iqr", "stderr", "cv", "skewness", "kurtosis", "geomean", "harmean", "trimmean",
                 "corr", "covar", "slope", "intercept", "rsq", "kth_largest", "kth_smallest", "string_agg")) {
-            Functions.Entry e = Functions.catalogue().stream().filter(x -> x.name().equals(n)).findFirst().orElseThrow();
-            assertThat(e.source()).as(n).isEqualTo(EngineFunctions.SOURCE);
-            assertThat(e.runs()).as(n).isEqualTo("E");
+            Functions.Entry e = com.ash.drishti.rachana.DrishtiRachana.current().functions().catalogue().stream().filter(x -> x.name().equals(n)).findFirst().orElseThrow();
+            assertThat(e.source()).as(n).isEqualTo(com.ash.rachana.agg.CoreAggregates.INSTANCE.source());   // Core's kernel (8.3h)
             assertThat(e.form()).as(n).isIn("mergeable", "holistic");
         }
     }

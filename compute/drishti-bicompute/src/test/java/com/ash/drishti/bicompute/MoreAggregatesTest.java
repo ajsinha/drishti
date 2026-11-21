@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.ash.drishti.bicompute.functions.Functions;
-import com.ash.drishti.bicompute.functions.MoreAggregates;
 import com.ash.drishti.bicompute.harness.FunctionHarness;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
@@ -69,8 +68,8 @@ class MoreAggregatesTest {
         assertThat((Double) run(fn("percent_rank_of", 8), pr)).isEqualTo(0.666);
         assertThat((Double) run(fn("percent_rank_of", 5), pr)).isEqualTo(0.583);
         assertThat((Double) run(fn("percent_rank_of", 5, 5), pr)).isEqualTo(0.58333);
-        assertThat(text(new MoreAggregates.ModeMulti(), "1", "2", "3", "4", "3", "2", "1", "2", "3", "5", "6", "1")).isEqualTo("1, 2, 3");   // MODE.MULT
-        assertThat(text(new MoreAggregates.ModeMulti(), "EUR", "USD", "EUR", "USD", "GBP")).isEqualTo("EUR, USD");
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.MoreAggregates.ModeMulti()), "1", "2", "3", "4", "3", "2", "1", "2", "3", "5", "6", "1")).isEqualTo("1, 2, 3");   // MODE.MULT
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.MoreAggregates.ModeMulti()), "EUR", "USD", "EUR", "USD", "GBP")).isEqualTo("EUR, USD");
     }
 
     @Test
@@ -91,7 +90,7 @@ class MoreAggregatesTest {
         assertThat(fn("percentile_exc", 0.01).emptyNote()).contains("#NUM!");
         assertThat((Double) run(fn("rank_avg", 7), new double[] {1, 2})).isNull();                         // not among them: #N/A
         assertThat((Double) run(fn("percent_rank_of", 20), new double[] {1, 2})).isNull();
-        assertThat(text(new MoreAggregates.ModeMulti(), "1", "2", "3")).isNull();                           // nothing repeats
+        assertThat(text(com.ash.drishti.bicompute.functions.CoreAggregate.of(new com.ash.rachana.agg.MoreAggregates.ModeMulti()), "1", "2", "3")).isNull();                           // nothing repeats
         assertThatThrownBy(() -> fn("percentile_exc", 1.0)).hasMessageContaining("exclusive");
         assertThatThrownBy(() -> fn("rank_avg")).hasMessageContaining("the value to rank");
         assertThatThrownBy(() -> fn("percent_rank_of", 1, 0)).hasMessageContaining("significant digits");

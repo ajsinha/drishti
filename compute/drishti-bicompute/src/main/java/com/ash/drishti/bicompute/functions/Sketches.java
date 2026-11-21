@@ -90,16 +90,17 @@ public final class Sketches {
 
     /** True when a function has an ≈ form (an exact distinct count or quantile of the built-ins). */
     public static boolean hasSketch(AggFunction<?> f) {
-        return f instanceof Builtins.Distinct || f instanceof Builtins.Quantile;
+        return f instanceof CoreAggregate c && (c.core() instanceof com.ash.rachana.agg.Builtins.Distinct || c.core() instanceof com.ash.rachana.agg.Builtins.Quantile);
     }
 
     /** The ≈ form of a call (same inputs and label, its id marked), or empty when it has none. */
     public static java.util.Optional<com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall> approximate(
             com.ash.drishti.kernel.api.pivot.AggregationPlan.FunctionCall f) {
         AggFunction<Object> s;
-        if (f.fn() instanceof Builtins.Distinct) {
+        com.ash.rachana.agg.Aggregate<Object> core = f.fn() instanceof CoreAggregate c ? c.core() : null;
+        if (core instanceof com.ash.rachana.agg.Builtins.Distinct) {
             s = new ApproxDistinct();
-        } else if (f.fn() instanceof Builtins.Quantile q) {
+        } else if (core instanceof com.ash.rachana.agg.Builtins.Quantile q) {
             s = new ApproxQuantile(q.name(), q.q());
         } else {
             return java.util.Optional.empty();
