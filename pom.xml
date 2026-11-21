@@ -188,6 +188,7 @@
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-core</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-tools</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-data</artifactId><version>${drishti.rachana.version}</version></dependency>
+      <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-live</artifactId><version>${drishti.rachana.version}</version></dependency>
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-api</artifactId><version>${drishti.lake.version}</version></dependency>
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-io</artifactId><version>${drishti.lake.version}</version></dependency>
       <dependency><groupId>com.ash.lake</groupId><artifactId>lake-config</artifactId><version>${drishti.lake.version}</version></dependency>
