@@ -18,6 +18,18 @@
 
 ## Unreleased
 
+- **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
+  and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
+  taken from `drishti-tools` (`tools-net`, `tools-settings`, `tools-concurrent`, `tools-time`, `tools-testkit`, pinned once as
+  `drishti.tools.version` through `tools-bom`), and the copies are deleted (the module `drishti-settingsfile` with them). The names Drishti hands
+  the tools (the settings file's property, the install folder's setting, the variable that allows an insecure TLS trust, the site proxy's keys, the
+  loaders' business-zone variable) are in one place, `DrishtiTools`. The exports, the pivot export, the playgrounds' books and the capacity
+  workbook are written by `tools-xlsx` (`ExportWorkbook` lays an export out on it; `PlaygroundWorkbook` gives it a template's look, properties and
+  branding footer; the capacity planner fills a `WorkbookTemplate`). A sheet name with an `&` no longer breaks a chart part, every sheet name is
+  valid and unique, and every formula of the pivot export is checked like the playgrounds'. The FRTB playground wrote some cells of a row out of
+  column order; the shared writer refuses that, so the header and the term cells are written in column order now. The key identity of the TLS test
+  fixture is `client` (was `drishti`).
+
 - **The server starts on a machine with few cores.** The connectors started side by side on virtual threads; a start loads classes from
   the server jar and initialises class holders, and a virtual thread doing either holds its carrier thread, so on a laptop with few cores
   every carrier was held and the start-up stopped after *connector … waits for the modules to load*. `SourceRegistry` now starts the

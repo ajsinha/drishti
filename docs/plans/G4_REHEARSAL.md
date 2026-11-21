@@ -105,3 +105,63 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name `DRISHTI_DELTA_ENGINE`; the capacity workbook's setting names | D7 | Drishti | M |
 | R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
 | R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |
+
+## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
+
+### What was done
+
+Drishti Tools (`github.com/ajsinha/drishti-tools`, `main` at `b3a451d`, no tag yet: `1.0.0-SNAPSHOT`) built into a scratch Maven repository, pinned once as
+`drishti.tools.version` and imported through `tools-bom`. Taken from it, with the copies deleted:
+
+| Tools module | What Drishti no longer carries | Where Drishti's names go |
+|---|---|---|
+| `tools-net` | TLS (`TlsContexts`, `TlsSettings`, `TlsMaterial`, `PemReader`, `Der`, `CertInfo`, `TlsHttp`), the proxy (`ProxySettings`, `NoProxy`, `SiteProxy`) | `DrishtiTools`: the variable `DRISHTI_ALLOW_INSECURE_TLS`, the site proxy's `drishti.http.proxy.` |
+| `tools-settings` | `Placeholders`, `SettingsFile`, `SettingSpec`, `Secrets`, the module `drishti-settingsfile`; `Roots.anchorValue` is `PathAnchors` | `DrishtiTools.applySettingsFile()`: `drishti.settings.file`, `${drishti.home}` |
+| `tools-concurrent`, `tools-time` | `SingleFlight`, `LoadGuard` | `DrishtiTools.loadGuard(args)`: business zone from `LAKE_BUSINESS_ZONE` (the lake pass's variable) |
+| `tools-testkit` | `FakeProxy`, `TlsFixture`, `TestPki` | the TLS test identity is `CN=client` and key alias `client` (was `drishti`) |
+| `tools-xlsx` | the four writers: `XlsxWriter` + `XlsxCharts` + `XlsxFormulas`, the pivot export's `Xlsx`, the playgrounds' `SheetStream` + `WorkbookStream`, `CapacityWorkbook`'s own zip | `ExportWorkbook` (an `ExportDoc` laid out on the writer), `PlaygroundWorkbook` (template look, properties, branding footer), `CapacityWorkbook` (cells of a `WorkbookTemplate`), `PivotExport` |
+
+Lines: 26 main files and 7 test files deleted (4,065 and 1,077 lines); the branch adds 1,455 (the adapters, `DrishtiTools`, the comparison tool, the guard);
+net -4,392. `SharedToolsGuardTest` holds it: no main source carries a copy or writes workbook parts.
+
+### The xlsx proof
+
+Every workbook Drishti's tests make was written on the parent commit and on the new code (60 workbooks: the exports with every chart kind, the statement with
+its print set-up, the pivot export, the capacity workbook, the VaR, Parametric VaR, Explain, FRTB and SIMM playground books, the VaR basket and the
+regulatory sign-off), read with Apache POI and compared cell by cell and formula by formula, then by sheet and by style (`tools/xlsx_before_after/XlsxCompare.java`;
+the capture hook was a temporary patch of the tests, not kept). Cell values, cell types, formulas (text and cached result), merges, freeze panes, column widths,
+outline levels, drop-downs, conditional formats, print set-up, defined names, charts (kind and references) are **equal in all 60**. Every difference:
+
+| Difference | Count | Reason |
+|---|---|---|
+| Default row height written (15) where there was none; playgrounds 14 to 15 | 327 sheets | the shared writer's default (Excel's own) |
+| The first sheet is the selected tab (the playgrounds selected the sheet called `Main`, the exports none) | 28 sheets | no sheet name in the writer |
+| Print-titles defined name `'MTM'!$1:$1` written `MTM!$1:$1` | 2 | the quotes are written only where a name needs them; the same reference |
+| Pivot export's header fill `DCE6F1` and title 14 pt are the exports' `EEF1F5` and 16 pt | 24 cells | one standard look for the four writers |
+| Provenance rows: a run's timing (`computeMs`), the order of the data-version lines (a set) | 6 cells | the runs, not the writer (the same on two runs of the old code) |
+
+Noise the comparison removes, each shown to come from the run and not from the writer: timestamps and run ids; the product name the tests install into a JVM-wide
+global; the capacity workbook's live figures; and the order of the FRTB Config rows, which is a set's iteration order and differs between two runs of the *same* code
+(the comparison matches those rows by parameter name and writes each formula's `Config!$B$n` by the name).
+
+The three bugs the tools fixed did not occur in the 60 (no sheet name with an `&`, no invalid name, no pivot formula outside the common set): a test now holds
+the `&` (`XlsxChartsTest`), the other two are the tools' own tests. **The `SCATTER` chart type the tools dropped is used by no caller**: Drishti's chart kinds are
+bar, column, line, area, pie and doughnut (any other visual is columns), as before.
+
+### Findings
+
+| # | Finding | Action |
+|---|---|---|
+| T1 | The FRTB playground wrote some cells of a row out of column order (the Classes header row's term cells, the Curvature bucket header and term cells): invalid for the file format, accepted by the old writer | fixed in `FrtbPlaygroundBook`; the shared writer refuses it, so any new book is caught |
+| T2 | The FRTB Config sheet's row order changes from run to run (a set's iteration order; the workbook is right either way) | not changed; a book's bytes are not reproducible for FRTB; worth an ordered set |
+| T3 | Tests that assert the old writer's raw XML (`s="3"`, `<v>92000.0</v>`, `chart2.xml`) | made independent of style indexes and part numbers (`DistApiTest`, `PivotExportTest`, `XlsxChartsTest`) |
+| T4 | The settings catalogue (`tools/settings_catalogue.py`) read `TlsSettings.java` and `ProxySettings.java` from `drishti-api`; they are in the tools now | reads a checkout of Drishti Tools (`DRISHTI_TOOLS_HOME`, else the folder next to this repository); the two texts the tools parametrise are filled with Drishti's names. `--check` was not run: it needs the kernel jar |
+| T5 | The SDK's `repo/` (a file repository of `drishti-api` and what it needs) must now carry the tools jars | **open**: `tools/launch/sdkbuild.py` lost its `drishti-settingsfile` entry; copying `com/ash/tools/*` from the build's repository into `repo/` needs a decision on how the tools are distributed |
+| T6 | `Secrets` outside TLS throws the tools' `SettingException`, not `TlsException` | no caller catches the old type (the build and the tests show it) |
+| T7 | Tools has no tag: `1.0.0-SNAPSHOT` from a scratch repository, as Rachana and Lake | pin to the tag when it exists |
+| T8 | `SimmPlaygroundWorkbookTest` fails in `setUp` alone (the banking module is not among the modules the boot gave the process); `TestPathsGuardTest` (`LanguageLevelGuardTest` builds a path from `..`) and `PivotFormulaMigrationTest` (the printer writes `and` for `&&`) fail | unrelated to this pass (they name `LanguageLevelGuardTest` and the Rachana printer, P10 above); `SimmPlaygroundWorkbookTest` failed the same way before it; none touched |
+
+Green: the TLS and proxy tests of the connectors, lake storage and AI, the settings and placeholder tests, the loaders, `NamedResources`, the settings catalogue,
+the pivot and export tests, the capacity workbook, the VaR, FRTB, SIMM playground and API tests, `SharedToolsGuardTest`; the VaR and ES goldens are untouched (no
+engine or test-data file changed). Build: `mvn` with a scratch `-Dmaven.repo.local` holding Drishti Tools, Rachana and Lake snapshots; nothing installed in `~/.m2`.
+
