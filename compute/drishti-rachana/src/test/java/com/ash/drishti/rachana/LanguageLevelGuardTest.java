@@ -29,7 +29,7 @@ class LanguageLevelGuardTest {
 
     @Test
     void noOtherMainCodeBuildsAnInstanceOrPicksALevel() throws IOException {
-        Pattern bad = Pattern.compile("Rachana\\.(core|with)\\(|\\.language\\(\"|Grammar\\.DEFAULT_LEVEL|new\\s+(?:com\\.ash\\.rachana\\.parse\\.)?SutraParser\\(");
+        Pattern bad = Pattern.compile("Rachana\\.(core|with|at)\\(|\\.language\\(\"|Grammar\\.DEFAULT_LEVEL|new\\s+(?:com\\.ash\\.rachana\\.parse\\.)?SutraParser\\(");
         Path root = Path.of("..", "..").toAbsolutePath().normalize();
         List<String> offenders;
         try (Stream<Path> files = Files.walk(root)) {

@@ -156,6 +156,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
                 .build();
-        return Rachana.with(options, Profile.core(), drishti).language(level);   // never the tools' default (1.2)
+        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call, never the tools' default (1.2)
     }
 }
