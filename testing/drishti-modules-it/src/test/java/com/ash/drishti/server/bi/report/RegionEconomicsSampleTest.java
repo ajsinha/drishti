@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.report;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.drishti.server.bi.Layered;
+import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -51,7 +51,7 @@ class RegionEconomicsSampleTest {
     }
 
     private static Dataset dataset() throws IOException {
-        DatasetParser.Result r = Layered.dataset(Files.readString(ReportParserTest.DATASETS.resolve("region-economics.dataset.yaml")));
+        DatasetParser.Result r = Tables.sample("region-economics");
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return r.dataset();
     }
@@ -80,7 +80,7 @@ class RegionEconomicsSampleTest {
         ReportParser.Result r = ReportParser.parse(ReportParserTest.report("region-economics"));
         assertThat(r.problems().stream().filter(ReportParser.Problem::error).toList()).isEmpty();
         assertThat(r.report().sample()).isTrue();
-        assertThat(r.report().dataset()).isEqualTo("region-economics");
+        assertThat(r.report().dataset()).isEqualTo("model:region-economics@1");
         assertThat(ReportValidator.validate(r.report(), dataset())).isEmpty();
         List<Report.Visual> visuals = r.report().page("regions").visuals();
         assertThat(visuals).extracting(Report.Visual::type).containsExactly("text", "slicer", "map", "bar", "table");
