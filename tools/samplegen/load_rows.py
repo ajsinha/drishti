@@ -34,7 +34,9 @@ A row (one JSON object a line, UTF-8):
 
 A row whose own ``date`` differs from the date it is stored under is counted and said (as lake build says it), never moved.
 
-Every table named in --rows is written afresh: its rows, every business date, in the layout its pack declares (samplegen/layout.py:
+``--format iceberg`` writes the same tables into Apache Iceberg through Drishti Lake's one loader (``tools/lake/loaderows.py``; the server's
+exec jar or LAKE_CLASSPATH): one load a table, each business date replaced, the corrections applied before it. Every table named in --rows
+is written afresh: its rows, every business date, in the layout its pack declares (samplegen/layout.py:
 promoted columns, sorted, files of file-rows). Each --restated input is a second commit on top: its rows replace the rows of the same
 id on their date, so time travel ("as known at") shows the correction. A restated row's table must be in --rows of the same run.
 Every input is read and checked before anything is written; then each table is written, and a line per table says its rows, its files
@@ -54,7 +56,7 @@ import archives  # noqa: E402  (tools/lake/archives.py: the archive rule every l
 import feedroute  # noqa: E402  (a file's .ready file)
 import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate  # noqa: E402  (the load rules: a name's table and date, a tar's layout)
-from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
+from samplegen.layout import Layout, layouts_for_domain, promote, write_days, write_partition  # noqa: E402
 
 SEND_A_TAR = "a file is one table and one business date (docs/guides/DATA_LAKE_GUIDE.md): send a tar of <table>/<YYYY-MM-DD>/ folders"
 
@@ -132,11 +134,33 @@ def _layout(domain: str, table: str, kind: str, layouts) -> Layout | None:
     return found.get(table) or found.get(kind)
 
 
+def _write_iceberg(path: pathlib.Path, domain: str, table: str, kind: str, by_day: dict, lay: Layout | None, work: pathlib.Path, settings,
+                   jar: str | None, java: str | None, say) -> None:
+    """One table into Iceberg through the one loader (``loaderows``: Drishti Lake's ``DrishtiLakeCli load``): each business day replaced, the
+    layout's promoted columns beside the document."""
+    import loaderows
+
+    def lines():
+        for d, rs in sorted(by_day.items()):
+            for i, body, doc in rs:
+                cols = promote(doc, lay) if lay and doc is not None else {}
+                yield json.dumps({"domain": domain, "kind": kind, "id": i, "date": d.isoformat(), "doc": body, "columns": cols},
+                                 ensure_ascii=False, separators=(",", ":"))
+    try:
+        loaderows.load(lines(), path.parent.parent, domain, table, work / table, "iceberg", settings=settings, jar=jar, java=java, say=say)
+    except loaderows.LoadError as e:
+        raise SystemExit(f"{domain}/{table}: the Iceberg load did not finish: {e}") from None
+
+
 def load(rows: list[pathlib.Path], root: pathlib.Path, restated: list[pathlib.Path] = (), layouts=None, say=print,
-         as_of: date | None = None) -> int:
+         as_of: date | None = None, fmt: str = "delta", work: pathlib.Path | None = None, iceberg_set=(), jar: str | None = None,
+         java: str | None = None) -> int:
     """Writes every table of `rows` under root/<domain>/<table>, then applies `restated`. layouts: {table or kind: Layout} for
     every table, or None for each domain's packs (layouts_for_domain). ``as_of``: the business date of every plain file (refused for a
-    tar). Returns the number of history rows written."""
+    tar). ``fmt`` ``iceberg``: the tables go into Iceberg through the one loader (``work``: its working folder, removed afterwards;
+    ``iceberg_set``: its ``KEY=VALUE`` settings; ``jar``, ``java``). Returns the number of history rows written."""
+    if fmt == "iceberg" and work is None:
+        raise SystemExit("--format iceberg needs --work DIR: the loader's working folder")
     cache: dict[str, dict] = {}
 
     def lays(domain):
@@ -169,17 +193,26 @@ def load(rows: list[pathlib.Path], root: pathlib.Path, restated: list[pathlib.Pa
         lay = _layout(domain, table, t["kind"], layouts if layouts is not None else lays)
         by_day = {d: [(i, body, json.loads(body) if lay else None) for i, body in rs] for d, rs in t["days"].items()}
         path = root / domain / table
-        write_days(str(path), by_day, lay, "overwrite")
-        for d, rs in sorted(fixes.get((domain, table), {}).items()):
-            ids = {i for i, _ in rs}
-            keep = [r for r in by_day.get(d, []) if r[0] not in ids] + [(i, body, json.loads(body) if lay else None) for i, body in rs]
-            write_partition(str(path), d, keep, lay, "overwrite-partition")
+        if fmt == "iceberg":                            # the corrections first, then one load: each date is replaced once
+            for d, rs in sorted(fixes.get((domain, table), {}).items()):
+                ids = {i for i, _ in rs}
+                by_day[d] = [r for r in by_day.get(d, []) if r[0] not in ids] + [(i, body, json.loads(body) if lay else None) for i, body in rs]
+            _write_iceberg(path, domain, table, t["kind"], by_day, lay, work, iceberg_set, jar, java, say)
+        else:
+            write_days(str(path), by_day, lay, "overwrite")
+            for d, rs in sorted(fixes.get((domain, table), {}).items()):
+                ids = {i for i, _ in rs}
+                keep = [r for r in by_day.get(d, []) if r[0] not in ids] + [(i, body, json.loads(body) if lay else None) for i, body in rs]
+                write_partition(str(path), d, keep, lay, "overwrite-partition")
         entities = len({r[0] for rs in by_day.values() for r in rs})
         rows = sum(len(r) for r in by_day.values())
         total += rows
         files = len(t["files"])
         say(f"{path}: {entities} entities x {len(by_day)} business days" + (f", {len(lay.columns)} promoted columns" if lay else "")
-            + f"; {rows} rows from {files} file{'s' if files != 1 else ''}, version {_version(path)}")
+            + f"; {rows} rows from {files} file{'s' if files != 1 else ''}" + ("" if fmt == "iceberg" else f", version {_version(path)}"))
+    if work is not None:
+        import shutil
+        shutil.rmtree(work, ignore_errors=True)
     return total
 
 
@@ -198,12 +231,20 @@ def main(argv=None) -> int:
     ap.add_argument("--rows", action="append", required=True, metavar="FILE",
                     help="a tar of <table>/<YYYY-MM-DD>/ folders of rows, or a file of one table's rows of one date (repeatable)")
     ap.add_argument("--restated", action="append", default=[], metavar="FILE", help="corrections in the same forms, a second commit (repeatable)")
-    ap.add_argument("--root", required=True, help="the Delta root (the demo lake's root, data/delta/demo)")
+    ap.add_argument("--root", required=True, help="the lake's root (the demo lake's root, data/delta/demo; data/iceberg with --format iceberg)")
+    ap.add_argument("--format", choices=("delta", "iceberg"), default="delta",
+                    help="the table format; iceberg goes through Drishti Lake's one loader (tools/lake/loaderows.py)")
+    ap.add_argument("--iceberg-set", action="append", default=[], metavar="KEY=VALUE", help="--format iceberg: a setting of the loader (catalog=rest, uri=..., "
+                                                                                              "warehouse=..., s3.region=...); repeatable")
+    ap.add_argument("--work", metavar="DIR", help="--format iceberg: the loader's working folder (removed afterwards)")
+    ap.add_argument("--jar", help="--format iceberg: the server's exec jar (default: the one in <home>/lib)")
+    ap.add_argument("--java", help="--format iceberg: the Java to run the loader")
     ap.add_argument("--as-of", metavar="YYYY-MM-DD", help="the business date of every plain file (over its .ready file's and its name's); "
                                                           "refused for a tar, whose folders name their dates")
     a = ap.parse_args(argv)
     total = load([pathlib.Path(p) for p in a.rows], pathlib.Path(a.root), [pathlib.Path(p) for p in a.restated],
-                 as_of=date.fromisoformat(a.as_of) if a.as_of else None)
+                 as_of=date.fromisoformat(a.as_of) if a.as_of else None, fmt=a.format, work=pathlib.Path(a.work) if a.work else None,
+                 iceberg_set=a.iceberg_set, jar=a.jar, java=a.java)
     print(f"{total} rows under {a.root}")
     return 0
 

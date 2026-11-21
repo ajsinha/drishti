@@ -64,7 +64,7 @@ def loader_args(step):
 
 def test_every_loader_is_a_main_class_of_the_server_jar_through_javacmd():
     for store, s in SL.STORES.items():
-        if store == "delta":
+        if store in ("delta", "iceberg"):                 # written by Python and Drishti Lake's one loader (test below)
             continue
         _, steps = plan(store, trades=5, env={"DRISHTI_LOADER_HEAP": "3g"})
         for j in javas(steps):
@@ -79,14 +79,34 @@ def test_the_heap_defaults_to_4g():
     assert "-Xmx4g" in javas(steps)[0]
 
 
-@pytest.mark.parametrize("store", ["iceberg", "cassandra"])
-def test_iceberg_and_cassandra_load_the_samples_and_the_book_in_one_run(store):
-    rows, steps = plan(store, trades=3, days=1)
+def test_cassandra_loads_the_samples_and_the_book_in_one_run():
+    rows, steps = plan("cassandra", trades=3, days=1)
     assert rows == DATA / "build" / "loader-rows"
     assert [s[1].rsplit("/", 1)[-1] for s in steps[:2]] == ["make_data.py", "bulk_trades.py"]
     assert len(javas(steps)) == 1 and loader_args(javas(steps)[0])[0] == str(rows)
-    _, alone = plan(store)
+    _, alone = plan("cassandra")
     assert len(alone) == 2 and loader_args(javas(alone)[0])[0] == str(rows)
+
+
+def test_iceberg_is_written_by_the_one_loader_from_both_tars_in_one_run():
+    rows, steps = plan("iceberg", trades=3, days=1)
+    assert [s[1].rsplit("/", 1)[-1] for s in steps] == ["make_data.py", "bulk_trades.py", "load_rows.py"]
+    load = steps[2]
+    assert not javas(steps)                                                   # no loader class of its own: load_rows starts the one loader
+    assert load[load.index("--format") + 1] == "iceberg" and load[load.index("--root") + 1] == str(DATA / "iceberg")
+    assert [load[i + 1] for i, w in enumerate(load) if w == "--rows"] == [str(rows / "banking.tar"), str(rows / "bulk-trades.tar")]
+    assert load[load.index("--work") + 1] == str(DATA / "build" / "iceberg-work")
+    assert load[load.index("--jar") + 1] == JAR and load[load.index("--java") + 1] == "/jdk/bin/java"
+    _, alone = plan("iceberg")
+    assert len(alone) == 2 and [w for w in alone[1] if w == "--rows"] == ["--rows"]
+
+
+def test_iceberg_options_are_the_loaders_settings():
+    _, steps = plan("iceberg", extra=["--catalog", "rest", "--uri=https://glue/iceberg", "--set", "s3.region=eu-west-2"])
+    load = steps[1]
+    assert [load[i + 1] for i, w in enumerate(load) if w == "--iceberg-set"] == ["catalog=rest", "uri=https://glue/iceberg", "s3.region=eu-west-2"]
+    with pytest.raises(SL.LoadError, match="unknown option --keep-days for --store iceberg"):
+        plan("iceberg", extra=["--keep-days", "3"])
 
 
 @pytest.mark.parametrize("store", ["files", "postgres", "duckdb", "mongodb", "redis", "aerospike"])
@@ -121,6 +141,8 @@ def test_redis_merges_the_samples_under_a_book_and_defaults_to_one_day():
 def test_the_targets_and_their_defaults():
     def targets(store, given=(), env=None):
         _, steps = plan(store, given, env=env)
+        if store == "iceberg":
+            return [steps[-1][steps[-1].index("--root") + 1]]
         return loader_args(javas(steps)[0])[1:1 + len(SL.STORES[store].targets)]
     assert targets("files") == [str(DATA / "files")]
     assert targets("iceberg") == [str(DATA / "iceberg")]
@@ -139,7 +161,7 @@ def test_a_typed_relative_path_means_where_the_command_was_typed():
     _, steps = plan("files", ["out/files"], cwd=Path("/home/me"))
     assert loader_args(javas(steps)[0])[1] == "/home/me/out/files"
     _, steps = plan("iceberg", ["s3a://lake/iceberg"])
-    assert loader_args(javas(steps)[0])[1] == "s3a://lake/iceberg"
+    assert steps[-1][steps[-1].index("--root") + 1] == "s3a://lake/iceberg"
     _, steps = plan("postgres", ["jdbc:postgresql://h/d"])                    # not a path: never touched
     assert loader_args(javas(steps)[0])[1] == "jdbc:postgresql://h/d"
 
@@ -169,7 +191,7 @@ def test_options_are_checked_against_the_store():
 
 def test_the_date_and_retention_guards_reach_every_java_loader():
     for store, s in SL.STORES.items():
-        if store != "delta":
+        if store not in ("delta", "iceberg"):             # iceberg: Drishti Lake's loader keeps its own date rule
             assert {"--future-days", "--zone"} <= set(s.valued), store
             if store not in ("files", "aerospike"):
                 assert "--max-drop-share" in s.valued and "--force-drop" in s.flags, store
@@ -216,11 +238,6 @@ def test_a_failed_load_ends_with_the_loaders_line_then_ours(ran, capsys):
     assert err == ["iceberg: the bucket 'warehouse' does not exist at http://localhost:9000",
                    "data load postgres: the load did not finish: see the line above"]
     assert not (data / "build" / "loader-rows").exists()
-
-
-def test_iceberg_is_not_loaded_here_until_it_is_rebuilt_on_the_one_loader(ran, capsys):
-    assert SL.run("iceberg", [], None, None, []) == 2
-    assert "lake build --format iceberg" in capsys.readouterr().err
 
 
 def test_a_usage_error_runs_nothing(ran, capsys):

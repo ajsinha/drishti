@@ -11,6 +11,8 @@
 # written permission of the copyright holder.
 #
 
+# Drishti's own acceptance check: two Delta lakes compared by delta-rs, an independent reader on purpose (Drishti Lake's parity kit
+# compares stores through its own cases, not two lakes on disk).
 """compare_lakes: do two Delta lakes hold the same tables with the same row counts per business date (and per partition)?
 
     python3 tools/lake/compare_lakes.py LAKE_A LAKE_B [--out result.json]

@@ -13,6 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+# Drishti's own: profiles an export for `lake build` (the id, classifiers and date field to choose); Drishti Lake has no such tool.
 """lake scan: what a large export holds, read as a stream: every field (dotted paths, up to depth 3; arrays are counted, not
 entered), how often it is present, its types, its most frequent values, and suggestions for ``lake build``: the id (--key) and
 classifiers (--partition-by: text fields with few distinct values), and the field the rows carry their date in (counted only: the business

@@ -12,6 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+# Drishti's own policy: which tables `lake build` made, so Drishti's maintenance touches only those; Drishti Lake keeps no such record.
 """Which tables of a lake Drishti's lake tool built, so maintenance touches only those (the ownership rule).
 
 ``drishti.py lake build`` records every table it commits to in ``<lake>/_drishti-lake/tables-built.json``
