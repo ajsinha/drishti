@@ -51,6 +51,15 @@ public final class StorageProviders {
         }
     }
 
+    /**
+     * Loads the providers now, on the calling thread. Called once before the connectors start in parallel, so no connector's start-up
+     * thread waits on this holder's class initialisation (with virtual threads, a wait that pins a carrier: on a machine with few
+     * cores that stopped the server at start). The number of providers.
+     */
+    public static int load() {
+        return Loaded.BY_SCHEME.size();
+    }
+
     /** The provider of {@code path}'s scheme, if one is on the class path. */
     public static Optional<StorageProvider> forPath(String path) {
         if (path == null || path.isBlank()) {

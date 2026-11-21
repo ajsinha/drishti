@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 public final class SourceRegistry implements AutoCloseable, com.ash.drishti.common.LiveSettings {
 
     private static final Logger LOG = LoggerFactory.getLogger(SourceRegistry.class);
+    /** The platform threads the connectors start on, side by side (a start is mostly I/O and class loading). */
+    static final int START_THREADS = 16;
 
     /** Copy-on-write: readers take the current snapshot and never lock; changes swap in a new one under {@link #swap}. */
     private volatile Map<String, SourcePlugin> plugins = Map.of();
@@ -235,9 +237,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         this.codec = codec;
         this.props = props;
         // Shared by every plugin for refreshes, rescans, ticks and nightly cache clearing, several of which block on
-        // I/O (a feed download, an Aerospike scan, a Delta reindex). Virtual-thread workers: a blocked task releases
-        // its carrier, and sixteen of them cost next to nothing, so one slow task never delays the others.
-        this.scheduler = Executors.newScheduledThreadPool(16, Thread.ofVirtual().name("drishti-source-sched-", 0).factory());
+        // I/O (a feed download, an Aerospike scan, a Delta reindex): sixteen workers, so one slow task never delays the others.
+        // Platform threads: a first rescan loads classes and a virtual thread loading a class pins its carrier, so on a
+        // machine with few cores a handful of them stopped every other virtual thread (and the server at start).
+        this.scheduler = Executors.newScheduledThreadPool(16, Thread.ofPlatform().name("drishti-source-sched-", 0).daemon(true).factory());
         Map<String, SourcePlugin> started = new LinkedHashMap<>();
         // a plugin used through named connectors runs as itself only if it is configured under plugins explicitly
         java.util.Set<String> viaConnectors = new java.util.HashSet<>();
@@ -282,7 +285,14 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 plainAll.put(p.manifest().name(), p);
             }
         }
-        try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
+        // The providers' holder initialised here, once, before the connectors start side by side (a Delta connector's start reads it).
+        LOG.debug("{} storage provider(s) loaded", com.ash.drishti.lakeio.StorageProviders.load());
+        // The connectors start side by side on a bounded pool of PLATFORM threads, never virtual ones: a start loads classes
+        // from the server jar and initialises holders, and a virtual thread doing either pins its carrier. With as many
+        // connectors as carriers (parallelism = the core count), the pinned threads waited on locks held by unmounted
+        // virtual threads that could never run again: the server stopped at start on a few-core machine.
+        try (var exec = Executors.newFixedThreadPool(Math.max(1, Math.min(enabled.size(), START_THREADS)),
+                Thread.ofPlatform().name("drishti-source-start-", 0).daemon(true).factory())) {
             List<Future<?>> starts = new ArrayList<>();
             for (SourcePlugin p : enabled) {
                 var ctx = new EngineSourceContext(settings.get(p), codec, scheduler, reader);

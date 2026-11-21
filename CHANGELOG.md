@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **The server starts on a machine with few cores.** The connectors started side by side on virtual threads; a start loads classes from
+  the server jar and initialises class holders, and a virtual thread doing either holds its carrier thread, so on a laptop with few cores
+  every carrier was held and the start-up stopped after *connector … waits for the modules to load*. `SourceRegistry` now starts the
+  connectors on a bounded pool of platform threads (`drishti-source-start-*`), its shared scheduler runs on platform threads, and the
+  storage providers are loaded before the connectors start. A forked-JVM test starts the registry with one carrier thread. The
+  workaround for older builds (`-Djdk.virtualThreadScheduler.parallelism=64`, `maxPoolSize=256`) is in IDE_GUIDE and OPERATIONS_GUIDE
+  section 21.
 - **CSV loaders, wave 2: the exposure masters (step 5).** Mappings, samples and pages for `counterparty-group`, `counterparty` (KYC as a nested record), `agreement` (elections), `csa` (eligible collateral, optional child file), `netting-set`, `collateral-balance` (holdings), `credit-limit` (tenor buckets) and `trade-valuation`; the links that change a number (a set's CSA and counterparty, a valuation's or a balance's netting set, a limit's counterparty) refuse the day.
 - **CSV loaders, wave 1 and the daily run (step 4).** Mappings, synthetic samples and generated pages (`tools/mrloader/docs/<kind>.md`, `kind_docs.py --check`) for `legal-entity`, `desk`, `book` (+ the PVF portfolio file), `risk-factor`, `var-limit`, `desk-pnl` and `position-sensitivity` (parents and a child file); `mr_run.py` runs a day in dependency order, checks the links across kinds (`links.py`, the limits' nodes from the pack's hierarchies) and hands it over; `mr_gen.py` writes the sample day; `DAILY_RUNBOOK.md`.
 - **`tools/mrloader/csv_load.py`: the generic CSV loader (CSV loaders, step 3).** One kind's CSV to checked records by its mapping file (`kinds/<kind>.yaml`), the CSV's format declared never guessed (`csvread.py`), one reject report (`FILE,ROW,KEY,COLUMN,FIELD,VALUE,REASON,WHY,FIX`), `on-reject: refuse` for masters and limits, computed columns refused by name, `--template`, `--kinds`, `--inbox`, `--load`; `validate.py` checks any kind's files; proven with `var-limit` from CSV to a scratch lake.
