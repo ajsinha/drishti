@@ -13,8 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The data lake guide's .ready file and its push examples (docs/guides/DATA_LAKE_GUIDE.md sections 3.4 and 4.0) against the code: the
-complete example names exactly the keys the inbox and the command-line loaders accept (ReadyNote.KEYS in Java, READY_KEYS in Python, the
-same list), with values those parsers take; the Python and Java push programs shown in the guide are the checked-in, tested files."""
+complete example names exactly the keys the command-line loaders accept (READY_KEYS in Python; that it is the inbox's list, Drishti Lake's
+ReadyNote.KEYS, is checked once, in tools/lake/test_feedroute.py), with values those parsers take; the Python and Java push programs shown in
+the guide are the checked-in, tested files."""
 import importlib.util
 import re
 import sys
@@ -29,7 +30,6 @@ pytestmark = pytest.mark.static
 ROOT = CONSOLE.parent
 GUIDE = ROOT / "docs" / "guides" / "DATA_LAKE_GUIDE.md"
 EXAMPLES = ROOT / "docs" / "guides" / "examples" / "lake-push"
-JAVA_KEYS = ROOT / "lake/drishti-lakeload" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "dataload" / "ReadyNote.java"
 
 
 def _feedroute():
@@ -45,11 +45,6 @@ def _section(title: str) -> str:
     start = text.index(title)
     nxt = re.search(r"^#{2,3} ", text[start + len(title):], re.M)
     return text[start: start + len(title) + (nxt.start() if nxt else len(text))]
-
-
-def test_the_java_and_python_key_lists_are_one_list():
-    java = re.search(r"KEYS = List\.of\(([^;]+)\);", JAVA_KEYS.read_text(encoding="utf-8")).group(1)
-    assert tuple(re.findall(r'"([a-z0-9-]+)"', java)) == _feedroute().READY_KEYS
 
 
 def test_the_complete_example_has_every_key_and_parses():
