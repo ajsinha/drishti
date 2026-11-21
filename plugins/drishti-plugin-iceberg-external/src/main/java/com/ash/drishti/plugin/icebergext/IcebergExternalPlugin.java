@@ -200,7 +200,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
                     TableReader r = lake.foreign(s.table(), s);
                     Optional<TableSnapshot> snap = r.snapshot(com.ash.lake.spi.AsOf.LATEST);
                     if (snap.isEmpty()) {                              // the reader names the files looked for and what is there instead (QA2-203)
-                        problems.put(s.kind(), s.kind() + ": no table " + s.table());
+                        problems.put(s.kind(), s.kind() + ": " + r.absence());
                         continue;
                     }
                     problems.remove(s.kind());
