@@ -240,3 +240,163 @@ G4 rehearsal's needs), `rachana-server` with Studio, and the libraries.
 
 Nothing else was changed. The must-fix items are for the lanes before the `v1.0.0` tag; the gate needs a short re-check then:
 the reactor with the added lanes, C1 at every level with 0 failing, the corpus with the new recorder, and the API baseline.
+
+## 9. Re-check
+
+Run on 2026-11-21, 12:37 to 13:00, on JDK 21, in fresh clones of my own. Judged from the code and my own runs. No product code
+was changed.
+
+| Repository | Branch | Commit |
+|---|---|---|
+| `drishti-rachana` | `g2/integration` | `774538f` (full run and reading), then `9db1aa2` (full run again: it landed during the re-check) |
+| `drishti-elements` | `g2/integration` | `b466b87` (suites); `6972989` and `b466b87` (the two packs Rachana vendored) |
+
+### 9.1 Verdict
+
+**NOT YET. Close, and nothing found is deep.** Every blocker and almost every must-fix of section 3 is truly closed in the code,
+not papered over, and level 1.0 is byte for byte what it was. Five small items stand between this and golden; the list of 9.4 is
+exact. The `v1.0.0` tag has its own, longer list (9.5).
+
+### 9.2 What I ran
+
+| Check | Result |
+|---|---|
+| `./mvnw clean verify`, fresh clone, `774538f` | green in 4 min 12 s: 1,095 Java tests, 39 Node tests, 0 skipped; four lanes green; temp gate green |
+| The same at `9db1aa2` | green in 3 min 31 s: 1,098 Java tests, 39 Node tests, 0 skipped; four lanes green; temp gate green |
+| Conformance lane | 2,593 cases (`9db1aa2`: 2,599). Level 1.0 pass 2,007; 1.1 pass 2,277; 1.2 pass 2,468 (2,474). 0 failing, verified or not. JVM = Node byte for byte at each level |
+| By hand, beyond the lane | Python on V8 = JVM byte for byte at 1.0, 1.1 and 1.2; a second JVM run at 1.2 identical |
+| What is still `unsupported` at 1.2 | 125: the 113 protocol cases (the protocol lane runs them), 7 grammar and 5 problem cases with `until` (earlier levels answer them). `check` and `grammar` are answered by all three runtimes |
+| Protocol lane | reference 54 pass, Python host 54 pass (the 59 others are live-table cases neither serves), live server 113 of 113; 0 fail |
+| Python SDK lane | 93 passed, 0 skipped. The 59 skips of the first review were live-table cases; they are now left out by name and run by the live server |
+| Chromium lane | `<rachana-view>`, forms, state, a built site, Studio: green |
+| `-DskipTests` | honoured: 29 s, no test, no Node test, no lane |
+| `tools/js/build_js.py` | green: runtime 2,088,209 bytes (Brotli 510,602), tools 2,215,331 (Brotli 535,820); runtime = tools on every case at each level |
+| `tools/libraries/build.py --gallery` | green: 145 examples, LG1 to LG5 and LG8 pass, gallery 31 + 57 pages |
+| `levels.py check 1.0` | identical at both commits: 1,999 identical, 52 newly answered, 61 listed moved or withdrawn |
+| Elements: build, API, licence checks; Node tests | all 0; 379 pass, 0 skipped |
+| Elements `pytest -n 8` (179 tests, Chromium) | **1 failed, 178 passed**, at machine load 28 (9.3, F18) |
+| Temp folders | no new `rachana-*` folder in `/tmp` after either run; both clones clean in `git status` after every build |
+
+**Level 1.0, 1.1 and 1.2 against the commit I reviewed (`2391142`, rebuilt and run again):**
+
+- **1.0:** 2,514 of 2,563 common cases answer the same bytes. The other 49 are the `check` and `grammar` cases, unanswered then and
+  passing now. Nothing else moved.
+- **1.1:** as 1.0, plus 13 problem cases that now carry `path` and the full `range` (decision O4). One start column moved
+  (a duplicate id now points at the `id`, column 11, not the panel, column 5).
+- **1.2:** as 1.1, plus the two `arrow` cases fixed, two messages that now list `pivot` and `surface`, one more start column.
+
+All of the 1.1 and 1.2 changes are intended, and allowed because those levels are not recorded yet. They show why
+`compat/levels/1.1` and `1.2` must be written at the tag.
+
+**A document without a level.** There are two defaults, both deliberate. `Rachana.core()` (the Java library) starts at 1.0, as
+SPEC 7.2 rule 6 says, so a host that names nothing is never moved. The tools (Node command, `<rachana-view>`, server, Studio,
+Python command) read `Grammar.DEFAULT_LEVEL`, the newest built level, now 1.2. It is written once; `DefaultLevelGuardTest`
+refuses a level literal in any entry point. Two gaps: SPEC 7.2 does not mention the tools' default, and `rachana new` writes no
+level into a new project, so a tool upgrade re-levels that project silently.
+
+### 9.3 Status of each finding
+
+| # | Status | Evidence |
+|---|---|---|
+| F1 | **closed**; guard not widened | Two JVM runs at 1.2 identical; three runtimes identical. `rachana-data` and `rachana-live` still build multi-key objects from `Map.of` (`StoreOverlay.java:190`, `LiveReferenceServer.java:237, 276`, `RowQuery.java:278`, `ProtocolHost.java:209`) and no guard looks there. Protocol answers are not byte-compared, so this is later |
+| F2 | **closed** | The recorder runs the i7a reference's own binder over a recording router and the host's pivot engine. I counted the views myself: 478 of 478 bind, 0 errors, 4,470 data panels, **7 empty (0.16%)**, every kind filled, 0 views with every data panel empty. `known-differences.txt` lists no bind. Notes: 3 synthetic rows per table, so row limits and "more" are thinly covered; the tool assembles title and keys itself |
+| F3 | **closed** | Section 9.2. `verify_lanes.py` fails on any failing case, any skip, any byte difference. `LevelReplayTest` asserts its prerequisites, where it used to skip |
+| F4 | **closed** | 49 of 49 answered on JVM, Node and Python. The seven refusals that 1.1 accepts carry `until: "1.0"` and a 1.1 twin each |
+| F5 | **closed for the two cases; verification open** | 0 failing at any level. 501 cases in 35 files are still `verified: false` (9.6) |
+| F6 | **closed** | `static_files_host.js` holds no evaluator: it calls the bundle's `query` (Core's `RowQuery`). `static_host.test.mjs` is in the Node tests and asserts that |
+| F7 | **closed but for 22 problems** | SPEC 6.1 now defers `doc`, `fix` and `expected`. `SutraProblem` has severity, path and range. Of 148 problems answered at 1.1 and 1.2, 126 carry `path` and the full range. **22 do not**: problems inside a fragment file (`RCH-2048` 11, `RCH-2121` 8, `RCH-2117` 2, `RCH-2023` 1). SPEC 6.1 says such a problem carries that file's name in `file`; they carry none, so line 9 of a fragment reads as line 9 of a 7-line Sutra (`problem/fragments-calls#fragment-reads-only-its-parameters`) |
+| F8 | **closed** | Read: `hostAllowed` runs first, in every auth mode (`RachanaServer.java:155, 494`): bind address, `localhost`, `127.0.0.1`, `[::1]` with the server's port, or a `server.origins` authority. Test: `aHostThatIsNotThisServersIsRefusedInEveryAuthMode` (rebound name, wrong port, no port, `auth: none`). Static files: `realInside` compares real paths (`:342`); **it has no test** (no symbolic link is made in any test) |
+| F9 | **closed** | `levels.py` fails on a deleted recorded case that is not listed; test added; the two deletions are listed as withdrawn |
+| F10 | **closed** | `drishti_views-paint.js:137`: enabled only when the host's `allowed` is a function and answers exactly `true`; a throw is `false`. Browser test covers none, `false`, `undefined`, `'yes'`, throws, `true`. The fix is in the vendored pack |
+| F11 | **closed** | Seven modules; `[stable]` 280 lines, `[experimental]` 4,444; a write refuses an unlogged removal; a released baseline is never rewritten. Since `2391142`: 0 lines removed, 526 added, `api-removals.txt` empty and rightly so. `9db1aa2` adds two experimental lines |
+| F12 | **(a) closed, (c) closed, (b) open** | (a) above. (c) one vendored pack, the stale one is gone, `ElementsPinGuardTest` refuses a second version. (b) **two programs are still named `rachana`**: `python/pyproject.toml:27` and `rachana-cli/package.json:10`, with different commands |
+| F13 | **pin closed; three parts open** | One pin: `drishti.elements.version` feeds Core's tables and the pack folder. I rebuilt the pack from Elements at `6972989` and at `b466b87`: **byte for byte the vendored one**, both times. Open: no size guard on the Rachana bundles (Brotli 501 KB at the review, 511 KB now, nothing checks); the pack named `3.2.0-dev` says `"elements": "3.1.0"` inside; the pack is an untagged build |
+| F14 | open (later, docs) | `DRISHTI_MIGRATION_TODO.md` 9.2 still names the private companion repository |
+| F15 | **closed, and it caught a real drift** | Fixture and schema are pinned by Rachana commit and hash and read with `git show`, never from the files of the branch checked out. Confirmed: my sibling clone had `774538f` out while its remote ref was `9db1aa2`, and the tests followed the ref. **At Rachana `9db1aa2` the fixture is stale**: `fire/fragment-marks` and `fire/pivot-cells` were added, and `test_the_fire_cases_fixture_is_the_cases_at_its_commit_and_they_have_not_moved_since` fails at Elements `b466b87` |
+| F16 | **closed** | Every test's temp folder is `java/target/tmp`; the build fails if anything is left |
+| F17 | **closed** | `auth: users` on a non-loopback bind is refused unless `server.behind-tls-proxy: true`; test present. `cookie-secure` is advised in the message, not required. Sign-in throttling per address is unchanged |
+| F18 | **not closed as a class** | The Node budgets now measure CPU time over synchronous code, and the validator takes the least of 15 runs: sound, and no wall clock is left in `tests/elements`. But in my one `-n 8` run `test_ten_thousand_a_second_into_a_grid_once_a_frame` failed (13,600 ticks sent in 3 s, 15,000 wanted); alone it passed 3 of 3. It is a wall-clock rate in a browser. The lead saw the Node suite fail too at load 40 |
+
+**Is CPU time enough for F18?** No. It removes the time a test waits for a core. It does not remove three things: a loaded
+machine runs each instruction slower (shared cores, cache, clock speed), so CPU time itself rises; the suite has tests on real
+timers (`setTimeout` in six files, the browser rate test); and `node --test` starts a process per file inside one of eight
+pytest workers. Budget tests must be kept away from parallel load: mark them, run everything else with `-n 8`, then run the
+marked ones alone and serially. A budget is a release measurement, not a unit test.
+
+**`FROZEN.sha384` since the review** (still `pre-release`): 10 files changed, 15 added. Each is justified. `el/check` and
+`el/examples/check` gain offsets (stronger); one loses `expected`, which SPEC 6.1 now defers. `grammar/reserved` gains `until`
+and seven twins. `live/declaration` gains `arrow`. `problem/examples/problem` regains `path`. Two message cases list `pivot` and
+`surface`. All 124 files are listed and every hash matches. At `9db1aa2` three new files are not listed
+(`fire/fragment-marks`, `fire/pivot-cells`, `problem/fragment-marks`). `everyCaseFileOfTheSuiteIsListedAtRelease` still asserts
+nothing.
+
+**New since the review, not regressions:** `compat/promotions.yaml` promotes four formats at 1.2, and `ReservedNamesTest`
+compares them with Drishti's definitions. The aggregate `range` is renamed `span` (O5). `-x ^ y` does not compile (O6).
+
+### 9.4 What remains before GOLDEN
+
+About half a builder-day in all.
+
+1. **Rachana, F7:** the 22 fragment-file problems carry `file`.
+2. **Elements, F15:** regenerate `tests/support/fire_cases.json` against Rachana `9db1aa2`. From here on the two repositories
+   move together or Elements is red.
+3. **Elements, F18:** separate the budget tests from the parallel run. Also pin Playwright (`playwright>=1.45` today): with a
+   version whose Chromium is not installed, 105 browser tests **skip and the run is green**. A gate run must fail on a skip, as
+   Rachana's does.
+4. **Rachana, F12 (b) and F13:** one program named `rachana`; a size guard on the two bundles at measured + 5%; the pack's
+   manifest says the version its folder says.
+5. **Freeze the base.** `g2/integration` still takes G3 merges: three landed during this re-check. Name one commit as the G2
+   base (a branch that no lane writes to), run `freeze.py` on it so every case file is listed, and let G3 start from there.
+
+### 9.5 What remains before the `v1.0.0` tag (not needed for golden)
+
+- The verification of 9.6.
+- Tag Elements 3.2.0 and vendor that; real versions in `pom.xml`, `Facade.VERSION`, the packages and `pyproject.toml`.
+- Record `compat/levels/1.1` and `1.2`; freeze contracts 1.1 and 1.2; `FROZEN.sha384` to `released`, with a listing test that asserts.
+- SPEC wording: 4.7 and 4.13 say text orders by code point and section 9 item 4 says "settled", but level 1.0 orders by UTF-16
+  code unit (`el/determinism#d-u02-a`); say so, as 4.16 does for numbers. 7.2 names the tools' default level. FORMAT 3 says a
+  later runtime "does not run" an `until` case and is silent on the fact that every case is answered at the level of its own
+  `since`. `LIVE_TABLES.md:197` says `RCH-2058` where SPEC and the case say `RCH-2060`.
+- `rachana new` writes the project's level.
+- A test for the static symbolic-link check; the `Map.of` guard over `rachana-data` and `rachana-live`; F14.
+
+### 9.6 The verification sample
+
+**501 of 2,599 cases are `verified: false`**: `expr` 273, `protocol` 113, `grammar` 30, `check` 26, `plan` 14, `sutra` 12,
+`live` 9, `problem` 8, `format` 7, `patch` 6, `expr-error` 3. I drew 40 at random (seed 20261121), in proportion to kind with at
+least two of each kind, and read each expected answer against the section its `source` names.
+
+**Result: 40 of 40 expected answers are correct. 0 wrong.**
+
+| Kind | Checked | Against |
+|---|---|---|
+| `expr`, `expr-error` (15) | 15 correct | SPEC 4.5 to 4.8, 4.10 rule 7, 4.12, 4.13, 4.16, 5.4, 9 item 8 |
+| `protocol` (9) | 9 correct | PROTOCOL 5.3, 6.1, 10.1, 12, 16 |
+| `check`, `grammar` (4) | 4 correct | SPEC 4.11, 4.14, 4.15 |
+| `format`, `sutra`, `problem` (6) | 6 correct | SPEC 2.4, 2.6, 4.9, 6.2, 7.2 |
+| `live`, `patch`, `plan` (6) | 6 correct | SPEC 6.2, PROTOCOL 7 and 8.1, VIEWMODEL frames, FORMAT 5.9 and 5.10 |
+
+Three cautions.
+
+- Four of the 15 expression cases are right **only as level 1.0 behaviour** (doubles for `2 / 3` and `-5.5 % 2`, `RCH-4010` for a
+  refused pattern, UTF-16 order). The SPEC states the first three; the fourth is the wording gap of 9.5.
+- A message's exact words are not specified anywhere (codes are). Where a case pins words, I checked the code and the sense.
+- 0 wrong in 40 means the true error rate is below about 7% with 95% confidence. That is up to about 35 wrong cases in 501. The
+  sample supports flipping; it does not replace evidence per case.
+
+**Recommended procedure for the other 461.** Flip by evidence, in two classes, before the freeze (a flip changes the file's
+bytes).
+
+1. **Class A, about 280 cases: the reference recorded the answer** (`el/determinism` and the other level 1.0 `expr`,
+   `expr-error`, `format` cases). Evidence is mechanical: the Drishti reference at `v2.9.11.i_7a`, through `RefBridge`, gives
+   the expected bytes, and Rachana's three runtimes give them too. A script writes the list; a case in `known-differences.txt`
+   is left out and read by a person (about ten). No reading is needed for the rest.
+2. **Class B, about 220 cases: written by reading, no reference exists** (`protocol`, `live`, `patch`, `plan`, `check`,
+   `grammar`, the 1.1 and 1.2 cases). Evidence: all runtimes pass with the same bytes (the build proves it), and **a reviewer who
+   did not write the case** reads each one against the section its `source` names. One independent review agent, about a day,
+   and not the lane that built the feature.
+3. **Record** per file in `conformance/1/VERIFIED.md`: file, cases, class, the section read or the reference tag, reviewer,
+   date, the Rachana commit. One commit per file, `FROZEN.sha384` rewritten with it.
+4. **The owner** reads the Class B log, spot-checks one case in ten (22 cases), and approves. FORMAT 3 says a person flips it.
+5. A case that cannot be shown right is fixed or withdrawn, never flipped. After the flip the rule of C1 is 0 failing and 0
+   unverified at the tag.
