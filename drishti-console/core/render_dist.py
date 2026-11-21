@@ -59,7 +59,7 @@ ADDENDUM = """\
 :host { display: block; position: relative; contain: content; container: drishti/inline-size; color: var(--d-ink); }
 :host([hidden]) { display: none; }
 :host([data-theme]) { background: var(--d-bg); }
-.r-view { min-width: 0; }
+.r-view { min-width: 0; padding: .75rem 1.25rem; }
 .r-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; justify-content: space-between; margin: 0 0 .4rem; }
 .fk { display: inline-flex; align-items: center; gap: .3rem; border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: var(--d-radius); padding: .15rem .6rem; font: inherit; font-size: .8rem; cursor: pointer; }
 .fk:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }

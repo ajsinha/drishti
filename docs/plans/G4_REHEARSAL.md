@@ -241,3 +241,64 @@ Branch `g4/binder` from `wip/g4-rehearsal-rx` `f954d27bf`, merged back into it. 
 | R-2 | Core's `Final` (`TAG`, `encode`, `decode`) is package-private, so a host keeps its own holistic-final state | API | Rachana (optional) |
 
 Note (g4/fixes-1): `drishti.py build jar` ran the server's tests and `LiveTablesAdapterTest` failed (4 tests: no table `position`, RCH-2081 on `TRADE_ID`, a problem-message text) against the lake lane's Rachana snapshot; not one of the four above, not investigated, not changed here.
+
+## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
+
+G4 item 10 (I7B_DUPLICATES U1, B6; DD-7: Jinja stays). Branch `g4/renderer` from `wip/g4-rehearsal-rx` `fd1b4a847`. Drishti Elements
+**pinned at 3.2.0**: the release tree of the `v3.2.0` tag (`787f97d`, built by `tools/elements/cli.py dist` in a fresh clone), its SHA-384
+manifest unchanged; `drishti.elements.version` 3.2.0, every module's range `>=3.2 <4`, every pinned path, Drishti's two libraries rebuilt.
+The data tables (`world-regions.yaml`, `formats.yaml`) are byte-identical to the 3.1.0 tree, so the server jar's behaviour is unchanged.
+
+### What was done
+
+| Item | Result |
+|---|---|
+| The entry | `static/render/3.2.0/drishti-render.js` keeps the API (`render`, `patch`, `subscribe`, the `Handle`, `<drishti-screen>`, `window.DrishtiRender`) and `drishti-elements.js` the embed elements 2.x (`<drishti-view>`, `<drishti-panel>`): same options, events, attributes and contract. |
+| Every panel | drawn by `drishti-views` `paint()` (`shadow: false` inside the host's shadow root): the title line, strip, freshness line, keys, every kind; drishti-chart, drishti-graph, drishti-data, drishti-inputs and the geo part handed to it from the same module graph. |
+| Host part (Drishti's) | `render/3.2.0/m/`, 10 modules, 1,598 lines: where the ViewModel comes from (`/api/view`, embed v2, the token, the sign-in window), navigation in place with its own Back bar (links are real `/v/…` addresses; the painter's cancelable `link` event opens them), About this page, live frames handed to the painter, the stream over drishti-events. |
+| CSP | the sheet (`drishti-render.css`, generated from Elements' tokens with every theme and the painter's sheets, 1,579 lines, was 3,292) is adopted by the shadow root; the loader's page links for those sheets are claimed without a request, so a host page with `style-src 'self'` loads no stylesheet and reports no violation. No inline styles. |
+| Explain | unchanged code: its `paintPanels` calls the same `render()`; Why it moved (drawer, its three views, the full page) is the painter's. |
+| Deleted | the `drishti-renderer` library (17 modules 2,783 lines, its bundle 1,972, harness and fixtures 134), `tools/renderer_fixtures.py`, `renderer.test.mjs`, `test_elements_renderer_browser.py`; `render/3.1.0/` (its paths answer 308 to 3.2.0 for one release). Not ported (DD-10, DD-11): GenUI stream messages, `facets`, `behaviours: 'console'` (accepted; the painter's tables), the `draw*` parts of the handle (no caller). |
+| Fixed on the way | `/embed/v2/elements/2/` resolved to the frozen 1.2.0 and `/embed/v2/render/2/` to nothing (pre-existing, two failing tests): the element API 2.4.0 maps to the current renderer, the alias is the major; embed v2 serves drishti-views and drishti-events modules; `elements_pin.LIBRARIES` holds all ten. |
+
+Lines: the renderer library and its harness 4,889 deleted, the host part 1,598 added (about 700 of it the old library's sign-in, token, net and About modules, moved); the generated sheet 3,292 to 1,579; tests and tools 213 deleted. The branch, without the vendored tree: +2,520, −7,938.
+
+### Proof
+
+| Check | Result |
+|---|---|
+| Embed and Explain browser tests, Playwright 1.64.1 pinned (Chromium 1248): `test_explain_browser` (4), `test_embed_elements2_browser` (5), `test_render_sign_in_browser` (6) | **15 passed** (before: Explain 4 passed, Elements 2: 3 passed, 2 failed on the alias bug) |
+| Renderer browser suites: `test_render_library_browser` (14), `test_render_behaviours_browser` (4 + 1 xfail E11), `test_render_parity_browser` without the pack Sutras (32: the console's macros against the painter, content: every cell, field and strip text, every entity link, every chart's series values) | pass |
+| Console Node tests (`tests/elements`, `test_elements_node.py`), the render, elements and embed v2 Python tests, the quick file checks | pass, but the six failing on the base commit too (`test_docs_pdfs` 4, `test_code_volume`, `test_docs_ready_example`) |
+| Console errors | none on any page; the painter warns (a warning, by design) on the two edge-case ViewModels that are invalid on purpose (`states`, `more-shapes`) |
+| VaR/ES goldens (`VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`) | **pass, untouched** (no Java changed) |
+
+**Before and after screenshots**: 14 ViewModels (6 captured views, 8 edge cases) × 2 themes (terminal, light) × 2 widths (1280, 390) drawn through
+the public entry, and the Explain test's 7 pages. Pixel diff: a pixel differs when a channel differs by more than **24/255**; compared at the
+larger size. Embed pages: 12.1 % to 74.7 % of pixels differ (median 25.6 %); Explain: preview and phone 0 %, the drawer's Why it moved
+0.8 % to 1.5 %, the full pages 23.9 % (page) and 26.4 % (Why it moved as a page). Every difference, with its reason (the content is the
+same: the parity suite):
+
+| Difference | Reason |
+|---|---|
+| Type: figures in the sans face (the old renderer set strip, fields and tables in the mono face in the terminal theme); smaller title | the painter's typography (Elements' tokens) |
+| Panel header: no accent bar, no per-panel `?` help button; a code tag (`CRV`, `REFS`) as a chip | the painter's frame; the console's help `?` is console chrome |
+| Strip: an emphasised figure is coloured text, not a filled box; no "with" before the counterparty | the painter's cell tones |
+| Freshness line (`live · aero-risk`) and the function keys row (`F2 Legs …`) drawn under the strip | the painter draws them (the old renderer did not show them) |
+| Key-value panels: values beside labels, left-aligned, one column at 1280 | the painter's field list |
+| Tables: a "Filter the rows" box and pages on long tables; tree tables open one level; a dash in an empty cell | the painter's tables |
+| Each chart: a "Data table" disclosure under it, a legend under donuts | the painter's chart frame |
+| Timeline, ladder status chips, gauge bar width | the painter's kinds |
+| The element sizes to its content (the old one filled the viewport with the theme's background) | an embed's height is its content; below it the host page shows |
+| Explain drawer: the metric panels' header without the accent bar; the change under the figure instead of beside it | the painter's metric kind |
+| Candlestick Data table: the raw numbers instead of the server's `openText`… | Elements finding E11 (below) |
+
+### Findings
+
+| # | Finding | Who |
+|---|---|---|
+| E11 | `drishti-views`' candlestick Data table prints `str(c.open)`, not the producer's `openText`/`highText`/`lowText`/`closeText` the contract carries (test `test_the_candles_print_the_servers_texts`, xfail strict) | Elements |
+| E12 | the painter cannot take a host's sheets: with a shadow root it links each library sheet into it, without one into the page; a cross-origin host with `style-src 'self'` refuses both. Drishti claims the loader's links and adopts its own sheet; an option for adopted sheets (or a pack sheet as a `CSSStyleSheet`) would remove the claim | Elements |
+| E13 | the chart kinds need `window.echarts` before they draw (`engine: () => win.echarts`); the host loads it. The painter's own loading would match its words ("the chart engine loaded only when a view has a chart") | Elements |
+| E14 | the painter's validation warns on ViewModels without `contract`; Drishti sets `1.x` (VIEWMODEL.md section 8) | Drishti, done |
+| D1 | the server-side parity check of every pack Sutra (`test_every_pack_sutra_on_its_sample_is_the_same`) still skips: the server's preview answers 422 for those Sutras (as on the base commit) | Drishti, triage |

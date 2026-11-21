@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **The client renderer draws every panel with Drishti Elements' painter.** Drishti Elements is pinned at **3.2.0**. Embeds (`<drishti-view>`,
+  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
+  `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
+  page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
+  filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` draws with the painter's tables (no column
+  funnels or Chart any table inside an embed); a GenUI stream's messages are not drawn. The old `drishti-renderer` library, its harness
+  and fixtures are deleted; `/static/render/3.1.0/` and `/embed/v2/render/3.1.0/` answer `308` to 3.2.0 for one release, and
+  `/embed/v2/elements/2/` is the current renderer again.
+
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
   taken from `drishti-tools` (`tools-net`, `tools-settings`, `tools-concurrent`, `tools-time`, `tools-testkit`, pinned once as
