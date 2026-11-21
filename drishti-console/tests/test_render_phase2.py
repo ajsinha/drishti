@@ -96,10 +96,10 @@ def test_v2_answers_the_view_model_with_its_contract_and_its_live_key(backend):
 def test_v2_serves_the_renderer_immutably_with_partial_versions_and_elements_2(backend):
     embed = make_client(backend)
     record = json.loads((rd.ROOT / rd.VERSION / rd.RECORD).read_text())
-    for rel in ("drishti-render.js", "drishti-elements.js", "drishti-render.d.ts", "drishti-render.css"):
+    for rel in ("drishti-render.js", "drishti-elements.js", "drishti-render.d.ts", "drishti-render.css", "m/drishti_screen.js"):
         r = embed.get(f"/embed/v2/render/{rd.VERSION}/{rel}", headers={"Origin": HOST})
         assert r.status_code == 200 and rd.sri(r.content) == record["files"][rel]["integrity"] and "immutable" in r.headers["cache-control"]
-    r = embed.get("/embed/v2/render/2/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
+    r = embed.get(f"/embed/v2/render/{rd.VERSION.split('.')[0]}/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)   # the major's alias
     assert r.status_code == 302 and r.headers["location"] == f"/embed/v2/render/{rd.VERSION}/drishti-render.js"
     r = embed.get("/embed/v2/render/1/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == "/embed/v2/render/1.2.0/drishti-render.js", "1.x pinned hosts keep the frozen 1.2.0"

@@ -14,11 +14,12 @@
 
 """How the client-side renderer is distributed (docs/guides/EMBED_GUIDE.md section 13).
 
-The library lives in one folder per version, ``web/static/render/<version>/``: the entry ``drishti-render.js``, its modules ``m/*.js``,
-the types ``drishti-render.d.ts``, the sheet ``drishti-render.css`` (generated here from the console's own sheets, rewritten for a
-shadow root like the Elements' sheet) and ``integrity.json`` (SHA-384 of every file, for subresource integrity). A version's folder is
-immutable: ``tests/test_render_library.py`` fails when a file changed and its ``integrity.json`` did not, so a change means a new folder.
-``tools/render_sheet.py`` writes the sheet and the record.
+The library lives in one folder per version, ``web/static/render/<version>/``: the entries ``drishti-render.js`` and ``drishti-elements.js``,
+the host part ``m/*.js`` (Drishti's: where a ViewModel comes from, sign-in, navigation, About; every panel is drawn by Drishti Elements'
+painter, drishti-views, from the vendored tree), the types ``drishti-render.d.ts``, the sheet ``drishti-render.css`` (generated here from
+Drishti Elements' tokens and the painter's sheets, rewritten for a shadow root) and ``integrity.json`` (SHA-384 of every file, for
+subresource integrity). A version's folder is immutable: ``tests/test_render_library.py`` fails when a file changed and its
+``integrity.json`` did not, so a change means a new folder. ``tools/render_sheet.py`` writes the sheet and the record.
 """
 from __future__ import annotations
 
@@ -36,41 +37,41 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
 VERSION = _pin.VERSION              # the current renderer: the pinned Drishti Elements version (core/elements_pin.py); 1.2.0 stays served, frozen, for existing embedders
-RETIRED = ("2.0.0",)                # the renderer of the Elements before the one version (2.4.0): its paths redirect to the current folder for ONE release (removed in the release after i6)
+RETIRED = ("2.0.0", "3.1.0")       # earlier renderers (2.0.0 before the one Elements version; 3.1.0, the previous pin): their paths redirect to the current folder for ONE release
 DEPRECATION = "the Drishti Render {old} paths are removed in the release after i6: use {new}"
 FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
-LIBRARY = STATIC / "elements" / "drishti-renderer" / "src"   # the current version's modules: the version folder holds the public entries, the sheet and the types
 FOLDER = ROOT / VERSION
+LIBRARY = FOLDER / "m"              # the host part of the current version (its modules; every panel is the painter's)
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"
 RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
-# the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
-SHEETS = es.SHEETS + ("css/drishti_drill.css", "css/drishti_wire.css", "css/drishti_refresh.css", "css/drishti_compute.css", "css/drishti_screen-grid.css",
-                      "elements/drishti-grid/drishti_grid.css")   # the nested pivot is drishti-grid's grid
-ICON_SOURCES = tuple(f"static/elements/drishti-renderer/src/drishti_{m}.js" for m in ("kinds", "layout", "screen", "view", "about", "signin"))
+# Drishti Elements' sheets the painter draws with, in the order of their libraries (the tokens with every theme first), and the console's
+# About sheet (the host's About this page): all of them adopted by the screen's shadow root, so a host page loads no stylesheet
+SHEETS = ("css/drishti_tokens.css", "css/drishti_resize.css", "css/drishti_chips.css", "css/drishti_states.css", "elements/drishti-inputs/drishti_inputs.css",
+          "elements/drishti-chart/drishti_chart.css", "elements/drishti-graph/drishti_graph.css", "elements/drishti-tree/drishti_tree.css",
+          "elements/drishti-views/drishti_views.css", "css/drishti_about.css")
+ICON_SOURCES = tuple(f"static/render/{VERSION}/m/drishti_{m}.js" for m in ("screen", "about", "signin"))
 
 ADDENDUM = """\
 *, ::before, ::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
-:host { display: block; position: relative; contain: content; container: drishti/inline-size; }
+:host { display: block; position: relative; contain: content; container: drishti/inline-size; color: var(--d-ink); }
 :host([hidden]) { display: none; }
-.view { min-height: 0; }
-.view:focus { outline: none; }
-.pnl, .vmain > *, .vright > * { min-width: 0; }
-.tbl-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.r-back { padding: .5rem 1.25rem 0; }
-.r-back .fk { cursor: pointer; }
-.r-deleted > :not(.r-deleted-banner) { opacity: .55; filter: grayscale(.7); }
+:host([data-theme]) { background: var(--d-bg); }
+.r-view { min-width: 0; }
+.r-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; justify-content: space-between; margin: 0 0 .4rem; }
+.fk { display: inline-flex; align-items: center; gap: .3rem; border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: var(--d-radius); padding: .15rem .6rem; font: inherit; font-size: .8rem; cursor: pointer; }
+.fk:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.r-about-btn { margin-left: auto; }
+.r-problem { padding: .8rem 1.25rem; }
+.dv-error { padding: .6rem .8rem; border: 1px solid var(--d-neg); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink); }
 .r-fix { display: block; margin-top: .3rem; color: var(--d-muted); }
-.dv-error { margin: .8rem 1.25rem; }
-.tbl-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 0 0 .4rem; }
-.tbl-pg-i { color: var(--d-muted); font-size: .8rem; }
-.tbl-sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; }
-.tbl-sort:focus-visible, .dr-step:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
-th[aria-sort="ascending"] .tbl-sort::after { content: " \\25B2"; font-size: .7em; }
-th[aria-sort="descending"] .tbl-sort::after { content: " \\25BC"; font-size: .7em; }
-.dr-step { background: none; border: 0; padding: 0; font: inherit; color: var(--d-link); cursor: pointer; }
+.about { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 92cqw); overflow: auto; z-index: 5; background: var(--d-surface); border-left: 1px solid var(--d-border); padding: .6rem .9rem; }
+.about header { display: flex; justify-content: space-between; align-items: center; }
+.raw-x { background: none; border: 0; color: var(--d-muted); font-size: 1.3rem; cursor: pointer; }
+.mono { font-family: var(--d-font-mono); }
+.t-warn { color: var(--d-warn); }
 .r-signin { display: flex; justify-content: center; padding: 2rem 1rem; }
 .r-signin-card { max-width: 32rem; text-align: center; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 1.25rem 1.5rem; }
 .r-signin-title { font-weight: 600; margin: 0 0 .4rem; }
@@ -81,10 +82,11 @@ th[aria-sort="descending"] .tbl-sort::after { content: " \\25BC"; font-size: .7e
 .r-signin-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 .r-signin-why { margin: .7rem 0 0; color: var(--d-neg); }
 @container drishti (max-width: 640px) {
-  .pnl-help, .tbl-pg-b, .tbl-sort, .tr-tog, .tab-head, .sg-tab, .sg-fold, .md-btn, .dr-step, .dr-up, .r-back .fk, .pv-switch button { min-width: 44px; min-height: 44px; }
+  .about { width: 100cqw; }
+  .fk, .raw-x { min-width: 44px; min-height: 44px; }
 }
 @media (pointer: coarse) {
-  .pnl-help, .tbl-pg-b, .tbl-sort, .tr-tog, .tab-head, .sg-tab, .sg-fold, .md-btn, .dr-step, .dr-up, .r-back .fk, .pv-switch button { min-width: 44px; min-height: 44px; }
+  .fk, .raw-x { min-width: 44px; min-height: 44px; }
 }
 """
 
@@ -97,9 +99,6 @@ def icons_used(version: str = VERSION) -> list[str]:
             text = path.read_text(encoding="utf-8")
             found.update(re.findall(r"icon\('([a-z0-9]+(?:-[a-z0-9]+)*)'\)", text))
             found.update(n for n in es.ICON_NAME.findall(text) if n != "bi")
-    # the console macros' glyphs too: the renderer draws the same panels
-    for rel in ("templates/_macros/panels.html", "templates/_macros/view.html", "templates/terminal/_grid.html"):
-        found.update(es.ICON_NAME.findall((WEB / rel).read_text(encoding="utf-8")))
     return sorted(found)
 
 
@@ -129,9 +128,6 @@ def files(version: str = VERSION) -> dict[str, Path]:
         rel = p.relative_to(folder).as_posix()
         if p.is_file() and rel != RECORD and rel not in DEMO:
             out[rel] = p
-    if version == VERSION and LIBRARY.is_dir():      # the current version: the renderer's own modules, by their path from the version folder
-        for p in sorted(LIBRARY.glob("*.js")):
-            out["../../elements/drishti-renderer/src/" + p.name] = p
     return out
 
 

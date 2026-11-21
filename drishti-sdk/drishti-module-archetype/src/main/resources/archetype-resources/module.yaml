@@ -11,7 +11,7 @@ kernel: ">=0.2 <1.0"
 rachana: ">=1.0"
 contracts: ">=1.0"
 plugin-api: ">=2.0"
-elements: ">=3.1 <4"
+elements: ">=3.2 <4"
 provides: {kinds: {${artifactId}-pack: [${artifactId}-greeting]}}
 api: {prefix: ${artifactId}}
 java: {jars: [${artifactId}.jar], lib: [], entry: ${package}.HelloModule, spring: [${package}.ModuleConfig]}

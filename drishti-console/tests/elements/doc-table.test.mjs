@@ -19,8 +19,8 @@
    Data tables under charts. The behaviours on a real page are tested by the renderer's browser files. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as G from '../../web/static/vendor/drishti-elements/3.1.0/elements/drishti-grid/src/drishti_index.js';
-import * as C from '../../web/static/vendor/drishti-elements/3.1.0/elements/drishti-core/src/drishti_index.js';
+import * as G from '../../web/static/vendor/drishti-elements/3.2.0/elements/drishti-grid/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
 
 // ---- a stand-in document: enough DOM for an element maker -------------------------------------------------------------------
 class Node0 { constructor(t) { this.nodeType = t; this.childNodes = []; } appendChild(c) { if (c.nodeType === 11) { c.childNodes.forEach((x) => this.childNodes.push(x)); c.childNodes = []; } else { this.childNodes.push(c); } return c; } }

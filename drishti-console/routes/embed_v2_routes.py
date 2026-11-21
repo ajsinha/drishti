@@ -53,9 +53,10 @@ STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
 RETIRED_ELEMENTS = ("2.3.0",)   # the Elements embed before the one version: redirected for one release
-ELEMENTS = {"2.2.0": "1.2.0", rd.VERSION: rd.VERSION}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.2.0 is the frozen 1.2.0; the current Elements version is the current renderer's; earlier ones are retired: 410)
-# The Elements libraries the current renderer imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
-LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|graph|tree|inputs|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
+ELEMENTS = {"2.2.0": "1.2.0", "2.4.0": rd.VERSION, rd.VERSION: rd.VERSION}   # the embed elements by their API version -> the renderer version that carries its drishti-elements.js (2.2.0 is the frozen 1.2.0; 2.4.0, the element API the current renderer carries, so the alias "2" is the current one; earlier ones are retired: 410)
+# The Elements libraries the current renderer imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js):
+# the painter (drishti-views) and what it draws with
+LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|graph|tree|inputs|events|views)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
