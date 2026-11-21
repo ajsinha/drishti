@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.lakeconfig;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.NamedResources;
-import com.ash.drishti.settingsfile.Placeholders;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.Placeholders;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,15 +49,15 @@ class LakeNamedSectionTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
         System.clearProperty(Lakes.PROPERTY);
     }
 
     private void ini(String text) throws Exception {
         Path f = dir.resolve("site.ini");
         Files.writeString(f, text);
-        System.setProperty(SettingsFile.PROPERTY, f.toString());
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, f.toString());
+        set.addAll(DrishtiTools.applySettingsFile());
     }
 
     private Path lakes() throws Exception {

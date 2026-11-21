@@ -24,7 +24,7 @@ import com.ash.drishti.flight.FlightService;
 import com.ash.drishti.identity.ApiTokenStore;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.io.InputStream;
 import java.nio.file.Files;

@@ -18,9 +18,9 @@ package com.ash.drishti.plugin.feeds;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.FakeProxy;
+import com.ash.tools.testkit.FakeProxy;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;

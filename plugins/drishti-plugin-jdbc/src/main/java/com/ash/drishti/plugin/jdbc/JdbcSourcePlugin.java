@@ -221,7 +221,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (url.isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("jdbc needs settings.url");
         }
-        this.tlsPlan = JdbcTls.plan(ctx.settings(), url, com.ash.drishti.settingsfile.Placeholders::process);     // fails the start, naming the setting and the file
+        this.tlsPlan = JdbcTls.plan(ctx.settings(), url, com.ash.tools.settings.Placeholders::process);     // fails the start, naming the setting and the file
         this.user = ctx.setting("user", "");
         this.password = ctx.setting("password", "");
         this.sourceName = ctx.setting("source-name", "jdbc");

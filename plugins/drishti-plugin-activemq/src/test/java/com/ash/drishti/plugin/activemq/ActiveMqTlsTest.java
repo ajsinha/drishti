@@ -15,17 +15,17 @@
  */
 package com.ash.drishti.plugin.activemq;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.drishti.testkit.MessageSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import jakarta.jms.Connection;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
@@ -135,7 +135,7 @@ class ActiveMqTlsTest extends MessageSourceContract {
 
     @Override
     protected void send(String destination, String id, String body, boolean deleted) throws Exception {
-        TlsMaterial m = TlsContexts.build(TlsSettings.from(tlsSettings));
+        TlsMaterial m = DrishtiTools.tls(TlsSettings.from(tlsSettings));
         ActiveMQSslConnectionFactory f = new ActiveMQSslConnectionFactory(url(61617, broker.getHost()));
         f.setKeyAndTrustManagers(m.keyManagers(), m.trustManagers(), new SecureRandom());
         try (Connection c = f.createConnection();

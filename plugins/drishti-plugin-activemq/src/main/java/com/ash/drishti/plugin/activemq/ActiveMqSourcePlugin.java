@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.activemq;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.messaging.MessageStateSource;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
@@ -96,7 +96,7 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
             throw new TlsException("tls.enabled is true but broker-url has no ssl:// endpoint (OpenWire over TLS is ssl://host:61617): "
                     + brokerUrl());
         }
-        return ssl ? TlsContexts.build(ts) : null;
+        return ssl ? DrishtiTools.tls(ts) : null;
     }
 
     /** The URL with {@code socket.verifyHostName=false} added to every ssl:// endpoint when hostname verification is off. */

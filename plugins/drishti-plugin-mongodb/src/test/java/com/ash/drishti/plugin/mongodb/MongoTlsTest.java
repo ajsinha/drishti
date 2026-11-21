@@ -18,9 +18,9 @@ package com.ash.drishti.plugin.mongodb;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsException;
+import com.ash.tools.net.TlsException;
 import com.ash.drishti.testkit.DatedSourceContract;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;

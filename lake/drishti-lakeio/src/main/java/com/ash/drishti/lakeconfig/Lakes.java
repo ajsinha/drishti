@@ -107,7 +107,7 @@ public final class Lakes {
         return com.ash.drishti.api.Roots.anchored(p == null || p.isBlank() ? com.ash.drishti.api.Roots.config("lakes") : p.strip());
     }
 
-    private static volatile Function<String, String> properties = com.ash.drishti.settingsfile.Placeholders::process;
+    private static volatile Function<String, String> properties = com.ash.tools.settings.Placeholders::process;
 
     /**
      * How a lake file's references are resolved by {@link #current()}: the server installs its own settings (its environment, system
@@ -115,7 +115,7 @@ public final class Lakes {
      * setting is seen; null: the process's environment.
      */
     public static void useProperties(Function<String, String> lookup) {
-        properties = lookup == null ? com.ash.drishti.settingsfile.Placeholders::process : lookup;
+        properties = lookup == null ? com.ash.tools.settings.Placeholders::process : lookup;
     }
 
     private static final Pattern NAMED = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)");
@@ -165,7 +165,7 @@ public final class Lakes {
 
     /** The lakes of {@link #dir()} with the process's environment. */
     public static Lakes load() {
-        return read(dir(), com.ash.drishti.settingsfile.Placeholders::process);
+        return read(dir(), com.ash.tools.settings.Placeholders::process);
     }
 
     /**
@@ -547,8 +547,8 @@ public final class Lakes {
             if (raw == null) {
                 return null;
             }
-            try {   // the one resolver (com.ash.drishti.settingsfile.Placeholders), through this reader's view
-                return com.ash.drishti.settingsfile.Placeholders.require(raw, this::lookup);
+            try {   // the one resolver (com.ash.tools.settings.Placeholders), through this reader's view
+                return com.ash.tools.settings.Placeholders.require(raw, this::lookup);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(where + ": " + key + ": " + e.getMessage() + " (or give the reference a default: ${name:default})", e);
             }

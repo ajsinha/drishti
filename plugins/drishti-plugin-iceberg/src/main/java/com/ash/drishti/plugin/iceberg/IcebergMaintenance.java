@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.Layout;

@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.rabbitmq;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.messaging.MessageStateSource;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -88,7 +88,7 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
             }
             return null;
         }
-        TlsMaterial m = TlsContexts.build(ts);
+        TlsMaterial m = DrishtiTools.tls(ts);
         if (isExternal() && m.clientKey() == null) {
             throw new TlsException("auth-mechanism: external logs in with a client certificate: set tls.cert-file and tls.key-file, or tls.keystore");
         }

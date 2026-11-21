@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
@@ -64,7 +64,7 @@ final class MongoTls {
         if (!mechanism.isEmpty() && !x509) {
             throw new TlsException("auth-mechanism '" + settings.get("auth-mechanism") + "' is not x509 (leave it out to log in as the uri says)");
         }
-        TlsMaterial m = on ? TlsContexts.build(ts, env, java.time.Clock.systemUTC()) : null;
+        TlsMaterial m = on ? DrishtiTools.tls(ts, env, java.time.Clock.systemUTC()) : null;
         if (x509 && (m == null || m.clientKey() == null)) {
             throw new TlsException("auth-mechanism: x509 logs in with a client certificate: switch TLS on (tls.enabled: true) and set tls.cert-file "
                     + "and tls.key-file, or tls.keystore");

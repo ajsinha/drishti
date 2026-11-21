@@ -16,7 +16,7 @@
 package com.ash.drishti.plugin.cassandra;
 
 import com.ash.drishti.testkit.LoaderRows;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.lakeio;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import java.util.Map;
 
 /**
@@ -103,7 +103,7 @@ public record S3Settings(String endpoint, String accessKey, String secretKey, St
             }
             return null;
         }
-        return TlsContexts.build(ts);
+        return DrishtiTools.tls(ts);
     }
 
     @Override

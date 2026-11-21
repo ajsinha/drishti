@@ -111,7 +111,7 @@ final class ExposureService implements AutoCloseable {
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, double[]>> paths =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)
                     .weigher((String k, Map<String, double[]> v) -> v.values().stream().mapToInt(a -> a.length * 8).sum() + 64).recordStats().build();
-    private final com.ash.drishti.api.SingleFlight<String> pathLoads = new com.ash.drishti.api.SingleFlight<>();
+    private final com.ash.tools.concurrent.SingleFlight<String> pathLoads = new com.ash.tools.concurrent.SingleFlight<>();
     /** The dates' loads (2.9.7): {@code drishti.ccr.exposure.load-threads} workers of their own, never the common pool. */
     private final java.util.concurrent.ForkJoinPool loads;
 

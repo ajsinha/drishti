@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.rest;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.PluginManifest;
@@ -22,9 +23,9 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsHttp;
+import com.ash.tools.net.TlsMaterial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
  * The HTTP client is shared and safe to call from many virtual threads.
  *
  * <p><b>TLS.</b> An {@code https://} {@code base-url} is checked against the JVM's authorities, or against the shared
- * {@code tls.*} settings ({@link com.ash.drishti.api.tls.TlsSettings}): a private CA ({@code tls.ca-file}), a truststore, and
+ * {@code tls.*} settings ({@link com.ash.tools.net.TlsSettings}): a private CA ({@code tls.ca-file}), a truststore, and
  * a client certificate for mutual TLS ({@code tls.cert-file} + {@code tls.key-file}, or {@code tls.keystore}).
  */
 public final class RestSourcePlugin implements SourcePlugin {
@@ -95,7 +96,7 @@ public final class RestSourcePlugin implements SourcePlugin {
         });
         this.proxy = ProxySettings.resolve(ctx.settings(), baseUrl);          // proxy.* / the site default; https targets are tunnelled with CONNECT
         HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout));
-        this.tls = TlsHttp.material(ctx.settings(), baseUrl, "base-url");      // fails the start, naming the setting and the file
+        this.tls = DrishtiTools.tlsMaterial(ctx.settings(), baseUrl, "base-url");      // fails the start, naming the setting and the file
         this.http = (tls == null ? hb : TlsHttp.apply(hb, tls)).build();
     }
 

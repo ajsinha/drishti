@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.redis;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.ColumnSet;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisFuture;

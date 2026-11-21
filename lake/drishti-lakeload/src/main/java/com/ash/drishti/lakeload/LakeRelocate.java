@@ -117,7 +117,7 @@ public final class LakeRelocate {
         }
         Outcome o;
         try {
-            o = relocate(Lakes.read(Lakes.dir(), com.ash.drishti.settingsfile.Placeholders::process), name, dry, Faults.NONE);
+            o = relocate(Lakes.read(Lakes.dir(), com.ash.tools.settings.Placeholders::process), name, dry, Faults.NONE);
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             o = new Outcome("refused", e.getMessage(), name, null, null, List.of(), Map.of());
         }

@@ -82,7 +82,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     private final java.util.Map<String, List<String>> titles = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile java.util.Map<String, java.util.NavigableSet<LocalDate>> jsonl = java.util.Map.of();   // kind -> days with a file
     private com.github.benmanes.caffeine.cache.Cache<DayKey, JsonlDay> days;
-    private final com.ash.drishti.api.SingleFlight<DayKey> builds = new com.ash.drishti.api.SingleFlight<>();
+    private final com.ash.tools.concurrent.SingleFlight<DayKey> builds = new com.ash.tools.concurrent.SingleFlight<>();
     private String idField;
     private String businessZone = "America/New_York";      // the zone whose today is the business date health checks the folders against
     private volatile Set<String> kinds = Set.of();

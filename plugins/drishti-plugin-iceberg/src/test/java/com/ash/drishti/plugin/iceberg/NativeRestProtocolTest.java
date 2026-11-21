@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.catalog.Catalog;
 import com.ash.drishti.iceberg.catalog.Catalogs;
-import com.ash.drishti.testkit.FakeProxy;
+import com.ash.tools.testkit.FakeProxy;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;

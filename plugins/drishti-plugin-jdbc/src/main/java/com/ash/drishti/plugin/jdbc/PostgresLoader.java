@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.common.LoadLine;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.io.StringReader;

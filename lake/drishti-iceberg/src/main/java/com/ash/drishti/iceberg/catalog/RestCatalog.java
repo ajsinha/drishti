@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.iceberg.catalog;
 
-import com.ash.drishti.api.proxy.ProxySettings;
+import com.ash.tools.net.ProxySettings;
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.io.DrishtiFileIO;
 import com.ash.drishti.iceberg.io.FileAccess;

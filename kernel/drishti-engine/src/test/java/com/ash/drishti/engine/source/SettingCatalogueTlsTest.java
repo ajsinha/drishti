@@ -15,16 +15,17 @@
  */
 package com.ash.drishti.engine.source;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.PluginManifest;
-import com.ash.drishti.api.SettingSpec;
+import com.ash.tools.settings.SettingSpec;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsSettings;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +75,7 @@ class SettingCatalogueTlsTest {
                 read.add("tls." + kebab(c.getName()));
             }
         }
-        Set<String> declared = TlsSettings.settingSpecs("tls.").stream().map(SettingSpec::name)
+        Set<String> declared = DrishtiTools.tlsSettingSpecs("tls.").stream().map(SettingSpec::name)
                 .filter(n -> !n.endsWith("-file") || n.endsWith("cert-file") || n.endsWith("key-file") || n.endsWith("ca-file"))
                 .collect(Collectors.toCollection(TreeSet::new));
         assertThat(declared).as("declared keys against the keys TlsSettings reads").isEqualTo(read);
@@ -82,7 +83,7 @@ class SettingCatalogueTlsTest {
 
     @Test
     void everyPasswordIsASecretWithAFileTwinAndNothingElseIsASecret() {
-        List<SettingSpec> specs = TlsSettings.settingSpecs("tls.");
+        List<SettingSpec> specs = DrishtiTools.tlsSettingSpecs("tls.");
         for (SettingSpec s : specs) {
             boolean password = s.name().endsWith("-password");
             assertThat(s.secret()).as(s.name()).isEqualTo(password);
@@ -96,7 +97,7 @@ class SettingCatalogueTlsTest {
     void theCatalogueOffersTheGeneratedSectionToTlsPluginsOnly() {
         SettingCatalogue cat = new SettingCatalogue(List.of(new Named("rest"), new Named("file"), new Named("kafka")));
         List<String> rest = cat.of("rest").settings().stream().map(SettingSpec::name).toList();
-        assertThat(rest).containsAll(TlsSettings.settingSpecs("tls.").stream().map(SettingSpec::name).toList());
+        assertThat(rest).containsAll(DrishtiTools.tlsSettingSpecs("tls.").stream().map(SettingSpec::name).toList());
         assertThat(rest).doesNotContain("tls.truststore.path", "tls.keystore.path");     // the names that were guessed before the module
         assertThat(cat.of("file").settings().stream().map(SettingSpec::name)).noneMatch(n -> n.startsWith("tls."));
         List<SettingSpec> kafka = new ArrayList<>(cat.of("kafka").settings());

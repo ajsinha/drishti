@@ -15,17 +15,17 @@
  */
 package com.ash.drishti.plugin.rabbitmq;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.drishti.testkit.MessageSourceContract;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.testkit.TestPki;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -142,7 +142,7 @@ class RabbitMqTlsTest extends MessageSourceContract {
 
     @Override
     protected void send(String destination, String id, String body, boolean deleted) throws Exception {
-        TlsMaterial m = TlsContexts.build(TlsSettings.from(tls));
+        TlsMaterial m = DrishtiTools.tls(TlsSettings.from(tls));
         ConnectionFactory f = new ConnectionFactory();
         f.setUri(uri(broker.getHost(), ""));
         RabbitMqSourcePlugin.secure(f, m, true);

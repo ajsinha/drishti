@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net.transport;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.net.member.GossipTransport;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.security.ClusterKey;
@@ -163,9 +164,9 @@ public final class PeerHttp implements GossipTransport {
         if (executor != null) {
             b.executor(executor);
         }
-        var material = com.ash.drishti.api.tls.TlsHttp.material(tls, baseUrl, "the peer's url");
+        var material = com.ash.tools.net.DrishtiTools.tlsMaterial(tls, baseUrl, "the peer's url");
         if (material != null) {
-            com.ash.drishti.api.tls.TlsHttp.apply(b, material);
+            com.ash.tools.net.TlsHttp.apply(b, material);
         }
         return b.build();
     }

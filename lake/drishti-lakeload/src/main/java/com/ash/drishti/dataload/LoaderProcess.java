@@ -148,7 +148,7 @@ public final class LoaderProcess implements LoadRunner {
                 return;
             }
         }
-        com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, com.ash.drishti.settingsfile.Placeholders::process);
+        com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, com.ash.tools.settings.Placeholders::process);
         com.ash.drishti.lakeconfig.LakeTable entry = packEntry(r);
         // the table's entry already there; or, with no connector naming one table, any table of the kind (the lake file is the truth)
         if (lake.tables().containsKey(entry.name())

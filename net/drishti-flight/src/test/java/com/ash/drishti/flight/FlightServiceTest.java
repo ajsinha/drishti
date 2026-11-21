@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.compute.arrow.ArrowMemory;
 import com.ash.drishti.compute.arrow.ArrowTable;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.testkit.TlsFixture;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.io.InputStream;
 import java.nio.file.Files;

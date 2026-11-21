@@ -71,12 +71,12 @@ public final class HttpFetcher {
     }
 
     private final HttpClient http;
-    private final com.ash.drishti.api.proxy.ProxySettings proxy;
+    private final com.ash.tools.net.ProxySettings proxy;
     private final Limits settings;
     private final String accept;
 
     /** @param accept the Accept header of every request */
-    public HttpFetcher(HttpClient http, Limits settings, com.ash.drishti.api.proxy.ProxySettings proxy, String accept) {
+    public HttpFetcher(HttpClient http, Limits settings, com.ash.tools.net.ProxySettings proxy, String accept) {
         this.http = http;
         this.settings = settings;
         this.proxy = proxy;

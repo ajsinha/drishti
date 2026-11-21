@@ -344,7 +344,7 @@ public abstract class MessageStateSource implements SourcePlugin {
      * The TLS material the connector built from its {@code tls.*} settings, set by the subclass when it connects over TLS: health
      * then also says when a configured certificate is about to expire.
      */
-    protected volatile com.ash.drishti.api.tls.TlsMaterial tls;
+    protected volatile com.ash.tools.net.TlsMaterial tls;
 
     /** Why the state store last failed to keep a message, until one is kept again. */
     private volatile String storeProblem;

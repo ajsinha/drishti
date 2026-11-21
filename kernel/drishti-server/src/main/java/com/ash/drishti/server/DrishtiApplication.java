@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.engine.EngineConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -68,7 +69,7 @@ public class DrishtiApplication {
     public static void main(String[] args) throws InterruptedException {
         // the settings file (-Ddrishti.settings.file=/abs/drishti.ini), first of all: its entries become system properties (an explicit -D
         // wins); LaunchRoots names the file as the origin of each root it set
-        java.util.List<String> fromFile = com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty();
+        java.util.List<String> fromFile = com.ash.tools.settings.DrishtiTools.applySettingsFile();
         if (!fromFile.isEmpty()) {
             System.setProperty(com.ash.drishti.packs.LaunchRoots.FROM_FILE, String.join(",", fromFile));
         }
@@ -76,10 +77,10 @@ public class DrishtiApplication {
         boolean cli = com.ash.drishti.server.cli.CliLauncher.isCli(args) || com.ash.drishti.server.cli.ModuleCli.isCli(args)
                 || com.ash.drishti.server.cli.ResolveCli.isCli(args) || com.ash.drishti.deltalake.write.LakeCli.isCli(args);
         java.io.PrintStream echo = cli ? System.err : System.out;
-        for (String f : com.ash.drishti.settingsfile.SettingsFile.filesRead()) {   // each file by its path; a secret's value never shown
+        for (String f : com.ash.tools.settings.SettingsFile.filesRead()) {   // each file by its path; a secret's value never shown
             StringBuilder b = new StringBuilder("settings file ").append(f).append(':');
-            com.ash.drishti.settingsfile.SettingsFile.sources().entrySet().stream().filter(e -> e.getValue().equals(f)).map(java.util.Map.Entry::getKey).sorted()
-                    .forEach(k -> b.append("\n  ").append(k).append(" = ").append(com.ash.drishti.settingsfile.SettingsFile.shown(k, System.getProperty(k))));
+            com.ash.tools.settings.SettingsFile.sources().entrySet().stream().filter(e -> e.getValue().equals(f)).map(java.util.Map.Entry::getKey).sorted()
+                    .forEach(k -> b.append("\n  ").append(k).append(" = ").append(com.ash.tools.settings.SettingsFile.shown(k, System.getProperty(k))));
             echo.println(b);
         }
         com.ash.drishti.common.JvmTempDir.ensureExists();   // -Djava.io.tmpdir=<data>/tmp/server may name a folder a fresh clone lacks

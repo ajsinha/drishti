@@ -16,7 +16,7 @@
 package com.ash.drishti.plugin.file;
 
 import com.ash.drishti.common.RowFeed;
-import com.ash.drishti.api.LoadGuard;
+import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

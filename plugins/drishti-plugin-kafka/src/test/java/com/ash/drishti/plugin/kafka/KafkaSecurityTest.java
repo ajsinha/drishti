@@ -18,8 +18,8 @@ package com.ash.drishti.plugin.kafka;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.testkit.TestPki;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.testkit.TestPki;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

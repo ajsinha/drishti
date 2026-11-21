@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.api;
 
+import com.ash.tools.settings.SettingSpec;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;

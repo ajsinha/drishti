@@ -23,9 +23,11 @@
   <properties>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
+    <!-- standalone: the same pin as the parent pom's drishti.tools.version (keep the two equal) -->
+    <drishti.tools.version>1.0.0-SNAPSHOT</drishti.tools.version>
   </properties>
   <dependencies>
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-settingsfile</artifactId><version>${project.version}</version></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-settings</artifactId><version>${drishti.tools.version}</version></dependency>
   </dependencies>
   <!-- standalone (Spring Boot's parent, not drishti-parent): the same Spotless check as every module (ADR-007), so the gate's
        `spotless:check` finds the plugin here too -->

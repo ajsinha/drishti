@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.testroots;
 
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.SettingsFile;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,7 +51,7 @@ public final class TestRoots {
 
     /** An explicit -D property, else the settings file named by -Ddrishti.settings.file, else null (then the code location decides). */
     private static String explicit(String key) {
-        SettingsFile.applyFromSystemProperty();
+        SettingsFile.applyFrom("drishti.settings.file", "drishti.home");
         String v = System.getProperty(key);
         return v == null || v.isBlank() ? null : v;
     }

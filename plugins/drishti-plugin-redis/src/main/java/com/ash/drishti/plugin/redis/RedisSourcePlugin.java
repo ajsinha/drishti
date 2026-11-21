@@ -119,7 +119,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
     private volatile Instant lastUpdate;
     private SourceContext context;
     private String uri;
-    private com.ash.drishti.api.tls.TlsMaterial tls;
+    private com.ash.tools.net.TlsMaterial tls;
     private boolean cluster;
     private String user;
     private String password;
@@ -150,7 +150,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
             // installed but not pointed at a Redis: idle, rather than a live source that serves every kind and fails
             throw new com.ash.drishti.api.PluginNotConfigured("redis needs settings.uri (redis://host:6379)");
         }
-        this.tls = RedisTls.material(ctx.settings(), uri, com.ash.drishti.settingsfile.Placeholders::process);       // fails the start, naming the file and the reason
+        this.tls = RedisTls.material(ctx.settings(), uri, com.ash.tools.settings.Placeholders::process);       // fails the start, naming the file and the reason
         this.cluster = Boolean.parseBoolean(ctx.setting("cluster", "false"));
         this.user = ctx.setting("user", null);
         this.password = ctx.setting("password", null);
@@ -639,7 +639,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
         }, dictionaries::put));
     }
 
-    private final com.ash.drishti.api.SingleFlight<Integer> dictionaryLoads = new com.ash.drishti.api.SingleFlight<>();
+    private final com.ash.tools.concurrent.SingleFlight<Integer> dictionaryLoads = new com.ash.tools.concurrent.SingleFlight<>();
 
     @Override
     public Set<String> columnar(String kind) {

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.s3;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
@@ -27,11 +28,10 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsContexts;
-import com.ash.drishti.api.tls.TlsException;
-import com.ash.drishti.api.tls.TlsMaterial;
-import com.ash.drishti.api.tls.TlsSettings;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsException;
+import com.ash.tools.net.TlsMaterial;
+import com.ash.tools.net.TlsSettings;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.InputStream;
@@ -97,7 +97,7 @@ public final class S3SourcePlugin implements SourcePlugin {
     /** Why the last listing failed (a successful read does not clear it: only the next good listing does). */
     private volatile String listingError;
     private Cache<String, Optional<EntityDocument>> cache;
-    private final com.ash.drishti.api.SingleFlight<String> reads = new com.ash.drishti.api.SingleFlight<>();
+    private final com.ash.tools.concurrent.SingleFlight<String> reads = new com.ash.tools.concurrent.SingleFlight<>();
 
     @Override
     public PluginManifest manifest() {
@@ -186,7 +186,7 @@ public final class S3SourcePlugin implements SourcePlugin {
             throw new TlsException("tls.verify-hostname: false is not supported by the s3 connector (the AWS client always checks the host "
                     + "name): give the endpoint a name the certificate carries, or use a certificate with the endpoint's name as a SAN");
         }
-        return TlsContexts.build(ts);
+        return DrishtiTools.tls(ts);
     }
 
     /** The ids of one kind in one dated folder (the type-ahead index reloads a day from this); S3 has no version for a day. */

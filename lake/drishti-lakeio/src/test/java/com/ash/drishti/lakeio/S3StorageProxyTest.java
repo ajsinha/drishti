@@ -17,9 +17,9 @@ package com.ash.drishti.lakeio;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.proxy.SiteProxy;
-import com.ash.drishti.testkit.FakeProxy;
-import com.ash.drishti.testkit.TlsFixture;
+import com.ash.tools.net.SiteProxy;
+import com.ash.tools.testkit.FakeProxy;
+import com.ash.tools.testkit.TlsFixture;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;

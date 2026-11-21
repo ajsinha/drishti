@@ -146,7 +146,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** Reads {@code file} (YAML or JSON) and applies {@code overrides} ({@code key.path=value}). */
     static LoadConfig read(Path file, List<String> overrides) throws IOException {
-        return read(file, overrides, com.ash.drishti.settingsfile.Placeholders::process);
+        return read(file, overrides, com.ash.tools.settings.Placeholders::process);
     }
 
     static LoadConfig read(Path file, List<String> overrides, Function<String, String> env) throws IOException {
@@ -721,9 +721,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     /** Reads values with {@code ${VAR}} expanded. */
     record Reader(Function<String, String> env) {
 
-        /** Every {@code ${key}} / {@code ${key:-default}} through the one resolver (com.ash.drishti.settingsfile.Placeholders), this reader's view. */
+        /** Every {@code ${key}} / {@code ${key:-default}} through the one resolver (com.ash.tools.settings.Placeholders), this reader's view. */
         String expand(String s) {
-            return com.ash.drishti.settingsfile.Placeholders.require(s, env);
+            return com.ash.tools.settings.Placeholders.require(s, env);
         }
 
         String text(JsonNode n, String key, String dflt) {

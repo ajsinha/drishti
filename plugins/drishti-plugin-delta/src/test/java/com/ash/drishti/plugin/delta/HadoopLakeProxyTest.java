@@ -17,7 +17,7 @@ package com.ash.drishti.plugin.delta;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.proxy.SiteProxy;
+import com.ash.tools.net.SiteProxy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.hadoop.conf.Configuration;

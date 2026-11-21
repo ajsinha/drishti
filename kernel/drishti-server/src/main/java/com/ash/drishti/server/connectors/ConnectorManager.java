@@ -15,8 +15,9 @@
  */
 package com.ash.drishti.server.connectors;
 
+import com.ash.drishti.api.DrishtiTools;
 import java.util.concurrent.locks.ReentrantLock;
-import com.ash.drishti.api.SettingSpec;
+import com.ash.tools.settings.SettingSpec;
 import com.ash.drishti.common.ConnectorSecrets;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -868,19 +869,19 @@ public final class ConnectorManager {
 
     /** The TLS the settings ask for and when each configured certificate expires; {@code null} when no {@code tls.*} setting is given. */
     public static Map<String, Object> tlsSummary(Map<String, String> settings) {
-        if (!com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
+        if (!com.ash.tools.net.TlsSettings.anyGiven(settings, "tls.")) {
             return null;
         }
         Map<String, Object> out = new LinkedHashMap<>();
         try {
-            var ts = com.ash.drishti.api.tls.TlsSettings.from(settings);
+            var ts = com.ash.tools.net.TlsSettings.from(settings);
             out.put("enabled", ts.enabled());
             out.put("verifyHostname", ts.verifyHostname());
             out.put("protocols", ts.protocols());
             if (!ts.enabled()) {
                 return out;
             }
-            var material = com.ash.drishti.api.tls.TlsContexts.build(ts);
+            var material = com.ash.tools.net.DrishtiTools.tls(ts);
             Instant now = Instant.now();
             out.put("certificates", material.certificates().stream().map(c -> {
                 Map<String, Object> x = new LinkedHashMap<>();

@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.settingsfile.SettingsFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -36,15 +36,15 @@ class LoadConfigSettingsFileTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
     }
 
     @Test
     void aLoadFilesPlaceholderResolvesASettingsFileKey() throws Exception {
         Path ini = dir.resolve("site.ini");
         Files.writeString(ini, "[load.inbox]\nfiles=/srv/inbox/pv.jsonl\n[site]\nsite.cold-lake=/lakes/cold\n");
-        System.setProperty(SettingsFile.PROPERTY, ini.toString());
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, ini.toString());
+        set.addAll(DrishtiTools.applySettingsFile());
         Path file = dir.resolve("load.yaml");
         Files.writeString(file, """
                 source:

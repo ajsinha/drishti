@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsMaterial;
 import com.ash.drishti.iceberg.catalog.Catalog;
 import com.ash.drishti.iceberg.catalog.Catalogs;
 import com.ash.drishti.iceberg.catalog.RestCatalog;

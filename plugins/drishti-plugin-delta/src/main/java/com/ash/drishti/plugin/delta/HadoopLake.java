@@ -67,7 +67,7 @@ final class HadoopLake {
             conf.set("fs.s3a.path.style.access", s.getOrDefault("s3.path-style", "true"));
             conf.set("fs.s3a.connection.ssl.enabled", String.valueOf(endpoint.startsWith("https")));
         }
-        var proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, endpoint.isBlank() ? "https://s3.amazonaws.com" : endpoint);
+        var proxy = com.ash.tools.net.ProxySettings.resolve(s, endpoint.isBlank() ? "https://s3.amazonaws.com" : endpoint);
         String target = endpoint.isBlank() ? "s3.amazonaws.com" : java.net.URI.create(endpoint).getHost();
         if (proxy.appliesTo(target)) {                         // S3A's own proxy settings (plain http to the proxy; https endpoints are tunnelled)
             conf.set("fs.s3a.proxy.host", proxy.host());

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.kafka;
 
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsMaterial;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;

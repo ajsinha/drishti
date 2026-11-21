@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.net;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.net.config.NetSchema;
-import com.ash.drishti.settingsfile.Placeholders;
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.Placeholders;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,15 +38,15 @@ class NetSettingsFileTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
     }
 
     @Test
     void aNetFilesPlaceholderResolvesASettingsFileKey() throws Exception {
         Path ini = dir.resolve("site.ini");
         Files.writeString(ini, "[net.cluster]\nsecret-file=/etc/drishti/net/secret\nseeds=10.0.0.11:18480,10.0.0.12:18480\n");
-        System.setProperty(SettingsFile.PROPERTY, ini.toString());
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, ini.toString());
+        set.addAll(DrishtiTools.applySettingsFile());
         NetSchema schema = new NetSchema(Placeholders::process);
         assertThat(schema.resolve("${net.cluster.secret-file}")).isEqualTo("/etc/drishti/net/secret");
         assertThat(schema.resolve("${net.cluster.seeds:${net.seeds:none}}")).isEqualTo("10.0.0.11:18480,10.0.0.12:18480");

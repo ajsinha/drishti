@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.ai;
 
-import com.ash.drishti.api.proxy.ProxySettings;
-import com.ash.drishti.api.tls.TlsHttp;
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.DrishtiTools;
+import com.ash.tools.net.ProxySettings;
+import com.ash.tools.net.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -87,7 +87,7 @@ public final class BedrockProvider extends BaseProvider {
         super(c, Set.of(Capability.TOOL_CALLS, Capability.JSON_MODE));
         this.region = c.setting("region", "us-east-1");
         String target = c.baseUrl().isEmpty() ? "https://bedrock-runtime." + region + ".amazonaws.com" : c.baseUrl();
-        this.tls = TlsHttp.material(c.settings(), target, "base-url");
+        this.tls = DrishtiTools.tlsMaterial(c.settings(), target, "base-url");
         if (tls != null && !tls.settings().verifyHostname()) {
             throw new LlmException(LlmException.Kind.CONFIG,
                     "bedrock: tls.verify-hostname: false is not supported by the AWS client (it always checks the host name); give the endpoint a name the certificate carries");

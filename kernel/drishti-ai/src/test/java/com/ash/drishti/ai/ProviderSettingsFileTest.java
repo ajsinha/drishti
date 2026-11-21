@@ -15,9 +15,10 @@
  */
 package com.ash.drishti.ai;
 
+import com.ash.drishti.api.DrishtiTools;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.settingsfile.SettingsFile;
+import com.ash.tools.settings.SettingsFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.nio.file.Files;
@@ -38,7 +39,7 @@ class ProviderSettingsFileTest {
     @AfterEach
     void clear() {
         set.forEach(System::clearProperty);
-        System.clearProperty(SettingsFile.PROPERTY);
+        System.clearProperty(DrishtiTools.SETTINGS_FILE);
     }
 
     @Test
@@ -47,8 +48,8 @@ class ProviderSettingsFileTest {
         Files.writeString(base, "[ai.main]\nmodel=gpt-x\n");
         Path secrets = dir.resolve("secrets.ini");
         Files.writeString(secrets, "[ai.main]\napi-key=sk-from-the-secrets-file\n");
-        System.setProperty(SettingsFile.PROPERTY, base + "," + secrets);
-        set.addAll(SettingsFile.applyFromSystemProperty());
+        System.setProperty(DrishtiTools.SETTINGS_FILE, base + "," + secrets);
+        set.addAll(DrishtiTools.applySettingsFile());
         String yaml = """
                 name: main
                 type: openai
@@ -58,7 +59,7 @@ class ProviderSettingsFileTest {
                   - {name: chat, id: gpt-x}
                 """;
         ProviderConfig c = ProviderConfigLoader.fromNode("main", new ObjectMapper(new YAMLFactory()).readTree(yaml),
-                com.ash.drishti.settingsfile.Placeholders::process);
+                com.ash.tools.settings.Placeholders::process);
         assertThat(c.apiKey()).isEqualTo("sk-from-the-secrets-file");
         assertThat(SettingsFile.sourceOf("ai.main.api-key")).isEqualTo(secrets.toString());
         assertThat(SettingsFile.shown("ai.main.api-key", c.apiKey())).isEqualTo(SettingsFile.MASK);

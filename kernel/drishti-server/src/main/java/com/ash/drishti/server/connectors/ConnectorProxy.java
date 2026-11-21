@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.server.connectors;
 
-import com.ash.drishti.api.proxy.ProxyException;
-import com.ash.drishti.api.proxy.ProxySettings;
+import com.ash.tools.net.ProxyException;
+import com.ash.tools.net.ProxySettings;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;

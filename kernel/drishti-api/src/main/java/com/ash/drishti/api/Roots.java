@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.api;
 
+import com.ash.tools.settings.PathAnchors;
 import java.nio.file.Path;
 
 /**
@@ -99,24 +100,20 @@ public final class Roots {
         return p.isAbsolute() ? p.normalize() : home().resolve(p).normalize();
     }
 
-    /** A JDBC URL of a database in a local file (SQLite, DuckDB, H2): its file part is a path. */
-    private static final java.util.regex.Pattern FILE_DB = java.util.regex.Pattern.compile("^(jdbc:(?:sqlite|duckdb|h2:file):)(.+)$");
-    /** A value that is not a local relative path: a URL or a scheme ({@code s3:}, {@code mem:}, {@code classpath:}, {@code jdbc:}), a word. */
-    private static final java.util.regex.Pattern NOT_A_PATH = java.util.regex.Pattern.compile(
-            "^(?:[A-Za-z][A-Za-z0-9+.-]+:.*|none|auto|off|on|true|false|-?[0-9]+(?:\\.[0-9]+)?)$");
-    /** An absolute local path: POSIX, a Windows drive, or a UNC share. */
-    private static final java.util.regex.Pattern ABSOLUTE = java.util.regex.Pattern.compile("^(?:/|\\\\|[A-Za-z]:[\\\\/]).*");
-
     /** Whether a value is an absolute local path (POSIX, a Windows drive, a UNC share), on any operating system. */
     public static boolean isAbsolute(String value) {
-        return value != null && ABSOLUTE.matcher(value.strip()).matches();
+        return PathAnchors.isAbsolute(value);
     }
+
+    /** The one setting whose value is a URL that may also be a folder (the packs registry): the URL rule does not apply to it. */
+    private static final String REGISTRY_URL = "drishti.packs.registry.url";
 
     /**
      * One value of a path setting made absolute, the one rule of every reader (docs/admin/CONFIGURATION.md, "Launch roots"): a relative
      * path is taken under {@code home}, never the working folder; a {@code jdbc:sqlite:}/{@code duckdb:}/{@code h2:file:} URL has its file
      * part anchored; any other URL (a key ending {@code url}), a scheme ({@code s3://}, {@code mem://}, {@code file:}), a word, a number, a
-     * JSON path ({@code $.x}, {@code @x}), a template ({@code {x}}) or an absolute path is kept as given.
+     * JSON path ({@code $.x}, {@code @x}), a template ({@code {x}}) or an absolute path is kept as given. The rule is the shared one
+     * ({@link PathAnchors}); the install folder's setting is Drishti's.
      *
      * @param key      the setting's name (for the URL rule and the message)
      * @param value    one value (one entry of a list)
@@ -125,31 +122,13 @@ public final class Roots {
      * @return the value to use
      */
     public static String anchorValue(String key, String value, Path home, java.util.List<String> problems) {
-        String x = value == null ? "" : value.strip();
-        java.util.regex.Matcher db = FILE_DB.matcher(x);
-        if (db.matches()) {                                       // jdbc:sqlite:<file>: the file part, unless absolute or in memory
-            String file = db.group(2);
-            if (file.startsWith(":") || ABSOLUTE.matcher(file).matches() || file.contains("{")) {
-                return value;
-            }
-            if (home == null) {
-                problems.add(key + " is '" + x + "', a database file at a relative path, and " + HOME + " (" + HOME_ENV + ") is not set");
-                return value;
-            }
-            return db.group(1) + home.resolve(file).normalize();
+        if (!REGISTRY_URL.equals(key)) {
+            return PathAnchors.anchorValue(key, value, home, HOME, problems);
         }
-        if ((key.endsWith("url") || key.endsWith("URL")) && !key.equals("drishti.packs.registry.url")) {   // any other URL is not a path (the registry's may be a folder)
-            return value;
-        }
-        if (x.isEmpty() || ABSOLUTE.matcher(x).matches() || NOT_A_PATH.matcher(x).matches() || x.contains("{")
-                || x.startsWith("$") || x.startsWith("@")) {             // a JSON path, a placeholder left as text
-            return value;
-        }
-        if (home == null) {
-            problems.add(key + " is '" + x + "', a relative path, and " + HOME + " (" + HOME_ENV + ") is not set: give an absolute path, or set " + HOME);
-            return value;
-        }
-        return home.resolve(x).normalize().toString();
+        java.util.List<String> local = new java.util.ArrayList<>();     // the registry's URL may be a folder: asked as a path, named as itself
+        String anchored = PathAnchors.anchorValue("drishti.packs.registry", value, home, HOME, local);
+        local.forEach(m -> problems.add(m.replaceFirst("^drishti\\.packs\\.registry ", REGISTRY_URL + " ")));
+        return anchored;
     }
 
     private static Path base(String property, String env, String underHome) {

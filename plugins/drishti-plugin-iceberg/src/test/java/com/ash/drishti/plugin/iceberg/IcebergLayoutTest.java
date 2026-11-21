@@ -319,7 +319,7 @@ class IcebergLayoutTest {
     @Test
     void retentionRemovesOldDaysAndExpiresTheirSnapshots() throws Exception {
         Table t = table();
-        assertThat(maintained().keepDays(1, com.ash.drishti.api.LoadGuard.fromArgs(new String[0]))).isEqualTo(1);
+        assertThat(maintained().keepDays(1, com.ash.tools.time.LoadGuard.fromArgs(new String[0]))).isEqualTo(1);
         maintained().rewriteManifests();
         maintained().expireSnapshots(0);
         IcebergSourcePlugin p = plugin(true);

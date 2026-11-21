@@ -174,7 +174,7 @@ class IcebergOrphanFilesTest {
         // the snapshots of the load are minutes old: inside the floor, none is expired although --expire-hours 0 asked for it
         assertThat(r.path("after").path("snapshots").asInt()).isGreaterThan(1);
         try (LayoutLake lake = LayoutLake.of(Map.of("root", root.toString(), "domain", "risk", "engine", engine))) {
-            assertThat(lake.load(VectorLake.KIND).orElseThrow().keepDays(1, com.ash.drishti.api.LoadGuard.fromArgs(
+            assertThat(lake.load(VectorLake.KIND).orElseThrow().keepDays(1, com.ash.tools.time.LoadGuard.fromArgs(
                     new String[] {"--as-of", AS_OF.toString(), "--force-drop"}), AS_OF.minusDays(3))).isZero();
         }
     }

@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
-import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.tools.net.TlsMaterial;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.api.core.auth.AuthProvider;
