@@ -120,12 +120,14 @@
       const doc = this.doc, h = this.h;
       this.el.textContent = '';
       this.el.classList.add('gx');
-      this.modeBtns = MODES.map((m) => h(doc, 'button', { cls: 'gx-seg-btn', text: m === 'playground' ? 'Playground' : 'Documentation', attrs: { type: 'button', 'data-mode': m },
-        on: { click: () => this.setMode(m) } }));
-      this.themeBtn = h(doc, 'button', { cls: 'gx-btn', text: 'Light / dark', attrs: { type: 'button', 'data-action': 'theme' }, on: { click: () => this.toggleTheme() } });
+      this.modeGroup = h(doc, 'span', { cls: 'gx-seg' });
+      this.modes = new this.E.inputs.ButtonGroup(this.modeGroup, { label: 'Mode', mode: 'single', value: this.mode,
+        buttons: MODES.map((m) => ({ label: m === 'playground' ? 'Playground' : 'Documentation', variant: 'bare', cls: 'gx-seg-btn', data: { mode: m, value: m } })) });
+      this.modes.on('change', (e) => this.setMode(e.value));
+      this.themeBtn = this.E.inputs.button(doc, { label: 'Light / dark', action: 'theme', onClick: () => this.toggleTheme() });
       const top = h(doc, 'header', { cls: 'gx-top' }, [h(doc, 'span', { cls: 'gx-brand', text: 'DRISHTI' }), h(doc, 'span', { cls: 'gx-top-title', text: 'Elements · the gallery' }),
         h(doc, 'span', { cls: 'gx-train', text: 'release train ' + this.cat.elements }),
-        h(doc, 'span', { cls: 'gx-seg', attrs: { role: 'group', 'aria-label': 'Mode' } }, this.modeBtns), h(doc, 'span', { cls: 'gx-sp' }), this.themeBtn]);
+        this.modeGroup, h(doc, 'span', { cls: 'gx-sp' }), this.themeBtn]);
       this.search = h(doc, 'input', { cls: 'gx-search', attrs: { type: 'search', placeholder: 'Search components…', 'aria-label': 'Search components' },
         on: { input: (e) => { this.q = e.target.value.trim().toLowerCase(); this.renderNav(); } } });
       this.navList = h(doc, 'div', { cls: 'gx-nav-list' });
@@ -140,7 +142,7 @@
     render() {
       this.unmount();
       this.el.setAttribute('data-mode', this.mode);
-      this.modeBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === this.mode)));
+      this.modes.setValue(this.mode);
       this.renderNav();
       if (this.mode === 'playground') { this.renderPlayground(); } else { this.renderDocs(); }
       this.writeAddress();
@@ -168,8 +170,11 @@
         if (!items.length) { return; }
         this.navList.appendChild(h(doc, 'section', { cls: 'gx-nav-lib', attrs: { 'aria-label': l.name } }, [
           h(doc, 'h2', { cls: 'gx-nav-head' }, [h(doc, 'span', { text: l.name }), h(doc, 'span', { cls: 'gx-ver', text: this.cat.elements }), this.badge(l.server)]),
-          h(doc, 'ul', {}, items.map((d) => h(doc, 'li', {}, [h(doc, 'button', { cls: 'gx-nav-item', text: d.title, attrs: { type: 'button', 'data-c': d.id, 'aria-current': d.id === this.id ? 'page' : null },
-            on: { click: () => this.select(d.id) } }, [h(doc, 'span', { cls: 'gx-kind', text: d.kind === 'element' ? '</>' : 'fn', attrs: { 'aria-hidden': 'true' } })])])))]));
+          h(doc, 'ul', {}, items.map((d) => {
+            const item = this.E.inputs.button(doc, { label: d.title, variant: 'bare', cls: 'gx-nav-item', data: { c: d.id }, attrs: { 'aria-current': d.id === this.id ? 'page' : null }, onClick: () => this.select(d.id) });
+            item.appendChild(h(doc, 'span', { cls: 'gx-kind', text: d.kind === 'element' ? '</>' : 'fn', attrs: { 'aria-hidden': 'true' } }));
+            return h(doc, 'li', {}, [item]);
+          }))]));
       });
       if (!this.navList.children.length) { this.navList.appendChild(h(doc, 'p', { cls: 'gx-note', text: 'Nothing matches "' + q + '".' })); }
     }
@@ -282,10 +287,9 @@
         if (this.codeTab === 'ag') { extra.appendChild(this.agTable()); }
         list.querySelectorAll('[role="tab"]').forEach((b) => { const on = b.dataset.tab === this.codeTab; b.setAttribute('aria-selected', String(on)); b.setAttribute('tabindex', on ? '0' : '-1'); });
       };
-      const list = h(doc, 'div', { cls: 'gx-tabs', attrs: { role: 'tablist', 'aria-label': 'Code' } }, tabs.map((t) => h(doc, 'button', { cls: 'gx-tab', text: t[1],
-        attrs: { type: 'button', role: 'tab', 'data-tab': t[0], 'aria-controls': 'gx-code-panel' }, on: { click: () => { this.codeTab = t[0]; show(); } } })));
+      const list = h(doc, 'div', { cls: 'gx-tabs', attrs: { role: 'tablist', 'aria-label': 'Code' } }, tabs.map((t) => this.E.inputs.button(doc, { label: t[1], variant: 'bare', cls: 'gx-tab', role: 'tab', data: { tab: t[0] }, attrs: { 'aria-controls': 'gx-code-panel' }, onClick: () => { this.codeTab = t[0]; show(); } })));
       this.E.core.rovingTabindex(list, { selector: '[role="tab"]', onMove: (b) => { this.codeTab = b.dataset.tab; show(); } });
-      const copy = h(doc, 'button', { cls: 'gx-btn gx-copy', text: 'Copy', attrs: { type: 'button', 'data-action': 'copy' }, on: { click: () => this.copy(code[this.codeTab]) } });
+      const copy = this.E.inputs.button(doc, { label: 'Copy', cls: 'gx-copy', action: 'copy', onClick: () => this.copy(code[this.codeTab]) });
       const box = h(doc, 'section', { cls: 'gx-codebox', attrs: { 'aria-label': 'Code' } }, [h(doc, 'div', { cls: 'gx-codehead' }, [list, copy]), pre, extra]);
       show();
       return box;
@@ -342,7 +346,7 @@
       const doc = this.doc, h = this.h;
       const file = (text, path) => h(doc, 'li', {}, [text + ' ', h(doc, 'code', { text: path })]);
       return h(doc, 'section', { cls: 'gx-panel' }, [h(doc, 'h2', { text: 'Docs' }), h(doc, 'ul', { cls: 'gx-links' }, [
-        h(doc, 'li', {}, [h(doc, 'button', { cls: 'gx-linkbtn', text: 'This component\'s documentation page', attrs: { type: 'button', 'data-action': 'to-docs' }, on: { click: () => this.setMode('docs') } })]),
+        h(doc, 'li', {}, [this.E.inputs.button(doc, { label: 'This component\'s documentation page', variant: 'link', action: 'to-docs', onClick: () => this.setMode('docs') })]),
         file('API reference:', 'docs/API.md'), file('Design:', 'docs/DESIGN.md')])]);
     }
 
@@ -370,9 +374,7 @@
       this.evlog = null;
       this.main.appendChild(this.hero(d));
       const panel = h(doc, 'div', { cls: 'gx-docpanel', attrs: { role: 'tabpanel', id: 'gx-doc-panel', tabindex: '0' } });
-      const list = h(doc, 'div', { cls: 'gx-tabs gx-doctabs', attrs: { role: 'tablist', 'aria-label': 'Documentation' } }, DOC_TABS.map((t) => h(doc, 'button', { cls: 'gx-tab', text: t[1],
-        attrs: { type: 'button', role: 'tab', 'data-tab': t[0], 'aria-selected': String(t[0] === this.docTab), tabindex: t[0] === this.docTab ? '0' : '-1', 'aria-controls': 'gx-doc-panel' },
-        on: { click: () => { if (this.docTab !== t[0]) { this.docTab = t[0]; this.render(); } } } })));
+      const list = h(doc, 'div', { cls: 'gx-tabs gx-doctabs', attrs: { role: 'tablist', 'aria-label': 'Documentation' } }, DOC_TABS.map((t) => this.E.inputs.button(doc, { label: t[1], variant: 'bare', cls: 'gx-tab', role: 'tab', selected: t[0] === this.docTab, data: { tab: t[0] }, attrs: { tabindex: t[0] === this.docTab ? '0' : '-1', 'aria-controls': 'gx-doc-panel' }, onClick: () => { if (this.docTab !== t[0]) { this.docTab = t[0]; this.render(); } } })));
       this.main.appendChild(list);
       this.main.appendChild(panel);
       if (this.docTab === 'examples') { this.renderExamples(d, panel); } else if (this.docTab === 'page') { GAL.renderPage(this, d, panel); } else if (this.docTab === 'api') { this.renderApi(d, panel); } else if (this.docTab === 'a11y') { this.renderA11y(d, panel); } else { this.renderChangelog(d, panel); }
@@ -384,7 +386,7 @@
         const v = Object.assign(this.initial(d), ex.values);
         const stage = h(doc, 'div', { cls: 'gx-stage gx-stage-ex', attrs: { 'data-demo': d.id, 'data-example': String(i) } });
         const card = h(doc, 'article', { cls: 'gx-example', attrs: { 'aria-label': ex.title } }, [h(doc, 'header', { cls: 'gx-ex-head' }, [h(doc, 'h2', { text: ex.title }), h(doc, 'span', { cls: 'gx-sp' }),
-          h(doc, 'button', { cls: 'gx-btn', text: 'Open in playground', attrs: { type: 'button', 'data-action': 'open-playground' }, on: { click: () => { this.values[d.id] = v; this.mode = 'playground'; this.render(); } } })]), stage,
+          this.E.inputs.button(doc, { label: 'Open in playground', action: 'open-playground', onClick: () => { this.values[d.id] = v; this.mode = 'playground'; this.render(); } })]), stage,
           h(doc, 'pre', { cls: 'gx-code gx-code-ex', text: this.snippets(d, v).js, attrs: { tabindex: '0', 'aria-label': ex.title + ', JavaScript' } }),
           h(doc, 'footer', { cls: 'gx-ex-foot', text: 'runs in the browser · ' + BADGES[l.server][1] })]);
         panel.appendChild(card);

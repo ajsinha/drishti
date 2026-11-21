@@ -19,6 +19,7 @@
    change with a ULID the retry reuses, and never changes the row itself: the change is pending (queued, held with its message, applied)
    until the table's patch arrives. The host's answers (409, 422, 403, 405, 404) are read here into what the screen shows. A masked cell
    ({"$masked": true}) is never editable. */
+import { isMasked } from '../../drishti-core/src/drishti_index.js';
 
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
@@ -38,12 +39,6 @@ export function ulid(now, rnd) {
   return out;
 }
 
-/**
- * Whether a cell value is masked for the reader.
- * @param {*} v
- * @returns {boolean}
- */
-export function isMaskedValue(v) { return v !== null && typeof v === 'object' && v.$masked === true; }
 
 /** @private an option's value and label */
 function option(o) { return o !== null && typeof o === 'object' ? { value: o.value, label: String(o.label !== undefined ? o.label : o.value) } : { value: o, label: String(o) }; }
@@ -163,7 +158,7 @@ export function buildChange(spec, row, set, reason, id) {
  * @returns {boolean}
  */
 export function mayEdit(spec, row, column, lockedWhy) {
-  return !!spec && !lockedWhy && Object.prototype.hasOwnProperty.call(spec.columns, column) && !isMaskedValue(row[column]) && !!row;
+  return !!spec && !lockedWhy && Object.prototype.hasOwnProperty.call(spec.columns, column) && !isMasked(row[column]) && !!row;
 }
 
 /** @private a refusal over a bridge has no HTTP status: its code says it */

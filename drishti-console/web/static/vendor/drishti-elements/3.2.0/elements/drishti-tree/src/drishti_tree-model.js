@@ -21,7 +21,7 @@
    beside it, labelled as what they are (the gap is the diversification), never in its place. A node may name further parents (a DAG:
    the org chart draws them as dashed links). Re-parenting in the edit mode collects moves into one proposal: shown at once as a draft,
    undone or discarded by the person, and applied only when the host says the proposal was approved (four eyes). No page needed. */
-import { EventBus } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, searchWords } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * A measure of the nodes.
@@ -383,7 +383,7 @@ export class HierarchyModel {
    * @returns {Array<{id: string, label: string, breadcrumbs: string[]}>}
    */
   search(q, o) {
-    const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const words = searchWords(q);
     if (!words.length) { return []; }
     const limit = (o && o.limit) || Infinity, out = [];
     for (const n of this.all()) {

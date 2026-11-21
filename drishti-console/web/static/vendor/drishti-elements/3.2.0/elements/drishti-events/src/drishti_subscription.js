@@ -19,6 +19,7 @@
    so a grid's connectLive and liveSource take a subscription as a feed), handlers by kind, and async iterators. */
 import { EventError, AbortError, makeMessage, isMessage, isOwnTopic, matches } from './drishti_envelope.js';
 import { createFlow, GridSink } from './drishti_flow.js';
+import { now } from '../../drishti-core/src/drishti_index.js';
 
 /** A subscription's states. */
 export const SUBSCRIPTION_STATES = Object.freeze(['pending', 'active', 'recovering', 'refused', 'closed']);
@@ -294,6 +295,3 @@ export class Subscription {
     this.events._forget(this);
   }
 }
-
-/** @private a fine clock for the listeners' time (performance.now where there is one) */
-function now() { return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now(); }

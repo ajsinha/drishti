@@ -22,7 +22,7 @@
    source) and Pivot ›, which hands the same kind, filters, grouping and numbers to the Pivot, refreshing live when the kind is live.
    The page supplies two things and nothing else: api (httpLiveApi, or any object with rows, row, edit, window, history and mine) and channel
    (any object with subscribe(handlers) that answers an unsubscribe function; the console's Drishti.Channel keyed live:<id> is one). */
-import { h, announce, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { h, announce, url as drishtiUrl, formatCount } from '../../drishti-core/src/drishti_index.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 import { Grid } from './drishti_grid-view.js';
 import { ROW_KEY, ROW_VERSION, LiveRows, gridColumns, windowIds, pivotLayout, pivotHref, staticSpec, staticApi } from './drishti_live-model.js';
@@ -124,7 +124,7 @@ export class LiveSetGrid {
     this.state = s;
     this.status.setAttribute('data-state', s);
     const n = this.rows.size, total = this.rows.total;
-    const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' ' + (this.spec.noun || 'rows');
+    const count = (this.paged ? formatCount(n) + ' of ' + formatCount(total) : formatCount(total)) + ' ' + (this.spec.noun || 'rows');
     this.status.textContent = ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s] + ' · ' + count
       + (note ? ' · ' + note : '');
     this.status.setAttribute('data-rows', total);
@@ -284,7 +284,7 @@ export class LiveSetGrid {
     this.newRows = n;
     if (!this.newBtn) { return; }
     this.newBtn.hidden = n <= 0;
-    this.newBtn.textContent = n.toLocaleString('en-US') + ' new';
+    this.newBtn.textContent = formatCount(n) + ' new';
   }
 
   /** @private the "N new" button: back to the top of the declaration's own order, from a fresh snapshot */

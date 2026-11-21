@@ -17,7 +17,7 @@
    figure, its change, its unit and caption), markdown (text in a basic markup: headings, emphasis, code, lists, links; built as DOM
    nodes, never HTML), links (related things, each with its badge and status) and timeline (dated events, oldest first). Every figure is
    the producer's text; nothing is formatted or computed here. A kind whose cells keep their count updates them in place (the live path). */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, formatCount } from '../../drishti-core/src/drishti_index.js';
 import { defineKind } from './drishti_views-kinds.js';
 import { drawCell, updateCell, linkTo, safeHref, toneClass, say } from './drishti_views-cells.js';
 import { marksOf, clickable } from './drishti_views-state.js';
@@ -166,10 +166,10 @@ const markdown = {
 const links = {
   paint(body, panel, ctx) {
     const doc = ctx.doc, ul = h(doc, 'ul', { cls: 'dv-links' });
-    list(panel.data.links).forEach((it) => {
+    list(panel.data.links).forEach((it) => {          // a denied target is never a link; a missing one is (its chip says so: it may be found when opened)
       it = it || {};
       const label = typeof it.label === 'string' ? it.label : '', text = typeof it.text === 'string' && it.text ? it.text : label;
-      const name = it.link && typeof it.link === 'object' && it.status !== 'denied' && it.status !== 'missing' ? linkTo(ctx, it.link, text) : h(doc, 'span', { cls: 'dv-links-text', text: text });
+      const name = it.link && typeof it.link === 'object' && it.status !== 'denied' ? linkTo(ctx, it.link, text) : h(doc, 'span', { cls: 'dv-links-text', text: text });
       const st = typeof it.status === 'string' && it.status && it.status !== 'resolved' ? h(doc, 'span', { cls: 'dv-chip dv-links-st dv-st-' + it.status, text: LINK_STATUS[it.status] || it.status }) : null;
       const badge = typeof it.badge === 'string' && it.badge ? h(doc, 'span', { cls: 'dv-tag', text: it.badge }) : null;
       ul.appendChild(h(doc, 'li', { cls: it.status ? 'dv-st-' + it.status : null }, [label && label !== text ? h(doc, 'span', { cls: 'dv-links-label', text: label }) : null, name, badge, st]));
@@ -196,7 +196,7 @@ const timeline = {
       ol.appendChild(li);
     });
     body.appendChild(ol);
-    if (Number.isInteger(panel.data.more) && panel.data.more > 0) { body.appendChild(h(doc, 'p', { cls: 'dv-more', text: say(ctx.messages, 'moreEvents', { count: panel.data.more.toLocaleString('en-US') }) })); }
+    if (Number.isInteger(panel.data.more) && panel.data.more > 0) { body.appendChild(h(doc, 'p', { cls: 'dv-more', text: say(ctx.messages, 'moreEvents', { count: formatCount(panel.data.more) }) })); }
     return { dispose() { while (body.firstChild) { body.removeChild(body.firstChild); } } };
   }
 };

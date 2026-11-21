@@ -33,11 +33,12 @@
    drishti-core's (",.0f" is amount0, ".2%" pct2, "~s" compact). */
 import { compileCondition, rowsOf, num } from './drishti_chart-data.js';
 import { chartIn } from './drishti_chart-element.js';
+import { aggregate as reduceValues, aggFunc } from '../../drishti-core/src/drishti_index.js';
 
-const AGG = { sum: (a) => a.reduce((s, x) => s + x, 0), mean: (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null), count: (a) => a.length,
-  min: (a) => (a.length ? Math.min.apply(null, a) : null), max: (a) => (a.length ? Math.max.apply(null, a) : null),
-  median: (a) => { if (!a.length) { return null; } const s = a.slice().sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; } };
-AGG.average = AGG.mean;
+/** What Vega-Lite names that drishti-core's aggregation engine names otherwise, and the one it lacks. */
+const AGG_NAME = { mean: 'avg', average: 'avg' };
+const median = (a) => { if (!a.length) { return null; } const s = a.slice().sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const agg = (name, values) => (name === 'median' ? median(values) : reduceValues(values, aggFunc(AGG_NAME[name] || name) ? AGG_NAME[name] || name : 'sum'));
 
 const KNOWN_TOP = ['$schema', 'data', 'mark', 'encoding', 'layer', 'transform', 'title', 'width', 'height', 'autosize', 'config', 'description', 'name', 'background', 'padding'];
 const KNOWN_ENC = ['x', 'y', 'color', 'fill', 'stroke', 'size', 'theta', 'tooltip', 'opacity', 'x2', 'y2'];
@@ -175,8 +176,8 @@ function aggregate(rows, enc) {
     const o = {};
     keys.forEach((f) => { o[f] = g[0][f]; });
     aggs.forEach((k) => {
-      const e = enc[k], fn = AGG[e.aggregate] || AGG.sum, name = e.field || '__count';
-      o[name] = e.aggregate === 'count' ? g.length : fn(g.map((r) => num(r[e.field])).filter((v) => v !== null));
+      const e = enc[k], name = e.field || '__count';
+      o[name] = e.aggregate === 'count' ? g.length : agg(e.aggregate, g.map((r) => num(r[e.field])).filter((v) => v !== null));
     });
     return o;
   });

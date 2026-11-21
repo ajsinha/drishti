@@ -18,7 +18,7 @@
    needs nothing more), the icon font of the host's own few glyphs (FontFace: an @font-face inside a shadow root is not used), and the
    vendored ECharts (and ECharts GL for a 3D surface) as scripts, which drishti-chart's panel charts draw with. Nothing comes from a CDN.
    Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's static scripts. */
-import { staticUrl, manifest, url as drishtiUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
+import { staticUrl, ELEMENTS_VERSION } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
 
 const base = { statics: null, sheet: null };
 
@@ -120,26 +120,6 @@ export function sheet() {
     const s = new CSSStyleSheet();
     s.replaceSync(await res.text());
     return s;
-  });
-}
-
-/**
- * The painter, drawing inside a shadow root of the host's, would ask drishti-core's loader to link the libraries' sheets into the page (a
- * request a host page's style-src may refuse, and a sheet a shadow root does not see). The host's adopted sheet already holds them, so the
- * loader's page links are claimed once, without loading anything: a <link> with no rel, which is what the loader looks for by its address.
- * @returns {void}
- */
-export function claimSheets() {
-  memoised('claimed', async () => {
-    const libs = manifest().libraries || {};
-    Object.keys(libs).forEach((n) => (libs[n].css || []).forEach((c) => {
-      const href = drishtiUrl(staticUrl(c));
-      if (!document.querySelector('link[data-drishti-elements="' + href + '"]')) {
-        const l = document.createElement('link');
-        l.setAttribute('data-drishti-elements', href);
-        document.head.appendChild(l);
-      }
-    }));
   });
 }
 

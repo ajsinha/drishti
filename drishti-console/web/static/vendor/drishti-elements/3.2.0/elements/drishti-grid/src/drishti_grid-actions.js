@@ -25,7 +25,7 @@ import { aggFunc } from './drishti_aggregate.js';
 import { XLSX_TYPE } from './drishti_export.js';
 import { columnMenuItems, cellMenuItems, FUNCTION_KEYS, parseCondition, pivotMeasures } from './drishti_grid-ui.js';
 import { LAYOUTS, DENSITIES } from './drishti_grid-model-base.js';
-import { openDialog, h, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { openDialog, h, url as drishtiUrl, copyText } from '../../drishti-core/src/drishti_index.js';
 import { editorOf } from './drishti_grid-edit.js';
 
 /**
@@ -89,8 +89,7 @@ function anyEditable(v) { return !v.model.pivotMode && v.model.shownColumns().so
 /** @private copied text: the clipboard, the note, the event */
 function copied(v, text, headers) {
   v.lastCopy = text;
-  const win = v.doc.defaultView;
-  try { if (win.navigator.clipboard) { win.navigator.clipboard.writeText(text).catch(() => {}); } } catch (err) { /* the text stays in lastCopy */ }
+  copyText(v.doc.defaultView, text);                // a refusal leaves the text in lastCopy
   const lines = text ? text.split('\n').length : 0;
   v.say('Copied ' + lines + (lines === 1 ? ' line' : ' lines') + (headers ? ' with headers' : '') + ' as tab-separated text');
   v.emitView('copied', { text: text, headers: !!headers });

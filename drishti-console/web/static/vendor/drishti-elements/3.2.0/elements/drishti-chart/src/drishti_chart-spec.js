@@ -77,10 +77,6 @@ export function kindOf(name) { return registry.get(name) || null; }
  */
 export function kindList() { return Array.from(registry.entries()).map(([n, d]) => ({ name: n, label: d.label, family: d.family, cartesian: !!d.cartesian })); }
 
-/** The aliases a spec may use for a kind. */
-export const KIND_ALIASES = Object.freeze({ column: 'bar', columns: 'bar', bars: 'bar', lines: 'line', point: 'scatter', points: 'scatter', doughnut: 'donut', box: 'boxplot',
-  'box-plot': 'boxplot', hist: 'histogram', choropleth: 'map', geo: 'map', candles: 'candlestick' });
-
 const LEGENDS = ['bottom', 'top', 'right', 'none'];
 const ON_CLICK = ['explain', 'select', 'none'];
 const EXPORTS = ['png', 'svg', 'csv', 'spec'];
@@ -94,7 +90,7 @@ export function checkSpec(spec) {
   const out = [];
   const bad = (path, message) => out.push({ path: path, message: message });
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) { bad('$', 'a spec is an object'); return out; }
-  const kind = KIND_ALIASES[spec.kind] || spec.kind;
+  const kind = spec.kind;
   if (!kind) { bad('$.kind', 'every spec names its kind'); } else if (!registry.has(kind)) { bad('$.kind', 'no kind ' + spec.kind + ' (there are ' + kindList().map((k) => k.name).join(', ') + ')'); }
   if (spec.data !== undefined && spec.data !== null && typeof spec.data !== 'object') { bad('$.data', 'data is rows, {rows}, {values}, {columns, rows} or {source}'); }
   if (spec.data && spec.data.source !== undefined && typeof spec.data.source !== 'string') { bad('$.data.source', 'a source is the address of a server answer'); }
@@ -126,7 +122,7 @@ export function checkSpec(spec) {
 }
 
 /**
- * A spec ready to draw: the kind's alias resolved, x, y and value as objects, the defaults filled in (legend at the bottom, click to
+ * A spec ready to draw: x, y and value as objects, the defaults filled in (legend at the bottom, click to
  * Explain, every export, the data table on). The spec given is not changed.
  * @param {Object} spec
  * @returns {Object}
@@ -137,7 +133,6 @@ export function normalizeSpec(spec) {
   if (problems.length) { const e = new Error(problems[0].path + ': ' + problems[0].message); e.problems = problems; throw e; }
   const s = JSON.parse(JSON.stringify(spec, (k, v) => (typeof v === 'function' ? undefined : v)));
   ['format', 'tooltipFormat'].forEach((k) => { if (typeof spec[k] === 'function') { s[k] = spec[k]; } });
-  s.kind = KIND_ALIASES[s.kind] || s.kind;
   ['x', 'y', 'value', 'size', 'colour', 'category'].forEach((k) => { if (typeof s[k] === 'string') { s[k] = { field: s[k] }; } });
   if (s.color && !s.colour) { s.colour = typeof s.color === 'string' ? { field: s.color } : s.color; }
   if (typeof s.series === 'string') { s.series = { by: s.series }; }

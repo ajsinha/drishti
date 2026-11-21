@@ -27,11 +27,10 @@ html, body { margin: 0; background: var(--d-bg); color: var(--d-ink); font: 13px
 .gx-top-title { font-weight: 600; }
 .gx-train { color: var(--d-faint); font-size: 12px; }
 .gx-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 8px; overflow: hidden; }
-.gx-seg-btn, .gx-btn, .gx-tab, .gx-linkbtn { font: inherit; color: var(--d-muted); background: transparent; border: 0; padding: 5px 11px; cursor: pointer; }
+.gx-seg-btn, .gx-tab, .gx-linkbtn { font: inherit; color: var(--d-muted); background: transparent; border: 0; padding: 5px 11px; cursor: pointer; }
 .gx-seg-btn + .gx-seg-btn { border-left: 1px solid var(--d-border); }
-.gx-seg-btn[aria-pressed="true"], .gx-btn[aria-pressed="true"] { background: var(--d-accent-tint); color: var(--d-accent); }
-.gx-btn { border: 1px solid var(--d-border); border-radius: 7px; color: var(--d-ink); }
-.gx-btn:hover, .gx-tab:hover, .gx-nav-item:hover { background: var(--d-surface-2); }
+.gx-seg-btn[aria-pressed="true"] { background: var(--d-accent-tint); color: var(--d-accent); }
+.gx-tab:hover, .gx-nav-item:hover { background: var(--d-surface-2); }
 .gx :focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .gx-linkbtn { padding: 0; color: var(--d-link); text-decoration: underline; }
 

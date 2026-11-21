@@ -26,7 +26,7 @@
      liveSource(source, feed)    any source with a live feed (subscribe): a grid connects both
 
    Each says what it can do (capabilities: sort, filter, group, pivot, live) so a page knows what a grid may offer. */
-import { compareRows, rowFilter, isBlank } from '../../drishti-core/src/drishti_index.js';
+import { compareRows, rowFilter, isBlank, fetcher } from '../../drishti-core/src/drishti_index.js';
 import { fetchFrame } from './drishti_arrow.js';
 
 /**
@@ -141,7 +141,7 @@ export function restSource(url, o) {
     capabilities: { sort: true, filter: true, group: o.method === 'POST', pivot: false, live: false },
     getRows(req) {
       req = rowRequest(req);
-      const f = o.fetch || globalThis.fetch.bind(globalThis);
+      const f = fetcher(o.fetch);
       const headers = Object.assign({ Accept: 'application/json' }, o.headers);
       if (o.method === 'GET') {
         const q = new URLSearchParams({ offset: String(req.startRow), limit: String(req.endRow - req.startRow) });

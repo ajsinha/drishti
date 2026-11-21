@@ -39,6 +39,7 @@ export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults,
   parseField, currencyOf, offeredValues } from './drishti_schema.js';
 export { FileDrop, acceptedName } from './drishti_file-drop.js';
 export { Switch } from './drishti_switch.js';
+export { Button, ButtonGroup, button } from './drishti_button.js';
 export { Form } from './drishti_form.js';
 export { WhatIf } from './drishti_what-if.js';
 export { QUERY_OPS, queryText, parseQuery, QueryBuilder } from './drishti_query-builder.js';

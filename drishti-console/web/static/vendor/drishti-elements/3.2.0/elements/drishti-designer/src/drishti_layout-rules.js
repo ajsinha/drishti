@@ -17,6 +17,7 @@
    snapping a pixel offset to the grid, clamping into the grid, overlap and settling (what a move overlaps is pushed down, as a report
    page does), align and distribute, the bounding box, and the panel rules of a 12-column screen (a width in columns, a height in rows
    or 0 for "as tall as its content", the sentence a screen reader hears). */
+import { clamp } from '../../drishti-core/src/drishti_index.js';
 
 /** The columns of a screen. */
 export const GRID = 12;
@@ -33,15 +34,6 @@ export const DEFAULT_MIN_SPAN = 3;
  * @property {number} w columns
  * @property {number} h rows
  */
-
-/**
- * n between lo and hi.
- * @param {number} n
- * @param {number} lo
- * @param {number} hi
- * @returns {number}
- */
-export function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
 /**
  * A width in columns, between the minimum and the whole grid.

@@ -15,7 +15,7 @@
  */
 /* A chart's export (PNG, SVG, CSV, the spec) and its live data (transactions by row id, throttled); Chart (drishti_chart-view.js)
    extends this and keeps the rest (the card, the tools, Explain, selection, keys, modes). */
-import { h, toCsv, download } from '../../drishti-core/src/drishti_index.js';
+import { h, toCsv, download, copyText } from '../../drishti-core/src/drishti_index.js';
 import { specText } from './drishti_chart-spec.js';
 import { rowId } from './drishti_chart-kinds.js';
 import { svgOf } from './drishti_chart-parts.js';
@@ -62,7 +62,7 @@ export class ChartIO {
     let out, type, file;
     if (what === 'png' || what === 'svg') { const sn = this.snapshot(what); out = sn.data; file = sn.file; type = sn.type; }
     if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
-    if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
+    if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; copyText(this.win, out); }
     if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }
     if (what !== 'spec') { (this.o.download || ((f, c, t) => download(this.doc, f, c, t)))(file, out, type); }
     this.emit('exported', { what: what, file: file, size: out.length });

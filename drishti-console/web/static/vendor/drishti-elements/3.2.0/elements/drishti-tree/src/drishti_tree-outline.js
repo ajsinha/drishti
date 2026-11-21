@@ -30,7 +30,7 @@
    Enter adds the field; its data-* attributes are the host's selectors; wire gives the host the button, for a drag), a mark that is a
    link (href) or carries the host's data-* attributes, small buttons after the line (actions: remove a dataset), branches that start
    closed (startOpen) and the node's column as wide as the panel (fill). */
-import { h, announce, EventBus, trackPointer, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { h, announce, EventBus, trackPointer, url as drishtiUrl, searchWords } from '../../drishti-core/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { keyMove } from './drishti_tree-io.js';
 import { Tree } from './drishti_tree-view.js';
@@ -111,7 +111,7 @@ const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => {
  * @returns {{hits: string[], keep: ?Set<string>}}
  */
 export function outlineFilter(model, q, textOf) {
-  const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(q);
   if (!words.length) { return { hits: [], keep: null }; }
   const wordsOf = textOf || ((n) => n.label + ' ' + n.id + ' ' + n.kind), hits = [], keep = new Set();
   model.all().forEach((n) => {

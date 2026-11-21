@@ -17,7 +17,7 @@
    "Connecting", "Reconnecting in 4 s" with Reconnect now, "Offline: 3 changes waiting", "Refused: ..." with Try again, "Missed 12 updates"
    with Refresh. Speaks changes of state and counts through a polite live region, at most one announcement in five seconds, never
    individual messages; nothing steals focus. */
-import { h, showState } from '../../drishti-core/src/drishti_index.js';
+import { h, showState, formatCount } from '../../drishti-core/src/drishti_index.js';
 
 /** How often the badge may speak, in milliseconds. */
 export const ANNOUNCE_EVERY_MS = 5000;
@@ -40,7 +40,7 @@ export function badgeView(st, f) {
   if (s === 'refused') { return { kind: 'error', text: 'Refused', detail: st.reason || null, fix: 'reconnect', tone: 'bad' }; }
   if (s === 'closed') { return { kind: 'stale', text: st.suspended ? 'Paused' + waiting : 'Closed' + waiting, detail: null, fix: 'reconnect', tone: 'muted' }; }
   if (s === 'connecting' || s === 'idle') { return { kind: 'empty', text: 'Connecting' + waiting, detail: null, fix: null, tone: 'muted' }; }
-  if (f.missed) { return { kind: 'stale', text: 'Missed ' + f.missed.toLocaleString('en-US') + (f.missed === 1 ? ' update' : ' updates'), detail: null, fix: 'refresh', tone: 'warn' }; }
+  if (f.missed) { return { kind: 'stale', text: 'Missed ' + formatCount(f.missed) + (f.missed === 1 ? ' update' : ' updates'), detail: null, fix: 'refresh', tone: 'warn' }; }
   return { kind: 'empty', text: 'Live' + waiting, detail: null, fix: null, tone: 'good' };
 }
 

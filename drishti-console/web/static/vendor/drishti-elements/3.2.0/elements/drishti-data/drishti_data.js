@@ -36,7 +36,7 @@
   var __m = {};
   /* ---- src/drishti_arrow.js ---- */
   __m["src/drishti_arrow.js"] = (function () {
-    var staticUrl = __lib("drishti-core").staticUrl, loadScript = __lib("drishti-core").loadScript, endpoint = __lib("drishti-core").endpoint;
+    var staticUrl = __lib("drishti-core").staticUrl, loadScript = __lib("drishti-core").loadScript, endpoint = __lib("drishti-core").endpoint, pad = __lib("drishti-core").pad, fetcher = __lib("drishti-core").fetcher;
     const ARROW_MEDIA = 'application/vnd.apache.arrow.stream';
     const ARROW_VENDOR = 'vendor/apache-arrow/21.1.0/Arrow.es2015.min.js';
     const SAFE = typeof BigInt === 'function' ? BigInt(Number.MAX_SAFE_INTEGER) : null;
@@ -46,7 +46,6 @@
       if (root.Arrow && root.Arrow.tableFromIPC) { return Promise.resolve(root.Arrow); }
       return loadScript(staticUrl(ARROW_VENDOR)).then(() => { if (!root.Arrow) { throw new Error('Arrow JS did not load'); } return root.Arrow; });
     }
-    function pad(n, w) { return String(n).padStart(w || 2, '0'); }
     function isoDay(ms) { const d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
     function isoTime(ms, zoned) {
       const d = new Date(ms), frac = d.getUTCMilliseconds() ? '.' + pad(d.getUTCMilliseconds(), 3) : '';
@@ -193,7 +192,7 @@
     }
     function fetchFrame(url, o) {
       o = o || {};
-      const f = o.fetch || globalThis.fetch.bind(globalThis);
+      const f = fetcher(o.fetch);
       const init = { method: o.method || 'GET', credentials: 'same-origin', signal: o.signal, headers: Object.assign({ Accept: ARROW_MEDIA + ', application/json;q=0.9' }, o.headers) };
       if (o.body !== undefined && init.method !== 'GET') { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
       return f(url, init).then((r) => readResponse(r, o));
@@ -208,7 +207,7 @@
         if (this.o.flight === false) { this.caps = Promise.resolve({ flightHttp: null }); return this.caps; }
         if (this.o.flight && this.o.flight.doGet) { this.caps = Promise.resolve({ flightHttp: { doGet: this.o.flight.doGet } }); return this.caps; }
         if (!this.o.capabilitiesUrl) { this.caps = Promise.resolve({ flightHttp: null }); return this.caps; }   // no address: Arrow over HTTP only
-        const f = this.o.fetch || globalThis.fetch.bind(globalThis);
+        const f = fetcher(this.o.fetch);
         this.caps = f(this.o.capabilitiesUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
           .then((r) => (r.ok ? r.json() : {}), () => ({}))
           .then((c) => ({ flightHttp: c && c.flightHttp && c.flightHttp.doGet ? { doGet: c.flightHttp.doGet } : null }), () => ({ flightHttp: null }));
@@ -292,7 +291,7 @@
   })();
   /* ---- src/drishti_sources.js ---- */
   __m["src/drishti_sources.js"] = (function () {
-    var compareRows = __lib("drishti-core").compareRows, rowFilter = __lib("drishti-core").rowFilter, isBlank = __lib("drishti-core").isBlank;
+    var compareRows = __lib("drishti-core").compareRows, rowFilter = __lib("drishti-core").rowFilter, isBlank = __lib("drishti-core").isBlank, fetcher = __lib("drishti-core").fetcher;
     var fetchFrame = __m["src/drishti_arrow.js"].fetchFrame;
     function rowRequest(r) {
       return Object.assign({ startRow: 0, endRow: 100, sortModel: [], filterModel: {}, quickFilter: '', rowGroupCols: [], groupKeys: [], valueCols: [] }, r);
@@ -359,7 +358,7 @@
         capabilities: { sort: true, filter: true, group: o.method === 'POST', pivot: false, live: false },
         getRows(req) {
           req = rowRequest(req);
-          const f = o.fetch || globalThis.fetch.bind(globalThis);
+          const f = fetcher(o.fetch);
           const headers = Object.assign({ Accept: 'application/json' }, o.headers);
           if (o.method === 'GET') {
             const q = new URLSearchParams({ offset: String(req.startRow), limit: String(req.endRow - req.startRow) });

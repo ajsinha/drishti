@@ -51,6 +51,7 @@
  *   reset(key)                         forget a remembered width set (all modes) and re-apply defaults
  *   phone()                            true when resizing is off (below 640 px)
  */
+import { clamp } from './drishti_util.js';
 
 let live = null;
 
@@ -69,7 +70,6 @@ export function installResize(window) {
   var mq = window.matchMedia ? window.matchMedia(PHONE) : null;
   function phone() { return !!(mq && mq.matches); }
   function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
   /* ---- memory: per person (this browser) and per mode; never shared server state --------------------------------------------- */
   function modeOf(el) { var m = el.closest && el.closest('[data-resize-mode]'); return m ? m.getAttribute('data-resize-mode') : ''; }

@@ -23,7 +23,7 @@
    Where the bytes come from: Flight over HTTP when the server offers it (a POST of the ticket to its do-get address, an Arrow stream
    back; ArrowClient asks the server's capabilities once), else Arrow over HTTP (Accept: application/vnd.apache.arrow.stream), else JSON.
    A server can answer Arrow over HTTP; a Flight service over gRPC is something a browser cannot speak. */
-import { staticUrl, loadScript, endpoint } from '../../drishti-core/src/drishti_index.js';
+import { staticUrl, loadScript, endpoint, pad, fetcher } from '../../drishti-core/src/drishti_index.js';
 
 /** The media type of an Arrow IPC stream. */
 export const ARROW_MEDIA = 'application/vnd.apache.arrow.stream';
@@ -43,7 +43,6 @@ export function arrowLib(given) {
   return loadScript(staticUrl(ARROW_VENDOR)).then(() => { if (!root.Arrow) { throw new Error('Arrow JS did not load'); } return root.Arrow; });
 }
 
-function pad(n, w) { return String(n).padStart(w || 2, '0'); }
 function isoDay(ms) { const d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
 function isoTime(ms, zoned) {
   const d = new Date(ms), frac = d.getUTCMilliseconds() ? '.' + pad(d.getUTCMilliseconds(), 3) : '';
@@ -278,7 +277,7 @@ export function readResponse(r, o) {
  */
 export function fetchFrame(url, o) {
   o = o || {};
-  const f = o.fetch || globalThis.fetch.bind(globalThis);
+  const f = fetcher(o.fetch);
   const init = { method: o.method || 'GET', credentials: 'same-origin', signal: o.signal, headers: Object.assign({ Accept: ARROW_MEDIA + ', application/json;q=0.9' }, o.headers) };
   if (o.body !== undefined && init.method !== 'GET') { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
   return f(url, init).then((r) => readResponse(r, o));
@@ -307,7 +306,7 @@ export class ArrowClient {
     if (this.o.flight === false) { this.caps = Promise.resolve({ flightHttp: null }); return this.caps; }
     if (this.o.flight && this.o.flight.doGet) { this.caps = Promise.resolve({ flightHttp: { doGet: this.o.flight.doGet } }); return this.caps; }
     if (!this.o.capabilitiesUrl) { this.caps = Promise.resolve({ flightHttp: null }); return this.caps; }   // no address: Arrow over HTTP only
-    const f = this.o.fetch || globalThis.fetch.bind(globalThis);
+    const f = fetcher(this.o.fetch);
     this.caps = f(this.o.capabilitiesUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
       .then((r) => (r.ok ? r.json() : {}), () => ({}))
       .then((c) => ({ flightHttp: c && c.flightHttp && c.flightHttp.doGet ? { doGet: c.flightHttp.doGet } : null }), () => ({ flightHttp: null }));

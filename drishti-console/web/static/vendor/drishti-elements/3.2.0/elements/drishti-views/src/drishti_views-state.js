@@ -18,9 +18,9 @@
    (its `on`, or its `set` written as set effects), and running that list on the state. The painter never evaluates an expression:
    every value, guard and argument of an effect arrives already evaluated for its mark. What a click writes, the host reads back as
    the next bind's state.<id> parameters; notify and host effects are handed to the host, never run here. */
+import { isObject } from '../../drishti-core/src/drishti_index.js';
 
 const list = (x) => (Array.isArray(x) ? x : []);
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /** The trigger each kind fires: a table's rows, an hbar's bars, and the one point-click of every other mark. */
 export function triggerOf(kind) {
@@ -38,7 +38,7 @@ export const POINT_KINDS = Object.freeze(['line', 'area', 'scatter', 'waterfall'
 export function triggerFor(kind) { return triggerOf(kind) || (POINT_KINDS.indexOf(kind) >= 0 ? 'point-click' : null); }
 
 function rowsDepthFirst(rows, out) {
-  list(rows).forEach((r) => { if (isObj(r)) { out.push(r); rowsDepthFirst(r.children, out); } });
+  list(rows).forEach((r) => { if (isObject(r)) { out.push(r); rowsDepthFirst(r.children, out); } });
   return out;
 }
 
@@ -50,15 +50,15 @@ function rowsDepthFirst(rows, out) {
  * @returns {Object[]}
  */
 export function marksOf(panel) {
-  const d = panel && isObj(panel.data) ? panel.data : {}, k = panel && panel.kind;
+  const d = panel && isObject(panel.data) ? panel.data : {}, k = panel && panel.kind;
   if (k === 'table' || k === 'ladder') { return rowsDepthFirst(d.rows, []); }
-  if (k === 'hbar') { return list(d.bars).filter(isObj); }
-  if (k === 'waterfall') { return list(d.steps).filter(isObj); }
-  if (k === 'scatter') { return list(d.points).filter(isObj); }
-  if (k === 'timeline') { return list(d.events).filter(isObj); }
-  if (k === 'candlestick') { return list(d.candles).filter(isObj); }
-  if (k === 'treemap') { return list(d.cells).filter(isObj); }
-  if (k === 'pivot') { const out = []; list(d.rows).forEach((r) => list(r && r.cells).forEach((c) => out.push(isObj(c) ? c : {}))); return out; }   // row by row
+  if (k === 'hbar') { return list(d.bars).filter(isObject); }
+  if (k === 'waterfall') { return list(d.steps).filter(isObject); }
+  if (k === 'scatter') { return list(d.points).filter(isObject); }
+  if (k === 'timeline') { return list(d.events).filter(isObject); }
+  if (k === 'candlestick') { return list(d.candles).filter(isObject); }
+  if (k === 'treemap') { return list(d.cells).filter(isObject); }
+  if (k === 'pivot') { const out = []; list(d.rows).forEach((r) => list(r && r.cells).forEach((c) => out.push(isObject(c) ? c : {}))); return out; }   // row by row
   if (k === 'surface') { return surfaceMarks(d); }
   if (k === 'line' || k === 'area') {
     return list(d.x).map((x, i) => ({ set: list(d.set)[i] || null, on: list(d.on)[i] || null, ev: list(d.ev)[i] }));
@@ -86,9 +86,9 @@ export function surfaceMarks(d) {
  * @returns {Object[]}
  */
 export function effectsOf(mark, trigger) {
-  if (!isObj(mark)) { return []; }
-  if (isObj(mark.on) && Array.isArray(mark.on[trigger])) { return mark.on[trigger].filter(isObj); }
-  if (isObj(mark.set)) { return Object.keys(mark.set).map((id) => ({ do: 'set', state: id, value: mark.set[id] })); }
+  if (!isObject(mark)) { return []; }
+  if (isObject(mark.on) && Array.isArray(mark.on[trigger])) { return mark.on[trigger].filter(isObject); }
+  if (isObject(mark.set)) { return Object.keys(mark.set).map((id) => ({ do: 'set', state: id, value: mark.set[id] })); }
   return [];
 }
 
@@ -97,7 +97,7 @@ export function effectsOf(mark, trigger) {
  * @param {Object} mark
  * @returns {boolean}
  */
-export function hasEffects(mark) { return isObj(mark) && (isObj(mark.set) || isObj(mark.on)); }
+export function hasEffects(mark) { return isObject(mark) && (isObject(mark.set) || isObject(mark.on)); }
 
 /**
  * A value as a bind request carries it: text, a list's items joined by commas.
@@ -118,7 +118,7 @@ export function requestText(v) {
 export function pickEvent(event, path) {
   let v = event;
   if (path === '') { return v === undefined ? null : v; }
-  for (const k of String(path).split('.')) { v = isObj(v) && Object.prototype.hasOwnProperty.call(v, k) ? v[k] : null; }
+  for (const k of String(path).split('.')) { v = isObject(v) && Object.prototype.hasOwnProperty.call(v, k) ? v[k] : null; }
   return v === undefined ? null : v;
 }
 
@@ -134,7 +134,7 @@ export class StateStore {
    */
   load(states) {
     this.entries.clear();
-    list(states).forEach((s) => { if (isObj(s) && typeof s.id === 'string') { this.entries.set(s.id, { value: s.value === undefined ? null : s.value, url: s.url === true, reads: Array.isArray(s.reads) ? s.reads.slice() : null }); } });
+    list(states).forEach((s) => { if (isObject(s) && typeof s.id === 'string') { this.entries.set(s.id, { value: s.value === undefined ? null : s.value, url: s.url === true, reads: Array.isArray(s.reads) ? s.reads.slice() : null }); } });
   }
 
   /**
@@ -208,10 +208,10 @@ export class StateStore {
       } else if (e.do === 'notify') {
         ran.push(Object.assign({}, e));
       } else if (e.do === 'host') {
-        const out = Object.assign({}, e), wired = isObj(e.withEvent) ? e.withEvent : null;
+        const out = Object.assign({}, e), wired = isObject(e.withEvent) ? e.withEvent : null;
         delete out.withEvent;
         if (wired && given) {
-          out.with = Object.assign({}, isObj(e.with) ? e.with : {});
+          out.with = Object.assign({}, isObject(e.with) ? e.with : {});
           Object.keys(wired).forEach((k) => { out.with[k] = pickEvent(event, wired[k]); });
         }
         ran.push(out);
@@ -261,22 +261,22 @@ export function resolveWire(panel, id, trigger, o) {
   const refuse = (message) => ({ problems: [{ code: 'RCH-5001', message: message }], effects: [] });
   if (trigger === 'change') {
     if (!o.control) { return refuse("no control '" + id + "' on the screen"); }
-    const on = isObj(o.control.on) && Array.isArray(o.control.on.change) ? o.control.on.change.filter(isObj) : [];
+    const on = isObject(o.control.on) && Array.isArray(o.control.on.change) ? o.control.on.change.filter(isObject) : [];
     return { problems: [], effects: on, event: o.value === undefined ? null : o.value };
   }
   if (!panel) { return refuse("no panel '" + id + "' on the screen"); }
   if (trigger === 'action') {
-    const acts = Array.isArray(panel.actions) ? panel.actions.filter(isObj) : [], ix = o.mark === undefined || o.mark === null ? 0 : o.mark;
+    const acts = Array.isArray(panel.actions) ? panel.actions.filter(isObject) : [], ix = o.mark === undefined || o.mark === null ? 0 : o.mark;
     if (!Number.isInteger(ix) || ix < 0 || ix >= acts.length) { return refuse("panel '" + id + "' has no action " + ix + ' (it has ' + acts.length + ')'); }
-    return { problems: [], effects: list(acts[ix].effects).filter(isObj), event: null };
+    return { problems: [], effects: list(acts[ix].effects).filter(isObject), event: null };
   }
   if (panel.kind !== 'form') { return refuse("panel '" + id + "' (" + panel.kind + ') does not fire ' + trigger); }
-  const values = isObj(o.values) ? o.values : {};
+  const values = isObject(o.values) ? o.values : {};
   if (trigger === 'submit') {
     const known = formFields(panel).map((f) => f.id), extra = Object.keys(values).filter((k) => known.indexOf(k) < 0);
     if (extra.length) { return refuse("the form of panel '" + id + "' has no field '" + extra[0] + "'"); }
   }
-  const on = panel.data && isObj(panel.data.on) && Array.isArray(panel.data.on[trigger]) ? panel.data.on[trigger].filter(isObj) : [];
+  const on = panel.data && isObject(panel.data.on) && Array.isArray(panel.data.on[trigger]) ? panel.data.on[trigger].filter(isObject) : [];
   return { problems: [], effects: on, event: values };
 }
 
@@ -285,7 +285,7 @@ export function resolveWire(panel, id, trigger, o) {
  * @param {Object} panel
  * @returns {Object[]}
  */
-export function formFields(panel) { return panel && isObj(panel.form) ? list(panel.form.fields).filter((f) => isObj(f) && typeof f.id === 'string') : []; }
+export function formFields(panel) { return panel && isObject(panel.form) ? list(panel.form.fields).filter((f) => isObject(f) && typeof f.id === 'string') : []; }
 
 /**
  * Makes an element fire a mark's trigger when clicked (or Enter or Space on it), when the mark carries effects: the pointer cursor, a place

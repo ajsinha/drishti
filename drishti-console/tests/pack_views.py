@@ -89,6 +89,12 @@ def test_id(rel: str) -> str:
     return f"{pack}/{Path(rel).name.removesuffix('.sutra.yaml')}"
 
 
+def every_pack() -> dict[str, str]:
+    """The server's environment that turns every shipped pack on: the default list and the packs a module or the kernel leaves off by
+    default (gleif, us-equities, funds: they read lakes built first), so each pack's own blocks are there when its Sutras are bound."""
+    return {"DRISHTI_PACKS": ",".join(["default"] + sorted(pack_dirs()))}
+
+
 def bind(server: str) -> dict:
     """{"views": {sutra path: ViewModel}, "skipped": [why]} for every pack Sutra with a sample document, from a real server."""
     import urllib.request
@@ -105,6 +111,7 @@ def bind(server: str) -> dict:
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
                 got[str(f.relative_to(ROOT))] = json.loads(r.read())
-        except Exception as e:  # noqa: BLE001 - recorded: a Sutra the preview refuses is reported, not drawn
-            skipped.append(f"{f.relative_to(ROOT)}: {e}")
+        except Exception as e:  # noqa: BLE001 - recorded: a Sutra the preview refuses is reported with the server's words, not drawn
+            why = e.read().decode("utf-8", "replace")[:400] if hasattr(e, "read") else ""
+            skipped.append(f"{f.relative_to(ROOT)}: {e} {why}")
     return {"views": got, "skipped": skipped}

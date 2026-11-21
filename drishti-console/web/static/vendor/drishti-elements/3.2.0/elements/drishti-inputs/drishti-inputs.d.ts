@@ -14,6 +14,29 @@
  * See the LICENSE file in the root of this repository.
  */
 /* drishti-inputs 3.2.0: TypeScript declarations, generated from the typed JSDoc by tools/elements/dts.py. */
+export interface ButtonOptions {
+  label?: string;
+  action?: string;
+  variant?: string;
+  pressed?: boolean;
+  toggle?: boolean;
+  role?: string;
+  selected?: boolean;
+  current?: boolean;
+  title?: string;
+  disabled?: boolean;
+  cls?: string;
+  data?: Record<string, string>;
+  attrs?: Record<string, string>;
+  onClick?: ((a0: Event) => void);
+}
+export interface ButtonGroupOptions {
+  label?: string;
+  buttons: ButtonOptions[];
+  mode?: string;
+  value?: string;
+  cls?: string;
+}
 /** A holiday rule. One of: {fixed: 'MM-DD', roll}, {nth, weekday, month} (nth -1: the last), {before: 'MM-DD', weekday} (the weekday strictly before a day: Victoria Day), {easter: offset} (days from Easter Sunday: -2 Good Friday, 1 Easter Monday). roll for a fixed day on a weekend: 'nearest' (Saturday to Friday, Sunday to Monday), 'monday' (to the next Monday, or Tuesday when Monday is taken), 'none'. from and to bound the years the rule holds. */
 export interface HolidayRule {
   name: string;
@@ -916,6 +939,38 @@ export declare class Switch extends InputBase {
   focus(): void;
   [member: string]: any;
 }
+/** A button. Events: click {event}, change {pressed} (a toggle flipped by a click). */
+export declare class Button extends InputBase {
+  constructor(host: HTMLElement, options: ButtonOptions);
+  /** The words on the button. */
+  setLabel(text: string): void;
+  /** The pressed state of a toggle (false for a button that is not one). */
+  getValue(): boolean;
+  /** Sets the pressed state, without an event. */
+  setValue(on: boolean): void;
+  /** Sets the pressed state (aria-pressed), without an event. */
+  setPressed(on: boolean): void;
+  /** Sets the selected state of a tab (aria-selected), without an event. */
+  setSelected(on: boolean): void;
+  /** Turns the button off for use, or back on. */
+  setDisabled(off: boolean): void;
+  /** Moves the focus to the button. */
+  focus(): void;
+  /** Takes the component off its element: the listeners stay on a <button> it drew on, so the button is left as it is. */
+  destroy(): void;
+  [member: string]: any;
+}
+/** A labelled row of buttons. Events: change {value} (mode single). */
+export declare class ButtonGroup extends InputBase {
+  constructor(host: HTMLElement, options: ButtonGroupOptions);
+  /** The pressed button's value (mode single). */
+  getValue(): string | null;
+  /** Presses the button of a value, without an event. */
+  setValue(v: string): void;
+  [member: string]: any;
+}
+/** Makes a button element in one call. */
+export declare function button(doc: Document, options: ButtonOptions): HTMLButtonElement;
 /** A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset, cancel {values}, step {index, id}. */
 export declare class Form extends InputBase {
   constructor(host: HTMLElement, options: FormOptions);

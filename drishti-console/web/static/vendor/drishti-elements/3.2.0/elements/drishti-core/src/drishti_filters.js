@@ -167,6 +167,35 @@ export function passes(v, f) {
 }
 
 /**
+ * The words of a quick search, the one reader of it for every library: lower-cased (or as `fold` makes them), split at spaces, a "quoted
+ * phrase" kept as one word (an unclosed quote takes the rest of the text). A row, node or option matches when every word is found in it.
+ * @param {*} q what was typed
+ * @param {function(string): string} [fold] the text's case and accent folding (default: lower case)
+ * @returns {string[]}
+ * @example searchWords('Desk "new york" fx')   // ['desk', 'new york', 'fx']
+ */
+export function searchWords(q, fold) {
+  const f = fold || ((t) => t.toLowerCase()), out = [], re = /"([^"]*)"?|(\S+)/g;
+  let m;
+  while ((m = re.exec(String(q === undefined || q === null ? '' : q)))) {
+    const w = f(m[1] !== undefined ? m[1].trim() : m[2]);
+    if (w) { out.push(w); }
+  }
+  return out;
+}
+
+/**
+ * Whether folded text holds every word of a search.
+ * @param {string} hay the text, folded as the words are
+ * @param {string[]} words from searchWords
+ * @returns {boolean}
+ */
+export function hasWords(hay, words) {
+  for (const w of words) { if (hay.indexOf(w) < 0) { return false; } }
+  return true;
+}
+
+/**
  * A test of rows by a filter model and a quick filter, or null when nothing filters.
  * @param {Object<string, ColumnFilter>} model column id to its filter
  * @param {string} quick words every one of which must appear in one of the columns
@@ -181,13 +210,13 @@ export function rowFilter(model, quick, columns, value) {
     if (!byId[k]) { throw new Error('a filter on ' + k + ', which is not a column'); }
     return [byId[k], model[k]];
   });
-  const words = String(quick || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(quick);
   if (!parts.length && !words.length) { return null; }
   return (row) => {
     for (const [c, f] of parts) { if (!passes(value(row, c), f)) { return false; } }
     if (words.length) {
       const hay = columns.map((c) => { const v = value(row, c); return isBlank(v) ? '' : String(v).toLowerCase(); }).join('\u0001');
-      for (const w of words) { if (hay.indexOf(w) < 0) { return false; } }
+      if (!hasWords(hay, words)) { return false; }
     }
     return true;
   };

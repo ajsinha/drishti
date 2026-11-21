@@ -19,7 +19,7 @@
    That first paint needs no engine. Then ready. A view is drawn inside a shadow root by default, so a ViewModel's names can neither
    collide with the page nor be styled by it; the theme's tokens still reach it (custom properties inherit).
    The painter computes nothing: every figure arrives as the producer's text. */
-import { h, manifest, staticUrl, loadStyle, load, loaded, loadPart } from '../../drishti-core/src/drishti_index.js';
+import { h, manifest, staticUrl, loadStyle, loadScript, load, loaded, loadPart, now, fetcher } from '../../drishti-core/src/drishti_index.js';
 import { CONTRACT } from './drishti_views-schema.js';
 import { validate, formatIssue } from './drishti_views-validate.js';
 import { complete } from './drishti_views-build.js';
@@ -37,13 +37,21 @@ import { ask } from './drishti_views-forms.js';
 export const SPECS = Object.freeze([Number(String(CONTRACT).split('.')[0])]);
 
 const HANDLES = new WeakMap();
-const EVENTS = ['ready', 'error', 'issues', 'link', 'key', 'patch', 'navigate', 'pick', 'select', 'state-change', 'notify', 'host', 'refused', 'bound', 'drawn', 'dispose', 'point'];
+const EVENTS = ['ready', 'error', 'issues', 'link', 'key', 'patch', 'navigate', 'pick', 'select', 'state-change', 'notify', 'host', 'refused', 'bound', 'drawn', 'dispose', 'point', 'filter', 'chart-table'];
 const CANCELABLE = { link: true, key: true };
 let counter = 0;
 
 /**
  * @typedef {Object} PaintOptions
  * @property {boolean} [shadow=true] draw inside a shadow root (false: into the element itself, styled by the page's sheets)
+ * @property {CSSStyleSheet[]} [sheets] the host styles the view: these constructable sheets (Elements' tokens and the painter's and libraries'
+ *   rules, as the host builds them) are adopted by the view's shadow root, or without one by the root the element is in (a host's shadow
+ *   root or the document), and the painter links no stylesheet of its own or of a library: a host page whose style-src refuses links works
+ * @property {function(): Promise<Object>} [engine] loads the chart engine (ECharts) the host's way (its Trusted Types policy); default: the
+ *   painter loads the vendored engine the first time a view has a chart (drishti-core's loadScript of drishti-chart's scripts)
+ * @property {{filters: boolean, chart: boolean}} [tableTools] filters: a funnel on each column heading of a table (its values with counts,
+ *   Select all, a search, a condition on a number column such as "> 1m"), filters that combine across columns; chart: Chart any table (a
+ *   table's rows as shown, or a grid's range, opened as a chart in a dialog beside it: drishti-chart's openTableChart)
  * @property {('comfortable'|'compact'|'terminal')} [density] the density of the view (default: the page's)
  * @property {Object<string, string>} [messages] the painter's own words, over the bundled English ones
  * @property {('full'|'strip'|'none')} [header='full'] how much of the header is drawn
@@ -73,7 +81,6 @@ let counter = 0;
  * @property {import('./drishti_views-live.js').LiveOptions} [live] the view's live stream over drishti-events (subscribed after the first paint)
  */
 
-function now() { return typeof performance !== 'undefined' ? performance.now() : Date.now(); }
 function isView(v) { return v !== null && typeof v === 'object' && !Array.isArray(v) && typeof v.then !== 'function' && !(typeof Response !== 'undefined' && v instanceof Response); }
 
 /** A painted view: what paint() answers. */
@@ -126,6 +133,8 @@ export class ViewHandle {
       flash: (node) => self.flash(node),
       library: (name) => self.library(name),
       charts: () => self.charts(),
+      tools: Object.assign({ filters: false, chart: false }, o.tableTools || {}),
+      chartTable: (table, opener) => self.chartTable(table, opener),
       styles: (name) => self.styles(name),
       fire: (id, trigger, mark) => self.fire(id, trigger, mark).catch(() => null),
       root: self.root,
@@ -156,15 +165,19 @@ export class ViewHandle {
       if (!sr) { try { sr = el.attachShadow({ mode: 'open' }); } catch (e) { sr = null; } }
       if (sr) {
         while (sr.firstChild) { sr.removeChild(sr.firstChild); }
+        if (this.hostSheets()) { this.sheets = []; adoptSheets(sr, this.options.sheets); return sr; }
         this.sheets = this.links(sr);
         return sr;
       }
     }
     this.sheets = [];
-    sheetPaths().forEach((p) => loadStyle(staticUrl(p)));
+    if (this.hostSheets()) { adoptSheets(el.getRootNode ? el.getRootNode() : el.ownerDocument, this.options.sheets); } else { sheetPaths().forEach((p) => loadStyle(staticUrl(p))); }
     while (el.firstChild) { el.removeChild(el.firstChild); }
     return el;
   }
+
+  /** @private whether the host styles the view (options.sheets): the painter then links no stylesheet */
+  hostSheets() { return Array.isArray(this.options.sheets); }
 
   /** @private */
   links(sr) {
@@ -207,7 +220,7 @@ export class ViewHandle {
     let p;
     if (typeof source === 'string') {
       this.src = source;
-      const f = this.options.fetch || ((u, init) => fetch(u, init));
+      const f = fetcher(this.options.fetch) || ((u, init) => fetch(u, init));
       p = Promise.resolve().then(() => f(source, { credentials: 'same-origin', headers: { Accept: 'application/json' } })).then((r) => {
         if (!r.ok) { throw Object.assign(new Error(r.status + ' ' + (r.statusText || '')), { status: r.status }); }
         return r.json();
@@ -607,6 +620,7 @@ export class ViewHandle {
    */
   styles(name) {
     const libs = manifest().libraries, css = (libs[name] && libs[name].css) || [];
+    if (this.hostSheets()) { return Promise.resolve(); }                  // the host's sheets hold every rule
     if (this.host === this.el) { css.forEach((c) => loadStyle(staticUrl(c))); return Promise.resolve(); }
     this.styled = this.styled || new Set();
     const doc = this.el.ownerDocument;
@@ -664,13 +678,46 @@ export class ViewHandle {
       const win = this.el.ownerDocument.defaultView, o = this.options;
       this.chartsP = this.library('drishti-chart').then((C) => {
         if (this.disposed) { throw new Error('disposed'); }
-        this.panelCharts = new C.PanelCharts(this.host, { engine: () => (win.echarts ? Promise.resolve(win.echarts) : Promise.reject(new Error('no chart engine'))),
+        this.panelCharts = new C.PanelCharts(this.host, { engine: () => this.engine(),
           tokensFrom: () => this.root, onLink: (l) => this.openLink(l),
           onPoint: (m, el) => { const pn = el.closest('[data-panel]'); this.emit('point', Object.assign({ panel: pn ? pn.getAttribute('data-panel') : null }, m)); }, geo: typeof o.geo === 'function' ? o.geo : () => this.geoHelper(), gl: o.gl, graph: () => this.library('drishti-graph') });
         return this.panelCharts;
       });
     }
     return this.chartsP;
+  }
+
+  /**
+   * The chart engine (ECharts): the page's own, else loaded the host's way (options.engine), else the vendored copy drishti-chart names.
+   * @private
+   * @returns {Promise<Object>}
+   */
+  engine() {
+    const win = this.el.ownerDocument.defaultView, o = this.options;
+    if (win.echarts) { return Promise.resolve(win.echarts); }
+    if (!this.engineP) {
+      const lib = manifest().libraries['drishti-chart'] || {};
+      const go = typeof o.engine === 'function' ? Promise.resolve(o.engine()) : (lib.scripts || []).reduce((p, src) => p.then(() => loadScript(staticUrl(src))), Promise.resolve());
+      this.engineP = go.then(() => { if (!win.echarts) { throw new Error('no chart engine'); } return win.echarts; });
+      this.engineP.catch(() => { this.engineP = null; });
+    }
+    return this.engineP;
+  }
+
+  /**
+   * Opens a table's rows as a chart in a dialog inside the view (tableTools.chart): drishti-chart's openTableChart, its engine and sheets.
+   * @private
+   * @param {{title: string, columns: string[], rows: Array<Array<*>>}} table
+   * @param {HTMLElement} opener gets the focus back
+   * @returns {Promise<Object>} the TableChart
+   */
+  chartTable(table, opener) {
+    return Promise.all([this.library('drishti-chart'), this.engine(), this.styles('drishti-chart')]).then(([C]) => {
+      if (this.disposed) { throw new Error('disposed'); }
+      const t = new C.TableChart(this.root, table, { opener: opener, chart: { density: this.options.density || 'compact' } });
+      this.emit('chart-table', { title: table.title || '', rows: table.rows.length });
+      return t.open();
+    }).catch((e) => { this.emit('error', { code: 'view.chart', error: e }); throw e; });
   }
 
   /**
@@ -713,6 +760,13 @@ export class ViewHandle {
     if (this.host !== this.el) { while (this.host.firstChild) { this.host.removeChild(this.host.firstChild); } } else if (this.root.parentNode) { this.root.remove(); }
     if (HANDLES.get(this.el) === this) { HANDLES.delete(this.el); }
   }
+}
+
+/* the host's constructable sheets adopted by a root (a ShadowRoot or a Document), each once, after the ones it has */
+function adoptSheets(root, sheets) {
+  if (!root || !('adoptedStyleSheets' in root)) { return; }
+  const have = root.adoptedStyleSheets;
+  root.adoptedStyleSheets = have.concat(sheets.filter((x) => x && have.indexOf(x) < 0));
 }
 
 function sheetPaths() {

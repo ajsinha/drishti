@@ -741,6 +741,7 @@
   __m["src/drishti_transport-sse.js"] = (function () {
     var EventError = __m["src/drishti_envelope.js"].EventError;
     var SERVER_FRAMES = __m["src/drishti_protocol.js"].SERVER_FRAMES;
+    var fetcher = __lib("drishti-core").fetcher;
     function parseSse(text) {
       const events = [];
       const blocks = String(text).replace(/\r\n?/g, '\n').split('\n\n');
@@ -795,7 +796,7 @@
     }
     function postFrames(ctx, frames) {
       if (ctx.protocol !== 1) { return Promise.reject(new EventError('protocol', 'a raw stream takes nothing from the page (protocol 1 sends to <events>/send)')); }
-      const F = ctx.env.fetch || globalThis.fetch;
+      const F = fetcher(ctx.env.fetch);
       if (!F) { return Promise.reject(new EventError('transport.missing', 'this page has no fetch')); }
       const session = ctx.session();
       if (!session) { return Promise.reject(new EventError('not.connected', 'the server has not named a session yet')); }
@@ -827,7 +828,7 @@
       };
     }
     function fetchTransport(ctx) {
-      const F = ctx.env.fetch || globalThis.fetch;
+      const F = fetcher(ctx.env.fetch);
       if (!F) { throw new EventError('transport.missing', 'this page has no fetch'); }
       const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       let ended = false;
@@ -1732,6 +1733,7 @@
   __m["src/drishti_subscription.js"] = (function () {
     var EventError = __m["src/drishti_envelope.js"].EventError, AbortError = __m["src/drishti_envelope.js"].AbortError, makeMessage = __m["src/drishti_envelope.js"].makeMessage, isMessage = __m["src/drishti_envelope.js"].isMessage, isOwnTopic = __m["src/drishti_envelope.js"].isOwnTopic, matches = __m["src/drishti_envelope.js"].matches;
     var createFlow = __m["src/drishti_flow.js"].createFlow, GridSink = __m["src/drishti_flow.js"].GridSink;
+    var now = __lib("drishti-core").now;
     const SUBSCRIPTION_STATES = Object.freeze(['pending', 'active', 'recovering', 'refused', 'closed']);
     class Subscription {
       constructor(events, pattern, fn, o) {
@@ -1907,7 +1909,6 @@
         this.events._forget(this);
       }
     }
-    function now() { return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now(); }
     return { "SUBSCRIPTION_STATES": SUBSCRIPTION_STATES, "Subscription": Subscription };
   })();
   /* ---- src/drishti_tabs.js ---- */
@@ -2156,6 +2157,7 @@
   /* ---- src/drishti_trace.js ---- */
   __m["src/drishti_trace.js"] = (function () {
     var matches = __m["src/drishti_envelope.js"].matches;
+    var formatCount = __lib("drishti-core").formatCount, pad = __lib("drishti-core").pad;
     class Recorder {
       constructor(clock, o) {
         this.clock = clock;
@@ -2217,10 +2219,9 @@
     }
     function safeMatch(p, t) { try { return matches(p, t); } catch (e) { return false; } }
     function clockText(ms) {
-      const d = new Date(ms), p = (n, w) => String(n).padStart(w || 2, '0');
-      return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + '.' + p(d.getMilliseconds(), 3);
+      const d = new Date(ms);
+      return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) + '.' + pad(d.getMilliseconds(), 3);
     }
-    function num(n) { return Number(n).toLocaleString('en-US'); }
     function explainWhy(events, q) {
       const r = events.recorder, query = Object.assign({}, q), topic = query.topic || '';
       const steps = [];
@@ -2232,7 +2233,7 @@
         return ok;
       };
       const done = (value) => ({ title: 'Why: ' + (topic || query.id || 'a message'), value: value, steps: steps, failed: failed,
-        note: r.o.max ? 'From the last ' + num(r.list.length) + ' messages recorded.' : undefined });
+        note: r.o.max ? 'From the last ' + formatCount(r.list.length) + ' messages recorded.' : undefined });
       const subs = Array.from(events._subs).filter((s) => topic && safeMatch(s.pattern, topic));
       if (topic && !step('A listener matched', subs.length > 0, subs.length ? subs.map((s) => '`' + s.pattern + '`').join(', ') + ' match `' + topic + '`.'
         : 'No subscription matches `' + topic + '`.' + nearest(events, topic))) { return done(failed.value); }
@@ -2256,13 +2257,13 @@
       const hits = r.find({ topic: topic || undefined, key: query.key, id: query.id, since: since, dir: 'in' });
       if (!hits.length) {
         const gaps = r.notes.filter((x) => x.type === 'gap' && x.at >= since && (!topic || x.stream === topic || safeMatch(x.stream + '.>', topic) || topic.indexOf(x.stream) === 0));
-        const words = gaps.length ? gaps.map((g) => 'Stream `' + g.stream + '` jumped from ' + num(g.from - 1) + ' to ' + num(g.to + 1) + '; ' + (g.recoverable ? 'a replay was asked.' : 'a replay was asked and answered `unavailable`.')).join(' ')
+        const words = gaps.length ? gaps.map((g) => 'Stream `' + g.stream + '` jumped from ' + formatCount(g.from - 1) + ' to ' + formatCount(g.to + 1) + '; ' + (g.recoverable ? 'a replay was asked.' : 'a replay was asked and answered `unavailable`.')).join(' ')
           : 'Nothing on `' + (topic || query.id) + '`' + (query.key !== undefined ? ' with key `' + query.key + '`' : '') + ' arrived' + (since ? ' since ' + clockText(since) : '') + '.';
         step('The message arrived', false, words);
         return done(failed.value);
       }
       const e = hits[hits.length - 1];
-      step('The message arrived', true, 'At ' + clockText(e.at) + (e.seq !== undefined ? ', seq ' + num(e.seq) : '') + ' from ' + (e.scope || 'the page') + '.');
+      step('The message arrived', true, 'At ' + clockText(e.at) + (e.seq !== undefined ? ', seq ' + formatCount(e.seq) : '') + ' from ' + (e.scope || 'the page') + '.');
       const drops = e.drops || [];
       const invalid = drops.find((d) => d.reason === 'invalid');
       if (!step('It was valid', !invalid || e.delivered > 0, invalid && !e.delivered ? invalid.words : 'Yes.')) { return done(failed.value); }
@@ -2271,7 +2272,7 @@
         let words = lost.words;
         if (lost.reason === 'conflated') {
           const later = r.find({ topic: e.topic, key: e.key, dir: 'in' }).filter((x) => x.at >= e.at && x !== e && x.delivered);
-          if (later.length) { words = 'Conflated: replaced by ' + (later[0].seq !== undefined ? 'seq ' + num(later[0].seq) : 'a later message') + ' with the same key ' + Math.max(0, later[0].at - e.at) + ' ms later.'; }
+          if (later.length) { words = 'Conflated: replaced by ' + (later[0].seq !== undefined ? 'seq ' + formatCount(later[0].seq) : 'a later message') + ' with the same key ' + Math.max(0, later[0].at - e.at) + ' ms later.'; }
         }
         step('It was kept', false, words);
         return done(failed.value);
@@ -3207,7 +3208,7 @@
   })();
   /* ---- src/drishti_status.js ---- */
   __m["src/drishti_status.js"] = (function () {
-    var h = __lib("drishti-core").h, showState = __lib("drishti-core").showState;
+    var h = __lib("drishti-core").h, showState = __lib("drishti-core").showState, formatCount = __lib("drishti-core").formatCount;
     const ANNOUNCE_EVERY_MS = 5000;
     function badgeView(st, f) {
       const s = (st && st.state) || 'idle';
@@ -3221,7 +3222,7 @@
       if (s === 'refused') { return { kind: 'error', text: 'Refused', detail: st.reason || null, fix: 'reconnect', tone: 'bad' }; }
       if (s === 'closed') { return { kind: 'stale', text: st.suspended ? 'Paused' + waiting : 'Closed' + waiting, detail: null, fix: 'reconnect', tone: 'muted' }; }
       if (s === 'connecting' || s === 'idle') { return { kind: 'empty', text: 'Connecting' + waiting, detail: null, fix: null, tone: 'muted' }; }
-      if (f.missed) { return { kind: 'stale', text: 'Missed ' + f.missed.toLocaleString('en-US') + (f.missed === 1 ? ' update' : ' updates'), detail: null, fix: 'refresh', tone: 'warn' }; }
+      if (f.missed) { return { kind: 'stale', text: 'Missed ' + formatCount(f.missed) + (f.missed === 1 ? ' update' : ' updates'), detail: null, fix: 'refresh', tone: 'warn' }; }
       return { kind: 'empty', text: 'Live' + waiting, detail: null, fix: null, tone: 'good' };
     }
     function statusBadge(el, events, o) {

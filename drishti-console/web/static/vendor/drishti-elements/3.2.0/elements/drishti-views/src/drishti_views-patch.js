@@ -21,6 +21,7 @@
    other than restored are ignored. Frames that arrive faster than the page paints are conflated: the newest strip cell per index,
    panel per id and provenance win, in the order of their last arrival, never across a deleted or restored. A hidden page paints
    nothing: it keeps only the conflated pending state and catches up in one paint when shown. */
+import { now } from '../../drishti-core/src/drishti_index.js';
 
 /** The patch ops of contract 1 (rows since 1.1). */
 export const OPS = Object.freeze(['strip', 'panel', 'provenance', 'deleted', 'restored', 'rows']);
@@ -192,5 +193,3 @@ export class Patcher {
     return done;
   }
 }
-
-function now() { return typeof performance !== 'undefined' ? performance.now() : Date.now(); }

@@ -21,7 +21,7 @@
    and the card's chrome and status line. Two modes of one component : 'card' (A, the default) and 'studio' (B: the kinds in a rail,
    the chart with its table, the spec beside it with options that change both). A map (kind: 'map') is drawn by its view
    (drishti_map-view.js) inside the same card. */
-import { h, stateBlock, showState, renderExplain, EventBus, bus as sharedBus, announce, selectionTopic, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, showState, renderExplain, EventBus, bus as sharedBus, announce, selectionTopic, url as drishtiUrl, fetcher } from '../../drishti-core/src/drishti_index.js';
 import { normalizeSpec, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
@@ -180,7 +180,7 @@ export class Chart extends ChartIO {
     if (this.map) { return this.map.load(); }
     if (d.source) {
       this.loadingEl.hidden = false;
-      const get = this.o.fetch || ((u) => this.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
+      const get = this.o.fetch || ((u) => fetcher(null, this.win)(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
       return Promise.resolve(get(d.source)).then((ans) => { this.rows = rowsOf(ans); this.loadingEl.hidden = true; return this.draw(); }, (e) => { this.loadingEl.hidden = true; this.fail(e); });
     }
     this.rows = rowsOf(this.rawSpec.data && Array.isArray(this.rawSpec.data) ? this.rawSpec.data : d);

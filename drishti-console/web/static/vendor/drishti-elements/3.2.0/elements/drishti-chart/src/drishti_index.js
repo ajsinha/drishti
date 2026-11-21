@@ -29,7 +29,7 @@ import { registerKind, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { defineChartElement } from './drishti_chart-element.js';
 
-export { registerKind, kindOf, kindList, KIND_ALIASES, checkSpec, normalizeSpec, specText } from './drishti_chart-spec.js';
+export { registerKind, kindOf, kindList, checkSpec, normalizeSpec, specText } from './drishti_chart-spec.js';
 export { rowsOf, fieldOf, num, members, sumBy, bin, quantile, boxStats, quantileBreaks, classOf, compileCondition, conditionFields } from './drishti_chart-data.js';
 export { CHART_DENSITIES, blend, alpha, chartTheme, toneColour, rampColour, formatterFor, textStyle, axisOf } from './drishti_chart-theme.js';
 export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, buildHistogram, buildWaterfall, buildBoxplot, buildHeatmap, overviewStrip, buildCandlestick, buildLayers,
@@ -48,6 +48,7 @@ export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusa
 export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, rectBrush, idsInBox, svgOf } from './drishti_chart-parts.js';
 export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
+export { TABLE_CHART_KINDS, TABLE_CHART_SERIES, tableChartData, tableChartSpec, TableChart, openTableChart } from './drishti_chart-table.js';
 export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
 export { ChartIO } from './drishti_chart-io.js';
 export { buildCalendar } from './drishti_chart-calendar.js';

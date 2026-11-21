@@ -151,6 +151,14 @@ export function formatNumber(v, o) {
 }
 
 /**
+ * A count in whole numbers with thousands separators (the way every library writes "1,234 rows"): a number's text without decimals.
+ * @param {*} n
+ * @returns {string}
+ * @example formatCount(1234567)   // "1,234,567"
+ */
+export function formatCount(n) { return formatNumber(n, { decimals: 0 }); }
+
+/**
  * A fraction as a percentage (0.1234 reads "12.3%").
  * @param {*} v the fraction
  * @param {NumberOptions} [o] decimals default 1; scale default 100; suffix default "%"

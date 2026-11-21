@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository.
  */
 /* The web components of drishti-inputs: <drishti-date>, <drishti-date-range>, <drishti-time>, <drishti-datetime>, <drishti-tree-picker>, <drishti-multiselect>,
-   <drishti-combobox>, <drishti-select>, <drishti-form>, <drishti-file-drop>, <drishti-filter-bar>, <drishti-code>, <drishti-code-diff> <drishti-switch>, <drishti-split>, <drishti-tabs>, <drishti-nav-list> and <drishti-column-map>. Each is its class drawn into the
+   <drishti-combobox>, <drishti-select>, <drishti-form>, <drishti-file-drop>, <drishti-filter-bar>, <drishti-code>, <drishti-code-diff> <drishti-switch>, <drishti-button>, <drishti-button-group>, <drishti-split>, <drishti-tabs>, <drishti-nav-list> and <drishti-column-map>. Each is its class drawn into the
    element: options as a property (el.options = {...}), or as attributes for the simple ones (label, calendar, mode, value, readonly);
    el.value reads and sets the value (el.disabled turns a select off and on); el.component is the plain API; events come out as drishti:<name> DOM events (drishti:change).
    No shadow root, so the page's tokens and the library's style sheet reach them. */
@@ -28,6 +28,7 @@ import { Select } from './drishti_select.js';
 import { Form } from './drishti_form.js';
 import { FileDrop } from './drishti_file-drop.js';
 import { Switch } from './drishti_switch.js';
+import { Button, ButtonGroup } from './drishti_button.js';
 import { SplitPane } from './drishti_split-pane.js';
 import { Tabs } from './drishti_tabs.js';
 import { NavList } from './drishti_nav-list.js';
@@ -39,10 +40,10 @@ import { CodeEditor, CodeDiff } from './drishti_code-editor.js';
 export const INPUT_ELEMENTS = Object.freeze({
   'drishti-date': DatePicker, 'drishti-date-range': DateRangePicker, 'drishti-time': TimePicker, 'drishti-datetime': DateTimePicker, 'drishti-tree-picker': TreePicker, 'drishti-multiselect': MultiSelect,
   'drishti-combobox': Combobox, 'drishti-select': Select, 'drishti-form': Form, 'drishti-file-drop': FileDrop, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff,
-  'drishti-switch': Switch, 'drishti-split': SplitPane, 'drishti-tabs': Tabs, 'drishti-nav-list': NavList, 'drishti-column-map': ColumnMap
+  'drishti-switch': Switch, 'drishti-button': Button, 'drishti-button-group': ButtonGroup, 'drishti-split': SplitPane, 'drishti-tabs': Tabs, 'drishti-nav-list': NavList, 'drishti-column-map': ColumnMap
 });
 
-const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled', 'help'];
+const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled', 'help', 'variant', 'action'];
 
 /** @private options from the element's attributes */
 function fromAttributes(el) {
@@ -67,7 +68,7 @@ export function defineInputElements(registry, win) {
     if (registry.get(name)) { return; }
     const Cls = INPUT_ELEMENTS[name];
     registry.define(name, class extends win.HTMLElement {
-      connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select || Cls === Switch)) { this.make(fromAttributes(this)); } }
+      connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select || Cls === Switch || Cls === Button)) { this.make(fromAttributes(this)); } }
       make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, Cls === Select && this.hasAttribute('native') ? Object.assign({ native: true }, o) : o); }   // <drishti-select native>: a pick fires change as a native select's did
       set options(o) { this.make(Object.assign(fromAttributes(this), o)); }
       get options() { return this.component ? this.component.o : null; }

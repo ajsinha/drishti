@@ -18,7 +18,7 @@
    close it, focus goes back), and the listbox (options with role option, the active one by aria-activedescendant, the arrows, Home, End,
    the page keys, Enter and Space, a cap on how many are drawn with "refine the search" past it). Nothing inline: elements are made with
    the DOM and styled through classes, so a page with a strict CSP draws them. */
-import { EventBus, h, placeUnder, stateBlock } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, h, placeUnder, stateBlock, searchWords } from '../../drishti-core/src/drishti_index.js';
 
 let seq = 0;
 
@@ -294,7 +294,7 @@ export function normalizeOptions(list) {
  * @returns {Array<Object>}
  */
 export function searchOptions(items, q) {
-  const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(q);
   if (!words.length) { return items.slice(); }
   const scored = [];
   items.forEach((raw, i) => {

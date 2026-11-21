@@ -17,6 +17,7 @@
    the last 5,000 headers (payloads only when a developer turns them on; memory only; tokens never). explain({ topic, key, id, since })
    reads it and answers drishti-core's ExplainResult: the steps in words, the first that failed marked. */
 import { matches } from './drishti_envelope.js';
+import { formatCount, pad } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * The options of the recorder.
@@ -152,12 +153,10 @@ function safeMatch(p, t) { try { return matches(p, t); } catch (e) { return fals
 
 /** @private a time as the page shows it: hh:mm:ss.mmm (local) */
 function clockText(ms) {
-  const d = new Date(ms), p = (n, w) => String(n).padStart(w || 2, '0');
-  return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + '.' + p(d.getMilliseconds(), 3);
+  const d = new Date(ms);
+  return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) + '.' + pad(d.getMilliseconds(), 3);
 }
 
-/** @private a count with thousands */
-function num(n) { return Number(n).toLocaleString('en-US'); }
 
 /**
  * Why a message did or did not reach the page's listeners: the steps in words, the first that failed marked.
@@ -176,7 +175,7 @@ export function explainWhy(events, q) {
     return ok;
   };
   const done = (value) => ({ title: 'Why: ' + (topic || query.id || 'a message'), value: value, steps: steps, failed: failed,
-    note: r.o.max ? 'From the last ' + num(r.list.length) + ' messages recorded.' : undefined });
+    note: r.o.max ? 'From the last ' + formatCount(r.list.length) + ' messages recorded.' : undefined });
   const subs = Array.from(events._subs).filter((s) => topic && safeMatch(s.pattern, topic));
   if (topic && !step('A listener matched', subs.length > 0, subs.length ? subs.map((s) => '`' + s.pattern + '`').join(', ') + ' match `' + topic + '`.'
     : 'No subscription matches `' + topic + '`.' + nearest(events, topic))) { return done(failed.value); }
@@ -200,13 +199,13 @@ export function explainWhy(events, q) {
   const hits = r.find({ topic: topic || undefined, key: query.key, id: query.id, since: since, dir: 'in' });
   if (!hits.length) {
     const gaps = r.notes.filter((x) => x.type === 'gap' && x.at >= since && (!topic || x.stream === topic || safeMatch(x.stream + '.>', topic) || topic.indexOf(x.stream) === 0));
-    const words = gaps.length ? gaps.map((g) => 'Stream `' + g.stream + '` jumped from ' + num(g.from - 1) + ' to ' + num(g.to + 1) + '; ' + (g.recoverable ? 'a replay was asked.' : 'a replay was asked and answered `unavailable`.')).join(' ')
+    const words = gaps.length ? gaps.map((g) => 'Stream `' + g.stream + '` jumped from ' + formatCount(g.from - 1) + ' to ' + formatCount(g.to + 1) + '; ' + (g.recoverable ? 'a replay was asked.' : 'a replay was asked and answered `unavailable`.')).join(' ')
       : 'Nothing on `' + (topic || query.id) + '`' + (query.key !== undefined ? ' with key `' + query.key + '`' : '') + ' arrived' + (since ? ' since ' + clockText(since) : '') + '.';
     step('The message arrived', false, words);
     return done(failed.value);
   }
   const e = hits[hits.length - 1];
-  step('The message arrived', true, 'At ' + clockText(e.at) + (e.seq !== undefined ? ', seq ' + num(e.seq) : '') + ' from ' + (e.scope || 'the page') + '.');
+  step('The message arrived', true, 'At ' + clockText(e.at) + (e.seq !== undefined ? ', seq ' + formatCount(e.seq) : '') + ' from ' + (e.scope || 'the page') + '.');
   const drops = e.drops || [];
   const invalid = drops.find((d) => d.reason === 'invalid');
   if (!step('It was valid', !invalid || e.delivered > 0, invalid && !e.delivered ? invalid.words : 'Yes.')) { return done(failed.value); }
@@ -215,7 +214,7 @@ export function explainWhy(events, q) {
     let words = lost.words;
     if (lost.reason === 'conflated') {
       const later = r.find({ topic: e.topic, key: e.key, dir: 'in' }).filter((x) => x.at >= e.at && x !== e && x.delivered);
-      if (later.length) { words = 'Conflated: replaced by ' + (later[0].seq !== undefined ? 'seq ' + num(later[0].seq) : 'a later message') + ' with the same key ' + Math.max(0, later[0].at - e.at) + ' ms later.'; }
+      if (later.length) { words = 'Conflated: replaced by ' + (later[0].seq !== undefined ? 'seq ' + formatCount(later[0].seq) : 'a later message') + ' with the same key ' + Math.max(0, later[0].at - e.at) + ' ms later.'; }
     }
     step('It was kept', false, words);
     return done(failed.value);

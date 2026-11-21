@@ -22,7 +22,7 @@
 
    The bundled calendars (US, UK, TARGET, CA) are the usual market rules and are illustrative: a site gives its official calendars with
    defineCalendar (the server's holiday calendars, as dates), and those win. */
-import { parseDate, isoDate, daysInMonth, today } from '../../drishti-core/src/drishti_index.js';
+import { parseDate, isoDate, daysInMonth, today, pad } from '../../drishti-core/src/drishti_index.js';
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -61,8 +61,7 @@ export const CALENDAR_RULES = Object.freeze({
     { name: 'Boxing Day', fixed: '12-26', roll: 'monday' }]
 });
 
-function pad(n) { return String(n).padStart(2, '0'); }
-function iso(y, m, d) { return String(y).padStart(4, '0') + '-' + pad(m) + '-' + pad(d); }
+function iso(y, m, d) { return pad(y, 4) + '-' + pad(m) + '-' + pad(d); }
 function wd(y, m, d) { return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
 function shiftIso(s, days) { const b = parseDate(s), t = new Date(Date.UTC(b.y, b.m - 1, b.d + days)); return iso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()); }
 

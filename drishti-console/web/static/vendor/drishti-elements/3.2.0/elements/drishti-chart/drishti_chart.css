@@ -213,3 +213,15 @@ div.dc-lgq { cursor: default; }
 .dc-facet { min-width: 0; }
 .dc-scale { width: 100%; max-width: 280px; height: 2.4em; }
 .dc-scale-label { fill: var(--d-muted); font-size: var(--d-fs-9); }
+/* Chart any table (drishti_chart-table.js): a wide dialog beside the table, full screen on a phone */
+.dc-tc { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); background: var(--d-surface); color: var(--d-ink); }
+.dc-tc::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dc-tc-head { display: flex; align-items: center; gap: var(--d-space-md); padding: 10px 14px; border-bottom: 1px solid var(--d-border); }
+.dc-tc-title { flex: 1; margin: 0; font-size: var(--d-fs-14, 14px); font-weight: 600; }
+.dc-tc-set { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-space-md); padding: 10px 14px; }
+.dc-tc-field { display: inline-flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.dc-tc-field > label, .dc-tc-series > legend { color: var(--d-muted); font-size: var(--d-fs-9, 11px); }
+.dc-tc-series { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; border: 0; }
+.dc-tc-s { display: inline-flex; align-items: center; gap: 4px; }
+.dc-tc-chart { padding: 0 14px 14px; }
+@media (max-width: 640px) { .dc-tc { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; } }

@@ -17,11 +17,10 @@
    the times of the day by a step (every 15 minutes by default) as a listbox, the nearest one active: the arrows move, Enter picks,
    Escape closes. The value is "HH:MM" (24 hours). DateTimePicker: the business-date picker and the time picker side by side, with the
    time zone named beside them; the value is "YYYY-MM-DDTHH:MM" (a date with no time yet reads as midnight). */
-import { announce, isoDate } from '../../drishti-core/src/drishti_index.js';
+import { announce, isoDate, pad } from '../../drishti-core/src/drishti_index.js';
 import { InputBase, Listbox, Popover, uid } from './drishti_inputs-dom.js';
 import { DatePicker } from './drishti_date-picker.js';
 
-const pad = (n) => (n < 10 ? '0' : '') + n;
 
 /**
  * Reads a typed time as "HH:MM", or null: 14:05, 14.05, 1405, 905, 9, 2pm, 2:30 pm, 12am, noon, midnight.

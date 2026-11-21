@@ -19,7 +19,7 @@
    panels that fold; or, with no picture, the flow with folding sections. The size of the CONTAINER decides the arrangement, not the
    window's: below 640 px one column in the phone order, up to 1000 px the tablet picture (or the areas stacked), above it the picture.
    Sizes come from a ResizeObserver; nothing here reads layout while a patch is applied. */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, isObject } from '../../drishti-core/src/drishti_index.js';
 import { say } from './drishti_views-cells.js';
 
 /** The container widths (px) at which the arrangement changes: at most NARROW is a phone, at most MEDIUM a tablet. */
@@ -30,7 +30,6 @@ const NAME = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 const fr = (cols) => cols.map((c) => 'minmax(0, ' + (+c) + 'fr)').join(' ');
 const quoted = (rows) => rows.map((r) => '"' + cellsOf(r).join(' ') + '"').join(' ');
 
-function isObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
 
 /**
  * The arrangement a view's layout asks for, as data: the mode (flow, columns, areas, sections), each area's panels in order, the
@@ -39,22 +38,22 @@ function isObj(v) { return v !== null && typeof v === 'object' && !Array.isArray
  * @returns {Object}
  */
 export function arrange(vm) {
-  const panels = (vm.panels || []).filter(isObj);
-  const layout = isObj(vm.layout) ? vm.layout : null;
-  const place = layout && isObj(layout.place) ? layout.place : {};
+  const panels = (vm.panels || []).filter(isObject);
+  const layout = isObject(vm.layout) ? vm.layout : null;
+  const place = layout && isObject(layout.place) ? layout.place : {};
   const picture = layout && Array.isArray(layout.areas) ? layout.areas.filter((r) => typeof r === 'string' && cellsOf(r).length) : [];
   const names = [];
   picture.forEach((r) => cellsOf(r).forEach((c) => { if (c !== '.' && NAME.test(c) && names.indexOf(c) < 0) { names.push(c); } }));
   const width = picture.length ? cellsOf(picture[0]).length : 0;
   const ok = picture.every((r) => cellsOf(r).length === width) && names.length > 0;
   const areaOf = (p) => {
-    const at = isObj(place[p.id]) ? place[p.id] : {};
+    const at = isObject(place[p.id]) ? place[p.id] : {};
     if (typeof at.area === 'string' && names.indexOf(at.area) >= 0) { return at.area; }
     if (p.area === 'right' && names.length) { return names[names.length - 1]; }
     return names.length ? names[0] : (p.area === 'right' ? 'right' : 'main');
   };
   const rows = panels.map((p, i) => {
-    const at = isObj(place[p.id]) ? place[p.id] : {};
+    const at = isObject(place[p.id]) ? place[p.id] : {};
     const order = Number.isInteger(at.order) && at.order >= 0 ? at.order : i;
     return { id: String(p.id), area: areaOf(p), section: typeof at.section === 'string' ? at.section : null, collapsible: at.collapsible === true, order: order, index: i };
   }).sort((a, b) => a.order - b.order || a.index - b.index);
@@ -68,14 +67,14 @@ export function arrange(vm) {
     out.tabs = [].concat(layout.tabs || []).filter((t) => typeof t === 'string');
     out.sticky = [].concat(layout.sticky || []).filter((t) => typeof t === 'string');
     out.areas = names.map((n) => ({ name: n, panels: rows.filter((r) => r.area === n).map((r) => r.id) }));
-    const s = isObj(layout.split) && Array.isArray(layout.split.between) && layout.split.between.length === 2 ? layout.split : null;
+    const s = isObject(layout.split) && Array.isArray(layout.split.between) && layout.split.between.length === 2 ? layout.split : null;
     if (s) {
       const k = boundary(out.picture, s.between[0], s.between[1]);
       if (k > 0) { out.split = { left: s.between[0], right: s.between[1], at: k, resizable: s.resizable !== false }; }
     }
-  } else if (layout && Array.isArray(layout.sections) && layout.sections.some((s) => isObj(s) && s.id)) {
+  } else if (layout && Array.isArray(layout.sections) && layout.sections.some((s) => isObject(s) && s.id)) {
     out.mode = 'sections';
-    const sections = layout.sections.filter((s) => isObj(s) && typeof s.id === 'string');
+    const sections = layout.sections.filter((s) => isObject(s) && typeof s.id === 'string');
     const known = sections.map((s) => s.id);
     out.top = rows.filter((r) => known.indexOf(r.section) < 0).map((r) => r.id);
     out.sections = sections.map((s) => ({ id: s.id, title: typeof s.title === 'string' ? s.title : s.id, collapsed: s.collapsed === true,
@@ -100,7 +99,7 @@ function boundary(picture, left, right) {
 }
 
 function phoneOrder(vm, out, rows, names) {
-  const list = (vm.layout && Array.isArray(vm.layout.phone) ? vm.layout.phone : (isObj(vm.phone) && Array.isArray(vm.phone.order) ? vm.phone.order : [])).map(String);
+  const list = (vm.layout && Array.isArray(vm.layout.phone) ? vm.layout.phone : (isObject(vm.phone) && Array.isArray(vm.phone.order) ? vm.phone.order : [])).map(String);
   const rank = {};
   let k = 0;
   list.forEach((x) => rows.forEach((r) => { if (!(r.id in rank) && (r.id === x || (names.indexOf(x) >= 0 && r.area === x))) { rank[r.id] = k++; } }));

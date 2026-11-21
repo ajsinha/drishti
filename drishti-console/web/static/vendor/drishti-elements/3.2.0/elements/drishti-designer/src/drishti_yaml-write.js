@@ -18,6 +18,7 @@
    highlight the selected item's lines and say which item a line belongs to. A path is written as drishti-inputs writes one:
    pages[0].visuals[2].title. A host whose server writes the YAML uses only the ranges; one without a server writes it here. */
 import { parseYamlTree } from './drishti_yaml-read.js';
+import { isObject } from '../../drishti-core/src/drishti_index.js';
 
 const PLAIN = /^[A-Za-z_/$@(][^\n#{}[\],"'`]*$/;
 const RESERVED = /^(true|false|null|yes|no|on|off|~|-?\d+(\.\d+)?([eE][-+]?\d+)?)$/i;
@@ -44,15 +45,14 @@ export function yamlScalar(v) {
 export function dumpYaml(value, o) {
   const step = (o && o.indent) || 2, out = [];
   const pad = (n) => ' '.repeat(n);
-  const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  const empty = (v) => (Array.isArray(v) && !v.length) || (isObj(v) && !Object.keys(v).length);
+  const empty = (v) => (Array.isArray(v) && !v.length) || (isObject(v) && !Object.keys(v).length);
   const inline = (v) => (Array.isArray(v) ? '[]' : '{}');
   function block(s, ind) { s.replace(/\n$/, '').split('\n').forEach((l) => out.push(l ? pad(ind) + l : '')); }
   function map(obj, ind, firstPrefix) {
     Object.keys(obj).forEach((k, i) => {
       const lead = i === 0 && firstPrefix !== undefined ? firstPrefix : pad(ind), v = obj[k], key = yamlScalar(k);
       if (empty(v)) { out.push(lead + key + ': ' + inline(v)); }
-      else if (isObj(v)) { out.push(lead + key + ':'); map(v, ind + step); }
+      else if (isObject(v)) { out.push(lead + key + ':'); map(v, ind + step); }
       else if (Array.isArray(v)) { out.push(lead + key + ':'); seq(v, ind + step); }
       else if (typeof v === 'string' && v.indexOf('\n') >= 0) { out.push(lead + key + ': |' + (/\n$/.test(v) ? '' : '-')); block(v, ind + step); }
       else { out.push(lead + key + ': ' + yamlScalar(v)); }
@@ -61,13 +61,13 @@ export function dumpYaml(value, o) {
   function seq(list, ind) {
     list.forEach((v) => {
       if (empty(v)) { out.push(pad(ind) + '- ' + inline(v)); }
-      else if (isObj(v)) { map(v, ind + 2, pad(ind) + '- '); }
+      else if (isObject(v)) { map(v, ind + 2, pad(ind) + '- '); }
       else if (Array.isArray(v)) { out.push(pad(ind) + '-'); seq(v, ind + step); }
       else if (typeof v === 'string' && v.indexOf('\n') >= 0) { out.push(pad(ind) + '- |' + (/\n$/.test(v) ? '' : '-')); block(v, ind + step); }
       else { out.push(pad(ind) + '- ' + yamlScalar(v)); }
     });
   }
-  if (isObj(value)) { if (empty(value)) { return '{}\n'; } map(value, 0); } else if (Array.isArray(value)) { if (!value.length) { return '[]\n'; } seq(value, 0); } else { out.push(yamlScalar(value)); }
+  if (isObject(value)) { if (empty(value)) { return '{}\n'; } map(value, 0); } else if (Array.isArray(value)) { if (!value.length) { return '[]\n'; } seq(value, 0); } else { out.push(yamlScalar(value)); }
   return out.join('\n') + '\n';
 }
 

@@ -35,7 +35,7 @@
   function toolbar(ctx, doc, label, buttons, extra) {
     const h = ctx.h;
     return h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'toolbar', 'aria-label': label } },
-      buttons.map((b) => h(doc, 'button', { cls: 'gx-btn', text: b[0], attrs: { type: 'button', 'data-action': b[1] }, on: { click: b[2] } })).concat(extra || []));
+      buttons.map((b) => ctx.E.inputs.button(doc, { label: b[0], action: b[1], onClick: b[2] })).concat(extra || []));
   }
 
   /** The status badge and the inspector's button: what every Eventing page carries. */
@@ -43,8 +43,7 @@
     const h = ctx.h, badge = h(doc, 'span', { cls: 'gx-ev-badge', attrs: { 'data-badge': '' } });
     const stopBadge = ctx.E.events.statusBadge(badge, events);
     let ins = null;
-    const open = h(doc, 'button', { cls: 'gx-btn', text: 'Open the inspector', attrs: { type: 'button', 'data-action': 'inspect' },
-      on: { click: () => { if (ins && !ins.closed) { ins.close(); } events.inspect().then((i) => { ins = i; ctx.log('inspector', 'opened'); }); } } });
+    const open = ctx.E.inputs.button(doc, { label: 'Open the inspector', action: 'inspect', onClick: () => { if (ins && !ins.closed) { ins.close(); } events.inspect().then((i) => { ins = i; ctx.log('inspector', 'opened'); }); } });
     const bar = h(doc, 'div', { cls: 'gx-demo-bar gx-ev-chrome' }, [badge, open]);
     return { bar: bar, destroy: () => { stopBadge(); if (ins && !ins.closed) { ins.close(); } bar.remove(); } };
   }
@@ -208,7 +207,7 @@
           const send = () => { const text = input.value.trim(); if (!text) { return; } events.publish('chat.lobby', { from: name, text: text }); ctx.log('publish', { from: name, text: text }); };
           input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { send(); } });
           const pane = h(doc, 'section', { cls: 'gx-ev-pane', attrs: { 'aria-label': name, 'data-person': name } }, [h(doc, 'h3', { text: name }), said.el,
-            h(doc, 'div', { cls: 'gx-demo-bar' }, [input, h(doc, 'button', { cls: 'gx-btn', text: 'Send', attrs: { type: 'button', 'data-action': 'send' }, on: { click: send } })])]);
+            h(doc, 'div', { cls: 'gx-demo-bar' }, [input, ctx.E.inputs.button(doc, { label: 'Send', action: 'send', onClick: send })])]);
           return { name: name, events: events, pane: pane, off: off };
         });
         const ann = people[0].events;
@@ -245,8 +244,7 @@
           const unshare = events.share('ui.selection.>', { to: 'tabs' });
           const chosen = h(doc, 'output', { cls: 'gx-note', attrs: { 'aria-live': 'polite', 'data-chosen': '' }, text: 'Nothing chosen yet' });
           const off = events.on('ui.selection.colour', (m) => { chosen.textContent = 'Chosen: ' + m.data.ids.join(', ') + (m.scope === 'tabs' ? ' (from the other tab)' : ' (here)'); });
-          const btns = COLOURS.map((c) => h(doc, 'button', { cls: 'gx-btn', text: c, attrs: { type: 'button', 'data-colour': c },
-            on: { click: () => { events.publish('ui.selection.colour', { ids: [c] }); ctx.log('selection', { tab: name, colour: c }); } } }));
+          const btns = COLOURS.map((c) => ctx.E.inputs.button(doc, { label: c, data: { colour: c }, onClick: () => { events.publish('ui.selection.colour', { ids: [c] }); ctx.log('selection', { tab: name, colour: c }); } }));
           const pane = h(doc, 'section', { cls: 'gx-ev-pane', attrs: { 'aria-label': name, 'data-tab': String(i + 1) } }, [h(doc, 'h3', { text: name }),
             h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'group', 'aria-label': 'Choose a colour in the ' + name.toLowerCase() } }, btns), chosen]);
           return { events: events, pane: pane, off: () => { off(); unshare(); } };
@@ -259,7 +257,7 @@
         const can = typeof win.BroadcastChannel === 'function' && win.location.protocol !== 'file:';
         const realBar = h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'group', 'aria-label': 'Real tabs' } }, [
           h(doc, 'a', { cls: 'gx-linkbtn', text: 'Open a real second tab', attrs: { href: win.location.href, target: '_blank', rel: 'noopener' } }),
-          h(doc, 'button', { cls: 'gx-btn', text: 'Choose Blue in every real tab', attrs: { type: 'button', 'data-action': 'real' }, on: { click: () => real.publish('ui.selection.colour', { ids: ['Blue'] }) } }),
+          ctx.E.inputs.button(doc, { label: 'Choose Blue in every real tab', action: 'real', onClick: () => real.publish('ui.selection.colour', { ids: ['Blue'] }) }),
           realOut,
           h(doc, 'span', { cls: 'gx-note', text: can ? 'Real tabs of this page share selections through a BroadcastChannel.' : 'Opened from the file system: some browsers keep such pages apart, so real tabs may not hear each other here.' })]);
         box.append(h(doc, 'div', { cls: 'gx-ev-panes' }, panes.map((p) => p.pane)), realBar);

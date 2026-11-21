@@ -165,7 +165,7 @@
     panel.appendChild(h(doc, 'h2', { text: 'JavaScript' }));
     const jsHost = h(doc, 'div', { attrs: { 'data-page-code': 'js' } });
     panel.appendChild(jsHost);
-    const reset = h(doc, 'button', { cls: 'gx-btn', text: 'Reset', attrs: { type: 'button', 'data-action': 'page-reset' } });
+    const reset = g.E.inputs.button(doc, { label: 'Reset', action: 'page-reset' });
     panel.appendChild(reset);
     const CE = g.E.inputs.CodeEditor;
     const ed = { html: new CE(htmlHost, { mode: 'html', value: original.html, height: 80 }), js: new CE(jsHost, { mode: 'javascript', value: original.js, height: 320 }) };
@@ -174,7 +174,7 @@
     function setError(msg, line) {
       errBox.hidden = false;
       errBox.textContent = '';
-      const go = h(doc, 'button', { cls: 'gx-btn', text: 'Go to the line', attrs: { type: 'button' }, on: { click: () => { const cm = ed.js.cm; if (cm && line) { cm.focus(); cm.setCursor({ line: line - 1, ch: 0 }); } } } });
+      const go = g.E.inputs.button(doc, { label: 'Go to the line', onClick: () => { const cm = ed.js.cm; if (cm && line) { cm.focus(); cm.setCursor({ line: line - 1, ch: 0 }); } } });
       errBox.appendChild(h(doc, 'span', { attrs: { 'data-page-error-text': '' }, text: (line ? 'Line ' + line + ': ' : '') + msg }));
       errBox.appendChild(go);
       status.textContent = 'The code failed; the last good drawing is kept.';

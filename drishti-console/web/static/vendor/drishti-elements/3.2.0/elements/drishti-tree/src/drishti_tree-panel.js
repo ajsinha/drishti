@@ -21,7 +21,7 @@
    rows that match and their ancestors (the grid's tree filter; the org chart marks the matches and opens their branches). The server's
    table stays in the page, hidden, for print and for pages without scripts; its footer (a total, "n more") is shown under the panel.
    The mode, the open rows and the filter are kept by key, so a live patch that draws the table again keeps them. Generic: any domain. */
-import { h, visualTheme, announce, textSortKey } from '../../drishti-core/src/drishti_index.js';
+import { h, visualTheme, announce, textSortKey, searchWords } from '../../drishti-core/src/drishti_index.js';
 import { Grid } from '../../drishti-grid/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { drawOrg } from './drishti_tree-draw.js';
@@ -239,7 +239,7 @@ export class TreePanel {
   /** @private how many rows the filter keeps */
   counted() {
     if (!this.q) { this.count.textContent = ''; return; }
-    const words = this.q.toLowerCase().split(/\s+/).filter(Boolean);       // as the grid's filter: every word in some cell of the row
+    const words = searchWords(this.q);                  // as the grid's filter: every word in some cell of the row
     const n = this.mode === 'org' ? (this.hits ? this.hits.size : 0) : this.tree.rows.filter((r) => words.every((w) => r.texts.some((t) => t.toLowerCase().indexOf(w) >= 0))).length;
     this.count.textContent = n + ' of ' + this.tree.rows.length + ' rows (filtered)';
   }

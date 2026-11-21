@@ -15,8 +15,8 @@
 
 """The client renderer on a page that is not the console (EMBED_GUIDE.md sections 7.4, 12 and 16): the host part's options, in a blank page
 under the console's CSP on one made-up origin (render_harness.py), Chromium. Every panel is drawn by Drishti Elements' painter, which has
-its own tables, tabs, pivots and data tables: ``behaviours: 'console'`` (the console's own scripts inside the container, the old
-renderer's) is accepted and draws the same panels with the painter's behaviours. ``about: true`` draws About this page from JSON in a side
+its own tables, tabs, pivots and data tables: ``behaviours: 'console'`` adds the painter's table tools (Drishti Elements' tableTools: the
+per-column filter funnels and Chart any table, drawn inside the container; no console script is loaded). ``about: true`` draws About this page from JSON in a side
 sheet inside the container. ``navigation: 'follow'`` lets a link be a
 link. ``subscribe(fn)`` takes the host's own channel. The candlestick prints the server's texts. No request leaves the origin, no CSP
 violation, no script error, and window.open is never called."""
@@ -97,11 +97,29 @@ def render(page, name, opts):
 ROOT = "document.getElementById('host').shadowRoot"
 
 
-def test_console_behaviours_are_the_painter_s(lab):
-    """The console's scripts are not started inside the container any more: the painter's tables (paging, sort, filter) are the one way."""
+def test_console_behaviours_bring_the_funnels_and_chart_any_table_into_the_container(lab):
+    """The console's table tools, now the painter's: a funnel on every column heading, Chart any table beside the table. No console script."""
     render(lab, "tables", {"behaviours": "console"})
-    assert lab.evaluate(f"() => {ROOT}.querySelectorAll('.dv-panel').length") == 4
-    assert lab.evaluate("() => [...document.scripts].filter((s) => /\\/js\\/drishti_(colfilter|tables|zoom|controls)\\.js/.test(s.src)).length") == 0
+    assert lab.evaluate(f"() => {ROOT}.querySelectorAll('[data-panel=\"flows\"] thead .dv-funnel').length") == 7
+    lab.locator("#host [data-panel='flows'] thead .dv-funnel").nth(1).click()
+    menu = lab.locator("#host .dv-cf")
+    menu.wait_for(state="visible", timeout=5000)
+    menu.locator("label", has_text="Select all").locator("input").uncheck()
+    menu.locator("label", has_text="EUR").locator("input").check()
+    menu.locator("button", has_text="OK").click()
+    shown = lab.evaluate(f"() => [...{ROOT}.querySelectorAll('[data-panel=\"flows\"] tbody tr')].map((r) => r.cells[1].textContent.trim())")
+    assert shown and set(shown) == {"EUR"}
+    lab.locator("#host [data-panel='flows'] button[data-chart-table]").click()
+    lab.wait_for_function(f"() => {{ const d = {ROOT}.querySelector('dialog.dc-tc'); return d && d.open && !!d.querySelector('.dc-canvas canvas'); }}", timeout=15000)
+    assert lab.evaluate(f"() => {ROOT}.querySelector('.dc-tc-title').textContent") == "Chart · Cash flows"
+    assert lab.evaluate("() => [...document.scripts].filter((s) => /\\/js\\/drishti_(colfilter|tables|zoom|controls|table-chart)\\.js/.test(s.src)).length") == 0
+    lab.keyboard.press("Escape")
+    lab.wait_for_function(f"() => !{ROOT}.querySelector('dialog.dc-tc')", timeout=5000)
+
+
+def test_the_library_s_own_behaviours_have_no_table_tools(lab):
+    render(lab, "tables", {})
+    assert lab.evaluate(f"() => [{ROOT}.querySelectorAll('.dv-panel').length, {ROOT}.querySelectorAll('.dv-funnel').length, [...{ROOT}.querySelectorAll('[data-chart-table]')].filter((b) => !b.hidden).length]") == [4, 0, 0]
 
 
 def test_about_is_drawn_from_json_inside_the_container(lab):
@@ -134,7 +152,6 @@ def test_subscribe_takes_the_host_s_own_channel(lab):
     assert lab.evaluate("() => window.__stop") == 1
 
 
-@pytest.mark.xfail(strict=True, reason="Elements finding (G4_REHEARSAL pass 3, E11): drishti-views' candlestick data table prints the raw numbers, not the producer's openText/highText/lowText/closeText the contract carries")
 def test_the_candles_print_the_servers_texts(lab, site):
     vm = cases.showcase()
     bars = next(p for p in vm["panels"] if p["id"] == "bars")

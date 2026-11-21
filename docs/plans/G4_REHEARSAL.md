@@ -353,3 +353,33 @@ same: the parity suite):
 | E13 | the chart kinds need `window.echarts` before they draw (`engine: () => win.echarts`); the host loads it. The painter's own loading would match its words ("the chart engine loaded only when a view has a chart") | Elements |
 | E14 | the painter's validation warns on ViewModels without `contract`; Drishti sets `1.x` (VIEWMODEL.md section 8) | Drishti, done |
 | D1 | the server-side parity check of every pack Sutra (`test_every_pack_sutra_on_its_sample_is_the_same`) still skips: the server's preview answers 422 for those Sutras (as on the base commit) | Drishti, triage |
+
+### Pass 3 renderer follow-ups (2026-11-21, on `g4/renderer-2`, merged into `wip/g4-rehearsal-rx`)
+
+Drishti Elements `develop` `3c9908f` and `5ddb94f` (not tagged: the lead tags 3.2.1 after the G3 gate), vendored as the release tree of a fresh
+clone of `5ddb94f` (`cli.py dist`) under the pin folder `3.2.0` (its manifest still says 3.2.0; `VENDOR.md` names the commit and the dev label
+3.2.1-dev). Elements' `tools/run_tests.py`: every pass green, nothing skipped.
+
+| # | State | What was done |
+|---|---|---|
+| E11 | closed | The candlestick Data table prints `openText`/`highText`/`lowText`/`closeText` (the number only without a text); Elements browser test; Drishti's strict xfail removed, the test passes |
+| E12 | closed | Paint option `sheets` (constructable sheets adopted by the view's root; the painter links no stylesheet, neither its own nor a library's). Drishti passes its one sheet; `claimSheets` (the claimed `<link>`s) is deleted |
+| E13 | closed | The painter loads the chart engine itself the first time a view has a chart, or the host's way (`engine`). Drishti passes `assets.echarts` (its Trusted Types policy); its own pre-paint engine load and the kinds walk are deleted |
+| E14 | closed | `complete` gives a contract-less ViewModel the painter's contract; Drishti's own stamping line is deleted |
+| Parity | closed | Paint option `tableTools: {filters, chart}`: a funnel on each column heading (values with counts, search, Select all, a number condition such as `> 1m`; AND across columns; kept through patches; Clear filters) and Chart any table (drishti-chart's new `TableChart`/`openTableChart`: the rows as shown, in a `<dialog>` inside the view; kind, across, series; the card's data table and export; a grid's Chart the range opens it). `behaviours: 'console'` maps to it. Browser tests in Elements and in Drishti (`test_console_behaviours_bring_the_funnels_and_chart_any_table_into_the_container`). GenUI stream messages stay i9 scope |
+| Missing links | closed | A link whose target the server found `missing` is a link again (its chip says so), as the console's pages link it; only `denied` is words |
+| 3.1.0 paths | closed | The redirect is removed: `/embed/v2/render/3.1.0/` answers `410 DRS-8006`, `/static/render/3.1.0/` `404` |
+| D1 | closed | The 422s had two causes, both of the test's server: no module packages in a lane (`Modules: none`: `modules/*.dmod` not built, so the trading pack's blocks were absent: 130 of 138) and the packs a module or the kernel leaves off by default (`gleif`, `us-equities`, `funds`: their blocks absent: 8). The pack-views server now turns every shipped pack on (`DRISHTI_PACKS=default,<every pack>`), a refusal is a failure (no skip) and the preview's own words are reported. 241 Sutras bound; the suite then showed 18 real differences: links to `missing` targets (fixed in Elements, above) and content a click away in the painter (a long table's further pages, closed pivot and tree rows), now opened before the read (intentional difference `pages-and-closed-rows`). `test_render_parity_browser`: **274 passed, none skipped** |
+| Quick checks | closed | The four guide PDFs regenerated, README's code volume, the settings catalogue's counts; the ready example's duplicate key-list test (it read the deleted `drishti-lakeload`) removed: the one check is `tools/lake/test_feedroute.py`. Console and tools static checks green |
+| Elements develop | note | Vendoring `develop` brings its breaking "one name per thing": chart-kind and aggregation aliases are gone (`KIND_ALIASES`); Drishti's Node test updated. The BI's own visual vocabulary (`type: column`) is mapped by Drishti's BI code; the BI suites were not run in this lane |
+
+**Proof.** Explain, Elements 2 and sign-in browser tests, the render library, behaviours and parity suites, the render, elements, embed and
+explain Python tests, the console Node tests: 228 passed, 1 fixed after the run (the Node alias test), skipped only WebKit (not installed
+here) and the framework builds (not fetched). No Java changed (the goldens untouched).
+
+**The painter's look that remains** (pass 3's table, less what this pass closed): the type (sans figures, smaller title), the panel frame
+(no accent bar or per-panel `?`; the code tag as a chip), the strip's coloured text, the freshness line and keys row, the key-value layout,
+the tables' filter box, pages and one-level trees, the Data table disclosure and donut legend, timeline/ladder/gauge drawing, the element
+sizing to its content, and Explain's metric panels. Closed here: the candlestick Data table (server texts). New with `behaviours: 'console'`:
+a small funnel after each column heading and a Clear filters and a Chart button in the table's bar. Pass 3's before/after shots are no longer
+on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels × 2 themes × 2 widths) are in the lane's scratch folder.

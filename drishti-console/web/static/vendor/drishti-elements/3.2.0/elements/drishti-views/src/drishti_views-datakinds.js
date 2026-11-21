@@ -18,10 +18,10 @@
    a derived read of the rows). Each loads its library (and adopts its sheets) the first time a view has such a panel, reads its dataset
    by name and follows the dataset's rows patches: a grid by transaction (only the rows in view are drawn again), a tree and a chart by
    drawing their rows again in the next animation frame. Values are raw: each column formats them with its field's fmt. */
-import { h, stateBlock } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, isMasked, formatCount } from '../../drishti-core/src/drishti_index.js';
 import { defineKind } from './drishti_views-kinds.js';
 import { say, toneClass } from './drishti_views-cells.js';
-import { valueText, rowKey, derive, isMasked } from './drishti_views-data.js';
+import { valueText, rowKey, derive, engineAgg } from './drishti_views-data.js';
 
 const SEP = '\u001f';
 
@@ -45,7 +45,7 @@ export function gridColumns(d, ds) {
     if (c.width > 0) { col.width = c.width; }
     if (c.pinned === 'left' || c.pinned === 'right') { col.pinned = c.pinned; }
     if (c.hidden === true) { col.hidden = true; }
-    if (c.agg) { col.aggFunc = c.agg; col.enableValue = true; }
+    if (c.agg) { col.aggFunc = engineAgg(c.agg); col.enableValue = true; }
     if (c.tone === 'sign') { col.cellClass = (v) => (typeof v === 'number' ? (v > 0 ? 'dv-t-pos' : v < 0 ? 'dv-t-neg' : '') : ''); } else if (c.tone) { const t = toneClass(c.tone); col.cellClass = () => t; }
     if (col.type !== 'number') { col.enableRowGroup = true; col.enablePivot = true; }
     return col;
@@ -103,7 +103,7 @@ function datasetKind(lib, make) {
       const host = h(doc, 'div', { cls: 'dv-ds-host' });          // the library's own element (a grid makes its host .dg, height 100%)
       box.appendChild(host);
       body.appendChild(box);
-      const note = ds.more > 0 ? h(doc, 'p', { cls: 'dv-more', text: say(ctx.messages, 'rowsLeft', { count: ds.more.toLocaleString() }) }) : null;
+      const note = ds.more > 0 ? h(doc, 'p', { cls: 'dv-more', text: say(ctx.messages, 'rowsLeft', { count: formatCount(ds.more) }) }) : null;
       if (note) { body.appendChild(note); }
       let drawn = null, gone = false, off = null;
       Promise.all([ctx.library(lib), ctx.styles(lib)]).then(([L]) => {
@@ -160,14 +160,37 @@ function withBars(G, cols, d, rows) {
   });
 }
 
+/**
+ * Chart any table on a grid (the host's tableTools.chart): the grid's "Chart the range" (its context menu) opens the range as a chart in a
+ * dialog beside the grid, the row's first column across. Without the tool the grid only raises chartRequested.
+ * @param {Object} ctx the painter's context
+ * @param {Object} panel
+ * @param {Object[]} cols the grid's columns
+ * @returns {?function(Object): void} drishti-grid's chart option
+ */
+export function gridChart(ctx, panel, cols) {
+  if (!(ctx.tools || {}).chart) { return null; }
+  return (detail) => {
+    const g = detail && list(detail.ranges)[0], t = (detail && detail.table) || { columns: [], rows: [] };
+    if (!g || !t.rows.length) { return; }
+    const first = g.c1 === 0;                       // the range holds the first column: its cells are the row's label already
+    const columns = first ? t.columns.slice() : [String((cols[0] && cols[0].header) || '')].concat(t.columns);
+    const rows = t.rows.map((r) => (first ? r.slice(1) : r.slice()));
+    const opener = ctx.root && ctx.root.ownerDocument ? ctx.root.ownerDocument.activeElement : null;
+    ctx.chartTable({ title: panel.title || '', columns: columns, rows: rows }, opener).catch(() => null);
+  };
+}
+
 const grid = datasetKind('drishti-grid', (G, box, panel, ds, ctx) => ds.source().then((src) => {
   const d = panel.data;
   const o = { columns: withBars(G, gridColumns(d, ds), d, () => (Array.isArray(src) ? ds.held || src : [])), layout: 'wells', density: ctx.density || 'compact', rowSelection: 'single',
     getRowId: (r, i) => rowKey(r, ds.key, i) };
+  const chart = gridChart(ctx, panel, o.columns);
+  if (chart) { o.chart = chart; }
   if (Array.isArray(src)) { o.rows = src; } else { o.datasource = src; if (ds.def.pages && ds.def.pages.size > 0) { o.blockSize = ds.def.pages.size; } }
   if (d.pivot && list(d.pivot.values).length) {
     o.pivot = { rows: list(d.pivot.rows), columns: list(d.pivot.columns), filters: [],
-      values: list(d.pivot.values).map((m) => Object.assign({ colId: m.field, aggFunc: m.agg || 'sum' }, m.label ? { as: m.label } : {})) };
+      values: list(d.pivot.values).map((m) => Object.assign({ colId: m.field, aggFunc: engineAgg(m.agg || 'sum') }, m.label ? { as: m.label } : {})) };
   }
   const g = new G.Grid(box, o);
   if (list(d.group).length) { g.model.setRowGroups(list(d.group)); }
@@ -236,7 +259,7 @@ const live = datasetKind('drishti-grid', (G, box, panel, ds, ctx) => {
   const mode = ref.edit === 'cells' || ref.edit === 'beside' ? ref.edit : null;
   const schemaOf = () => (typeof t.schema === 'function' ? Promise.resolve().then(() => t.schema()).then((s) => s || null, () => null) : Promise.resolve(null));
   let g = null, f = null, total = null, gone = false, edit = null, notices = null, timer = null;
-  const count = () => { note.textContent = say(ctx.messages, 'liveRows', { shown: held.size.toLocaleString(), total: (total === null ? held.size : total).toLocaleString() }); };
+  const count = () => { note.textContent = say(ctx.messages, 'liveRows', { shown: formatCount(held.size), total: formatCount(total === null ? held.size : total) }); };
   const labelOf = (name) => { const x = ds.field(name); return (x && x.label) || name; };
   const idsOf = (p) => list(p.remove).map((k) => (Array.isArray(k) ? k.map((x) => (x === null || x === undefined ? '' : String(x))).join(SEP) : String(k))).concat(list(p.update).concat(list(p.add)).map(idOf));
   const apply = (p) => {
@@ -286,7 +309,7 @@ const live = datasetKind('drishti-grid', (G, box, panel, ds, ctx) => {
     if (g) { g.setRows(Array.from(held.values())); } else {
       const cols = withBars(G, gridColumns(d, ds), d, () => Array.from(held.values()));
       g = new G.Grid(box, Object.assign({ columns: edit ? cols.map((c) => edit.column(c)) : cols, layout: 'wells', density: ctx.density || 'compact',
-        rowSelection: 'single', getRowId: (r) => idOf(r), rows: Array.from(held.values()) }, edit ? edit.gridOptions() : {}));
+        rowSelection: 'single', getRowId: (r) => idOf(r), rows: Array.from(held.values()), chart: gridChart(ctx, panel, cols) || undefined }, edit ? edit.gridOptions() : {}));
       if (list(d.group).length) { g.model.setRowGroups(list(d.group)); }   // the rows keep the host's order (the query's sort)
       g.refresh();
       g.on('selectionChanged', () => {

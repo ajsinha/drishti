@@ -57,7 +57,7 @@ def pack_views(tmp_path_factory):
     from wb_live import _stack
 
     def make():
-        stack = _stack(tmp_path_factory, {})
+        stack = _stack(tmp_path_factory, P.every_pack())   # every shipped pack on: off-by-default ones too (their blocks with them)
         url = next(stack)                         # skips when the server jar or a JDK is missing
         try:
             return P.bind(url.server)

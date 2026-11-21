@@ -1,6 +1,6 @@
 {
-  "bytes": 204738,
-  "gzip": 36714,
+  "bytes": 211403,
+  "gzip": 37669,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -53,7 +53,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "b2ee9a13c0f37711b186239dfe6ad3b960dc257dba16c75b0b53cf5853d06ca1",
+  "sha256": "19badcfe5f16e7368dd015f428faf13480bebef44bcb71396c802bc679067a79",
   "sources": [
     "css/drishti_tokens.css",
     "css/drishti_theme.css",
@@ -71,5 +71,5 @@
     "css/drishti_touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "f41e46df0811"
+  "version": "b0586d18393b"
 }
