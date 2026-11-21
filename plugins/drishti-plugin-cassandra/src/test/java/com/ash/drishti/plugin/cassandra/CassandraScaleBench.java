@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.lakehost.DrishtiLake;
 import com.ash.lake.common.RowFeed;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.EntityRef;
-import com.ash.tools.time.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -100,7 +100,7 @@ class CassandraScaleBench {
         String[] args = CassandraNode.args(node, "bench_trading", "--buckets", "128", "--in-flight", "256");
         long t0 = System.nanoTime();
         CassandraLoader.Result r;
-        try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), LoadGuard.fromArgs(args));
+        try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), DrishtiTools.loadGuard(args));
              RowFeed in = DrishtiLake.rowFeed(file.toString(), null)) {
             r = loader.load(in);
         }

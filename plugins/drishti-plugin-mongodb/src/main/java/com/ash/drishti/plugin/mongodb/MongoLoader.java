@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
 import com.ash.lake.common.RowFeed;
@@ -93,7 +94,7 @@ public final class MongoLoader {
     private final long t0 = System.nanoTime();
 
     MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight) {
-        this(db, format, ttlDays, batchSize, maxInFlight, LoadGuard.fromArgs(new String[0]));
+        this(db, format, ttlDays, batchSize, maxInFlight, DrishtiTools.loadGuard(new String[0]));
     }
 
     MongoLoader(MongoDatabase db, MongoLayout.DocFormat format, int ttlDays, int batchSize, int maxInFlight, LoadGuard guard) {
@@ -126,7 +127,7 @@ public final class MongoLoader {
             MongoLoader loader = new MongoLoader(client.getDatabase(database),
                     MongoLayout.DocFormat.valueOf(options.getOrDefault("doc-format", "string").toUpperCase(java.util.Locale.ROOT)),
                     Integer.parseInt(options.getOrDefault("ttl-days", "0")), Integer.parseInt(options.getOrDefault("batch", "1000")), inFlight,
-                    LoadGuard.fromArgs(args));
+                    DrishtiTools.loadGuard(args));
             long n = loader.load(in);
             System.out.printf("mongodb: loaded %,d rows into database %s in %,.0f s%n", n, database, loader.seconds());
             if (options.containsKey("keep-days")) {

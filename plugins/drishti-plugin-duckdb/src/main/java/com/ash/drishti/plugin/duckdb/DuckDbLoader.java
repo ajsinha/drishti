@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
 import com.ash.lake.common.RowFeed;
@@ -137,7 +138,7 @@ public final class DuckDbLoader {
         }
         List<String> a = List.of(args);
         DuckDbLoader loader = new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")),
-                LoadGuard.fromArgs(args), Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
+                DrishtiTools.loadGuard(args), Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
                 option(args, "--memory-limit", "2GB"), Integer.parseInt(option(args, "--threads", "0")));
         loader.asOf = RowFeed.asOf(args);
         loader.load(args[0]);
