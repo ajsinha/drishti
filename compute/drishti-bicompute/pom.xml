@@ -44,6 +44,8 @@
         <exclusion><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></exclusion>
       </exclusions>
     </dependency>
+    <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-conformance-cases</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId></dependency>

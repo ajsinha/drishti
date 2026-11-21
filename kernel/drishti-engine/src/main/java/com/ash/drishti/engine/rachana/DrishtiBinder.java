@@ -117,6 +117,19 @@ public final class DrishtiBinder {
                 Cell.of("Source", pv == null ? null : pv.source() + ", gen " + pv.generation())));
     }
 
+    /**
+     * A panel as Drishti's API answers it: the error text of a panel that could not be bound carries Rachana's {@code RCH-} code, which
+     * the edge answers as Drishti's {@code DRS-} code of the same number ({@code RCH-2102} as {@code DRS-2102}, SPLIT_PLAN 8.3e).
+     */
+    public static com.ash.rachana.view.ViewModel.PanelView edge(com.ash.rachana.view.ViewModel.PanelView v) {
+        if (v == null || v.error() == null || !v.error().startsWith("RCH-")) {
+            return v;
+        }
+        return new com.ash.rachana.view.ViewModel.PanelView(v.id(), v.kind(), v.title(), v.code(), v.key(), v.area(), v.inferred(),
+                v.explanation(), v.data(), "DRS-" + v.error().substring(4), v.empty(), v.span(), v.height(), v.denied(), v.wire(), v.refresh(),
+                v.form(), v.provenance(), v.compute(), v.actions());
+    }
+
     /** A pivot panel's figures by the pivot engine (every cell, subtotal and total in memory), its row keys as the engine writes them. */
     public static final PivotEngine PIVOTS = new PivotEngine() {
         @Override

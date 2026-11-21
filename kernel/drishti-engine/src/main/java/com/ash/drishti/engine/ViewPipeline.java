@@ -523,7 +523,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         : linkedSource(p, ctx, wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx)))), bindPool));
             }
         }
-        List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();
+        List<PanelView> panels = futures.stream().map(CompletableFuture::join).map(DrishtiBinder::edge).toList();
         Sutra s = layout.sutra();
         List<Cell> strip = new ArrayList<>();
         for (StripItem i : s.strip()) {
