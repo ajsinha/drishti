@@ -52,7 +52,7 @@ USERS = {"ann": "bi-writer", "bob": "bi-reviewer", "cat": "bi-reader", "sue": "b
 POSITIONS_TABLE = """rachana: 3
 table: bi.positions_model_trade
 version: 1.0.0
-title: Positions model: trade
+title: "Positions model: trade"
 from: { kind: trade, connector: trading-store }
 columns:
   desk:     { path: "$.desk", type: string }
