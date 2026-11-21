@@ -220,8 +220,8 @@ public final class BiFolder implements AutoCloseable {
                     for (Path f : files.filter(p -> p.getFileName().toString().endsWith(".yaml")).sorted().toList()) {
                         String key = old + "/" + f.getFileName();
                         Entry was = entries.get(key);
-                        next.put(key, new Entry(0, 0, null, MIGRATE_FIRST + ": a " + old.substring(0, old.length() - 1) + " file in BI's old form is not read; run "
-                                + "drishti.py tables migrate --dry-run, then without it (the tables and models are written under the table layer's folder)",
+                        next.put(key, new Entry(0, 0, null, MIGRATE_FIRST + ": a " + old.substring(0, old.length() - 1) + " file in BI's old form is not read: "
+                                + "write it as tables and a model under the table layer's folder (TABLES_AND_MODELS.md)",
                                 was != null && was.problemSince() != null ? was.problemSince() : Instant.now()));
                     }
                 } catch (IOException e) {

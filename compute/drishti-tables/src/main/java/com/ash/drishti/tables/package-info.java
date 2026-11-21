@@ -28,7 +28,7 @@
  *   <li>{@code preview}: a table's rows over sample documents, and the sample checks (keys unique, paths present).</li>
  *   <li>{@code materialize}: the materialisation's API (none, on-load, live) and its store layout; BI's layers move behind it.</li>
  *   <li>{@code migrate}: BI's datasets and models into tables and layer models, DEL into Rachana through a pluggable step.</li>
- *   <li>{@code cli}: {@code tables check}, {@code tables preview}, {@code tables migrate}, {@code tables lineage}.</li>
+ *   <li>{@code cli}: {@code tables check}, {@code tables preview}, {@code tables lineage}.</li>
  * </ul>
  *
  * <p>Dependency direction: this module reads Rachana and the pivot engine; BI (drishti-server) reads this module; nothing here reads BI

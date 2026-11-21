@@ -1507,27 +1507,9 @@ scenario PVs at position grain and is unchanged by a source switch.
 connector when it is that system's, else the first of the system's connectors that carries the command; never another system's. A system
 without a write path for the command refuses the change, with the reason.
 
-## 7. The demo lake's one-time move
+## 7. The demo lake's folder
 
-The demo lake is `<data>/delta/demo/`. A demo lake built in the older layout, its tables directly in `<data>/delta/<domain>/`, is
-**moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
-the server stopped (`lake relocate` is deprecated: it serves only an install still in the older layout and is retired in the next release):
-
-```bash
-python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
-python3 tools/drishti.py lake relocate demo               # exit 0 moved (or nothing to move), 1 refused or moved back
-```
-
-**Safe**: only the demo lake's own folders move, each by a rename on the same file system (no file copied or rewritten); every Delta table
-is measured before and after (version, data files, rows, every named file present) and **any difference or error moves everything
-back**; it refuses, moving nothing, when `<data>/delta/demo` exists, when a folder belongs to no lake file, or while a load holds the lock;
-it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. No connector file is
-written: the server reads connector files and never writes them; the packs' templates read the demo lake by name (`lake: demo`), and a
-site's own file keeps whatever it says. A site that sets `DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
-
-**Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
-`<data>/delta/`, and delete `relocated.json`. Every check, refusal and message:
-[OPERATIONS_GUIDE.md, The lakes' folders](OPERATIONS_GUIDE.md#71-the-lakes-folders).
+The demo lake is `<data>/delta/demo/`. A demo lake whose tables sit directly in `<data>/delta/<domain>/` is not read: delete those folders and build it again (`drishti.py lake build`); `lake build` says so when it finds them.
 
 ## 8. Checking a load, and troubleshooting
 

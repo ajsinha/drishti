@@ -49,26 +49,34 @@ PASSWORD = "long-enough-pass-1"
 ROLES = {"bi-reader": (["bi"], False), "bi-writer": (["bi", "bi-author"], False), "bi-reviewer": (["bi", "bi-author"], True), "bi-steward": (["bi", "bi-steward"], False), "bi-none": ([], False)}
 USERS = {"ann": "bi-writer", "bob": "bi-reviewer", "cat": "bi-reader", "sue": "bi-steward", "nobi": "bi-none", "root": "admin"}
 
-POSITIONS = """rachana: 1
-dataset: positions-model
-title: Positions model
-tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    mode: cached
-    columns:
-      desk: string
-      book: string
-      notional: decimal
-measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  Trades: { expr: "count(trade)" }
+POSITIONS_TABLE = """rachana: 3
+table: bi.positions_model_trade
+version: 1.0.0
+title: Positions model: trade
+from: { kind: trade, connector: trading-store }
+columns:
+  desk:     { path: "$.desk", type: string }
+  book:     { path: "$.book", type: string }
+  notional: { path: "$.notional", type: decimal }
+materialize: on-load
 """
 
-REPORT = """rachana: 1
+POSITIONS_MODEL = """rachana: 3
+model: positions-model
+version: 1.0.0
+title: Positions model
+tables:
+  trade: { table: bi.positions_model_trade, role: fact }
+measures:
+  Notional: { expr: sum(trade.notional), format: amount0 }
+  Trades:   { expr: count(trade) }
+"""
+
+REPORT = """rachana: 2
 report: trades-report
-dataset: gov-trades
+version: 1
 title: Trades report
+model: gov-trades@1
 pages:
   - id: overview
     title: Overview
@@ -77,6 +85,17 @@ pages:
       - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Bars of notional by desk }
       - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.DESK, trade.PORTFOLIO, MTM] } }
 """
+
+
+def _shipped_trades(kind: str) -> str:
+    """The shipped trades-basic table or model (config/tables/banking), as this desk's own: renamed gov-trades, without the sample marks."""
+    name = "trades_basic_trade.table.yaml" if kind == "table" else "trades-basic.model.yaml"
+    text = (ROOT / "config" / "tables" / "banking" / name).read_text()
+    text = text.replace("banking.trades_basic_trade", "bi.gov_trades_trade").replace("was: trades-basic-trade\n", "").replace("model: trades-basic", "model: gov-trades")
+    text = text.replace('title: "Trades, the basics: trade"', "title: Trades table").replace('title: "Trades, the basics"', "title: Trades model")
+    text = re.sub(r"^(sample: true|tags: \[sample.*\]|endorsement: promoted).*\n", "", text, flags=re.M)
+    text = re.sub(r"^\s*#.*\n", "", text, flags=re.M)
+    return re.sub(r"[ ]+# .*$", "", text, flags=re.M)
 
 
 def call(method: str, path: str, user: str, roles: list, body=None):
@@ -99,14 +118,6 @@ def admin(method: str, path: str, body=None):
     return call(method, path, "drishti-dev-admin", ["admin"], body)
 
 
-def dataset_body() -> str:
-    text = (ROOT / "kernel/drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text()   # the 2.1 sample, kept by the server's tests
-    text = text.replace("dataset: trades-basic", "dataset: gov-trades").replace("title: Trades, the basics", "title: Trades model")
-    text = re.sub(r"^(sample: true|tags: \[sample.*\]|endorsement: promoted).*\n", "", text, flags=re.M)
-    text = re.sub(r"^\s*#.*\n", "", text, flags=re.M)                  # the sample's commentary stays in the sample; a desk's own model is shorter
-    return re.sub(r"[ ]+# .*$", "", text, flags=re.M)
-
-
 def seed(tmp: Path) -> dict:
     """Roles, users and the content described at the top; returns the item ids."""
     for role, (bi, approve) in ROLES.items():
@@ -122,17 +133,15 @@ def seed(tmp: Path) -> dict:
     assert s == 201, ws
     ann("PUT", "/bi/workspaces/rates-desk/members/bob", {"role": "member"})
     ann("PUT", "/bi/workspaces/rates-desk/members/cat", {"role": "viewer"})
-    # BI reads the table layer: the desk's old-form files are migrated as an installation's are, then seeded as tables, models and a report
-    from bi_samples import migrate_texts
-    texts = migrate_texts({"datasets/gov-trades.dataset.yaml": dataset_body(), "datasets/positions-model.dataset.yaml": POSITIONS,
-                           "reports/trades-report.report.yaml": REPORT}, tmp)
+    # BI reads the table layer: the desk's own tables, models and a report
+    texts = {"table": _shipped_trades("table"), "model": _shipped_trades("model")}
     ids = {}
     audience = ["bi-steward", "bi-reader", "bi-writer", "bi-reviewer"]
-    plan = [("table", "table", "Trades table", texts["bi/gov_trades_trade.table.yaml"], True),
-            ("positions-table", "table", "Positions table", texts["bi/positions_model_trade.table.yaml"], True),
-            ("model", "model", "Trades model", texts["bi/gov-trades.model.yaml"], True),
-            ("report", "report", "Trades report", texts["reports/trades-report.report.yaml"], True),
-            ("positions", "model", "Positions model", texts["bi/positions-model.model.yaml"], False)]
+    plan = [("table", "table", "Trades table", texts["table"], True),
+            ("positions-table", "table", "Positions table", POSITIONS_TABLE, True),
+            ("model", "model", "Trades model", texts["model"], True),
+            ("report", "report", "Trades report", REPORT, True),
+            ("positions", "model", "Positions model", POSITIONS_MODEL, False)]
     for key, kind, title, body, publish in plan:
         s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": f"{title} for the desk", "body": body, "message": "first cut",
                                                                 "tags": ["rates"], "audienceRoles": audience})

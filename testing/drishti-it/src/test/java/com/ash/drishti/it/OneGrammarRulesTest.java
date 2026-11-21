@@ -48,13 +48,9 @@ class OneGrammarRulesTest {
 
     /**
      * The expression parsers outside Rachana that are allowed, each for a stated reason and only until the release named. DEL, BI's dataset
-     * expressions and the pivot's formulas are Rachana since 2.9.11.d; what is left: the migration tool's reader of DEL (it reads the texts it
-     * rewrites, never evaluates them) and the VaR scope selector.
+     * expressions and the pivot's formulas are Rachana since 2.9.11.d; what is left: the VaR scope selector.
      */
     static final Map<String, String> EXPRESSION_PARSER_EXCEPTIONS = Map.of(
-            "com.ash.drishti.server.bi.expr.DelParser", "the migration tool's reader of DEL (drishti.py tables migrate and the stored items' "
-                    + "migration at start): it reads the old texts it rewrites into Rachana, never evaluates them; deleted with the migration tool in "
-                    + "2.9.14 (docs/architecture/ARCHITECTURE.md §28 Q24)",
             "com.ash.drishti.banking.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
                     + "exact-equality regression check (docs/architecture/ARCHITECTURE.md §28 Q20)");
 

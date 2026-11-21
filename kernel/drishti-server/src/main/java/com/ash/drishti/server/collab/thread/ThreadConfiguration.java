@@ -17,11 +17,9 @@ package com.ash.drishti.server.collab.thread;
 
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.identity.NoteStore;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.CollabTx;
-import com.ash.drishti.identity.collab.NoteImport;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.server.collab.DirectoryService;
 import com.ash.drishti.server.collab.InboxHub;
@@ -60,16 +58,5 @@ public class ThreadConfiguration {
             RateLimits limits, AuditLog audit) {
         return new ThreadService(store, tx, props, entitlements, principals, router, renderer, pinned, audience, notifiers, hub, limits, audit,
                 Clock.systemUTC());
-    }
-
-    /** Imports the notes of earlier releases into comment threads once at start (every start imports only what is new). */
-    @Bean
-    public org.springframework.beans.factory.SmartInitializingSingleton noteImport(NoteStore notes, ThreadStore store, CollabTx tx, AuditLog audit,
-            CollabProperties props) {
-        return () -> {
-            if (props.enabled()) {
-                NoteImport.run(notes, store, tx, audit);
-            }
-        };
     }
 }

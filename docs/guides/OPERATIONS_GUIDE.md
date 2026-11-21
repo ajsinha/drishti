@@ -2881,21 +2881,7 @@ A cluster is upgraded one node at a time with the rolling upgrade runner, `pytho
 
 **What a start does after an upgrade, by itself**: it writes no connector file. A connector file an older release generated is
 superseded by its template and listed in Admin → Health as *safe to delete* (one whose template is gone is not used, `DRS-1046`); an
-older release's edits kept in the content store are listed in Health and not applied ([6.6](#66-connectors-where-a-pack-reads-its-data)). Stored BI items are moved into the table layer ([21.10](#2110-bi-after-an-upgrade)); and a demo lake built in
-the older layout (tables directly under `data/delta/<domain>/`) is moved into `data/delta/demo/` once, before any connector opens a table. That move
-renames the demo lake's own folders on the same file system (no file is copied, rewritten or deleted), measures every table before and after (version,
-files, rows) and moves everything back on any difference; it **refuses**, saying why and moving nothing, when `data/delta/demo` exists, when something in
-`data/delta` belongs to no lake file, when a folder is on another file system, when a table is Iceberg or does not open, or while a build holds the lock.
-It records itself in `data/delta/demo/_drishti-lake/relocated.json`; it writes no connector file (the server reads connector files and never
-writes them: the packs' templates read the demo lake by name, `lake: demo`). By hand, with the server stopped:
-
-```bash
-python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
-python3 tools/drishti.py lake relocate demo               # exit 0 moved (or nothing to move), 1 refused or moved back
-```
-
-`drishti.lakes.relocate-on-start=false` (`DRISHTI_LAKES_RELOCATE_ON_START=false`) leaves it to the command. Afterwards scheduled jobs that name `data/delta` for the demo lake name `data/delta/demo`
-(`lake build --lake`, `lake maintain`, `deploy/lake-maintenance.yaml`).
+older release's edits kept in the content store are listed in Health and not applied ([6.6](#66-connectors-where-a-pack-reads-its-data)). BI items in an older form are refused with a message that names the fix ([21.10](#2110-bi-after-an-upgrade)); a demo lake built in the older layout (tables directly under `data/delta/<domain>/`) is not read: delete those folders and run `drishti.py lake build` (it says so).
 
 ## 19. Several servers
 
@@ -3413,21 +3399,14 @@ says what it reads for you now.
 
 ### 21.10 BI after an upgrade
 
-BI reads only tables and models of the table layer, and only Rachana. At start (`drishti.bi.migrate.on-start`) the server moves every stored dataset and
-model into the layer in place (every version, the draft too) and rewrites saved pivot formulas into Rachana; each change is audited and the text before is a
-saved state; an item it cannot convert is never changed.
+BI reads only tables and models of the table layer, and only Rachana. Nothing is converted at start.
 
 | Symptom | Check and fix |
 |---|---|
-| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)): it writes tables and models under `config/tables/` and rebinds the reports |
-| An expression says `DRS-9100` ("old expression syntax ... refused") | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): files with `tables migrate` or `drishti.py bi migrate --expressions FILE --write`, stored items at the next start ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
-| Admin → BI settings lists **migration problems** | fix the item's text by hand and restart, or rebuild it in **Build › Tables & models** |
-| New saved states by `system` with origin `migrate`; a pivot formula reads differently (`&&` for `and`) | nothing to do: the start-up move (audit `pivot-formula-migrate`); its figures do not change |
-| A stored board is missing, or `/bi/b/<id>` opens the report viewer | boards became reports with board pages at the first start (audited `bi-boards-migrated`); a board file still in a folder: `drishti.py bi migrate --boards FILE... --write` |
-| A dataset with `from:` or `derived:` says `DRS-9190` | `drishti.py tables migrate` moves it into the table layer |
-| A desk-head sees fewer limits or other facts after migrating her own dataset | by design: nobody sees more after the upgrade (`related_rows('<fact>')`); give the role `true` on a table or `may-see-all` in the model as the data owner decides |
+| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: write it as a table or a model under `config/tables/` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)) |
+| An expression says `DRS-9100` | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): rewrite it ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
+| A dataset with `from:` or `derived:` says `DRS-9190` | write it as tables and a model of the layer |
 | A bookmark to the dataset wizard or model designer opens Build › Tables & models | those screens are replaced: open the table or model there |
-| A site wants to move stored items itself, later | `DRISHTI_BI_MIGRATE_ON_START=false`; until moved BI does not read them |
 
 ### 21.11 BI: refresh, live, visuals, Python and AI
 
@@ -3540,7 +3519,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9081` | too many runs (HTTP 429): `queue.per-user` (5) or the node's `queue.max` (200); wait or cancel one |
 | `DRS-9087` | the node that owns the run did not answer (HTTP 503): try later, or *Re-run elsewhere* |
 | `DRS-9088` | the run result store is full (HTTP 507): free space or raise `store.max-bytes` |
-| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`): refused by default (`drishti.bi.expr.legacy: refuse`; `warn` reads it while converting); `drishti.py bi migrate --expressions FILE --write` ([21.10](#2110-bi-after-an-upgrade)). Also a dataset's structure: an unknown key, no `source:` or two, a name starting `pack.`, a `version:` that is not semver |
+| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`): refused (rewrite it in Rachana, [21.10](#2110-bi-after-an-upgrade)). Also a dataset's structure: an unknown key, no `source:` or two, a name starting `pack.`, a `version:` that is not semver |
 | `DRS-9101` | a dataset column: an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query dataset that declares no columns |
 | `DRS-9102` | a dataset source the server cannot use (a pack or kind not enabled, a query parameter not `as-of`, `business-date`, `from` or `to`, an unbound `:name`) |
 | `DRS-9103` | a time mode the source cannot give (`live` over an array or a query, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of`) |

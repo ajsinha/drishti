@@ -73,7 +73,7 @@ codes and, where it helps scripts, `--json`.
 | `data` | `profile`, `ingest`, `load`, `landed`, `loads`, `get` | `tools/ingest_jsonl.py`, `tools/storeload.py`; REST for `landed`, `loads`, `get` | [6](#6-data-profile-ingest-and-load) |
 | `dataload` | `status`, `run`, `retry`, `ready`, `undo` (the data inbox) | REST | [6](#dataload-the-data-inbox) |
 | `testdata` | `capture-market` | a scratch server and the market connectors | [6](#testdata-capture-market-the-market-snapshot-for-offline-demos) |
-| `lake` | `build`, `scan`, `status`, `publish`, `demo`, `show`, `check`, `migrate-config`, `maintain`, `relocate`, `undo`, `memory` | `tools/lake/`; the server jar's writer and parallel loader | [7](#7-lake-a-large-json-export-into-a-delta-lake) |
+| `lake` | `build`, `scan`, `status`, `publish`, `demo`, `show`, `check`, `maintain`, `undo`, `memory` | `tools/lake/`; the server jar's writer and parallel loader | [7](#7-lake-a-large-json-export-into-a-delta-lake) |
 | `server`, `admin` | `server health`, `caches`, `packs`, `commands`, `smoke`, `engines`, `blas`; `admin capacity` (also `admin engines`, `admin blas`) | REST `/api/v1/admin/...` (an administrator) | [8](#8-server-health-and-packs) |
 | `doctor` | `drishti.py doctor` | this machine, and with `--server` the server | [8](#doctor-is-this-machine-ready) |
 | `connector` | `list`, `get`, `apply`, `delete`, `test`, `plugins`, `enable`, `disable`, `reset`, `history` | REST (Admin → Connectors) | [9](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) |
@@ -1664,9 +1664,7 @@ Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), 
 | `lake publish` | a built day committed into a Delta table in S3 ([7.11](#711-lake-publish-a-built-day-into-a-delta-table-in-s3)) |
 | `lake demo` | every demo lake from the committed test data ([7.10](#710-the-demo-lakes-lake-demo)) |
 | `lake show`, `lake check` | the lakes and tables as the server reads them; connectors that name known lakes and lake files that match the disk |
-| `lake migrate-config` (deprecated: from an older release, retired in the next release) | lake files from connector files that still describe their lake; says it is deprecated when it runs |
 | `lake maintain` | keeps a lake small and fast, on a timer ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)) |
-| `lake relocate` (deprecated: from an older release, retired in the next release) | a lake built in the older layout moved once into its own folder, `<data>/delta/<lake>` ([DATA_LAKE_GUIDE.md section 7](DATA_LAKE_GUIDE.md#7-the-demo-lakes-one-time-move)); says it is deprecated when it runs |
 | `lake undo` | one load's rows removed by its load id ([DATA_LAKE_GUIDE.md section 5.5](DATA_LAKE_GUIDE.md#55-undo-a-load)) |
 | `lake delete` | whole business dates removed from one table, one commit, then the server told ([7.15](#715-lake-delete-whole-business-dates-out-of-a-table)) |
 | `lake memory` | the in-memory lake's stores, jobs and refills (`status`, `jobs`, `refill`; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) |
@@ -1697,7 +1695,6 @@ python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-o
     --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
 python3 tools/drishti.py lake show                       # every lake and table as the server reads them
 python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
-python3 tools/drishti.py lake migrate-config [--write]   # deprecated (an older release's layout): lake files from connector files that still describe their lake
 ```
 
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
@@ -3415,7 +3412,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 
 `drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `EXPORT` or `ADMIN` (reserved command words).
 
-### `bi expr`, `bi migrate`, `bi sql`: the BI languages
+### `bi expr`, `bi sql`: the BI languages
 
 Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [FUNCTIONS.md](FUNCTIONS.md)),
 and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_REFERENCE.md](API_REFERENCE.md#6-expressions-apiv1biexpr)). Reads
@@ -3424,17 +3421,14 @@ need no scope.
 ```
 drishti.py bi expr functions [--scope row|rule|aggregate]                 the function catalogue, by family
 drishti.py bi expr validate EXPR [--scope S] [--model M] [--alias A]       check one expression as you see the model; exit 1 on an error
-drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          boards of the older form to reports with board pages: writes reports/<name>.report.yaml, removes the board file
-drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl] [--file F]   Drishti SQL over a model
 ```
 
-BI's own dataset and model files (`rachana: 1` and `2`) and their old expression syntax are migrated into tables and models of the table layer by
-`drishti.py tables migrate` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md), the migration); BI refuses them where it reads (`DRS-9196`).
+BI reads tables and models of the table layer and Rachana only; a dataset or model file in an older form is refused where it is read (`DRS-9196`).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
-drishti-console/.venv/bin/python tools/drishti.py tables migrate --check        # CI: exit 1 while a BI file is in the old form
+drishti-console/.venv/bin/python tools/drishti.py tables check
 ```
 
 Captured, with a lower-case name the second time (the model's columns are the packs' UPPER_SNAKE names):
@@ -3591,27 +3585,6 @@ drishti.py tables preview TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]
 drishti.py tables lineage NAME                                      who uses a table or a model
 drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
                                                                     the flat virtual table offered for a new table, columns from a sample
-drishti.py tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR]
-```
-
-`tables migrate --dry-run` prints the unified diff of every file it would write under `config/tables/bi/` and the report (every item, every
-expression before and after, every refusal); `--check` exits 1 when anything would change; without either it writes the files, one audit
-line each with `--audit`. A second run changes nothing. Captured on the shipped samples:
-
-```text
-$ drishti.py tables migrate --dry-run --report migration.txt
---- /dev/null
-+++ b/bi/counterparty_exposure_counterparties.table.yaml
-...
-items: 34 (converted 34, unchanged 0, refused 0)
-expressions: 103 (rewritten 22, refused 0)
-files to write: 32
-$ drishti.py tables migrate --audit data/audit/tables-migrate.jsonl
-...
-34 file(s) written under /path/to/drishti/config/tables
-$ drishti.py tables migrate --check
-nothing to migrate
-```
 
 ## 13. The risk engines: `var`, `exposure`, `sens`, `frtb`, `simm`, `pivot`
 

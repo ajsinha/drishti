@@ -605,7 +605,7 @@ class LanguagesApiTest {
 
         JsonNode old = validate("rita", "[Notional] / [Trades]", "aggregate");
         assertThat(old.path("syntax").asText()).isEqualTo("rachana");
-        assertThat(old.path("valid").asBoolean()).as("another syntax is not read: tables migrate rewrites it").isFalse();
+        assertThat(old.path("valid").asBoolean()).as("another syntax is not read").isFalse();
     }
 
     /** A report's own measures travel as the model query's define, and its perspective narrows its Fields pane. */

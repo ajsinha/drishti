@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 /**
  * A table of the table layer ({@code rachana: 3}, bi/TABLES_AND_MODELS.md) as the {@link Dataset} BI's compiler plans over: the one-table dataset of the
  * table's implicit model ({@link com.ash.drishti.server.bi.layer.Standalone}). BI's own dataset files ({@code rachana: 1} and {@code 2}) are not
- * read: {@code drishti.py tables migrate} writes them as tables and models ({@code DRS-9196}). Never throws for a bad document; the problems come
+ * read: they are refused ({@code DRS-9196}). Never throws for a bad document; the problems come
  * back with their DRS code and the path of the offending key.
  */
 public final class DatasetParser {
@@ -69,8 +69,8 @@ public final class DatasetParser {
             return com.ash.drishti.server.bi.layer.Standalone.asVersion1(yaml);
         }
         List<Problem> out = new ArrayList<>();
-        out.add(new Problem("error", MIGRATE_FIRST, "", "not a table of the table layer (rachana: 3 with table:): a dataset in BI's old form is migrated by "
-                + "drishti.py tables migrate (bi/TABLES_AND_MODELS.md, the migration)"));
+        out.add(new Problem("error", MIGRATE_FIRST, "", "not a table of the table layer (rachana: 3 with table:): a dataset in BI's old form is not read: "
+                + "write it as a table (bi/TABLES_AND_MODELS.md)"));
         return new Result(null, out);
     }
 

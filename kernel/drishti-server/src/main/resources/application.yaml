@@ -285,8 +285,6 @@ drishti:
     # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
     # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
     fetch-timeout: 10s
-    # DEPRECATED (one release): its jars are moved once into the lib folder (drishti.lib.path), then it is ignored; Health says so.
-    plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
     default-route: demo
     routes: {}  # kind -> plugin or connector that serves it (packs add theirs: trade: trade-endur)

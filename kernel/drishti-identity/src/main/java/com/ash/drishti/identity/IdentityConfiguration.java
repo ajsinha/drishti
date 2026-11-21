@@ -384,7 +384,6 @@ public class IdentityConfiguration {
     @Bean
     public UserService userService(JpaUserStore store, JpaAuditLog auditLog, PreferenceStore preferences, IdentityProperties props,
             RoleNames roles) {
-        LegacyImport.run(props, store, auditLog, preferences);
         UserService s = new UserService(store, new PasswordHasher(props.iterations()), auditLog, props, roles);
         s.seedIfEmpty();
         return s;

@@ -410,7 +410,7 @@ class ArtifactApiTest {
         // BI's old dataset form is refused with the migration's command, as the BI folder refuses it
         mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content("dataset: art-new\n"))
                 .andExpect(jsonPath("$.valid").value(false)).andExpect(jsonPath("$.problems[0]").value(containsString("DRS-9196")))
-                .andExpect(jsonPath("$.problems[0]").value(containsString("tables migrate")));
+                .andExpect(jsonPath("$.problems[0]").value(containsString("write it as tables and a model")));
         mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=new_widgets.table.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.valid").value(true)).andExpect(jsonPath("$.name").value("art.new_widgets"))
                 .andExpect(jsonPath("$.exists").value(false));

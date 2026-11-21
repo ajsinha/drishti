@@ -3267,9 +3267,6 @@ Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.datalo
   tool that loads them.
 - **The warning** for a load into a lake no connector reads (`Cycle.unread`) comes from the packs' `lakesRead()`; null when the server
   cannot say.
-- **The demo move** (`LakeRelocate`, run at start by `drishti.lakes.relocate-on-start` and by `drishti.py lake relocate`): renames only the
-  lake's own top folders, measures every Delta table before and after (version, files, rows from statistics, every named file present),
-  moves everything back on any difference, never deletes, records `relocated.json`.
 
 ### 3. The load rules: principles and decisions
 

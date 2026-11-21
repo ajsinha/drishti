@@ -98,7 +98,7 @@ public final class ModelDefParser {
     private static ModelDef read(JsonNode root, LayerYaml y, Map<String, DatasetDef.History> histories) {
         if (root.path("rachana").asInt(0) != LAYER || !root.has("tables")) {
             y.error(DatasetParser.MIGRATE_FIRST, "rachana", "a model of the table layer says `rachana: 3` and names its tables (`tables: { <alias>: { table: <name> } }`); "
-                    + "a model in BI's old form is migrated by drishti.py tables migrate (bi/TABLES_AND_MODELS.md, the migration)");
+                    + "a model in BI's old form is not read: write it as a model of the layer (bi/TABLES_AND_MODELS.md)");
         }
         y.unknownKeys(root, TOP, "DRS-9120", "");
         String name = LayerYaml.text(root, "model", "");

@@ -1991,8 +1991,7 @@ presets (`EditionEnvironmentPostProcessor`) sit above the engine files.
 **Switch and source** (`EngineSwitches`) reads Spring's own property sources in order and reports which one decided each switch. The keys
 `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled` and `drishti.pivot.enabled`, set above
 the shipped files, decide their engine's switch (`DRS-1024` logged once); the in-memory lake is on when its stores are configured in the
-local file and nothing sets its switch; `drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` read `drishti.sensitivities.*`
-through a lowest-precedence alias layer (`EngineKeyAliases`). Each lens's `config/distributions/kernel.yaml `features:`` entry names the engine switch
+local file and nothing sets its switch. Each lens's `config/distributions/kernel.yaml `features:`` entry names the engine switch
 (`var: { server: [drishti.engines.var.enabled] }`).
 
 ### 27.3 The lifecycle and what off means on the server
@@ -2506,15 +2505,7 @@ breakdown are computed by the engine; the model only words them.
 
 ### 28.13 Migrations of old BI files
 
-BI reads only the table layer's form (`rachana: 3`) and Rachana. `drishti.py tables migrate` (dry run, `--check` for CI, a report, one audit
-line per file) maps every older dataset and model key to the layer's, translates each DEL expression through DEL's parser into Rachana's tree
-(never by text substitution), keeps the null semantics, checks the result, and rewrites the consumers in `config/bi` in place with comments
-kept. The server migrates stored items at its first start: every version rewritten under its number, the text before kept as a saved state, an
-item that cannot be migrated left as it was with the reason. A grouped dataset becomes a rows table and a summary table over its implicit model.
-Refused (`DRS-9195`): an expression whose meaning cannot be kept, two items that give one name and differ, a pack-generated table (regenerated,
-never migrated). A file in the older form is refused at read with `DRS-9196` (the tables layer's `DRS-9614`). Stored boards become reports with
-board pages at start (`drishti.bi.migrate.on-start`), keeping their ids; board files are converted by `drishti.py bi migrate --boards`. The
-pivot's saved formulas are migrated in place at start, idempotent and audited (`pivot-formula-migrate`). Every migration is idempotent.
+BI reads only the table layer's form (`rachana: 3`) and Rachana. A file in the older form is refused at read with `DRS-9196` (the tables layer's `DRS-9614`) and the message names the fix: write it as a table or a model.
 
 ## 29. Python compute: one Python runtime
 

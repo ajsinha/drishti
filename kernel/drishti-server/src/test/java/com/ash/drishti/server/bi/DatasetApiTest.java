@@ -341,7 +341,7 @@ class DatasetApiTest {
         // BI's old dataset form is refused with the migration's command
         JsonNode old = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n")));
         assertThat(old.path("valid").asBoolean()).isFalse();
-        assertThat(old.path("problems").toString()).contains("DRS-9196").contains("tables migrate");
+        assertThat(old.path("problems").toString()).contains("DRS-9196").contains("write it as a table");
     }
 
     @Test @Order(4)
