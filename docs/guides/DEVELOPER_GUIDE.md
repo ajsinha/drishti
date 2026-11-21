@@ -3967,7 +3967,7 @@ the server's distribution.
 
 | Piece | Where | What it does |
 |---|---|---|
-| the engine | a bean implementing `kernel.api.engines.ComputeEngine`: `id()`, `running(boolean)`, `running()`, and optionally `start()`, `stop()`, `memoryBytes()`, `threadPrefixes()` | attached to the engine registry while the module is loaded; started when its switch is on and its needs run |
+| the engine | a bean implementing `com.ash.drishti.api.compute.ComputeEngine` (drishti-api): `id()`, `running(boolean)`, `running()`, and optionally `start()`, `stop()`, `memoryBytes()`, `threadPrefixes()` | attached to the engine registry while the module is loaded; started when its switch is on and its needs run |
 | its catalogue entry | `META-INF/drishti/engines.yaml` in the module's jar: `engines:` with `id`, `title`, `about`, `file`, `switch`, `env`, `aliases`, `live-on` and the lists `needs`, `uses`, `api`, `console`, `words`, `menus`, `help`, `kinds`, `inputs` … | what Admin → Engines shows and what disappears for people when it is off; without one: title = id, file `<id>.yaml`, switch `drishti.engines.<id>.enabled` |
 | its settings | `engines/<id>.yaml` in the module's jar | joins the server's settings **last**, so the site's `config/engines/<id>.yaml` and every other setting win |
 | its declaration | `compute: {engines: [{id: <id>}]}` in `module.yaml` | the distribution reader's list: a distribution without the module switches them off |

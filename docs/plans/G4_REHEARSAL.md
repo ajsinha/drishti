@@ -105,3 +105,21 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name `DRISHTI_DELTA_ENGINE`; the capacity workbook's setting names | D7 | Drishti | M |
 | R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
 | R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |
+
+## Pass 3: compute engine (2026-11-21), on `g4/compute-engine` merged into `wip/g4-rehearsal-rx`
+
+Front-loaded from the engine integration design (EN-25, owner: fix known duplicates now). The two interfaces named `ComputeEngine` are one:
+`com.ash.drishti.api.compute.ComputeEngine` (drishti-api) with the union of their real uses, each method with a default: the switch
+(`id`, `start`, `changing`, `stop`, `memoryBytes`, `datesOpen`, `threadPrefixes`, `running`, `threadsNamed`) and the reactive computation
+(`manifest`, `compute`, `incremental`, `affected`, `close`). `id()` defaults to the manifest's name; `manifest()` of a switch-only engine
+refuses. `kernel.api.engines.ComputeEngine` is deleted (the package is gone): kernel API **0.6**, surface baseline regenerated. The registry,
+Admin controller, configuration, module bridge, `BasicEngine`, `OpenBlasEngine` and the registry test import the one type; the reactive
+engines (`VectorSumEngine`, `BetaEngine`, `CorrelationEngine`, `VarResultEngine`, `ExposureResultEngine`, test engines) are unchanged. Engine
+ids and the catalogues (`engines/catalogue.yaml`, modules' `META-INF/drishti/engines.yaml`) are unchanged, so they stay consistent. The new
+engine model (`com.ash.engine`, `EngineLifecycle`, engine-host) stays for the combined i8.
+
+| Check | Result |
+|---|---|
+| Compile, main and test, every module but `packaging/*` and `drishti-it` (needs `drishti-app`) | green |
+| `ApiSurfaceTest`, `EngineRegistryTest`, `EngineApiTest` (switches, Admin → Engines API), `EngineCatalogueTest`, `EngineFilesTest`, `ModuleBridgeTest`, the three `*ModuleOffTest`, `ReactiveApiTest`, the reactive connector tests, `BetaEngineTest`, `CorrelationEngineTest` | pass (225 tests in the run) |
+| VaR/ES goldens: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` | **pass, bit-identical** |
