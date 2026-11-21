@@ -140,7 +140,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `drishti-engine`, `drishti-rachana`, `drishti-inference` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
 | `drishti-registry` | modules, lenses, functions and their switches: what is on at this site |
 | `drishti-banking`, `drishti-compute-banking` | the banking module: VaR and ES, exposure, FRTB-SA, SIMM, sensitivities, the MR cube; its compute kernels |
-| `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
+| `lake-io`, `lake-delta`, `lake-iceberg`, `lake-load` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
 | `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |

@@ -52,14 +52,14 @@ except ImportError:
 def loader_available() -> bool:
     import stores
     try:
-        stores.loader_command(pathlib.Path(tempfile.gettempdir()))
+        stores.loader_command(pathlib.Path(tempfile.gettempdir()), main="com.ash.drishti.lakehost.DrishtiLakeCli")
         return True
     except SystemExit:
         return False
 
 
 def parallel_loader() -> bool:
-    """Whether the parallel loader can run here: Java and the server's exec jar (or DRISHTI_LAKE_CLASSPATH)."""
+    """Whether the parallel loader can run here: Java and the server's exec jar (or LAKE_CLASSPATH)."""
     import javaload
     return javaload.command(None, None) is not None
 

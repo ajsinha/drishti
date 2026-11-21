@@ -62,14 +62,14 @@ settings:
 - tls.*
 - proxy.*
 auth: As the iceberg connector's; S3 keys (${ENV} or file:), the AWS chain or vended credentials; a REST catalog takes credential (OAuth2 id:secret), token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
-licence: Drishti's own Iceberg engine (drishti-iceberg, no Hadoop) with Jackson (Apache-2.0), bundled.
-windows: Works the same on Windows (drishti-iceberg, no Hadoop and no winutils.exe; Windows paths under root are fine).
+licence: Drishti's own Iceberg engine (lake-iceberg, no Hadoop) with Jackson (Apache-2.0), bundled.
+windows: Works the same on Windows (lake-iceberg, no Hadoop and no winutils.exe; Windows paths under root are fine).
 doc: plugins/drishti-plugin-iceberg-external/README.md
 ---
 # The iceberg-external connector
 
 Plugin `iceberg-external` (`plugins/drishti-plugin-iceberg-external`): Iceberg tables as their owners wrote them, read through
-drishti-iceberg. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
+lake-iceberg. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
 tables Drishti's own loader writes use `iceberg`, which reads that layout faster.
 
 ## What it reads
@@ -209,8 +209,8 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 | Searchable fields | the columns the pack promotes | **every primitive column**, nested struct fields to `depth` (2) |
 | Writes | the loader and maintenance | **never** |
 
-Both read through drishti-iceberg, Drishti's own Iceberg engine with no Hadoop
-([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
+Both read through lake-iceberg, Drishti's own Iceberg engine with no Hadoop
+([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
 there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
 
 ## Ids, dates and modes
@@ -245,7 +245,7 @@ refers to CP-1?*) reads those columns.
 - An **unsorted** table pays once per snapshot and day: the id columns of the day's files are read into an **id index** (id to file,
   about 60 B an id, `id-index-mb`; least-used days dropped first), and later reads open the one file. Health suggests sorting the
   table when one day's index passes `id-index-warn-rows`.
-- Footers, manifests and delete files are read once and kept ([the native engine's caches](../drishti-plugin-iceberg/README.md#engines-and-caches)).
+- Footers, manifests and delete files are read once and kept ([the reader's caches](../drishti-plugin-iceberg/README.md#the-reader-and-caches)).
 
 ## Deletes and time travel
 
@@ -292,7 +292,6 @@ tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
   Data file paths are opened as written (a Spark or pyiceberg folder `g=a%2Fb` is that folder); every partition transform is pruned.
   Feature by feature: [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 - **Effective kinds are not read as columns** (each entity's latest row would have to be resolved across days).
-- `engine: library` is refused (it is the `iceberg` connector's only).
 
 ## Troubleshooting
 

@@ -186,8 +186,13 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
         if dry_run:
             done["retention"] = {"cutoff": cutoff, "would_remove_files": len(old), "dates": dropped}
         else:
-            done["retention"] = {"cutoff": cutoff, "dates": dropped, **{k: v for k, v in dt.delete(f"business_date < '{cutoff.isoformat()}'").items()
-                                                                        if k in ("num_deleted_rows", "num_removed_files")}}
+            # the dates are removed by Drishti Lake's retention tool (LakeRetention --dates: one remove commit), the one way a date leaves a lake
+            import delete
+            gone = delete.plan(uri.rsplit("/", 2)[0], "delta", table_name(uri), ",".join(dropped), False) if dropped else {}
+            done["retention"] = {"cutoff": cutoff, "dates": dropped, "num_deleted_rows": gone.get("dropped", 0)}
+            if dropped:
+                dt = DeltaTable(uri, storage_options=opts or None)
+                actions = add_actions(dt)
     rows_rr = maintain_rows.clean(conf)
     if rows_rr:      # rows past their age, by the shared rule (the files compacted and vacuumed below are the ones left)
         done["row-retention"] = maintain_rows.apply(uri.rsplit("/", 2)[0], "delta", table_name(uri), rows_rr, dry_run)

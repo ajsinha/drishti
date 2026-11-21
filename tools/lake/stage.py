@@ -279,6 +279,7 @@ class Stager:
              dated: str | None = None) -> None:
         """The next documents come from the file ``label``: its tar folder's date, else filedate.decide (--as-of, else ``given``, its
         .ready file's business-date; its name's date; the business today; ``date_from`` name: a name without a date refuses the file)."""
+        import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
         from drishti_lake import filedate
         if folder_date is not None:
             s = FileState(label, folder_date, "folder")
@@ -302,6 +303,7 @@ class Stager:
         """The summary's keys (the Java loader's LoadReport gives the same): ``fileDates`` (each file: its date, where it came from, in
         words, the rows whose own date field said another date), ``otherDateRows``, ``dateNotes`` (those rows in words) and
         ``emptyFiles`` (files with no document: ignored, nothing written for them)."""
+        import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
         from drishti_lake import filedate
         files, notes = [], []
         for s in self.stats.file_states:

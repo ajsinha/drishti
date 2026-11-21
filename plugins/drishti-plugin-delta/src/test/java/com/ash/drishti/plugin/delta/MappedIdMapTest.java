@@ -83,4 +83,30 @@ class MappedIdMapTest {
         }
         assertThat(tmp.resolve("trade/50@1050/x.idmap.tmp")).doesNotExist();
     }
+
+    @Test
+    void theFileFormatIsTheProductsOneInBothDirections() throws Exception {
+        String[] ids = {"1000001", "CLY-3000001", "MX-20000001", "Zürich-7", "a_b-c", "10", "9"};
+        java.util.Arrays.sort(ids);
+        int[] files = new int[ids.length];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = i % 3;
+        }
+        IdMap heap = IdMap.of(ids, files);
+        Path theirs = tmp.resolve("by-lake.idmap");
+        Path ours = tmp.resolve("by-drishti.idmap");
+        com.ash.lake.read.IdMaps.write(heap, theirs).close();
+        com.ash.drishti.api.MappedIdFile.write(ids.length, i -> ids[i], id -> heap.file(id), ours).close();
+        assertThat(Files.readAllBytes(ours)).as("one format: the same bytes").isEqualTo(Files.readAllBytes(theirs));
+        MappedIdMap readOurs = MappedIdMap.open(theirs);                // Drishti's reader on the product's file
+        try (com.ash.lake.read.MappedIdMap readTheirs = com.ash.lake.read.IdMaps.open(ours)) {   // the product's reader on Drishti's
+            for (int i = 0; i < ids.length; i++) {
+                assertThat(readOurs.id(i)).isEqualTo(ids[i]);
+                assertThat(readOurs.file(ids[i])).isEqualTo(files[i]);
+                assertThat(readTheirs.id(i)).isEqualTo(ids[i]);
+                assertThat(readTheirs.file(ids[i])).isEqualTo(files[i]);
+            }
+        }
+        readOurs.close();
+    }
 }

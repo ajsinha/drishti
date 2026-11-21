@@ -19,7 +19,7 @@
 # create the same version. `drishti.py lake publish` and `lake maintain` commit with the Python deltalake package 1.6, which
 # writes each commit file with a conditional PUT (put-if-absent, If-None-Match: *): S3 answers 412 Precondition Failed to the
 # second writer, which re-reads the log and retries at the next version. deltalake 1.x has no DynamoDB lock any more
-# (S3DynamoDBLogStore was removed), so there is no lock table to create. Drishti's own engine (drishti-lakeio) uses the same
+# (S3DynamoDBLogStore was removed), so there is no lock table to create. Drishti's own engine (lake-io) uses the same
 # conditional PUT, with a start-up probe, for the Iceberg tables it writes. This script is that probe for the lake bucket.
 USAGE="check-conditional-writes.sh [--dry-run] [--env FILE]
 

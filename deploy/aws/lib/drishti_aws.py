@@ -167,7 +167,7 @@ def account(sess) -> str:
 
 def sign(credentials, method: str, url: str, region: str, service: str, body: bytes | None = None,
          when: datetime | None = None) -> dict[str, str]:
-    """The headers of a SigV4-signed request, shaped as Drishti's Java REST client sends it (drishti-iceberg SigV4): Accept and,
+    """The headers of a SigV4-signed request, shaped as Drishti's Java REST client sends it (lake-iceberg SigV4): Accept and,
     with a body, Content-Type, X-Amz-Content-Sha256 of the payload, X-Amz-Date, the session token when there is one, Authorization.
     ``when`` fixes the clock (tests compare with recorded signatures)."""
     import botocore.auth

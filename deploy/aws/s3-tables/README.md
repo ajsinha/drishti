@@ -74,7 +74,7 @@ deploy/aws/s3-tables/s3-tables.sh remove --bucket drishti-risk --namespace risk 
 
 The tests run with no AWS account: `python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables` (the S3 Tables, IAM and STS calls
 on botocore's Stubber, the table's files on an in-memory S3, the Iceberg REST endpoint on a fake that checks the signature, the
-signatures against the ones recorded for drishti-iceberg's Java signer). **Not run against AWS**: no AWS account is available to the
+signatures against the ones recorded for lake-iceberg's Java signer). **Not run against AWS**: no AWS account is available to the
 build, so `create`, `check` and `remove` have not been run live; that run waits for an AWS sandbox account. With one,
 `DRISHTI_S3TABLES_LIVE=1 python -m pytest deploy/aws/s3-tables` runs `check` against it, and
 `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>` runs Drishti's own write, read and drop.

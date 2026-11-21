@@ -76,6 +76,13 @@ final class VectorLake {
         return d.toString();
     }
 
+    /** The document of a position without a vector, as the one loader writes it: the vector field null (not the marker). */
+    static String docWithoutVector(Pos p) throws Exception {
+        ObjectNode d = (ObjectNode) JSON.readTree(doc(p));
+        d.putNull("PNL");
+        return d.toString();
+    }
+
     private static ArrayNode array(double[] v) {
         ArrayNode a = JSON.createArrayNode();
         for (double x : v) {
@@ -121,7 +128,7 @@ final class VectorLake {
                 // the one loader takes a vector from the document (where its marker stands), not from the row's columns
                 if (n instanceof ObjectNode o && o.path("columns").has("PNL") && o.path("doc").isTextual()) {
                     ObjectNode doc = (ObjectNode) JSON.readTree(o.path("doc").asText());
-                    doc.set("PNL", o.path("columns").get("PNL"));
+                    doc.set("PNL", o.path("columns").get("PNL"));       // a null vector stays null in the document (the loader's rule)
                     o.put("doc", doc.toString());
                     ((ObjectNode) o.get("columns")).remove("PNL");
                     l = o.toString();
@@ -158,7 +165,7 @@ final class VectorLake {
                 } else {
                     cols.set("PNL", array(p.pnl()));
                 }
-                rows.add(JSON.createObjectNode().put("id", p.id()).put("doc", doc(p)).<ObjectNode>set("columns", cols).toString());
+                rows.add(JSON.createObjectNode().put("id", p.id()).put("doc", p.pnl() == null ? docWithoutVector(p) : doc(p)).<ObjectNode>set("columns", cols).toString());
             }
             Path rowsFile = Files.createTempFile(tmp, "delta", ".rows");
             Files.write(rowsFile, rows, StandardCharsets.UTF_8);

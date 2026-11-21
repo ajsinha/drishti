@@ -4212,7 +4212,7 @@ region, keys or the default credential chain, `s3.path-style`). The table is **a
 a restated date adds rows with the next `RESULT_VERSION`, and the latest version of a date is the rows with the highest. A table keeps
 the format it was created in: with the format changed and the root not, the publish is refused in words (`publishError`), so give the
 new format another root. The readers follow by themselves: with `format: iceberg` the server reads the market-risk pack's `var-results`
-template (BI's reader, `plugin: delta` in the pack) as `plugin: iceberg` over `${drishti.var.official.root}` with `engine: native` and
+template (BI's reader, `plugin: delta` in the pack) as `plugin: iceberg` over `${drishti.var.official.root}` with
 the `s3.*` settings of `drishti.var.official.storage` (`OfficialReaders`). The file generated at start says so; a file never edited
 follows when the format changes (back to Delta too); an edited file is kept and the change of plugin listed under Template updates.
 `drishti.py lake demo` and `build_demo_lakes.py` leave `var-results.yaml` and `exposure-results.yaml` to the server (they read where the
@@ -4221,7 +4221,7 @@ moved to `<data>/connectors/history/` by the next build, and the server writes t
 
 | Format | Append-only | 7 years |
 |---|---|---|
-| Delta | `delta.appendOnly=true`; each commit file on S3 an exclusive create (a conditional PUT through drishti-lakeio), so two servers publishing at once both land, the second on the next version | `delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days` |
+| Delta | `delta.appendOnly=true`; each commit file on S3 an exclusive create (a conditional PUT through lake-io), so two servers publishing at once both land, the second on the next version | `delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days` |
 | Iceberg | append commits only; `drishti.append-only=true` on the table | `history.expire.max-snapshot-age-ms` of 2,557 days; `write.metadata.delete-after-commit.enabled=false` (every metadata file kept) |
 
 ```yaml
@@ -5127,8 +5127,8 @@ A date's first open reads its vectors from the lake, then sorts, sums and writes
 rows in order:
 
 1. **Pieces.** The connector lists the date's data files (only those a shard's key range may hold, section 28) in file order. The Delta
-   connector on its native engine (the default) cuts each file into runs of whole row groups of about the buffer's share (below), from the
-   file's footer (cached); on the Hadoop engine, and on Iceberg, a piece is a whole data file. Only the columns the load uses are read: the
+   connector cuts each file into runs of whole row groups of about the buffer's share (below), from the
+   file's footer (cached); on Iceberg a piece is a whole data file. Only the columns the load uses are read: the
    id, the vector and the trade's text columns, never the stored document.
 2. **Decode.** Up to `drishti.var.read.threads` pieces decode at once, each on a thread of its own (`drishti-vector-read-*`, a pool per
    load that ends with it), into chunks of copied rows: the ids, the texts and the values, each value copied as decoded (a `float` widened

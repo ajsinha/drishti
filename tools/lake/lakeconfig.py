@@ -17,7 +17,7 @@
 
 There is ONE reader of the lake files, in Java (Drishti Lake's ``com.ash.lake.config.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
-loader is: ``DRISHTI_LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
+loader is: ``LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
 ``lake/drishti-lakeio/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
 from __future__ import annotations
 
@@ -108,7 +108,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     java_bin = writers.find_java(java)
     if not java_bin:
         raise LakeConfigError("no java found to read the lake files (drishti.java.home in the settings file, DRISHTI_JAVA_HOME, JAVA_HOME, or java on the PATH)")
-    cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
+    cp = os.environ.get("LAKE_CLASSPATH")
     if cp and not jar:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
     j = writers.find_jar(jar)
@@ -118,7 +118,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
     raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) and no compiled "
-                          "drishti-lake-host; DRISHTI_LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
+                          "drishti-lake-host; LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
 
 
 def run(args: list[str], folder: pathlib.Path | None = None, jar: str | None = None, java: str | None = None) -> dict:

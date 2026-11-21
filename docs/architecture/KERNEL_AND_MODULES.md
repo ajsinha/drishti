@@ -163,7 +163,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 | Foundations | `drishti-common`, `drishti-api` (data SPIs), `drishti-registry` (access registry, licence), `drishti-identity` |
 | Grammar and screens | `drishti-rachana` (Rachana, Sutras), `drishti-engine` (view pipeline, inference, search, phrase, view augmenters, entity links), `drishti-packs` (pack loader and pack runtime) |
 | Analysis | `drishti-bicompute` (pivot engine, Rachana functions, Explain, what-if), `drishti-tables` (virtual tables, models), `drishti-inference` |
-| Data | `drishti-lakeio` (the lake core: the lake files and file access), `drishti-lakeload` (the loader, the inbox, the in-memory lake), `drishti-deltalake`, `drishti-iceberg`, `drishti-flight`; the disk cache and the message-queue state store in `drishti-common` |
+| Data | `lake-io` (the lake core: the lake files and file access), `lake-load` (the loader, the inbox, the in-memory lake), `lake-delta`, `lake-iceberg`, `drishti-flight`; the disk cache and the message-queue state store in `drishti-common` |
 | Connectors | `plugins/drishti-connectors` (the built-in light ones: file, rest, feed, news, demo, yfinance) and every `plugins/drishti-plugin-*` (delta, iceberg, iceberg-external, s3, jdbc, duckdb, kafka, rabbitmq, activemq, redis, mongodb, cassandra, aerospike); the connector files, credentials and **bindings** (section 5) |
 | Compute | `drishti-compute` (generic: vector store, many-set sums, sharding, the Python pool and sandbox, the scheduler), `drishti-native` (BLAS/LAPACK with Java fallbacks) |
 | Platform | `drishti-server` (REST, security, approvals, collaboration, alerts, cluster `drishti-net`, Health, audit, Admin), `drishti-ai` (LLM providers, MCP), `drishti-app` (the runnable kernel jar) |
@@ -239,7 +239,7 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 | `OfficialReaders.OfficialResults` (`drishti-packs`) | published results lakes it reads | `var-official`, `ccr-official` |
 | `ApiAlias` (`server.modules`) | old paths answered as new for one release | `/api/v1/var` → `/api/v1/risk/var` |
 | `SourcePlugin` (`drishti-api`) | **kernel only from P1** (section 5.7): banking's `VarPositionsPlugin` and `VarPvStreamPlugin` become `KindProvider`s | — |
-| `StorageProvider` (`drishti-lakeio`), `ProviderFactory` (`drishti-ai`) | **kernel only** (storage back-ends, LLM providers) | — |
+| `StorageProvider` (`lake-io`), `ProviderFactory` (`drishti-ai`) | **kernel only** (storage back-ends, LLM providers) | — |
 
 **New SPIs** (P1 unless noted):
 

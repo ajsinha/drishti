@@ -14,7 +14,7 @@
 
 """Iceberg lakes in lake maintain and Admin -> Lakes (Delta stays the default): the Iceberg tables found beside Delta ones and listed with
 their format, the command each gets (the floor of the risk domains raised and passed as --floor-days, orphan files at 72 hours at least,
-a dry run), the ownership rule, the history; and, where Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH) are at hand, a real
+a dry run), the ownership rule, the history; and, where Java and the server's exec jar (or LAKE_CLASSPATH) are at hand, a real
 table built with lake build --format iceberg, an orphan listed by a dry run and removed by the run.
 
     drishti-console/.venv/bin/python -m pytest tools/lake/test_maintain_iceberg.py -q
@@ -181,7 +181,7 @@ class RunTest(unittest.TestCase):
             self.assertEqual((kept["format"], kept["orphans"]["wouldRemove"], kept["floor"]["days"]), ("iceberg", 1, 2557))
 
 
-@unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH)")
+@unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or LAKE_CLASSPATH)")
 class RealTableTest(unittest.TestCase):
     """A table lake build --format iceberg wrote: a dry run lists an old orphan and drops nothing, the run removes it."""
 

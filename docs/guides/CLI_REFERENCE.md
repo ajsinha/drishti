@@ -1687,7 +1687,7 @@ the Delta connector reads:
 
 **With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) the table's place, partitions, promoted
 columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
-drishti-lakeio's `LakesCli`). A pack's own recommended entries (its `pack.yaml` `lake:` block) and its templates' `lake: demo` and `lake-tables:` are read and written by `tools/packlake.py`, the one module the pack generators and every tool that reads a template's layout share. A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
+lake-io's `LakesCli`). A pack's own recommended entries (its `pack.yaml` `lake:` block) and its templates' `lake: demo` and `lake-tables:` are read and written by `tools/packlake.py`, the one module the pack generators and every tool that reads a template's layout share. A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
 the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
 alone is the older form: the options and the pack decide. A table whose lake file says `load-mode: append` is written by the parallel
 loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
@@ -1844,7 +1844,7 @@ summary: lake/_drishti-lake/runs/20261017T174401-1340283.json
 ### 7.5 Iceberg instead of Delta: `--format iceberg`
 
 Delta is the default format of `lake build` and of every pack. `--format iceberg` writes the same staged rows into an Apache Iceberg
-table `<lake>/<domain>/<table>` with Drishti's Iceberg loader (in the server's exec jar; `DRISHTI_ICEBERG_CLASSPATH` in development):
+table `<lake>/<domain>/<table>` with Drishti's Iceberg loader (in the server's exec jar; `LAKE_CLASSPATH` in development):
 the documents, the promoted columns and the vector columns (`--vector PNL`: `list<double>`) exactly as for Delta. Only
 `overwrite-dates` (each business date of the input replaces that date in one Iceberg commit); `--partition-by` columns are kept as
 columns, the table being partitioned by business date alone. `--lake s3://bucket/prefix` writes to S3 (staged in a local scratch
@@ -2105,10 +2105,10 @@ drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=delta    
 ```
 
 A system in Iceberg is built as Delta first (`lake demo`, or `lake build` of your files into `<data>/build/iceberg-stage`), so its
-documents and promoted columns are exactly a Delta build's, then copied by `tools/lake/stores.py` with Drishti's own Iceberg loader
-(`IcebergLoader`, `engine: native`, from the server's exec jar: build it first; `DRISHTI_LOADER_HEAP`, default 2g) into
+documents and promoted columns are exactly a Delta build's, then copied by `tools/lake/stores.py` with Drishti Lake's loader
+(`DrishtiLakeCli load`, loader rows: `tools/lake/loaderows.py`, from the server's exec jar: build it first, or `LAKE_CLASSPATH`; `DRISHTI_LAKE_LOADER_HEAP`, default 4g) into
 `<data>/iceberg/trading/trade_<system>` (beside `--lake`'s folder; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed, and its
-connector file `trade-<system>.yaml` is written with `plugin: iceberg`, `engine: native` and `table: {trade: trade_<system>}` (back to the
+connector file `trade-<system>.yaml` is written with `plugin: iceberg` and `table: {trade: trade_<system>}` (back to the
 pack's Delta template when the system returns to Delta; the replaced text is kept in `<data>/connectors/history/`), so one connector
 serves each system, never two. A full build without `--store` puts every system in Delta; a partial one (`--only`,
 `--files-only`) keeps each system it does not name in the store it has, and `--only` with a `--store` that moves another system adds that
@@ -2187,11 +2187,11 @@ verify, the Python one with uv).
 ### 7.13 The parallel lake loader
 
 For a load too large for the Python path (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
-**parallel lake loader** (module `drishti-lakeload`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
+**parallel lake loader** (module `lake-load`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
 documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
-the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload). `tools/lake/javaload.py` is `lake build`'s side of it.
+the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load). `tools/lake/javaload.py` is `lake build`'s side of it.
 
 `tools/lake/deltaread.py` is how the Python tools read a Delta table's rows: by delta-rs, or by the server's own Delta Kernel reader for
 a table delta-rs would read only in part (column mapping, deletion vectors, v2 checkpoints), never a half-read
@@ -2221,15 +2221,15 @@ folder: `-Dlake.lakes.dir` or `LAKE_LAKES_DIR`); a key of the load file that say
 **On its own** (a scheduler, a container, a machine without the console's Python):
 
 ```bash
-java -Xmx40g -Djava.io.tmpdir=/mnt/nvme/tmp -Dloader.main=com.ash.drishti.lakeload.LakeLoad \
-    -jar lib/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
-# development: java -cp <the module's class path> com.ash.drishti.lakeload.LakeLoad --config load.yaml
+java -Xmx40g -Djava.io.tmpdir=/mnt/nvme/tmp -Dloader.main=com.ash.drishti.lakehost.DrishtiLakeCli \
+    -jar lib/drishti-server-<version>-exec.jar load --config /etc/drishti/load-pv.yaml
+# development: java -cp <the module's class path> com.ash.drishti.lakehost.DrishtiLakeCli load --config load.yaml
 ```
 
 ```powershell
 # Windows (PowerShell; Java only, no .exe)
-java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" `
-    -jar C:\drishti\kernel\drishti-server\target\drishti-server-<version>-exec.jar --config C:\drishti\load-pv.yaml
+java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash.drishti.lakehost.DrishtiLakeCli" `
+    -jar C:\drishti\kernel\drishti-server\target\drishti-server-<version>-exec.jar load --config C:\drishti\load-pv.yaml
 ```
 
 Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file), `--summary FILE`, `--progress FILE`, `--dry-run`
@@ -2260,7 +2260,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.flatten` | the pack's | `NAME: LEGS[0].NOTIONAL`: fields added to the document and promoted |
 | `source.partition-by` | none | Delta partition folders after `business_date` (Iceberg: keep them as `promote`) |
 | `source.latest-by` | `COMPUTED_AT` (or the pack's `ingest.<kind>.latest-by`) | duplicates (one id twice on one date): the copy with the latest of this ISO timestamp is kept, else the last read (files sorted by path, then line order); the others dropped and counted (`duplicates`, `duplicateExamples`), never a failure; `''` keeps the last read. The same rule as lake build's Python path (section 7.3) |
-| `target.format` | `delta` | `delta` or `iceberg` (Iceberg through the native engine: no Hadoop) |
+| `target.format` | `delta` | `delta` or `iceberg` (Iceberg written by Drishti Lake's loader: no Hadoop) |
 | `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<lake>/<domain>/<table or kind>`; `lake` a folder or `s3://bucket/prefix` |
 | `target.path` | none | the table's location instead of the four above |
 | `target.storage-options` | `source.storage-options` | the target's S3 options |
@@ -2392,7 +2392,7 @@ load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.man
 
 (The scratch folder's path shortened to `/scratch`.)
 
-The tests: `./mvnw -o -q -pl :drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
+The tests: Drishti Lake's `lake-load` tests (its repository) (equality with the Python path on both formats, through the connectors; one commit a
 date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
 a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
 `python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
@@ -2461,7 +2461,7 @@ The dates are removed by the lake loader's `LakeRetention --dates` (the writer o
 partition delete, or the files store's day files. What the server does with the signal, how to bring a date back, and why `lake undo`
 cannot: [DATA_LAKE_GUIDE.md section 5.8](DATA_LAKE_GUIDE.md#58-delete-business-dates). Exit codes: 0 deleted (or a dry run), 1 refused
 or failed (nothing changed), 2 deleted but the signal failed, 3 another run holds the table's lock. The tests: `tools/lake/test_delete.py`,
-`DeleteDatesParityTest` (drishti-lakeload: the three stores), `VarDeletedDateTest` (the VaR engine) and `LoadsApiTest` (the signal).
+`DeleteDatesParityTest` (lake-load: the three stores), `VarDeletedDateTest` (the VaR engine) and `LoadsApiTest` (the signal).
 
 ## 8. `server`: health and packs
 
@@ -3985,7 +3985,7 @@ loader is a main class of the server jar in `<home>/lib` (`-Dloader.main`), star
 | `files` | root (`<data>/files`) | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | | delete old day folders |
 | `postgres` | JDBC URL (`DRISHTI_PG_URL`, else `jdbc:postgresql://localhost:5432/drishti`) | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns; the samples with `--recreate` | `--user`, `--password` (default `DRISHTI_PG_USER` / `DRISHTI_PG_PASSWORD`), `--writers`, `--batch` | `--keep-months N` |
 | `duckdb` | database (`DRISHTI_DUCKDB_PATH`, else `<data>/duckdb/drishti.duckdb`) | one DuckDB file, written beside and renamed over the old one; the samples with `--recreate` | `--memory-limit`, `--parsers`, `--threads` | `--keep-days N` |
-| `iceberg` | root (`<data>/iceberg`, or `s3a://…`) | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop | `--engine`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--spill-dir`, `--set k=v`, `--threads`, `--buffer-mb`, `--file-rows`, `--row-group-mb` | `--keep-days N` |
+| `iceberg` | root (`<data>/iceberg`, or `s3a://…`) | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; written by Drishti Lake's loader, no Hadoop (`data load --store iceberg` is not rebuilt on the one loader yet: use `lake build --format iceberg`) | `--engine`, `--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--spill-dir`, `--set k=v`, `--threads`, `--buffer-mb`, `--file-rows`, `--row-group-mb` | `--keep-days N` |
 | `mongodb` | URI (`mongodb://localhost:27017`), database (`drishti`) | MongoDB, a collection per domain, zstd, the `day_ids` index | `--doc-format string\|bson`, `--batch`, `--in-flight` | `--keep-days N` or `--ttl-days N` |
 | `redis` | URI (`redis://localhost:6379`) | Redis, a compressed document per entity per day, each day replaced atomically (`--merge` adds instead; with `--trades` the samples merge and the book replaces); `--days` defaults to 1 | `--codec`, `--level`, `--chunk-rows`, `--in-flight`, `--threads`, `--keep-replaced-seconds`, `--cluster`, `--publish`, `--retrain`, `--replace`, `--merge` | `--ttl-days N` |
 | `aerospike` | hosts (`localhost:3000`), namespace (`test`) | Aerospike, a set per domain, promoted fields as bins | | `--ttl-days N` |

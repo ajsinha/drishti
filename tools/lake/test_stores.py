@@ -54,11 +54,11 @@ def test_switching_a_system_writes_a_partial_override_and_back_to_delta_removes_
     assert "now reads iceberg, was delta" in stores.switch(folder, "calypso", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
     # a partial override (KERNEL_AND_MODULES.md 18.5): only the keys that differ from the source module's template, which it names
-    assert doc == {"template": "module source-calypso", "plugin": "iceberg", "settings": {"lake": stores.ICEBERG_LAKE, "engine": "native"}}
+    assert doc == {"template": "module source-calypso", "plugin": "iceberg", "settings": {"lake": stores.ICEBERG_LAKE}}
     s = R.repository(connectors=folder).connectors.find("trade-calypso").settings     # as the Java resolver merges them
     # the lake form (docs/guides/DATA_LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
     # the table (the pack's entry, the partition field kept as a promoted column) and the root
-    assert s["engine"] == "native" and s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"
+    assert s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"
     assert s["union"] == "true" and s["source-name"] == "trade-calypso" and "root" not in s
     lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
     assert lf["format"] == "iceberg" and lf["root"] == stores.ICEBERG_DEFAULT  # the default data folder: the portable form the server resolves
@@ -88,7 +88,7 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert stores.current_domain(folder, "risk") == "delta"
     assert "now reads iceberg, was delta" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "risk-store.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["lake"] == stores.ICEBERG_LAKE
+    assert doc["plugin"] == "iceberg" and doc["settings"]["lake"] == stores.ICEBERG_LAKE
     assert "kinds" not in doc and "lake-tables" not in doc["settings"] and doc["template"] == "pack market-risk"   # inherited
     lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
     assert lf["tables"]["risk.pnl-vector"]["vectors"]                  # the vector columns go with the lake entry

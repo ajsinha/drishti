@@ -92,6 +92,8 @@ external_lib/python/*
 
 # Drishti's own jars: <home>/lib holds the server jar, made by python tools/drishti.py build jar; the jar is never committed (lib/README.md is)
 /lib/*.jar
+# Drishti Lake's Python wheel (pip install -r drishti-console/requirements.txt reads it here); never committed
+/lib/wheels/*.whl
 # the site's jars: <home>/lib/ext (drishti.lib.path), kept on an upgrade; never committed (lib/ext/README.md is)
 /lib/ext/*
 !/lib/ext/README.md

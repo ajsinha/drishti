@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``lake build --format iceberg``: the staged rows of a build written into an Apache Iceberg table by Drishti's own Iceberg loader
-(IcebergLoader in the server's exec jar, ``engine: native``: no Hadoop, so it works on Windows). Delta stays the default format; Iceberg
+"""``lake build --format iceberg``: the staged rows of a build written into an Apache Iceberg table by Drishti Lake's loader
+(``DrishtiLakeCli load`` in the server's exec jar or on LAKE_CLASSPATH, ``source.format: loader-rows``: tools/lake/loaderows.py). Delta stays the default format; Iceberg
 is chosen per build (``--format iceberg``) or by a pack's Iceberg connector.
 
 The table is ``<lake>/<domain>/<table>``, in the layout the Iceberg connector reads fastest (docs/guides/ICEBERG_CONNECTOR.md): rows
@@ -22,18 +22,14 @@ whose missing elements stay null, each business date sorted by id. Each business
 one overwrite of the day), so re-running a day is safe; ``overwrite-partitions`` and ``append`` are Delta's and are refused here. Partition
 columns (``--partition-by``) are kept as ordinary columns: an Iceberg table of this layout is partitioned by business date alone.
 
-The staged files are streamed to the loader's standard input (one JSON line a row: domain, kind, id, date, doc, columns), so memory stays
-flat; the loader sorts each day itself (spilling to the build's staging folder)."""
+The rows go to the loader as one file a date (one JSON line a row: domain, kind, id, date, doc, columns) in the build's staging folder; the
+loader sorts each day itself (spilling there)."""
 from __future__ import annotations
 
 import json
 import pathlib
-import subprocess
-import threading
 
-import feedfiles
 import stage
-import stores
 import writers
 
 
@@ -69,46 +65,20 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
     loader's own last line when it fails (nothing of a day that did not commit is visible)."""
     total = sum(len(parts) for parts in by_day.values())
     return write_lines(lake, domain, table, lines(domain, table, by_day, partition_names, types), sorted(d.isoformat() for d in by_day), workdir,
-                       jar, java, (lambda: progress(total, total)) if progress else None, settings)
+                       jar, java, (lambda: progress(total, total)) if progress else None, settings,
+                       sorted(n for n, k in (types or {}).items() if k == "vector"))
 
 
 def write_lines(lake, domain: str, table: str, rows, dates: list[str], workdir: pathlib.Path, jar: str | None = None, java: str | None = None,
-                done=None, settings: list[str] | None = None) -> dict:
+                done=None, settings: list[str] | None = None, vectors=()) -> dict:
     """The loader's lines (``lines``' form: domain, kind, id, date, doc, columns; a JSON text each) into the table; the same result as ``write``.
     Also the Python loader's (tools/ingest_jsonl.py ``--store iceberg``): every writer of Iceberg goes through this one."""
-    spill = workdir / "spill"
-    spill.mkdir(parents=True, exist_ok=True)
+    import loaderows
     try:
-        cmd = stores.loader_command(workdir, jar, java) + ["-", str(lake), "--engine", "native", "--spill-dir", str(spill), "--buffer-mb", "512"]
-        for kv in settings or []:
-            if "=" not in kv:
-                raise writers.WriteError(f"--iceberg-set {kv}: give KEY=VALUE")
-            cmd += ["--set", kv]
-    except SystemExit as e:
-        raise writers.WriteError(str(e)) from None
-    said: list[str] = []
-    n = 0
-    with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
-                          errors="replace") as proc:
-        reader = threading.Thread(target=lambda: said.extend(proc.stdout), daemon=True)
-        reader.start()
-        try:
-            # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
-            # in its own day's folder (the day lake build decided for it)
-            out = feedfiles.RowsTarStream(proc.stdin.buffer)
-            for line in rows:
-                out.add(table, json.loads(line)["date"], line)
-                n += 1
-            out.close()
-            if done:
-                done()
-            proc.stdin.close()
-        except BrokenPipeError:
-            pass
-        proc.wait()
-        reader.join(timeout=10)
-    words = [s.rstrip() for s in said if s.strip() and not s.startswith("SLF4J")]
-    if proc.returncode:
-        raise writers.WriteError("the Iceberg load did not finish: " + (words[-1] if words else f"exit {proc.returncode}"))
-    return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": n,
-            "dates": dates, "loader": [w for w in words if w.startswith("iceberg:")][-3:]}
+        loaded = loaderows.load(rows, lake, domain, table, workdir, "iceberg", vectors=vectors, settings=settings, jar=jar, java=java)
+    except loaderows.LoadError as e:
+        raise writers.WriteError("the Iceberg load did not finish: " + str(e)) from None
+    if done:
+        done()
+    return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": loaded["rows"],
+            "dates": dates}

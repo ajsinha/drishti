@@ -43,6 +43,7 @@ from typing import Iterable, Iterator
 HERE = pathlib.Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
+import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate
 import re as _re
 _JSONL_MEMBER = _re.compile(r"\.(jsonl|ndjson|json)(\.gz|\.zst)?$", _re.IGNORECASE)  # noqa: E402

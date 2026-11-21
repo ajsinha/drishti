@@ -18,7 +18,7 @@
 #   tools/bench/pinning.sh data                    build the small data sets (<= 10,000 trades a day) in $DRISHTI_PIN_DIR
 #   tools/bench/pinning.sh rabbit-up | rabbit-down start / remove the RabbitMQ container (2 GB, ports 25672/25673)
 #   tools/bench/pinning.sh run <config> <21|25> [seconds]
-#        config: delta-hadoop | delta-native | duckdb | files
+#        config: delta | duckdb | files
 #        starts the exec jar on that JDK (Java 21 with -Djdk.tracePinnedThreads=full) on port $DRISHTI_PIN_PORT
 #        (18993) with the config's store, a RabbitMQ message source and the public ECB feed, drives 200 concurrent
 #        clients (tools/bench/pinload.py), then stops the server by its process id and prints the pinned stacks.
@@ -83,8 +83,7 @@ cmd_run() {
     DRISHTI_PACKS_OVERLAY="$run/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$run/packs/installed" DRISHTI_FEEDS="$run/feeds"
     DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false DRISHTI_FEED_ECB_FX=true)
   case "$cfg" in
-    delta-hadoop) env+=(DRISHTI_DELTA_ENGINE=hadoop) ;;
-    delta-native) env+=(DRISHTI_DELTA_ENGINE=native) ;;
+    delta) ;;
     duckdb) env+=(SPRING_PROFILES_ACTIVE=duckdb DRISHTI_DUCKDB_PATH="$D/drishti.duckdb") ;;
     files) env+=(SPRING_PROFILES_ACTIVE=files DRISHTI_FILES_ROOT="$D/files") ;;
     *) echo "unknown config $cfg" >&2; exit 2 ;;

@@ -15,8 +15,7 @@
 "Mixed Delta and Iceberg storage").
 
 A system stored in Iceberg is built as Delta first (``lake demo`` or ``lake build``, so its documents and promoted columns are exactly those
-of a Delta build), then copied into ``<iceberg root>/trading/trade_<system>`` by Drishti's own Iceberg loader (IcebergLoader, ``engine:
-native``: no Hadoop, so it works on Windows), and its Delta table is removed. Its connector file ``trade-<system>.yaml`` is switched with it:
+of a Delta build), then copied into ``<iceberg root>/trading/trade_<system>`` by Drishti Lake's loader (``DrishtiLakeCli load``, loader rows: tools/lake/loaderows.py), and its Delta table is removed. Its connector file ``trade-<system>.yaml`` is switched with it:
 ``plugin: iceberg`` reading ``table.trade: trade_<system>``, or back to the pack's Delta template; one connector serves each system, never both.
 
     python tools/lake/stores.py --from data/delta/trading/trade_calypso --root data/iceberg --table trade_calypso --replace
@@ -53,7 +52,6 @@ STORES = ("delta", "iceberg")
 DOMAIN = "trading"
 DELTA_DEFAULT = lakeconfig.DEMO_ROOT_REF   # the demo lake: its own folder, <data>/delta/demo (config/lakes/demo.yaml)
 ICEBERG_DEFAULT = "${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}"
-LOADER = "com.ash.drishti.plugin.iceberg.IcebergLoader"
 WRITTEN_BY = "# Written by tools/build_demo_lakes.py --store"
 
 
@@ -165,8 +163,8 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 
 # ---- the loader --------------------------------------------------------------------------------------------------------------------------
 
-def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, main: str = LOADER) -> list[str]:
-    """How to start IcebergLoader (or another class of the plugin, ``main``: IcebergMaintenance): DRISHTI_ICEBERG_CLASSPATH (development:
+def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, *, main: str) -> list[str]:
+    """How to start one of Drishti Lake's Java mains (``main``: LakeUndo, LakeRetention, LakeRelocate, IcebergMaintenance): LAKE_CLASSPATH (development:
     ``-cp CP``), else the server's exec jar (``jar``, else the newest in <home>/lib), whose
     launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):
@@ -178,13 +176,13 @@ def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None 
     if not java:
         raise SystemExit("stores: no java (Java 21 or newer: drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME or java on the PATH)")
     heap = "-Xmx" + os.environ.get("DRISHTI_LOADER_HEAP", "2g")
-    cp = os.environ.get("DRISHTI_ICEBERG_CLASSPATH")
+    cp = os.environ.get("LAKE_CLASSPATH")
     if cp:
         args = [heap, "-cp", cp, main]
     else:
         jar = writers.find_jar(jar)
         if not jar:
-            raise SystemExit("stores: Iceberg is written by the server's exec jar: none in <home>/lib: run "
+            raise SystemExit("stores: the lake tools run in the server's exec jar: none in <home>/lib: run "
                              "python tools/drishti.py build jar (or pass --jar)")
         args = [heap, f"-Dloader.main={main}", "-jar", jar]
     return java_cmd(java, args, tmp=data / "tmp" / "server")
@@ -213,46 +211,25 @@ def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAI
 
 
 def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib.Path, say=print, domain: str = DOMAIN) -> dict:
-    """Copies one Delta table into ``<root>/trading/<table_name>`` with IcebergLoader (each business day committed as one overwrite of
-    that day); {rows, newest}."""
-    if str(HERE) not in sys.path:
-        sys.path.insert(0, str(HERE))
-    import feedfiles  # noqa: E402  (tools/lake/feedfiles.py: the rows as a tar of <table>/<YYYY-MM-DD>/ folders)
-    spill = data / "tmp" / "iceberg"
-    spill.mkdir(parents=True, exist_ok=True)
-    cmd = loader_command(data) + ["-", str(root), "--engine", "native", "--spill-dir", str(spill), "--buffer-mb", "512"]
+    """Copies one Delta table into ``<root>/trading/<table_name>`` with Drishti Lake's loader (each business day replaced); {rows, newest}."""
+    import loaderows
     newest: list = []
     n = 0
-    said: list[str] = []
-    with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
-                          errors="replace") as proc:
-        def echo():
-            for text in proc.stdout:                            # the loader's own progress (rows read, days written) shown as it comes
-                said.append(text)
-                if text.startswith("iceberg:"):
-                    say("    " + text.rstrip(), flush=True)
-        reader = threading.Thread(target=echo, daemon=True)
-        reader.start()
-        try:
-            # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
-            # in its Delta business date's folder
-            out = feedfiles.RowsTarStream(proc.stdin.buffer)
-            for line in rows(delta, table_name, newest, domain):
-                out.add(table_name, json.loads(line)["date"], line)
-                n += 1
-                if n % 100_000 == 0:
-                    say(f"    {domain}/{table_name}: {n:,} rows sent to Iceberg", flush=True)
-            out.close()
-            proc.stdin.close()
-        except BrokenPipeError:
-            pass
-        proc.wait()
-        reader.join(timeout=10)
-    with_words = [s.rstrip() for s in said if s.strip() and not s.startswith("SLF4J")]
-    if proc.returncode:
-        raise SystemExit(f"stores: the Iceberg load of {table_name} did not finish: {with_words[-1] if with_words else f'exit {proc.returncode}'}")
-    with contextlib.suppress(OSError):
-        spill.rmdir()                                           # the loader's run files are gone; the folder too when empty
+
+    def counted():
+        nonlocal n
+        for line in rows(delta, table_name, newest, domain):
+            n += 1
+            if n % 100_000 == 0:
+                say(f"    {domain}/{table_name}: {n:,} rows read for Iceberg", flush=True)
+            yield line
+    work = data / "tmp" / "iceberg"
+    try:
+        loaderows.load(counted(), root, domain, table_name, work, "iceberg", say=say)
+    except loaderows.LoadError as e:
+        raise SystemExit(f"stores: the Iceberg load of {table_name} did not finish: {e}") from None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
     record_build(delta, root, table_name, domain, n)
     return {"rows": n, "newest": newest[0] if newest else None}
 
@@ -307,7 +284,6 @@ def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathl
         st = dict(raw["settings"])
         iceberg_lake(folder, pack, raw, ice, data)
         st["lake"] = ICEBERG_LAKE
-        st["engine"] = "native"
         return {**raw, "settings": st}
     return packlake.view(pack)["connectors"][name]
 
@@ -351,7 +327,7 @@ def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: path
 def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
                    folder: pathlib.Path | None = None) -> tuple[dict | None, str]:
     """The override of trade-<system> for its store (the source module's template, one source system of the union, table
-    trade_<system>; plugin and root set; ``engine: native`` for Iceberg) and its header line; None when the template says it all."""
+    trade_<system>; plugin and root set; Iceberg's lake) and its header line; None when the template says it all."""
     pack = _pack_manifest(pack_dir("trading") / "pack.yaml")
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
@@ -361,7 +337,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
         where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'}, config/lakes/demo.yaml)"
     elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
-        settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
+        settings = {"root": root, **{k: v for k, v in settings.items() if k != "root"}}
         where = f"{system.upper()}'s trades in Iceberg ({ice / DOMAIN / f'trade_{system}'})"
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
@@ -418,7 +394,7 @@ def current_domain(folder: pathlib.Path, domain: str) -> str:
 def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
                           pair: tuple[str, str] | None = None, folder: pathlib.Path | None = None) -> tuple[dict | None, str]:
     """The override of one of the domain's connectors for its store (the pack's template, layouts with their vector columns, with plugin
-    and root set; ``engine: native`` for Iceberg) and its header line; None when the template says it all. ``pair`` (pack, connector): by
+    and root set; Iceberg's lake) and its header line; None when the template says it all. ``pair`` (pack, connector): by
     default the domain's first."""
     pack_name, name = pair or DOMAIN_STORES[domain][0]
     pack = _pack_manifest(pack_dir(pack_name) / "pack.yaml")
@@ -430,7 +406,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
         where = f"every {domain} table in Delta ({lake / domain}, config/lakes/demo.yaml)"
     elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
-        settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
+        settings = {"root": root, **{k: v for k, v in settings.items() if k != "root"}}
         where = f"every {domain} table in Iceberg ({ice / domain})"
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)

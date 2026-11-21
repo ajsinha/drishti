@@ -2557,13 +2557,13 @@ Every connector with a network client reads these settings. This is what each do
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
 | [Aerospike](../../plugins/drishti-plugin-aerospike/README.md#security) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
 | [Cassandra](../../plugins/drishti-plugin-cassandra/README.md#security) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
-| [Delta](../../plugins/drishti-plugin-delta/README.md#security-tls-and-credentials) (native engine) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process; refused with `engine: hadoop` |
+| [Delta](../../plugins/drishti-plugin-delta/README.md#security-tls-and-credentials) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#security-tls-and-credentials) (REST catalog's object store) | `https://` `s3.endpoint` | yes | checked, not narrowed | **refused** | yes | an HTTPS stand-in S3 in the test process; refused with `catalog: hadoop` |
 
 The rule is the same everywhere: `tls.*` against an address that is not TLS is a start-up error, never a silent downgrade, and a
 wrong file or password stops the connector at start naming the setting and the file. Where a library has no hook for a
-private CA, the connector says so at start and names the JVM truststore as the way out; those places are the Hadoop S3A
-engine and path catalogs (Delta, Iceberg), and the REST catalog's own connection (Iceberg).
+private CA, the connector says so at start and names the JVM truststore as the way out; that place is the REST catalog's own
+connection (Iceberg).
 
 
 ### 10.1 The settings
@@ -3029,7 +3029,7 @@ private CA.
 | [News](../../docs/connectors/types/news/README.md#outbound-proxy) | yes | same |
 | [yfinance](../../docs/connectors/types/yfinance/README.md#outbound-proxy) | yes | same |
 | [S3](../../plugins/drishti-plugin-s3/README.md#outbound-proxy) | yes, AWS and S3-compatible endpoints | the AWS SDK's proxy configuration; with a proxy the Apache HTTP client is used (the URL-connection client cannot answer a proxy's login when it tunnels https) |
-| [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
+| [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes | the SDK's proxy configuration |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
 | [Kafka](../../plugins/drishti-plugin-kafka/README.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
 | AI providers: OpenAI-compatible, Anthropic ([AI_GUIDE.md](AI_GUIDE.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
@@ -3206,12 +3206,11 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
   system is in one store.
 - **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
   `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
-  `tools/lake/stores.py` streams the rows into Drishti's own Iceberg loader (`IcebergLoader`, `engine: native`: no Hadoop, so it works on
+  `tools/lake/stores.py` writes the rows with Drishti Lake's loader (`DrishtiLakeCli load`, loader rows: no Hadoop, so it works on
   Windows), started from the server's exec jar (`lib/drishti-server-*-exec.jar`: `python tools/drishti.py build jar` makes it;
-  heap `DRISHTI_LOADER_HEAP`, default 2g). The loader's progress lines (`iceberg: … rows read`, `iceberg: written in … s`) and the usual
-  30-second heartbeat show while it copies.
+  heap `DRISHTI_LAKE_LOADER_HEAP`, default 4g). The usual 30-second heartbeat shows while it copies.
 - **Connector files:** the build writes `trade-<system>.yaml` (in `config/connectors`, or `--connectors-dir`) from the trading pack's
-  template with `plugin: iceberg`, `engine: native` and `table: {trade: trade_<system>}` (the Iceberg connector's `table.<kind>` setting,
+  template with `plugin: iceberg` and `table: {trade: trade_<system>}` (the Iceberg connector's `table.<kind>` setting,
   as the Delta connector's), or back with `plugin: delta` when the system returns to Delta; the text it replaces is kept in
   `<data>/connectors/history/`. One connector serves each system, never two; the trading pack's union of the three systems is unchanged.
   A running server restarts a switched connector by itself (live reload); `lake demo` leaves an Iceberg file as it is.
@@ -3237,7 +3236,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
   over each, one after the other: six trade pages, `TRD <id> 10` for each, two counterparty-trades pages, three searches and a BI model query
   (sum of `QUANTITY` by source system, currency and product type). Measured on 2026-10-21: **18 answers, the same** (only timings, the
   data-version stamps and the table generation in the provenance panel differ, as they name the storage).
-- **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergLoader --keep-days` or the Iceberg maintenance of
+- **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergMaintenance --keep-days` (the Iceberg maintenance) of
   [ICEBERG_CONNECTOR.md, section 9](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance).
 - **Default:** an option; the demo default is Delta.
 
@@ -3529,7 +3528,7 @@ a new connector adds can be loaded with the same demo data.
 | `python tools/drishti.py data load --store files [root] [--trades N] [--days D]` | `make_data.py --jsonl` (a tar), then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
 | `python tools/drishti.py data load --store delta [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
 | `python tools/drishti.py data load --store postgres [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl` (a tar), then `PostgresLoader` (samples with `--recreate`), then the bulk book's tar |
-| `python tools/drishti.py data load --store iceberg [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl` and the bulk book (two tars), then `IcebergLoader` on their folder in one load (each day sorted by id) |
+| `python tools/drishti.py data load --store iceberg [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | not rebuilt on Drishti Lake's one loader yet (it started `IcebergLoader`, which Drishti Lake's loader replaced): use `lake build --format iceberg` |
 | `python tools/drishti.py data load --store duckdb [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl` (a tar), then `DuckDbLoader` (samples with `--recreate`), then the bulk book's tar; each load builds `<database>.loading` and renames it over the database |
 | `python tools/drishti.py data load --store mongodb [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl` (a tar), then `MongoLoader`, then the bulk book's tar |
 | `python tools/drishti.py data load --store redis [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl` (a tar), then `RedisLoader`, then the bulk book's tar |

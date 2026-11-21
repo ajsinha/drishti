@@ -131,7 +131,6 @@ plugins:
       - { name: id-map-disk.idle-release, type: duration, default: "30m", desc: "A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS_GUIDE.md section 12.3)", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: id-map-mb, type: int, desc: "Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
-      - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available)", group: tuning }
       - { name: s3.endpoint, desc: "An S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
       - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: used only with s3.endpoint", group: s3, default: "true" }
@@ -173,12 +172,10 @@ plugins:
       - { name: "metadata-location.*", desc: "A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json)", group: connection }
       - { name: relocate, desc: "`<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, plugins/drishti-plugin-iceberg/README.md › Catalogs and storage). Each side is a plain folder (`/data/ice1`, `C:\\lake` or `C:/lake`, `\\\\fs\\share\\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\\old -> D:\\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so", group: connection }
       - { name: vended-credentials, type: boolean, default: "true", desc: "`rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire", group: connection }
-      - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present)", group: tuning }
-      - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: "catalog.*", desc: "Any Iceberg catalog property (catalog.<property>)", group: connection }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
       - { name: credential, secret: true, desc: "REST catalog credential: ${ENV_VAR} or file:/path", group: connection }
-      - { name: root, type: path, desc: "`hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`)", group: connection }
+      - { name: root, type: path, desc: "`hadoop` (path-based catalog): the lake, a folder or `s3://…` (the product reads local disk and S3-compatible storage)", group: connection }
       - { name: uri, desc: "`rest`: the catalog's URI", group: connection }
       - { name: catalog, desc: "`hadoop` (path-based tables), `rest`, or `s3tables` (AWS S3 Tables: its Iceberg REST endpoint, the settings from `table-bucket-arn`)", group: connection, default: "hadoop" }
       - { name: table-bucket-arn, desc: "`s3tables`: the table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>`; the endpoint, SigV4 signing (`s3tables`), region, warehouse and REST prefix follow from it, the domain is the namespace and a kind is read from its table with underscores (`pnl-vector` is `pnl_vector`). Blank: the connector stays idle. Native engine only", group: connection }

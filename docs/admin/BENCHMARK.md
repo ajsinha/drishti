@@ -232,7 +232,7 @@ on the measuring machine, not in git.
 
 ```bash
 tools/bench/pinning.sh data && tools/bench/pinning.sh rabbit-up
-tools/bench/pinning.sh run delta-native 21 150     # then 25; config: delta-hadoop | delta-native | duckdb | files
+tools/bench/pinning.sh run delta 21 150     # then 25; config: delta | duckdb | files
 tools/bench/pinning.sh rabbit-down
 ```
 

@@ -90,7 +90,7 @@
 <rect x="574" y="734" width="244.0" height="24" rx="12.0" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
 <text x="696.0" y="750.32" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#2f3d4e" text-anchor="middle">SECRETS: vault / Secrets Manager</text>
 <rect x="150" y="790" width="290" height="48" rx="8" fill="#e6f4e6" stroke="#8cc28c" stroke-width="1.2"/>
-<text x="295.0" y="818.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">LOADERS: drishti-lakeload jobs</text>
+<text x="295.0" y="818.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">LOADERS: lake-load jobs</text>
 <path d="M 245 790 L 245 724" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
 <text x="253" y="762" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">one commit a date</text>
 <path d="M 440 814 L 994 814 L 994 420 L 978 420" fill="none" stroke="#5b7590" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ah)"/>

@@ -328,6 +328,7 @@ def plan(path, dataset: str | None = None, configured: Iterable[str] | None = No
 
 def _tar_feed(path: pathlib.Path, kind: str, entries, size: int, configured, today) -> Plan:
     """A tar feed's plan: one dataset per table, each member dated by its folder (filedate.tar_layout); any problem refuses the archive."""
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
     from drishti_lake import filedate
     for raw, _sz, t in entries:                       # the guards first: an unsafe member refuses the archive before anything else
         safe_parts(raw)

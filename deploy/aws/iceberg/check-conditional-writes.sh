@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The probe of deploy/aws/delta-lake/check-conditional-writes.sh, under the Iceberg prefix. A path-based Iceberg table in S3
-# (ICEBERG_CATALOG=hadoop) commits by creating its next metadata file with a conditional PUT (If-None-Match: *, drishti-lakeio's
+# (ICEBERG_CATALOG=hadoop) commits by creating its next metadata file with a conditional PUT (If-None-Match: *, lake-io's
 # exclusive create): a second writer of the same version is refused with 412 and retries on the new metadata. With ICEBERG_CATALOG=glue
 # the catalog serialises commits itself, and the probe only proves the data files' bucket behaves.
 USAGE="check-conditional-writes.sh [--dry-run] [--env FILE]

@@ -32,6 +32,7 @@ import sys
 import tempfile
 from datetime import date
 
+import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate
 
 import hostdates

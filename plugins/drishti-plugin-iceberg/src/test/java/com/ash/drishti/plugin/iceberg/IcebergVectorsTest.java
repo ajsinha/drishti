@@ -104,9 +104,9 @@ class IcebergVectorsTest {
             assertThat(doc.get("PNL").size()).isEqualTo(VectorLake.N);
             assertThat(doc.get("PNL").get(7).asDouble()).isEqualTo(want.get(3).pnl()[7]);
             assertThat(doc.get("PNL").get(3).isNull()).isTrue();
-            // the position without a vector keeps its marker
+            // the position without a vector has a null vector in its document (the one loader's rule, on every store)
             var none = p.fetch(EntityRef.of(VectorLake.KIND, "POS-00005"), AsOf.of(DAY)).orElseThrow().data();
-            assertThat(none.get("PNL").get("$vector").asText()).isEqualTo("PNL");
+            assertThat(none.get("PNL").isNull()).isTrue();
         } finally {
             p.close();
         }
@@ -140,8 +140,7 @@ class IcebergVectorsTest {
         List<String> lines = new ArrayList<>(List.of(VectorLake.line(ps.get(0), DAY, null), VectorLake.line(ps.get(2), DAY, null)));
         lines.add(VectorLake.line(ps.get(1), DAY, List.of(1.0, "x", 2.0)));
         assertThatThrownBy(() -> VectorLake.loadLines(tmp, root, "native", lines))
-                .hasMessageContaining("1 rows not loaded")
-                .hasMessageContaining("POS-00001")
+                .hasMessageContaining("rows written: 2, rejected: 1")
                 .hasMessageContaining("the vector field 'PNL' is not a list of numbers");
         IcebergSourcePlugin p = plugin(root, "native");
         try {
