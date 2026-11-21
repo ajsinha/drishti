@@ -28,7 +28,6 @@ import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.engine.time.BusinessDateProperties;
 import com.ash.drishti.engine.time.BusinessDates;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import java.time.Clock;
 import java.time.Duration;
@@ -94,7 +93,7 @@ class HistoryCacheMasksTest {
         router.fallback(peers);
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
-                Formats.defaults(), new ElCompiler(), HistorySpec::defaults, k -> "TRD");
+                Formats.defaults(), com.ash.drishti.rachana.DrishtiRachana.compiler(), HistorySpec::defaults, k -> "TRD");
     }
 
     private static HistoryService.Query days(String id, int n) {

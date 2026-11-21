@@ -19,7 +19,6 @@ import com.ash.rachana.SutraExpressions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.Sutra;
 import com.ash.rachana.parse.SutraParser;
 import java.nio.file.Files;
@@ -47,7 +46,7 @@ class DocumentedSutrasTest {
             }
         }
         SutraParser parser = com.ash.drishti.rachana.DrishtiRachana.parser();
-        SutraExpressions check = new SutraExpressions(new ElCompiler());
+        SutraExpressions check = new SutraExpressions(com.ash.drishti.rachana.DrishtiRachana.compiler());
         int checked = 0;
         for (Path f : files) {
             Matcher m = BLOCK.matcher(Files.readString(f));

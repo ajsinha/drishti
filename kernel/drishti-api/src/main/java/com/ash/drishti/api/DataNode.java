@@ -121,6 +121,19 @@ public sealed interface DataNode extends com.ash.rachana.api.Node permits DataNo
         if (value == null) {
             return Val.NULL;
         }
+        if (value instanceof com.ash.rachana.api.Node n) {                      // Rachana's own tree (a list or record an expression built)
+            return switch (n.kind()) {
+                case MISSING -> missing();
+                case NULL -> n.isMasked() ? masked() : nullValue();
+                case OBJECT -> {
+                    LinkedHashMap<String, DataNode> fields = new LinkedHashMap<>(Math.max(4, n.size() * 2));
+                    n.fields().forEach((k, v) -> fields.put(k, of(v)));
+                    yield new Obj(fields);
+                }
+                case ARRAY -> new Arr(n.elements().stream().map(DataNode::of).toList());
+                default -> n.isMasked() ? masked() : new Val(n.value());
+            };
+        }
         if (value instanceof Map<?, ?> m) {
             LinkedHashMap<String, DataNode> fields = new LinkedHashMap<>(Math.max(4, m.size() * 2));
             m.forEach((k, v) -> fields.put(String.valueOf(k), of(v)));

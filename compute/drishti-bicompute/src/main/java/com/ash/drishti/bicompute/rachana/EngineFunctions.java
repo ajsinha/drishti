@@ -52,7 +52,7 @@ public final class EngineFunctions implements FunctionProvider {
 
     @Override
     public Grouping grouping() {
-        return new ListGrouping();
+        return null;                           // Core's own grouping (com.ash.rachana.agg), the one implementation (8.3h)
     }
 
     @Override
@@ -151,6 +151,11 @@ public final class EngineFunctions implements FunctionProvider {
                 "measure('MEASURE', 'GROUP:G-1')", (a, c) -> measure(a)));
         out.add(new Provided("cell", 1, 33, "view, [field, member] ...", "measure", "a cell of a saved pivot view, as the view computes it",
                 "cell('desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')", (a, c) -> cell(a)));
+        // a provider may not give a name Core gives (SPLIT_PLAN 8.3h): the list aggregates and list functions are Core's now (the aggregate
+        // kernel); what stays here is the _once family, the measure-level functions, measure and cell
+        java.util.Set<String> core = new java.util.HashSet<>();
+        com.ash.rachana.agg.CoreAggregates.INSTANCE.functions().forEach(f -> core.add(f.name()));
+        out.removeIf(p -> core.contains(p.name()));
         return out;
     }
 

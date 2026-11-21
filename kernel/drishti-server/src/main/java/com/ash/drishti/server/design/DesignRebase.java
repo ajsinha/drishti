@@ -116,7 +116,7 @@ public class DesignRebase {
                         + " be replayed on " + newBase + "; make that change again by hand", 0));
                 continue;
             }
-            for (Op op : Ops.parse(ops)) {
+            for (Op op : Ops.parse(new com.fasterxml.jackson.databind.ObjectMapper().convertValue(ops, Object.class))) {
                 flat.add(op);
                 where.add("step " + step);
             }

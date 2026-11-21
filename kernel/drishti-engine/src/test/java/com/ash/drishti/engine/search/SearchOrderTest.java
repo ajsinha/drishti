@@ -34,7 +34,6 @@ import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.source.SourcesProperties;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import java.time.Duration;
 import java.time.Instant;
@@ -102,7 +101,7 @@ class SearchOrderTest {
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofMillis(500), null, null);
         var router = new SourceRouter(new SourceRegistry(List.of(store), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
         var mnemonics = new Mnemonics(new CommandsProperties(Map.of("TRD", new CommandsProperties.Mnemonic("trade", "Trade")), null, null, null));
-        return new StructuredSearch(router, mnemonics, new ElCompiler(), Formats.defaults(), new SearchProperties(1000, Duration.ofSeconds(2)));
+        return new StructuredSearch(router, mnemonics, com.ash.drishti.rachana.DrishtiRachana.compiler(), Formats.defaults(), new SearchProperties(1000, Duration.ofSeconds(2)));
     }
 
     private static List<String> ids(StructuredSearch s, String q) {

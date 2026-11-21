@@ -18,8 +18,6 @@ package com.ash.drishti.rachana;
 import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.rachana.el.ElCompiler;
-import com.ash.rachana.parse.SutraBlocks;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -57,7 +55,7 @@ class PackSutrasTest {
         }
         com.ash.drishti.rachana.DrishtiRachana.blocks().kit(KIT);
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
-                null, null, null, null, null, null, null, null), new ElCompiler())) {
+                null, null, null, null, null, null, null, null), com.ash.drishti.rachana.DrishtiRachana.compiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);
             assertThat(com.ash.drishti.rachana.DrishtiRachana.blocks().find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();

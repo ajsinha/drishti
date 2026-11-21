@@ -20,7 +20,6 @@ import com.ash.drishti.bicompute.functions.Builtins;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.kernel.api.pivot.Batch;
-import com.ash.drishti.api.error.ErrorCode;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.Values;
 import java.util.ArrayList;

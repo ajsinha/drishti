@@ -27,7 +27,6 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import java.time.Duration;
 import java.time.Instant;
@@ -142,7 +141,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext context) {
-        kinds = DerivedKind.parse(context.settings(), new ElCompiler(), Formats.defaults());
+        kinds = DerivedKind.parse(context.settings(), com.ash.drishti.rachana.DrishtiRachana.compiler(), Formats.defaults());
         if (kinds.isEmpty()) {
             throw new PluginNotConfigured("derived needs at least one <kind>.from setting");
         }

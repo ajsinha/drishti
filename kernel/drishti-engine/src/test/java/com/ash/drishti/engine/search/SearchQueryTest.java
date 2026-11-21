@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Values;
 import com.ash.rachana.format.Formats;
@@ -31,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class SearchQueryTest {
 
     private static boolean holds(SearchQuery q, Map<String, Object> doc) {
-        return Values.truthy(new ElCompiler().compile(q.condition()).eval(EvalContext.of(DataNode.of(doc), Formats.defaults())));
+        return Values.truthy(com.ash.drishti.rachana.DrishtiRachana.compiler().compile(q.condition()).eval(EvalContext.of(DataNode.of(doc), Formats.defaults())));
     }
 
     @Test

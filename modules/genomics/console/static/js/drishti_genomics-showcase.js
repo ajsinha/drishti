@@ -69,7 +69,7 @@
     p.textContent = (e && e.call ? 'This page could not read ' + api + e.call + ': ' : 'This page failed: ') + ((e && e.message) || String(e))
       + (e && e.status ? ' (HTTP ' + e.status + ')' : '') + '. ' + (e && e.call ? advice(e) : 'Open the page again; if it fails again, the browser console names the error.');
   }
-  function tell(channel, ids) { E.core.bus.emit(E.core.SELECTION_EVENT, { channel: channel, ids: ids, source: root }); }
+  function tell(channel, ids) { E.core.bus.emit(E.core.selectionTopic(channel), { channel: channel, ids: ids, source: root }); }
   const pct = (v) => (v === null || v === undefined ? '—' : E.core.formatPercent(v, { decimals: 0 }));
   const count = (v) => (v === null || v === undefined ? '—' : E.core.formatNumber(v, { decimals: 0 }));
 

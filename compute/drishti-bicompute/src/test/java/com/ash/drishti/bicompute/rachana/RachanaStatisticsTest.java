@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 class RachanaStatisticsTest {
 
-    static final ElCompiler EL = new ElCompiler();
+    static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
     static final Formats F = Formats.load(null, List.of("../../examples/packs/finance/config/formats.yaml"));
     static final DataNode DOC;
 

@@ -33,7 +33,6 @@ import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.view.ViewModelSchema;
 import com.ash.rachana.model.PanelKind;
 import com.ash.rachana.model.Sutra;
-import com.ash.rachana.parse.SutraParser;
 import com.ash.drishti.server.api.ViewModelSchemaController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

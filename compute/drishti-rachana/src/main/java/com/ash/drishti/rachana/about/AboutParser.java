@@ -21,7 +21,6 @@ import com.ash.rachana.el.Template;
 import com.ash.rachana.model.SourceLocation;
 import com.ash.rachana.parse.PNode;
 import com.ash.rachana.parse.PositionalYamlReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

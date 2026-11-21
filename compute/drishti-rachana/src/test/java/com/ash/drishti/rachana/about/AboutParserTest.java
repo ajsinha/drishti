@@ -19,7 +19,6 @@ import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.rachana.SutraProblem;
-import com.ash.rachana.el.ElCompiler;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +32,7 @@ class AboutParserTest {
 
     @TempDir Path dir;
 
-    private final AboutParser parser = new AboutParser(new ElCompiler(), 40);
+    private final AboutParser parser = new AboutParser(com.ash.drishti.rachana.DrishtiRachana.compiler(), 40);
 
     private AboutParser.Parsed parse(String yaml) {
         return parser.parse(yaml, "about.yaml", Set.of("thing"));
@@ -128,7 +127,7 @@ class AboutParserTest {
         Path f = dir.resolve("about.yaml");
         Files.writeString(f, "about: 1\nkinds:\n  thing:\n    glossary:\n      a: { use: nope }\n      b: { term: B }\n");
         AboutCatalog c = new AboutCatalog(new AboutProperties(List.of(new AboutProperties.PackSource("p", "P", f.toString(), null,
-                List.of("thing"), List.of("p"))), null, null), new ElCompiler());
+                List.of("thing"), List.of("p"))), null, null), com.ash.drishti.rachana.DrishtiRachana.compiler());
         assertThat(c.problems().get("p/about.yaml")).extracting(SutraProblem::code).containsExactly("DRS-2043");
         assertThat(c.forKind("thing").orElseThrow().glossary()).containsOnlyKeys("b");
     }
@@ -138,7 +137,7 @@ class AboutParserTest {
         // the file the PACK_DEVELOPER_GUIDE walks through: it must stay valid as the format hardens (strict keys, compiled templates, text caps)
         Path file = Path.of(TestRoots.repo(), "docs", "guides", "examples", "pack", "helpdesk", "config", "about.yaml");
         assertThat(file).exists();
-        AboutParser.Parsed p = new AboutParser(new ElCompiler(), 600).parse(Files.readString(file), "helpdesk/about.yaml", Set.of("ticket"));
+        AboutParser.Parsed p = new AboutParser(com.ash.drishti.rachana.DrishtiRachana.compiler(), 600).parse(Files.readString(file), "helpdesk/about.yaml", Set.of("ticket"));
         assertThat(p.problems()).isEmpty();
         assertThat(p.kinds()).containsKey("ticket");
         assertThat(p.kinds().get("ticket").glossary()).isNotEmpty();

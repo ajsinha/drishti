@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 class InferenceEngineTest {
 
     static final Path FIXTURES = Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples");
-    static final ElCompiler EL = new ElCompiler();
+    static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
     static final Formats F = Formats.load(null, java.util.List.of("../../examples/packs/finance/config/formats.yaml"));
     static final InferenceEngine ENGINE = new InferenceEngine(Semantics.load(null, java.util.List.of("../../examples/packs/finance/config/semantics.yaml")), Rules.builtIn());
     static final LayoutMerger MERGER = new LayoutMerger(ENGINE, EL, F);
@@ -155,7 +155,7 @@ class InferenceEngineTest {
         assertThat(LayoutMerger.labelOf("$.legs[0].cashflows[1].amount")).isEqualTo("Amount");
         assertThat(LayoutMerger.labelOf("link($.nettingSet, 'netting-set')")).isEqualTo("Netting set");
         assertThat(LayoutMerger.labelOf("fmt($.dv01ByTenor, 'x')")).isEqualTo("DV01 by tenor");
-        var parsed = new com.ash.rachana.parse.SutraParser().parse("""
+        var parsed = com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
                 rachana: 1
                 sutra: no-labels
                 version: 1

@@ -27,7 +27,6 @@ import com.ash.drishti.engine.live.PatchDiffer;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.rachana.model.Sutra;
-import com.ash.rachana.parse.SutraParser;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

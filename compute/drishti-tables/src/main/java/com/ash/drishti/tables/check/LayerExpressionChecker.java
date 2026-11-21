@@ -50,7 +50,7 @@ public final class LayerExpressionChecker implements ExpressionChecker {
         List<Problem> out = new ArrayList<>();
         for (com.ash.rachana.el.check.Problem p : c.problems()) {
             String words = p.message() + (p.fix() == null ? "" : " (" + p.fix() + ")");
-            out.add(p.error() ? Problem.error(p.code(), path, words) : Problem.warning(p.code(), path, words));
+            out.add(p.error() ? Problem.error(com.ash.drishti.rachana.DrishtiRachana.drs(p.code()), path, words) : Problem.warning(com.ash.drishti.rachana.DrishtiRachana.drs(p.code()), path, words));
         }
         if (!model) {
             layerRules(text, env, path, out);

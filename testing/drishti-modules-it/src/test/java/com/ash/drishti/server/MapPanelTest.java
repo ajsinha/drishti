@@ -29,9 +29,7 @@ import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.rachana.SutraException;
 import com.ash.rachana.SutraExpressions;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.Sutra;
-import com.ash.rachana.parse.SutraParser;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -90,7 +88,7 @@ class MapPanelTest {
     @Test
     void theGrammarReadsTheOptionsAndCompilesTheExpressions() {
         assertThat(sutra(WORLD).panels().get(0).kind().id()).isEqualTo("map");
-        var el = new SutraExpressions(new ElCompiler());
+        var el = new SutraExpressions(com.ash.drishti.rachana.DrishtiRachana.compiler());
         assertThat(el.check(sutra(WORLD))).isEmpty();
         assertThat(el.check(sutra(SHADED))).isEmpty();
         assertThat(el.check(sutra("{ id: m, kind: map, highlight: '$.a +* 2' }"))).extracting("code").contains("DRS-2101");

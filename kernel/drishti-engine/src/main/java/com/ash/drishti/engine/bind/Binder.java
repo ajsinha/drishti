@@ -285,7 +285,7 @@ public final class Binder {
     }
 
     private DataNode node(Object v) {
-        return v instanceof DataNode n ? n : DataNode.missing();
+        return v instanceof DataNode n ? n : v instanceof com.ash.rachana.api.Node n ? DataNode.of(n) : DataNode.missing();   // Core's trees too
     }
 
     // ---- kinds --------------------------------------------------------------------------------

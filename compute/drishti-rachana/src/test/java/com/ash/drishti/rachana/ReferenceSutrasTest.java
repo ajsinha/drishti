@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class ReferenceSutrasTest {
 
     static final Path FIXTURES = Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples");
-    static final ElCompiler EL = new ElCompiler();
+    static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
     static final Formats F = Formats.load(null, java.util.List.of("../../examples/packs/finance/config/formats.yaml"));
     static SutraRegistry registry;
     static SutraMatcher matcher;

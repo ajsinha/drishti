@@ -33,7 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
 /** The match trace: every Sutra of the kind in priority order with its verdict; {@code match()} is unchanged. */
 class MatchTraceTest {
 
-    static final ElCompiler EL = new ElCompiler();
+    static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
     static final Formats F = Formats.load(null, List.of("../../examples/packs/finance/config/formats.yaml"));
 
     @TempDir

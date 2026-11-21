@@ -17,7 +17,6 @@ package com.ash.drishti.rachana.about;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.rachana.el.ElCompiler;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,11 +49,11 @@ class DesignAboutTest {
         Path f = dir.resolve("pack.yaml");
         Files.writeString(f, PACK);
         return new AboutCatalog(new AboutProperties(List.of(new AboutProperties.PackSource("p", "Pack", f.toString(), null, List.of("thing"), List.of("p"))), null, null),
-                new ElCompiler());
+                com.ash.drishti.rachana.DrishtiRachana.compiler());
     }
 
     private static DesignAbout of(AboutCatalog c, String text) {
-        return DesignAbout.of(c, new ElCompiler(), 600, text, "thing");
+        return DesignAbout.of(c, com.ash.drishti.rachana.DrishtiRachana.compiler(), 600, text, "thing");
     }
 
     @Test

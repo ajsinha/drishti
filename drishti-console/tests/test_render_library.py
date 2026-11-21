@@ -92,14 +92,14 @@ def test_every_kind_of_the_grammar_is_drawn():
 
 def test_the_renderer_draws_with_the_libraries_and_keeps_no_grid_chart_format_or_live_code_of_its_own():
     """The owner's rule (2026-11-07): tables are drishti-grid's, charts drishti-chart's (the only place an engine is called), formats and
-    the element maker drishti-core's, streams drishti-data's live client; one component test covers the console and the renderer."""
+    the element maker drishti-core's, streams drishti-events (raw mode); one component test covers the console and the renderer."""
     src = {p.name: code(p) for p in rd.LIBRARY.glob("*.js")}
     engine = re.compile(r"echarts\.init|\.setOption\(|getInstanceByDom|new EventSource|\.toFixed\(|Intl\.NumberFormat|createElement\('table'\)|h\('table'")
     assert {k: engine.findall(v) for k, v in src.items() if engine.search(v)} == {}
     gone = {"drishti_tables.js", "drishti_charts.js", "drishti_draw.js", "drishti_format.js"}
     assert not gone & set(src), "the renderer's private table, chart and format modules are gone (no dual machinery)"
     joined = "\n".join(src.values())
-    for lib in ("drishti-grid", "drishti-chart", "drishti-core", "drishti-data"):
+    for lib in ("drishti-grid", "drishti-chart", "drishti-core", "drishti-events"):
         assert f"/vendor/drishti-elements/{elements_pin.VERSION}/elements/{lib}/src/drishti_index.js" in joined, lib   # the vendored copy
 
 

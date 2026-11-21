@@ -187,7 +187,7 @@ public class BuilderController {
     /** The {@code ops} of a body, or a 400 that says which operation is wrong. */
     static List<Op> ops(JsonNode body) {
         try {
-            return Ops.parse(body.get("ops"));
+            return Ops.parse(new com.fasterxml.jackson.databind.ObjectMapper().convertValue(body.get("ops"), Object.class));
         } catch (Ops.FormatException e) {
             throw bad(e.getMessage());
         }

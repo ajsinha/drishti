@@ -28,7 +28,6 @@ import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.rachana.model.Sutra;
 import com.ash.rachana.SutraException;
-import com.ash.rachana.parse.SutraParser;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;

@@ -25,7 +25,7 @@
   if (!core || !core.configure) { return; }
   core.configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' } });
   var own = drishti_url('/static/elements/');          // drishti-core installed drishti_url (the console's URL sub-path)
-  [['drishti-insight', ['drishti-core']], ['drishti-renderer', ['drishti-core', 'drishti-grid', 'drishti-chart', 'drishti-data', 'drishti-graph', 'drishti-tree']],
+  [['drishti-insight', ['drishti-core']], ['drishti-renderer', ['drishti-core', 'drishti-grid', 'drishti-chart', 'drishti-data', 'drishti-events', 'drishti-graph', 'drishti-tree']],
     ['drishti-risk', ['drishti-core', 'drishti-grid', 'drishti-chart']]].forEach(function (l) {
     var short = l[0].replace('drishti-', '');
     core.register(l[0], { base: own, bundle: l[0] + '/drishti_' + short + '.js', requires: l[1], module: l[0] === 'drishti-risk' ? 'banking' : 'core' });

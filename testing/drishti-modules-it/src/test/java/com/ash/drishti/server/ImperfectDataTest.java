@@ -27,7 +27,6 @@ import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.rachana.RachanaProperties;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.Sutra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +61,7 @@ class ImperfectDataTest {
         try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
-                        null, null, null, null, null, null, null, null), new ElCompiler())) {
+                        null, null, null, null, null, null, null, null), com.ash.drishti.rachana.DrishtiRachana.compiler())) {
                     out.addAll(r.all());
                 }
             }
@@ -126,7 +125,7 @@ class ImperfectDataTest {
         guide = guide.substring(guide.indexOf("## 6. Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
-        Sutra s = new com.ash.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
+        Sutra s = com.ash.drishti.rachana.DrishtiRachana.parser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
         DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));

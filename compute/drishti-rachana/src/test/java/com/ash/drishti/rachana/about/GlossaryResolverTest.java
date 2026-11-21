@@ -17,7 +17,6 @@ package com.ash.drishti.rachana.about;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.rachana.el.ElCompiler;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,7 +72,7 @@ class GlossaryResolverTest {
                 ? List.of(new AboutProperties.PackSource("child", "C", c.toString(), null, List.of("other"), List.of("child", "base")),
                         new AboutProperties.PackSource("base", "B", b.toString(), null, List.of("thing"), List.of("base")))
                 : List.of(new AboutProperties.PackSource("base", "B", b.toString(), null, List.of("thing"), List.of("base")));
-        AboutCatalog cat = new AboutCatalog(new AboutProperties(packs, null, null), new ElCompiler());
+        AboutCatalog cat = new AboutCatalog(new AboutProperties(packs, null, null), com.ash.drishti.rachana.DrishtiRachana.compiler());
         assertThat(cat.problems()).isEmpty();
         return new GlossaryResolver(cat);
     }
@@ -135,7 +134,7 @@ class GlossaryResolverTest {
 
     @Test
     void theCoreVocabularyIsSmallAndLoadsWithoutProblems() {
-        AboutCatalog cat = new AboutCatalog(new AboutProperties(List.of(), null, null), new ElCompiler());
+        AboutCatalog cat = new AboutCatalog(new AboutProperties(List.of(), null, null), com.ash.drishti.rachana.DrishtiRachana.compiler());
         assertThat(cat.core("currency")).isPresent();
         assertThat(cat.core("asOf")).isPresent();
         long n = List.of("id", "name", "title", "description", "status", "type", "category", "currency", "amount", "price", "quantity", "count",
