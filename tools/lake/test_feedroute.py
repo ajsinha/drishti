@@ -14,6 +14,7 @@
 """tools/lake/feedroute.py: the .ready file as the command-line loaders read it, with the same keys as the data inbox (DATA_LOAD_RULES.md
 section 5): one list of keys, compared with Drishti Lake's ReadyNote.KEYS; ``lake:`` read and checked; a command-line --lake wins."""
 import argparse
+import os
 import pathlib
 import re
 import sys
@@ -28,7 +29,10 @@ ROOT = HERE.parents[1]
 
 
 def test_the_ready_keys_are_the_inbox_s_keys_in_the_same_order():
-    java = (ROOT / "lake/drishti-lakeload/src/main/java/com/ash/drishti/dataload/ReadyNote.java").read_text(encoding="utf-8")
+    home = os.environ.get("LAKE_HOME")                      # a checkout of Drishti Lake: its ReadyNote is the inbox's list of keys
+    if not home:
+        pytest.skip("LAKE_HOME (a Drishti Lake checkout) is not set")
+    java = (pathlib.Path(home) / "java/lake-load/src/main/java/com/ash/lake/inbox/ReadyNote.java").read_text(encoding="utf-8")
     m = re.search(r"KEYS = List\.of\(([^;]*)\);", java)
     assert m, "ReadyNote.KEYS not found"
     assert tuple(re.findall(r'"([^"]+)"', m.group(1))) == feedroute.READY_KEYS

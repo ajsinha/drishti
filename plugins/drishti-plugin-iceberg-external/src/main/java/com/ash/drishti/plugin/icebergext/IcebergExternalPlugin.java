@@ -15,10 +15,6 @@
  */
 package com.ash.drishti.plugin.icebergext;
 
-import com.ash.lake.iceberg.external.ExternalTable;
-import com.ash.lake.iceberg.external.KindConfig;
-import com.ash.lake.iceberg.external.Shape;
-
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.DataNode;
@@ -31,14 +27,16 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.lake.iceberg.Table;
-import com.ash.lake.iceberg.catalog.Catalog;
-import com.ash.lake.iceberg.catalog.Catalogs;
-import com.ash.lake.iceberg.catalog.S3Tables;
-import com.ash.lake.iceberg.read.JsonValues;
-import com.ash.lake.iceberg.external.ExternalTable.Day;
-import com.ash.lake.iceberg.external.ExternalTable.Layout;
-import com.github.benmanes.caffeine.cache.AsyncCache;
+import com.ash.drishti.lakehost.LakeReads;
+import com.ash.lake.read.ColumnAsk;
+import com.ash.lake.read.ColumnBlock;
+import com.ash.lake.read.DayFiles;
+import com.ash.lake.read.IdMap;
+import com.ash.lake.read.LakeReader;
+import com.ash.lake.read.TableReader;
+import com.ash.lake.read.TableShape;
+import com.ash.lake.read.TableSnapshot;
+import com.ash.lake.spi.ColumnType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.ByteArrayInputStream;
@@ -48,7 +46,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,39 +53,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Serves entities from Iceberg tables Drishti does not write (plugins/drishti-plugin-iceberg-external/README.md): tables of Spark, Flink,
- * Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read through drishti-iceberg (no Hadoop) and never
- * written. A kind is a table ({@code tables.<kind>.table}); its document is the row as JSON (every column; structs as
- * objects, lists as arrays, maps as objects), or a JSON column; its id is one column or several joined
- * ({@code id}, by default the table's identifier fields); its business date a date column, a timestamp's day
- * ({@code date-from: day}, {@code date-zone}), by default the partition spec's date, or none (current only). Every
- * primitive column (nested struct fields to {@code depth}, 2) is searchable without a pack declaring it; columns named
- * in {@code links} make reverse lookups. {@code tables: auto} with {@code namespace} serves every table of a namespace,
- * named after it, with its identifier fields and partition date.
- *
- * <p>One entity: the day's files pruned with the id (a table sorted or bucketed by its id reads one row group); for an
- * unsorted table, an id index built on first use per snapshot and day ({@code id-index-mb}, 1024; Health suggests
- * sorting when one day passes {@code id-index-warn-rows}, 5,000,000). Type-ahead from the newest day's ids (every
- * day's for {@code effective} kinds); a table without a date bounded by {@code max-index-rows} (10,000,000), marked
- * partial beyond it. Time travel by {@code knownAt} through the snapshot log. Settings: the catalog's, as the
- * {@code iceberg} connector's (section 15.4); {@code decimals: number|string}, {@code binary: base64|omit},
- * {@code refresh-seconds} (10), {@code lookback-days} (10), {@code doc-cache-mb} (256), {@code columns-cache-mb} (1024),
+ * Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read through Drishti Lake's shaped read of a foreign table
+ * ({@link LakeReader#foreign}, {@link TableShape}; no Hadoop) and never written. A kind is a table ({@code tables.<kind>.table}); its
+ * document is the row as JSON, or a JSON column; its id is one column or several joined; its business date a date column, a timestamp's
+ * day, by default the partition's date, or none (current only). The shape's rules (what is a document, an id, a date, a searchable path)
+ * are the product's; what stays here is the connector's: the kinds, the id and column caches, the type-ahead, links, refresh and health.
+ * {@code tables: auto} with {@code namespace} serves every table of a namespace. Time travel by {@code knownAt} through the snapshot log.
+ * Settings: the catalog's, as the {@code iceberg} connector's; {@code decimals}, {@code binary}, {@code refresh-seconds} (10),
+ * {@code lookback-days} (10), {@code doc-cache-mb} (256), {@code columns-cache-mb} (1024), {@code id-index-mb} (1024),
  * {@code max-concurrent-reads} (16), {@code source-name} ({@code iceberg-external}).
  */
 public final class IcebergExternalPlugin implements SourcePlugin {
 
-    private record SnapKey(String kind, long snapshotId) {}
-
-    private record DayKey(String kind, LocalDate date, long fingerprint) {}
+    private record Kind(TableShape shape, TableReader reader, boolean effective) {}
 
     private record Columns(String[] ids, Map<String, double[]> numbers, Map<String, String[]> texts) {
         long bytes() {
@@ -100,32 +83,29 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         }
     }
 
-    private final Map<String, ExternalTable> tables = new ConcurrentHashMap<>();
-    private final Map<String, Long> current = new ConcurrentHashMap<>();
+    private final Map<String, Kind> kinds = new ConcurrentHashMap<>();
+    private final Map<String, TableSnapshot> current = new ConcurrentHashMap<>();
     private final Map<String, String> problems = new ConcurrentHashMap<>();
     private final Map<String, Long> bigIndexes = new ConcurrentHashMap<>();
-    private final Map<List<String>, Catalog> catalogs = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
     private final Set<String> partial = ConcurrentHashMap.newKeySet();
-    private final ExecutorService loaders = Executors.newVirtualThreadPerTaskExecutor();
     private final ReentrantLock refreshing = new ReentrantLock();
-    private AsyncCache<SnapKey, Layout> layouts;
-    private AsyncCache<DayKey, Map<String, int[]>> idIndexes;
-    private AsyncCache<String, Columns> columnSets;
+    private Cache<String, IdMap> idMaps;
+    private Cache<String, Columns> columnSets;
     private Cache<String, String> docs;
     private com.ash.drishti.api.ReadSlots reads;      // bounded queue; a read whose caller has gone leaves it (QA3A-01)
     private SourceContext context;
     private Map<String, String> settings;
+    private LakeReader lake;
     private String sourceName;
     private int lookbackDays;
     private long maxIndexRows;
     private long warnRows;
-    private JsonValues.Options options;
     private volatile Instant lastUpdate;
 
     @Override
     public PluginManifest manifest() {
-        return new PluginManifest(sourceName == null ? "iceberg-external" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
+        return new PluginManifest(sourceName == null ? "iceberg-external" : sourceName, "1.0", kinds.keySet(), new SourceCapabilities(false, true, true, true));
     }
 
     @Override
@@ -135,10 +115,11 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext ctx) throws IOException {
-        if (S3Tables.named(ctx.settings()) && S3Tables.arnOf(ctx.settings()).isEmpty()) {
+        boolean s3Tables = "s3tables".equalsIgnoreCase(ctx.setting("catalog", ""));
+        if (s3Tables && ctx.setting("table-bucket-arn", "").isBlank()) {
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external with catalog: s3tables needs settings.table-bucket-arn");
         }
-        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && !S3Tables.named(ctx.settings())
+        if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank() && !s3Tables
                 && ctx.settings().keySet().stream().noneMatch(k -> k.startsWith("metadata-location."))) {
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external needs settings.root, settings.uri (a REST catalog) or metadata-location.<kind>");
         }
@@ -148,41 +129,32 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxIndexRows = Long.parseLong(ctx.setting("max-index-rows", "10000000"));
         this.warnRows = Long.parseLong(ctx.setting("id-index-warn-rows", "5000000"));
-        this.options = new JsonValues.Options("string".equalsIgnoreCase(ctx.setting("decimals", "number")), "omit".equalsIgnoreCase(ctx.setting("binary", "base64")));
-        this.layouts = Caffeine.newBuilder().executor(loaders).maximumSize(64).buildAsync();
-        this.idIndexes = Caffeine.newBuilder().executor(loaders).maximumWeight(mb("id-index-mb", "1024"))
-                .weigher((DayKey k, Map<String, int[]> v) -> (int) Math.min(Integer.MAX_VALUE, 64L + 60L * v.size())).buildAsync();
-        this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(mb("columns-cache-mb", "1024"))
-                .weigher((String k, Columns v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+        Map<String, String> readerSettings = new java.util.HashMap<>(settings);
+        String namespace = settings.getOrDefault("namespace", "");
+        boolean rest = "rest".equalsIgnoreCase(settings.getOrDefault("catalog", "")) || s3Tables;
+        if (!rest && !namespace.isBlank() && !settings.containsKey("domain")) {      // a path-based namespace is the folder <root>/<levels>
+            readerSettings.put("domain", namespace.replace('.', '/'));
+        }
+        this.lake = LakeReads.open("iceberg", readerSettings);
+        this.idMaps = Caffeine.newBuilder().maximumWeight(mb("id-index-mb", "1024"))
+                .weigher((String k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, 64L + Math.max(v.bytes(), 60L * v.size()))).build();
+        this.columnSets = Caffeine.newBuilder().maximumWeight(mb("columns-cache-mb", "1024"))
+                .weigher((String k, Columns v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).build();
         this.docs = Caffeine.newBuilder().maximumWeight(mb("doc-cache-mb", "256")).weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
-        this.reads = new com.ash.drishti.api.ReadSlots("document reads of " + ctx.setting("source-name", "iceberg-external"),
+        this.reads = new com.ash.drishti.api.ReadSlots("document reads of " + sourceName,
                 Integer.parseInt(ctx.setting("max-concurrent-reads", "16")), Integer.parseInt(ctx.setting("max-queued-reads", "4096")));
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-seconds", "10"));
-        ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
+        ctx.scheduler().scheduleWithFixedDelay(this::refresh, every, every, TimeUnit.SECONDS);
     }
 
     private long mb(String key, String fallback) {
         return Long.parseLong(context.setting(key, fallback)) * 1024 * 1024;
     }
 
-    /** The catalog of one namespace (REST: the namespace; path-based: the folder {@code <root>/<levels…>}). */
-    private Catalog catalog(List<String> namespace) {
-        return catalogs.computeIfAbsent(namespace, ns -> {
-            Map<String, String> s = new HashMap<>(settings);
-            s.remove("domain");
-            if ("rest".equalsIgnoreCase(s.getOrDefault("catalog", "")) || S3Tables.named(s)) {      // S3 Tables is a REST catalog
-                s.put("namespace", String.join(".", ns));
-            } else {
-                s.put("domain", String.join("/", ns));
-            }
-            return Catalogs.open(s);
-        });
-    }
-
-    /** The kinds configured, and (tables: auto) the namespace's tables. */
-    private List<KindConfig> kinds() throws IOException {
-        List<KindConfig> out = new ArrayList<>(KindConfig.from(settings));
+    /** The kinds configured, those named by a metadata file, and (tables: auto) the namespace's tables. */
+    private List<TableShape> shapes() throws IOException {
+        List<TableShape> out = new ArrayList<>(TableShape.all(settings));
         Set<String> metadataKinds = new TreeSet<>();
         settings.keySet().forEach(k -> {
             if (k.startsWith("metadata-location.")) {
@@ -191,38 +163,19 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         });
         for (String k : metadataKinds) {
             if (out.stream().noneMatch(c -> c.kind().equals(k))) {
-                out.add(KindConfig.of(k, settings, "tables." + k + ".", k));
+                out.add(TableShape.of(k, settings, k));
             }
         }
         if ("auto".equalsIgnoreCase(settings.getOrDefault("tables", "").trim())) {
             String ns = settings.getOrDefault("namespace", "");
-            List<String> levels = ns.isBlank() ? List.of() : List.of(ns.split("\\."));
-            for (String t : catalog(levels).tables()) {
-                String kind = KindConfig.kindOf(t);
+            for (String t : lake.tables()) {
+                String kind = TableShape.kindOf(t);
                 if (out.stream().noneMatch(c -> c.kind().equals(kind))) {
-                    out.add(KindConfig.of(kind, settings, "tables." + kind + ".", ns.isBlank() ? t : ns + "." + t));
+                    out.add(TableShape.of(kind, settings, ns.isBlank() ? t : ns + "." + t));
                 }
             }
         }
         return out;
-    }
-
-    private Optional<Table> open(KindConfig k) throws IOException {
-        if (settings.containsKey("metadata-location." + k.kind())) {
-            return catalog(List.of()).load(k.kind());
-        }
-        return catalog(k.namespace()).load(k.tableName());
-    }
-
-    /** Why a kind's table was not found: its catalog's account of what it looked for (a path-based one names the metadata files). */
-    private String missing(KindConfig k) {
-        try {
-            String named = settings.containsKey("metadata-location." + k.kind()) ? k.kind() : k.tableName();
-            String why = catalog(settings.containsKey("metadata-location." + k.kind()) ? List.of() : k.namespace()).missing(named);
-            return why.startsWith("no table " + named) ? "no table " + k.table() + why.substring(("no table " + named).length()) : why;
-        } catch (RuntimeException e) {
-            return "no table " + k.table();
-        }
     }
 
     void refresh() {
@@ -230,50 +183,45 @@ public final class IcebergExternalPlugin implements SourcePlugin {
             return;
         }
         try {
-            List<KindConfig> kinds;
+            List<TableShape> wanted;
             try {
-                kinds = kinds();
+                wanted = shapes();
             } catch (IOException | RuntimeException e) {
                 problems.put("(catalog)", "cannot list the tables: " + e.getMessage());
                 return;
             }
             problems.remove("(catalog)");
-            for (KindConfig k : kinds) {
-                if (tables.containsKey(k.kind())) {
+            lake.refresh();                                            // each table's current snapshot is read again at its next snapshot()
+            for (TableShape s : wanted) {
+                if (kinds.containsKey(s.kind())) {
                     continue;
                 }
                 try {
-                    Optional<Table> t = open(k);
-                    if (t.isEmpty()) {                          // Health names the files looked for and what is there instead (QA2-203)
-                        problems.put(k.kind(), k.kind() + ": " + missing(k));
+                    TableReader r = lake.foreign(s.table(), s);
+                    Optional<TableSnapshot> snap = r.snapshot(com.ash.lake.spi.AsOf.LATEST);
+                    if (snap.isEmpty()) {                              // the reader names the files looked for and what is there instead (QA2-203)
+                        problems.put(s.kind(), s.kind() + ": no table " + s.table());
                         continue;
                     }
-                    ExternalTable et = new ExternalTable(k, t.get(), loaders, options);
-                    String problem = t.get().currentSnapshot().map(s -> Shape.of(k, t.get().metadata(), t.get().metadata().schemaFor(s)).problem(k))
-                            .orElse(null);
-                    if (problem != null) {
-                        problems.put(k.kind(), problem);
-                        continue;
-                    }
-                    problems.remove(k.kind());
-                    tables.put(k.kind(), et);
+                    problems.remove(s.kind());
+                    kinds.put(s.kind(), new Kind(s, r, "effective".equalsIgnoreCase(settings.getOrDefault("tables." + s.kind() + ".mode", "snapshot"))));
                 } catch (IOException | RuntimeException e) {
-                    problems.put(k.kind(), k.kind() + ": " + e.getMessage());
+                    problems.put(s.kind(), s.kind() + ": " + e.getMessage());
                 }
             }
             boolean changed = false;
-            for (Map.Entry<String, ExternalTable> e : tables.entrySet()) {
+            for (Map.Entry<String, Kind> e : kinds.entrySet()) {
                 try {
-                    Optional<Long> id = e.getValue().refresh();
-                    if (id.isPresent() && !id.get().equals(current.get(e.getKey()))) {
-                        current.put(e.getKey(), id.get());
+                    Optional<TableSnapshot> snap = e.getValue().reader().snapshot(com.ash.lake.spi.AsOf.LATEST);
+                    TableSnapshot before = current.get(e.getKey());
+                    if (snap.isPresent() && (before == null || before.version() != snap.get().version())) {
+                        current.put(e.getKey(), snap.get());
                         changed = true;
-                        Instant committed = Instant.ofEpochMilli(layout(e.getKey(), null).map(Layout::timestampMs).orElse(0L));
-                        if (lastUpdate == null || committed.isAfter(lastUpdate)) {
-                            lastUpdate = committed;
+                        if (lastUpdate == null || snap.get().committed().isAfter(lastUpdate)) {
+                            lastUpdate = snap.get().committed();
                         }
                     }
-                } catch (RuntimeException ex) {
+                } catch (IOException | RuntimeException ex) {
                     // unreachable for now: the last snapshot keeps serving
                 }
             }
@@ -288,78 +236,77 @@ public final class IcebergExternalPlugin implements SourcePlugin {
     /** Type-ahead: the newest day's ids (every day's for an effective kind; all ids, bounded, for a current-only kind). */
     private void reindex() {
         List<EntityHit> hits = new ArrayList<>();
-        for (String kind : tables.keySet()) {
+        for (Map.Entry<String, Kind> e : kinds.entrySet()) {
+            String kind = e.getKey();
             try {
-                layout(kind, null).ifPresent(l -> {
-                    if (l.days().isEmpty()) {
-                        return;
+                TableSnapshot s = snapshot(kind, null).orElse(null);
+                if (s == null || s.dates().isEmpty()) {
+                    continue;
+                }
+                String subtitle = kind + " · " + sourceName;
+                Collection<LocalDate> days = e.getValue().effective() ? s.dates() : List.of(s.dates().last());
+                Set<String> seen = new HashSet<>();
+                for (LocalDate d : days) {
+                    IdMap ids = idMap(kind, s, d);
+                    if (ids.size() >= maxIndexRows) {
+                        partial.add(kind);
                     }
-                    String subtitle = kind + " · " + sourceName;
-                    Collection<Day> days = tables.get(kind).config().effective() ? l.days().values() : List.of(l.days().lastEntry().getValue());
-                    Set<String> seen = new HashSet<>();
-                    for (Day d : days) {
-                        Map<String, int[]> ids = idIndex(kind, l, d);
-                        if (ids.size() >= maxIndexRows) {
-                            partial.add(kind);
-                        }
-                        for (String id : ids.keySet()) {
-                            if (seen.add(id)) {
-                                hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
-                            }
+                    for (int i = 0; i < ids.size(); i++) {
+                        String id = ids.id(i);
+                        if (seen.add(id)) {
+                            hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
                         }
                     }
-                });
-            } catch (RuntimeException e) {
+                }
+            } catch (IOException | RuntimeException ex) {
                 // indexed next time
             }
         }
         index.replaceAll(hits);
     }
 
-    private Optional<Layout> layout(String kind, Instant knownAt) {
-        ExternalTable t = tables.get(kind);
-        if (t == null) {
+    private Optional<TableSnapshot> snapshot(String kind, Instant knownAt) {
+        Kind k = kinds.get(kind);
+        if (k == null) {
             return Optional.empty();
         }
-        Optional<Long> snap;
         if (knownAt == null) {
-            Long id = current.get(kind);
-            snap = id != null ? Optional.of(id) : t.current();
-        } else {
-            snap = t.snapshotAt(knownAt.toEpochMilli());
+            return Optional.ofNullable(current.get(kind));
         }
-        return snap.map(id -> join(layouts.get(new SnapKey(kind, id), k -> t.layout(id))));
-    }
-
-    private Map<String, int[]> idIndex(String kind, Layout l, Day d) {
-        Map<String, int[]> ids = join(idIndexes.get(new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).ids(l, d, maxIndexRows)));
-        if (ids.size() > warnRows) {
-            bigIndexes.put(kind, (long) ids.size());
-        }
-        return ids;
-    }
-
-    private static <T> T join(CompletableFuture<T> f) {
         try {
-            return f.join();
-        } catch (CompletionException e) {
-            if (e.getCause() instanceof RuntimeException re) {
-                throw re;
-            }
-            throw e;
+            return k.reader().snapshot(com.ash.lake.spi.AsOf.time(knownAt));
+        } catch (IOException e) {
+            throw LakeReads.failure(kind, "log", e);
         }
+    }
+
+    private IdMap idMap(String kind, TableSnapshot s, LocalDate d) throws IOException {
+        String key = kind + "\u001f" + s.version() + "\u001f" + d;
+        IdMap m = idMaps.getIfPresent(key);
+        if (m == null) {
+            m = s.ids(d);
+            idMaps.put(key, m);
+        }
+        if (m.size() > warnRows) {
+            bigIndexes.put(kind, (long) m.size());
+        }
+        return m;
+    }
+
+    private String stampOf(TableSnapshot s, LocalDate d) {
+        return s.day(d).map(DayFiles::stamp).orElse("");
     }
 
     /** The days to look in for {@code date}, newest first (current-only kinds have one). */
-    private List<Day> candidates(String kind, Layout l, LocalDate date) {
-        boolean effective = tables.get(kind).config().effective();
-        if (l.days().containsKey(LocalDate.MIN) && l.days().size() == 1) {
-            return List.of(l.days().get(LocalDate.MIN));
+    private List<LocalDate> candidates(String kind, TableSnapshot s, LocalDate date) {
+        boolean effective = kinds.get(kind).effective();
+        if (s.dates().size() == 1 && s.dates().first().equals(LocalDate.MIN)) {
+            return List.of(LocalDate.MIN);
         }
-        var head = date == null ? l.days().descendingMap() : l.days().headMap(date, true).descendingMap();
-        List<Day> out = new ArrayList<>();
-        for (Day d : head.values()) {
-            if (!effective && date != null && d.date().isBefore(date.minusDays(lookbackDays))) {
+        var head = date == null ? s.dates().descendingSet() : s.dates().headSet(date, true).descendingSet();
+        List<LocalDate> out = new ArrayList<>();
+        for (LocalDate d : head) {
+            if (!effective && date != null && d.isBefore(date.minusDays(lookbackDays))) {
                 break;
             }
             out.add(d);
@@ -377,35 +324,24 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) throws IOException {
-        Optional<Layout> l = layout(ref.kind(), asOf.knownAt());
-        if (l.isEmpty()) {
+        Optional<TableSnapshot> o = snapshot(ref.kind(), asOf.knownAt());
+        if (o.isEmpty()) {
             return Optional.empty();
         }
-        ExternalTable t = tables.get(ref.kind());
-        Optional<List<Object>> values = t.parse(l.get().shape(), ref.id());
-        if (values.isEmpty()) {
-            return Optional.empty();
-        }
-        for (Day d : candidates(ref.kind(), l.get(), asOf.businessDate())) {
-            String key = ref.kind() + "\u001f" + d.fingerprint() + "\u001f" + d.date() + "\u001f" + ref.id();
+        TableSnapshot s = o.get();
+        for (LocalDate d : candidates(ref.kind(), s, asOf.businessDate())) {
+            String key = ref.kind() + "\u001f" + stampOf(s, d) + "\u001f" + d + "\u001f" + ref.id();
             String json = docs.getIfPresent(key);
             if (json == null) {
-                List<Integer> files = t.candidates(l.get(), d, t.idFilter(l.get().shape(), values.get()));
-                if (files.size() > 2) {
-                    int[] known = idIndex(ref.kind(), l.get(), d).get(ref.id());   // an unsorted table: the day's id index names the file
-                    files = new ArrayList<>();
-                    if (known != null) {
-                        for (int f : known) {
-                            files.add(f);
-                        }
-                    }
-                }
-                if (files.isEmpty()) {
+                int file = idMap(ref.kind(), s, d).file(ref.id());
+                if (file < 0) {
                     continue;
                 }
                 reads.acquire();
                 try {
-                    json = t.fetch(l.get(), d, ref.id(), values.get(), files).orElse(null);
+                    json = s.document(d, file, ref.id()).orElse(null);
+                } catch (IOException | RuntimeException e) {
+                    throw LakeReads.failure(ref.kind(), d.toString(), e);
                 } finally {
                     reads.release();
                 }
@@ -415,8 +351,8 @@ public final class IcebergExternalPlugin implements SourcePlugin {
             }
             if (json != null) {
                 DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
-                return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, l.get().sequenceNumber(), Instant.now(), false,
-                        LocalDate.MIN.equals(d.date()) ? null : d.date())));
+                return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, s.sequence(), Instant.now(), false,
+                        LocalDate.MIN.equals(d) ? null : d)));
             }
         }
         return Optional.empty();
@@ -424,79 +360,69 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public Set<String> columnar(String kind) {
-        ExternalTable t = tables.get(kind);
-        if (t == null || t.config().effective()) {
+        Kind k = kinds.get(kind);
+        if (k == null || k.effective()) {
             return Set.of();
         }
         try {
-            return layout(kind, null).map(l -> l.shape().searchable().keySet()).orElse(Set.of());
+            return snapshot(kind, null).map(s -> s.promoted().keySet()).orElse(Set.of());
         } catch (RuntimeException e) {
             return Set.of();
         }
     }
 
-    private Columns columnSet(String kind, Layout l, Day d) {
-        Set<String> paths = l.shape().searchable().keySet();
-        String key = kind + "\u001f" + d.date() + "\u001f" + d.fingerprint();
-        return join(columnSets.get(key, k -> {
-            List<String> ps = new ArrayList<>(paths);
-            List<Object[]> rows = tables.get(kind).columns(l, d, ps, maxIndexRows);
-            if (rows.size() >= maxIndexRows) {
-                partial.add(kind);
-            }
-            String[] ids = new String[rows.size()];
-            Map<String, double[]> nums = new LinkedHashMap<>();
-            Map<String, String[]> texts = new LinkedHashMap<>();
-            for (int c = 0; c < ps.size(); c++) {
-                if (ExternalTable.numeric(l.shape().searchable().get(ps.get(c)).type())) {
-                    nums.put(ps.get(c), new double[rows.size()]);
-                } else {
-                    texts.put(ps.get(c), new String[rows.size()]);
-                }
-            }
-            for (int i = 0; i < rows.size(); i++) {
-                Object[] r = rows.get(i);
-                ids[i] = (String) r[0];
-                for (int c = 0; c < ps.size(); c++) {
-                    Object v = r[c + 1];
-                    double[] n = nums.get(ps.get(c));
-                    if (n != null) {
-                        n[i] = v == null ? Double.NaN : (Double) v;
-                    } else {
-                        texts.get(ps.get(c))[i] = (String) v;
-                    }
-                }
-            }
-            return new Columns(ids, nums, texts);
-        }));
+    private Columns columnSet(String kind, TableSnapshot s, LocalDate d) throws IOException {
+        String key = kind + "\u001f" + d + "\u001f" + stampOf(s, d) + "\u001f" + s.version();
+        Columns c = columnSets.getIfPresent(key);
+        if (c != null) {
+            return c;
+        }
+        Map<String, ColumnType> types = s.columns().types();
+        List<ColumnAsk> asks = new ArrayList<>();
+        s.promoted().forEach((path, column) -> asks.add(new ColumnAsk(path, column, numeric(types.get(column)))));
+        ColumnBlock b = s.columns(d, asks);
+        if (b.ids().length >= maxIndexRows) {
+            partial.add(kind);
+        }
+        c = new Columns(b.ids(), b.numbers(), b.texts());
+        columnSets.put(key, c);
+        return c;
+    }
+
+    private static boolean numeric(ColumnType t) {
+        return t == ColumnType.DOUBLE || t == ColumnType.LONG || t == ColumnType.INT;
     }
 
     @Override
     public Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) {
-        ExternalTable t = tables.get(kind);
-        if (t == null || t.config().effective()) {
+        Kind k = kinds.get(kind);
+        if (k == null || k.effective()) {
             return Optional.empty();
         }
-        Optional<Layout> l = layout(kind, asOf.knownAt());
-        if (l.isEmpty() || !l.get().shape().searchable().keySet().containsAll(paths)) {
+        Optional<TableSnapshot> o = snapshot(kind, asOf.knownAt());
+        if (o.isEmpty() || !o.get().promoted().keySet().containsAll(paths)) {
             return Optional.empty();
         }
-        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        List<LocalDate> days = candidates(kind, o.get(), asOf.businessDate());
         if (days.isEmpty()) {
             return Optional.empty();
         }
-        Day d = days.get(0);
-        Columns all = columnSet(kind, l.get(), d);
-        Map<String, double[]> nums = new LinkedHashMap<>();
-        Map<String, String[]> texts = new LinkedHashMap<>();
-        for (String p : paths) {
-            if (all.numbers().containsKey(p)) {
-                nums.put(p, all.numbers().get(p));
-            } else {
-                texts.put(p, all.texts().get(p));
+        LocalDate d = days.get(0);
+        try {
+            Columns all = columnSet(kind, o.get(), d);
+            Map<String, double[]> nums = new LinkedHashMap<>();
+            Map<String, String[]> texts = new LinkedHashMap<>();
+            for (String p : paths) {
+                if (all.numbers().containsKey(p)) {
+                    nums.put(p, all.numbers().get(p));
+                } else {
+                    texts.put(p, all.texts().get(p));
+                }
             }
+            return Optional.of(new ColumnSet(all.ids(), nums, texts, LocalDate.MIN.equals(d) ? null : d));
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, d.toString(), e);
         }
-        return Optional.of(new ColumnSet(all.ids(), nums, texts, LocalDate.MIN.equals(d.date()) ? null : d.date()));
     }
 
     @Override
@@ -508,13 +434,13 @@ public final class IcebergExternalPlugin implements SourcePlugin {
     @Override
     public List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf) {
         List<EntityRef> out = new ArrayList<>();
-        for (String k : kind == null ? tables.keySet() : Set.of(kind)) {
-            ExternalTable t = tables.get(k);
-            if (t == null) {
+        for (String name : kind == null ? kinds.keySet() : Set.of(kind)) {
+            Kind k = kinds.get(name);
+            if (k == null) {
                 continue;
             }
             List<String> cols = new ArrayList<>();
-            t.config().links().forEach((column, linked) -> {
+            k.shape().links().forEach((column, linked) -> {
                 if (linked.equals(target.kind())) {
                     cols.add(column);
                 }
@@ -522,27 +448,31 @@ public final class IcebergExternalPlugin implements SourcePlugin {
             if (cols.isEmpty()) {
                 continue;
             }
-            layout(k, asOf.knownAt()).ifPresent(l -> {
+            snapshot(name, asOf.knownAt()).ifPresent(s -> {
                 Set<String> found = new TreeSet<>();
                 Set<String> seen = new HashSet<>();
-                for (Day d : candidates(k, l, asOf.businessDate())) {
-                    Columns c = columnSet(k, l, d);
-                    for (int i = 0; i < c.ids().length; i++) {
-                        if (!seen.add(c.ids()[i])) {
-                            continue;
-                        }
-                        for (String col : cols) {
-                            String[] values = c.texts().get(col);
-                            double[] nums = c.numbers().get(col);
-                            if (values != null && target.id().equals(values[i])
-                                    || nums != null && !Double.isNaN(nums[i]) && target.id().equals(plain(nums[i]))) {
-                                found.add(c.ids()[i]);
-                                break;
+                try {
+                    for (LocalDate d : candidates(name, s, asOf.businessDate())) {
+                        Columns c = columnSet(name, s, d);
+                        for (int i = 0; i < c.ids().length; i++) {
+                            if (!seen.add(c.ids()[i])) {
+                                continue;
+                            }
+                            for (String col : cols) {
+                                String[] values = c.texts().get(col);
+                                double[] nums = c.numbers().get(col);
+                                if (values != null && target.id().equals(values[i])
+                                        || nums != null && !Double.isNaN(nums[i]) && target.id().equals(plain(nums[i]))) {
+                                    found.add(c.ids()[i]);
+                                    break;
+                                }
                             }
                         }
                     }
+                } catch (IOException e) {
+                    throw LakeReads.failure(name, "columns", e);
                 }
-                found.forEach(id -> out.add(EntityRef.of(k, id)));
+                found.forEach(id -> out.add(EntityRef.of(name, id)));
             });
         }
         return out;
@@ -565,10 +495,10 @@ public final class IcebergExternalPlugin implements SourcePlugin {
     @Override
     public Map<String, Object> cacheStats() {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("tables", tables.size());
-        m.put("snapshots", layouts.synchronous().estimatedSize());
-        m.put("idIndexes", idIndexes.synchronous().estimatedSize());
-        m.put("columnSets", columnSets.synchronous().estimatedSize());
+        m.put("tables", kinds.size());
+        m.put("snapshots", current.size());
+        m.put("idIndexes", idMaps.estimatedSize());
+        m.put("columnSets", columnSets.estimatedSize());
         m.put("documents", docs.estimatedSize());
         m.put("ids", index.size());
         if (!partial.isEmpty()) {
@@ -579,18 +509,15 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public void purgeCaches() {
-        layouts.synchronous().invalidateAll();
-        idIndexes.synchronous().invalidateAll();
-        columnSets.synchronous().invalidateAll();
+        idMaps.invalidateAll();
+        columnSets.invalidateAll();
         docs.invalidateAll();
-        com.ash.lake.io.ParquetFooters.purge();
-        com.ash.lake.iceberg.scan.Planner.purge();
-        com.ash.lake.iceberg.read.Deletes.purge();
+        lake.purge();
     }
 
     @Override
     public String health() {
-        if (tables.isEmpty()) {
+        if (kinds.isEmpty()) {
             return "DOWN: no table served" + (problems.isEmpty() ? "" : ": " + String.join("; ", new TreeSet<>(problems.values())));
         }
         List<String> notes = new ArrayList<>(new TreeSet<>(problems.values()));
@@ -599,7 +526,8 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         if (!partial.isEmpty()) {
             notes.add("partial (max-index-rows): " + String.join(", ", new TreeSet<>(partial)));
         }
-        if (!problems.isEmpty()) {                              // a configured table not served (missing, no id): the connector is degraded (QA2-203)
+        lake.problems().all().stream().map(p -> p.table() + ": " + p.reason()).sorted().forEach(notes::add);
+        if (!problems.isEmpty() || !lake.problems().all().isEmpty()) {   // a configured table not served (missing, no id): the connector is degraded (QA2-203)
             return "DEGRADED: " + String.join("; ", notes);
         }
         return notes.isEmpty() ? "UP" : "UP (" + String.join("; ", notes) + ")";
@@ -613,19 +541,14 @@ public final class IcebergExternalPlugin implements SourcePlugin {
     /** The served kinds' starter-pack schemas ({@link StarterSchemas}), for {@code drishti.py pack make --schema}. */
     public Map<String, com.fasterxml.jackson.databind.node.ObjectNode> starterSchemas() {
         Map<String, com.fasterxml.jackson.databind.node.ObjectNode> out = new LinkedHashMap<>();
-        tables.forEach((kind, t) -> layout(kind, null).ifPresent(l -> out.put(kind, StarterSchemas.of(t.config(), l.shape()))));
+        kinds.forEach((kind, k) -> snapshot(kind, null).ifPresent(s -> out.put(kind, StarterSchemas.of(k.shape(), s))));
         return out;
     }
 
     @Override
     public void close() {
-        loaders.shutdownNow();
-        catalogs.values().forEach(c -> {
-            try {
-                c.close();
-            } catch (RuntimeException e) {
-                // closing a client: nothing to do
-            }
-        });
+        if (lake != null) {
+            lake.close();
+        }
     }
 }

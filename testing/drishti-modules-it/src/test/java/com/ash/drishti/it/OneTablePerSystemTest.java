@@ -101,7 +101,7 @@ class OneTablePerSystemTest {
             Path file = root.resolve("data/testdata/trades/" + s + "/trade_" + s + "." + DAY + ".jsonl.gz");
             Path cfg = tmp.resolve("load-" + s + ".yaml");
             // the table as the inbox takes it (LoaderProcess): the connector's, from its module's template
-            String table = com.ash.lake.config.PackEntry.read(pack, "trade", connector).table();
+            String table = com.ash.lake.config.PackEntry.read(com.ash.drishti.lakehost.DrishtiLake.runtime(), pack, "trade", connector).table();
             assertThat(table).as(s + ": the table its connector names").isEqualTo("trade_" + s);
             Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack
                     + "'\n  connector: " + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n  table: " + table + "\n");

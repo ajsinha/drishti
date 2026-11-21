@@ -30,6 +30,8 @@
   <dependencies>
     <!-- G4 rehearsal: the pinned Drishti Lake jars -->
     <dependency><groupId>com.ash.lake</groupId><artifactId>lake-iceberg</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
+    <dependency><groupId>com.ash.lake</groupId><artifactId>lake-load</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>

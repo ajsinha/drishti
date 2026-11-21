@@ -94,10 +94,10 @@ class DeltaOnAwsS3Test extends DatedSourceContract {
     }
 
     @Test
-    void theTemplateNamesAnS3RootTheNativeEngineAndNoKeys() throws Exception {
+    void theTemplateNamesAnS3RootAndNoKeys() throws Exception {
         Map<String, String> s = template(Map.of());
         assertThat(s.get("root")).isEqualTo("s3://drishti-lake/delta");
-        assertThat(s).containsEntry("engine", "native").containsEntry("domain", "risk").containsKey("s3.region");
+        assertThat(s).doesNotContainKey("engine").containsEntry("domain", "risk").containsKey("s3.region");
         assertThat(s.keySet()).noneMatch(k -> k.contains("access-key") || k.contains("secret"));
         assertThat(connectorSettings(Map.of())).containsEntry("lake", "s3").doesNotContainKey("root");   // the lake file holds the root
         assertThat(template(Map.of("DRISHTI_DELTA_S3_BUCKET", "acme-lake", "DRISHTI_DELTA_S3_PREFIX", "lake/delta")).get("root"))

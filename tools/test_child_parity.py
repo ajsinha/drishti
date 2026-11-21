@@ -18,8 +18,8 @@ parent, a sum of the child grouped by a parent field).
 
     uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/test_child_parity.py -q
 
-The rules are the pack's ``ingest:`` block (tools/packgen/childkinds.py in Python, com.ash.drishti.lakeload.ChildKinds in the parallel loader);
-the documents and the rows they must give are lake/drishti-lakeload/src/test/resources/childkinds, which ChildLoadsTest checks against the Java
+The rules are the pack's ``ingest:`` block (tools/packgen/childkinds.py in Python, Drishti Lake's ChildKinds in the parallel loader);
+the documents and the rows they must give are tools/lake/testdata/childkinds (a copy of Drishti Lake's lake-load test resources), which Drishti Lake's ChildLoadsTest checks against the Java
 split, so the two languages cannot drift. Iceberg and the parallel loader need Java and the server's exec jar (skipped without).
 """
 from __future__ import annotations
@@ -34,7 +34,7 @@ import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
-FIXTURE = ROOT / "lake" / "drishti-lakeload" / "src" / "test" / "resources" / "childkinds"
+FIXTURE = ROOT / "tools" / "lake" / "testdata" / "childkinds"       # Drishti Lake's fixtures (lake-load test resources), kept here for the Python split
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "lake"))
 sys.path.insert(0, str(HERE / "packgen"))

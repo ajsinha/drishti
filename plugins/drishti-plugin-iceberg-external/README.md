@@ -62,14 +62,14 @@ settings:
 - tls.*
 - proxy.*
 auth: As the iceberg connector's; S3 keys (${ENV} or file:), the AWS chain or vended credentials; a REST catalog takes credential (OAuth2 id:secret), token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
-licence: Drishti's own Iceberg engine (lake-iceberg, no Hadoop) with Jackson (Apache-2.0), bundled.
-windows: Works the same on Windows (lake-iceberg, no Hadoop and no winutils.exe; Windows paths under root are fine).
+licence: Reads through Drishti Lake's shaped read of a foreign table (its Iceberg reader over iceberg-core; no Hadoop), with Jackson (Apache-2.0), bundled.
+windows: Works the same on Windows (Drishti Lake's reader, no Hadoop and no winutils.exe; Windows paths under root are fine).
 doc: plugins/drishti-plugin-iceberg-external/README.md
 ---
 # The iceberg-external connector
 
 Plugin `iceberg-external` (`plugins/drishti-plugin-iceberg-external`): Iceberg tables as their owners wrote them, read through
-lake-iceberg. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
+Drishti Lake's Iceberg reader. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
 tables Drishti's own loader writes use `iceberg`, which reads that layout faster.
 
 ## What it reads
@@ -209,7 +209,7 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 | Searchable fields | the columns the pack promotes | **every primitive column**, nested struct fields to `depth` (2) |
 | Writes | the loader and maintenance | **never** |
 
-Both read through lake-iceberg, Drishti's own Iceberg engine with no Hadoop
+Both read through Drishti Lake's Iceberg reader, with no Hadoop; this connector asks for each table through `LakeReader.foreign` with a `TableShape` built from `tables.<kind>.*`
 ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
 there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
 

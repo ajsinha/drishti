@@ -165,12 +165,12 @@ class ArchitectureRulesTest {
             .because("Drishti Lake is a product with its own repository: the host gives it a catalog and settings, the product never names the host");
 
     /**
-     * The Delta and Iceberg source plugins read through the product's public read API only (com.ash.lake.read, the runtime com.ash.lake and the
+     * The Delta, Iceberg and Iceberg-external source plugins read through the product's public read API only (com.ash.lake.read, the runtime com.ash.lake and the
      * SPI): no table-layer class, and no Delta Kernel, Iceberg, Parquet or Hadoop type (the product's tables are its own; there is no Hadoop engine).
      */
     @ArchTest
     static final ArchRule sourcePluginsReadThroughThePublicReadApi = noClasses()
-            .that().resideInAnyPackage("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..")
+            .that().resideInAnyPackage("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.plugin.icebergext..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.lake.delta..", "com.ash.lake.iceberg..", "com.ash.lake.io..",
                     "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.files..", "io.delta..", "org.apache.iceberg..",
                     "org.apache.parquet..", "org.apache.hadoop..");
@@ -179,7 +179,7 @@ class ArchitectureRulesTest {
     @ArchTest
     static final ArchRule onlyTheLakeHostBuildsTheRuntime = noClasses()
             .that().resideOutsideOfPackages("com.ash.drishti.lakehost..", "com.ash.drishti.server..", "com.ash.lake..", "com.ash.drishti.testkit..")
-            .and().resideOutsideOfPackages("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..")
+            .and().resideOutsideOfPackages("com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.plugin.icebergext..")
             .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
                     com.tngtech.archunit.base.DescribedPredicate.describe("is LakeRuntime.fromProcess or LakeRuntime.builder",
                             (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> t.getOwner().getFullName().equals("com.ash.lake.LakeRuntime")
