@@ -1,0 +1,32 @@
+{
+  "_about": "The drop-in test's pins and its recorded answer (tools/drillkit/dropin.py). The engine is built from the drishti-engine repository at engineRef; bump engineRef with the pinned engine version. 'api' holds the server routes the lane calls: a route moves here, never into the code. Routes marked assumed follow docs/plans/ENGINE_INTEGRATION_DESIGN.md (EN-29) and the kernel Lifecycle contract of branch i8/pack-lifecycle until the server's own change lands; the first drill that disagrees corrects this one file.",
+  "engineRepo": "https://github.com/drishti-platform/drishti-engine.git",
+  "engineRef": "0d708f4d0fd5e9400b5e2f555a67f839d8cbfd1f",
+  "engineModule": "engine-sample",
+  "engineApi": "0.1",
+  "product": "drishti-engine-samples",
+  "engine": "wmean",
+  "neighbour": "group-totals",
+  "output": "mean-by-group",
+  "snapshot": {"date": "2026-01-13"},
+  "answer": {"columns": ["GROUP", "COUNT", "WEIGHT", "MEAN"], "rows": [["A", 2, 4, 17.5], ["B", 1, 2, 5]]},
+  "api": {
+    "platform": "/api/v1/engines/platform",
+    "engines": "/api/v1/admin/engines",
+    "ask": "/api/v1/engines/{id}/{output}",
+    "health": "/api/v1/engines/{id}/health",
+    "stats": "/api/v1/engines/{id}/stats",
+    "lifecycle": "/api/v1/admin/engines/{id}/lifecycle",
+    "packs": "/api/v1/admin/packs/{id}",
+    "packHealth": "/api/v1/admin/packs/{id}/health",
+    "packStats": "/api/v1/admin/packs/{id}/stats",
+    "packLifecycle": "/api/v1/admin/packs/{id}/lifecycle",
+    "connectorHealth": "/api/v1/admin/connectors/{id}/health",
+    "connectorStats": "/api/v1/admin/connectors/{id}/stats",
+    "connectorLifecycle": "/api/v1/admin/connectors/{id}/lifecycle",
+    "connectorRead": "/api/v1/data/{kind}/count"
+  },
+  "pack": {"name": "dropin-surveys", "domain": "core", "kind": "observation"},
+  "connector": {"name": "dropin-files"},
+  "unknownMarkers": {"suspended": "suspended"}
+}
