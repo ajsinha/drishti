@@ -47,8 +47,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
  *   GET /api/v1/risk/var/explain/matrix?scope=&amp;from=&amp;to=&amp;confidence=   why.answer (and its matrix), as 2.9.11.d answered them
  * </pre>
  * The explanation itself is the one Explain's ({@code GET /api/v1/explain?kind=var}, {@link VarNumberExplainer}): its Why it moved tab,
- * the steps, drivers and the Matrix and Sentences views. This is its Workbook. The old paths ({@code /api/v1/var/explain} and
- * {@code /explain/matrix}, reached through the {@code /api/v1/var} alias, and {@code /api/v1/pivot/mr/explain} in {@link MrCubeController})
+ * the steps, drivers and the Matrix and Sentences views. This is its Workbook. The old paths ({@code /explain}, {@code /explain/matrix},
+ * and {@code /api/v1/risk/mr/explain} in {@link MrCubeController})
  * answer for one release with {@code Deprecation: true} and a {@code Link} to the one Explain.
  */
 @RestController
