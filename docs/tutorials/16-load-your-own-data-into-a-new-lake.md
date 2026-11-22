@@ -61,7 +61,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 - [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
   2026-09-30).
 - `build_demo_lakes.py` writes Iceberg with the loader in the server's jar, so the server is built first (above).
-- The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has `deltalake`.
+- The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has the Drishti Lake wheel (the loader's Python path) and `pyarrow`.
 - Stop the server while you build the lake; the examples use the default data folder, `data/` (`data/delta/demo`, `data/iceberg`).
 
 ## What you will learn
@@ -164,8 +164,8 @@ tables:
 
 Why each key is there, and the arithmetic behind keeping `partition-by` short, is the guide's
 [section 2](../guides/DATA_LAKE_GUIDE.md#2-the-lake-file-every-key). A partition column needs a plain name (letters, digits, `_`, `-`);
-its values may hold anything (`Fixed income`, `100%`, `x/y`): the folders are named as Spark names them, so Databricks and delta-rs
-read the lake as it is ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+its values may hold anything (`Fixed income`, `100%`, `x/y`): the folders are named as Spark names them, so Databricks and the other Delta readers
+read the lake as it is (the loader's rules and guards are Drishti Lake's: [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/LOADER.md)) ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 **The command line.**
 
@@ -1520,7 +1520,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | `failed/`: the date in the name is refused | a business date is a real date, not in the future: run `make_day.py` with today's date or an earlier one |
 | a connector refused: *lake risklake has no table risk.pnl-vector* | list only risklake's tables in `lake-tables:` |
 | the page still shows demo trades | the connector file still says `lake: demo`, or the server was not restarted |
-| *this Python lacks deltalake* | run the script with the console's Python (Before you start) |
+| *this Python lacks the Drishti Lake wheel* | run the script with the console's Python (Before you start) |
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |
 | `VAR BANK` answers *no P&L vectors in any connector* | the server reads another Iceberg root: set `DRISHTI_ICEBERG_ROOT` to the folder beside your `--lake` |
 | `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 30) |
