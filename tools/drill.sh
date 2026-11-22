@@ -590,7 +590,7 @@ java21_verify() {
   # lane of this drill has finished, alone (the parent pom's timing-budget-tests; java25 leaves them out too)
   local lane wait=()
   for lane in browser other tools-a tools-b java25 anywhere containers; do
-    [[ -n ${RUN_LANE[$lane]:-} ]] && wait+=("$LOGS/$( [[ $lane == browser || $lane == other ]] && echo console- )$lane.secs")
+    [[ -n ${RUN_LANE[$lane]:-} ]] && wait+=("$LOGS/$( [[ $lane == browser || $lane == other ]] && echo console- || true )$lane.secs")
   done
   local -a TIMING_AFTER=("${wait[@]}" /dev/null)
   copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs -Ddrishti.timing.skip=true "${JAVA_RESUME_ARGS[@]}"
