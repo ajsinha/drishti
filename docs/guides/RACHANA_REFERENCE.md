@@ -7767,8 +7767,8 @@ Computed by the pure function `defaults(columns, rows)` in `drishti_table-chart-
 
 | File | What | Size goal |
 |---|---|---|
-| `web/static/js/drishti_table-chart-engine.js` | pure, no DOM, node-testable (`module.exports`) like `drishti_pivot-engine.js`: classify, defaults, normalise settings, settings → pivot arrangement (`plan`), the engine's cube → series (`finish`) (Top N, Others, buckets, sort, percent), the text summary, the export grid, the ECharts option builder (with tokens passed in) | ≤ 700 lines |
-| `web/static/js/drishti_table-chart.js` | the dialog, settings pane, ECharts instance, keys, actions, adapters' glue (`window.Drishti.tableChart`) | ≤ 900 lines |
+| `web/static/js/drishti_table-chart-engine.js` | pure, no DOM, node-testable (`module.exports`) like `drishti_pivot-engine.js`: classify, defaults, normalise settings, settings → pivot arrangement (`plan`), the engine's cube → series (`finish`) (Top N, Others, buckets, sort, percent), the text summary, the export grid; the option is drishti-chart's (`tableChartOption` of its report part, tokens passed in) | ≤ 700 lines |
+| `web/static/js/drishti_table-chart.js` | the dialog, settings pane, the chart (drishti-chart's `OptionChart`), keys, actions, adapters' glue (`window.Drishti.tableChart`) | ≤ 900 lines |
 | `web/static/js/drishti_table-chart-sources.js` | the adapters: `records`, `search`, `history`, `bi`, `dom` | ≤ 500 lines |
 | `web/static/css/drishti_table-chart.css` | the dialog, the phone sheet, the settings column, tokens only | ≤ 250 lines |
 

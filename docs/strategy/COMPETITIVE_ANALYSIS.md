@@ -113,7 +113,7 @@ that want on-premises, explainable views of any data.
 Drishti's own capabilities are given in two columns throughout:
 
 - **Today**: built, released and documented (the guides linked in the text say how).
-- **Planned**: in the agreed release plan ([IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md)), proposed and not started.
+- **Planned**: in the agreed release plan ([the release notes](../../RELEASE_NOTES.md)), proposed and not started.
   We name the release theme, not the number, because numbers move. Done: *sensitivities and market-risk capital* (position
   sensitivities, FRTB-SA, SIMM, the market-risk cube: today). The themes to come, in order: *counterparty engines* (SA-CCR, the counterparty cube, FVA, the
   exposure playground); *Java 25 and performance*; *oversight* (breaches and escalation, the board pack, market-data checks);
@@ -621,7 +621,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 **Drishti (this repository)**
 
-- [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
+- [README](../../README.md); [the release notes](../../RELEASE_NOTES.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
   [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/bi/README.md);
   [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);

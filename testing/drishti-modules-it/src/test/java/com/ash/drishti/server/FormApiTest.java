@@ -195,6 +195,18 @@ class FormApiTest {
         java.util.List<String> want = new java.util.ArrayList<>();
         searched.path("rows").forEach(r -> want.add(r.path("ref").path("id").asText()));
         org.assertj.core.api.Assertions.assertThat(page.stream().map(r -> r.get("id").asText()).toList()).containsExactlyElementsOf(want);
+        // each row keeps the search's title (LS1): its Title column, null when the title only repeats the id
+        for (int i = 0; i < page.size(); i++) {
+            var row = searched.path("rows").get(i);
+            String title = row.path("title").asText(row.path("ref").path("id").asText());
+            var kept = page.get(i).get(com.ash.drishti.server.live.KindSnapshot.TITLE);
+            org.assertj.core.api.Assertions.assertThat(kept).as("the Title column").isNotNull();
+            org.assertj.core.api.Assertions.assertThat(kept.isNull() ? page.get(i).get("id").asText() : kept.asText()).isEqualTo(title);
+        }
+        // a bare mnemonic's table carries the as-of notices as a search's answer does (LS4)
+        mvc.perform(get("/api/v1/rdp/kinds/TRD").header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.table").isNotEmpty()).andExpect(jsonPath("$.asOfNotices").isArray());
+        org.assertj.core.api.Assertions.assertThat(live.path("asOfNotices").isArray()).isTrue();
         // each row holds the search's values at the columns' fields
         var first = searched.path("rows").get(0).path("values");
         first.fieldNames().forEachRemaining(path -> org.assertj.core.api.Assertions

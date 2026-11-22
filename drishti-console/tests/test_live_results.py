@@ -114,6 +114,19 @@ def test_values_and_cells_are_shaped_in_one_place():
     assert spec["table"] == "q-1" and spec["query"] == {"sort": [{"col": "id"}]} and spec["key"] == ["id"]
 
 
+def test_a_forms_rows_keep_the_searchs_title_and_a_bare_mnemonic_its_as_of_notices():
+    answer = {"table": "q-1", "query": {}, "live": True, "search": {"kind": "trade", "columns": ["$.n"]},
+              "page": {"columns": [{"name": "id"}, {"name": "_title"}, {"name": "n"}], "values": [["T1", "Swap 5y EUR", 1], ["T2", None, 2]],
+                       "total": 2}}
+    rows = live_results.table_rows(live_results.as_search(answer))
+    assert [r["title"] for r in rows] == ["Swap 5y EUR", "T2"]
+    assert live_results.titled(rows)
+    notices = [{"connector": "trade-endur", "asked": "2026-11-20", "answered": "2026-11-19"}]
+    kind = {"table": "kind-trade", "schema": {"title": "TRD", "key": ["id"], "columns": [{"name": "id"}]},
+            "page": {"columns": [{"name": "id"}], "values": [["T1"]], "total": 1}, "asOfNotices": notices}
+    assert live_results.kind_page(kind)["asOfNotices"] == notices
+
+
 def test_a_tables_schema_is_the_grids_declaration_with_its_write_rules():
     schema = {"name": "trade", "title": "Trade blotter", "key": ["TRADE_ID"], "rowVersion": "TRADE_VERSION", "profile": {"kind": "trade", "links": [{"label": "VaR", "href": "/var"}]},
               "tray": True, "columns": [{"name": "TRADE_ID", "type": "string"}, {"name": "PRICE", "type": "number", "fmt": "price4", "label": "Price"}],

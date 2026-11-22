@@ -1081,12 +1081,12 @@ connectors:                     # a mapping NAME: { plugin, enabled?, kinds, set
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [agreement, csa]
     settings:                   # passed to the plugin as-is (credentials only as ${ENV})
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
       domain: legal             # reads <root>/legal/<kind>/
   credit-store:
     plugin: delta
     kinds: [netting-set, credit-limit, cva, sa-ccr]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: credit }
 
 routes:                         # KIND: CONNECTOR — which connector answers each kind
   agreement: legal-store
@@ -1101,7 +1101,7 @@ A pack names its connectors as a mapping, each with the definition it suggests (
 
 ```yaml
 connectors:                                         # what to suggest if the site has none yet
-  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
@@ -1177,7 +1177,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
       domain: trading
       table: { trade: trade_endur }    # the kind's table under <root>/trading/ (default: the kind's name)
       union: true                      # one part of a kind several connectors serve together (5.2)
@@ -2129,7 +2129,7 @@ routes: {trade: desk-pack-store}         # which connector answers each kind
 connectors:                              # the logical names the pack reads through, with the connection settings as its suggestion
   desk-pack-store:
     plugin: delta
-    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
+    settings: {root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
 ```
 
 **Reported rather than decided:** unresolved `$ref`s (an open object), a schema file that is not JSON or YAML, kinds with the same name, an ambiguous

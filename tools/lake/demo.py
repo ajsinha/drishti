@@ -369,7 +369,8 @@ class DemoLake:
         if javaload.command(getattr(self.a, "jar", None), getattr(self.a, "java", None)):
             return "java", "the parallel lake loader in the server's exec jar"
         name, why = writers.choose("auto", getattr(self.a, "jar", None), getattr(self.a, "java", None))
-        return name, why
+        return name, (f"the parallel loader was not found: looked for {javaload.looked_for(getattr(self.a, 'jar', None))}, or Java 21; "
+                      f"fell back to the {name} engine ({why})")
 
     @staticmethod
     def default_jobs() -> int:

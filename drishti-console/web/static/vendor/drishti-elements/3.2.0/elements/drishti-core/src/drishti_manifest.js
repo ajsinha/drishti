@@ -136,6 +136,10 @@ export const MANIFEST = Object.freeze({
         "geo": {
           "file": "drishti-chart/drishti_chart-geohelper.js",
           "css": []
+        },
+        "report": {
+          "file": "drishti-chart/drishti_chart-report.js",
+          "css": []
         }
       }
     },

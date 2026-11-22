@@ -13,7 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# IntelliJ IDEA and PyCharm: build and run Drishti
+# IntelliJ IDEA, PyCharm and VS Code: build and run Drishti
+
+VS Code is section 10. All three IDEs use the platform's one launcher standard: launchers are named `<Product>: <verb> [<what>]` (`Drishti: build all`, `Drishti: run server (demo)`), live in ONE `run-configs/` folder at the repository root, and use only Java, Python and Maven (no `.exe`, no shell script). The other repositories of the platform (Rachana, Elements, Lake, Tools) follow the same standard, so what you learn here applies to each: section 9 opens them together.
 
 For developers and testers who build and run Drishti from the two IDEs. **IntelliJ IDEA builds Drishti and runs the server with Java
 only**: Maven builds the server jar and the modules and installs them, and the server launchers run that jar (IntelliJ **JAR
@@ -39,9 +41,8 @@ The three parts follow that order: [1. Build](#1-build-intellij-idea-java-only),
 | **A JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, Windows `C:\jdk-21`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`. Production runs on 21. |
 | **IntelliJ IDEA** (Community or Ultimate) | its bundled Maven builds everything; the repository's `mvnw` is the same Maven for a terminal. |
 
-No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. Two IDEs, two
-projects, **never one folder for both**: opened on the same folder they overwrite each other's `.idea`, and IntelliJ then loses the Maven
-modules (*module not specified*). If that happened, close both, delete the root's `.idea/` (IDE settings only) and reopen.
+No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. IntelliJ and PyCharm open the same project, the repository root, and read the same `run-configs/`. If IntelliJ loses the Maven
+modules (*module not specified*), close it, delete the root's `.idea/` (IDE settings only) and reopen.
 
 ### 1.2 Open the root `pom.xml` in IntelliJ IDEA
 
@@ -593,3 +594,137 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
    Drishti Research** beside Risk, Trading, Market and World; **Admin → Data loads** shows the inbox running. Then `VAR BANK <GO>`
    computes. *If not:* banking *stale*: recipe A; banking missing: recipe B; VaR (or `GET /api/v1/risk/var/…`) answers 404: banking
    is not loaded, Admin → Modules says why (recipe A or B).
+
+## 9. The whole platform in one IDE
+
+Drishti is built on four products that live in their own repositories ([QUICKSTART_DEVELOPERS.md section 1](../QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine)),
+side by side under one folder:
+
+```
+~/IdeaProjects/drishti-platform/            (Windows C:\Users\<you>\IdeaProjects\drishti-platform\)
+    drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/  drishti-stack/
+```
+
+### 9.1 One window per repository, the usual way
+
+Open each repository root as its own project (**File, Open**): in IntelliJ link the repository's `java/pom.xml` in the Maven tool window (Drishti:
+the root `pom.xml`); in PyCharm the Python part (`python/` in Rachana and Lake, `drishti-console/` and `tools/` in Drishti) is marked as sources.
+Each project shows its own launchers in its own run-configuration folder (**Tools**, **Rachana**, **Lake**, **Elements**, **Drishti**), with the verbs
+of the standard: `build all` and `test` everywhere, `install release (tag only)` where a repository publishes jars, `run ...` for programs.
+The install order is **tools, Rachana, Lake, then Drishti**, from release tags only; run each `install release (tag only)` launcher on a checkout of the
+tag, never on a branch ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build) does it in one command).
+
+### 9.2 All repositories in one IntelliJ window
+
+To search, navigate and refactor across repositories, open Drishti and attach the others as modules of the same window:
+
+1. **File, Open** the `drishti/` folder, then **File, Project Structure, Modules, +, Import Module**: choose `drishti-tools/java/pom.xml`, then
+   `drishti-rachana/java/pom.xml`, `drishti-lake/java/pom.xml`, each as a **Maven** project (or, in the Maven tool window, **+** and choose the pom).
+   Elements, which has no Java, is attached with **Import Module, Create module from existing sources** on its `js/` folder.
+2. Set the one project SDK to JDK 21 (section 1.2) and **Maven, Runner, JRE: Use Project JDK**.
+3. A change in an attached repository is compiled in the IDE, but Drishti's build reads the product's jar from `~/.m2` (the installed tag), so to run
+   Drishti against such a change build the product with its own `build all` launcher into a scratch repository
+   (`-Dmaven.repo.local=<folder>`, the product's `BUILD_AND_IDE.md`), never install a branch into `~/.m2`.
+4. Each attached repository keeps its own launchers: add its `run-configs/` by opening that repository in a second window (9.1) when you need to run
+   them, or copy the launcher (Ctrl+D) into this project.
+
+### 9.3 The same in PyCharm
+
+PyCharm: open the `drishti/` root; add the other repositories' Python parts as content roots (**Settings, Project, Project Structure, Add Content
+Root**: `drishti-rachana/python`, `drishti-lake/python`), mark each `src` or package folder as sources, and keep one interpreter, the console's
+`drishti-console/.venv`, for Drishti and a separate one for each product that has its own requirements.
+
+### 9.4 Windows
+
+Paths are the Windows form of the layout above; no `.exe` is needed for any of it. `JAVA_HOME` is `C:\jdk-21`, and behind a company network
+the Maven runner needs `-Djavax.net.ssl.trustStoreType=Windows-ROOT` (section 1.4). Playwright's browsers for the browser tests install into the
+user's profile with `drishti-console\.venv\Scripts\python.exe -m playwright install chromium`.
+
+## 10. Visual Studio Code
+
+For developers and testers who work in VS Code. Every component of the Drishti platform (Drishti, Rachana, Lake, Tools, Elements) carries a
+**workspace file** at its root, `<product>.code-workspace` (for Drishti, `drishti.code-workspace`), with the same build, test, check and run
+actions as the IntelliJ and PyCharm launchers (sections 1 to 9): one **task** per Maven or Python launcher, one **launch** entry
+(F5, debuggable) per Java application and per Python program, under the same names. The convention is the platform's launcher standard:
+`<Product>: <verb> [<what>]`, with the verbs `build`, `test`, `check`, `install`, `run`, `lint`, `bundle`, `maintain`, `bench`. Nothing here
+needs a hidden folder, a shell script or an `.exe`: Java, Python and Maven only, so the same files work on Linux, macOS and Windows.
+
+**In one minute.** Install the extensions (section 10.1), open `drishti.code-workspace` (File, Open Workspace from File), set the JDK path
+(section 10.2), then **Terminal, Run Task, `Drishti: build all`**. Once, make `~/drishti-envs/dev.ini` (`python tools/drishti.py setup`, [QUICKSTART_DEVELOPERS.md](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment)),
+then run the tasks **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**; open `http://localhost:17480`.
+
+### 10.1 What you need
+
+| You need | How |
+|---|---|
+| **JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`, Windows `C:\jdk-21` |
+| **Python 3.13** and the console's environment | `uv venv --python 3.13 drishti-console/.venv` and the requirements ([QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment)) |
+| **VS Code** with the extensions the workspace recommends | Extension Pack for Java (`vscjava.vscode-java-pack`), Python (`ms-python.python`, `ms-python.debugpy`, `ms-python.vscode-pylance`), YAML (`redhat.vscode-yaml`); VS Code offers them when the workspace opens |
+| The platform's other repositories, built and installed | tools, Rachana and Lake from their tags into `~/.m2`, in that order ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); their versions: the index repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md) |
+
+### 10.2 Open a repository
+
+1. **File, Open Workspace from File**, choose `drishti.code-workspace` at the root of the clone (a visible file).
+2. The workspace's `settings` hold `java.configuration.runtimes` (name `JavaSE-21`) and `java.jdt.ls.java.home`: change the path to your JDK 21
+   (Windows `C:\\jdk-21` in the JSON). A copy of the workspace file for yourself is fine; the shipped one is overwritten by a pull.
+3. Choose the console's Python: **Python: Select Interpreter**, `drishti-console/.venv` (Windows `drishti-console\.venv\Scripts\python.exe`).
+4. Wait for the Java extension to import the Maven project (the first import downloads libraries). Behind a company network that re-signs
+   HTTPS the import and the build stop with `PKIX path building failed`: put `-Djavax.net.ssl.trustStoreType=Windows-ROOT` in the environment
+   variable `MAVEN_OPTS` (`setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, then a new terminal) and in the Java extension's
+   `java.import.maven.vmargs`; the full explanation is [section 1.4](#14-maven-behind-a-company-network-pkix-path-building-failed).
+
+### 10.3 Build, test and run: the tasks
+
+**Terminal, Run Task** (or Ctrl+Shift+B for the default build) lists every task of the workspace under the standard names. The same names exist
+in IntelliJ and PyCharm, so a team mixes the three without translating.
+
+| Task | What it does | Use it when |
+|---|---|---|
+| `Drishti: build all` | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar into `lib/` and every module package into `modules/` | after a clone and after every pull |
+| `Drishti: build modules` | only the module packages, stamped for the jar in `lib/` | you changed only module code |
+| `Drishti: test` | the Maven tests | before a hand-over |
+| `Drishti: test Python` | the console's and the tools' pytest | before a hand-over |
+| `Drishti: build demo lakes` | `drishti.py lake demo`, the demo lakes through Drishti Lake's loader | after a build, with the server stopped |
+| `Drishti: run server (demo)` | the server on 18480 on the demo lakes | the normal run |
+| `Drishti: run console` | the console on 17480 | with the server |
+| `Drishti: check environment` | `drishti.py doctor` | something does not start or answer |
+
+(The workspace file is the authority for the complete list; the names above are those of the standard.) Stop the server before a build: the
+build replaces the jar and the packages it runs, and Windows keeps them locked.
+
+### 10.4 Run and debug
+
+**Run and Debug** (Ctrl+Shift+D) lists the launch entries, named like the tasks: pick **Drishti: run server (demo)** and press **F5** to debug
+the server (breakpoints in the Java extension, the jar's classes from `lib/`), **Drishti: run console** to debug the console (the Python
+debugger, `debugpy`). To start both without a debugger, run their tasks. Both read `~/drishti-envs/dev.ini` and the profile `demo.ini`
+([section 2.1](#21-the-settings-file-drishti-envsdevini)); sign in as `drishti-dev-admin` / `drishti-dev-admin123`
+(a QA machine's development secrets only).
+
+### 10.5 Several repositories at once
+
+To work across the platform (a change in Drishti that needs one in Lake), use one **multi-root workspace**: **File, Open Workspace from File**
+on any one product's workspace, then **File, Add Folder to Workspace** for each of the others under `~/IdeaProjects/drishti-platform/`
+(`drishti`, `drishti-rachana`, `drishti-elements`, `drishti-lake`, `drishti-tools`, `drishti-stack`), then **File, Save Workspace As** into
+`drishti-platform/` itself (`drishti-platform.code-workspace`, beside the clones, outside every repository, so it is never committed). The
+tasks and launches of the workspaces you did not open are not merged into it; run them from their own workspace (a second VS Code window
+costs nothing), and use the multi-root one for searching, reading and editing across repositories. A change in a product repository reaches Drishti only
+through a tag installed into `~/.m2` ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); to try an unreleased change,
+build the product with `-Dmaven.repo.local=<scratch folder>` as that product's `BUILD_AND_IDE.md` says, and never install a branch.
+
+### 10.6 Python and JavaScript parts
+
+The Python parts (`drishti-console`, `tools`) run from the console's environment; the workspace's Python tasks set `PYTHONPATH` where a package
+needs it. Elements (JavaScript) and Rachana's JavaScript build and test through Maven (`exec-maven-plugin`), so VS Code needs no Node
+extension for the tasks; Node 20 or newer is needed only for the Node unit tests.
+
+### 10.7 When it does not work
+
+| You see | Cause and fix |
+|---|---|
+| the Java extension shows `JavaSE-21` unresolved | the JDK path in the workspace's settings is wrong for this machine: edit it, then **Java: Clean Java Language Server Workspace** |
+| `PKIX path building failed` | section 10.2, step 4 |
+| a task says `lib/drishti-server-exec.jar` is missing | run `Drishti: build all` first |
+| the console cannot import a package | the wrong interpreter: section 10.2, step 3 |
+| the server refuses the modules at start (`stamped for another jar`) | a new jar with old modules: run `Drishti: build all`, never the jar alone |
+
+A fresh start, step by step, and every check: [section 8](#8-a-fresh-start-step-by-step-and-how-to-check-each-step).

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -32,7 +33,10 @@ import java.util.function.Function;
  * Drishti's write-back bound as the live tables' sink (LT-8, i8 step 3): a checked change is handed to the edit service as the person
  * who made it, under the declaration's form ({@code live:<table>}), with the version it was made on and its change id; lanes, approvals
  * (four eyes: the change waits as {@code held}), the outbox, cluster ownership and connector writes stay the write-back's. Rachana's own
- * outbox is not installed. The person is the request's: the protocol mount names them for the write it serves ({@link #as}).
+ * outbox is not installed. The person is the request's: the protocol mount names them for the write it serves ({@link #as}), and a
+ * change whose maker ({@code by}) is not that person is refused, so the caller always reaches the write-back and its audit record. The
+ * change id is Rachana's end to end: the write-back keeps it, so {@link #madeBy} and {@link #prior} answer a repeat from the write-back's
+ * own durable record (edit log, approval queue) on any node and after a restart (PROTOCOL 16).
  */
 public final class DrishtiChangeSink implements ChangeSink {
 
@@ -49,10 +53,47 @@ public final class DrishtiChangeSink implements ChangeSink {
 
     private final Function<String, LiveTableSpec> specs;
     private final BiFunction<Principal, JsonNode, List<Map<String, Object>>> submit;
+    private final Function<String, Optional<Map<String, Object>>> known;
 
-    public DrishtiChangeSink(Function<String, LiveTableSpec> specs, BiFunction<Principal, JsonNode, List<Map<String, Object>>> submit) {
+    /**
+     * @param specs the declarations by table name
+     * @param submit the write-back's submit as a person
+     * @param known what the write-back knows of a change id ({@code EditService.known}: {@code {state, by, needed?, message?}})
+     */
+    public DrishtiChangeSink(Function<String, LiveTableSpec> specs, BiFunction<Principal, JsonNode, List<Map<String, Object>>> submit,
+            Function<String, Optional<Map<String, Object>>> known) {
         this.specs = specs;
         this.submit = submit;
+        this.known = known;
+    }
+
+    /** The person the calling thread writes as (the mount's mark), or null outside a write. */
+    static Principal caller() {
+        return CALLER.get();
+    }
+
+    @Override
+    public String madeBy(String changeId) {
+        return known.apply(changeId).map(m -> m.get("by") == null ? null : String.valueOf(m.get("by"))).orElse(null);
+    }
+
+    @Override
+    public Outcome prior(String changeId) {
+        return known.apply(changeId).map(DrishtiChangeSink::outcome).orElse(null);
+    }
+
+    /** The write-back's state of a change as the protocol says it. */
+    static Outcome outcome(Map<String, Object> m) {
+        String state = String.valueOf(m.getOrDefault("state", "queued"));
+        Object said = m.get("message");
+        return switch (state) {
+            case "awaiting" -> new Outcome(State.HELD, "waiting for approval" + (m.get("needed") == null ? "" : " (" + m.get("needed")
+                    + " needed)"), null);
+            case "applied" -> new Outcome(State.APPLIED, null, null);
+            case "rejected", "withdrawn" -> new Outcome(State.REJECTED, said == null ? state : String.valueOf(said), null);
+            case "refused", "conflicted" -> new Outcome(State.FAILED, said == null ? state : String.valueOf(said), null);
+            default -> new Outcome(State.QUEUED, null, null);
+        };
     }
 
     /** Runs a write as the person (the sink submits as them); the mark is the calling thread's and is removed after. */
@@ -107,13 +148,13 @@ public final class DrishtiChangeSink implements ChangeSink {
             return new Outcome(State.REFUSED, e.getMessage(), null);
         }
         Map<String, Object> first = got.isEmpty() ? Map.of() : got.get(0);
-        String state = String.valueOf(first.getOrDefault("state", "queued"));
-        return switch (state) {
-            case "awaiting" -> new Outcome(State.HELD, "waiting for approval" + (first.get("needed") == null ? "" : " (" + first.get("needed")
-                    + " needed)"), null);
-            case "applied" -> new Outcome(State.APPLIED, null, null);
-            case "rejected" -> new Outcome(State.REFUSED, String.valueOf(first.getOrDefault("message", "rejected")), null);
-            default -> new Outcome(State.QUEUED, null, null);
-        };
+        if (first.get("id") != null && !c.id().equals(first.get("id"))) {
+            // never answered under another id: the change would not be found again by the id its maker holds
+            return new Outcome(State.REFUSED, "the write-back did not keep the change id " + c.id(), null);
+        }
+        if ("rejected".equals(first.get("state"))) {
+            return new Outcome(State.REFUSED, String.valueOf(first.getOrDefault("message", "rejected")), null);
+        }
+        return outcome(first);
     }
 }

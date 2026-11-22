@@ -237,7 +237,7 @@ holds every trade set, and at 768 MB a server ran out of heap at start and its p
 quick file check) fails on any test that does otherwise and is not parked.
 
 **Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
-trade-grain variant) is parked until i6 (IMPLEMENTATION_PLAN.md): it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
+trade-grain variant) is parked until i6: it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
 with the reason "parked to i6: writes to a lake (owner 2026-11-15)", so every run and drill report shows it as skipped, never silently
 gone. The parked tests:
 

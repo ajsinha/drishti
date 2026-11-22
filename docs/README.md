@@ -224,10 +224,9 @@ repeat.
 |---|---|
 | Build, test and change the code; recipes for common changes | [BUILD_GUIDE.md › Part VIII. Changing Drishti's code: the developer guide](guides/DEVELOPER_GUIDE.md) |
 | Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
-| See how server-side pricing (QuantLib) will work, and what is next on the roadmap | [AI_GUIDE.md › Server-side pricing: the quant service (proposed)](guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [IMPLEMENTATION_PLAN.md › Roadmap](architecture/IMPLEMENTATION_PLAN.md#roadmap) |
+| See how server-side pricing (QuantLib) will work, and what is next on the roadmap | [AI_GUIDE.md › Server-side pricing: the quant service (proposed)](guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [the release notes](../RELEASE_NOTES.md) |
 | Call the REST API, or read the ViewModel contract | [API_REFERENCE.md](guides/API_REFERENCE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
 | Know why something is the way it is | [adr/](architecture/adr/README.md): the architecture decision records |
-| See how it was built, wave by wave, and what is still open | [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) |
 | See the performance roadmap: Java 25, native libraries (BLAS, compression, JSON), embedded columnar engines (DuckDB, Polars) | [HIGH_PERFORMANCE_NATIVE.md](architecture/HIGH_PERFORMANCE_NATIVE.md) |
 | See the four reference mockups the views reproduce | [requirements/](requirements/) |
 
@@ -285,7 +284,6 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [RACHANA_REFERENCE.md › Panels: the twenty-two kinds, and developing a new one](guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) | you followed an old link to the panels guide (PANEL_KINDS.md and PANEL_DEVELOPER_GUIDE.md, both now in RACHANA_REFERENCE.md) |
 | [BUILD_GUIDE.md](guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) | you followed an old link to the Rachana guide (RACHANA_GUIDE.md, now BUILD_GUIDE.md) |
 | [BUILD_GUIDE.md › Testing](guides/BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check) | you followed an old link to the headless Sutra tool (SUTRA_CLI.md): testing is section 15 there; the tool itself is [CLI_REFERENCE.md section 15](guides/CLI_REFERENCE.md#the-headless-sutra-tool) |
-| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you followed an old link to architecture/TESTDATA_FROM_SEEDS_PLAN.md (every old link and help address goes to the section that took it over) |
 | [LENSES.md](guides/ADMIN_GUIDE.md#12-what-a-lens-is) | you followed an old link to admin/EDITIONS_GUIDE.md, architecture/LENSES.md (every old link and help address goes to the section that took it over) |
 | [APPROVALS_GUIDE.md](guides/APPROVALS_GUIDE.md) | you followed an old link to architecture/APPROVALS_GUIDE.md, guides/WRITE_BACK_GUIDE.md (every old link and help address goes to the section that took it over) |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you followed an old link to guides/ANALYSE.md, guides/PYTHON_CALC.md, guides/QUERY_BY_FORM.md (every old link and help address goes to the section that took it over) |
@@ -347,7 +345,6 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [VAR_PLAYGROUND.md](guides/VAR_GUIDE.md) | you want the design of the VaR Playground (design, not built; planned): every VaR figure worked in a grid with an explanation panel and exported as an .xlsx with real formulas (Main, Config, Data, FX, PnL, Explain, Provenance) that recalculates in Excel, LibreOffice and Google Sheets and equals the engine to the cent; up to 500 positions from the VaR screen's scope; the playground family and the rule that every metric ships with its playground |
 | [IFRS9_ECL.md](architecture/IFRS9_ECL.md) | you want the design of the IFRS 9 expected credit loss engine (design, not built; proposed for 2.9.20): staging, PD, LGD, EAD, weighted scenarios, overlays, POCI, why the provision moved, the data contracts, the playground and the hand-built cases |
 | [FINANCIAL_CRIME.md](architecture/FINANCIAL_CRIME.md) | you want the design of the financial crime engines (design, not built; proposed for 2.9.21 and 2.9.22): trade surveillance, transaction monitoring and threshold tuning, network analytics, customer risk rating, sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC reporting, rule effectiveness and data protection |
-| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, what is still open, the release rules and the themed releases 2.9.8 to 2.9.14 (decided 2026-10-31), and 2.9.7's Drill B |
 
 ### Lenses (`lenses/`)
 

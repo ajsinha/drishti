@@ -18,7 +18,7 @@
    consoleTables: sort by a heading, the filter box and the column funnels, pages and rows per page, ↑ ↓ PgUp PgDn Home End Enter, a
    zoomed panel fitted to its height, the state kept through a live repaint). This file is their host on a page: the column funnels
    (drishti_colfilter.js), the keymap, and Chart any table (RACHANA_REFERENCE.md: a chart button in the heading and K open the table as a
-   chart, drishti_table-chart.js, loaded at the first use with its engine and ECharts, so a page with tables pays nothing until then;
+   chart, drishti_table-chart.js, loaded at the first use with its engine, ECharts and drishti-chart's report part, so a page with tables pays nothing until then;
    a table with data-no-chart has none). A table with data-plain is left as it is (a form laid out as a table). */
 (function () {
   'use strict';
@@ -41,7 +41,7 @@
       document.head.appendChild(x);
     });
   }
-  /** The chart kit {open, sources}: echarts, the pivot and chart engines, the adapters, the dialog and its stylesheet. */
+  /** The chart kit {open, sources}: echarts, drishti-chart's report part, the pivot and chart engines, the adapters, the dialog and its stylesheet. */
   function chartKit() {
     if (kit) { return kit; }
     if (!document.querySelector('link[data-table-chart-css]')) {
@@ -51,6 +51,8 @@
     }
     var steps = [];
     if (!window.echarts) { steps.push(ELEMENTS ? ELEMENTS.staticUrl('vendor/echarts/echarts.min.js') : 'vendor/echarts/echarts.min.js'); }
+    var PART = 'elements/drishti-chart/drishti_chart-report.js';            // drishti-chart's report part: the dialog's chart
+    if (!(window.Drishti.elements && window.Drishti.elements.chart_report)) { steps.push(ELEMENTS ? ELEMENTS.staticUrl(PART) : PART); }
     if (!window.Drishti.pivotEngine && !((window.drishtiModules || {}).pivotEngine)) { steps.push('js/drishti_pivot-engine.js'); }
     if (!window.Drishti.tableChartEngine) { steps.push('js/drishti_table-chart-engine.js'); }
     if (!window.Drishti.tableChartSources) { steps.push('js/drishti_table-chart-sources.js'); }

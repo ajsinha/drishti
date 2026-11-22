@@ -18,6 +18,33 @@
 
 ## Unreleased
 
+- **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.
+
+- **i7b documents.** The developer quickstart, the deployment and QA guide (with the QA figures VaR 167,372,692 and ES 210,131,972 for the bank on
+  2026-11-06), the IDE guide (VS Code, and the whole platform in one IDE) are written for the five-repository platform; the root README names
+  the platform; the guides' repository links point at github.com/drishti-platform; loading, upkeep, archives and protocol compliance in the data
+  lake guide and the operations guide point to Drishti Lake's guides instead of repeating them; lake roots are written under `${lake.data.dir}`.
+
+- **BI charts draw with drishti-chart.** Every chart of a report (bar, column, line, area, combo, small multiples, pie, donut, waterfall, treemap,
+  heatmap, scatter, bubble, gauge, funnel, histogram, box plot, the map, the rolling line and a KPI's sparkline), the Python visual's chart and
+  Chart any table's chart are drawn by Drishti Elements' drishti-chart (its new report part, `drishti_chart-report.js`); the console's own chart
+  builders are gone (`drishti_bi-multiples.js` deleted; `drishti_bi-visuals.js` keeps the cards and the report's adapter; the table chart engine keeps
+  the numbers and the words). BI's maps use drishti-chart's map helper (its geo part): the world is drawn in the Equal Earth projection, as the
+  view painter's maps are. No console script calls ECharts for BI any more (the guard's allow-list lost three files).
+- **Live tables, G4 fixes (LS1, LS3, LS4, LS7, LV4).** A live table's write keeps Rachana's change id end to end: the write-back takes a
+  client's id (1 to 64 letters, digits, `-`, `_`), so the approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message
+  carry it, and the same id again answers that change's state from the write-back's own record (any node, after a restart), never made
+  twice; another person's repeat is refused (PROTOCOL 16). The person who made a change reaches the write-back and every audit record
+  (`live-write-*` with the change id and its columns, `edit-submitted` with the same id; `edit-repeated` for a repeat); a write not tied to
+  a signed-in request is refused. A source that fails a read answers `503 rdp.unavailable` with its own words added (`source`; made safe:
+  one line, 300 characters at most, file paths cut to the name, credentials as `***`). A FORM's rows keep the search's title (Title column).
+  A bare mnemonic's table page carries the as-of notices, as a search's answer does. A paged grid's **N new** (no jump) is by design, now
+  said in LIVE_RESULTS_GUIDE.md.
+- **Delta upkeep without delta-rs.** `tools/lake/maintain.py` keeps a Delta table through Drishti Lake's `lake maintain` alone: a laid-out
+  table's drifted dates are rewritten sorted by id by `--relayout` (the pack's `file-rows`; `maintain.py relayout --dates --force` as
+  before), the report's files, MB and latest date come from Lake. Retention keeps today and `keep-business-days` business days before it
+  again (Drishti's rule before the move; Lake had kept one date fewer).
+
 - **Compatibility shims removed (no customer, no tech debt).** The BI and tables migrators (`tables migrate`, `bi migrate`, the start-up
   migration of stored items and of saved pivot formulas, `PivotFormulaMigration`), the DEL reader (`DelParser`, `DelToRachana`; the setting
   `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,

@@ -122,7 +122,6 @@ What exists now, on the server and in the console (the console's part since phas
 
 The domain boundaries and the move: [DOMAIN_MODULES.md](DOMAIN_MODULES.md). The kernel, the module package, its loading and data binding, and distributions: [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md). The JavaScript libraries
 modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
-The roadmap: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## 10. Row rules
 
@@ -155,7 +154,7 @@ drishti:
 it opens every record of it; an administrator and a server with sign-in off see every record. A person may change a record of a system when
 none of their roles lists `edit-systems`, or one of them lists that system.
 
-**Where they apply.** Row rules restrict **record views**: the live sets behind lists and blotters (the person's reader, per request,
+**Where they apply.** Row rules restrict **record views**: the live tables behind lists and blotters (Rachana's live tables) (the person's reader, per request,
 tested on every row and every live change; part of the audience, so two people with different rules never share a filled set), search (the
 rule joins the search's condition), FORM and Raw JSON (a record outside the rule is not found). **Aggregates keep their own scope model**:
 VaR, BI totals and other computed measures are not filtered by row rules (BI's dataset rules and VaR's scopes decide them).

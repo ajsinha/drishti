@@ -160,7 +160,7 @@ def test_the_workbench_offers_the_map_and_seeds_it_from_the_field_that_names_a_c
     assert "['map', 'globe2'," in palette and "kind === 'map'" in actions and "out.highlight = place.path" in actions
 
 
-def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_geomap_first():
+def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_the_map_helper_first():
     # 2.4.0: the Format pane is generated from the format schemas; the map's level and drill carry the hooks the schema names
     schema = yaml.safe_load((CONSOLE.parent / "kernel/drishti-server" / "src" / "main" / "resources" / "bi" / "report" / "format" / "other-chart.yaml").read_text(encoding="utf-8"))
     props = schema["properties"]
@@ -169,11 +169,11 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
     assert props["drill"]["x-hook"] == "format-drill" and props["drill"]["type"] == "boolean" and props["drill"]["x-types"] == ["map"]
     pane = (CONSOLE / "web" / "static" / "js" / "drishti_bi-format-pane.js").read_text(encoding="utf-8")
     assert "prop['x-hook'] ? prop['x-hook']" in pane and "hook: hook" in pane, "the pane gives each control (a Form field's hook: data-<hook>) the data attribute its x-hook names"
-    for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html)
+    for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html); BI's maps are drishti-chart's (its geo and report parts)
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
-        assert text.index("drishti_geomap.js") < text.index("drishti_bi-visuals.js"), page
+        assert "drishti_geomap.js" not in text and text.index("drishti_chart-geohelper.js") < text.index("drishti_chart-report.js") < text.index("drishti_bi-visuals.js"), page
     for page in ("terminal/view.html", "build/design.html", "build/shared.html"):
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert text.index("drishti_geomap.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
-    assert "'geomap', 'charts'" in embed and "'geomap'].concat(" in embed          # the report's libraries: drishti-core and -grid, then geomap, then BI's
+    assert "'geomap', 'charts'" in embed and "'elements-chart-geo', 'elements-chart-report'].concat(" in embed          # the report's libraries: drishti-core and -grid, drishti-chart's parts, then BI's

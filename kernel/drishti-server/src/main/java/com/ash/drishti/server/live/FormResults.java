@@ -196,6 +196,9 @@ public class FormResults {
             for (JsonNode row : s.answer().path("rows")) {
                 Map<String, Object> r = new LinkedHashMap<>();
                 r.put(SearchFilter.KEY, row.path("ref").path("id").asText());
+                if (row.hasNonNull("title") && !row.path("title").asText().equals(row.path("ref").path("id").asText())) {
+                    r.put(KindSnapshot.TITLE, row.path("title").asText());
+                }
                 row.path("values").fields().forEachRemaining(e -> put(r, e.getKey(), plain(e.getValue())));
                 out.add(r);
             }
@@ -239,6 +242,9 @@ public class FormResults {
         List<Map<String, Object>> columns = new ArrayList<>();
         for (String c : f.columns()) {
             columns.add(Map.of("name", c, "label", SearchFilter.KEY.equals(c) ? "Id" : HistoryController.label(c)));
+            if (SearchFilter.KEY.equals(c)) {                         // the search's title of each row, after its id (LS1)
+                columns.add(Map.of("name", KindSnapshot.TITLE, "label", "Title"));
+            }
         }
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("rachana", 1);

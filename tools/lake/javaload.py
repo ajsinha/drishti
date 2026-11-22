@@ -21,9 +21,8 @@ its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, `
 ``parallel.writers=16``, ``target.layout.sort-by=[LEGAL_ENTITY,DESK,id]``). This build holds the lake's lock and writes the run log and
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
 
-The Python path is the default: ``--engine auto`` never picks the loader on its own. Only with ``--java-above-mb N`` does it pick the
-loader for a large load: every input JSON Lines, at least N MB of them, mode overwrite-dates, and a jar (or LAKE_CLASSPATH) that
-has the loader; anything else goes the way it always went. Java is started
+The loader is the default: ``--engine auto`` tries it first (inputs JSON Lines, mode overwrite-dates or append, and an exec jar or
+LAKE_CLASSPATH that has it), then Drishti's Java writer, then deltalake; the message says which jar was looked for when it falls back. Java is started
 only through ``tools/javacmd.py``'s ``java_cmd``."""
 from __future__ import annotations
 
@@ -92,22 +91,35 @@ def is_jsonl(path: pathlib.Path) -> bool:
         return False
 
 
+def looked_for(jar: str | None) -> str:
+    """Exactly which jar the loader was looked for in, and what was wrong with it (named in the fallback message)."""
+    import writers
+    if jar:
+        return f"the jar given with --jar ({jar})" + (" does not carry the parallel loader" if os.path.isfile(jar) else ": no such file")
+    import javacmd
+    pattern = str(javacmd.lib_dir() / javacmd.JAR_GLOB)
+    found = writers.find_jar(None)
+    if found:
+        return f"{found} (found, but it does not carry the parallel loader: drishti-lake-host is missing from it)"
+    return f"{pattern} (no jar matches)"
+
+
 def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> tuple[bool, str]:
-    """(use the loader, why) for ``--engine auto``."""
-    above = getattr(a, "java_above_mb", None)
-    if above is None:                         # the default: the Python path; the loader only when asked (--engine java or --java-above-mb)
-        return False, "the Python path is the default (--engine java, or --java-above-mb N, for the parallel loader)"
-    threshold = int(above) * 1048576
-    size = sum(f.stat().st_size for f in files)
-    if size < threshold:
-        return False, f"{size / 1048576:.0f} MB of input is under --java-above-mb"
+    """(use the loader, why) for ``--engine auto``, the default: the parallel loader first; when its exec jar (or Java) is missing the
+    message names the jar looked for and the engine used instead."""
     if a.mode not in (None, "overwrite-dates", "append"):
         return False, f"--mode {a.mode} is the Python path's"
     if not all(is_jsonl(f) for f in files):
         return False, "an input is not JSON Lines"
     if not command(jar, java):
-        return False, "no jar with the parallel loader"
-    return True, f"{size / 1048576:,.0f} MB of JSON Lines (at least --java-above-mb): the parallel loader"
+        import writers
+        try:
+            engine = writers.choose("auto", jar, java)[0]
+        except writers.WriteError:
+            engine = "none (no other engine is available)"
+        return False, (f"the parallel loader was not found: looked for {looked_for(jar)}, or Java 21 (--java, JAVA_HOME): "
+                       f"fell back to the {engine} engine")
+    return True, "the parallel lake loader (the default engine)"
 
 
 def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, env: dict) -> dict:

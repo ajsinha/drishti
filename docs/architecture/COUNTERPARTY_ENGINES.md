@@ -16,7 +16,7 @@
 # Counterparty engines: SA-CCR, the Exposure playground, FVA and the CCR cube core
 
 Status: design, not built. The data contracts are written (`status: planned`); the engines, screens and playgrounds below are the
-design to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
+design to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in the implementation plan.
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
@@ -400,7 +400,7 @@ path, board buckets, browser), CCP6 (the exposure guide's cube chapter, a tutori
 release, the lens control A3's measure **EAD SA-CCR** is live (not greyed), the kind `saccr-result` is no longer hidden in the lens, and
 C1's **Incremental EAD (SA-CCR)** tile is answered by SA-CCR's what-if.
 
-**As built: the exposure what-if in Java** (IMPLEMENTATION_PLAN 2.9.12 row 5). The `addon` and `paths` what-if that CCP4 overlays are
+**As built: the exposure what-if in Java**. The `addon` and `paths` what-if that CCP4 overlays are
 both the server's exposure engine's: `POST /api/v1/risk/exposure/what-if` computes the exact method with `ExposureWhatIfMath`
 (`drishti-compute-banking`, `com.ash.drishti.banking.compute.ccr`) over `ExposureMath`'s collateral and statistics, the scope and each joined netting set
 read as the asker, no sandbox, no compute pool, no Python ([EXPOSURE_GUIDE.md section 19.5](../guides/EXPOSURE_GUIDE.md#195-the-exact-what-if-in-the-java-engine)).

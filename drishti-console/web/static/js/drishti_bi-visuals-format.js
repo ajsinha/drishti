@@ -15,8 +15,8 @@
  */
 /* Report schema v2 (R6, 2.4.0) in the browser: what a visual's typed format and its report's theme do to the picture. The theme's colours and visual defaults
    (a visual's own format wins), conditional formatting (a rule on the measure or on another one, a 2- or 3-stop colour scale, icons, a colour per value of a
-   field), the axes of a category chart (minimum, maximum, logarithmic, gridlines, label rotation), label density, 100% stacking and the frame (subtitle,
-   border, shadow, background, padding). Used by drishti_bi-visuals.js, drishti_bi-grids.js, drishti_bi-matrix.js and drishti_bi-multiples.js. Colours are set through the CSS object model
+   field) and the frame (subtitle, border, shadow, background, padding). What a format does to a chart (axes, label density, 100% stacking, series colours) is
+   drishti-chart's report part. Used by drishti_bi-visuals.js, drishti_bi-grids.js and drishti_bi-matrix.js. Colours are set through the CSS object model
    (element.style), never a style attribute, so the pages' strict policy holds. */
 (function () {
   'use strict';
@@ -163,50 +163,6 @@
       td.insertBefore(i, td.firstChild);
       td.setAttribute('data-cf-level', style.icon.words);
     }
-  };
-
-  // ---- the chart parts a format sets ----------------------------------------------------------------------------------------
-
-  /** The value axis as the format says: minimum, maximum, logarithmic, gridlines, shown or not. */
-  V.valueAxisFormat = function (axis, f) {
-    const va = (f && f.valueAxis) || {};
-    if (typeof va.min === 'number') { axis.min = va.min; }
-    if (typeof va.max === 'number') { axis.max = va.max; }
-    if (va.log) { axis.type = 'log'; axis.logBase = 10; }
-    if (va.gridlines === false) { axis.splitLine = Object.assign({}, axis.splitLine, { show: false }); }
-    if (va.gridlines === true) { axis.splitLine = Object.assign({}, axis.splitLine, { show: true }); }
-    if (va.show === false) { axis.show = false; }
-    return axis;
-  };
-  /** The category axis as the format says: label rotation, shown or not. */
-  V.categoryAxisFormat = function (axis, f) {
-    const ca = (f && f.categoryAxis) || {};
-    if (typeof ca.rotate === 'number') { axis.axisLabel = Object.assign({}, axis.axisLabel, { rotate: ca.rotate }); }
-    if (ca.show === false) { axis.show = false; }
-    return axis;
-  };
-  /** How many points a label goes on: every point at 100%, else every n-th so that the share labelled is about the density. */
-  V.labelEvery = function (f, count) {
-    const d = f && typeof f.labelDensity === 'number' ? f.labelDensity : 100;
-    return d >= 100 || count <= 1 ? 1 : Math.max(1, Math.round(100 / Math.max(1, d)));
-  };
-  V.labelPosition = function (f, horizontal, isLine) {
-    const p = f && f.labelPosition;
-    if (p === 'inside') { return 'inside'; }
-    if (p === 'centre') { return 'inside'; }
-    return horizontal ? 'right' : 'top';
-  };
-  /** 100% stacking: each category's series as shares of the category's total. */
-  V.percentOf = function (series, count) {
-    const totals = new Array(count).fill(0);
-    series.forEach((s) => s.values.forEach((v, i) => { if (typeof v === 'number') { totals[i] += Math.abs(v); } }));
-    return series.map((s) => Object.assign({}, s, { values: s.values.map((v, i) => (typeof v === 'number' && totals[i] ? v / totals[i] : null)) }));
-  };
-  /** A series' colour from the format (`seriesColours` by series name or measure), else null. */
-  V.seriesColour = function (f, name, measure) {
-    const m = (f && f.seriesColours) || {};
-    const c = m[name] || m[measure];
-    return HEX.test(c || '') ? c : null;
   };
 
   // ---- the frame ---------------------------------------------------------------------------------------------------------

@@ -150,8 +150,8 @@
   ],
   "files": {
     "CHANGELOG.md": {
-      "bytes": 43441,
-      "integrity": "sha384-d0D/NY9hykfItO9h76O/YzM56pLhPW5dE2UmfDaRvPowNMEuA6i1aBASLzKGp+B/"
+      "bytes": 44700,
+      "integrity": "sha384-rmHJNjc0M61oZXZFUPcums/GQ7GqEFYidcWFfefN1rKAhn3tjkhufJg5H8ffptpW"
     },
     "LICENSE": {
       "bytes": 3869,
@@ -218,16 +218,24 @@
       "integrity": "sha384-kpZwpA7EaAwT79FkrPeAXmakxie1lecbdFtAoqBOEGKmp8hIqNMiaPfQJj3mPts5"
     },
     "elements/drishti-chart/drishti-chart-geo.d.ts": {
-      "bytes": 6584,
-      "integrity": "sha384-774zphwsjqJ5i/ZyxtqFGBeqquqKRoG4gXqOGjuZwLM9MXgKO5pbrsg5emtVv3YK"
+      "bytes": 7207,
+      "integrity": "sha384-FgnwtlIEVAo2V39UlrxmVgiau0K2qaqwryDpXYXchGW+Y3hkUbRNuFRO8Voot2fU"
+    },
+    "elements/drishti-chart/drishti-chart-report.d.ts": {
+      "bytes": 14924,
+      "integrity": "sha384-W7Q35iFLyZ1lUd8suON5J+zYQlGDlcFmqBNnTCMACfz7HGZrh1Ofg6g8Cgv2X0hO"
     },
     "elements/drishti-chart/drishti-chart.d.ts": {
-      "bytes": 52282,
-      "integrity": "sha384-57v+lNaGTDE72/kLPDFHW2Im1Z1ImJsN0jehyjBrIMM9mqDFjtnx7GCFUXfCAykt"
+      "bytes": 52905,
+      "integrity": "sha384-o0zccIk47ft3jwNjmPaG4R5eowEYA5wAheQzdayUe8uru7GiQMfZg9ZF0X/zeFKU"
     },
     "elements/drishti-chart/drishti_chart-geohelper.js": {
       "bytes": 13589,
       "integrity": "sha384-lkV9PhwSxe1ZI9NLDTd7vWFHCLQI/pp4Q2BJlHbS8dKnm+oGJ2dXKKOKf0lKFZR6"
+    },
+    "elements/drishti-chart/drishti_chart-report.js": {
+      "bytes": 66064,
+      "integrity": "sha384-quTDRNv4fM3HYKa1BaBH7/VLO7MJR8igOiXOG/xwFXKzAL0+DrqsXn7u6j7rDgGc"
     },
     "elements/drishti-chart/drishti_chart.css": {
       "bytes": 18970,
@@ -309,6 +317,14 @@
       "bytes": 6425,
       "integrity": "sha384-q9R6KDyr2S4uxb3xpbZn8n7HF1tzMYI7HKxuRXv6aXni5qZgu2or/KiZEqUyp/AR"
     },
+    "elements/drishti-chart/src/drishti_chart-report-kinds.js": {
+      "bytes": 40654,
+      "integrity": "sha384-vgGRU8w2QqPd0PU2PNU8d4A3K//H02oGVbKK1bXEQuTjajiAqogEkKe0ShOvCL4y"
+    },
+    "elements/drishti-chart/src/drishti_chart-report.js": {
+      "bytes": 33289,
+      "integrity": "sha384-KGKMCTKyJuL3iQV1EZTBq7D8OLwtWHWF45pp81gGN3pP6jQ1+C7fSHLAaEdDKBn/"
+    },
     "elements/drishti-chart/src/drishti_chart-scale.js": {
       "bytes": 3865,
       "integrity": "sha384-vhZe8kcQgPYHnQhVSuaa0dyE36lU2LJLD/AAKXZss90q05esLr8soFNWHaQaCcsv"
@@ -362,8 +378,8 @@
       "integrity": "sha384-wKdYYFlKGgE01sISfbqd8rQ6Oa810dc/HZBQ1XJSHIPszJBynGp6MzDv4VD3PN83"
     },
     "elements/drishti-core/drishti_core.js": {
-      "bytes": 185096,
-      "integrity": "sha384-XLvk7t+TBJ0zGSN78z4bNSO1zgX8L/ltbkZrdy/+5oCByXBsjd0k87TBQVE2gK8I"
+      "bytes": 185222,
+      "integrity": "sha384-mvSUaoTWcpMPdxqJfXQturAnZ/+eb0r9mwyxQKHIfMuDAbj4XYZE17uTL41ku3xO"
     },
     "elements/drishti-core/src/drishti_a11y.js": {
       "bytes": 6884,
@@ -442,8 +458,8 @@
       "integrity": "sha384-lHSTxqUUddotPYa1DCNrFVzXDstNreD675E693B6E9pAS8xEFjJRmYx7aWEYUr2W"
     },
     "elements/drishti-core/src/drishti_manifest.js": {
-      "bytes": 10487,
-      "integrity": "sha384-WdOHIgDU5xo90Zx9XMHP5hs/BX6Jkvi6Bn/AEGS5PcS8s217I3kSS3fMdYuazpoE"
+      "bytes": 10597,
+      "integrity": "sha384-7NNX7h/JIyhq7MEuiaeUu9q99ttsSt2pjDZ3nzqN7p2o6DDm8D8ttUusWzU8TAIR"
     },
     "elements/drishti-core/src/drishti_overlay.js": {
       "bytes": 7912,
@@ -1326,12 +1342,12 @@
       "integrity": "sha384-8sF2K2+7bGkkCdmNtdWpSGljCBdywOtIf1lNBYapAAQg1CYeAbIzVmAt5QGgxVQt"
     },
     "elements/drishti_elements.json": {
-      "bytes": 9748,
-      "integrity": "sha384-ZcL1WIe6/3tyN4UdAPQxVGbViWApdqCA/khSR5wHEt2N/Mo3tzjA5ekQLT/uRksw"
+      "bytes": 9873,
+      "integrity": "sha384-/oafg6b6c41l2GfhoKV7FpIf1q9ANaf2+zGC5Ueh7VHfK5al5a8jVSMhO7tJWnAl"
     },
     "gallery/drishti_catalogue.js": {
-      "bytes": 1146977,
-      "integrity": "sha384-hJo+eeQAiLyXfTGQwSHflDnInrAmS/953P30VQFLWPWLIZ0n/ebA+SZgjQMedT2h"
+      "bytes": 1165832,
+      "integrity": "sha384-/dV45noTL/ONiPbq+TcKKYO6T8L0fS8Fvoag2fngBwT8B1rkvcOsXnkroCTJ1n/R"
     },
     "gallery/drishti_gallery-boot.js": {
       "bytes": 3662,

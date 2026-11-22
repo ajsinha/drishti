@@ -32,7 +32,8 @@ import java.util.Map;
  * (overlay, owned or a source command), the reason, who and when. Kept as JSON in the edit log's {@code body} and in
  * {@code drishti_edit_request} while it awaits approval.
  *
- * @param id the change id ({@code chg-} and a ULID: time-ordered); a retry or resend is recognised by it
+ * @param id the change id ({@code chg-} and a ULID, or the client's own: a live table's change keeps Rachana's id end to end); a retry or
+ *     resend is recognised by it and answered again
  * @param key the queue key: {@code kind:entity}
  * @param kind the record's kind
  * @param entity the record's id

@@ -7,7 +7,7 @@
 # NSET: netting sets, the data contract
 
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
-[IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+[the release notes](../../RELEASE_NOTES.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).

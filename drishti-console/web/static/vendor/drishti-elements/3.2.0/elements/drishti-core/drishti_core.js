@@ -2085,6 +2085,10 @@
             "geo": {
               "file": "drishti-chart/drishti_chart-geohelper.js",
               "css": []
+            },
+            "report": {
+              "file": "drishti-chart/drishti_chart-report.js",
+              "css": []
             }
           }
         },

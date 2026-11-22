@@ -6,7 +6,7 @@
 
 # Data contracts for computed measures
 
-*Revision 1.0 · 2026-10-25 · Companion to [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+*Revision 1.0 · 2026-10-25 · Companion to [the release notes](../../RELEASE_NOTES.md)*
 
 Drishti keeps **fundamental data** as it is and **computes every risk measure when asked**, for any scope, from trade-level inputs in one
 common risk lake. Each document in this folder is the **data contract** of one measure, or of one group of related commands. It states
@@ -87,7 +87,7 @@ connector each. Every input of every computed measure lives under the domain `ri
 (market-risk, counterparty-risk, and later the balance-sheet packs) reads it through one connector, `risk-store`:
 
 ```
-${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
+${DRISHTI_DELTA_ROOT}                         default ${lake.data.dir}/delta
 └── risk/                                     the common risk lake (domain: risk)
     ├── position/                             one Delta table per kind
     ├── pnl-vector/
