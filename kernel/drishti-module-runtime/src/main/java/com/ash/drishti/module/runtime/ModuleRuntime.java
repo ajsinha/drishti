@@ -245,8 +245,7 @@ public final class ModuleRuntime implements AutoCloseable {
         }
         Map<String, Object> p = c.yaml(plugin, "V1");
         if (!"2".equals(DmodManifest.str(p.get("format")))) {
-            notes.add("console plugin format 1 is read for one release; its routes are not in the route table (move to format 2)");
-            return out;
+            throw new ModuleRefusedException("V1", m.label() + ": " + plugin + ": the console plugin must say format: 2 (format 1 is not read)");
         }
         Set<String> ids = new HashSet<>();
         if (p.get("routes") instanceof List<?> list) {

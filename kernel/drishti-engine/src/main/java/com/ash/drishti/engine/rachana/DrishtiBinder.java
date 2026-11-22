@@ -89,7 +89,7 @@ public final class DrishtiBinder {
                 .withPanel(PanelKind.PROVENANCE, (p, c, b) -> provenance(c))
                 .withLabels(com.ash.drishti.inference.Semantics::humanize)
                 .withLimits(limits == null ? PanelLimits.defaults() : limits)
-                .withPivot(new PivotLimits(pv.enabled(), pv.maxRecords(), "drishti.engines.pivot.enabled"));
+                .withPivot(new PivotLimits(true, pv.maxRecords(), "drishti.engines.pivot.enabled"));
     }
 
     private static Host host(BindContext c) {
