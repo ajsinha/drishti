@@ -52,6 +52,7 @@
     <module>testing/drishti-testroots</module>
     <module>testing/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
+    <module>kernel/drishti-engine-host</module>
     <module>lake/drishti-lake-host</module>
     <module>net/drishti-net</module>
     <module>compute/drishti-compute</module>
@@ -108,6 +109,9 @@
     <drishti.tools.version>1.1.0</drishti.tools.version>
     <!-- the pinned Drishti Lake release (DRISHTI_LAKE_DESIGN D1): the tag v0.9.1 -->
     <drishti.lake.version>0.9.1</drishti.lake.version>
+    <!-- Drishti Engine (github.com/drishti-platform/drishti-engine, docs/architecture/ENGINES_IN_DRISHTI.md): engine-api and engine-host, the
+         server's own, shared with every engine JAR of <home>/lib/engines; provided in each module (the exec jar carries them). develop until 1.0. -->
+    <drishti.engine.version>0.1.0-SNAPSHOT</drishti.engine.version>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -168,6 +172,8 @@
   <dependencyManagement>
     <dependencies>
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-bom</artifactId><version>${drishti.tools.version}</version><type>pom</type><scope>import</scope></dependency>
+      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><version>${drishti.engine.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><version>${drishti.engine.version}</version><scope>provided</scope></dependency>
       <!-- one Parquet version everywhere: Delta Kernel brings parquet-hadoop 1.16, Iceberg parquet-column 1.18; mixed, the page index fails -->
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-hadoop</artifactId><version>${parquet.version}</version></dependency>
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version></dependency>
@@ -237,6 +243,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine-host</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId><version>${project.version}</version></dependency>

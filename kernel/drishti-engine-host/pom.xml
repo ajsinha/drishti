@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-engine-host</artifactId>
+  <name>drishti-engine-host</name>
+  <description>Drishti hosts engines (docs/architecture/ENGINES_IN_DRISHTI.md): the engine JARs of &lt;home&gt;/lib/engines loaded through
+    drishti-engine's engine-host (a class loader per JAR, start checks, version and licence refusals, the lifecycle, health and stats), bound
+    from config/engines/&lt;id&gt;.yaml (inputs to kinds and lake tables over the read API, options, schedules, outputs to lake and live tables,
+    access), with the caller's row rules and masks applied on inputs and outputs. Plain Java: the server wires it to Spring, the router and
+    the access rules through small ports.</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- stored outputs: written the one way Drishti Lake offers a host (LakeRowsLoad) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
+    <!-- the server's own, shared with every engine JAR (ENGINE_INTEGRATION_DESIGN section 0.5): provided here, compile in drishti-server -->
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <!-- the sample engine's workbook writer is a platform library the host provides (com.ash.tools.xlsx) -->
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-xlsx</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <resources>
+      <!-- the versions of the platform libraries this build provides to engines (Provided.line), from the pins above -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <!-- the tests drop the sample engine's JAR into a temporary lib folder, as a site copies it: never a dependency of any module -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sample-engine-jar</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>copy</goal></goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.ash.engine</groupId>
+                  <artifactId>engine-sample</artifactId>
+                  <version>${drishti.engine.version}</version>
+                  <type>jar</type>
+                  <destFileName>engine-sample-1.0.0.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/engines</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <engine.sample.jar>${project.build.directory}/engines/engine-sample-1.0.0.jar</engine.sample.jar>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
