@@ -373,6 +373,53 @@ them. Lines removed: 0.
 | VaR/ES goldens | not affected (no engine or test-data file changed; not run) |
 
 
+### Pass 3 live tables, the switch-over (2026-11-21, on `g4/live-2` from `wip/g4-rehearsal-rx`)
+
+The owner's rule (no dual machinery at the drill) overrides cut line DC1: the switch is made and the liveset engine deleted. Built against
+drishti-rachana `develop` (`7b16e0a0`, with LV5 below), Drishti Lake `94dd281` (Lake `main` 0.9.0 refuses `${drishti.data.dir}` in a lake
+file since G3 F5: every `config/lakes/*.yaml` must move to `${lake.data.dir}` before the re-pin; the Spring context does not start
+otherwise) and Drishti Tools 1.0.0-SNAPSHOT (the branch's pin), in `~/.cache/drishti-lanes/g4-live2/m2`.
+
+**What was built**
+
+| Gap | Where | How |
+|---|---|---|
+| LV1 search grammar → filter tree | `drishti-engine` `SearchFilter` (one compiler) | `SearchQuery.pick` and the search's own name resolution, the condition made row-relative (`@.X`), `startsWith` as `starts_with`, Rachana's `FilterTree.of` for the tree; an id pattern is a condition on `id`; the order a `{col, dir}` (else by id), the limit the search's. A condition outside the tree's subset (`matches`, `size`, links) has no tree and stays in the table's `where:` |
+| FORM results | `server.live.FormResults`, `GET /api/v1/rdp/searches` | a table of the kind per (columns, day[, kept condition][, audience when spanning]) declared in code (`q-<hash>`, its source in `LiveSources`), read with `{filter, sort, limit}`; whole when a column is not a lake column; a condition on a field masked for the person answers no row (the protocol refuses such a filter, 403) |
+| As-of dates | `KindBindings` with `AsOf`, `KindSnapshot` | a day other than the live one reads the lake as of that day (columns and documents) and the table has no stream (`live: false`) |
+| Drishti*net fan-out | `KindSnapshot.Peers`, `KindStream.Peers`, `PeerSources.subscribeKind`, `GET /api/v1/net/changes/{kind}` | for a person whose search the cluster routing scatters: the table is the audience's own, whole; its snapshot is this node's rows then each member's share of the search (as the person, one hop), merged by key (higher row version wins when given); each member's changes over the new peer stream (its own records, masked there) |
+| LV5 | Rachana `develop` `cc577818` | `ProtocolHost.keys` public (case `ProtocolHostTest.keysAreReadAsTheProtocolSendsThem`); the mount's copy deleted |
+| Profile in the schema | `LiveTablesController` | `GET /tables/{name}` adds `profile` (kind, links), `tray`, `readOnly` (why not, from the authoriser) and `excludes` (switched-off trading systems) for the grid |
+
+**Deleted**: `server/liveset/*` (8 files, 3,302 lines), its 6 tests (`LiveSetTest`, `StorePagesTest`, `LiveQueryTest`, `LiveIsolationTest`,
+`LiveBlotterBrokerAbsentTest`, `ContractColumnsTest`) and `LiveSetValidationTest`, `/api/v1/live/*`, the console's `/api/live/*`,
+`drishti.live-sets.engine`; `trade.blotter.yaml` is `trade.live.yaml` (LV2: no key field in the form). `KernelLiveQueries` reads
+`FormResults` (the kernel API `LiveQueries` keeps its shape). The console's grids (FORM results, the search page, bare mnemonics, the
+blotter page, the trading landing) paint through the same LiveSetGrid over a Data Protocol adapter in `js/drishti_records.js`
+(query, record, write; changes on the one live channel, `live:<table>[~<filter>]`, events `msg` and `gap`).
+
+**Ported and proved**
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11 LiveSet/StorePages scenarios), `LiveIsolationTest` (3, ported: shared table, scope on reads and changes, whole and paged; masked column refused; audience), `ContractColumnsTest` (3) | pass |
+| `FormApiTest`, `FormResultsParityTest` (10 searches: rows, count, order and columns equal the search's; tree vs kept condition; as-of), `LiveTableValidationTest` (3), `KafkaTradeEditTest` (write through `/rdp/tables/trade/write`, four eyes held then applied once, stale refused) | RESULT_MODULES |
+| Console: `test_live_results`, `test_live_routes`, `test_form_routes`, `test_base_path*` | 78 pass |
+| Blotter browser tests `test_live_grid_browser` (pinned Playwright 1.64.1) | Chromium 15/15; WebKit 15/15 (LD_PRELOAD of `~/.cache/drishti-lanes/webkit-libs`; the clipboard read-back is Chromium-only) |
+| VaR/ES goldens | not affected (no engine, VaR or test-data file changed) |
+| `ArchitectureRulesTest` | RESULT_ARCH |
+
+**Behaviour that changed (findings)**
+
+| # | Finding |
+|---|---|
+| LS1 | A FORM's rows have no title column (a table row has no search title); the id is shown |
+| LS2 | The console's grid follows the table unwindowed on the shared live channel: a change of a row a paged grid does not hold moves its count and **N new** (no top insertion within a second); a windowed stream remains the protocol's (`POST /changes` with `window`) for a client that holds its own connection |
+| LS3 | A source failure answers `503 rdp.unavailable` without the source's words (POS/PORT on a server with no VaR inputs) |
+| LS4 | `asOfNotices` (a trading system answering from an earlier date) are not carried by a search's table yet |
+| LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
+| LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
+
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
 G4 item 10 (I7B_DUPLICATES U1, B6; DD-7: Jinja stays). Branch `g4/renderer` from `wip/g4-rehearsal-rx` `fd1b4a847`. Drishti Elements

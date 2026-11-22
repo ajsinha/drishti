@@ -170,11 +170,13 @@ class KafkaTradeEditTest {
         assertThat(topic()).hasSize(1);
 
         // the blotter's edit is a Data Protocol write on the trade table, handed to the write-back as the person with its change id
-        String id = "01JKAFKAEDIT0000000000001";
-        JsonNode sent = call("POST", "/api/v1/rdp/tables/trade/write", tia, Map.of("id", id, "op", "update", "key", List.of("EN-1"), "basedOn", 1,
-                "reason", "booked to the wrong book", "set", Map.of("PORTFOLIO", "BOOK-B"), "from", Map.of("PORTFOLIO", "BOOK-A")), 200);
+        JsonNode sent = call("POST", "/api/v1/rdp/tables/trade/write", tia, Map.of("id", "01JKAFKAEDIT0000000000001", "op", "update",
+                "key", List.of("EN-1"), "basedOn", 1, "reason", "booked to the wrong book", "set", Map.of("PORTFOLIO", "BOOK-B"),
+                "from", Map.of("PORTFOLIO", "BOOK-A")), 200);
         assertThat(sent.path("state").asText()).as("four eyes: the site's policy for a source amendment").isEqualTo("held");
-        assertThat(call("GET", "/api/v1/changes/" + id, tia, null, 200).path("state").asText()).isEqualTo("awaiting");
+        JsonNode mine = call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes").get(0);
+        String id = mine.path("id").asText();
+        assertThat(mine.path("state").asText()).isEqualTo("awaiting");
         assertThat(topic()).as("nothing is written before the approval").hasSize(1);
         assertThat(call("POST", "/api/v1/approvals/change/" + id + "/approve", tia, Map.of(), 403).path("code").asText()).isNotBlank();
         call("POST", "/api/v1/approvals/change/" + id + "/approve", kim, Map.of("comment", "checked"), 200);

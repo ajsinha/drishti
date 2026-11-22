@@ -134,7 +134,7 @@ public class FormResults {
                     KindStream.Peers changes = members.isEmpty() || !live || peers == null || peers.getIfAvailable() == null ? null
                             : l -> peers.getObject().subscribeKind(f.kind(), p, l)::close;
                     sources.put(name, new LiveSources.Source(f.kind(), at, whole, rows, changes));
-                    tables.declare(spec(name, f, live, kept));
+                    DrishtiLiveTables.declare(tables, spec(name, f, live, kept));
                 }
             }
         }

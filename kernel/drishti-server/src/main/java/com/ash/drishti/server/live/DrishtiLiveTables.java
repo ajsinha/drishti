@@ -148,6 +148,7 @@ public class DrishtiLiveTables {
             return own.isPresent() ? own : defaultSpec(kind, contractColumns(packs, kind), Set.of(), mnemonics.codeFor(kind), "id", narrow);
         });
         DEFAULTS.put(lt, defaults);
+        SPECS.put(lt, specs);
         return lt;
     }
 
@@ -161,6 +162,18 @@ public class DrishtiLiveTables {
     @Bean
     public KindBindings kindBindings(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search, Environment env) {
         return routerBindings(router, search, Duration.ofSeconds(env.getProperty("drishti.live-sets.store-timeout-seconds", Long.class, 120L)));
+    }
+
+    /** The declarations one engine's authoriser and write-back know, by name. */
+    static final Map<LiveTables, Map<String, LiveTableSpec>> SPECS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Declares a table made in code (a FORM's result): known to the authoriser and the write-back as a file's declaration is. */
+    public static void declare(LiveTables lt, LiveTableSpec spec) {
+        Map<String, LiveTableSpec> specs = SPECS.get(lt);
+        if (specs != null) {
+            specs.put(spec.name(), spec);
+        }
+        lt.declare(spec);
     }
 
     /** The authoriser of one engine. */

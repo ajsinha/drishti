@@ -120,7 +120,7 @@ public class LiveTablesController {
         List<List<Object>> window = null;
         boolean top = false;
         if (b.get("window") instanceof Map<?, ?> w) {
-            window = keys(w.get("keys"));
+            window = ProtocolHost.keys(w.get("keys"));
             top = Boolean.TRUE.equals(w.get("top"));
         }
         SseEmitter emitter = new SseEmitter(0L);
@@ -181,7 +181,7 @@ public class LiveTablesController {
             return ResponseEntity.status(404).body(ProtocolError.of("rdp.table.unknown", 404, "no windowed stream '" + sub + "' of yours",
                     "operation", "window").body());
         }
-        o.sub().window(keys(body.get("keys")), Boolean.TRUE.equals(body.get("top")));
+        o.sub().window(ProtocolHost.keys(body.get("keys")), Boolean.TRUE.equals(body.get("top")));
         return ResponseEntity.noContent().build();
     }
 
@@ -213,16 +213,5 @@ public class LiveTablesController {
             }
         }
         return ResponseEntity.status(a.status()).body(a.body());
-    }
-
-    /** A window's keys as the protocol sends them: each a list of key values (a single value is a one-column key). */
-    static List<List<Object>> keys(Object o) {
-        List<List<Object>> out = new java.util.ArrayList<>();
-        if (o instanceof List<?> l) {
-            for (Object k : l) {
-                out.add(k instanceof List<?> kl ? new java.util.ArrayList<>(kl) : java.util.Collections.singletonList(k));
-            }
-        }
-        return out;
     }
 }
