@@ -165,7 +165,7 @@ tables:
 Why each key is there, and the arithmetic behind keeping `partition-by` short, is the guide's
 [section 2](../guides/DATA_LAKE_GUIDE.md#2-the-lake-file-every-key). A partition column needs a plain name (letters, digits, `_`, `-`);
 its values may hold anything (`Fixed income`, `100%`, `x/y`): the folders are named as Spark names them, so Databricks and the other Delta readers
-read the lake as it is (the loader's rules and guards are Drishti Lake's: [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/LOADER.md)) ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+read the lake as it is (the loader's rules and guards are Drishti Lake's: [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 **The command line.**
 
