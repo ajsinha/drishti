@@ -538,7 +538,10 @@ def test_a_system_basket_page_lists_its_positions_and_opens_one_beside(stack, br
     wait(pg, "location.pathname.indexOf('/v/system-basket/PF-ASHA-UNWIND') === 0", 30)
     wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
     pg.goto(str(stack) + "/go?q=PORT+%3CGO%3E")                           # PORT alone: the system baskets to pick from
-    wait(pg, "document.body.innerText.indexOf('PF-RATES-DESK') >= 0", 30)
+    wait(pg, "document.querySelectorAll('.dg-row[data-key]').length > 3", 30)
+    # the records grid draws only the rows in view (28 baskets, one long definition each): its quick filter finds the one asked for
+    pg.locator("input.dg-quick").first.fill("PF-RATES-DESK")
+    wait(pg, "[...document.querySelectorAll('.dg-row[data-key]')].some(r => r.innerText.indexOf('PF-RATES-DESK') >= 0)", 30)
     pg.close()
 
 
