@@ -337,7 +337,7 @@ column, so small groups make single reads cheap; column scans barely notice.
 
 | Writer | Row group | Set by |
 |---|---|---|
-| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (the Java writer) | **256 KB**, pages of 64 KB | `LAKE_PARQUET_ROW_GROUP_KB`, `LAKE_PARQUET_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_GUIDE.md section 7.1](../../docs/guides/CLUSTER_GUIDE.md#133-the-layout-buckets-tables-partitions-files)) |
+| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel loader into **Delta** (Drishti Lake's writer) | **256 KB**, pages of 64 KB | `LAKE_PARQUET_ROW_GROUP_KB`, `LAKE_PARQUET_PAGE_KB`; the AWS deployment sets 1 MB ([CLUSTER_GUIDE.md section 7.1](../../docs/guides/CLUSTER_GUIDE.md#133-the-layout-buckets-tables-partitions-files)) |
 | the parallel loader into **Iceberg** | 1 MB, unless the layout sets `rowGroupBytes` | the loader's configuration ([DATA_LAKE_GUIDE.md section 3.3](../../docs/guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader)) |
 | the Python writers on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** | the pack's layout |
 

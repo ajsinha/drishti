@@ -2586,8 +2586,7 @@ C hides errors in a corner and is kept only for `--shots` runs.
 ```
 
 Packs and inbox rules are **found** top down (the first place that has it). Connectors are **layered** bottom up (the template, then
-the site's changes over it). Bindings are **decided** top down (the site's entry, else what the templates declare). The working
-paper beside this section ([pack-resolution-inventory.md](pack-resolution-inventory.md), internal) lists every reader and the tests.
+the site's changes over it). Bindings are **decided** top down (the site's entry, else what the templates declare).
 
 ### 18.1 The one source of "what is on"
 
