@@ -296,3 +296,52 @@ removed. Nothing was written to `~/.m2`, to `/tmp` by me, or to any product repo
 ## Decisions taken (lead, under the owner's delegation, 2026-11-21)
 
 All eight section-6 recommendations are accepted: a fragment used from a Sutra of another level is refused; Elements next is 3.3.0 (v3.2.0 stays at 787f97d); the files store is BUILT on S3 and memory (owner parity rule: build, not declare); Lake's drishti.* read-both is removed now; a lost concurrent replace fails on every store; newest load is by commit order, not clock; rachana-server may use tools-csv (Core stays dependency-free); a short re-check of the Rachana and Lake fix commits before tagging. Tools v1.0.0 is tagged now on a version commit over 3ef8e9d.
+
+## Re-check (final, 2026-11-21 21:15)
+
+**Verdict: GOLDEN.** Nothing blocks the three tags. Findings F1, F2, F4, F5, F6 and F7 are closed; F3 and F8 are in Elements 3.3.0.
+
+### The commits to tag
+
+| # | Repository | Tag | Commit | Evidence |
+|---|---|---|---|---|
+| 0 | `drishti-tools` | `v1.1.0` (already tagged) | `4d3567a2d31ca270e2d1e1863d5c8dbdb38f9830` | built and installed by this gate, green |
+| 1 | `drishti-lake` | `v0.9.0` | **`eed492ad859d800b06dd3519ba588eaa90ae5f46`** (`main`) | this gate's own `tools/ci/check.py` on this commit: all green (delta-rs interop 3 + 3 + 2, none skipped; Python 142 passed; kit 562 results twice, stable; coverage 79 of 115, 59 cases, none removed; reference 93 identical + the 3 known Iceberg undo differences) |
+| 2 | `drishti-rachana` | `v0.12.0` | **`038ea4bb040bad6b2b7890a4ab5e2e88eaa80afa`** (`develop`, "Release 0.12.0") | this gate's full verify of `73c76065` (1,150 Java tests, 44 Node, four lanes, F1 and F2 probes); on top of it only: `ProtocolHost.keys` public, launchers, the two-line Tools 1.1.0 change (`92cf1ff9`) and the version commit, each read as a diff; the builder's full verify green on `92cf1ff9` and `038ea4bb` |
+| 3 | `drishti-elements` | `v3.3.0` | **`3363c9f16ec5441aa9570acd8cdcfdcbd8182bdb`** (`develop`, "Release 3.3.0") | the version commit read as a diff (version file, bundles, changelog heading, both Rachana pins); the builder's `run_tests` green with nothing skipped; the ViewModel schema copy is byte-equal to Rachana `038ea4bb` (sha256 `10894f18…ba20`, compared by this gate) |
+
+Order: Lake and Rachana first (both need only the Tools tag, which exists), Elements last, since its pins name the Rachana commit that
+becomes `v0.12.0`. No tag of these names exists on any of the three remotes today.
+
+### What changed since the first re-check, and how it was judged
+
+- **Lake `main` moved after `eafbd4e`** (the commit the first re-check and the builder's probes ran on): `bcff31d` (loader rows keep
+  their vectors in the stored form `{"$vector": "<column>"}`, Java `RowParser` and Python `rowrule`, kit case
+  `load/loader-rows-stored-vectors`) and `eed492a` (launchers only). `bcff31d` changes the loader's row path and is listed under 0.9.0 in
+  the changelog, so the tag belongs on `eed492a`, not `eafbd4e`; that is why the full check was run again on it. The diff was read: the
+  stored form is taken only for loader rows, only when the object is exactly the one field naming the vector's own column; a null column
+  is no vector; a missing column, a non-list value or another column's name is rejected; the kit case holds all seven rows.
+  The builder's probes (F5 four-loader same-date replace on Delta, Iceberg and files, local and memory; guards; `lake maintain` on every
+  store including S3) ran on `eafbd4e`; nothing in the two later commits touches commit, replace, guard or maintain code, so they stand.
+- **Rachana**: finding 1 of the first re-check (Rachana did not build against Tools 1.1.0) is fixed exactly as asked: the pin is 1.1.0
+  and `rachana-server` requires `com.ash.tools.csv`. The release commit changes versions only (25 files, one line each); no
+  `0.11.0` or `-SNAPSHOT` is left outside the changelog and the compat corpus.
+- **Elements**: the 3.3.0 version commit exists; the live-host pin and the ViewModel pin both name `038ea4bb` in full.
+
+### Cross-stack versions at the tags
+
+| Link | State |
+|---|---|
+| Lake 0.9.0 uses Tools | 1.1.0 |
+| Rachana 0.12.0 uses Tools | 1.1.0 (`tools-csv` only, module `com.ash.tools.csv`) — one Tools version for a host that takes both |
+| Elements 3.3.0 tests pin Rachana | `038ea4bb` = `v0.12.0` |
+| Rachana 0.12.0 vendors Elements | **3.2.0**, not 3.3.0 (`ELEMENTS_VERSION`, `drishti.elements.version`). A host that wants Elements 3.3.0 takes it from the Elements tag itself; Rachana 1.0.0 vendors 3.3.0 |
+
+### Known and open, not blockers (G4 / Lake follow-up)
+
+- Iceberg `sorted-and-filed` is false in read-ids.
+- Lake's retention keeps one date fewer than Drishti's old rule: Drishti's G4 move must state the count it wants.
+- Rachana 0.12.0 vendors Elements 3.2.0 (above).
+- `S3LoadTest` failed once in this gate's first run on `eed492a` with "Port 18751 was already in use" and passed on the rerun and on
+  `eafbd4e`: `S3MockServer` picks a free port and binds it later, so a second lane on the machine can take it in between. A test-harness
+  race, not product code; fix in the Lake follow-up (bind port 0, or retry on a new port), because a drill with lanes in parallel can meet it.
