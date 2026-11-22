@@ -54,7 +54,11 @@ public final class LifecycleService {
         this.sources = sources;
         this.connectorNames = connectorNames;
         com.ash.drishti.api.lifecycle.LifecycleMachine.Listener tell = e -> {
-            audit.record(e.actor(), e.auditAction(), e.target(), e.words());
+            // a person's transition, and every refusal or failure, is audited; the server's own (a boot, a connector file's restart) is not:
+            // it would bury the people's in a row per connector at every start, and those changes have their own audit entries already
+            if (!(com.ash.drishti.engine.source.SourceRegistry.SYSTEM.equals(e.actor()) && "done".equals(e.outcome()))) {
+                audit.record(e.actor(), e.auditAction(), e.target(), e.words());
+            }
             listeners.forEach(l -> l.accept(e));
         };
         packs.onTransition(tell);

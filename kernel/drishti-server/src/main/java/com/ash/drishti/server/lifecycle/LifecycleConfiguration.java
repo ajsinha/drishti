@@ -169,6 +169,9 @@ public class LifecycleConfiguration {
         }
         EngineRegistry.State s = r.state(id);
         String why = s.word() + (r.reason(id).isEmpty() ? "" : ": " + r.reason(id));
+        if ("SUSPENDED".equals(s.name())) {
+            return ComponentHealth.of(ComponentHealth.Status.SUSPENDED, why, now);   // the engine specification's suspend (section 7.1)
+        }
         return switch (s) {
             case RUNNING -> ComponentHealth.up(now);
             case STARTING -> ComponentHealth.of(ComponentHealth.Status.DEGRADED, why, now);
