@@ -37,7 +37,7 @@ class DeltaDocDiskCacheTest {
     private DeltaSourcePlugin plugin(Path root, Path cache) throws Exception {
         DeltaSourcePlugin p = new DeltaSourcePlugin();
         p.start(DatedSourceContract.context(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake", "engine", "native",
-                "layout.trade.columns", "mtm,book,nettingSet,counterparty.id", "doc-disk-cache.enabled", "true", "doc-disk-cache.dir", cache.toString(),
+                "layout.trade.columns", "mtm,book,nettingSet,counterparty.id", "doc-disk-cache.enabled", "true", "doc-disk-cache.dir", cache.toString(), "id-map-disk.dir", tmp.resolve("data").resolve("cache").resolve("lake").resolve("idmaps").toString(),
                 "doc-cache-mb", "0")));
         return p;
     }

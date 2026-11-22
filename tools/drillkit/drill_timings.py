@@ -24,11 +24,14 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
 
 _seconds: dict[str, float] = defaultdict(float)
+_phases: dict[str, dict] = {}   # the journal: a test's phases until its teardown reports
+_CONFIG = None
 _PAUSE = 300.0        # seconds a test waits at most for memory: never fails it, and a drill that is really out of memory still shows
 
 
@@ -51,9 +54,65 @@ def pytest_runtest_setup(item) -> None:
         time.sleep(2)
 
 
+def pytest_configure(config) -> None:
+    global _CONFIG
+    _CONFIG = config
+    if str(Path(__file__).parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).parent))
+
+
+def _plain(nodeid: str) -> str:
+    """A test id without the "@group" suffix --dist loadgroup puts on it (the journal's ids are the same in every run)."""
+    at = nodeid.rfind("@")
+    return nodeid[:at] if at > nodeid.rfind("]") and at > nodeid.rfind("::") else nodeid
+
+
+def pytest_collection_modifyitems(config, items) -> None:
+    """The drill's resume (DRILL_RESUME_FILE, written by drill_journal.py snapshot before the lane starts, so every worker sees the same
+    list): a test that passed at this commit with the same file key is not run again."""
+    path = os.environ.get("DRILL_RESUME_FILE")
+    if not path or not Path(path).is_file():
+        return
+    import drill_journal
+    done = {r["id"]: r["key"] for r in drill_journal.read(path)}
+    root, keys, keep, gone = Path(str(config.rootpath)), {}, [], []
+    for item in items:
+        f = item.nodeid.split("::", 1)[0]
+        if f not in keys:
+            keys[f] = drill_journal.py_key(root, item.nodeid)
+        (gone if done.get(_plain(item.nodeid)) == keys[f] else keep).append(item)
+    if gone:
+        config.hook.pytest_deselected(items=gone)
+        items[:] = keep
+        wid = getattr(config, "workerinput", {}).get("workerid", "gw0")
+        if wid == "gw0" and os.environ.get("DRILL_RESUMED"):   # one worker counts (every worker collects the same tests)
+            drill_journal.append(os.environ["DRILL_RESUMED"], {"lane": os.environ.get("DRILL_LANE", ""), "count": len(gone)})
+
+
+def _journal(report) -> None:
+    """One line per finished test, at its teardown (a test killed mid-way leaves none): failed when any phase failed."""
+    path = os.environ.get("DRILL_JOURNAL")
+    if not path:
+        return
+    st = _phases.setdefault(report.nodeid, {"failed": False, "called": False, "secs": 0.0})
+    st["secs"] += float(getattr(report, "duration", 0.0) or 0.0)
+    st["failed"] |= report.outcome == "failed"
+    st["called"] |= report.when == "call" and report.outcome == "passed"
+    if report.when != "teardown":
+        return
+    st = _phases.pop(report.nodeid)
+    import drill_journal
+    outcome = "failed" if st["failed"] else "passed" if st["called"] else "skipped"
+    drill_journal.append(path, {"lane": os.environ.get("DRILL_LANE", ""), "id": _plain(report.nodeid), "outcome": outcome,
+                                "seconds": round(st["secs"], 2), "commit": os.environ.get("DRILL_COMMIT", ""),
+                                "key": drill_journal.py_key(Path(str(_CONFIG.rootpath)), report.nodeid), "module": ""})
+
+
 def pytest_runtest_logreport(report) -> None:
-    """Adds one phase's duration to its file."""
+    """Adds one phase's duration to its file; the controller (or the one process) journals the finished test."""
     _seconds[report.nodeid.split("::", 1)[0]] += float(getattr(report, "duration", 0.0) or 0.0)
+    if _CONFIG is not None and not hasattr(_CONFIG, "workerinput"):
+        _journal(report)
 
 
 def pytest_sessionfinish(session, exitstatus) -> None:

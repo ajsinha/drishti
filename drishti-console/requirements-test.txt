@@ -10,9 +10,11 @@ jsonschema>=4.21      # the data contracts' schema checks (tools/contracts.py an
 # Test-only: the drishti.quant tests (tests/test_quant.py) check Calc's analytics against textbook values in plain
 # CPython. Not needed to run the console (Calc's Python runs in the browser), so not in requirements.txt.
 -r requirements.txt
-numpy>=2.0
-pandas>=2.2       # tests that run the compute pool's engine or a promoted draft in-process (test_transform_editor.py, test_bi_notebook.py)
-scipy>=1.13
+# the compute pool's libraries at the versions config/compute/locks/python.lock pins: the browser tests run the server's pool `python` on
+# this interpreter, which refuses every run while one of them differs (test_bi_notebook.py checks the two agree)
+numpy==2.5.3
+pandas==3.0.6     # tests that run the compute pool's engine or a promoted draft in-process (test_transform_editor.py, test_bi_notebook.py)
+scipy==1.18.1
 # Test-only: tests/test_live_tabs_browser.py drives Chromium (many live tabs, UX-01). Skipped unless the browser is there
 # too: `python -m playwright install chromium`.
 playwright~=1.64.0       # 1.64.x only: the browsers and the visual snapshots are of one version (the drill's readiness check asks for it)

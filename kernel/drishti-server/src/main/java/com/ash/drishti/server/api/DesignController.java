@@ -439,7 +439,7 @@ public class DesignController {
         List<Op> ops = BuilderController.ops(b);
         OpResult[] result = new OpResult[1];
         StoredDesign d = designs.applyOps(who.user(), id, baseRev, yaml -> {
-            OpResult r = applier.apply(yaml, ops);
+            OpResult r = com.ash.drishti.rachana.DrishtiRachana.drs(applier.apply(yaml, ops));
             result[0] = r;
             java.util.Set<Integer> failed = new java.util.HashSet<>();
             r.problems().forEach(p -> failed.add(p.op()));

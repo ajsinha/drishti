@@ -25,6 +25,7 @@ import re
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
@@ -208,10 +209,22 @@ def _stop_pool():
 atexit.register(_stop_pool)
 
 
-def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False, ready=None):
+def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False, ready=None, lane=False, own_console=False):
     """A real server and a console in front of it, from this worker's pool (StackPool): yields the Stack, stops it (or keeps it idle for the
     next file asking the same, when ``shared``) when the caller's fixture ends. ``ready(stack)``: run once after a start, before a shared
     server's folder is fingerprinted (what the server does by itself at start is never counted against the file)."""
+    import lane_servers
+    if lane_servers.enabled() and work is None and (shared or lane or (not extra_env and not auth)):
+        # one server per lane (TEST_HARNESS.md, "Lane servers"): the default set-up and every read-only shared one; the file keeps its own
+        # names on it. own_console: the file's console reads settings from this process's environment (a console of its own, in front of
+        # the lane's server).
+        st = lane_stack(tmp_path_factory, extra_env, auth, None if heap == "768m" else heap, ready)
+        if own_console:
+            for url in _console_in_process(st.server, auth):
+                yield Stack(url, st.work, st.server)
+        else:
+            yield st
+        return
     key = (tuple(sorted(extra_env.items())), auth, heap)
     if shared and work is None and key in POOL.idle:
         gen, st = POOL.idle.pop(key)
@@ -243,16 +256,8 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
             next(gen, None)
 
 
-def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
-    if jar() is None or not JAVA.exists():
-        pytest.skip("needs the server jar (python tools/drishti.py build jar) and JDK 25")
-    import uvicorn
-
-    from core.app import create_app
-    from core.config import Settings, load_settings
-
-    port = free_port("DRISHTI_WB_SERVER_PORT")
-    work = work or tmp_path_factory.mktemp("wb-server")
+def _prepare_work(work: Path) -> None:
+    """The server's folder: the committed config linked in (the site's own parts never), the module folders beside it."""
     if (ROOT / "config").exists():                 # the server reads config beside where it runs; its data stays in the scratch directory
         (work / "config").mkdir()
         for sub in (ROOT / "config").iterdir():    # each committed part linked; the site's own parts never (SITE_CONFIG)
@@ -263,47 +268,77 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     for name in ("modules", "lib"):                # the module folders (the kernel's packs and jars) beside the config, as the server reads them
         if (ROOT / name).exists() and not (work / name).exists():
             (work / name).symlink_to(ROOT / name, target_is_directory=True)
+
+
+def _launch_server(work: Path, port: int, extra_env: dict, heap: str, own_session: bool = False) -> subprocess.Popen:
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
            **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     # the server's heap: 768 MB for a page's worth of data; a file whose server holds a year of VaR history says so (heap="1536m")
-    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    return subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
+                            stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT, start_new_session=own_session)
+
+
+def _wait_server(proc: subprocess.Popen, port: int, work: Path) -> None:
+    """Waits until the server is ready: skips when it exited, fails when it never answers."""
+    # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
+    # that never answers fails rather than skipping every test of the file in silence. Ready is Spring's own readiness state, which turns
+    # UP only after the start's last step (the distribution's modules installed and recorded in data/modules/registry.json): the web
+    # layer answers seconds earlier, and a shared server fingerprinted then saw its own start's registry write as the file's (drill of
+    # 2026-11-16), and a page of a module still loading (EXP of banking) had no console part yet (as bi_stack.wait_ready).
+    deadline = time.monotonic() + 600
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            pytest.skip("the server did not start: " + (work / "server.log").read_text()[-400:])
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/actuator/health/readiness", timeout=2).read(10)
+            return
+        except urllib.error.HTTPError as e:      # 503: listening, still starting
+            if e.code != 503:
+                return                           # sign-in on (401): the server answering
+            time.sleep(0.5)   # wait-ok: polling a server that is still starting
+        except OSError:
+            time.sleep(0.5)   # wait-ok: polling a server that is still starting
+    pytest.fail("the server did not answer within 10 minutes: " + (work / "server.log").read_text()[-400:])
+
+
+def _console_settings(backend: str, auth: bool):
+    from lane_console import console_settings
+    return console_settings(backend, auth, TOKEN_SECRET)
+
+
+def _console_in_process(backend: str, auth: bool):
+    """A console in this process (a thread) in front of ``backend``: yields its URL, stops it after."""
+    import uvicorn
+
+    from core.app import create_app
+
+    app = create_app(_console_settings(backend, auth))
+    cport = free_port("DRISHTI_WB_CONSOLE_PORT")
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=cport, log_level="warning", timeout_graceful_shutdown=2))
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    deadline = time.monotonic() + 20
+    while not server.started and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert server.started, "the console did not start"
     try:
-        # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
-        # that never answers fails rather than skipping every test of the file in silence. Ready is Spring's own readiness state, which turns
-        # UP only after the start's last step (the distribution's modules installed and recorded in data/modules/registry.json): the web
-        # layer answers seconds earlier, and a shared server fingerprinted then saw its own start's registry write as the file's (drill of
-        # 2026-11-16), and a page of a module still loading (EXP of banking) had no console part yet (as bi_stack.wait_ready).
-        deadline = time.monotonic() + 600
-        while time.monotonic() < deadline:
-            if proc.poll() is not None:
-                pytest.skip("the server did not start: " + (work / "server.log").read_text()[-400:])
-            try:
-                urllib.request.urlopen(f"http://127.0.0.1:{port}/actuator/health/readiness", timeout=2).read(10)
-                break
-            except urllib.error.HTTPError as e:      # 503: listening, still starting
-                if e.code != 503:
-                    break                            # sign-in on (401): the server answering
-                time.sleep(0.5)   # wait-ok: polling a server that is still starting
-            except OSError:
-                time.sleep(0.5)   # wait-ok: polling a server that is still starting
-        else:
-            pytest.fail("the server did not answer within 10 minutes: " + (work / "server.log").read_text()[-400:])
-        data = load_settings(CONSOLE / "config").as_dict()
-        data.setdefault("backend", {})["url"] = f"http://127.0.0.1:{port}"
-        if auth:
-            data["auth"] = {**data.get("auth", {}), "enabled": True, "session_secret": "s" * 40, "token_secret": TOKEN_SECRET, "secure_cookie": False}
-        app = create_app(Settings(data))
-        cport = free_port("DRISHTI_WB_CONSOLE_PORT")
-        server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=cport, log_level="warning", timeout_graceful_shutdown=2))
-        thread = threading.Thread(target=server.run, daemon=True)
-        thread.start()
-        deadline = time.monotonic() + 20
-        while not server.started and time.monotonic() < deadline:
-            time.sleep(0.05)
-        assert server.started, "the console did not start"
-        yield Stack(f"http://127.0.0.1:{cport}", work, f"http://127.0.0.1:{port}")
+        yield f"http://127.0.0.1:{cport}"
+    finally:
         server.should_exit = True
         thread.join(10)
+
+
+def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
+    if jar() is None or not JAVA.exists():
+        pytest.skip("needs the server jar (python tools/drishti.py build jar) and JDK 25")
+    port = free_port("DRISHTI_WB_SERVER_PORT")
+    work = work or tmp_path_factory.mktemp("wb-server")
+    _prepare_work(work)
+    proc = _launch_server(work, port, extra_env, heap)
+    try:
+        _wait_server(proc, port, work)
+        for url in _console_in_process(f"http://127.0.0.1:{port}", auth):
+            yield Stack(url, work, f"http://127.0.0.1:{port}")
     finally:
         # a scratch server need not drain: its graceful shutdown waits for requests still open (a page's live channel) and took the full
         # 15 s the tests used to wait on every VaR file; 3 s, then it is killed (its folder is thrown away)
@@ -313,6 +348,92 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(10)
+
+
+# ---- lane servers (TEST_HARNESS.md, "Lane servers"): one server and one console per lane for every worker ----------------------------
+
+#: the set-ups every file of the lane shares: the default server (no settings), and any server a file asks for with shared=True
+#: the lane server's heap: one server serves every worker, so it gets room (DRILL_TEST_SERVER_HEAP, default 12g; 16g allowed)
+LANE_HEAP = os.environ.get("DRILL_TEST_SERVER_HEAP") or os.environ.get("DRISHTI_LANE_HEAP", "12g")
+#: the environment as the test run set it, before any file changed it for a console of its own: the lane console's
+_BASE_ENV = dict(os.environ)
+#: the lane server's room for Designs: with sign-in off every worker's test is the one desk user, so the whole lane's designs count against
+#: ONE person's limits (drishti.builder.designs: 50 named, 10 scratch with the oldest evicted, 250 MB). The lane gives that user the room of
+#: every test of the lane, as its heap is the room of every worker (drill of 2026-11-22: the 51st named design of the lane was refused,
+#: DRS-5005, and a scratch design could be evicted by another worker's). A file that tests the limits themselves keeps a server of its own.
+LANE_DESIGNS = {"DRISHTI_BUILDER_DESIGNS_MAXPERUSER": "100000", "DRISHTI_BUILDER_DESIGNS_MAXSCRATCH": "10000",
+                "DRISHTI_BUILDER_DESIGNS_MAXUSERMB": "100000"}
+
+
+def _lane_base(tmp_path_factory) -> Path:
+    import lane_servers
+    from browser_harness import run_dir
+    return lane_servers.lane_dir(run_dir(tmp_path_factory) / "lane")
+
+
+def _lane_start(extra_env: dict, auth: bool, heap: str, ready):
+    def start(work: Path) -> dict:
+        _prepare_work(work)
+        port = free_port()
+        proc = _launch_server(work, port, {**LANE_DESIGNS, **extra_env}, heap, own_session=True)
+        try:
+            _wait_server(proc, port, work)
+        except BaseException:
+            proc.kill()
+            raise
+        backend = f"http://127.0.0.1:{port}"
+        cport = free_port()
+        cdir = work / "console"
+        env = {**_BASE_ENV, "DRISHTI_CONSOLE_DATA_DIR": str(cdir / "data"), "DRISHTI_CONSOLE_TMP_DIR": str(cdir / "tmp"),
+               "DRISHTI_DATA_DIR": str(cdir / "java-data"), "PYTHONPATH": os.pathsep.join([str(CONSOLE), str(Path(__file__).resolve().parent)])}
+        env.pop("DRISHTI_CONSOLE_TEST_DATA_PID", None)
+        env.pop("DRISHTI_TEST_DATA_DIR_PID", None)
+        for k in ("data", "tmp", "java-data"):
+            (cdir / k).mkdir(parents=True, exist_ok=True)
+        con = subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "lane_console.py"), backend, str(cport), "1" if auth else "0", TOKEN_SECRET],
+                               cwd=str(CONSOLE), env=env, stdin=subprocess.DEVNULL, stdout=(work / "console.log").open("w"),
+                               stderr=subprocess.STDOUT, start_new_session=True)
+        url = f"http://127.0.0.1:{cport}"
+        deadline = time.monotonic() + 120
+        while True:
+            if con.poll() is not None or time.monotonic() > deadline:
+                proc.kill()
+                con.kill()
+                pytest.fail("the lane console did not start: " + (work / "console.log").read_text()[-600:])
+            try:
+                urllib.request.urlopen(url + "/healthz", timeout=2).read(10)
+                break
+            except urllib.error.HTTPError:
+                break                                    # answering
+            except OSError:
+                time.sleep(0.2)   # wait-ok: polling a console that is still starting
+        st = {"pids": [proc.pid, con.pid], "url": url, "server": backend}
+        if ready:
+            ready(Stack(url, work, backend))
+        return st
+    return start
+
+
+def _healthy(state: dict) -> bool:
+    try:
+        urllib.request.urlopen(state["server"] + "/actuator/health/readiness", timeout=5).read(10)
+        return True
+    except urllib.error.HTTPError as e:
+        return e.code == 401
+    except OSError:
+        return False
+
+
+def lane_stack(tmp_path_factory, extra_env=None, auth=False, heap=None, ready=None) -> "Stack":
+    """The lane's server (and console) of this set-up, started by the first worker that asks, attached to by every other."""
+    import lane_servers
+    if jar() is None or not JAVA.exists():
+        pytest.skip("needs the server jar (python tools/drishti.py build jar) and JDK 25")
+    extra_env = dict(extra_env or {})
+    heap = heap or LANE_HEAP
+    key = lane_servers.key_of("wb", sorted(extra_env.items()), auth, heap)
+    st = lane_servers.attach(_lane_base(tmp_path_factory), key, _lane_start(extra_env, auth, heap, ready), _healthy)
+    return Stack(st["url"], Path(st["work"]), st["server"])
 
 
 def post(page, url: str, body: dict) -> dict:

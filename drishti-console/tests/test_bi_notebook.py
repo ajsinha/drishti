@@ -276,3 +276,19 @@ def test_the_servers_python_packages_are_all_pinned():
     pinned = re.findall(r"(?m)^([A-Za-z0-9_.-]+)==", lock)
     assert set(server) <= set(pinned), f"drishti.bi.report.python-packages {server}: each must be pinned in config/compute/locks/python.lock ({pinned})"
     assert load_settings(CONSOLE / "config").get("bi.python.packages") is None                                # the console holds no Python runtime
+
+
+def test_the_test_environment_and_the_lake_wheel_agree_with_the_compute_lock():
+    """The browser tests run the server's pool ``python`` on the console's interpreter, which the server refuses while a pinned library
+    differs: the test requirements pin the lock's versions, and the Lake wheel the console installs pins the same pyarrow, or no
+    environment could carry both (drill of 2026-11-22: the wheel's pyarrow 26.0.1 against the lock's 26.0.0)."""
+    from importlib import metadata
+    root = Path(__file__).resolve().parents[2]
+    lock = dict(re.findall(r"(?m)^([A-Za-z0-9_.-]+)==(\S+)", (root / "config/compute/locks/python.lock").read_text(encoding="utf-8")))
+    raw = (CONSOLE / "requirements-test.txt").read_text(encoding="utf-8")
+    named = dict(re.findall(r"(?m)^([A-Za-z0-9_.-]+)\s*[=<>~!]=\s*([^\s#]+)", raw))
+    named = {k: v for k, v in named.items() if k in lock}
+    assert {"numpy", "pandas", "scipy"} <= set(named), named
+    assert all(re.search(rf"(?m)^{k}=={re.escape(lock[k])}(\s|$)", raw) for k in named), f"requirements-test.txt {named}, the lock {lock}"
+    arrow = [r for r in metadata.requires("drishti-lake") or [] if re.match(r"pyarrow\s*==", r)]
+    assert arrow == [f"pyarrow=={lock['pyarrow']}"], f"the Lake wheel asks {arrow}, the compute lock pins pyarrow=={lock['pyarrow']}"

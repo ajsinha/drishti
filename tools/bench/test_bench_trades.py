@@ -14,6 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """tools/bench/trades.py, small: two systems, two days, a few hundred trades into a temporary lake, every table it makes there."""
+import os
 import sys
 import tempfile
 import unittest
@@ -27,6 +28,9 @@ class TradesTest(unittest.TestCase):
     def test_a_small_book_is_generated_and_loaded_day_by_day(self):
         with tempfile.TemporaryDirectory() as d:
             lake, tmp = Path(d) / "delta", Path(d) / "tmp"
+            was = os.environ.get("DRISHTI_CONNECTORS_DIR")         # the loads write their connector files here, not into the repo's config/connectors
+            os.environ["DRISHTI_CONNECTORS_DIR"] = str(Path(d) / "connectors")
+            self.addCleanup(os.environ.pop, "DRISHTI_CONNECTORS_DIR") if was is None else self.addCleanup(os.environ.__setitem__, "DRISHTI_CONNECTORS_DIR", was)
             code = trades.main(["--lake", str(lake), "--tmp", str(tmp), "--days", "2", "--min", "200", "--max", "300",
                                 "--systems", "endur,calypso", "--counterparties", "50", "--parallel"])
             self.assertEqual(code, 0)

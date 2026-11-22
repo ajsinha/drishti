@@ -43,6 +43,10 @@ IMG = docs_img("guides/img/designer")                 # docs/guides/img/designer
 LINE = "TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s"
 
 
+#: the page customizations are the (signed-out) user's, so server-wide on the lane's server: the serial group (TEST_HARNESS.md, "Lane servers")
+pytestmark = pytest.mark.serial
+
+
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     if os.environ.get("DRISHTI_DZ_BASE"):
@@ -51,7 +55,7 @@ def stack(tmp_path_factory):
     old = os.environ.get("DRISHTI_UI_DESIGNER")
     os.environ["DRISHTI_UI_DESIGNER"] = "true"             # read when the console's settings load: this console only
     try:
-        yield from (str(s) for s in _stack(tmp_path_factory, {}))
+        yield from (str(s) for s in _stack(tmp_path_factory, {}, own_console=True))
     finally:
         if old is None:
             os.environ.pop("DRISHTI_UI_DESIGNER", None)

@@ -93,8 +93,11 @@ class DesignBlocksApiTest {
                     {"TRADE_ID":"BK-2","SOURCE_SYSTEM":"BLKSYS","PRODUCT_TYPE":"SWAP","RATE":0.02}
                     {"TRADE_ID":"BK-3","SOURCE_SYSTEM":"BLKSYS","PRODUCT_TYPE":"SWAP","RATE":0.03}
                     """);
-            Files.writeString(p.resolve("samples/catalog.json"),
-                    "[{\"kind\":\"trade\",\"id\":\"BK-1\"},{\"kind\":\"trade\",\"id\":\"BK-2\"},{\"kind\":\"trade\",\"id\":\"BK-3\"}]");
+            Files.writeString(p.resolve("samples/catalog.jsonl"), """
+                    {"kind":"trade","id":"BK-1"}
+                    {"kind":"trade","id":"BK-2"}
+                    {"kind":"trade","id":"BK-3"}
+                    """);
             return p;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
