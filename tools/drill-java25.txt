@@ -19,17 +19,8 @@ compute/drishti-compute            # BLAS, vectors, Arrow memory
 @DiskCacheTest
 @SortedStoreInUseTest
 lake/drishti-lake-host          # the lake host: Drishti Lake's mapped files, LZ4 pages, Parquet footers (the product's jars)
-@MemoryLakeTest            # the in-memory lakes (Drishti Lake's lake-memory)
-@MemoryRatiosTest
-@RetentionTest
-@DeltaInMemoryTest
-@IcebergInMemoryTest
-@MemoryStorageTest
-@MemoryStorageContractTest
 plugins/drishti-plugin-duckdb    # native library
 plugins/drishti-plugin-delta
-@CodecsTest
-@ThroughputTest
 @ParametricVarTest
 @ManyScopeVectorsTest
 @JvmTempDirTest

@@ -211,7 +211,7 @@
   })();
   /* ---- src/drishti_tree-model.js ---- */
   __m["src/drishti_tree-model.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus;
+    var EventBus = __lib("drishti-core").EventBus, searchWords = __lib("drishti-core").searchWords;
     const SEP = '\u001f';
     class HierarchyModel {
       constructor(o) {
@@ -372,7 +372,7 @@
       reveal(id) { this.pathOf(id).slice(0, -1).forEach((n) => this.open.add(n.id)); this.events.emit('changed', { what: 'open' }); }
       visible() { const out = []; const walk = (n) => { out.push(n); if (this.open.has(n.id)) { n.children.forEach(walk); } }; this.roots.forEach(walk); return out; }
       search(q, o) {
-        const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+        const words = searchWords(q);
         if (!words.length) { return []; }
         const limit = (o && o.limit) || Infinity, out = [];
         for (const n of this.all()) {
@@ -1345,7 +1345,7 @@
   })();
   /* ---- src/drishti_tree-panel.js ---- */
   __m["src/drishti_tree-panel.js"] = (function () {
-    var h = __lib("drishti-core").h, visualTheme = __lib("drishti-core").visualTheme, announce = __lib("drishti-core").announce, textSortKey = __lib("drishti-core").textSortKey;
+    var h = __lib("drishti-core").h, visualTheme = __lib("drishti-core").visualTheme, announce = __lib("drishti-core").announce, textSortKey = __lib("drishti-core").textSortKey, searchWords = __lib("drishti-core").searchWords;
     var Grid = __lib("drishti-grid").Grid;
     var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
     var drawOrg = __m["src/drishti_tree-draw.js"].drawOrg;
@@ -1490,7 +1490,7 @@
       }
       counted() {
         if (!this.q) { this.count.textContent = ''; return; }
-        const words = this.q.toLowerCase().split(/\s+/).filter(Boolean);       // as the grid's filter: every word in some cell of the row
+        const words = searchWords(this.q);                  // as the grid's filter: every word in some cell of the row
         const n = this.mode === 'org' ? (this.hits ? this.hits.size : 0) : this.tree.rows.filter((r) => words.every((w) => r.texts.some((t) => t.toLowerCase().indexOf(w) >= 0))).length;
         this.count.textContent = n + ' of ' + this.tree.rows.length + ' rows (filtered)';
       }
@@ -1633,7 +1633,7 @@
   })();
   /* ---- src/drishti_tree-outline.js ---- */
   __m["src/drishti_tree-outline.js"] = (function () {
-    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer, drishtiUrl = __lib("drishti-core").url;
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer, drishtiUrl = __lib("drishti-core").url, searchWords = __lib("drishti-core").searchWords;
     var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
     var keyMove = __m["src/drishti_tree-io.js"].keyMove;
     var Tree = __m["src/drishti_tree-view.js"].Tree;
@@ -1641,7 +1641,7 @@
     const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
     const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => { if (/^data-(?!dt-)[a-z0-9-]+$/.test(k) && a[k] !== null && a[k] !== undefined) { out[k] = String(a[k]); } }); return out; };
     function outlineFilter(model, q, textOf) {
-      const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+      const words = searchWords(q);
       if (!words.length) { return { hits: [], keep: null }; }
       const wordsOf = textOf || ((n) => n.label + ' ' + n.id + ' ' + n.kind), hits = [], keep = new Set();
       model.all().forEach((n) => {

@@ -672,7 +672,7 @@ Every option has a default:
 | `token`, `credentials` | none, `same-origin` | a bearer token provider; fetch credentials (`include` with a `server`) |
 | `auth`, `signInWindow` | `token` with a token, else `session`; `auto` | how the person gets in ([chapter 4](#4-how-a-user-gets-in)); the sign-in window's mode (`auto`, `popup`, `tab`, `redirect`) |
 | `device` | none | `phone`, `tablet` or `desk`, sent as `X-Drishti-Device` |
-| `behaviours` | `'library'` | `'library'`: light ones (sorting, one filter box, paging, trees, drills, tabs); `'console'`: the console's own (per-column funnels, Chart any table, the nested-pivot grid, drills in place, zoom, the controls), started inside the container; `'host'`: none but the widths, your page's scripts enhance the DOM |
+| `behaviours` | `'library'` | `'library'`: the painter's own (sorting, the filter box, paging, trees, tabs, pivots, a Data table under each chart); `'console'`: those and the table tools (a funnel on each column heading: the values with counts, a search, Select all, a number condition such as `> 1m`; Chart any table: the rows as shown opened as a chart in a dialog inside the container); `'host'`: as `'library'` (renderer 1.2.0: none but the widths) |
 | `about` | `false` | an About button in the head and `?`: About this page drawn from JSON in a side sheet inside the container |
 | `insight` | none | `{ about(ref, generation) }` answers About this page's JSON from your own source instead of `aboutUrl` |
 | `designOn` | `false` | "How this view was built" links its Sutra to the designer |
@@ -760,7 +760,7 @@ Every failure is a `drishti:error` event and, when there is nothing to show, a b
 | `DRS-9104` | a reference without kind or id | the same |
 | `DRS-9105` | a ViewModel speaks a contract major the library does not draw | Load the renderer version this server serves |
 | `DRS-9106` | an unknown `behaviours` | Leave it out for the library's own, the default |
-| `DRS-9107` | `behaviours: 'console'` could not load the console's scripts | Check that the console serves its static scripts, or use `behaviours: 'library'` |
+| `DRS-9107` | renderer 1.2.0: `behaviours: 'console'` could not load the console's scripts | Check that the console serves its static scripts, or use `behaviours: 'library'` |
 | `DRS-9108` | an unknown `auth` | Leave it out: `token` when you give a token, else the console's session; `popup` for a page without a backend |
 | `DRS-5003` | the console could not be reached | Check the server option, the network, and that the console allows this origin (CORS) |
 | the server's own (`DRS-1001`, `DRS-5002`, ...) | the view was refused | the server's own `fix` when it gives one, else per code (`DRS-4023`: the edition or lens hides the kind), else per HTTP status: sign in or give a token (401), your role may not open this kind (403), no such entity here (404), retry (502, 504) |
@@ -969,8 +969,8 @@ Drishti Elements libraries it imports instead.
 **Renderer 3.2.0.** Every panel is drawn by Drishti Elements' painter (`drishti-views`); the API, the options, the events, the element
 attributes and the contract are the same. What you may see: the painter's look (its title line, freshness line and function keys, a
 filter box and pages on long tables, a Data table under each chart), a dash in an empty cell, a pivot's corner in its fields' own case;
-`behaviours: 'console'` draws with the painter's tables (no column funnels, no Chart any table); a GenUI stream's messages are not drawn.
-The `3.1.0` paths answer `308` to `3.2.0` for one release.
+`behaviours: 'console'` gives the painter's tables their tools (column funnels, Chart any table, in the container); the console's nested-pivot grid, drills in place and zoom are the painter's own pivots, trees and tabs; a GenUI stream's messages are not drawn (release i9).
+The `3.1.0` paths are gone (`410` with `DRS-8006` under `/embed/v2/`): pin `3.2.0`.
 
 **Moving from Elements 1.x to 2.x.** Change the script line ([chapter 3](#3-five-minutes-a-static-page)); the token exchange, the
 attributes, the events and the slots are the same. Keep `<drishti-report>`, `<drishti-about>` and `<drishti-search>` pages on 1.x.

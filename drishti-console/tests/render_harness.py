@@ -301,6 +301,30 @@ def read(page) -> dict:
     return page.evaluate(READ_JS)
 
 
+OPEN_ALL_JS = """
+async () => {
+  const host = document.querySelector('#host');
+  const scope = host ? (host.shadowRoot || host) : null;
+  if (!scope || !scope.querySelector('.dv-view')) { return 0; }
+  const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  let clicks = 0;
+  for (let round = 0; round < 200; round++) {
+    const todo = [...scope.querySelectorAll('.dv-more-btn:not([hidden]), .dv-twisty[aria-expanded="false"]')];
+    if (!todo.length) { break; }
+    todo.forEach((b) => { b.click(); clicks++; });
+    await frame();
+  }
+  return clicks;
+}
+"""
+
+
+async def open_all_async(page) -> int:
+    """Opens everything the painter keeps a click away (a long table's further pages, closed tree and pivot rows), so its content is read
+    as the console's page shows it (test_render_parity_browser.py, INTENTIONAL "pages-and-closed-rows"); answers the clicks made."""
+    return await page.evaluate(OPEN_ALL_JS)
+
+
 async def read_async(page) -> dict:
     """read(), on Playwright's async API (the per-worker browser of browser_harness.py)."""
     return await page.evaluate(READ_JS)

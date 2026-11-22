@@ -17,6 +17,7 @@
    when the node is first opened, and a selection kept compact: a node checked means everything under it, so a desk with all its books
    checked is the desk, and a branch never loaded can be checked whole. Each node reads checked, mixed (some below it are) or unchecked.
    Search keeps the matches and their ancestors (opened), from the loaded levels or through a server hook. Pure; runs under Node. */
+import { searchWords } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * @typedef {Object} TreeNode
@@ -232,7 +233,7 @@ export class TreeModel {
   search(q, server) {
     this.query = String(q || '').trim();
     if (!this.query) { this.found = null; return Promise.resolve(0); }
-    const words = this.query.toLowerCase().split(/\s+/);
+    const words = searchWords(this.query);
     const run = () => {
       const hit = new Set();
       this.byId.forEach((n, id) => { const t = (n.label + ' ' + (n.detail || '')).toLowerCase(); if (words.every((w) => t.indexOf(w) >= 0)) { hit.add(id); } });

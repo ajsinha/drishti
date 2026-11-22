@@ -35,10 +35,14 @@
   `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
   `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
   page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
-  filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` draws with the painter's tables (no column
-  funnels or Chart any table inside an embed); a GenUI stream's messages are not drawn. The old `drishti-renderer` library, its harness
-  and fixtures are deleted; `/static/render/3.1.0/` and `/embed/v2/render/3.1.0/` answer `308` to 3.2.0 for one release, and
+  filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` gives the painter's tables their tools
+  (Drishti Elements' `tableTools`: a funnel on each column heading, Chart any table in a dialog inside the container); the host hands the
+  painter its one sheet (`sheets`, no page stylesheet) and its ECharts loader (`engine`); a GenUI stream's messages are not drawn (i9). The old `drishti-renderer` library, its harness
+  and fixtures are deleted, and the `3.1.0` paths with them (no redirect: `/embed/v2/render/3.1.0/` answers `410`); and
   `/embed/v2/elements/2/` is the current renderer again.
+- **Every pack Sutra is drawn by the client renderer in the parity suite.** Its server turns every shipped pack on (the off-by-default ones too, with
+  their blocks), a Sutra the preview refuses fails with the server's words, and the painter's pages and closed rows are opened before the read:
+  241 Sutras, none skipped. A link to a target the server found missing is a link again in an embed, as on the console's pages.
 - **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
   snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
   rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default

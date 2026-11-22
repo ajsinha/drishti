@@ -176,11 +176,9 @@ export declare function registerKind(name: string, def: KindDef, o?: { replace: 
 export declare function kindOf(name: string): KindDef | null;
 /** The registered kinds in the order they were registered: name, label and family. */
 export declare function kindList(): { name: string; label: string; family: string; cartesian: boolean }[];
-/** The aliases a spec may use for a kind. */
-export declare const KIND_ALIASES: any;
 /** A spec's problems, each with its path: an unknown kind, a missing field, a condition that does not read, a value of the wrong kind. */
 export declare function checkSpec(spec: Record<string, any>): { path: string; message: string }[];
-/** A spec ready to draw: the kind's alias resolved, x, y and value as objects, the defaults filled in (legend at the bottom, click to Explain, every export, the data table on). The spec given is not changed. */
+/** A spec ready to draw: x, y and value as objects, the defaults filled in (legend at the bottom, click to Explain, every export, the data table on). The spec given is not changed. */
 export declare function normalizeSpec(spec: Record<string, any>): Record<string, any>;
 /** The spec as people read it: two-space JSON with the keys in a stable order (kind, title, data first); inline rows shortened to their count so the spec stays readable beside the chart. */
 export declare function specText(spec: Record<string, any>, o?: { rows: boolean }): string;
@@ -437,6 +435,27 @@ export declare class Studio {
   destroy(): void;
   [member: string]: any;
 }
+/** The kinds a table is offered as. */
+export declare const TABLE_CHART_KINDS: readonly string[];
+/** The most series drawn by default. */
+export declare const TABLE_CHART_SERIES: number;
+/** A table's fields and rows as values: each column's type from its cells, numbers read from their text. */
+export declare function tableChartData(table: { columns: string[]; rows: any[][] }): { fields: ({ name: string; type: ('number' | 'date' | 'text') })[]; rows: Record<string, any>[] };
+/** The chart spec of a table and the reader's choice: what goes across (x), the series, the kind. Left out: the smart default. */
+export declare function tableChartSpec(table: { columns: string[]; rows: any[][]; title: string }, choice?: { kind: string; x: string; series: string[] }): { spec: Record<string, any>; fields: Record<string, any>[]; choice: { kind: string; x: string; series: string[] } };
+/** A table opened as a chart: the dialog, its settings and drishti-chart's card. new TableChart(root, table, options).open(). */
+export declare class TableChart {
+  constructor(root: (Element | ShadowRoot), table: { columns: string[]; rows: any[][]; title: string }, o?: { opener: HTMLElement; chart: Record<string, any>; choice: Record<string, any>; onClose: (() => void) });
+  /** Shows the dialog with the chart drawn. */
+  open(): Promise<TableChart>;
+  /** Draws another choice (kind, x, series). */
+  choose(choice: { kind: string; x: string; series: string[] }): Promise<void>;
+  /** Closes the dialog (the focus goes back to the opener). */
+  shut(): void;
+  [member: string]: any;
+}
+/** Opens a table as a chart in a dialog inside root. */
+export declare function openTableChart(root: (Element | ShadowRoot), table: { columns: string[]; rows: any[][]; title: string }, o?: Record<string, any>): TableChart;
 /** Every event a chart emits (on chart.events and as DOM events drishti:<kebab-name> on its element). */
 export declare const CHART_EVENTS: readonly string[];
 /** The modes of a chart: card (the default) and studio . */

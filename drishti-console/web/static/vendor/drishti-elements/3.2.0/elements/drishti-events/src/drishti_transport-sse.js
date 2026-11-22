@@ -21,6 +21,7 @@
    parseSse and readSse(response) read the format for anyone (a POST that answers a stream, for example). */
 import { EventError } from './drishti_envelope.js';
 import { SERVER_FRAMES } from './drishti_protocol.js';
+import { fetcher } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * An SSE event.
@@ -109,7 +110,7 @@ function under(url, part) {
  */
 export function postFrames(ctx, frames) {
   if (ctx.protocol !== 1) { return Promise.reject(new EventError('protocol', 'a raw stream takes nothing from the page (protocol 1 sends to <events>/send)')); }
-  const F = ctx.env.fetch || globalThis.fetch;
+  const F = fetcher(ctx.env.fetch);
   if (!F) { return Promise.reject(new EventError('transport.missing', 'this page has no fetch')); }
   const session = ctx.session();
   if (!session) { return Promise.reject(new EventError('not.connected', 'the server has not named a session yet')); }
@@ -153,7 +154,7 @@ export function eventSourceTransport(ctx) {
  * @returns {Transport}
  */
 export function fetchTransport(ctx) {
-  const F = ctx.env.fetch || globalThis.fetch;
+  const F = fetcher(ctx.env.fetch);
   if (!F) { throw new EventError('transport.missing', 'this page has no fetch'); }
   const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
   let ended = false;

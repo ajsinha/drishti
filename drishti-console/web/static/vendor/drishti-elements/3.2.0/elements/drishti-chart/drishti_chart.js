@@ -247,8 +247,6 @@
     }
     function kindOf(name) { return registry.get(name) || null; }
     function kindList() { return Array.from(registry.entries()).map(([n, d]) => ({ name: n, label: d.label, family: d.family, cartesian: !!d.cartesian })); }
-    const KIND_ALIASES = Object.freeze({ column: 'bar', columns: 'bar', bars: 'bar', lines: 'line', point: 'scatter', points: 'scatter', doughnut: 'donut', box: 'boxplot',
-      'box-plot': 'boxplot', hist: 'histogram', choropleth: 'map', geo: 'map', candles: 'candlestick' });
     const LEGENDS = ['bottom', 'top', 'right', 'none'];
     const ON_CLICK = ['explain', 'select', 'none'];
     const EXPORTS = ['png', 'svg', 'csv', 'spec'];
@@ -256,7 +254,7 @@
       const out = [];
       const bad = (path, message) => out.push({ path: path, message: message });
       if (!spec || typeof spec !== 'object' || Array.isArray(spec)) { bad('$', 'a spec is an object'); return out; }
-      const kind = KIND_ALIASES[spec.kind] || spec.kind;
+      const kind = spec.kind;
       if (!kind) { bad('$.kind', 'every spec names its kind'); } else if (!registry.has(kind)) { bad('$.kind', 'no kind ' + spec.kind + ' (there are ' + kindList().map((k) => k.name).join(', ') + ')'); }
       if (spec.data !== undefined && spec.data !== null && typeof spec.data !== 'object') { bad('$.data', 'data is rows, {rows}, {values}, {columns, rows} or {source}'); }
       if (spec.data && spec.data.source !== undefined && typeof spec.data.source !== 'string') { bad('$.data.source', 'a source is the address of a server answer'); }
@@ -291,7 +289,6 @@
       if (problems.length) { const e = new Error(problems[0].path + ': ' + problems[0].message); e.problems = problems; throw e; }
       const s = JSON.parse(JSON.stringify(spec, (k, v) => (typeof v === 'function' ? undefined : v)));
       ['format', 'tooltipFormat'].forEach((k) => { if (typeof spec[k] === 'function') { s[k] = spec[k]; } });
-      s.kind = KIND_ALIASES[s.kind] || s.kind;
       ['x', 'y', 'value', 'size', 'colour', 'category'].forEach((k) => { if (typeof s[k] === 'string') { s[k] = { field: s[k] }; } });
       if (s.color && !s.colour) { s.colour = typeof s.color === 'string' ? { field: s.color } : s.color; }
       if (typeof s.series === 'string') { s.series = { by: s.series }; }
@@ -319,7 +316,7 @@
       });
       return JSON.stringify(copy, null, 2);
     }
-    return { "registerKind": registerKind, "kindOf": kindOf, "kindList": kindList, "KIND_ALIASES": KIND_ALIASES, "checkSpec": checkSpec, "normalizeSpec": normalizeSpec, "specText": specText };
+    return { "registerKind": registerKind, "kindOf": kindOf, "kindList": kindList, "checkSpec": checkSpec, "normalizeSpec": normalizeSpec, "specText": specText };
   })();
   /* ---- src/drishti_chart-theme.js ---- */
   __m["src/drishti_chart-theme.js"] = (function () {
@@ -2146,7 +2143,7 @@
   /* ---- src/drishti_map-view.js ---- */
   __m["src/drishti_map-view.js"] = (function () {
     var isRegionLevel = __m["src/drishti_chart-regions.js"].isRegionLevel, regionName = __m["src/drishti_chart-regions.js"].regionName;
-    var h = __lib("drishti-core").h, showState = __lib("drishti-core").showState, ToastTray = __lib("drishti-core").ToastTray, drishtiUrl = __lib("drishti-core").url;
+    var h = __lib("drishti-core").h, showState = __lib("drishti-core").showState, ToastTray = __lib("drishti-core").ToastTray, drishtiUrl = __lib("drishti-core").url, fetcher = __lib("drishti-core").fetcher;
     var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader, fitView = __m["src/drishti_chart-geo.js"].fitView;
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
@@ -2200,7 +2197,7 @@
       }
       load() {
         const s = this.c.spec, d = s.data || {};
-        const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
+        const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => fetcher(null, this.c.win)(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
           : Promise.resolve(rowsOf(Array.isArray(this.c.rawSpec.data) ? this.c.rawSpec.data : d));
         return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? (/^continents$/i.test(s.level) ? 'continents' : String(s.level).toUpperCase()) : 'world'); }, (e) => this.c.fail(e));
       }
@@ -2440,7 +2437,7 @@
     var h = __lib("drishti-core").h;
     var kindList = __m["src/drishti_chart-spec.js"].kindList, kindOf = __m["src/drishti_chart-spec.js"].kindOf, specText = __m["src/drishti_chart-spec.js"].specText;
     var dataTable = __m["src/drishti_chart-parts.js"].dataTable;
-    var selectElement = __lib("drishti-inputs").selectElement;
+    var selectElement = __lib("drishti-inputs").selectElement, button = __lib("drishti-inputs").button;
     function coloured(doc, text) {
       const out = doc.createDocumentFragment(), re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d[\d.e+-]*|true|false|null)/g;
       let at = 0, m;
@@ -2462,9 +2459,9 @@
         this.pre = h(doc, 'pre', { cls: 'dc-spec', attrs: { tabindex: '0', 'aria-label': 'The spec' } });
         this.opts = h(doc, 'div', { cls: 'dc-opts' });
         this.tab = 'spec';
-        const tabBtn = (id, text) => h(doc, 'button', { cls: 'dc-tab', text: text, attrs: { type: 'button', role: 'tab', 'data-tab': id, 'aria-selected': String(this.tab === id) }, on: { click: () => this.showTab(id) } });
+        const tabBtn = (id, text) => button(doc, { label: text, variant: 'bare', cls: 'dc-tab', role: 'tab', data: { tab: id }, selected: this.tab === id, onClick: () => this.showTab(id) });
         this.tabs = h(doc, 'div', { cls: 'dc-tabs', attrs: { role: 'tablist' } }, [tabBtn('spec', 'Spec'), tabBtn('options', 'Options')]);
-        this.copy = h(doc, 'button', { cls: 'dc-btn', text: 'Copy the spec', attrs: { type: 'button', 'data-act': 'copy-spec' }, on: { click: () => this.c.export('spec') } });
+        this.copy = button(doc, { label: 'Copy the spec', variant: 'bare', cls: 'dc-btn', data: { act: 'copy-spec' }, onClick: () => this.c.export('spec') });
         this.note = h(doc, 'p', { cls: 'dc-note', text: 'The spec names no drawing engine: a page, a Sutra panel, a BI visual and a generator write the same one. Options change the chart and the spec together.' });
         this.right = h(doc, 'div', { cls: 'dc-specpane' }, [this.tabs, this.opts, this.pre, h(doc, 'div', { cls: 'dc-spec-foot' }, [this.copy]), this.note]);
         this.root = h(doc, 'div', { cls: 'dc-studio' }, [this.rail, this.mid, this.right]);
@@ -2483,8 +2480,8 @@
         this.rail.textContent = '';
         ['general', 'map'].filter((f) => groups[f]).concat(Object.keys(groups).filter((f) => f !== 'general' && f !== 'map')).forEach((f) => {
           this.rail.appendChild(h(doc, 'div', { cls: 'dc-rail-g', text: words[f] || f }));
-          groups[f].forEach((k) => this.rail.appendChild(h(doc, 'button', { cls: 'dc-rail-k' + (c.spec.kind === k.name ? ' dc-on' : ''), text: k.label,
-            attrs: { type: 'button', 'data-kind': k.name, 'aria-current': c.spec.kind === k.name ? 'true' : 'false' }, on: { click: () => this.pick(k.name) } })));
+          groups[f].forEach((k) => this.rail.appendChild(button(doc, { label: k.label, variant: 'bare', cls: 'dc-rail-k' + (c.spec.kind === k.name ? ' dc-on' : ''),
+            data: { kind: k.name }, current: c.spec.kind === k.name, onClick: () => this.pick(k.name) })));
         });
         this.pre.textContent = '';
         this.pre.appendChild(coloured(doc, specText(c.rawSpec)));
@@ -2524,7 +2521,7 @@
   })();
   /* ---- src/drishti_chart-io.js ---- */
   __m["src/drishti_chart-io.js"] = (function () {
-    var h = __lib("drishti-core").h, toCsv = __lib("drishti-core").toCsv, download = __lib("drishti-core").download;
+    var h = __lib("drishti-core").h, toCsv = __lib("drishti-core").toCsv, download = __lib("drishti-core").download, copyText = __lib("drishti-core").copyText;
     var specText = __m["src/drishti_chart-spec.js"].specText;
     var rowId = __m["src/drishti_chart-kinds.js"].rowId;
     var svgOf = __m["src/drishti_chart-parts.js"].svgOf;
@@ -2554,7 +2551,7 @@
         let out, type, file;
         if (what === 'png' || what === 'svg') { const sn = this.snapshot(what); out = sn.data; file = sn.file; type = sn.type; }
         if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
-        if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
+        if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; copyText(this.win, out); }
         if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }
         if (what !== 'spec') { (this.o.download || ((f, c, t) => download(this.doc, f, c, t)))(file, out, type); }
         this.emit('exported', { what: what, file: file, size: out.length });
@@ -2594,7 +2591,7 @@
   })();
   /* ---- src/drishti_chart-view.js ---- */
   __m["src/drishti_chart-view.js"] = (function () {
-    var h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, showState = __lib("drishti-core").showState, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, selectionTopic = __lib("drishti-core").selectionTopic, drishtiUrl = __lib("drishti-core").url;
+    var h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, showState = __lib("drishti-core").showState, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, selectionTopic = __lib("drishti-core").selectionTopic, drishtiUrl = __lib("drishti-core").url, fetcher = __lib("drishti-core").fetcher;
     var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
@@ -2708,7 +2705,7 @@
         if (this.map) { return this.map.load(); }
         if (d.source) {
           this.loadingEl.hidden = false;
-          const get = this.o.fetch || ((u) => this.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
+          const get = this.o.fetch || ((u) => fetcher(null, this.win)(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
           return Promise.resolve(get(d.source)).then((ans) => { this.rows = rowsOf(ans); this.loadingEl.hidden = true; return this.draw(); }, (e) => { this.loadingEl.hidden = true; this.fail(e); });
         }
         this.rows = rowsOf(this.rawSpec.data && Array.isArray(this.rawSpec.data) ? this.rawSpec.data : d);
@@ -3882,14 +3879,151 @@
     }
     return { "colourScale": colourScale };
   })();
+  /* ---- src/drishti_chart-table.js ---- */
+  __m["src/drishti_chart-table.js"] = (function () {
+    var h = __lib("drishti-core").h, textSortKey = __lib("drishti-core").textSortKey, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
+    var selectElement = __lib("drishti-inputs").selectElement, button = __lib("drishti-inputs").button;
+    var Chart = __m["src/drishti_chart-view.js"].Chart;
+    const TABLE_CHART_KINDS = Object.freeze(['bar', 'line', 'area', 'pie', 'scatter']);
+    const TABLE_CHART_SERIES = 6;
+    const ISO = /^\d{4}-\d{2}-\d{2}/;
+    const list = (x) => (Array.isArray(x) ? x : []);
+    const text = (v) => (v === null || v === undefined ? '' : String(v).replace(/\s+/g, ' ').trim());
+    const EMPTY = /^[—–-]$/;                                // a dash prints an empty cell
+    function numberOf(v) {
+      if (typeof v === 'number') { return isFinite(v) ? v : null; }
+      let t = text(v);
+      if (!t || EMPTY.test(t)) { return null; }
+      const neg = /^\(.*\)$/.test(t);
+      if (neg) { t = t.slice(1, -1); }
+      const k = textSortKey(t);
+      return k.n == null || ISO.test(t) ? null : (neg ? -k.n : k.n);
+    }
+    function tableChartData(table) {
+      const seen = new Set();
+      const names = list(table && table.columns).map((c, i) => {
+        let n = text(c) || 'Column ' + (i + 1);
+        while (seen.has(n)) { n += ' ' + (i + 1); }
+        seen.add(n);
+        return n;
+      });
+      const rows = list(table && table.rows).map((r) => list(r));
+      const fields = names.map((name, i) => {
+        let num = 0, date = 0, all = 0;
+        rows.forEach((r) => {
+          const v = r[i];
+          if (typeof v === 'number') { if (isFinite(v)) { num++; all++; } return; }
+          const t = text(v);
+          if (!t || EMPTY.test(t)) { return; }
+          all++;
+          if (ISO.test(t) && !isNaN(Date.parse(t.slice(0, 10)))) { date++; } else if (numberOf(t) !== null) { num++; }
+        });
+        return { name: name, type: all && date / all >= 0.8 ? 'date' : all && num / all >= 0.8 ? 'number' : 'text' };
+      });
+      return {
+        fields: fields,
+        rows: rows.map((r) => {
+          const o = {};
+          fields.forEach((f, i) => {
+            const v = r[i];
+            o[f.name] = f.type === 'number' ? numberOf(v) : text(v);
+          });
+          return o;
+        })
+      };
+    }
+    function tableChartSpec(table, choice) {
+      const data = tableChartData(table), fields = data.fields, c = choice || {};
+      const numbers = fields.filter((f) => f.type === 'number').map((f) => f.name);
+      const has = (n) => fields.some((f) => f.name === n);
+      const x = has(c.x) ? c.x : ((fields.find((f) => f.type !== 'number') || fields[0] || {}).name || null);
+      let series = list(c.series).filter((n) => numbers.indexOf(n) >= 0 && n !== x);
+      if (!c.series) { series = numbers.filter((n) => n !== x).slice(0, TABLE_CHART_SERIES); }
+      const xf = fields.find((f) => f.name === x) || {};
+      const kind = TABLE_CHART_KINDS.indexOf(c.kind) >= 0 ? c.kind : xf.type === 'date' ? 'line' : 'bar';
+      const spec = { kind: kind, title: text(table && table.title) || undefined, data: { rows: data.rows }, legend: series.length > 1 ? 'bottom' : false };
+      if (kind === 'pie') {
+        Object.assign(spec, { category: { field: x }, value: { field: series[0] || null } });
+      } else if (kind === 'scatter') {
+        Object.assign(spec, { x: { field: xf.type === 'number' ? x : (series[0] || x), type: 'value' }, y: { field: xf.type === 'number' ? series[0] : (series[1] || series[0]) } });
+      } else {
+        Object.assign(spec, { x: { field: x, type: 'category' }, series: series.map((n) => ({ field: n, name: n })) });
+      }
+      if (spec.title === undefined) { delete spec.title; }
+      return { spec: spec, fields: fields, choice: { kind: kind, x: x, series: series } };
+    }
+    let seq = 0;
+    class TableChart {
+      constructor(root, table, o) {
+        this.root = root;
+        this.table = table;
+        this.o = o || {};
+        const doc = this.doc = (root.ownerDocument || root);
+        this.id = 'dc-tc-' + (++seq);
+        const title = text(table && table.title);
+        this.settings = h(doc, 'div', { cls: 'dc-tc-set', attrs: { role: 'group', 'aria-label': 'Chart settings' } });
+        this.host = h(doc, 'div', { cls: 'dc-tc-chart' });
+        this.close = button(doc, { label: 'Close', variant: 'bare', cls: 'dc-tc-close', data: { act: 'close' }, onClick: () => this.shut() });
+        this.dialog = h(doc, 'dialog', { cls: 'dc-tc', attrs: { 'aria-labelledby': this.id + '-t' } }, [
+          h(doc, 'div', { cls: 'dc-tc-head' }, [h(doc, 'h2', { cls: 'dc-tc-title', text: 'Chart' + (title ? ' · ' + title : ''), attrs: { id: this.id + '-t' } }), this.close]),
+          this.settings, this.host]);
+        this.dialog.addEventListener('close', () => this.gone());
+        this.built = tableChartSpec(table, this.o.choice);
+      }
+      open() {
+        this.root.appendChild(this.dialog);
+        openDialog(this.dialog, { focus: this.close });
+        this.chart = new Chart(this.host, this.built.spec, Object.assign({ height: 360 }, this.o.chart || {}));
+        this.drawSettings();
+        return Promise.resolve(this.chart.ready).then(() => this);
+      }
+      choose(choice) {
+        this.built = tableChartSpec(this.table, Object.assign({}, this.built.choice, choice));
+        this.drawSettings();
+        return Promise.resolve(this.chart.setSpec(this.built.spec));
+      }
+      drawSettings() {
+        const doc = this.doc, c = this.built.choice, fields = this.built.fields, s = this.settings;
+        s.textContent = '';
+        const select = (key, label, options, value) => {
+          const el = selectElement(doc, { options: options, value: value, label: label, search: false }, { id: this.id + '-' + key, 'data-tc': key });
+          el.component.on('change', (d) => { const x = {}; x[key] = d.value; this.choose(x); });
+          return h(doc, 'span', { cls: 'dc-tc-field' }, [h(doc, 'label', { text: label, attrs: { for: this.id + '-' + key } }), el]);
+        };
+        s.appendChild(select('kind', 'Type', TABLE_CHART_KINDS.slice(), c.kind));
+        s.appendChild(select('x', c.kind === 'pie' ? 'Slices' : 'Across', fields.map((f) => f.name), c.x));
+        const numbers = fields.filter((f) => f.type === 'number' && f.name !== c.x);
+        const box = h(doc, 'fieldset', { cls: 'dc-tc-series' }, [h(doc, 'legend', { text: numbers.length ? 'Series' : 'No number column to chart' })]);
+        numbers.forEach((f) => {
+          const on = c.series.indexOf(f.name) >= 0;
+          const input = h(doc, 'input', { attrs: { type: 'checkbox', 'data-tc-series': f.name }, on: { change: () => {
+            const next = numbers.map((n) => n.name).filter((n) => (n === f.name ? input.checked : c.series.indexOf(n) >= 0));
+            this.choose({ series: next });
+          } } });
+          input.checked = on;
+          box.appendChild(h(doc, 'label', { cls: 'dc-tc-s' }, [input, h(doc, 'span', { text: f.name })]));
+        });
+        s.appendChild(box);
+      }
+      shut() { closeDialog(this.dialog); }
+      gone() {
+        if (this.chart) { this.chart.destroy(); this.chart = null; }
+        this.dialog.remove();
+        if (this.o.opener && this.o.opener.focus && this.o.opener.isConnected) { this.o.opener.focus(); }
+        if (typeof this.o.onClose === 'function') { this.o.onClose(); }
+      }
+    }
+    function openTableChart(root, table, o) { const t = new TableChart(root, table, o); t.open(); return t; }
+    return { "TABLE_CHART_KINDS": TABLE_CHART_KINDS, "TABLE_CHART_SERIES": TABLE_CHART_SERIES, "tableChartData": tableChartData, "tableChartSpec": tableChartSpec, "TableChart": TableChart, "openTableChart": openTableChart };
+  })();
   /* ---- src/drishti_chart-vega.js ---- */
   __m["src/drishti_chart-vega.js"] = (function () {
     var compileCondition = __m["src/drishti_chart-data.js"].compileCondition, rowsOf = __m["src/drishti_chart-data.js"].rowsOf, num = __m["src/drishti_chart-data.js"].num;
     var chartIn = __m["src/drishti_chart-element.js"].chartIn;
-    const AGG = { sum: (a) => a.reduce((s, x) => s + x, 0), mean: (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null), count: (a) => a.length,
-      min: (a) => (a.length ? Math.min.apply(null, a) : null), max: (a) => (a.length ? Math.max.apply(null, a) : null),
-      median: (a) => { if (!a.length) { return null; } const s = a.slice().sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; } };
-    AGG.average = AGG.mean;
+    var reduceValues = __lib("drishti-core").aggregate, aggFunc = __lib("drishti-core").aggFunc;
+    const AGG_NAME = { mean: 'avg', average: 'avg' };
+    const median = (a) => { if (!a.length) { return null; } const s = a.slice().sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    const agg = (name, values) => (name === 'median' ? median(values) : reduceValues(values, aggFunc(AGG_NAME[name] || name) ? AGG_NAME[name] || name : 'sum'));
     const KNOWN_TOP = ['$schema', 'data', 'mark', 'encoding', 'layer', 'transform', 'title', 'width', 'height', 'autosize', 'config', 'description', 'name', 'background', 'padding'];
     const KNOWN_ENC = ['x', 'y', 'color', 'fill', 'stroke', 'size', 'theta', 'tooltip', 'opacity', 'x2', 'y2'];
     const MARKS = { bar: 1, line: 1, area: 1, point: 1, circle: 1, square: 1, tick: 1, rule: 1, rect: 1, arc: 1, boxplot: 1 };
@@ -3993,8 +4127,8 @@
         const o = {};
         keys.forEach((f) => { o[f] = g[0][f]; });
         aggs.forEach((k) => {
-          const e = enc[k], fn = AGG[e.aggregate] || AGG.sum, name = e.field || '__count';
-          o[name] = e.aggregate === 'count' ? g.length : fn(g.map((r) => num(r[e.field])).filter((v) => v !== null));
+          const e = enc[k], name = e.field || '__count';
+          o[name] = e.aggregate === 'count' ? g.length : agg(e.aggregate, g.map((r) => num(r[e.field])).filter((v) => v !== null));
         });
         return o;
       });
@@ -4158,7 +4292,7 @@
     registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "overviewStrip": __m["src/drishti_chart-kinds.js"].overviewStrip, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "buildLollipop": __m["src/drishti_chart-kinds4.js"].buildLollipop, "buildTrace3d": __m["src/drishti_chart-kinds4.js"].buildTrace3d, "buildSegmented": __m["src/drishti_chart-kinds4.js"].buildSegmented, "buildMatrix": __m["src/drishti_chart-kinds4.js"].buildMatrix, "canDraw3d": __m["src/drishti_chart-kinds4.js"].canDraw3d, "ensure3d": __m["src/drishti_chart-kinds4.js"].ensure3d, "registerSequenceKinds": __m["src/drishti_chart-kinds4.js"].registerSequenceKinds, "trackValues": __m["src/drishti_chart-tracks.js"].trackValues, "trackColour": __m["src/drishti_chart-tracks.js"].trackColour, "categoryCells": __m["src/drishti_chart-tracks.js"].categoryCells, "addTracks": __m["src/drishti_chart-tracks.js"].addTracks, "segmentOf": __m["src/drishti_chart-overlays.js"].segmentOf, "scatterOverlays": __m["src/drishti_chart-overlays.js"].scatterOverlays, "frameValues": __m["src/drishti_chart-frames.js"].frameValues, "frameRows": __m["src/drishti_chart-frames.js"].frameRows, "reducedMotion": __m["src/drishti_chart-frames.js"].reducedMotion, "FrameBar": __m["src/drishti_chart-frames.js"].FrameBar, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "locate": __m["src/drishti_chart-geo.js"].locate, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "WORLD_REGIONS": __m["src/drishti_world-regions.js"].WORLD_REGIONS, "REGION_START_LEVELS": __m["src/drishti_chart-regions.js"].REGION_START_LEVELS, "isRegionLevel": __m["src/drishti_chart-regions.js"].isRegionLevel, "regionOf": __m["src/drishti_chart-regions.js"].regionOf, "regionName": __m["src/drishti_chart-regions.js"].regionName, "prepareRegionLevel": __m["src/drishti_chart-regions.js"].prepareRegionLevel, "bounds": __m["src/drishti_chart-regions.js"].bounds, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "rectBrush": __m["src/drishti_chart-parts.js"].rectBrush, "idsInBox": __m["src/drishti_chart-parts.js"].idsInBox, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "selectionTopic": __lib("drishti-core").selectionTopic, "filterTopic": __lib("drishti-core").filterTopic, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "elementTooltips": __m["src/drishti_chart-panels.js"].elementTooltips, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "pointOf": __m["src/drishti_chart-panel-draw.js"].pointOf, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "overviewStrip": __m["src/drishti_chart-kinds.js"].overviewStrip, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "buildLollipop": __m["src/drishti_chart-kinds4.js"].buildLollipop, "buildTrace3d": __m["src/drishti_chart-kinds4.js"].buildTrace3d, "buildSegmented": __m["src/drishti_chart-kinds4.js"].buildSegmented, "buildMatrix": __m["src/drishti_chart-kinds4.js"].buildMatrix, "canDraw3d": __m["src/drishti_chart-kinds4.js"].canDraw3d, "ensure3d": __m["src/drishti_chart-kinds4.js"].ensure3d, "registerSequenceKinds": __m["src/drishti_chart-kinds4.js"].registerSequenceKinds, "trackValues": __m["src/drishti_chart-tracks.js"].trackValues, "trackColour": __m["src/drishti_chart-tracks.js"].trackColour, "categoryCells": __m["src/drishti_chart-tracks.js"].categoryCells, "addTracks": __m["src/drishti_chart-tracks.js"].addTracks, "segmentOf": __m["src/drishti_chart-overlays.js"].segmentOf, "scatterOverlays": __m["src/drishti_chart-overlays.js"].scatterOverlays, "frameValues": __m["src/drishti_chart-frames.js"].frameValues, "frameRows": __m["src/drishti_chart-frames.js"].frameRows, "reducedMotion": __m["src/drishti_chart-frames.js"].reducedMotion, "FrameBar": __m["src/drishti_chart-frames.js"].FrameBar, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "locate": __m["src/drishti_chart-geo.js"].locate, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "WORLD_REGIONS": __m["src/drishti_world-regions.js"].WORLD_REGIONS, "REGION_START_LEVELS": __m["src/drishti_chart-regions.js"].REGION_START_LEVELS, "isRegionLevel": __m["src/drishti_chart-regions.js"].isRegionLevel, "regionOf": __m["src/drishti_chart-regions.js"].regionOf, "regionName": __m["src/drishti_chart-regions.js"].regionName, "prepareRegionLevel": __m["src/drishti_chart-regions.js"].prepareRegionLevel, "bounds": __m["src/drishti_chart-regions.js"].bounds, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "rectBrush": __m["src/drishti_chart-parts.js"].rectBrush, "idsInBox": __m["src/drishti_chart-parts.js"].idsInBox, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "TABLE_CHART_KINDS": __m["src/drishti_chart-table.js"].TABLE_CHART_KINDS, "TABLE_CHART_SERIES": __m["src/drishti_chart-table.js"].TABLE_CHART_SERIES, "tableChartData": __m["src/drishti_chart-table.js"].tableChartData, "tableChartSpec": __m["src/drishti_chart-table.js"].tableChartSpec, "TableChart": __m["src/drishti_chart-table.js"].TableChart, "openTableChart": __m["src/drishti_chart-table.js"].openTableChart, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "selectionTopic": __lib("drishti-core").selectionTopic, "filterTopic": __lib("drishti-core").filterTopic, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "elementTooltips": __m["src/drishti_chart-panels.js"].elementTooltips, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "pointOf": __m["src/drishti_chart-panel-draw.js"].pointOf, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "3.2.0" }, __m["src/drishti_index.js"]));
 });

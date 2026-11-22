@@ -54,7 +54,7 @@
         { id: 'cmd.theme', title: 'Switch theme', group: 'Commands', words: ['dark', 'light'], run: say },
         { id: 'word.dv01', title: 'DV01', group: 'Words', detail: 'Change in value for one basis point', run: say }]);
       const off = C.bindPaletteKey(doc.defaultView, pal);
-      const btn = ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Open the palette (Ctrl+K)', attrs: { type: 'button' }, on: { click: () => pal.open() } });
+      const btn = ctx.E.inputs.button(doc, { label: 'Open the palette (Ctrl+K)', onClick: () => pal.open() });
       host.appendChild(btn);
       return { target: btn, element: btn, ready: Promise.resolve(), destroy: () => { off(); pal.destroy(); btn.remove(); } };
     },
@@ -143,8 +143,8 @@
       const G = ctx.E.grid, doc = host.ownerDocument;
       const rows = [];
       ['Rates', 'Credit', 'FX', 'Equities'].forEach((d, i) => ['EMEA', 'APAC', 'Americas'].forEach((r, k) => rows.push({ desk: d, region: r, var99: 20 + ((i * 13 + k * 7) % 41), mtm: ((i + 1) * (k + 2) * 37) % 300 - 120 })));
-      const bar = ctx.h(doc, 'div', { cls: 'gx-fn' }, [ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Add a rule…', attrs: { type: 'button' }, on: { click: () => G.openRuleBuilder(el.grid) } }),
-        ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Copy a link to this view', attrs: { type: 'button' }, on: { click: () => { const l = G.shareLink(doc.defaultView.location.href, el.grid.getState()); ctx.log('shareLink', l.length + ' characters'); } } })]);
+      const bar = ctx.h(doc, 'div', { cls: 'gx-fn' }, [ctx.E.inputs.button(doc, { label: 'Add a rule…', onClick: () => G.openRuleBuilder(el.grid) }),
+        ctx.E.inputs.button(doc, { label: 'Copy a link to this view', onClick: () => { const l = G.shareLink(doc.defaultView.location.href, el.grid.getState()); ctx.log('shareLink', l.length + ' characters'); } })]);
       const el = doc.createElement('drishti-grid');
       host.appendChild(bar);
       host.appendChild(el);
@@ -180,7 +180,7 @@
       const C = ctx.E.core, doc = host.ownerDocument, box = ctx.h(doc, 'div', { cls: 'gx-fn' });
       host.appendChild(box);
       const chip = new C.SelectionChip(box, { channel: 'gallery-chip', describe: (ids) => ids.length + ' trades: ' + ids.slice(0, 2).join(', ') + (ids.length > 2 ? '…' : '') });
-      [['IRS-1', 'IRS-2', 'FX-9'], ['BND-4'], ['IRS-7', 'IRS-8']].forEach((ids, i) => box.appendChild(ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Select set ' + (i + 1), attrs: { type: 'button' }, on: { click: () => C.publishSelection('gallery-chip', ids) } })));
+      [['IRS-1', 'IRS-2', 'FX-9'], ['BND-4'], ['IRS-7', 'IRS-8']].forEach((ids, i) => box.appendChild(ctx.E.inputs.button(doc, { label: 'Select set ' + (i + 1), onClick: () => C.publishSelection('gallery-chip', ids) })));
       return { target: box, element: box, ready: Promise.resolve(), destroy: () => { chip.destroy(); box.remove(); } };
     },
     code: () => ({ js: "const chip = new Drishti.elements.core.SelectionChip(host, { channel: 'trades' });\n// grids, charts and trees linked to 'trades' publish; chip.clear() clears for every card", element: '<!-- any host element -->' })

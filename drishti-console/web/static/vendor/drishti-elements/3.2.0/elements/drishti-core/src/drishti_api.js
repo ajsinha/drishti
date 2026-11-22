@@ -20,6 +20,7 @@
    time limit; the as-of date of the page goes with every call in the header asOfHeader (default X-Drishti-As-Of). A root-absolute path is put under
    the page's URL sub-path (drishti_base.js). */
 import { url } from './drishti_base.js';
+import { fetcher } from './drishti_util.js';
 
 /** The default name of the header that carries the page's as-of date (option asOfHeader). */
 export const AS_OF_HEADER = 'X-Drishti-As-Of';
@@ -138,7 +139,7 @@ export class ApiClient {
    */
   request(method, path, body, c) {
     c = c || {};
-    const f = this.o.fetch || globalThis.fetch;
+    const f = fetcher(this.o.fetch);
     const tries = 1 + (c.retries !== undefined ? c.retries : method === 'GET' ? this.o.retries : 0);
     const limit = c.timeout !== undefined ? c.timeout : this.o.timeout;
     const send = body === undefined || (typeof FormData !== 'undefined' && body instanceof FormData) ? body : JSON.stringify(body);

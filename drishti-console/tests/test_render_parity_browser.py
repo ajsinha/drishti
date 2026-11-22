@@ -48,6 +48,8 @@ INTENTIONAL = {
     "pivot-corner": "a pivot's corner names its row fields in their own case on the painter ('book › family'), capitalised on the console",
     "inactive-words": "an inactive cell: the console adds the words 'not active' for a screen reader, the painter says it with the tone",
     "drill-count": "a drill-down row's count of children ('2 ▸'): the console's affordance; the painter opens the row by a click",
+    "pages-and-closed-rows": "a long table's further pages and a tree's or pivot's closed rows: the console's page holds them all, the "
+                             "painter one click away ('Show more', a row's twisty); the library's page is read after opening them",
     "chart-marks": "a chart's marks: compared as each series' type, name and values; colours come from each page's theme, and the points' "
                    "own payload (links, texts) is what each side's click and tooltip read",
 }
@@ -99,6 +101,8 @@ async def draw(browsers, site, url, width, library):
         if library:
             await page.wait_for_function("() => window.__rendered === true", timeout=20000)
             ph.mark("rendered")
+        if library and await H.open_all_async(page):  # pages and closed rows: the painter's content a click away, opened before the read
+            ph.mark("opened")
         await settled(page, animations=False)          # the read takes each chart's option, never its pixels
         ph.mark("settled")
         out = await H.read_async(page)
@@ -201,6 +205,5 @@ def test_the_pack_sutras_are_bound_on_their_samples(pack_views):
 @pytest.mark.parametrize("sutra", P.drawable(), ids=P.test_id)
 def test_every_pack_sutra_on_its_sample_is_the_same(browsers, render_site, pack_views, sutra):
     vm = pack_views["views"].get(sutra)
-    if vm is None:
-        pytest.skip(f"not bound by the server's preview: {[s for s in pack_views['skipped'] if s.startswith(sutra)]}")
+    assert vm is not None, f"not bound by the server's preview: {[s for s in pack_views['skipped'] if s.startswith(sutra)]}"   # a refusal is a failure, never a skip
     assert_same(browsers, render_site, sutra, vm)

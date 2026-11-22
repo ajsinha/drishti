@@ -14,15 +14,6 @@
  * See the LICENSE file in the root of this repository.
  */
 /* drishti-grid 3.2.0: TypeScript declarations, generated from the typed JSDoc by tools/elements/dts.py. */
-export interface AggFunc {
-  name: string;
-  label: string;
-  init: (() => any);
-  add: ((a0: any, a1: any) => any);
-  merge: ((a0: any, a1: any) => any);
-  result: ((a0: any) => any);
-  numeric: boolean;
-}
 export interface CellDrawOptions {
   showValue?: boolean;
 }
@@ -391,17 +382,17 @@ export declare class ColumnModel {
 }
 /** The functions by name. */
 export declare const AGG_FUNCS: any;
-/** A function by its name or a usual alias (average, distinct), or a registered one; null when the browser does not compute it. */
-export declare function aggFunc(name: string): AggFunc | null;
+/** A function by its name (the server's: sum, count, count_distinct, avg ...), or a registered one; null when the browser does not compute it. */
+export declare function aggFunc(name: string): import('../drishti-core/drishti-core').AggFunc | null;
 /** Registers a host's own aggregation for client-side rows (the AG Grid-style adapter's aggFuncs): it is given every member's value of a cell or total and answers the figure; the state is the list of values, so a total is still made from its own members, never from other cells' figures. A built-in name cannot be replaced. The name must be a plain word (it goes into a measure's text, name(FIELD)). */
-export declare function registerAggFunc(name: string, fn: ((a0: any[]) => any), o?: { label: string; numeric: boolean }): AggFunc;
+export declare function registerAggFunc(name: string, fn: ((a0: any[]) => any), o?: { label: string; numeric: boolean }): import('../drishti-core/drishti-core').AggFunc;
 /** Forgets a registered aggregation (a grid that registered it is gone). */
 export declare function unregisterAggFunc(name: string): boolean;
 /** A measure's text read: func(field), or count() for the members; null when it is not that simple form (var(99, 1d), ratio(...)). */
 export declare function parseMeasure(measure: string): { func: string; field: string | null } | null;
 /** Whether a measure must be asked of the server for every cell and total: the browser does not compute its function, or its field is marked non-additive (VaR, ES, a ratio: their totals are never sums of the parts). */
 export declare function isServerMeasure(measure: string, column?: ((a0: string) => Record<string, any> | null)): boolean;
-/** The aggregate of some rows' values by a function (a one-off: a selection's figure, a group's). */
+/** The aggregate of some values by a function (a one-off: a selection's figure, a group's, a chart's category). The mask is never summed: a masked member makes every numeric aggregation (sum, min, max, avg) masked, and a distinct count counts all masks as one value. */
 export declare function aggregate(values: Iterable<any>, func: string): any;
 /** The unit separator joining a path's values in a key. */
 export declare const SEP: string;
@@ -1006,10 +997,10 @@ export declare class LiveSetGrid {
   destroy(): void;
   [member: string]: any;
 }
+/** Whether a value is the Data Protocol's mask ({"$masked": true}): a value the reader may not see. */
+export declare function isMaskedValue(v: any): boolean;
 /** A ULID: 26 characters, a time (48 bits) then randomness (80 bits), sortable by creation. */
 export declare function ulid(now?: number, rnd?: (() => number)): string;
-/** Whether a cell value is masked for the reader. */
-export declare function isMaskedValue(v: any): boolean;
 /** What the reader may change, from the table's schema: null when the schema has no `write` (a read-only table: no edit control at all). */
 export declare function writeSpec(schema: Record<string, any> | null): WriteSpec | null;
 /** The editor a column's rule asks for: number, select, date, checkbox, else text. */

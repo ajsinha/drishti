@@ -16,6 +16,7 @@
 /* Business dates: a date is a calendar day (yyyy-MM-dd), never a moment, so no time zone ever moves it. Patterns are the server's
    (java.time DateTimeFormatter letters: yyyy, yy, MMMM, MMM, MM, M, dd, d, EEEE, EEE; text in single quotes), and the default, yyyy-MM-dd,
    leaves the ISO text as it is, as the server does. Business days skip Saturdays, Sundays and the holidays given. Pure; runs under Node. */
+import { pad } from './drishti_util.js';
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})/;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -55,7 +56,6 @@ function valid(y, m, d) {
  */
 export function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
 
-function pad(n, w) { return String(n).padStart(w, '0'); }
 
 /**
  * A business date as ISO text, yyyy-MM-dd.

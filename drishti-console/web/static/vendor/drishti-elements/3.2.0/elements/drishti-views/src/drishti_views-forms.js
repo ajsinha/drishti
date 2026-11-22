@@ -18,13 +18,12 @@
    Cancel. Submit hands the values to the painter's fire (a refused submit shows the messages the host's check hook answered, each at its
    field; nothing is evaluated here: the rules are the Rachana runtime's), Cancel runs the cancel effects without checks. An action button
    fires its place in the panel's list; confirm asks first; a requires is enabled only when the host's allowed hook answers true (no hook, or any other answer: disabled). */
-import { h, openDialog, closeDialog } from '../../drishti-core/src/drishti_index.js';
+import { h, openDialog, closeDialog, isObject } from '../../drishti-core/src/drishti_index.js';
 import { defineKind } from './drishti_views-kinds.js';
 import { say } from './drishti_views-cells.js';
 import { formFields } from './drishti_views-state.js';
 
 const list = (x) => (Array.isArray(x) ? x : []);
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /** The drishti-inputs field type of a form field's type. */
 const TYPES = Object.freeze({ number: 'number', integer: 'integer', money: 'money', boolean: 'boolean', date: 'date', time: 'time', datetime: 'datetime' });
@@ -37,7 +36,7 @@ const TYPES = Object.freeze({ number: 'number', integer: 'integer', money: 'mone
 export function formSchema(panel) {
   const properties = {}, required = [];
   formFields(panel).forEach((f) => {
-    const opts = list(f.options).filter(isObj), s = { type: TYPES[f.type] || 'string', title: typeof f.label === 'string' && f.label ? f.label : f.id };
+    const opts = list(f.options).filter(isObject), s = { type: TYPES[f.type] || 'string', title: typeof f.label === 'string' && f.label ? f.label : f.id };
     if (opts.length) {
       s.type = 'string';
       s.enum = opts.map((o) => String(o.value));
@@ -59,7 +58,7 @@ export function formSchema(panel) {
  * @returns {Object}
  */
 export function formValues(panel) {
-  const v = panel && panel.data && isObj(panel.data.values) ? panel.data.values : {}, out = {};
+  const v = panel && panel.data && isObject(panel.data.values) ? panel.data.values : {}, out = {};
   Object.keys(v).forEach((k) => { if (v[k] !== null && v[k] !== undefined) { out[k] = v[k]; } });
   return out;
 }
@@ -72,7 +71,7 @@ export function formValues(panel) {
  * @returns {Object<string, string>} field id to message
  */
 export function problemsByField(panel, problems) {
-  const fields = formFields(panel), rules = panel.form && Array.isArray(panel.form.rules) ? panel.form.rules.filter(isObj) : [], out = {};
+  const fields = formFields(panel), rules = panel.form && Array.isArray(panel.form.rules) ? panel.form.rules.filter(isObject) : [], out = {};
   list(problems).forEach((p) => {
     const msg = String(p.message);
     const rule = rules.find((r) => r.message === msg && Array.isArray(r.fields) && r.fields.length);
@@ -141,7 +140,7 @@ export function ask(ctx, text) {
 export function drawActions(ctx, panel, into) {
   const doc = ctx.doc;
   while (into.firstChild) { into.removeChild(into.firstChild); }
-  const acts = list(panel.actions).filter(isObj);
+  const acts = list(panel.actions).filter(isObject);
   into.hidden = !acts.length;
   acts.forEach((a, i) => {
     const allowed = typeof a.requires !== 'string' || !a.requires || ctx.allowed(a.requires);

@@ -19,7 +19,7 @@
    the same kind, filters and grouping. The server's rules (rights, masks, versions, four eyes) are never decided here; this only draws them.
    The connection is not here either: any object with subscribe(handlers) is a channel (the console's live channel, a test's manual one),
    and httpLiveApi is the one way a page reaches the server's /live endpoints. */
-import { MASK, hasFormat, endpoint, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { MASK, hasFormat, endpoint, url as drishtiUrl, fetcher } from '../../drishti-core/src/drishti_index.js';
 import { nestedText } from './drishti_columns.js';
 
 /** The grid row's key and version properties (the record's own fields keep their names). */
@@ -280,7 +280,7 @@ export function changedFields(then, now) {
 export function httpLiveApi(o) {
   const base = (o.base || endpoint('live')).replace(/\/$/, ''), id = encodeURIComponent(o.id);
   const changes = () => o.changesUrl || endpoint('changes');
-  const f = o.fetch || ((typeof fetch === 'function') ? fetch.bind(globalThis) : null);
+  const f = fetcher(o.fetch);
   const missing = (what) => Promise.reject(new Error('live set: no address configured (option ' + what + ' or configure({ endpoints }))'));
   const call = (method, path, body) => f(path, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
     body: body ? JSON.stringify(body) : undefined }).then((r) => r.json().catch(() => ({})).then((j) => {

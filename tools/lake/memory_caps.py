@@ -13,6 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
+# Drishti's own: the launchers' JVM sizing from the server's lake files before any JVM starts; Drishti Lake sizes its own memory store inside the JVM.
 """The in-memory lake's caps for the launchers (docs/architecture/DATA_ARCHITECTURE.md section 3a): prints the MB the JVM's direct-memory
 limit must have, 256 (the server's own buffers) plus every memory store's max-mb, read from the configuration the server reads
 (application.local.yaml in the working folder, then the files named on the command line), with ${VAR:default} resolved from the

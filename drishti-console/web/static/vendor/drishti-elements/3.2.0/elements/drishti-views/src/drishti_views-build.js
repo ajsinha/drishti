@@ -85,12 +85,15 @@ function emptyOf(node) {
 
 /**
  * The value with every field contract 1 requires and the producer left out filled in: null where the schema allows it, otherwise the
- * type's empty value (false, 0, '', [], {}); nested records alike. Nothing is removed or changed.
+ * type's empty value (false, 0, '', [], {}); nested records alike; a ViewModel without a contract speaks this painter's (CONTRACT). Nothing is removed or changed.
  * @param {*} value
  * @param {string} def a record of the schema ("ViewModel", "PanelView", "Frame", "Metric", ...)
  * @returns {*}
  */
-export function complete(value, def) { return fill(value, { $ref: '#/$defs/' + def }); }
+export function complete(value, def) {
+  if (def === 'ViewModel' && value && typeof value === 'object' && !Array.isArray(value) && value.contract === undefined) { value.contract = CONTRACT; }   // no contract: contract 1, as this painter draws it (VIEWMODEL.md section 8)
+  return fill(value, { $ref: '#/$defs/' + def });
+}
 
 function fill(v, node) {
   if (Array.isArray(v)) {

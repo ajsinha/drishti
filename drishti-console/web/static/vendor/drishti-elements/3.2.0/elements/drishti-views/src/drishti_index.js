@@ -29,11 +29,12 @@ export { StateStore, marksOf, effectsOf, hasEffects, triggerFor, requestText, re
 import { defineKind } from './drishti_views-kinds.js';
 export { formSchema, formValues, problemsByField } from './drishti_views-forms.js';
 export { inlineNodes, markupNodes, LINK_STATUS } from './drishti_views-words.js';
-export { PAGE_ROWS, numberOfText } from './drishti_views-tables.js';
+export { PAGE_ROWS, numberOfText, parseCondition } from './drishti_views-tables.js';
 export { MAX_NESTING } from './drishti_views-tabs.js';
 export { CHART_KINDS, chartTable } from './drishti_views-charts.js';
-export { AGGS, DATASET_FORMS, READ_LIMIT, isMasked, valueText, rowKey, inferFields, aggregate, derive, allowedAddress, Dataset, datasetsOf } from './drishti_views-data.js';
-export { DATASET_KINDS, gridColumns, chartSpec } from './drishti_views-datakinds.js';
+export { AGGS, engineAgg, aggregate, DATASET_FORMS, READ_LIMIT, valueText, rowKey, inferFields, derive, allowedAddress, Dataset, datasetsOf } from './drishti_views-data.js';
+export { isMasked } from '../../drishti-core/src/drishti_index.js';
+export { DATASET_KINDS, gridColumns, chartSpec, gridChart } from './drishti_views-datakinds.js';
 export { LIVE_KINDS, LiveLink } from './drishti_views-live.js';
 
 /**

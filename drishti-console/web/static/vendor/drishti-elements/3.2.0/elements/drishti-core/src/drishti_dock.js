@@ -21,6 +21,7 @@
 import { h } from './drishti_dom.js';
 import { rovingTabindex, announce } from './drishti_a11y.js';
 import { resizeHandle } from './drishti_resize.js';
+import { clamp } from './drishti_util.js';
 
 /**
  * @typedef {Object} DockNode
@@ -33,7 +34,7 @@ import { resizeHandle } from './drishti_resize.js';
  * @property {DockNode} [b]
  */
 
-const clamp = (v) => Math.max(0.1, Math.min(0.9, v));
+const share = (v) => clamp(v, 0.1, 0.9);
 
 /** The dock's layout as data. */
 export class DockModel {
@@ -170,7 +171,7 @@ export class DockModel {
    * @param {number} ratio
    * @returns {void}
    */
-  setRatio(node, ratio) { node.ratio = clamp(ratio); this.changed(); }
+  setRatio(node, ratio) { node.ratio = share(ratio); this.changed(); }
 
   /**
    * The workspace as data, to keep (JSON).
@@ -265,7 +266,7 @@ export class Dock {
     try {
       resizeHandle(handle, { axis: row ? 'x' : 'y', label: 'Resize the panels',
         start: () => { size = (row ? box.clientWidth : box.clientHeight) || 1; start = n.ratio; return null; },
-        move: (c, dx, dy) => { n.ratio = clamp(start + (row ? dx : dy) / size); a.style.flexBasis = (n.ratio * 100) + '%'; b.style.flexBasis = ((1 - n.ratio) * 100) + '%'; },
+        move: (c, dx, dy) => { n.ratio = share(start + (row ? dx : dy) / size); a.style.flexBasis = (n.ratio * 100) + '%'; b.style.flexBasis = ((1 - n.ratio) * 100) + '%'; },
         end: () => this.model.changed(), reset: () => this.model.setRatio(n, 0.5),
         key: (step) => { this.model.setRatio(n, n.ratio + step * 0.02); return true; }, value: () => ({ now: Math.round(n.ratio * 100), min: 10, max: 90 }) });
     } catch (e) { /* resize not installed (a test page): the ratio is set by the model */ }

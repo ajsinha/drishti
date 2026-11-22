@@ -17,6 +17,35 @@
 
 Each release lists what changed, by library. One version for every library: the `elements` key of `elements/drishti_elements.json`.
 
+## Unreleased
+
+- **A link whose target is missing is still a link** (drishti-views, links): its `missing` chip says so; only a `denied` target is drawn as words.
+- **Table tools for embeds** (drishti-views, drishti-chart): the paint option `tableTools: {filters, chart}` gives a table a funnel on each column
+  heading (values with counts, search, Select all, a number condition such as `> 1m`; filters combine across columns and survive a patch) and Chart any
+  table (the rows as shown opened as a chart in a dialog beside the table: kind, across, series; the card's data table and export). drishti-chart's new
+  `TableChart`, `openTableChart`, `tableChartSpec` and `tableChartData` chart any rows of text; a grid panel's "Chart the range" opens the same dialog.
+  drishti-views' size budget is 255,000 bytes (243,130 with them; was 232,000).
+- **The host styles and loads** (drishti-views): `sheets` (constructable sheets adopted by the view's root; the painter links no stylesheet) and
+  `engine` (the host loads ECharts its own way); without `engine` the painter loads the vendored chart engine itself the first time a view has a chart.
+- **A candlestick's data table prints the producer's texts** (drishti-views): `openText`, `highText`, `lowText`, `closeText` (the raw number only
+  when a text is absent), as the contract carries them.
+- **`complete` gives a ViewModel without a contract the painter's** (drishti-views): a document with no `contract` speaks contract 1.
+
+- **Quoted-phrase search in all ten search sites** (decision accepted): a "quoted phrase" is one word in the grid, tree, inputs, designer and core
+  filter searches, one reader (`searchWords`), no site keeps its own. **Core's size budget is 190,000** bytes (was 180,000; deliberate, owner: bigger
+  is fine when deliberate).
+- **Button and ButtonGroup** (drishti-inputs, new): the one way a screen draws a button. `button(doc, {label, action, variant, pressed, toggle, role,
+  selected, current, data, attrs, onClick})`, `<drishti-button>`, `<drishti-button-group mode="single">`. The gallery's 35 hand-made buttons (the toolbars, the
+  tabs, the mode segment, the navigator, the link button) and the chart studio's kind rail now use it; a guard fails on a new hand-made button in the
+  gallery or the studio, and the libraries' own internal buttons (167) are counted and may only fall.
+- **One name per thing** (breaking): chart kinds lose their aliases (`column`, `columns`, `bars`, `lines`, `point`, `points`, `doughnut`, `box`, `box-plot`,
+  `hist`, `choropleth`, `geo`, `candles`; `KIND_ALIASES` is gone) and the engine's aggregations lose theirs (the views keep the ViewModel's `distinct`, translated at their own boundary by `engineAgg`) (`average`, `mean`, `distinct`, `countDistinct`: write `bar`,
+  `line`, `scatter`, `donut`, `boxplot`, `histogram`, `map`, `candlestick`, `avg`, `count_distinct`). A spec with an old kind is refused by its name.
+- **Known duplicates folded into drishti-core** (all libraries): `isObject`, `clamp`, `pad`, `copyText`, `fetcher` and `now` (one copy each, the local ones removed);
+  `searchWords` and `hasWords`, the one quick-search reader (a "quoted phrase" is one word) used by the grid, tree, inputs, designer and core filter;
+  the aggregation engine (`aggFunc`, `aggregate`, `registerAggFunc`, `isMasked`) moved to drishti-core with the masked rule, used by the grid, the views and the
+  Vega-Lite chart (`median` stays in the chart); `formatCount` for counts. The grid, views and chart keep their public names.
+
 ## 3.2.0 (2026-11-21)
 
 - **The painter in a shadow root takes a pack's stylesheet** (drishti-views): when the page links `drishti-elements.css` (a pack), the view's shadow root links it once

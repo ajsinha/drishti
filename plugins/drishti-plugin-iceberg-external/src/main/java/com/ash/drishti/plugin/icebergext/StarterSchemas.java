@@ -17,10 +17,9 @@ package com.ash.drishti.plugin.icebergext;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.SourceContext;
+import com.ash.lake.read.DocumentField;
 import com.ash.lake.read.TableShape;
 import com.ash.lake.read.TableSnapshot;
-import com.ash.lake.spi.Column;
-import com.ash.lake.spi.ColumnType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -50,7 +49,7 @@ public final class StarterSchemas {
 
     private StarterSchemas() {}
 
-    /** One kind's schema from the table's columns as the product's read API reports them (a column's name and type; nested fields are not described). */
+    /** One kind's schema from the documents' fields as the product's read API reports them (nested fields, the id and the date included). */
     static ObjectNode of(TableShape cfg, TableSnapshot t) {
         ObjectNode schema = F.objectNode();
         schema.put("$schema", "https://json-schema.org/draft/2020-12/schema");
@@ -59,37 +58,50 @@ public final class StarterSchemas {
         schema.put("description", "Rows of the Iceberg table " + cfg.table() + " as " + cfg.kind() + " documents");
         schema.put("type", "object");
         ObjectNode props = schema.putObject("properties");
-        for (Column f : t.columns().all()) {
-            if (cfg.exclude().contains(f.name()) || f.name().equals(cfg.documentColumn())) {
-                continue;
-            }
-            String name = cfg.nameOf(f.name());
-            ObjectNode p = type(f.type());
-            if (f.name().equals(t.idColumn()) || cfg.id().size() == 1 && cfg.id().get(0).equals(f.name())) {
+        for (DocumentField f : t.documentFields()) {
+            ObjectNode p = type(f);
+            if (f.id() && cfg.id().size() <= 1) {
                 p.put("x-drishti-role", "key");
             }
-            if (f.name().equals(cfg.date())) {
+            if (f.date()) {
                 p.put("x-drishti-role", "date");
             }
-            if (cfg.links().containsKey(name)) {
-                p.put("x-drishti-link", cfg.links().get(name));
+            if (cfg.links().containsKey(f.name())) {
+                p.put("x-drishti-link", cfg.links().get(f.name()));
             }
-            props.set(name, p);
+            props.set(f.name(), p);
         }
         return schema;
     }
 
-    private static ObjectNode type(ColumnType t) {
+    private static ObjectNode type(DocumentField f) {
         ObjectNode n = F.objectNode();
-        switch (t) {
-            case BOOLEAN -> n.put("type", "boolean");
-            case INT, LONG -> n.put("type", "integer");
-            case DOUBLE -> n.put("type", "number");
-            case DATE -> n.put("type", "string").put("format", "date");
-            case TIMESTAMP -> n.put("type", "string").put("format", "date-time");
-            case BINARY -> n.put("type", "string").put("contentEncoding", "base64");
-            case STRING_LIST -> n.put("type", "array").putObject("items").put("type", "string");
-            case DOUBLE_LIST, FLOAT_LIST -> n.put("type", "array").putObject("items").put("type", "number");
+        switch (f.kind()) {
+            case "boolean" -> n.put("type", "boolean");
+            case "int", "long" -> n.put("type", "integer");
+            case "float", "double", "decimal" -> n.put("type", "number");
+            case "date" -> n.put("type", "string").put("format", "date");
+            case "time" -> n.put("type", "string").put("format", "time");
+            case "timestamp", "timestamptz" -> n.put("type", "string").put("format", "date-time");
+            case "uuid" -> n.put("type", "string").put("format", "uuid");
+            case "binary" -> n.put("type", "string").put("contentEncoding", "base64");
+            case "struct" -> {
+                n.put("type", "object");
+                ObjectNode props = n.putObject("properties");
+                f.children().forEach(c -> props.set(c.name(), type(c)));
+            }
+            case "list" -> {
+                n.put("type", "array");
+                if (!f.children().isEmpty()) {
+                    n.set("items", type(f.children().get(0)));
+                }
+            }
+            case "map" -> {
+                n.put("type", "object");
+                if (f.children().size() == 2) {
+                    n.set("additionalProperties", type(f.children().get(1)));
+                }
+            }
             default -> n.put("type", "string");
         }
         return n;

@@ -18,7 +18,7 @@
    window), paints it, applies live frames (the painter's patches) and the view's stream, navigates in place with its own back stack, and
    tells the host what happens through drishti:* events on the container. The painter draws every panel, the header, the strip, the
    freshness line and the keys; the host bar above it holds Back and About this page. */
-import { paint as paintView, CHART_KINDS, CONTRACT } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-views/src/drishti_index.js';
+import { paint as paintView } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-views/src/drishti_index.js';
 import * as ChartLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-chart/src/drishti_index.js';
 import * as GraphLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-graph/src/drishti_index.js';
 import * as EventsLib from '../../../vendor/drishti-elements/3.2.0/elements/drishti-events/src/drishti_index.js';
@@ -37,20 +37,8 @@ const BEHAVIOURS = ['library', 'host', 'console'];
 const AUTH = ['token', 'popup', 'session'];
 const HEADERS = ['full', 'strip', 'none'];
 const EMBED = '/embed/v2';
-const ENGINE_KINDS = new Set(CHART_KINDS.concat(['hbar', 'chart']));   // the kinds drishti-chart draws with the engine
 const enc = (x) => encodeURIComponent(String(x));
 const idPath = (id) => String(id).split('/').map(enc).join('/');
-
-/** The kinds of a ViewModel's panels, those inside tabs too. */
-function kindsOf(panels, out) {
-  (panels || []).forEach((p) => {
-    if (!p || typeof p !== 'object') { return; }
-    out.add(p.kind);
-    const tabs = p.data && Array.isArray(p.data.tabs) ? p.data.tabs : [];
-    tabs.forEach((t) => kindsOf(t && t.panels, out));
-  });
-  return out;
-}
 
 /** The console's address of an entity (the same as the console's own links), under the screen's server. */
 function entityHref(o, link) { return (o.server || basePath()) + '/v/' + enc(link.kind) + '/' + idPath(link.id); }
@@ -94,8 +82,7 @@ export class Screen {
     this.onKey = (e) => { if (e.altKey && e.key === 'ArrowLeft' && this.stack.length) { e.preventDefault(); this.back(); } };
     this.root.addEventListener('click', this.onClick);
     this.root.addEventListener('keydown', this.onKey);
-    if (o.shadow) { assets.claimSheets(); }
-    this.ready = o.shadow ? Promise.all([assets.sheet().then((s) => { this.root.adoptedStyleSheets = [s]; }), assets.font().catch(() => {})]) : Promise.resolve();
+    this.ready = o.shadow ? Promise.all([assets.sheet().then((s) => { this.sheet = s; this.root.adoptedStyleSheets = [s]; }), assets.font().catch(() => {})]) : Promise.resolve();
   }
 
   /** The theme on the container (a name of Drishti Elements' tokens), or 'inherit' (none of its own: the host page's tokens). */
@@ -112,10 +99,15 @@ export class Screen {
   }
 
   // ---- painting --------------------------------------------------------------------------------------------------------------
-  /** The painter's options: the view's links as the console's addresses, opened by this screen; the libraries from this module graph. */
+  /** The painter's options: the view's links as the console's addresses, opened by this screen; the libraries from this module graph; in a
+      shadow root the host's one sheet (the painter links none); ECharts loaded through this console's Trusted Types policy; behaviours
+      'console' gives every table the reader's tools (column funnels, Chart any table: the painter's). */
   paintOptions() {
     const o = this.o;
     return {
+      sheets: o.shadow ? (this.sheet ? [this.sheet] : []) : undefined,
+      engine: () => assets.echarts(),
+      tableTools: o.behaviours === 'console' ? { filters: true, chart: true } : undefined,
       shadow: false, header: o.header, validate: 'warn', complete: true, keys: !!o.keys, label: o.label || undefined, locale: o.locale, density: o.density,
       panels: Array.isArray(o.panels) ? o.panels : undefined,
       links: { href: (link) => (link && link.kind && link.id ? drishtiUrl(entityHref(o, link)) : null) },
@@ -128,9 +120,7 @@ export class Screen {
   async paint(vm) {
     if (!vm || typeof vm !== 'object' || !Array.isArray(vm.panels)) { return this.fail(problem('DRS-9103', 'not a ViewModel: it has no panels list', 'Pass the JSON of GET /api/v1/views/{kind}/{id}, or {kind, id} to fetch it.')); }
     await this.ready.catch(() => {});
-    if ([...kindsOf(vm.panels, new Set())].some((k) => ENGINE_KINDS.has(k))) { await assets.echarts().catch(() => null); }   // the painter says so in words when it fails
     this.vm = JSON.parse(JSON.stringify(vm));
-    if (!this.vm.contract) { this.vm.contract = String(CONTRACT); }   // a ViewModel without a contract speaks 1 (VIEWMODEL.md section 8): the painter's 1.x
     this.container.setAttribute('aria-label', this.o.label || str((vm.title || {}).id || (vm.ref || {}).id));
     if (!this.view) { this.mount(this.vm); await this.view.ready; } else { this.bar(); await this.view.update(this.vm); }
     this.emit('paint', { ref: this.vm.ref, generation: (this.vm.provenance || {}).generation || 0 });

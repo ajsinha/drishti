@@ -19,7 +19,7 @@
 import { h } from '../../drishti-core/src/drishti_index.js';
 import { kindList, kindOf, specText } from './drishti_chart-spec.js';
 import { dataTable } from './drishti_chart-parts.js';
-import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
+import { selectElement, button } from '../../drishti-inputs/src/drishti_index.js';
 
 /** @private the spec's JSON with its keys, strings and numbers marked for the style sheet (elements, no markup strings) */
 function coloured(doc, text) {
@@ -50,9 +50,9 @@ export class Studio {
     this.pre = h(doc, 'pre', { cls: 'dc-spec', attrs: { tabindex: '0', 'aria-label': 'The spec' } });
     this.opts = h(doc, 'div', { cls: 'dc-opts' });
     this.tab = 'spec';
-    const tabBtn = (id, text) => h(doc, 'button', { cls: 'dc-tab', text: text, attrs: { type: 'button', role: 'tab', 'data-tab': id, 'aria-selected': String(this.tab === id) }, on: { click: () => this.showTab(id) } });
+    const tabBtn = (id, text) => button(doc, { label: text, variant: 'bare', cls: 'dc-tab', role: 'tab', data: { tab: id }, selected: this.tab === id, onClick: () => this.showTab(id) });
     this.tabs = h(doc, 'div', { cls: 'dc-tabs', attrs: { role: 'tablist' } }, [tabBtn('spec', 'Spec'), tabBtn('options', 'Options')]);
-    this.copy = h(doc, 'button', { cls: 'dc-btn', text: 'Copy the spec', attrs: { type: 'button', 'data-act': 'copy-spec' }, on: { click: () => this.c.export('spec') } });
+    this.copy = button(doc, { label: 'Copy the spec', variant: 'bare', cls: 'dc-btn', data: { act: 'copy-spec' }, onClick: () => this.c.export('spec') });
     this.note = h(doc, 'p', { cls: 'dc-note', text: 'The spec names no drawing engine: a page, a Sutra panel, a BI visual and a generator write the same one. Options change the chart and the spec together.' });
     this.right = h(doc, 'div', { cls: 'dc-specpane' }, [this.tabs, this.opts, this.pre, h(doc, 'div', { cls: 'dc-spec-foot' }, [this.copy]), this.note]);
     this.root = h(doc, 'div', { cls: 'dc-studio' }, [this.rail, this.mid, this.right]);
@@ -79,8 +79,8 @@ export class Studio {
     this.rail.textContent = '';
     ['general', 'map'].filter((f) => groups[f]).concat(Object.keys(groups).filter((f) => f !== 'general' && f !== 'map')).forEach((f) => {
       this.rail.appendChild(h(doc, 'div', { cls: 'dc-rail-g', text: words[f] || f }));
-      groups[f].forEach((k) => this.rail.appendChild(h(doc, 'button', { cls: 'dc-rail-k' + (c.spec.kind === k.name ? ' dc-on' : ''), text: k.label,
-        attrs: { type: 'button', 'data-kind': k.name, 'aria-current': c.spec.kind === k.name ? 'true' : 'false' }, on: { click: () => this.pick(k.name) } })));
+      groups[f].forEach((k) => this.rail.appendChild(button(doc, { label: k.label, variant: 'bare', cls: 'dc-rail-k' + (c.spec.kind === k.name ? ' dc-on' : ''),
+        data: { kind: k.name }, current: c.spec.kind === k.name, onClick: () => this.pick(k.name) })));
     });
     this.pre.textContent = '';
     this.pre.appendChild(coloured(doc, specText(c.rawSpec)));

@@ -46,9 +46,10 @@
   }
 
   /** A row of buttons above a demo (Tick, Stream, Export ...). */
-  function toolbar(doc, h, label, buttons) {
+  function toolbar(doc, ctx, label, buttons) {
+    const h = ctx.h;
     return h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'toolbar', 'aria-label': label } },
-      buttons.map((b) => h(doc, 'button', { cls: 'gx-btn', text: b.text, attrs: { type: 'button', 'aria-pressed': b.pressed === undefined ? null : String(b.pressed), 'data-action': b.id }, on: { click: b.run } })));
+      buttons.map((b) => ctx.E.inputs.button(doc, { label: b.text, action: b.id, pressed: b.pressed, onClick: b.run })));
   }
 
   const GRID_TYPES = ['GridViewOptions', 'GridOptions'];
@@ -247,7 +248,7 @@
         feed.push({ type: 'transaction', update: up });
         ctx.log('feed.push', { type: 'transaction', update: up.length + ' rows' });
       };
-      const bar = toolbar(doc, ctx.h, 'Feed', [{ id: 'tick', text: 'Tick', run: tick },
+      const bar = toolbar(doc, ctx, 'Feed', [{ id: 'tick', text: 'Tick', run: tick },
         { id: 'stream', text: 'Stream', pressed: false, run: (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', String(on)); clearInterval(timer); if (on) { timer = setInterval(tick, 400); } } }]);
       host.appendChild(bar);
       const m = mountElement(host, this.build(values, ctx));
@@ -288,7 +289,7 @@
         const v = col && col.type === 'number' ? +values.value : values.value;
         ctx.log('setCellValue', { row: f.row, column: col ? col.id : f.col, value: v, applied: g.model.setCellValue(f.row, f.col, v) });
       };
-      const bar = toolbar(doc, ctx.h, 'Edit', [{ id: 'set', text: 'Set the focused cell to "' + values.value + '"', run: set }]);
+      const bar = toolbar(doc, ctx, 'Edit', [{ id: 'set', text: 'Set the focused cell to "' + values.value + '"', run: set }]);
       host.appendChild(bar);
       m = mountElement(host, this.build(values, ctx));
       const destroy = m.destroy;
@@ -308,7 +309,7 @@
       let m = null;
       const out = ctx.h(doc, 'span', { cls: 'gx-note', attrs: { 'aria-live': 'polite' } });
       const run = (id) => () => { Promise.resolve(m.element.grid.runAction(id)).then(() => { out.textContent = ctx.downloads.length ? 'Last file: ' + ctx.downloads[ctx.downloads.length - 1].name + ', ' + ctx.downloads[ctx.downloads.length - 1].size + ' bytes' : ''; }); };
-      const bar = toolbar(doc, ctx.h, 'Export', [{ id: 'export-csv', text: 'CSV', run: run('export-csv') }, { id: 'export-xlsx', text: 'Excel (.xlsx)', run: run('export-xlsx') }]);
+      const bar = toolbar(doc, ctx, 'Export', [{ id: 'export-csv', text: 'CSV', run: run('export-csv') }, { id: 'export-xlsx', text: 'Excel (.xlsx)', run: run('export-xlsx') }]);
       bar.appendChild(out);
       host.appendChild(bar);
       m = mountElement(host, this.build(values, ctx));
@@ -390,7 +391,7 @@
       let n = 0;
       const offs = [bus.on('trade.booked', (p) => { out.appendChild(ctx.h(doc, 'li', { text: 'on trade.booked → ' + JSON.stringify(p) })); ctx.log('trade.booked', p); })];
       bus.once('limit.breached', (p) => { out.appendChild(ctx.h(doc, 'li', { text: 'once limit.breached → ' + JSON.stringify(p) })); ctx.log('limit.breached', p); });
-      const bar = toolbar(doc, ctx.h, 'Emit', [{ id: 'emit', text: 'emit trade.booked', run: () => bus.emit('trade.booked', { id: 'T' + (++n) }) },
+      const bar = toolbar(doc, ctx, 'Emit', [{ id: 'emit', text: 'emit trade.booked', run: () => bus.emit('trade.booked', { id: 'T' + (++n) }) },
         { id: 'once', text: 'emit limit.breached (heard once)', run: () => bus.emit('limit.breached', { desk: 'Rates' }) }]);
       const el = ctx.h(doc, 'div', { cls: 'gx-fn' }, [bar, out]);
       host.appendChild(el);
@@ -413,8 +414,8 @@
         h(doc, 'p', { text: '“Finally, what we do about it.”', attrs: { 'data-tour-say': '3' } }),
         h(doc, 'div', { cls: 'gx-note', text: 'Card A: shown at steps 1 and 2', attrs: { 'data-tour-steps': '1 2' } }),
         h(doc, 'div', { cls: 'gx-note', text: 'Card B: shown at steps 2 and 3', attrs: { 'data-tour-steps': '2 3' } }),
-        h(doc, 'div', { cls: 'gx-demo-bar' }, [h(doc, 'button', { cls: 'gx-btn', text: '← Back', attrs: { type: 'button', 'data-tour': 'back' } }), h(doc, 'span', { attrs: { 'data-tour': 'at' } }),
-          h(doc, 'button', { cls: 'gx-btn', text: 'Next →', attrs: { type: 'button', 'data-tour': 'next' } })])]);
+        h(doc, 'div', { cls: 'gx-demo-bar' }, [ctx.E.inputs.button(doc, { label: '← Back', data: { tour: 'back' } }), h(doc, 'span', { attrs: { 'data-tour': 'at' } }),
+          ctx.E.inputs.button(doc, { label: 'Next →', data: { tour: 'next' } })])]);
       host.appendChild(el);
       const tour = new ctx.E.core.Tour(el, { onStep: (n) => ctx.log('step', { at: n }) });
       const m = done(el);
@@ -433,11 +434,11 @@
     mount: function (host, values, ctx) {
       const doc = host.ownerDocument, C = ctx.E.core, h = ctx.h;
       const dlg = h(doc, 'dialog', { cls: 'gx-dialog', attrs: { 'aria-label': 'A dialog' } }, [h(doc, 'p', { text: 'A modal dialog: focus moved in, and goes back when it closes.' }),
-        h(doc, 'label', {}, ['Name ', h(doc, 'input', { attrs: { type: 'text', value: 'Rates VaR' } })]), h(doc, 'button', { cls: 'gx-btn', text: 'Close', attrs: { type: 'button' }, on: { click: () => C.closeDialog(dlg, 'ok') } })]);
+        h(doc, 'label', {}, ['Name ', h(doc, 'input', { attrs: { type: 'text', value: 'Rates VaR' } })]), ctx.E.inputs.button(doc, { label: 'Close', onClick: () => C.closeDialog(dlg, 'ok') })]);
       const drawer = h(doc, 'aside', { cls: 'gx-drawer', attrs: { hidden: true, 'aria-label': 'A drawer' } }, [h(doc, 'p', { text: 'A drawer: Tab stays inside; Escape closes it.' }),
-        h(doc, 'button', { cls: 'gx-btn', text: 'Close the drawer', attrs: { type: 'button' }, on: { click: () => close && close() } })]);
+        ctx.E.inputs.button(doc, { label: 'Close the drawer', onClick: () => close && close() })]);
       let close = null;
-      const bar = toolbar(doc, h, 'Overlays', [{ id: 'toast', text: 'Toast', run: () => { C.toast(this.opts(values)); ctx.log('toast', this.opts(values)); } },
+      const bar = toolbar(doc, ctx, 'Overlays', [{ id: 'toast', text: 'Toast', run: () => { C.toast(this.opts(values)); ctx.log('toast', this.opts(values)); } },
         { id: 'dialog', text: 'Dialog', run: () => { C.openDialog(dlg); ctx.log('openDialog', ''); } },
         { id: 'drawer', text: 'Drawer', run: () => { close = C.openDrawer(drawer, { onClose: () => ctx.log('drawer closed', '') }); ctx.log('openDrawer', ''); } }]);
       const el = h(doc, 'div', { cls: 'gx-fn' }, [bar, dlg, drawer]);
@@ -484,7 +485,7 @@
       const out = h(doc, 'pre', { cls: 'gx-out', attrs: { 'aria-live': 'polite' } });
       const ask = (path) => () => { const t0 = Date.now(); client.get(path).then((r) => { out.textContent = 'GET ' + path + ' → ' + JSON.stringify(r) + ' (' + (Date.now() - t0) + ' ms)'; ctx.log('answer', path); },
         (e) => { out.textContent = 'GET ' + path + ' → ' + e.message + (e.code ? ' [' + e.code + ']' : '') + ' (' + (Date.now() - t0) + ' ms)'; ctx.log('problem', e.message); }); };
-      const el = h(doc, 'div', { cls: 'gx-fn' }, [toolbar(doc, h, 'Requests', [{ id: 'ok', text: 'GET /desks/ok', run: ask('/desks/ok') }, { id: 'problem', text: 'GET /desks/problem', run: ask('/desks/problem') },
+      const el = h(doc, 'div', { cls: 'gx-fn' }, [toolbar(doc, ctx, 'Requests', [{ id: 'ok', text: 'GET /desks/ok', run: ask('/desks/ok') }, { id: 'problem', text: 'GET /desks/problem', run: ask('/desks/problem') },
         { id: 'flaky', text: 'GET /desks/flaky (retried)', run: ask('/desks/flaky') }]), out]);
       host.appendChild(el);
       return done(el);
@@ -498,7 +499,7 @@
     values: {}, examples: [{ title: 'A toolbar with a roving tab index', values: {} }],
     mount: function (host, values, ctx) {
       const doc = host.ownerDocument, h = ctx.h, C = ctx.E.core;
-      const items = ['Day', 'Week', 'Month', 'Year'].map((t) => h(doc, 'button', { cls: 'gx-btn', text: t, attrs: { type: 'button', role: 'tab', 'aria-selected': 'false' } }));
+      const items = ['Day', 'Week', 'Month', 'Year'].map((t) => ctx.E.inputs.button(doc, { label: t, role: 'tab', selected: false }));
       const list = h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'tablist', 'aria-label': 'Period' } }, items);
       const roving = C.rovingTabindex(list, { selector: '[role="tab"]', onMove: (el) => { items.forEach((x) => x.setAttribute('aria-selected', String(x === el))); C.announce(el.textContent + ' selected'); ctx.log('move', el.textContent); } });
       const el = h(doc, 'div', { cls: 'gx-fn' }, [h(doc, 'p', { text: 'Tab into the list, then the arrows, Home and End: one Tab stop, the choice announced.' }), list]);

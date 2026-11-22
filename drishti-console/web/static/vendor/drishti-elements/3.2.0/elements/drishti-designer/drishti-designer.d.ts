@@ -249,8 +249,6 @@ export declare const GRID: number;
 export declare const MAX_H: number;
 /** A panel narrower than this is unreadable. */
 export declare const DEFAULT_MIN_SPAN: number;
-/** n between lo and hi. */
-export declare function clamp(n: number, lo: number, hi: number): number;
 /** A width in columns, between the minimum and the whole grid. */
 export declare function clampSpan(n: number, min?: number, grid?: number): number;
 /** A height in rows; 0 is "as tall as its content". */
@@ -392,6 +390,8 @@ export declare class LayoutCanvas {
   destroy(): void;
   [member: string]: any;
 }
+/** A number held between two bounds. */
+export declare function clamp(v: number, lo: number, hi: number): number;
 /** Entries matching a search: every word of the query in the label, the detail, the category or the keywords. */
 export declare function searchPalette(entries: PaletteEntry[], query: string): PaletteEntry[];
 /** The entries in their categories, in the order the categories first appear. */

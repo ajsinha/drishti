@@ -34,9 +34,251 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (__lib) {
   'use strict';
   var __m = {};
+  /* ---- src/drishti_inputs-dom.js ---- */
+  __m["src/drishti_inputs-dom.js"] = (function () {
+    var EventBus = __lib("drishti-core").EventBus, h = __lib("drishti-core").h, placeUnder = __lib("drishti-core").placeUnder, stateBlock = __lib("drishti-core").stateBlock, searchWords = __lib("drishti-core").searchWords;
+    let seq = 0;
+    function uid(prefix) { return 'di-' + prefix + '-' + (++seq); }
+    function debounce(fn, ms) {
+      let t = 0, args = null;
+      const d = function () { args = arguments; clearTimeout(t); t = setTimeout(() => { t = 0; fn.apply(null, args); }, ms); };
+      d.cancel = () => { clearTimeout(t); t = 0; };
+      d.flush = () => { if (t) { clearTimeout(t); t = 0; fn.apply(null, args); } };
+      return d;
+    }
+    class InputBase {
+      constructor(host, options, cls) {
+        if (!host || !host.ownerDocument) { throw new Error('an input needs an element to fill'); }
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.win = this.doc.defaultView;
+        this.o = Object.assign({}, options);
+        this.events = new EventBus();
+        host.classList.add('di', cls);
+      }
+      on(name, fn) { return this.events.on(name, fn); }
+      emit(name, detail) {
+        this.events.emit(name, detail || {});
+        const ev = 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
+        this.host.dispatchEvent(new this.win.CustomEvent(ev, { detail: detail || {}, bubbles: true, composed: true }));
+      }
+      el(tag, p, children) { return h(this.doc, tag, p, children); }
+      destroy() { if (this.pop) { this.pop.close(); } this.events.clear(); this.host.textContent = ''; }
+    }
+    class Popover {
+      constructor(doc, o) {
+        this.doc = doc;
+        this.o = o || {};
+        this.el = null;
+        this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target)) && !this.nested(e.target)) { this.close(); } };
+        this.onKey = (e) => { if (e.key === 'Escape' && this.el) { e.stopPropagation(); this.close(true); } };
+      }
+      isOpen() { return !!this.el; }
+      nested(t) {
+        for (let p = t && t.closest ? t.closest('.di-pop') : null; p && p.diAnchor; p = p.diAnchor.closest ? p.diAnchor.closest('.di-pop') : null) {
+          if (this.el.contains(p.diAnchor)) { return true; }
+        }
+        return false;
+      }
+      open(anchor, content, o) {
+        this.close();
+        this.anchor = anchor;
+        this.before = this.doc.activeElement;
+        const el = this.el = h(this.doc, 'div', { cls: 'di-pop ' + (this.o.cls || ''), attrs: { role: this.o.role || 'dialog', 'aria-label': this.o.label || null } });
+        if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
+        el.diAnchor = anchor;                                                  // a panel opened from inside another keeps the other open
+        el.appendChild(content);
+        el.addEventListener('keydown', this.onKey);
+        (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */
+        placeUnder(el, anchor, { matchWidth: true });
+        this.doc.addEventListener('mousedown', this.onDown, true);
+        if (!o || o.focus !== false) { const f = el.querySelector('[autofocus], input, button, [tabindex="0"]'); if (f) { f.focus(); } }
+        return el;
+      }
+      place() { if (this.el && this.anchor) { placeUnder(this.el, this.anchor, { matchWidth: true }); } }
+      close(refocus) {
+        if (!this.el) { return; }
+        this.doc.removeEventListener('mousedown', this.onDown, true);
+        this.el.remove();
+        this.el = null;
+        if (refocus && this.before && this.before.focus && this.doc.contains(this.before)) { this.before.focus(); }
+        if (this.o.onClose) { this.o.onClose(); }
+      }
+    }
+    class Listbox {
+      constructor(doc, o) {
+        this.doc = doc;
+        this.o = Object.assign({ cap: 300 }, o);
+        this.id = uid('lb');
+        this.el = h(doc, 'div', { cls: 'di-listbox', attrs: { role: 'listbox', id: this.id, 'aria-label': this.o.label || 'Options', 'aria-multiselectable': this.o.multiple ? 'true' : null } });
+        this.items = [];
+        this.active = -1;
+        this.selected = () => false;
+        this.el.addEventListener('mousedown', (e) => e.preventDefault());
+        this.el.addEventListener('click', (e) => {
+          const opt = e.target.closest('.di-option');
+          if (opt && !opt.classList.contains('di-disabled')) { this.setActive(+opt.dataset.i); this.o.onPick(this.items[+opt.dataset.i], e); }
+        });
+      }
+      render(items, selected, o) {
+        o = o || {};
+        this.items = items.slice(0, this.o.cap);
+        this.selected = selected;
+        const el = this.el;
+        el.textContent = '';
+        let group = null;
+        this.items.forEach((it, i) => {
+          if (it.group && it.group !== group) { group = it.group; el.appendChild(h(this.doc, 'div', { cls: 'di-option-group', text: group, attrs: { role: 'presentation' } })); }
+          const sel = this.o.followActive ? i === this.active : !!selected(it);
+          const opt = h(this.doc, 'div', { cls: 'di-option' + (sel ? ' di-selected' : '') + (it.disabled ? ' di-disabled' : '') + (i === this.active ? ' di-active' : ''),
+            attrs: { role: 'option', id: this.id + '-' + i, 'aria-selected': String(sel), 'aria-disabled': it.disabled ? 'true' : null }, data: { i: String(i) } });
+          if (this.o.multiple) { opt.appendChild(h(this.doc, 'span', { cls: 'di-tick', text: sel ? '☑' : '☐', attrs: { 'aria-hidden': 'true' } })); }
+          if (this.o.render) { this.o.render(it, opt); }
+          else {
+            opt.appendChild(h(this.doc, 'span', { cls: 'di-option-label', text: it.label }));
+            if (it.detail) { opt.appendChild(h(this.doc, 'span', { cls: 'di-option-detail', text: it.detail })); }
+          }
+          el.appendChild(opt);
+        });
+        const more = (o.more || 0) + Math.max(0, items.length - this.items.length);
+        if (!items.length) { el.appendChild(stateBlock(this.doc, 'empty', { text: o.empty || 'Nothing matches', compact: true, role: 'presentation' })); }
+        if (more > 0) { el.appendChild(h(this.doc, 'div', { cls: 'di-more', text: more + ' more: refine the search', attrs: { role: 'presentation' } })); }
+        if (this.active >= this.items.length) { this.active = this.items.length - 1; }
+      }
+      setActive(i, owner) {
+        this.active = Math.max(-1, Math.min(this.items.length - 1, i));
+        Array.prototype.forEach.call(this.el.querySelectorAll('.di-option'), (o) => {
+          o.classList.toggle('di-active', +o.dataset.i === this.active);
+          if (this.o.followActive) { o.setAttribute('aria-selected', String(+o.dataset.i === this.active)); }
+        });
+        const cur = this.active >= 0 ? this.doc.getElementById(this.id + '-' + this.active) : null;
+        if (cur && cur.scrollIntoView) { cur.scrollIntoView({ block: 'nearest' }); }
+        if (owner) { if (cur) { owner.setAttribute('aria-activedescendant', cur.id); } else { owner.removeAttribute('aria-activedescendant'); } }
+      }
+      key(e, owner) {
+        const n = this.items.length, k = e.key;
+        if (!n) { return false; }
+        const page = 8;
+        let next = null;
+        if (k === 'ArrowDown') { next = this.active + 1 >= n ? 0 : this.active + 1; }
+        else if (k === 'ArrowUp') { next = this.active <= 0 ? n - 1 : this.active - 1; }
+        else if (k === 'PageDown') { next = Math.min(n - 1, this.active + page); }
+        else if (k === 'PageUp') { next = Math.max(0, this.active - page); }
+        else if (k === 'Home' && e.ctrlKey) { next = 0; }
+        else if (k === 'End' && e.ctrlKey) { next = n - 1; }
+        if (next !== null) { e.preventDefault(); this.setActive(next, owner); return true; }
+        if ((k === 'Enter' || (k === ' ' && this.o.multiple && e.target === owner && owner.tagName !== 'INPUT')) && this.active >= 0) {
+          const it = this.items[this.active];
+          if (it && !it.disabled) { e.preventDefault(); this.o.onPick(it, e); return true; }
+        }
+        return false;
+      }
+    }
+    function normalizeOptions(list) {
+      return (list || []).map((x) => (x !== null && typeof x === 'object' ? { value: x.value !== undefined ? x.value : x.label, label: String(x.label !== undefined ? x.label : x.value), detail: x.detail || '',
+        disabled: !!x.disabled, group: x.group || '' } : { value: x, label: String(x), detail: '', disabled: false, group: '' }));
+    }
+    function searchOptions(items, q) {
+      const words = searchWords(q);
+      if (!words.length) { return items.slice(); }
+      const scored = [];
+      items.forEach((raw, i) => {
+        const it = raw !== null && typeof raw === 'object' && typeof raw.label === 'string' ? raw : normalizeOptions([raw])[0];   // a string, a number or {value} alone is a label too
+        const l = it.label.toLowerCase(), d = (it.detail || '').toLowerCase();
+        let score = 0;
+        for (const w of words) {
+          if (l === w) { score += 5; } else if (l.indexOf(w) === 0) { score += 4; } else if (new RegExp('[\\s\\-_./(]' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(l)) { score += 3; } else if (l.indexOf(w) >= 0) { score += 2; } else if (d.indexOf(w) >= 0) { score += 1; } else { return; }
+        }
+        scored.push({ it: raw, score: score, i: i });
+      });
+      return scored.sort((a, b) => b.score - a.score || a.i - b.i).map((x) => x.it);
+    }
+    return { "uid": uid, "debounce": debounce, "InputBase": InputBase, "Popover": Popover, "Listbox": Listbox, "normalizeOptions": normalizeOptions, "searchOptions": searchOptions };
+  })();
+  /* ---- src/drishti_button.js ---- */
+  __m["src/drishti_button.js"] = (function () {
+    var InputBase = __m["src/drishti_inputs-dom.js"].InputBase;
+    const VARIANTS = ['plain', 'primary', 'link', 'bare'];
+    class Button extends InputBase {
+      constructor(host, options) {
+        super(host, options, 'di-button');
+        const o = this.o;
+        this.button = host.tagName === 'BUTTON' ? host : this.el('button');
+        if (this.button === host) { host.classList.remove('di'); }       // a <button> is its own control: the page's classes (not the field's font) style it
+        this.button.setAttribute('type', 'button');
+        if (this.button !== host) { host.appendChild(this.button); }
+        const variant = VARIANTS.includes(o.variant) ? o.variant : 'plain';
+        this.button.classList.add('di-btn-' + variant);
+        String(o.cls || '').split(/\s+/).filter(Boolean).forEach((c) => this.button.classList.add(c));
+        Object.keys(o.data || {}).forEach((k) => this.button.setAttribute('data-' + k, String(o.data[k])));
+        Object.keys(o.attrs || {}).forEach((k) => { if (o.attrs[k] !== null && o.attrs[k] !== undefined) { this.button.setAttribute(k, String(o.attrs[k])); } });
+        if (o.action) { this.button.setAttribute('data-action', o.action); }
+        if (o.role) { this.button.setAttribute('role', o.role); }
+        if (o.title) { this.button.setAttribute('title', o.title); }
+        this.setLabel(o.label || '');
+        this.paint();
+        this.button.addEventListener('click', (e) => {
+          if (this.o.disabled) { return; }
+          if (this.o.toggle && typeof this.o.pressed === 'boolean') { this.setPressed(!this.o.pressed); this.emit('change', { pressed: this.o.pressed }); }
+          this.emit('click', { event: e });
+          if (typeof this.o.onClick === 'function') { this.o.onClick(e); }
+        });
+        this.setDisabled(!!o.disabled);
+      }
+      paint() {
+        const b = this.button, o = this.o;
+        if (typeof o.pressed === 'boolean') { b.setAttribute('aria-pressed', String(o.pressed)); }
+        if (typeof o.selected === 'boolean') { b.setAttribute('aria-selected', String(o.selected)); }
+        if (typeof o.current === 'boolean') { b.setAttribute('aria-current', o.current ? 'true' : 'false'); }
+      }
+      setLabel(text) { this.o.label = text; if (this.button.textContent !== text) { this.button.textContent = text; } }
+      getValue() { return this.o.pressed === true; }
+      setValue(on) { this.setPressed(on); }
+      setPressed(on) { this.o.pressed = on === true || on === 'true'; this.paint(); }
+      setSelected(on) { this.o.selected = !!on; this.paint(); }
+      setDisabled(off) { this.o.disabled = !!off; this.button.disabled = !!off; this.host.classList.toggle('di-disabled', !!off); }
+      focus() { this.button.focus(); }
+      destroy() { this.events.clear(); }
+    }
+    function button(doc, options) {
+      const b = doc.createElement('button');
+      b.component = new Button(b, options);
+      return b;
+    }
+    function valueOf(o) { return String((o.data && o.data.value) || o.action || o.label || ''); }
+    class ButtonGroup extends InputBase {
+      constructor(host, options) {
+        super(host, options, 'di-button-group');
+        const o = this.o;
+        host.setAttribute('role', 'group');
+        if (o.label) { host.setAttribute('aria-label', o.label); }
+        String(o.cls || '').split(/\s+/).filter(Boolean).forEach((c) => host.classList.add(c));
+        this.single = o.mode === 'single';
+        this.value = o.value === undefined ? null : String(o.value);
+        this.buttons = (o.buttons || []).map((b) => {
+          const bo = Object.assign({}, b);
+          if (this.single) { bo.pressed = valueOf(b) === this.value; }
+          const el = button(this.doc, bo);
+          el.component.value = valueOf(b);
+          host.appendChild(el);
+          if (this.single) { el.component.on('click', () => this.pick(el.component.value, true)); }
+          return el;
+        });
+      }
+      getValue() { return this.value; }
+      setValue(v) { this.pick(v, false); }
+      pick(v, fire) {
+        const changed = v !== this.value;
+        this.value = v === null || v === undefined ? null : String(v);
+        this.buttons.forEach((b) => b.component.setPressed(b.component.value === this.value));
+        if (fire && changed) { this.emit('change', { value: this.value }); }
+      }
+    }
+    return { "Button": Button, "button": button, "ButtonGroup": ButtonGroup };
+  })();
   /* ---- src/drishti_calendar.js ---- */
   __m["src/drishti_calendar.js"] = (function () {
-    var parseDate = __lib("drishti-core").parseDate, isoDate = __lib("drishti-core").isoDate, daysInMonth = __lib("drishti-core").daysInMonth, today = __lib("drishti-core").today;
+    var parseDate = __lib("drishti-core").parseDate, isoDate = __lib("drishti-core").isoDate, daysInMonth = __lib("drishti-core").daysInMonth, today = __lib("drishti-core").today, pad = __lib("drishti-core").pad;
     const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     const CALENDAR_RULES = Object.freeze({
       US: [{ name: 'New Year\'s Day', fixed: '01-01', roll: 'nearest' }, { name: 'Martin Luther King Jr. Day', nth: 3, weekday: 1, month: 1 },
@@ -53,8 +295,7 @@
         { name: 'Labour Day', nth: 1, weekday: 1, month: 9 }, { name: 'Thanksgiving', nth: 2, weekday: 1, month: 10 }, { name: 'Christmas Day', fixed: '12-25', roll: 'monday' },
         { name: 'Boxing Day', fixed: '12-26', roll: 'monday' }]
     });
-    function pad(n) { return String(n).padStart(2, '0'); }
-    function iso(y, m, d) { return String(y).padStart(4, '0') + '-' + pad(m) + '-' + pad(d); }
+    function iso(y, m, d) { return pad(y, 4) + '-' + pad(m) + '-' + pad(d); }
     function wd(y, m, d) { return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
     function shiftIso(s, days) { const b = parseDate(s), t = new Date(Date.UTC(b.y, b.m - 1, b.d + days)); return iso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()); }
     function easterSunday(y) {
@@ -449,167 +690,6 @@
       return s;
     }
     return { "wordAt": wordAt, "completions": completions, "insertText": insertText, "lineDiff": lineDiff, "sideBySide": sideBySide, "diffStats": diffStats };
-  })();
-  /* ---- src/drishti_inputs-dom.js ---- */
-  __m["src/drishti_inputs-dom.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus, h = __lib("drishti-core").h, placeUnder = __lib("drishti-core").placeUnder, stateBlock = __lib("drishti-core").stateBlock;
-    let seq = 0;
-    function uid(prefix) { return 'di-' + prefix + '-' + (++seq); }
-    function debounce(fn, ms) {
-      let t = 0, args = null;
-      const d = function () { args = arguments; clearTimeout(t); t = setTimeout(() => { t = 0; fn.apply(null, args); }, ms); };
-      d.cancel = () => { clearTimeout(t); t = 0; };
-      d.flush = () => { if (t) { clearTimeout(t); t = 0; fn.apply(null, args); } };
-      return d;
-    }
-    class InputBase {
-      constructor(host, options, cls) {
-        if (!host || !host.ownerDocument) { throw new Error('an input needs an element to fill'); }
-        this.host = host;
-        this.doc = host.ownerDocument;
-        this.win = this.doc.defaultView;
-        this.o = Object.assign({}, options);
-        this.events = new EventBus();
-        host.classList.add('di', cls);
-      }
-      on(name, fn) { return this.events.on(name, fn); }
-      emit(name, detail) {
-        this.events.emit(name, detail || {});
-        const ev = 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
-        this.host.dispatchEvent(new this.win.CustomEvent(ev, { detail: detail || {}, bubbles: true, composed: true }));
-      }
-      el(tag, p, children) { return h(this.doc, tag, p, children); }
-      destroy() { if (this.pop) { this.pop.close(); } this.events.clear(); this.host.textContent = ''; }
-    }
-    class Popover {
-      constructor(doc, o) {
-        this.doc = doc;
-        this.o = o || {};
-        this.el = null;
-        this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target)) && !this.nested(e.target)) { this.close(); } };
-        this.onKey = (e) => { if (e.key === 'Escape' && this.el) { e.stopPropagation(); this.close(true); } };
-      }
-      isOpen() { return !!this.el; }
-      nested(t) {
-        for (let p = t && t.closest ? t.closest('.di-pop') : null; p && p.diAnchor; p = p.diAnchor.closest ? p.diAnchor.closest('.di-pop') : null) {
-          if (this.el.contains(p.diAnchor)) { return true; }
-        }
-        return false;
-      }
-      open(anchor, content, o) {
-        this.close();
-        this.anchor = anchor;
-        this.before = this.doc.activeElement;
-        const el = this.el = h(this.doc, 'div', { cls: 'di-pop ' + (this.o.cls || ''), attrs: { role: this.o.role || 'dialog', 'aria-label': this.o.label || null } });
-        if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
-        el.diAnchor = anchor;                                                  // a panel opened from inside another keeps the other open
-        el.appendChild(content);
-        el.addEventListener('keydown', this.onKey);
-        (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */
-        placeUnder(el, anchor, { matchWidth: true });
-        this.doc.addEventListener('mousedown', this.onDown, true);
-        if (!o || o.focus !== false) { const f = el.querySelector('[autofocus], input, button, [tabindex="0"]'); if (f) { f.focus(); } }
-        return el;
-      }
-      place() { if (this.el && this.anchor) { placeUnder(this.el, this.anchor, { matchWidth: true }); } }
-      close(refocus) {
-        if (!this.el) { return; }
-        this.doc.removeEventListener('mousedown', this.onDown, true);
-        this.el.remove();
-        this.el = null;
-        if (refocus && this.before && this.before.focus && this.doc.contains(this.before)) { this.before.focus(); }
-        if (this.o.onClose) { this.o.onClose(); }
-      }
-    }
-    class Listbox {
-      constructor(doc, o) {
-        this.doc = doc;
-        this.o = Object.assign({ cap: 300 }, o);
-        this.id = uid('lb');
-        this.el = h(doc, 'div', { cls: 'di-listbox', attrs: { role: 'listbox', id: this.id, 'aria-label': this.o.label || 'Options', 'aria-multiselectable': this.o.multiple ? 'true' : null } });
-        this.items = [];
-        this.active = -1;
-        this.selected = () => false;
-        this.el.addEventListener('mousedown', (e) => e.preventDefault());
-        this.el.addEventListener('click', (e) => {
-          const opt = e.target.closest('.di-option');
-          if (opt && !opt.classList.contains('di-disabled')) { this.setActive(+opt.dataset.i); this.o.onPick(this.items[+opt.dataset.i], e); }
-        });
-      }
-      render(items, selected, o) {
-        o = o || {};
-        this.items = items.slice(0, this.o.cap);
-        this.selected = selected;
-        const el = this.el;
-        el.textContent = '';
-        let group = null;
-        this.items.forEach((it, i) => {
-          if (it.group && it.group !== group) { group = it.group; el.appendChild(h(this.doc, 'div', { cls: 'di-option-group', text: group, attrs: { role: 'presentation' } })); }
-          const sel = this.o.followActive ? i === this.active : !!selected(it);
-          const opt = h(this.doc, 'div', { cls: 'di-option' + (sel ? ' di-selected' : '') + (it.disabled ? ' di-disabled' : '') + (i === this.active ? ' di-active' : ''),
-            attrs: { role: 'option', id: this.id + '-' + i, 'aria-selected': String(sel), 'aria-disabled': it.disabled ? 'true' : null }, data: { i: String(i) } });
-          if (this.o.multiple) { opt.appendChild(h(this.doc, 'span', { cls: 'di-tick', text: sel ? '☑' : '☐', attrs: { 'aria-hidden': 'true' } })); }
-          if (this.o.render) { this.o.render(it, opt); }
-          else {
-            opt.appendChild(h(this.doc, 'span', { cls: 'di-option-label', text: it.label }));
-            if (it.detail) { opt.appendChild(h(this.doc, 'span', { cls: 'di-option-detail', text: it.detail })); }
-          }
-          el.appendChild(opt);
-        });
-        const more = (o.more || 0) + Math.max(0, items.length - this.items.length);
-        if (!items.length) { el.appendChild(stateBlock(this.doc, 'empty', { text: o.empty || 'Nothing matches', compact: true, role: 'presentation' })); }
-        if (more > 0) { el.appendChild(h(this.doc, 'div', { cls: 'di-more', text: more + ' more: refine the search', attrs: { role: 'presentation' } })); }
-        if (this.active >= this.items.length) { this.active = this.items.length - 1; }
-      }
-      setActive(i, owner) {
-        this.active = Math.max(-1, Math.min(this.items.length - 1, i));
-        Array.prototype.forEach.call(this.el.querySelectorAll('.di-option'), (o) => {
-          o.classList.toggle('di-active', +o.dataset.i === this.active);
-          if (this.o.followActive) { o.setAttribute('aria-selected', String(+o.dataset.i === this.active)); }
-        });
-        const cur = this.active >= 0 ? this.doc.getElementById(this.id + '-' + this.active) : null;
-        if (cur && cur.scrollIntoView) { cur.scrollIntoView({ block: 'nearest' }); }
-        if (owner) { if (cur) { owner.setAttribute('aria-activedescendant', cur.id); } else { owner.removeAttribute('aria-activedescendant'); } }
-      }
-      key(e, owner) {
-        const n = this.items.length, k = e.key;
-        if (!n) { return false; }
-        const page = 8;
-        let next = null;
-        if (k === 'ArrowDown') { next = this.active + 1 >= n ? 0 : this.active + 1; }
-        else if (k === 'ArrowUp') { next = this.active <= 0 ? n - 1 : this.active - 1; }
-        else if (k === 'PageDown') { next = Math.min(n - 1, this.active + page); }
-        else if (k === 'PageUp') { next = Math.max(0, this.active - page); }
-        else if (k === 'Home' && e.ctrlKey) { next = 0; }
-        else if (k === 'End' && e.ctrlKey) { next = n - 1; }
-        if (next !== null) { e.preventDefault(); this.setActive(next, owner); return true; }
-        if ((k === 'Enter' || (k === ' ' && this.o.multiple && e.target === owner && owner.tagName !== 'INPUT')) && this.active >= 0) {
-          const it = this.items[this.active];
-          if (it && !it.disabled) { e.preventDefault(); this.o.onPick(it, e); return true; }
-        }
-        return false;
-      }
-    }
-    function normalizeOptions(list) {
-      return (list || []).map((x) => (x !== null && typeof x === 'object' ? { value: x.value !== undefined ? x.value : x.label, label: String(x.label !== undefined ? x.label : x.value), detail: x.detail || '',
-        disabled: !!x.disabled, group: x.group || '' } : { value: x, label: String(x), detail: '', disabled: false, group: '' }));
-    }
-    function searchOptions(items, q) {
-      const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
-      if (!words.length) { return items.slice(); }
-      const scored = [];
-      items.forEach((raw, i) => {
-        const it = raw !== null && typeof raw === 'object' && typeof raw.label === 'string' ? raw : normalizeOptions([raw])[0];   // a string, a number or {value} alone is a label too
-        const l = it.label.toLowerCase(), d = (it.detail || '').toLowerCase();
-        let score = 0;
-        for (const w of words) {
-          if (l === w) { score += 5; } else if (l.indexOf(w) === 0) { score += 4; } else if (new RegExp('[\\s\\-_./(]' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(l)) { score += 3; } else if (l.indexOf(w) >= 0) { score += 2; } else if (d.indexOf(w) >= 0) { score += 1; } else { return; }
-        }
-        scored.push({ it: raw, score: score, i: i });
-      });
-      return scored.sort((a, b) => b.score - a.score || a.i - b.i).map((x) => x.it);
-    }
-    return { "uid": uid, "debounce": debounce, "InputBase": InputBase, "Popover": Popover, "Listbox": Listbox, "normalizeOptions": normalizeOptions, "searchOptions": searchOptions };
   })();
   /* ---- src/drishti_code-editor.js ---- */
   __m["src/drishti_code-editor.js"] = (function () {
@@ -1694,7 +1774,7 @@
   })();
   /* ---- src/drishti_field-picker.js ---- */
   __m["src/drishti_field-picker.js"] = (function () {
-    var announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock;
+    var announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, searchWords = __lib("drishti-core").searchWords;
     var Popover = __m["src/drishti_inputs-dom.js"].Popover, uid = __m["src/drishti_inputs-dom.js"].uid;
     class FieldPicker {
       constructor(doc, o) {
@@ -1747,7 +1827,7 @@
         return words.every((w) => hay.indexOf(w) >= 0);
       }
       render() {
-        const doc = this.doc, words = this.query.toLowerCase().split(/\s+/).filter(Boolean);
+        const doc = this.doc, words = searchWords(this.query);
         this.list.textContent = '';
         this.rows = [];
         let shown = 0;
@@ -2195,10 +2275,9 @@
   })();
   /* ---- src/drishti_time-picker.js ---- */
   __m["src/drishti_time-picker.js"] = (function () {
-    var announce = __lib("drishti-core").announce, isoDate = __lib("drishti-core").isoDate;
+    var announce = __lib("drishti-core").announce, isoDate = __lib("drishti-core").isoDate, pad = __lib("drishti-core").pad;
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, Popover = __m["src/drishti_inputs-dom.js"].Popover, uid = __m["src/drishti_inputs-dom.js"].uid;
     var DatePicker = __m["src/drishti_date-picker.js"].DatePicker;
-    const pad = (n) => (n < 10 ? '0' : '') + n;
     function parseTime(text) {
       const t = String(text === undefined || text === null ? '' : text).trim().toLowerCase().replace(/\s+/g, ' ');
       if (!t) { return null; }
@@ -2327,7 +2406,7 @@
   })();
   /* ---- src/drishti_schema.js ---- */
   __m["src/drishti_schema.js"] = (function () {
-    var formatNumber = __lib("drishti-core").formatNumber, formatDate = __lib("drishti-core").formatDate, isoDate = __lib("drishti-core").isoDate, parseNumberText = __lib("drishti-core").parseNumberText;
+    var formatNumber = __lib("drishti-core").formatNumber, formatDate = __lib("drishti-core").formatDate, isoDate = __lib("drishti-core").isoDate, parseNumberText = __lib("drishti-core").parseNumberText, isObject = __lib("drishti-core").isObject;
     var parseTime = __m["src/drishti_time-picker.js"].parseTime, parseDateTime = __m["src/drishti_time-picker.js"].parseDateTime;
     var identityMap = __m["src/drishti_column-map-rules.js"].identityMap, mapProblems = __m["src/drishti_column-map-rules.js"].mapProblems;
     function words(key) {
@@ -2519,8 +2598,7 @@
     }
     function changes(before, after, base) {
       const out = [], p = base || '';
-      const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
-      if (isObj(before) || isObj(after)) {
+      if (isObject(before) || isObject(after)) {
         const keys = new Set(Object.keys(before || {}).concat(Object.keys(after || {})));
         keys.forEach((k) => out.push.apply(out, changes((before || {})[k], (after || {})[k], p ? p + '.' + k : k)));
         return out;
@@ -2654,6 +2732,7 @@
   })();
   /* ---- src/drishti_tree.js ---- */
   __m["src/drishti_tree.js"] = (function () {
+    var searchWords = __lib("drishti-core").searchWords;
     class TreeModel {
       constructor(o) {
         o = o || {};
@@ -2754,7 +2833,7 @@
       search(q, server) {
         this.query = String(q || '').trim();
         if (!this.query) { this.found = null; return Promise.resolve(0); }
-        const words = this.query.toLowerCase().split(/\s+/);
+        const words = searchWords(this.query);
         const run = () => {
           const hit = new Set();
           this.byId.forEach((n, id) => { const t = (n.label + ' ' + (n.detail || '')).toLowerCase(); if (words.every((w) => t.indexOf(w) >= 0)) { hit.add(id); } });
@@ -3564,7 +3643,7 @@
   /* ---- src/drishti_split-pane.js ---- */
   __m["src/drishti_split-pane.js"] = (function () {
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase;
-    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    var clamp = __lib("drishti-core").clamp;
     function recall(win, key) {
       try { const v = JSON.parse(win.localStorage.getItem('drishti.split.' + key)); return Array.isArray(v) ? v : null; } catch (e) { return null; }
     }
@@ -3958,6 +4037,7 @@
     var Form = __m["src/drishti_form.js"].Form;
     var FileDrop = __m["src/drishti_file-drop.js"].FileDrop;
     var Switch = __m["src/drishti_switch.js"].Switch;
+    var Button = __m["src/drishti_button.js"].Button, ButtonGroup = __m["src/drishti_button.js"].ButtonGroup;
     var SplitPane = __m["src/drishti_split-pane.js"].SplitPane;
     var Tabs = __m["src/drishti_tabs.js"].Tabs;
     var NavList = __m["src/drishti_nav-list.js"].NavList;
@@ -3967,9 +4047,9 @@
     const INPUT_ELEMENTS = Object.freeze({
       'drishti-date': DatePicker, 'drishti-date-range': DateRangePicker, 'drishti-time': TimePicker, 'drishti-datetime': DateTimePicker, 'drishti-tree-picker': TreePicker, 'drishti-multiselect': MultiSelect,
       'drishti-combobox': Combobox, 'drishti-select': Select, 'drishti-form': Form, 'drishti-file-drop': FileDrop, 'drishti-filter-bar': FilterBar, 'drishti-code': CodeEditor, 'drishti-code-diff': CodeDiff,
-      'drishti-switch': Switch, 'drishti-split': SplitPane, 'drishti-tabs': Tabs, 'drishti-nav-list': NavList, 'drishti-column-map': ColumnMap
+      'drishti-switch': Switch, 'drishti-button': Button, 'drishti-button-group': ButtonGroup, 'drishti-split': SplitPane, 'drishti-tabs': Tabs, 'drishti-nav-list': NavList, 'drishti-column-map': ColumnMap
     });
-    const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled', 'help'];
+    const ATTRS = ['label', 'calendar', 'mode', 'value', 'readonly', 'as-of', 'placeholder', 'name', 'disabled', 'help', 'variant', 'action'];
     function fromAttributes(el) {
       const o = {};
       ATTRS.forEach((a) => {
@@ -3985,7 +4065,7 @@
         if (registry.get(name)) { return; }
         const Cls = INPUT_ELEMENTS[name];
         registry.define(name, class extends win.HTMLElement {
-          connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select || Cls === Switch)) { this.make(fromAttributes(this)); } }
+          connectedCallback() { if (!this.component && (this.attributes.length > 1 || this.hasAttribute('options-json') || Cls === DatePicker || Cls === CodeEditor || Cls === Select || Cls === Switch || Cls === Button)) { this.make(fromAttributes(this)); } }
           make(o) { if (this.component) { this.component.destroy(); } this.component = new Cls(this, Cls === Select && this.hasAttribute('native') ? Object.assign({ native: true }, o) : o); }   // <drishti-select native>: a pick fires change as a native select's did
           set options(o) { this.make(Object.assign(fromAttributes(this), o)); }
           get options() { return this.component ? this.component.o : null; }
@@ -4301,7 +4381,7 @@
       if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', go); } else { go(); }
       if (root.MutationObserver) { new root.MutationObserver(() => { if (doc.querySelector(CODE_AREA_SELECTOR)) { go(); } }).observe(doc.documentElement, { childList: true, subtree: true }); }
     }
-    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "FieldPicker": __m["src/drishti_field-picker.js"].FieldPicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "selectElement": __m["src/drishti_select.js"].selectElement, "selectProperties": __m["src/drishti_select.js"].selectProperties, "SplitPane": __m["src/drishti_split-pane.js"].SplitPane, "Tabs": __m["src/drishti_tabs.js"].Tabs, "NavList": __m["src/drishti_nav-list.js"].NavList, "ColumnMap": __m["src/drishti_column-map.js"].ColumnMap, "identityMap": __m["src/drishti_column-map-rules.js"].identityMap, "mapProblems": __m["src/drishti_column-map-rules.js"].mapProblems, "typesFit": __m["src/drishti_column-map-rules.js"].typesFit, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "FileDrop": __m["src/drishti_file-drop.js"].FileDrop, "acceptedName": __m["src/drishti_file-drop.js"].acceptedName, "Switch": __m["src/drishti_switch.js"].Switch, "Form": __m["src/drishti_form.js"].Form, "WhatIf": __m["src/drishti_what-if.js"].WhatIf, "QUERY_OPS": __m["src/drishti_query-builder.js"].QUERY_OPS, "queryText": __m["src/drishti_query-builder.js"].queryText, "parseQuery": __m["src/drishti_query-builder.js"].parseQuery, "QueryBuilder": __m["src/drishti_query-builder.js"].QueryBuilder, "FORM_HOST_SELECTOR": __m["src/drishti_form-host.js"].FORM_HOST_SELECTOR, "formOf": __m["src/drishti_form-host.js"].formOf, "upgradeForms": __m["src/drishti_form-host.js"].upgradeForms, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
+    return { "install": install, "CALENDAR_RULES": __m["src/drishti_calendar.js"].CALENDAR_RULES, "easterSunday": __m["src/drishti_calendar.js"].easterSunday, "ruleDate": __m["src/drishti_calendar.js"].ruleDate, "HolidayCalendar": __m["src/drishti_calendar.js"].HolidayCalendar, "defineCalendar": __m["src/drishti_calendar.js"].defineCalendar, "calendar": __m["src/drishti_calendar.js"].calendar, "DATE_PRESETS": __m["src/drishti_calendar.js"].DATE_PRESETS, "resolvePreset": __m["src/drishti_calendar.js"].resolvePreset, "parseDateInput": __m["src/drishti_calendar.js"].parseDateInput, "monthGrid": __m["src/drishti_calendar.js"].monthGrid, "shiftDate": __m["src/drishti_calendar.js"].shiftDate, "uid": __m["src/drishti_inputs-dom.js"].uid, "debounce": __m["src/drishti_inputs-dom.js"].debounce, "InputBase": __m["src/drishti_inputs-dom.js"].InputBase, "Popover": __m["src/drishti_inputs-dom.js"].Popover, "Listbox": __m["src/drishti_inputs-dom.js"].Listbox, "normalizeOptions": __m["src/drishti_inputs-dom.js"].normalizeOptions, "searchOptions": __m["src/drishti_inputs-dom.js"].searchOptions, "CalendarView": __m["src/drishti_date-picker.js"].CalendarView, "DatePicker": __m["src/drishti_date-picker.js"].DatePicker, "DateRangePicker": __m["src/drishti_date-range.js"].DateRangePicker, "parseTime": __m["src/drishti_time-picker.js"].parseTime, "parseDateTime": __m["src/drishti_time-picker.js"].parseDateTime, "timeSlots": __m["src/drishti_time-picker.js"].timeSlots, "TimePicker": __m["src/drishti_time-picker.js"].TimePicker, "DateTimePicker": __m["src/drishti_time-picker.js"].DateTimePicker, "TreeModel": __m["src/drishti_tree.js"].TreeModel, "TreePicker": __m["src/drishti_tree-picker.js"].TreePicker, "FieldPicker": __m["src/drishti_field-picker.js"].FieldPicker, "MultiSelect": __m["src/drishti_multiselect.js"].MultiSelect, "TypeAhead": __m["src/drishti_combobox.js"].TypeAhead, "Combobox": __m["src/drishti_combobox.js"].Combobox, "Select": __m["src/drishti_select.js"].Select, "selectElement": __m["src/drishti_select.js"].selectElement, "selectProperties": __m["src/drishti_select.js"].selectProperties, "SplitPane": __m["src/drishti_split-pane.js"].SplitPane, "Tabs": __m["src/drishti_tabs.js"].Tabs, "NavList": __m["src/drishti_nav-list.js"].NavList, "ColumnMap": __m["src/drishti_column-map.js"].ColumnMap, "identityMap": __m["src/drishti_column-map-rules.js"].identityMap, "mapProblems": __m["src/drishti_column-map-rules.js"].mapProblems, "typesFit": __m["src/drishti_column-map-rules.js"].typesFit, "words": __m["src/drishti_schema.js"].words, "pathParts": __m["src/drishti_schema.js"].pathParts, "getPath": __m["src/drishti_schema.js"].getPath, "setPath": __m["src/drishti_schema.js"].setPath, "conditionHolds": __m["src/drishti_schema.js"].conditionHolds, "fieldsOf": __m["src/drishti_schema.js"].fieldsOf, "defaults": __m["src/drishti_schema.js"].defaults, "fieldProblem": __m["src/drishti_schema.js"].fieldProblem, "validate": __m["src/drishti_schema.js"].validate, "visibleValue": __m["src/drishti_schema.js"].visibleValue, "changes": __m["src/drishti_schema.js"].changes, "parseField": __m["src/drishti_schema.js"].parseField, "currencyOf": __m["src/drishti_schema.js"].currencyOf, "offeredValues": __m["src/drishti_schema.js"].offeredValues, "FileDrop": __m["src/drishti_file-drop.js"].FileDrop, "acceptedName": __m["src/drishti_file-drop.js"].acceptedName, "Switch": __m["src/drishti_switch.js"].Switch, "Button": __m["src/drishti_button.js"].Button, "ButtonGroup": __m["src/drishti_button.js"].ButtonGroup, "button": __m["src/drishti_button.js"].button, "Form": __m["src/drishti_form.js"].Form, "WhatIf": __m["src/drishti_what-if.js"].WhatIf, "QUERY_OPS": __m["src/drishti_query-builder.js"].QUERY_OPS, "queryText": __m["src/drishti_query-builder.js"].queryText, "parseQuery": __m["src/drishti_query-builder.js"].parseQuery, "QueryBuilder": __m["src/drishti_query-builder.js"].QueryBuilder, "FORM_HOST_SELECTOR": __m["src/drishti_form-host.js"].FORM_HOST_SELECTOR, "formOf": __m["src/drishti_form-host.js"].formOf, "upgradeForms": __m["src/drishti_form-host.js"].upgradeForms, "defineWidget": __m["src/drishti_form-fields.js"].defineWidget, "defaultWidget": __m["src/drishti_form-fields.js"].defaultWidget, "applyHook": __m["src/drishti_form-fields.js"].applyHook, "FilterModelBar": __m["src/drishti_filter-bar.js"].FilterModelBar, "FilterBar": __m["src/drishti_filter-bar.js"].FilterBar, "upgradeDateInput": __m["src/drishti_native.js"].upgradeDateInput, "upgradeTimeInput": __m["src/drishti_native.js"].upgradeTimeInput, "upgradeDateTimeInput": __m["src/drishti_native.js"].upgradeDateTimeInput, "upgradeCheckboxes": __m["src/drishti_native.js"].upgradeCheckboxes, "upgradeFields": __m["src/drishti_native.js"].upgradeFields, "rachanaMode": __m["src/drishti_code-modes.js"].rachanaMode, "yamlMode": __m["src/drishti_code-modes.js"].yamlMode, "MODES": __m["src/drishti_code-modes.js"].MODES, "defineModes": __m["src/drishti_code-modes.js"].defineModes, "MiniStream": __m["src/drishti_code-modes.js"].MiniStream, "tokens": __m["src/drishti_code-modes.js"].tokens, "wordAt": __m["src/drishti_code-text.js"].wordAt, "completions": __m["src/drishti_code-text.js"].completions, "insertText": __m["src/drishti_code-text.js"].insertText, "lineDiff": __m["src/drishti_code-text.js"].lineDiff, "sideBySide": __m["src/drishti_code-text.js"].sideBySide, "diffStats": __m["src/drishti_code-text.js"].diffStats, "ensureCodeMirror": __m["src/drishti_code-editor.js"].ensureCodeMirror, "yamlIndentAfter": __m["src/drishti_code-editor.js"].yamlIndentAfter, "CodeEditor": __m["src/drishti_code-editor.js"].CodeEditor, "CodeDiff": __m["src/drishti_code-editor.js"].CodeDiff, "upgradeCodeArea": __m["src/drishti_code-upgrade.js"].upgradeCodeArea, "upgradeCodeAreas": __m["src/drishti_code-upgrade.js"].upgradeCodeAreas, "CODE_AREA_SELECTOR": __m["src/drishti_code-upgrade.js"].CODE_AREA_SELECTOR, "INPUT_ELEMENTS": __m["src/drishti_inputs-element.js"].INPUT_ELEMENTS, "defineInputElements": __m["src/drishti_inputs-element.js"].defineInputElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-inputs", version: "3.2.0" }, __m["src/drishti_index.js"]));
 });

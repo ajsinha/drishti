@@ -441,39 +441,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-17 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-21 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 474k | 2,373 |
-| Java, tests | 189k | 1,186 |
-| Python, product (console, tools, loaders, feeds) | 150k | 754 |
-| Python, tests | 113k | 678 |
-| JavaScript, product (console and its own Elements libraries) | 67k | 313 |
-| JavaScript, tests | 1.1k | 8 |
-| CSS | 17k | 106 |
-| HTML (templates and pages) | 43k | 380 |
-| YAML: configuration, Sutras, data contracts | 121k | 1,568 |
-| Markdown: guides, tutorials, design | 220k | 353 |
+| Java, product | 405k | 2,053 |
+| Java, tests | 168k | 1,030 |
+| Python, product (console, tools, loaders, feeds) | 156k | 784 |
+| Python, tests | 114k | 681 |
+| JavaScript, product (console and its own Elements libraries) | 64k | 304 |
+| JavaScript, tests | 1.1k | 7 |
+| CSS | 16k | 105 |
+| HTML (templates and pages) | 42k | 379 |
+| YAML: configuration, Sutras, data contracts | 121k | 1,594 |
+| Markdown: guides, tutorials, design | 224k | 376 |
 
-About **750k lines of product code** and **303k lines of tests** (40% of the product code), with **220k lines of documentation**.
+About **683k lines of product code** and **283k lines of tests** (41% of the product code), with **224k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 50 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Maven modules | 46 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
-| Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
+| Lenses | 12: world, markets, publicsector, research, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
 | Console routes | 670 |
-| Server REST handlers | 837 |
-| Drishti's own Elements libraries (Drishti Elements itself: vendored) | 3 libraries, 35 ES modules |
-| Domain packs | 16: banking 3, capital-markets 2, economy 8, genomics 2, market-data 1 |
-| Sutras in the shipped packs | 242 |
+| Server REST handlers | 839 |
+| Drishti's own Elements libraries (Drishti Elements itself: vendored) | 2 libraries, 18 ES modules |
+| Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
+| Sutras in the shipped packs | 265 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,706: Java 1088, console 280, browser 184, tools 146, JavaScript 8 |
-| Documents under docs/ | 197 (24 guides, 11 tutorials) |
+| Test files | 1,564: Java 944, console 280, browser 183, tools 150, JavaScript 7 |
+| Documents under docs/ | 201 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 

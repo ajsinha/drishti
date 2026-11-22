@@ -1,3 +1,18 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
 
 ## Pass 2 (2026-11-21): Rachana profile and Elements 3.x, on `wip/g4-rehearsal-rx`
 
@@ -127,6 +142,17 @@ Python: the tests that cross-checked Java source or fixtures of the deleted modu
 (`tools/lake/testdata/childkinds`) or `LAKE_HOME` (the ready keys); `test_delta_interop` compiles its reader against `lake-delta`.
 Two failures are older than this branch (`test_memory_caps` run-config check, `test_lake_paths` clusterctl path): same result at `48f7b9931`.
 
+
+### Pass 3 lake closure (2026-11-21, on `g4/lake-close`, against Drishti Lake `cbd329d`)
+
+| # | State | What was done |
+|---|---|---|
+| R5 (the two differences) | closed | Both were generic, so both are Drishti Lake's. `TableReader.absence()` says why a table has no snapshot (a foreign Iceberg table: the catalog's account, for a path-based one the files looked for and what the folder holds; a Delta table: no log; files: no folder), and `TableSnapshot.documentFields()` lists a shaped table's documents' fields with nested fields and the id and date roles, the date also when it is the table's day partition (`DocumentField`; additive, `api-surface.txt` extended; `ShapedReadTest`). The connector's health says `no table ghost: looked in ... for version-hint.text, v<N>.metadata.json ... (the folder is empty)` again; `StarterSchemas` writes nested objects, lists, maps and `x-drishti-role: date` from the partition spec again (tests in `IcebergExternalPluginTest`) |
+| R8 | closed | Decided one by one against Drishti Lake `cbd329d`. Kept as Drishti's own, now said in each file: `jsonstream` (Drishti Lake's loader reads JSON Lines; JSON arrays of any size are the exports `lake build`, `lake scan` and `convert` take; a Lake item if the loader should read arrays), `scan` (profiles an export for `lake build`), `ownership` (the record of the tables `lake build` made, for Drishti's maintenance), `compare_lakes` (an acceptance check by an independent reader, delta-rs, on purpose), `memory_caps` (the launchers' JVM sizing before any JVM starts) and `memory_cli` (the server's admin REST API). None duplicates a Lake capability. `data load --store iceberg` works through the one loader: `samplegen/load_rows.py --format iceberg` (the samples and the book in one run, the layout's promoted columns, the corrections applied before the one load a table, each business date replaced) on `DrishtiLakeCli load`; its options are the loader's settings (`--catalog`, `--uri`, `--warehouse`, `--credential`, `--token`, `--set KEY=VALUE`). Run end to end on the shipped samples (25,430 rows, 29 tables, 10 business days; the working folders removed) |
+| Delta upkeep | Lake gap | Drishti Lake has no Delta compaction (OPTIMIZE), explicit checkpoint or VACUUM: `maintain` is Iceberg only (`IcebergMaintenance`), `LakeRetention` removes dates and rows, the Delta writer checkpoints on its own cadence only. `tools/lake/maintain.py` keeps delta-rs for those three until Drishti Lake has them (the item for the lead: `lake maintain` on a Delta table: compact small files per date, checkpoint, vacuum with the retention floor and the ownership rule; then `maintain.py` calls it and delta-rs leaves the tools) |
+| Lake items found | open | (1) the date guard (`--future-days`, `--zone`) and the retention guard (`--max-drop-share`, `--force-drop`) the old Iceberg loader had are not in the one loader; `data load --store iceberg` takes neither (Delta never had them there). (2) JSON-array input in the loader (above). (3) the archive rule of `tools/lake/archives.py` (451 lines, with the `rows` layout `load_rows.py` reads) and `drishti_lake.archives` (the feed layout only) are two copies of one rule: to be one when Lake's gets the `rows` layout |
+| Python | closed | `test_memory_caps` (the IDE launchers name the JVM options file `serverstart.jvm_flags` writes; the exec jar's manifest grants native access, so no `--add-opens` is passed: the test asked for the old flags) and `test_lake_paths` (`clusterctl` spelled `data/delta/demo`: it asks `lakeconfig.default_root`) fixed at their cause; `drill-java25.txt` no longer names the nine tests that moved to Drishti Lake; the planner's `JvmFooter` flag is `lake.parquet.footer-cache-mb` (the rename left it behind; workbook and test vectors regenerated); `test_maintain_iceberg` knows the lake-files reader's new main; `test_launcher_memory` asks `loaderows` for the Iceberg loader's JVM |
+| Results (after the last edit) | | Python `tools` (1,352 tests): 1,341 pass, 11 fail, none lake: `test_config_readers_guard` (`tools/mrloader/contract.py` and `test_launchers.py` name the packs folders: older than this branch), `test_sdk_builds_genomics` (starts Maven offline), and the contracts' eight and `test_pack_new` pass with `jsonschema` installed (25 of 25). Java: `IcebergExternalPluginTest` 7, Iceberg plugin 49, Delta plugin 94 (`DeltaAfterMaintenanceTest` skipped: no deltalake in the Python it starts), `ArchitectureRulesTest` 30 (the rule's Jackson exemptions are the only change), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` and `PackagedVarGoldenTest` (2 of 2) pass: the goldens are bit-identical |
 
 ## Pass 3 (2026-11-21): tools, on `g4/tools` (merged into `wip/g4-rehearsal-rx` after the lake pass)
 
@@ -407,3 +433,33 @@ same: the parity suite):
 | E13 | the chart kinds need `window.echarts` before they draw (`engine: () => win.echarts`); the host loads it. The painter's own loading would match its words ("the chart engine loaded only when a view has a chart") | Elements |
 | E14 | the painter's validation warns on ViewModels without `contract`; Drishti sets `1.x` (VIEWMODEL.md section 8) | Drishti, done |
 | D1 | the server-side parity check of every pack Sutra (`test_every_pack_sutra_on_its_sample_is_the_same`) still skips: the server's preview answers 422 for those Sutras (as on the base commit) | Drishti, triage |
+
+### Pass 3 renderer follow-ups (2026-11-21, on `g4/renderer-2`, merged into `wip/g4-rehearsal-rx`)
+
+Drishti Elements `develop` `3c9908f` and `5ddb94f` (not tagged: the lead tags 3.2.1 after the G3 gate), vendored as the release tree of a fresh
+clone of `5ddb94f` (`cli.py dist`) under the pin folder `3.2.0` (its manifest still says 3.2.0; `VENDOR.md` names the commit and the dev label
+3.2.1-dev). Elements' `tools/run_tests.py`: every pass green, nothing skipped.
+
+| # | State | What was done |
+|---|---|---|
+| E11 | closed | The candlestick Data table prints `openText`/`highText`/`lowText`/`closeText` (the number only without a text); Elements browser test; Drishti's strict xfail removed, the test passes |
+| E12 | closed | Paint option `sheets` (constructable sheets adopted by the view's root; the painter links no stylesheet, neither its own nor a library's). Drishti passes its one sheet; `claimSheets` (the claimed `<link>`s) is deleted |
+| E13 | closed | The painter loads the chart engine itself the first time a view has a chart, or the host's way (`engine`). Drishti passes `assets.echarts` (its Trusted Types policy); its own pre-paint engine load and the kinds walk are deleted |
+| E14 | closed | `complete` gives a contract-less ViewModel the painter's contract; Drishti's own stamping line is deleted |
+| Parity | closed | Paint option `tableTools: {filters, chart}`: a funnel on each column heading (values with counts, search, Select all, a number condition such as `> 1m`; AND across columns; kept through patches; Clear filters) and Chart any table (drishti-chart's new `TableChart`/`openTableChart`: the rows as shown, in a `<dialog>` inside the view; kind, across, series; the card's data table and export; a grid's Chart the range opens it). `behaviours: 'console'` maps to it. Browser tests in Elements and in Drishti (`test_console_behaviours_bring_the_funnels_and_chart_any_table_into_the_container`). GenUI stream messages stay i9 scope |
+| Missing links | closed | A link whose target the server found `missing` is a link again (its chip says so), as the console's pages link it; only `denied` is words |
+| 3.1.0 paths | closed | The redirect is removed: `/embed/v2/render/3.1.0/` answers `410 DRS-8006`, `/static/render/3.1.0/` `404` |
+| D1 | closed | The 422s had two causes, both of the test's server: no module packages in a lane (`Modules: none`: `modules/*.dmod` not built, so the trading pack's blocks were absent: 130 of 138) and the packs a module or the kernel leaves off by default (`gleif`, `us-equities`, `funds`: their blocks absent: 8). The pack-views server now turns every shipped pack on (`DRISHTI_PACKS=default,<every pack>`), a refusal is a failure (no skip) and the preview's own words are reported. 241 Sutras bound; the suite then showed 18 real differences: links to `missing` targets (fixed in Elements, above) and content a click away in the painter (a long table's further pages, closed pivot and tree rows), now opened before the read (intentional difference `pages-and-closed-rows`). `test_render_parity_browser`: **274 passed, none skipped** |
+| Quick checks | closed | The four guide PDFs regenerated, README's code volume, the settings catalogue's counts; the ready example's duplicate key-list test (it read the deleted `drishti-lakeload`) removed: the one check is `tools/lake/test_feedroute.py`. Console and tools static checks green |
+| Elements develop | note | Vendoring `develop` brings its breaking "one name per thing": chart-kind and aggregation aliases are gone (`KIND_ALIASES`); Drishti's Node test updated. The BI's own visual vocabulary (`type: column`) is mapped by Drishti's BI code; the BI suites were not run in this lane |
+
+**Proof.** Explain, Elements 2 and sign-in browser tests, the render library, behaviours and parity suites, the render, elements, embed and
+explain Python tests, the console Node tests: 228 passed, 1 fixed after the run (the Node alias test), skipped only WebKit (not installed
+here) and the framework builds (not fetched). No Java changed (the goldens untouched).
+
+**The painter's look that remains** (pass 3's table, less what this pass closed): the type (sans figures, smaller title), the panel frame
+(no accent bar or per-panel `?`; the code tag as a chip), the strip's coloured text, the freshness line and keys row, the key-value layout,
+the tables' filter box, pages and one-level trees, the Data table disclosure and donut legend, timeline/ladder/gauge drawing, the element
+sizing to its content, and Explain's metric panels. Closed here: the candlestick Data table (server texts). New with `behaviours: 'console'`:
+a small funnel after each column heading and a Clear filters and a Chart button in the table's bar. Pass 3's before/after shots are no longer
+on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels × 2 themes × 2 widths) are in the lane's scratch folder.

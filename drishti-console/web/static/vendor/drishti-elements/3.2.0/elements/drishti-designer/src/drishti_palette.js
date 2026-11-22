@@ -17,7 +17,7 @@
    search. An entry is dragged onto the canvas (through the page's DragHub, or as an HTML5 drag of the host's type for a canvas that
    takes those) or added with a click or Enter (the "add" event: the host puts it where the selection is). The list is a listbox:
    the arrows, Home and End move, typing searches. */
-import { EventBus, announce, h } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, announce, h, searchWords } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * An entry of the palette.
@@ -52,7 +52,7 @@ export function entryAttrs(attrs) {
  * @returns {PaletteEntry[]}
  */
 export function searchPalette(entries, query) {
-  const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(query);
   if (!words.length) { return entries.slice(); }
   return entries.filter((e) => {
     const hay = [e.label, e.detail, e.category].concat(e.keywords || []).join(' ').toLowerCase();

@@ -40,7 +40,8 @@ export { ROW_KEY, ROW_VERSION, WINDOW_ROWS, gridRow, gridColumns, LiveRows, wind
   changedFields, httpLiveApi, inferType, digValue, staticSpec, staticApi } from './drishti_live-model.js';
 export { stateWords, isPending, itemsText, RecordPanel } from './drishti_live-panel.js';
 export { LIVE_STATES, LiveSetGrid } from './drishti_live-set.js';
-export { ulid, isMaskedValue, writeSpec, editorFor, checkRule, reasonMode, checkChange, buildChange, mayEdit, outcome, changedWords, PendingChanges } from './drishti_live-edit-model.js';
+export { isMasked as isMaskedValue } from '../../drishti-core/src/drishti_index.js';
+export { ulid, writeSpec, editorFor, checkRule, reasonMode, checkChange, buildChange, mayEdit, outcome, changedWords, PendingChanges } from './drishti_live-edit-model.js';
 export { LiveEdit, LiveNotices } from './drishti_live-edit.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';
 export { docTable, docPivotable, docDrill, heatBucket, docPivot, docPlainTable } from './drishti_doc-table.js';

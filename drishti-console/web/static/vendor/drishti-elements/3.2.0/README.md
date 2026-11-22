@@ -65,7 +65,7 @@ Serve a copy of the release tree (`python3 tools/elements/cli.py dist`) from you
 </script>
 ```
 
-More in [docs/USING.md](docs/USING.md).
+More in [docs/USING.md](docs/USING.md) (the widgets), [docs/VIEWS.md](docs/VIEWS.md) (the painter), [docs/EVENTS.md](docs/EVENTS.md) and four runnable [tutorials](docs/TUTORIALS.md).
 
 ## The gallery
 
@@ -110,8 +110,8 @@ No Java here: Python and Node only. The launchers are checked in and visible.
 | **IntelliJ IDEA Community** | no Python and no Node/JavaScript support: the two Maven launchers (Node tests, gallery server; Node and Python on the PATH, no bash), PyCharm or VS Code for the rest |
 | **VS Code** | **File, Open Workspace from File**, `drishti-elements.code-workspace`: tasks (checks, build, dist, Node and pytest suites, gallery server) and Run and Debug configurations; recommended extensions: Python and Pylance, ESLint, YAML |
 
-Prepare once: `pip install -r tests/requirements.txt` and `playwright install chromium`. Windows: use `python` for `python3`; the Maven launchers need no bash (name the programs with `-Dnode=` / `-Dpython=` when they are not on the PATH). The Rachana and Lake installation order, JDK 21 and the local Maven
-repository are described once, in [Drishti Rachana's java/README](https://github.com/ajsinha/drishti-rachana/blob/g2/integration/java/README.md#build-and-run-in-the-ide).
+Prepare once: `pip install -r tests/requirements.txt` and `playwright install chromium`. Windows: use `python` for `python3`; the Maven launchers need no bash (name the programs with `-Dnode=` / `-Dpython=` when they are not on the PATH). Elements needs no Java and no `~/.m2` artefact itself. The family's install order is Rachana (tag), then the tools, then Lake (tag), then Drishti; the Rachana and Lake jars land in
+`~/.m2/repository/com/ash/{rachana,lake}/` (Windows `C:\Users\<user>\.m2\repository`) (Elements itself is not a Maven artefact). The installation order, JDK 21 and the local Maven repository are described once, in [Drishti Rachana's java/README](https://github.com/ajsinha/drishti-rachana/blob/g2/integration/java/README.md#build-and-run-in-the-ide).
 
 ## Licence
 
@@ -125,5 +125,5 @@ The copyright holder is Ashutosh Sinha. For permission or questions, contact the
 
 ## Documentation
 
-[docs/README.md](docs/README.md) is the index: [USING](docs/USING.md), [DESIGN](docs/DESIGN.md), [API](docs/API.md), [CONTRACTS](docs/CONTRACTS.md),
+[docs/README.md](docs/README.md) is the index: [USING](docs/USING.md), [VIEWS](docs/VIEWS.md), [EVENTS](docs/EVENTS.md), [TUTORIALS](docs/TUTORIALS.md), [DESIGN](docs/DESIGN.md), [API](docs/API.md), [CONTRACTS](docs/CONTRACTS.md),
 [THEMING](docs/THEMING.md), [MOVING_FROM_AG_GRID](docs/MOVING_FROM_AG_GRID.md).

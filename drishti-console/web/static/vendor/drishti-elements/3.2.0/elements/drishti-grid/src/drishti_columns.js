@@ -16,7 +16,7 @@
 /* Columns: what each column is (its field, type, format, width, pinning, what it may be used for in a pivot, whether its figures add
    up), their order, and the field list a person searches to build a view. Values are read the same way everywhere (getValue) and
    shown the same way (formatValue: the server's named formats through drishti-core). */
-import { formatNamed, hasFormat, formatNumber, formatDate, EventBus } from '../../drishti-core/src/drishti_index.js';
+import { formatNamed, hasFormat, formatNumber, formatDate, EventBus, searchWords } from '../../drishti-core/src/drishti_index.js';
 
 /** Aggregation functions the browser computes from members (never from other totals). */
 export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
@@ -259,7 +259,7 @@ export class ColumnModel {
    */
   fields(search) {
     const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-    const words = fold(search).split(/\s+/).filter(Boolean);
+    const words = searchWords(search, fold);
     return this.cols.filter((c) => {
       if (c.system) { return false; }
       const hay = fold(c.header + ' ' + c.id + ' ' + c.description + ' ' + (c.group || ''));

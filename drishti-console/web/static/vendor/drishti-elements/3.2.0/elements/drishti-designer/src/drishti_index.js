@@ -21,13 +21,14 @@
    History, Impact, Propose for review). Depends on drishti-core, drishti-inputs and drishti-tree (the outline). */
 export { CommandStack, SnapshotHistory } from './drishti_commands.js';
 export { Selection } from './drishti_selection.js';
-export { GRID, MAX_H, DEFAULT_MIN_SPAN, clamp, clampSpan, clampHeight, hideRefused, sizeText, rowsFromPixels, snap, clampRect, overlaps, settle, bounds,
+export { GRID, MAX_H, DEFAULT_MIN_SPAN, clampSpan, clampHeight, hideRefused, sizeText, rowsFromPixels, snap, clampRect, overlaps, settle, bounds,
   ALIGN_EDGES, alignRects, distributeRects } from './drishti_layout-rules.js';
 export { LayoutModel } from './drishti_layout-model.js';
 export { KEY_SCHEMES, designerBindings, designerKeys, keyHelp } from './drishti_keymap.js';
 export { DragHub, sortableList } from './drishti_pointer.js';
 export { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
 export { LayoutCanvas } from './drishti_layout-canvas.js';
+export { clamp } from '../../drishti-core/src/drishti_index.js';
 export { searchPalette, paletteGroups, entryAttrs, Palette } from './drishti_palette.js';
 export { commonValues, sharedSchema, Inspector } from './drishti_inspector.js';
 // the one outline is drishti-tree's TreeOutline

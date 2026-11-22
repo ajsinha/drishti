@@ -22,7 +22,7 @@ import { GridKeys } from './drishti_keys.js';
 import { load } from './drishti_loader.js';
 import { installBase } from './drishti_base.js';
 
-export { MINUS, EMPTY, MASK, COMPACT_UNITS, plainDigits, roundHalfUp, group, formatNumber, formatPercent, formatBasisPoints, formatCurrency,
+export { MINUS, EMPTY, MASK, COMPACT_UNITS, plainDigits, roundHalfUp, group, formatNumber, formatCount, formatPercent, formatBasisPoints, formatCurrency,
   formatCompact, defineFormats, hasFormat, namedFormat, formatNames, formatSpec, formatNamed, formatter, formatPythonFloat, BYTE_UNITS,
   formatBytes, formatDuration, columnScale, formatScaled } from './drishti_format.js';
 export { parseDate, daysInMonth, isoDate, today, formatDate, formatDateRange, isBusinessDay, addBusinessDays, previousBusinessDay,
@@ -46,8 +46,10 @@ export { DockModel, Dock, workspaceStore } from './drishti_dock.js';
 export { SelectionHistory, SelectionChip } from './drishti_selection-chip.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
 export { configure, endpoint, register, manifest, ELEMENTS_VERSION, libraryVersion, requirements, loaded, load, loadPart, refused, staticUrl, loadScript, loadStyle } from './drishti_loader.js';
-export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, filterRows, textSortKey,
+export { isBlank, searchWords, hasWords, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, filterRows, textSortKey,
   compareTextKeys } from './drishti_filters.js';
+export { AGG_FUNCS, aggFunc, registerAggFunc, unregisterAggFunc, aggregate, isMasked } from './drishti_aggregate.js';
+export { isObject, clamp, pad, copyText, fetcher, now } from './drishti_util.js';
 export { h, escapeHtml, placeAt, placeUnder, attrAllowed, safeUrl } from './drishti_dom.js';
 export { parseNumberText, numberEditText } from './drishti_parse.js';
 export { toCsv, download } from './drishti_files.js';

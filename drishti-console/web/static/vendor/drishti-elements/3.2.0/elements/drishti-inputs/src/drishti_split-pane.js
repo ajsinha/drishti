@@ -19,6 +19,7 @@
    it to its smallest and largest, Enter or a double-click puts it back where it began. Sizes may be remembered (options.persistKey,
    in the browser's local storage, never required: without storage the sizes simply start from the options). */
 import { InputBase } from './drishti_inputs-dom.js';
+import { clamp } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * @typedef {Object} SplitPaneDef
@@ -39,7 +40,6 @@ import { InputBase } from './drishti_inputs-dom.js';
  * @property {string} [label] names the group (aria-label)
  */
 
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 /** Reads remembered shares; never throws. */
 function recall(win, key) {

@@ -86,4 +86,12 @@ def test_every_launcher_asks_the_one_place_and_passes_arrows_cap():
     assert "DRISHTI_ARROW_MB" in ecs and "drishti.arrow.max-bytes" in ecs
     for f in (ROOT / "run-configs").glob("Drishti server*.run.xml"):
         text = f.read_text(encoding="utf-8")
-        assert "--add-opens=java.base/java.nio=ALL-UNNAMED" in text and "drishti.arrow.max-bytes" in text, f.name
+        # the IDE launchers name the JVM options file that serverstart.jvm_flags writes (one source: memory_flags runs memory_caps.py for the
+        # direct-memory limit and Arrow's cap); the exec jar's manifest grants native access, so no --add-opens is passed
+        assert "jvm-" in text and ".args" in text, f.name
+    assert "memory_flags(workdir" in text_of_jvm_flags(ROOT)
+
+
+def text_of_jvm_flags(root):
+    src = (root / "tools" / "launch" / "serverstart.py").read_text(encoding="utf-8")
+    return src[src.index("def jvm_flags"):src.index("def argfile_text")]

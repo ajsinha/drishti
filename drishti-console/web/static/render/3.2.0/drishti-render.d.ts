@@ -75,7 +75,7 @@ export interface RenderOptions {
   outsideLinks?: 'event' | 'follow' | 'new-window';
   /** Follow the view's live stream when it is live (default true). */
   live?: boolean;
-  /** Accepted for 1.x and 2.x hosts: every value draws with the painter's own tables, tabs and pivots. */
+  /** The painter's own tables, tabs and pivots; 'console' adds the table tools (a funnel on each column heading, Chart any table). */
   behaviours?: 'library' | 'console' | 'host';
   /** 1.0.0: an About button in the head and `?`: About this page from JSON in a side sheet inside the container. */
   about?: boolean;

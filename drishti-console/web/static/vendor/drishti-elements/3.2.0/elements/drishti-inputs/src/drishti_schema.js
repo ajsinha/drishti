@@ -18,7 +18,7 @@
    is true; all, any, not), and validation with messages in words ("Notional must be at least 1,000", "Pick at most 3 desks", "Maturity
    must be after the trade date"). A field that is hidden is neither validated nor part of the value. Changes between two values (the
    four-eyes proposal's diff) are listed by path. Paths read "legs[1].notional". */
-import { formatNumber, formatDate, isoDate, parseNumberText } from '../../drishti-core/src/drishti_index.js';
+import { formatNumber, formatDate, isoDate, parseNumberText, isObject } from '../../drishti-core/src/drishti_index.js';
 import { parseTime, parseDateTime } from './drishti_time-picker.js';
 import { identityMap, mapProblems } from './drishti_column-map-rules.js';
 
@@ -361,8 +361,7 @@ export function visibleValue(schema, values) {
  */
 export function changes(before, after, base) {
   const out = [], p = base || '';
-  const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
-  if (isObj(before) || isObj(after)) {
+  if (isObject(before) || isObject(after)) {
     const keys = new Set(Object.keys(before || {}).concat(Object.keys(after || {})));
     keys.forEach((k) => out.push.apply(out, changes((before || {})[k], (after || {})[k], p ? p + '.' + k : k)));
     return out;

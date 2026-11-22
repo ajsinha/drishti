@@ -14,6 +14,15 @@
  * See the LICENSE file in the root of this repository.
  */
 /* drishti-core 3.2.0: TypeScript declarations, generated from the typed JSDoc by tools/elements/dts.py. */
+export interface AggFunc {
+  name: string;
+  label: string;
+  init: (() => any);
+  add: ((a0: any, a1: any) => any);
+  merge: ((a0: any, a1: any) => any);
+  result: ((a0: any) => any);
+  numeric: boolean;
+}
 export interface ClientOptions {
   base?: string;
   asOf?: (string | (() => string | null));
@@ -207,6 +216,8 @@ export declare function roundHalfUp(v: number, decimals: number): string;
 export declare function group(plain: string, separator?: string): string;
 /** A number formatted by the server's rules (FormatSpec.number), with the console's options. */
 export declare function formatNumber(v: any, o?: NumberOptions): string;
+/** A count in whole numbers with thousands separators (the way every library writes "1,234 rows"): a number's text without decimals. */
+export declare function formatCount(n: any): string;
 /** A fraction as a percentage (0.1234 reads "12.3%"). */
 export declare function formatPercent(v: any, o?: NumberOptions): string;
 /** Basis points, as the server's bp1 format: one decimal, a sign always, " bp". The value is in basis points already; pass {scale: 10000} for a fraction (0.0012 reads "+12.0 bp"). */
@@ -581,6 +592,10 @@ export declare function loadScript(src: string): Promise<void>;
 export declare function loadStyle(href: string): void;
 /** Whether a value is blank (null, undefined, '' or NaN). */
 export declare function isBlank(v: any): boolean;
+/** The words of a quick search, the one reader of it for every library: lower-cased (or as `fold` makes them), split at spaces, a "quoted phrase" kept as one word (an unclosed quote takes the rest of the text). A row, node or option matches when every word is found in it. */
+export declare function searchWords(q: any, fold?: ((a0: string) => string)): string[];
+/** Whether folded text holds every word of a search. */
+export declare function hasWords(hay: string, words: string[]): boolean;
 /** The natural order of two values (blanks are not handled here: see compareRows). */
 export declare function compareValues(a: any, b: any): number;
 /** A comparator of rows by a sort model: each item in turn, blanks last whatever the direction, the column's own comparator when it has one. */
@@ -599,6 +614,30 @@ export declare function filterRows(rows: Record<string, any>[], model: Record<st
 export declare function textSortKey(text: string): { n: number; s: string };
 /** The order of two sort keys (textSortKey): numbers and dates before text, numbers by value, text by code point. */
 export declare function compareTextKeys(a: { n: number; s: string }, b: { n: number; s: string }): number;
+/** The functions by name. */
+export declare const AGG_FUNCS: any;
+/** A function by its name (the server's: sum, count, count_distinct, avg ...), or a registered one; null when the browser does not compute it. */
+export declare function aggFunc(name: string): AggFunc | null;
+/** Registers a host's own aggregation for client-side rows (the AG Grid-style adapter's aggFuncs): it is given every member's value of a cell or total and answers the figure; the state is the list of values, so a total is still made from its own members, never from other cells' figures. A built-in name cannot be replaced. The name must be a plain word (it goes into a measure's text, name(FIELD)). */
+export declare function registerAggFunc(name: string, fn: ((a0: any[]) => any), o?: { label: string; numeric: boolean }): AggFunc;
+/** Forgets a registered aggregation (a grid that registered it is gone). */
+export declare function unregisterAggFunc(name: string): boolean;
+/** The aggregate of some values by a function (a one-off: a selection's figure, a group's, a chart's category). The mask is never summed: a masked member makes every numeric aggregation (sum, min, max, avg) masked, and a distinct count counts all masks as one value. */
+export declare function aggregate(values: Iterable<any>, func: string): any;
+/** Whether a value is the Data Protocol's mask ({"$masked": true}): a value the reader may not see. */
+export declare function isMasked(v: any): boolean;
+/** Whether a value is a plain object (not null, not a list). */
+export declare function isObject(v: any): boolean;
+/** A number held between two bounds. */
+export declare function clamp(v: number, lo: number, hi: number): number;
+/** A whole number as text of a width, with leading zeros (pad(7) is "07"). */
+export declare function pad(n: number, width?: number): string;
+/** Writes text to the system clipboard when the page has one; a refusal (no permission, no clipboard) is not an error. */
+export declare function copyText(win?: Window, text: string): boolean;
+/** The fetch to use: the one given, else the page's own, bound to it; null when there is none. */
+export declare function fetcher(custom?: (...args: any[]) => any, win?: Record<string, any>): (...args: any[]) => any | null;
+/** A fine clock in milliseconds (performance.now where there is one, else the date). */
+export declare function now(): number;
 /** Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children. */
 export declare function h(doc: Document, tag: string, p?: { cls: string; text: string; attrs: Record<string, string>; data: Record<string, string>; style: Record<string, string>; on: Record<string, ((a0: Event) => void)> }, children?: ((Node | string | null))[]): HTMLElement;
 /** The one HTML escape of Drishti Elements: text made safe for an element's text and for a quoted attribute value (double or single quotes), and for XML text too (SVG, SpreadsheetML). Escapes & < > " ' ; null and undefined are the empty string. */

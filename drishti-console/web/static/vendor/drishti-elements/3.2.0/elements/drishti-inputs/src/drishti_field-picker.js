@@ -19,7 +19,7 @@
    stays in the search field and the active item follows the keys (aria-activedescendant): Up and Down move, Right opens, Left closes,
    Space checks, Enter uses (and closes), Escape closes, a letter types into the search. The picker draws; the host says what an item is
    and what a pick does (drishti-grid's pivot field pickers). */
-import { announce, h, stateBlock } from '../../drishti-core/src/drishti_index.js';
+import { announce, h, stateBlock, searchWords } from '../../drishti-core/src/drishti_index.js';
 import { Popover, uid } from './drishti_inputs-dom.js';
 
 /**
@@ -132,7 +132,7 @@ export class FieldPicker {
 
   /** @private draws the groups and items */
   render() {
-    const doc = this.doc, words = this.query.toLowerCase().split(/\s+/).filter(Boolean);
+    const doc = this.doc, words = searchWords(this.query);
     this.list.textContent = '';
     this.rows = [];
     let shown = 0;

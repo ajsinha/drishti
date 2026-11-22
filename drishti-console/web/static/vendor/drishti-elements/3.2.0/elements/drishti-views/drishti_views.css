@@ -180,6 +180,21 @@ th[aria-sort="ascending"] .dv-sort::after { content: " ▲"; } th[aria-sort="des
 .dv-tbl tfoot tr { border-top: 2px solid var(--d-border); }
 .dv-heat { background: color-mix(in srgb, var(--d-accent) calc(var(--dv-heat, 0) * 40%), transparent); }
 .dv-across th { text-align: center; color: var(--d-muted); font-weight: 400; }
+.dv-table { position: relative; }
+.dv-sp { flex: 1; }
+.dv-tool-btn { border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: var(--d-radius-4); font: inherit; font-size: var(--d-fs-12); padding: var(--d-sp-1) var(--d-sp-8); cursor: pointer; }
+.dv-funnel { border: 0; background: none; padding: 0 0 0 var(--d-sp-2); font: inherit; color: var(--d-faint); cursor: pointer; }
+.dv-funnel.dv-on { color: var(--d-accent); }
+.dv-cf { position: absolute; z-index: 20; top: 2.4em; left: var(--dv-cf-left, 0); width: 17rem; max-width: calc(100% - 8px); display: flex; flex-direction: column; gap: var(--d-sp-6); padding: var(--d-sp-8); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
+.dv-cf .dv-filter { min-width: 0; width: 100%; box-sizing: border-box; }
+.dv-cf-list { max-height: 14rem; overflow: auto; display: flex; flex-direction: column; }
+.dv-cf-item { display: flex; align-items: center; gap: var(--d-sp-6); padding: var(--d-sp-1) 0; cursor: pointer; }
+.dv-cf-item[hidden] { display: none; }
+.dv-cf-item > span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-cf-all { border-bottom: 1px solid var(--d-border); }
+.dv-cf-note { margin: 0; color: var(--d-bad); font-size: var(--d-fs-12); }
+.dv-cf-foot { display: flex; gap: var(--d-sp-6); justify-content: flex-end; }
+.dv-tool-btn:focus-visible, .dv-funnel:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .dv-more-btn { margin-top: var(--d-sp-6); border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: var(--d-radius-pill); font: inherit; padding: var(--d-sp-1) var(--d-sp-10); cursor: pointer; }
 .dv-more-btn[hidden] { display: none; }
 .dv-sort:focus-visible, .dv-twisty:focus-visible, .dv-more-btn:focus-visible, .dv-pick:focus-visible, .dv-tbl-scroll:focus-visible, .dv-filter:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }

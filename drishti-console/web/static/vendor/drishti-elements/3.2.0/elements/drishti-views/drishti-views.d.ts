@@ -28,6 +28,9 @@ export interface LiveOptions {
 }
 export interface PaintOptions {
   shadow?: boolean;
+  sheets?: any[];
+  engine?: (() => Promise<Record<string, any>>);
+  tableTools?: { filters: boolean; chart: boolean };
   density?: ('comfortable' | 'compact' | 'terminal');
   messages?: Record<string, string>;
   header?: ('full' | 'strip' | 'none');
@@ -170,6 +173,8 @@ export declare const LINK_STATUS: any;
 export declare const PAGE_ROWS: number;
 /** The number a formatted text shows ("1,234.5", "-4.2%", "(1,200)", "12.3m"), or NaN: the order of a numeric column. */
 export declare function numberOfText(t: string): number;
+/** A number column's condition as drishti-core's filter model ("> 1m", "<= 250k", "= 0", "1.5m"), or null when it is not one. */
+export declare function parseCondition(t: string): { type: string; op: string; value: number } | null;
 /** How deep tabs may nest panels. */
 export declare const MAX_NESTING: number;
 /** The kinds drawn by drishti-chart's panel charts (hbar only in its donut shape). */
@@ -178,20 +183,20 @@ export declare const CHART_KINDS: readonly string[];
 export declare function chartTable(kind: string, d: Record<string, any>): { columns: string[]; rows: string[][] };
 /** The aggregations a measure may name. */
 export declare const AGGS: readonly string[];
+/** The engine's name for an aggregation a view names (the ViewModel says `distinct`; the engine and the server say `count_distinct`). */
+export declare function engineAgg(name: string): string;
+/** Aggregates values by a view's aggregation name. */
+export declare function aggregate(values: any[], name: string): any;
 /** The forms a dataset's rows come in. */
 export declare const DATASET_FORMS: readonly string[];
 /** How many rows a chart or a tree reads from a source by address at most. */
 export declare const READ_LIMIT: number;
-/** Whether a value is the Data Protocol's mask ({"$masked": true}). */
-export declare function isMasked(v: any): boolean;
 /** A raw value as text, by a format name (drishti-core's named formats) and the field's type; the mask as the mask, nothing as ''. */
 export declare function valueText(v: any, fmt: string | null, type?: string): string;
 /** A row's key: its key fields' values as text, joined by U+001F (VIEWS_DESIGN 5.3); the row's place when the dataset has no key. */
 export declare function rowKey(row: Record<string, any>, key: string[], index?: number): string;
 /** The fields of rows given without any: every own key of the first 50 rows, in order, typed from their values. */
 export declare function inferFields(rows: Record<string, any>[]): { name: string; type: string }[];
-/** Combines numbers by an aggregation; the mask and nothing are left out (a masked member masks a sum: the figure is not shown). */
-export declare function aggregate(values: any[], agg: string): any;
 /** A derived read (VIEWS_DESIGN 4.5): the rows grouped by x (and by), each measure combined by its aggregation; without any aggregation the rows as they are. limit keeps the categories with the largest first figure (the others are left out). */
 export declare function derive(rows: Record<string, any>[], q: { x: string | null; by: string | null; y: ({ field: string; agg: string | null })[]; limit: number }): Record<string, any>[];
 /** Whether an address may be read: http(s) (or the page's own scheme) at the page's origin, the view's origin or an origin the host allowed (options.data.allow: origins, or 'any-https'). */
@@ -213,12 +218,16 @@ export declare class Dataset {
 }
 /** The datasets of a view, by name (made when the view is drawn; nothing is read until a panel asks). */
 export declare function datasetsOf(vm: Record<string, any>, env: Record<string, any>): Map<string, Dataset>;
+/** Whether a value is the Data Protocol's mask ({"$masked": true}): a value the reader may not see. */
+export declare function isMasked(v: any): boolean;
 /** The kinds drawn from a dataset (contract 1.1; live 1.2). */
 export declare const DATASET_KINDS: readonly string[];
 /** drishti-grid's columns of a grid panel: its columns, or every field of its dataset; each formats its raw values with the field's fmt. */
 export declare function gridColumns(d: Record<string, any>, ds: Record<string, any>): Record<string, any>[];
 /** drishti-chart's spec of a chart panel over rows already derived (grouped and combined). */
 export declare function chartSpec(d: Record<string, any>, ds: Record<string, any>, rows: Record<string, any>[]): Record<string, any>;
+/** Chart any table on a grid (the host's tableTools.chart): the grid's "Chart the range" (its context menu) opens the range as a chart in a dialog beside the grid, the row's first column across. Without the tool the grid only raises chartRequested. */
+export declare function gridChart(ctx: Record<string, any>, panel: Record<string, any>, cols: Record<string, any>[]): ((a0: Record<string, any>) => void) | null;
 /** The message kinds a view's stream carries. */
 export declare const LIVE_KINDS: readonly string[];
 /** One view's subscription to its stream. */
@@ -245,7 +254,7 @@ export declare class ViewError {
   constructor(message: string, issues: Record<string, any>[]);
   [member: string]: any;
 }
-/** The value with every field contract 1 requires and the producer left out filled in: null where the schema allows it, otherwise the type's empty value (false, 0, '', [], {}); nested records alike. Nothing is removed or changed. */
+/** The value with every field contract 1 requires and the producer left out filled in: null where the schema allows it, otherwise the type's empty value (false, 0, '', [], {}); nested records alike; a ViewModel without a contract speaks this painter's (CONTRACT). Nothing is removed or changed. */
 export declare function complete(value: any, def: string): any;
 /** The ViewModel builder: view(title) answers one. */
 export declare class ViewBuilder {

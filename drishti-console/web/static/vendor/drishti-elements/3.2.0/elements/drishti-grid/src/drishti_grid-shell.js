@@ -22,7 +22,7 @@
    The toolbar (pivot, expand, collapse, pin totals, formatting, export, view), the status bar (the rows, the pivot's source, figures
    still asked of the server, the value filters, the selection's count, sum, average, min and max with the non-additive warning), the
    command line and the function keys are drawn here; what they run is drishti_grid-actions.js. */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, formatCount } from '../../drishti-core/src/drishti_index.js';
 import { formatValue } from './drishti_columns.js';
 import { rangeStats } from './drishti_selection.js';
 import { renderExplain } from './drishti_grid-explain.js';
@@ -170,7 +170,7 @@ export function renderStatus(v) {
   const shown = m.shownColumns();
   if (piv) { item(m.answer ? 'Pivot · ' + (m.answer.computedBy === 'browser' ? 'computed in the browser' : 'by the server') : 'Pivot', 'dg-st-mode'); }
   else if (!v.o.quietStatus) { item(m.serverSide ? 'Server-side rows' : 'Rows in the page', 'dg-st-mode'); }
-  if (!v.o.quietStatus) { item(m.rowCount().toLocaleString('en-US') + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count'); }
+  if (!v.o.quietStatus) { item(formatCount(m.rowCount()) + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count'); }
   const pending = piv && m.answer && m.answer.pending ? m.answer.pending.length : 0;
   if (pending) { item('… ' + pending + ' figures asked of the server', 'dg-st-pending'); }
   (m.pivotExtra.valueFilters || []).forEach((f) => item('value filter: ' + conditionText(f, (x) => v.fmtMeasure(f.by, x)), 'dg-st-vf'));

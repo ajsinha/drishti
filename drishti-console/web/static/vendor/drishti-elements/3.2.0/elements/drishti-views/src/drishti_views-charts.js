@@ -64,7 +64,7 @@ export function chartTable(kind, d) {
     rows = list(d.points).map((p) => [str(p && (p.label || p.group)), str(p && p.x), str(p && p.y)]);
   } else if (kind === 'candlestick') {
     columns = ['', 'open', 'high', 'low', 'close'];
-    rows = list(d.candles).map((c) => [str(c && c.x), str(c && c.open), str(c && c.high), str(c && c.low), str(c && c.close)]);
+    rows = list(d.candles).map((c) => [str(c && c.x)].concat(['open', 'high', 'low', 'close'].map((k) => str(c && (c[k + 'Text'] || c[k])))));   // the producer's texts (contract)
   } else if (kind === 'surface') {
     columns = [''].concat(list(d.x).map(str));
     rows = list(d.y).map((y, i) => [str(y)].concat(list(list(d.z)[i]).map(str)));

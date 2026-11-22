@@ -214,8 +214,8 @@
         }
       };
       const bar = ctx.h(doc, 'div', { cls: 'gx-demo-bar', attrs: { role: 'toolbar', 'aria-label': 'Live' } }, [
-        ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Tick', attrs: { type: 'button', 'data-action': 'tick' }, on: { click: tick } }),
-        ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Stream', attrs: { type: 'button', 'aria-pressed': 'false', 'data-action': 'stream' }, on: { click: (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', String(on)); clearInterval(timer); if (on) { timer = setInterval(tick, 300); } } } })]);
+        ctx.E.inputs.button(doc, { label: 'Tick', action: 'tick', onClick: tick }),
+        ctx.E.inputs.button(doc, { label: 'Stream', action: 'stream', pressed: false, toggle: true, onClick: (e) => { const on = e.currentTarget.getAttribute('aria-pressed') === 'true'; clearInterval(timer); if (on) { timer = setInterval(tick, 300); } } })]);
       host.appendChild(bar);
       m = mountElement(host, this.build(values, ctx));
       m.tick = tick;
