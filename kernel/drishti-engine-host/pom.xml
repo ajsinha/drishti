@@ -33,6 +33,8 @@
     the access rules through small ports.</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- SharedLib: the one test of an engine JAR found in the shared folder (lib/ext) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <!-- stored outputs: written the one way Drishti Lake offers a host (LakeRowsLoad) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <!-- the server's own, shared with every engine JAR (ENGINE_INTEGRATION_DESIGN section 0.5): provided here, compile in drishti-server -->

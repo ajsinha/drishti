@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Drishti hosts engines.** Engine JARs built outside Drishti against drishti-engine's `engine-api` are copied into `<home>/lib/engines`
+  and found at start. Each JAR gets its own class loader, and each JAR's version and licence (`config/licence.yaml`, `ENG-1014`) are
+  checked, with a refusal in one sentence. Each engine is bound from `config/engines/<id>.yaml`: its inputs to kinds by contract over the
+  read API, with the caller's row rules and masks applied; its options, schedules and data-version triggers; its outputs to live and lake
+  tables; and who may ask. Engines have the init, start, suspend, resume and shutdown lifecycle, health and stats on a board, the
+  `engineHost` health entry and the `drishti_lifecycle_*` metrics. They appear on Admin → Engines with the built-in engines.
+  docs/architecture/ENGINES_IN_DRISHTI.md.
+
 - **Browser tests: one server per lane.** The browser lane's workers share one Drishti server and one console per set-up
   (`tools/lane_servers.py`: the first worker starts them under a file lock, the others attach; a watchdog stops them once the lane's
   processes are gone, so a killed run leaves no server behind); its heap is `DRILL_TEST_SERVER_HEAP` (default 12g). Tests that change

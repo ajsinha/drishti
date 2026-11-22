@@ -57,6 +57,18 @@ public final class SharedLib {
     public record Jar(String name, long bytes, String sha256) {
     }
 
+    /**
+     * True for an engine JAR ({@code META-INF/services/com.ash.engine.Engine}): it belongs in {@code <home>/lib/engines}, never the shared folder
+     * (docs/architecture/ENGINES_IN_DRISHTI.md; the engine specification 17.4 rule 1).
+     */
+    public static boolean isEngineJar(Path jar) {
+        try (java.util.jar.JarFile j = new java.util.jar.JarFile(jar.toFile())) {
+            return j.getEntry("META-INF/services/com.ash.engine.Engine") != null;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     /** True for Drishti's own server jar ({@code drishti-server-<version>-exec.jar}): it belongs in {@code <home>/lib}, never the site's folder. */
     public static boolean isDrishtiServerJar(String name) {
         return name.startsWith("drishti-server-") && name.endsWith("-exec.jar");
@@ -80,6 +92,11 @@ public final class SharedLib {
                     if (isDrishtiServerJar(f.getFileName().toString())) {
                         JUL.warning("the lib folder " + folder + " holds " + f.getFileName() + ", the server's exec jar: skipped (the product's own jar"
                                 + " goes in <home>/lib, the site's jars in the lib folder); remove it from there");
+                        continue;
+                    }
+                    if (isEngineJar(f)) {
+                        JUL.warning("the lib folder " + folder + " holds " + f.getFileName() + ", an engine JAR: skipped (engines load from"
+                                + " <home>/lib/engines, drishti.engine-lib.path, each in its own class loader); move it there");
                         continue;
                     }
                     found.add(new Jar(f.getFileName().toString(), Files.size(f), sha256(f)));

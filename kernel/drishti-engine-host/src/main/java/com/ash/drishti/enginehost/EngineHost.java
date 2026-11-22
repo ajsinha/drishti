@@ -42,7 +42,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.jar.JarFile;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -269,6 +268,11 @@ public final class EngineHost implements AutoCloseable {
         return settings;
     }
 
+    /** The live and stored outputs. */
+    public Outputs outputs() {
+        return ports.outputs();
+    }
+
     public FileLicence licence() {
         return licence;
     }
@@ -343,13 +347,9 @@ public final class EngineHost implements AutoCloseable {
         return out;
     }
 
-    /** True when the JAR registers engines ({@code META-INF/services/com.ash.engine.Engine}). */
+    /** True when the JAR registers engines ({@code META-INF/services/com.ash.engine.Engine}): the one test, the shared folder's. */
     public static boolean isEngineJar(Path jar) {
-        try (JarFile j = new JarFile(jar.toFile())) {
-            return j.getEntry("META-INF/services/com.ash.engine.Engine") != null;
-        } catch (IOException e) {
-            return false;
-        }
+        return com.ash.drishti.common.SharedLib.isEngineJar(jar);
     }
 
     @Override

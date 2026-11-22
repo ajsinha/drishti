@@ -48,6 +48,11 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
+    <!-- Drishti hosts engines (docs/architecture/ENGINES_IN_DRISHTI.md): the host module, and drishti-engine's engine-api and engine-host, which
+         the server provides to every engine JAR of lib/engines (shared, parent-first): compile here, so the exec jar carries them -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine-host</artifactId></dependency>
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><scope>compile</scope></dependency>
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><scope>compile</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-connectors</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId></dependency>

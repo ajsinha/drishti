@@ -59,6 +59,14 @@
   }
 
   // ---------------------------------------------------------------------------------------------------------- this server
+  /** A hosted engine (an engine JAR of lib/engines): its JAR, health, isolation and each input's tables with the rule that bound them. */
+  function hosted(e) {
+    var h = e.hosted;
+    if (!h) { return ''; }
+    var inputs = (h.inputs || []).map(function (i) { return i.input + ' <- ' + ((i.tables || []).join(' + ') || 'absent') + ' (rule ' + i.rule + ': ' + i.how + ')'; });
+    return ' <span class="eng-muted" title="' + esc(inputs.join('\n')) + '">' + esc(h.jar) + ' · ' + esc((h.health || {}).state || '')
+      + ' · ' + esc(h.isolation) + (h.sessions ? ' · ' + h.sessions + ' session(s)' : '') + '</span>';
+  }
   function drawServer() {
     var body = $('[data-eng-table] tbody');
     var heap = Number(view.heapMaxBytes || 0) || 1;
@@ -72,7 +80,7 @@
         + (e.reason ? ' <span class="eng-muted" title="' + esc(e.reason) + '">' + esc(e.reason) + '</span>' : '');
       var source = esc(e.source);
       return '<tr data-engine="' + esc(e.id) + '"' + (s ? ' class="staged"' : '') + (installed ? '' : ' class="eng-dim"') + '>'
-        + '<td class="l"><b>' + esc(e.title) + '</b> <span class="eng-id">' + esc(e.id) + '</span></td>'
+        + '<td class="l"><b>' + esc(e.title) + '</b> <span class="eng-id">' + esc(e.id) + '</span>' + hosted(e) + '</td>'
         + '<td class="l">' + (installed
           ? '<button type="button" role="switch" class="eng-sw" aria-checked="' + on + '" aria-label="' + esc(e.title) + ' on this server" data-eng-switch="' + esc(e.id) + '"><span></span></button> '
             + '<span class="eng-sw-l">' + (on ? 'on' : 'off') + '</span>'
@@ -91,6 +99,15 @@
       if (e.restartNeeded) { notes.push(e.title + ' was turned on (' + e.restartNeeded + '): written to ' + e.file + '; it starts at the next restart.'); }
       if (e.overridden && e.installed) { notes.push(e.title + "'s switch comes from " + e.source + ': a change here is written to the file but ' + e.source + ' still wins until it is removed.'); }
     });
+    var lib = view.engineLib || {};
+    if (lib.folder) {
+      notes.push('Engine JARs in ' + lib.folder + ' (' + lib.platform + '; trust ' + lib.trust + '; licence: ' + lib.licence + '): '
+        + ((lib.jars || []).map(function (j) { return j.file + ' [' + (j.engines || []).join(', ') + ']' + ((j.notes || []).length ? ' ' + j.notes.join('; ') : ''); }).join(', ') || 'none') + '.');
+      (lib.unlisted || []).forEach(function (u) {
+        notes.push(u.id + ': ' + u.state + (u.words ? ' (' + u.words + ')' : '') + (u.template ? '; a template: GET /api/v1/admin/engines/' + u.id + '/template.' : '.'));
+      });
+      (lib.packs || []).forEach(function (n) { notes.push(n + '.'); });
+    }
     $('[data-eng-notes]').textContent = notes.join(' ');
     var running = (view.engines || []).filter(function (e) { return e.state === 'running'; }).length;
     if (!view.engines) { $('[data-eng-meta]').textContent = asking; return; }
