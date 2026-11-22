@@ -92,7 +92,7 @@ nothing of ours collides with theirs:
   define (`on`, `ok`, `mono`, `pill`...) and the data- attributes other libraries also read (`data-theme`, `data-state`, `data-target`,
   `data-action`, `data-toggle`...) are shared with the published renderer and Elements versions, so they keep their names while those
   versions are served.
-* **Addresses.** The embed routes keep their public names (`/embed/v1/js/<name>.js`, `/embed/v2/js/<name>.js`, `/embed/v2/css/<name>.css`
+* **Addresses.** The embed routes keep their public names (`/embed/v2/js/<name>.js`, `/embed/v2/css/<name>.css`
   serve `drishti_<name>`), and `/static/js/<name>.js` or `/static/css/<name>.css` for a name without the prefix answers with the
   `drishti_` file: what a page pinned to an older renderer version asks for.
 

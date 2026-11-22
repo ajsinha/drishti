@@ -335,7 +335,7 @@ does not grow by more than the bootstrap's size. The same harness gives i7 its b
 | Stays | Why it is the console's |
 |---|---|
 | templates, macros, the composed pages of module parts, the Sutra and view-model rendering (`web/templates`, `core/screen_grid.py`, `core/phone.py`, `core/compare_side.py`, `core/history_rows.py`) | pure presentation of the server's answers |
-| static files and Drishti Elements (`web/static`, `web/embed`, `core/element_*.py`, `core/render_dist.py`, `core/staticzip.py`), the vendored libraries | the controlled UI statics are served by the console |
+| static files and Drishti Elements (`web/static`, `core/element_sheet.py`, `core/render_dist.py`, `core/staticzip.py`), the vendored libraries | the controlled UI statics are served by the console |
 | `base_path`, CSRF, security headers, the CSP, the 404 page (`core/base_path.py`, `core/csrf.py`, `core/notfound.py`) | the browser-facing surface |
 | its own sessions and sign-in until single sign-on (`core/auth.py`, `core/oidc.py`, `routes/auth_routes.py`); embed-token checks against the server's published key (`core/embed_auth.py`, `core/embed_limits.py`) | the console's own job; sessions are already opened and ended on the server. Enterprise SSO is i7's or j's (section 6) |
 | the server list, discovery and the watch (`core/servers.py`, `core/cluster.py`, `core/backend_watch.py`), the client (`core/backend.py`), the live channel and its relay | how it reaches servers |

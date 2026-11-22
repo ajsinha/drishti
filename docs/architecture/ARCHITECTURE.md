@@ -2450,7 +2450,7 @@ print setup, burst per recipient by subscriptions. **Controls** (slicers, field 
 drill and cross-filter) are view state: the console sends the state and the server builds each visual's MQ from it, in a fixed order of
 authority; a field parameter is a name substituted into the wells and sort on the server. **BI Studio** is one shell over the report and theme
 designers; designers edit a YAML concrete syntax tree (comments and key order kept), the server validates with the same parser as publish, and
-saves are guarded by the item's etag (`DRS-9007`). Exports, subscriptions, alerts and the embedded `<drishti-report>` ask each visual through
+saves are guarded by the item's etag (`DRS-9007`). Exports, subscriptions and alerts ask each visual through
 the same server code as the viewer, as their reader. **Alerts** on numbers are evaluated per person, server-side, with hysteresis and cooldown;
 one alert engine serves report visuals, model measures, Sutra fields and board tiles.
 
@@ -2687,10 +2687,8 @@ Decisions: [ADR-021](adr/021-embedding-is-html-over-the-wire.md) (embedding, the
 - **The console's pages are drawn by the server**: Jinja and the view macros (30.3). That is the one page renderer.
 - **Drishti Render** (`static/render/<version>/`, the version the Elements pin) draws a screen in the browser from the ViewModel JSON:
   every panel by Drishti Elements' painter (`drishti-views`, `paint()`), around it Drishti's host part (`m/`). It draws **embeds**
-  (Elements 2.x, the embed API v2) and Explain's "Why it moved" only. Renderer 1.2.0 stays served, frozen, for pages that pinned it.
-- **Drishti Elements 1.x** (`web/embed/`, version 1.4.5, frozen) is HTML over the wire: the console renders panels with the same macros
-  and the element swaps sanitised fragments into a shadow root. It carries `<drishti-report>`, `<drishti-about>` and `<drishti-search>`.
-- **Elements 2.x** is `<drishti-view>`, `<drishti-panel>` and `<drishti-screen>` on Drishti Render, with 1.x's element API.
+  (Elements 2.x, the embed API v2) and Explain's "Why it moved" only.
+- **Elements 2.x** is `<drishti-view>`, `<drishti-panel>` and `<drishti-screen>` on Drishti Render; the embed API is v2 only (the 1.x elements, the HTML-over-the-wire embed API and the frozen renderer 1.2.0 are deleted).
 - **Jinja stays** (owner, I7B_DUPLICATES DD-7): the console's own pages are server HTML, a documented exception to "one way to draw".
 
 The rule that holds it together: **the server is the only judge of what a user may see** (roles, masks, row rules, per viewer, before
@@ -2701,7 +2699,7 @@ renderer and the macros drawing the same thing.
  host backend ──POST /api/v1/embed/token (RFC 8693)──► drishti-server  (EmbedTokenService, TokenFilter, AccessRecorder embed:<app>)
       │ token to its own page                                ▲  bearer passed through
  host page ──module + sheet (immutable, SRI)──► drishti-console /embed/v{1,2}/**  (EmbedAuth, CORS per app, EmbedLimits)
-   <drishti-view> ── GET /embed/v2/views/{kind}/{id} ─────────┤  ViewModel JSON (v2) / macro HTML (v1)
+   <drishti-view> ── GET /embed/v2/views/{kind}/{id} ─────────┤  ViewModel JSON
    one Connection per page ── GET /embed/v2/channel?s=vm:… ──┘  frames over ChannelSession, token renewed in place
 ```
 
@@ -2730,10 +2728,9 @@ search, Select all, a number condition) and Chart any table (the rows as shown, 
 ### 30.3 The view macros shared with the console
 
 The console's view parts are macros in `templates/_macros/view.html` (`vtitle`, `strip`, `vhead`, `panels(items, embed)`,
-`provenance_banners(...)`) and `_macros/panels.html` (`panel(p, embed=false)`, one macro per kind). `terminal/view.html` and the embed
-API v1 (`routes/embed_routes.py` `_render`) call the same macros, so there is no second template; `embed=true` drops only what means
-nothing in a host page (the help link and the CSV download), and `tests/test_view_macros.py` proves a panel's HTML is the same on the
-console page and in the embed payload. Live frames reuse the same macros (`_panel_html`), so live and static views look identical.
+`provenance_banners(...)`) and `_macros/panels.html` (`panel(p, embed=false)`, one macro per kind). `terminal/view.html` calls the macros for
+the console's own page; the embed carries the ViewModel, not HTML. Live frames on the console reuse the same macros (`_panel_html`), so live
+and static views look identical.
 
 The server formats every value a person reads; both renderers compute only bar widths, gauge levels, donut shares, heat buckets and
 progress, with **half-up rounding on the decimal value** (the macros' `half_up` filter, `core/half_up.py`, and drishti-core's
@@ -2741,9 +2738,7 @@ progress, with **half-up rounding on the decimal value** (the macros' `half_up` 
 
 ### 30.4 Embedded views and sign-in
 
-**The embed payload.** v1 (`GET /embed/v1/views/{kind}/{id}`) answers the head, strip cells (as data, because live strip patches update
-cells by index), banners and each panel as macro HTML, plus provenance, `masked` (count and panel ids, counted on the built view by the
-server), the channel key and the controls. v2 (`GET /embed/v2/views/{kind}/{id}`) answers the ViewModel itself (`"contract": "1.0"`,
+**The embed payload.** `GET /embed/v2/views/{kind}/{id}` answers the ViewModel itself (`"contract": "1.0"`,
 `Drishti-Subscribe` naming its live key); `…/panels`, `…/about` (`{explain, index}`) and the live patches are JSON too. A control change
 asks only for the panels that read it (`…/panels?panels=&ctl.…`).
 
@@ -2805,28 +2800,21 @@ sort buttons, pager, back bar, 44 px targets). It is adopted as a constructable 
 the icon font is registered with the `FontFace` API because `@font-face` inside a shadow root is not used. The same tool writes the
 version's `integrity.json` (SHA-384 of every distributed file and of the renderer's modules).
 
-**The element stylesheet.** `tools/elements_sheet.py` (library `core/element_sheet.py`) writes Elements 1.x's
-`web/elements/drishti-view.css` and its manifest (tokens, theme, view parts, layout, pivot, about, controls; `:root[data-theme=x]`
-becomes `:host([theme=x])`; of Bootstrap Icons only the glyphs the macros name) and `drishti-report.css` from the BI sheets. Its guard
-(`tests/test_element_sheet.py`) fails when the committed files differ from a fresh build, on a missing or unused glyph, or over the gzip
-target.
+**The renderer's stylesheet.** `tools/render_sheet.py` (library `core/element_sheet.py`, `core/render_dist.py`) writes `static/render/<version>/drishti-render.css` from Drishti Elements' tokens and the painter's sheets (`:root[data-theme=x]` becomes `:host([theme=x])`; of Bootstrap Icons only the glyphs the painter names). Its guard fails when the committed sheet or the integrity record differs from a fresh build.
 
 ### 30.7 The element package distribution
 
-- **Immutable versions.** One folder per renderer version (`web/static/render/<version>/`); Elements 1.x at `core/element_dist.py`
-  `VERSION` with the committed record `web/elements/integrity.json`. `test_render_library.py`, `test_render_phase2.py` and
-  `test_element_package.py` fail when a byte of a released version changes without a new version: a version names the same bytes for
+- **Immutable versions.** One folder per renderer version (`web/static/render/<version>/`) with its committed `integrity.json`. `test_render_library.py` and
+  `test_render_phase2.py` fail when a byte of a released version changes without a new version: a version names the same bytes for
   ever.
 - **Paths.** `/static/render/<v>/` on the console's origin; `/embed/v2/render/<v>/` for other origins (immutable, one year; a partial
   version `302`s to the exact one; an unserved one is `410 DRS-8006`); `/embed/v2/elements/<v>/drishti-elements.js` `302`s to the
   renderer that carries that Elements version; `/embed/v2/elements/<library>/…`, `/embed/v2/js/<name>.js` and `/embed/v2/vendor/…` are
-  allow-listed files the library loads from beside itself; `/embed/v1/elements/<v>/…` serves 1.x with `ETag` = the file's SRI value.
+  allow-listed files the library loads from beside itself, with `ETag` = the file's SRI value.
 - **Lifecycle.** `embed.lifecycle` (one entry per API major) adds `Deprecation` (RFC 9745), `Sunset` (RFC 8594) and a `Link` to every
   answer from the announcement, and `410 DRS-8006` from the sunset day; a `Drishti-Embed-Api` header naming an unserved major is `410`.
 - **Packages.** `@drishti/render` is the version folder laid out as an npm package (documented, not published); the Elements libraries are
-  a separate project, Drishti Elements, vendored at a pinned version ([ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md)). `core/element_api.py`
-  holds the element API as data: it generates the reference tables in EMBED_GUIDE.md and the TypeScript declarations, and a test checks
-  it against the elements.
+  a separate project, Drishti Elements, vendored at a pinned version ([ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md)).
 
 ### 30.8 The parity suite
 

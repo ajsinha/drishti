@@ -15,7 +15,7 @@
 -->
 # Tutorial 20 · Embed Drishti
 
-Your own web application can show a live Drishti view or a published BI report **inside its own page**, with no iframe: `<drishti-view>` and `<drishti-report>` (Drishti Elements). The user is **your** user, signed in to **your** application; Drishti never sees their password, and your page
+Your own web application can show a live Drishti view **inside its own page**, with no iframe: `<drishti-view>` (Drishti Elements). The user is **your** user, signed in to **your** application; Drishti never sees their password, and your page
 never sees Drishti's secrets. In this tutorial you register a host application in **Admin → Embedding**, run the sample host that ships with Drishti on its own origin under a **strict content-security policy**, watch a view and a report appear in it, and see how **tokens** and **limits** work.
 
 ## Time to complete
@@ -25,8 +25,8 @@ About 40 minutes.
 ## Before you start
 
 - The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
-  on), with the **demo ticker on** as in [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
-  step 6 and the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
+  on), with the **demo ticker on** as in [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live view of
+  the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
   (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
 - Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the commands below use 17944, and the pictures were taken with the host on 17782), and the two demo users `viewer` and `author` in Drishti (step 2).
 - The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
@@ -34,7 +34,7 @@ About 40 minutes.
 ## What you will learn
 
 - the pieces: the **host application**, its **backend** (which holds a secret), the **console** (which serves the library and the views), and the **server** (which issues tokens);
-- how to **register** a host: exact origins, how it signs in, scopes, and which kinds and which reports it may show;
+- how to **register** a host: exact origins, how it signs in, scopes, and which kinds it may show;
 - what the **embed token** is, how short its life is, and why it is read-only and always masked;
 - what the host page needs: the one script line, a token provider, and a CSP that names the console and nothing else;
 - the **limits** (calls per minute, per user) and the codes you will meet.
@@ -64,7 +64,7 @@ Open **Admin → Embedding**.
 
 You should see the empty list and **New application**. Press it.
 
-![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17782, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:search, embed:view, the kinds trade and trade-valuation and two reports, the rates](img/t16/02-register-form.jpg)
+![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17782, signs in with Both, a JWK set, the scopes embed:about, embed:view, the kinds trade and trade-valuation and two reports, the rates](img/t16/02-register-form.jpg)
 
 Fill it in:
 
@@ -73,9 +73,9 @@ Fill it in:
 | Name, Id | `Harbour CRM`, `harbour-crm` | the id is what the host's backend names itself with |
 | Origins | `http://127.0.0.1:17944` | the **exact** origin of the host's pages (scheme, host, port, no path). A page on any other origin is refused (`DRS-8002`); `null` and wildcards are refused |
 | How it signs in | **Both** | a **client secret** (shown once) and a **public key** (a JWK set): the host's backend authenticates with the secret and signs a short assertion about its user with its private key. For the sample host paste the JWK set made from `tools/elements-demo/demo-host-key.json` (its public half: `n`, `e`, `kid`) |
-| Scopes | `embed:view`, `embed:about`, `embed:report`, `embed:search` | what the host may ask a token for: views, the About text, BI reports, and the search box of step 10 |
-| Kinds and reports | `trade, trade-valuation, report:file:report:live-trading-desk, report:file:report:trades-overview` | an allow-list: **the kinds `trade` and [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
-| Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live report asks again at every tick |
+| Scopes | `embed:view`, `embed:about` | what the host may ask a token for: views and the About text |
+| Kinds | `trade, trade-valuation` | an allow-list: **the kinds `trade` and [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
+| Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live view asks again at every tick |
 | Token life | `300` seconds | the lifetime of a token; never more than the server's `drishti.embed.token-max-seconds` |
 
 Press **Register**.
@@ -102,7 +102,7 @@ python3 tools/elements-demo/server.py --port 17944 --app harbour-crm \
 You should see `host app on http://127.0.0.1:17944  (Drishti console http://127.0.0.1:17480)`. Its page has **one Drishti line**, an element, and a token provider:
 
 ```html
-<script type="module" src="http://127.0.0.1:17480/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="http://127.0.0.1:17480/embed/v2/elements/2/drishti-elements.js" crossorigin="anonymous"></script>
 ...
 <drishti-view id="main" kind="trade-valuation" entity="TVAL-1000008" theme="light"></drishti-view>
 ```
@@ -126,9 +126,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 subject_token=<a JWT the host signs: iss harbour-crm, sub author, aud <the token endpoint>, exp in 60 s>
 subject_token_type=urn:ietf:params:oauth:token-type:jwt
 audience=http://127.0.0.1:17480            (the console)
-scope=embed:view embed:about embed:report
+scope=embed:view embed:about
 -> {"access_token": "<JWT>", "issued_token_type": "urn:ietf:params:oauth:token-type:access_token", "token_type": "Bearer", "expires_in": 300,
-    "scope": "embed:view embed:about embed:report"}
+    "scope": "embed:view embed:about"}
 ```
 
 (Captured against a stack on ports 19590 and 19591 with the client authenticated by `private_key_jwt` instead of the secret: a
@@ -140,7 +140,7 @@ The token the page receives is a short **ES256** JWT; its header and claims are 
 ```text
 header   {"alg": "ES256", "typ": "drishti-embed+jwt", "kid": "emb-1602301c91fc"}
 claims   {"iss": "http://127.0.0.1:19590", "aud": "http://127.0.0.1:19591", "sub": "author", "azp": "harbour-crm",
-          "scope": "embed:view embed:about embed:report", "origins": ["http://127.0.0.1:17944"], "iat": 1792278895, "exp": 1792279195,
+          "scope": "embed:view embed:about", "origins": ["http://127.0.0.1:17944"], "iat": 1792278895, "exp": 1792279195,
           "jti": "emb_ikzuTg317DGVdoqv", "typ": "drishti-embed+jwt"}
 ```
 
@@ -156,80 +156,7 @@ You should see **the host's** page chrome (a blue bar, its own search box *Find 
 
 Embedded views **always mask**: the `author` role holds the `raw` power in the console, but through an embed token every masked field reads `•••` (the trade's *Trader*, for one). Open the same trade in the console beside it to compare.
 
-## Step 6 · A report in a card
-
-Open `http://127.0.0.1:17944/report` (signed in as `viewer`).
-
-![The host's report page: a card "The desk report" holding the Live trading desk report with its live indicator, Pause button, page tabs, five cards, bars, a rolling line and tables](img/t16/06-host-report.jpg)
-
-You should see the **Live trading desk** report from the reports tutorial, Part F (a live report, which reads its live dataset directly) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `TRADER_ID` column reads `•••` (masked). It is one element:
-
-```html
-<drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
-<drishti-report id="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare" theme="light"></drishti-report>
-```
-
-The second element shows **one visual** of the same report with no chrome. Click a bar, pick a tab, set a slicer:
-
-![Further down the page: the Worst trades and Latest changes tables, the single visual Net MTM by desk, and the host's own panel listing the events the report raised](img/t16/07-host-report-click.jpg)
-
-You should see the host's own panel at the bottom, **the events the report told the page about**: `page-changed`, `loaded` (twice: one for each element), `masked rep {"columns":["trade.TRADER_ID"]}`, (click a bar and a `filter-changed` event with the selection joins them). A host page can react to all of them (`drishti:filter-changed`, `drishti:page-changed`, `drishti:error`, `drishti:masked`, `drishti:token-needed`). The library is also available as an npm package, `@drishti/elements`, with TypeScript declarations.
-
-On a phone the report is drawn with the report's **own phone layout** (the designer's *Phone* tab: which visuals, in what order):
-
-![The host's report page at 390 px: one column, Net MTM first](img/t16/08-host-phone.jpg)
-
-**A report on a model.** Every other sample report reads a **model**: **Trades overview** says `model: trades-basic@1`. Nothing changes for the
-host: the element names the report, and the server answers each visual from the model, as the reader, masked. The sample host takes the report and the
-single visual from its address, so open `http://127.0.0.1:17944/report?report=file:report:trades-overview&visual=by-desk`:
-
-![The host's report page with Trades overview, a report on the model trades-basic@1: four cards, MTM by desk, notional by trade date, the desk and currency table and the Currency slicer, and no live bar](img/t16/12-host-model-report.jpg)
-
-You should see **Trades overview** in the same card: the tabs *Overview* and *By product*, the cards (`15,000` trades, `3,617,068,619,774` of notional), the
-bars, the line, the table and the **Currency** slicer with its values, and **no live bar** (the report has no live table). The host's panel says
-`loaded rep {"title":"Trades overview","page":"overview"}`. The elements are the same two, with the other report:
-
-```html
-<drishti-report id="rep" report="file:report:trades-overview" theme="light"></drishti-report>
-<drishti-report id="one" report="file:report:trades-overview" visual="by-desk" chrome="bare" theme="light"></drishti-report>
-```
-
-What the element asks for one visual, and what it is told (captured with the embed token of step 4 from the host's origin, as the page sends it), shows the model
-query the server ran for it:
-
-```text
-POST http://127.0.0.1:19591/embed/v1/reports/file:report:trades-overview/query        (Authorization: Bearer <embed token>, Origin: http://127.0.0.1:17944)
-     {"page":"overview","visual":"by-desk","state":{"carry":[],"slicers":{},"drill":[],"selections":[]}}
-200  {"columns": [{"name": "trade.DESK", ...}, {"name": "MTM", ...}],
-      "rows": [["DESK-RATES", 4108728089.500002], ["DESK-MM", 393805216.8699998], ...], "rowCount": 10,
-      "meta": {"layer": "columns", "tables": ["trade"], "masked": [], ...}, "visual": "by-desk",
-      "mq": {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM"]},
-             "shape": "grouped", "sort": [{"by": "MTM", "desc": true}], "limit": 500, "options": {"format": "json", "layer": "auto"}}}
-```
-
-The same question **from the command line**, as you, gives the same ten desks (unmasked: you are not an embed token):
-
-```text
-$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures MTM --sort=-MTM --limit 3
-trade.DESK   MTM
------------  ----------------
-DESK-RATES   4,108,728,089.50
-DESK-MM      393,805,216.87
-DESK-STRUCT  382,608,464.96
-3 row(s)  as of 2026-10-16  plan p_23850150972ee2e5
-``` **In YAML** the report's first lines are what make it a report on a model:
-
-```yaml
-rachana: 2
-report: trades-overview
-version: 1
-title: Trades overview
-model: trades-basic@1            # the model it reads, by name and major version
-```
-
-(Elements 1.4.1 asks for a slicer's values as the console does, and leaves the live bar out of a report with no live table.)
-
-## Step 7 · The strict policy the page keeps
+## Step 6 · The strict policy the page keeps
 
 The host page is served with the policy a careful host would have: no inline script or style, no frames, and **only the Drishti console beyond itself**. These are the page's real response headers and the host's own report collector, after all of the above:
 
@@ -243,7 +170,7 @@ $ curl -s http://127.0.0.1:17944/api/csp-reports
 
 You should see the console's address in exactly three directives (`script-src`, `font-src`, `connect-src`) and **an empty list of violations**: the elements adopt their style sheets, add the icon font through the `FontFace` API, draw charts on a canvas and build a report's DOM with `textContent`, so a page that blocks inline code still works. A host that enforces **Trusted Types** adds `require-trusted-types-for 'script'; trusted-types drishti-elements` and nothing else (try `http://127.0.0.1:17944/?tt=1`).
 
-## Step 8 · Usage, limits and what to do when it says no
+## Step 7 · Usage, limits and what to do when it says no
 
 Back in **Admin → Embedding**:
 
@@ -251,7 +178,7 @@ Back in **Admin → Embedding**:
 
 You should see the usage of the application: **tokens** issued, **calls** made, how many are **live** (open streams), and **refused** calls counted by code. (Each number counts since the console started.) The limits are the application's: `callsPerMinute` for the whole application and `userCallsPerMinute` for each user. A live report asks again at every tick, so a low limit shows quickly. Here the application was registered again with 5 calls a minute per user:
 
-![The report page on a phone, with the cards saying "DRS-8004 over the embed call rate; retry in 40 s" instead of figures](img/t16/10-rate-limited.jpg)
+![A view on a phone, with the panels saying "DRS-8004 over the embed call rate; retry in 40 s" instead of figures](img/t16/10-rate-limited.jpg)
 
 You should see `DRS-8004 over the embed call rate; retry in 51 s` in the visuals that were refused, and a **Retry** button: the element retries by itself when the time is up, and tells the host with a `drishti:error` event (`fatal: false`). The ones you will meet:
 
@@ -261,44 +188,44 @@ You should see `DRS-8004 over the embed call rate; retry in 51 s` in the visuals
 | `DRS-8002` (403) | this origin is not one of the application's | register the **exact** origin in Admin → Embedding |
 | `DRS-8003` (403) | the application is unknown or disabled | it was disabled or deleted |
 | `DRS-8004` (429) | over the call rate, or too many open streams | raise the application's rates, or `embed.max_streams` |
-| `DRS-8005` | the application may not show this kind or this report | add the kind or `report:<id>` to its list; publish the report |
+| `DRS-8005` | the application may not show this kind | add the kind to its list |
 | `DRS-8006` (410) | a library version this console no longer serves | pin the version the answer names |
 | `DRS-5002` (403) | a path or scope the embed token does not open (an embed token never writes) | give the application the scope it needs |
 
 If an element stays in `loading` with no event at all, the token provider never answered: open the browser's network tab; the first request is to **your** backend.
 
-## Step 9 · Pin the version, and stay safe
+## Step 8 · Pin the version, and stay safe
 
-The console serves the library at an **exact semantic version**, immutably, with the SHA-384 of every file at `/embed/v1/elements/<version>/integrity.json`. A production page pins the version and puts the `integrity` on the script line, so the bytes it runs are the bytes it reviewed; `/embed/v1/drishti-elements.js` follows the console and is for development. Keep the client secret in the backend's environment, rotate it
+The console serves the library at an **exact semantic version**, immutably, with the SHA-384 of every file at `/embed/v2/render/<version>/integrity.json`. A production page pins the version and puts the `integrity` on the script line, so the bytes it runs are the bytes it reviewed; `/embed/v2/elements/2/drishti-elements.js` follows the console's newest 2.x and is for development. Keep the client secret in the backend's environment, rotate it
 from the row's **Rotate** button (with a grace period so a rolling restart does not fail), and make the application's origins, scopes and kinds as narrow as the page needs: **a registered application can show exactly the kinds and reports it lists and nothing else**, whatever the user's roles allow. You should see the file list and its hashes by opening `/embed/v1/elements/<version>/integrity.json` on the console (the version is in the address of the script line).
 
-## Step 10 · Search and About in the host's page, and the framework samples
+## Step 9 · The page's own controls, and the framework samples
 
-Two more elements put more of Drishti in the host's page. **`<drishti-search>`** is a search box across Drishti for the signed-in user (scope `embed:search`: read-only, masked, cut to the kinds the application may show, rate-limited); **`<drishti-about>`** is the *About this page* body of a view (scope `embed:about`). Register the scopes (tick *embed:search* in the form of step 3, as the picture there shows) and put them on the page:
+The element draws what the server sends for one entity; **what picks the entity is the host's own page**: a list, a search box of the host's, a link. Set `kind` and `entity` and the element reloads in place and cancels the request it was making. A typed Drishti command (`TRD 1000001`) can be resolved to the entity it names with `DrishtiElements.resolve(text)` (scope `embed:view`; read-only), for the host's own search box:
 
 ```html
-<drishti-search placeholder="Find a trade" target="#v"></drishti-search>
+<input id="pick" type="search" placeholder="A trade id">
 <drishti-view id="v" kind="trade" entity="1000001"></drishti-view>
-<drishti-about kind="trade" entity="1000001"></drishti-about>
+<script type="module">
+  document.getElementById('pick').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { document.getElementById('v').setAttribute('entity', e.target.value.trim()); }
+  });
+</script>
 ```
 
-The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository) and open `http://127.0.0.1:17968/samples/react/` on the host of step 4:
-
-![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
-
-You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#71-the-sample-pages).
+The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository), register the host with the scopes `embed:view embed:about`, and open `/samples/react/`, `/samples/vue/` or `/samples/angular/` on the sample host. You should see the page's own box above the view; type the id of another trade and press Enter, and the view follows. The page keeps the strict policy of step 6. [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#7-react-angular-and-vue) says how each framework wires events.
 
 ## Next steps
 
 - [Tutorial 21](21-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 and [../guides/bi/README.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 covers the reports a host application's users receive; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 
 | You see | Meaning |
 |---|---|
 | the element says `DRS-8002` | the page's origin is not registered **exactly** (scheme, host and port): `http://localhost:17944` and `http://127.0.0.1:17944` are different origins |
-| `Drishti refused the token request` from the host | the backend's secret is wrong, the user does not exist in Drishti, or the scope asked for is not one the application was given (the sample host asks for `embed:view embed:about` for a view page and `embed:report` for a report page) |
+| `Drishti refused the token request` from the host | the backend's secret is wrong, the user does not exist in Drishti, or the scope asked for is not one the application was given (the sample host asks for `embed:view embed:about`) |
 | the page is blank and the browser console shows a CSP violation | the host's policy does not name the console in `script-src`, `font-src` and `connect-src` |
-| the view or report shows `•••` where the console shows figures | by design: an embed token always masks |
+| the view shows `•••` where the console shows figures | by design: an embed token always masks |
 | the user is signed in to Drishti but the host says "not signed in" | the host and Drishti sign users in separately; the host's own sign-in decides who its user is |

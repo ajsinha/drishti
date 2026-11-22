@@ -981,7 +981,7 @@ BI off the owners. BI queries are bounded on their own (`drishti.bi.query.max-co
 
 ### 7.4 No sticky sessions: the console relay
 
-A browser's live channel (`GET /api/channel`, or an embedded element's `/embed/v1/channel`) is held by the console worker that opened it; the
+A browser's live channel (`GET /api/channel`, or an embedded element's `/embed/v2/channel`) is held by the console worker that opened it; the
 browser's later calls on it (adding and removing panes, an embed's token renewal, the pack wizard's job calls) reach whichever worker on
 whichever console the balancer picks. **The relay** passes each such call to the worker that holds the channel, so **the load balancer needs
 no stickiness**:

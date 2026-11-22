@@ -163,7 +163,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 
 | Folder | What is in it |
 |---|---|
-| `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader, `ai/` for the console's LLM clients, and one module per feature such as `forms.py`, `bi.py`, `controls.py`, `calc.py`, `retry.py`), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/embed/` and `web/elements/` (Drishti Elements, the `<drishti-view>` web component), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`; 255 files, 89 of them Chromium tests named `*_browser.py`) |
+| `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader, `ai/` for the console's LLM clients, and one module per feature such as `forms.py`, `bi.py`, `controls.py`, `calc.py`, `retry.py`), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`; 255 files, 89 of them Chromium tests named `*_browser.py`) |
 | `modules/<module>/packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/` (`catalog.jsonl` and one `<kind>.jsonl` per kind), `config/` (formats, semantics, help, workspaces), `guides/`, `python/` (Calc snippets) and `tests/`. Seven ship: `core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`. The trading pack's Sutras are organised `sutras/common/` (shared blocks), `sutras/endur/`, `sutras/calypso/`, `sutras/murex/` (one per product type) and `sutras/pages/` (cross-system pages); the folders are organisation only: each Sutra's `match` (`SOURCE_SYSTEM` and `PRODUCT_TYPE`) decides ([BUILD_GUIDE.md](BUILD_GUIDE.md)) |
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
@@ -180,7 +180,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [BUILD_GUIDE.md](BUILD_GUIDE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `calcruntime.py` (`drishti.py calc install`: installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `storeload.py` (`drishti.py data load`: the demo data into any of the nine stores), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
+| `tools/` (files) | `drill.sh` (verify and publish), `calcruntime.py` (`drishti.py calc install`: installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `storeload.py` (`drishti.py data load`: the demo data into any of the nine stores), `render_sheet.py` (regenerates the renderer's stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
@@ -1677,34 +1677,29 @@ python3 tools/make_icons.py --check    # exit 1 when an icon is missing or drish
 Change the colours, the fill or the stroke weights in the script, never in the files. `tests/test_icons.py` checks that the files
 exist, that `/favicon.ico` answers, and that the pages and the manifest link them.
 
-#### Regenerating the element stylesheet
+#### Regenerating the renderer's stylesheet
 
-`<drishti-view>` (Drishti Elements, [EMBED_GUIDE.md](EMBED_GUIDE.md)) styles its Shadow DOM with a **generated** sheet, not the
-console's own: `drishti-console/web/elements/drishti-view.css` and `drishti-view.manifest.json`. It is the console's tokens, theme,
-terminal, layout and gradients sheets with `:root`, `html` and `body` rewritten to `:host`, no `@font-face` (the element registers the
-icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs that `templates/_macros/panels.html`,
-`templates/_macros/view.html` and the scripts that run inside the element name. Regenerate it after changing any of those sheets, a
-macro, `drishti_bi.css` or the report styles, or an icon in such a script:
+`<drishti-view>` (Drishti Elements, [EMBED_GUIDE.md](EMBED_GUIDE.md)) styles its Shadow DOM with the **generated** sheet of Drishti Render,
+`drishti-console/web/static/render/<version>/drishti-render.css`, and `integrity.json` records the hash of every file of that version. The
+sheet is Drishti Elements' tokens and the painter's sheets (and the console's About sheet) with `:root`, `html` and `body` rewritten to
+`:host`, no `@font-face` (the element registers the icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs
+the painter names. Regenerate it after changing any of those sheets:
 
 ```bash
-python3 tools/elements_sheet.py            # write the sheet and its manifest; prints size and glyph count
-python3 tools/elements_sheet.py --check    # exit 1 when the committed files are stale
-python3 tools/elements_sheet.py --icons    # which glyph is named where
+python3 tools/render_sheet.py            # write the sheet and the integrity record
+python3 tools/render_sheet.py --check    # exit 1 when either is stale
 ```
 
-The output is reproducible and its version is the first 12 hex digits of its hash (served at
-`/embed/v1/elements/<version>/drishti-view.css`, cacheable for ever). `tests/test_element_sheet.py` fails when the committed sheet is
-stale or a macro uses a glyph the sheet lacks: run the tool and commit the two files. A name that is not a Bootstrap Icons glyph makes
-the tool fail and says where it is named.
+The output is reproducible. A released version's folder never changes: copy it to a new version, bump `VERSION` in
+`core/render_dist.py` and run the tool.
 
-**Writing element CSS: width rules become container rules.** Write responsive rules in the console's sheets as usual
-(`@media (max-width: 640px) { ... }`). The generator rewrites every width-based `@media` rule into
+**Writing element CSS: width rules become container rules.** Write responsive rules in the shared sheets as usual
+(`@media (max-width: 640px) { ... }`). The generator (`core/element_sheet.py`) rewrites every width-based `@media` rule into
 `@container drishti (max-width: 640px) { ... }`, so an embedded view answers to the width of its **element** (the host element is a
 size container, `container: drishti / inline-size`), not to the host page's viewport; `:host` inside such a rule becomes `.view` (a
 container cannot style itself) and `vw` becomes `cqw`. Non-width media (`prefers-color-scheme`, `prefers-reduced-motion`, `print`,
-`hover`, `pointer`) are kept. Do not write `@container` by hand in the console's sheets, and do not use `100vw` or `vh` for something
-inside the element's tree where the element's own size is meant. Element-only rules (finger-sized controls, the About sheet's width)
-live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` fails if a width `@media` rule is left in the sheet.
+`hover`, `pointer`) are kept. Do not write `@container` by hand in the sheets, and do not use `100vw` or `vh` for something
+inside the element's tree where the element's own size is meant.
 
 ### 5.9 The multi-select and the date fields
 
@@ -1717,8 +1712,8 @@ query-by-form renderer marks every enum field with more than three values `data-
 decides by option count, no pack is hard-coded); a dependent list's labels carry `qf-dep-off` when they do not apply and the
 multi-select offers only the others. `drishti_controls.js` builds a Sutra's `multi-select`, `date` and `date-range` controls with
 `MultiSelect`, `DatePicker` and `DateRangePicker` (the server's presets). Inside `<drishti-view>` drishti-inputs is one of the
-allow-listed enhancer bundles (`routes/embed_routes.py` `ENHANCERS`, `web/embed/assets.js`), loaded before `controls`, with its style
-sheet in the view sheet and on the host page (a picker's list floats in the page's body). Tests: `test_form_browser.py` (multi-select,
+allow-listed scripts (`routes/embed_v2_routes.py` `SCRIPTS`), loaded before `controls`, with its style
+sheet in the renderer's sheet and on the host page (a picker's list floats in the page's body). Tests: `test_form_browser.py` (multi-select,
 search, keyboard, URL, phone), `test_controls_browser.py`, `test_embed_controls_browser.py`.
 
 ### 5.10 Write a view enhancer (the `init(root)` contract)
@@ -1737,8 +1732,7 @@ A script that makes a rendered view interactive (sorting, charts, popovers) must
   `ResizeObserver` on `root.host` for a shadow root.
 - Return `{ dispose }` (remove listeners and observers). Register `window.drishtiModules.<name> = { init }`; start `init(document)`
   unless `document.currentScript` has `data-manual`; publish console globals only in that case.
-- Add the script to `ENHANCERS` in `routes/embed_routes.py` and to `boot` in `web/embed/enhancers.js` (and `ENHANCERS` in
-  `web/embed/assets.js`); extend `test_embed_elements_browser.py` to prove it inside the element. The console's own browser tests must
+- Add the script to `SCRIPTS` in `routes/embed_v2_routes.py` and to the renderer's behaviours; extend `test_embed_elements2_browser.py` to prove it inside the element. The console's own browser tests must
   pass unchanged.
 
 ### 5.11 Retry and live-reload utilities
