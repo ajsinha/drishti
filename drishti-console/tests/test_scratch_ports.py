@@ -107,4 +107,4 @@ def test_every_base_lies_in_the_window_so_workers_never_meet():
 
 def test_the_guard_sees_the_known_stacks():
     found = {name for name, *_ in _scan()}
-    assert {"bi_report_stack.py", "test_w1_model_designer_browser.py", "test_bi_languages_browser.py", "test_embed_elements_browser.py"} <= found, found
+    assert {"bi_report_stack.py", "test_w1_model_designer_browser.py", "test_bi_languages_browser.py", "embed_stack.py"} <= found, found

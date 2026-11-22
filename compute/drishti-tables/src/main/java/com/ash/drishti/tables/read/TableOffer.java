@@ -85,7 +85,7 @@ public final class TableOffer {
         }
         Map<String, Object> about = new LinkedHashMap<>();
         about.put("description", "Offered from a sample of " + sample.size() + " documents; review the columns before accepting.");
-        TableDef t = new TableDef(name, null, "1.0.0", about, from, null, null, columns, keys, null, null, TableDef.Materialize.NONE, null, null,
+        TableDef t = new TableDef(name, "1.0.0", about, from, null, null, columns, keys, null, null, TableDef.Materialize.NONE, null, null,
                 Map.of(), List.of(), List.of(), List.of());
         return new Offer(t, grains, sample.size());
     }
@@ -111,7 +111,7 @@ public final class TableOffer {
             }
         }
         TableDef t = offer.table();
-        TableDef at = new TableDef(t.name(), null, t.version(), t.about(), t.from(), grain, null, columns, List.of(), null, null, t.materialize(), null,
+        TableDef at = new TableDef(t.name(), t.version(), t.about(), t.from(), grain, null, columns, List.of(), null, null, t.materialize(), null,
                 null, Map.of(), List.of(), List.of(), List.of());
         return new Offer(at, offer.grains(), offer.documents());
     }

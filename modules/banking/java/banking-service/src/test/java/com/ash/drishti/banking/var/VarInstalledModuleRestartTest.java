@@ -72,7 +72,7 @@ class VarInstalledModuleRestartTest {
         props.put("drishti.sources.connectors-dir", Files.createDirectories(work.resolve("connectors")).toString());
         props.put("drishti.rachana.hot-reload", "false");
         props.put("drishti.var.official.on-start", "false");
-        props.put("drishti.var.threads", "2");
+        props.put("drishti.module.banking.var.threads", "2");
         props.put("drishti.identity.database-url", "jdbc:sqlite:" + work.resolve("identity.db"));
 
         for (int start = 1; start <= 3; start++) {                         // the first start and two restarts over the same folders

@@ -60,7 +60,7 @@ SHA-384 of every file). Its licence is the owner's proprietary licence, the same
 A template names the copy through one global, `ELEMENTS_DIR` (`/static/vendor/drishti-elements/<version>`, set in `core/app.py` from the
 pin): `{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.js`. No template spells the version. `base.html` loads drishti-core's
 bundle first, and drishti-core knows the folder it came from: a console script that needs another library's file or an engine asks it
-(`Drishti.elements.core.staticUrl('vendor/echarts/echarts.min.js')`); inside an embed (`/embed/v1/`, `/embed/v2/`) the scripts keep the
+(`Drishti.elements.core.staticUrl('vendor/echarts/echarts.min.js')`); inside an embed (`/embed/v2/`) the scripts keep the
 embed routes beside them, which serve the same vendored files (`routes/embed_routes.py`, `routes/embed_v2_routes.py`). The live hub's
 shared worker learns the folder from the page (`drishti_channel.js` adds it to the worker's address).
 

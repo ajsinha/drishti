@@ -107,12 +107,12 @@ class AbandonedReadsTest {
         assertThat(store.slots.abandonedCount()).isEqualTo(10_000);
         store.slots.release();
         store.slots.release();
-        Thread.sleep(200);
-        assertThat(store.read.get()).as("an abandoned read never reads").isZero();
         assertThat(Thread.activeCount()).isLessThanOrEqualTo(before + 4);
         assertThat(System.nanoTime() - t0).isLessThan(Duration.ofSeconds(10).toNanos());
         // with slots free again, a read goes through
         assertThat(r.fetchAll(refs(10), Duration.ofSeconds(2), AsOf.LATEST)).hasSize(10);
+        // the queue held no abandoned read (waiting is zero, all 10,000 counted abandoned): only these ten ever read, with no pause to wait for a stray one
+        assertThat(store.read.get()).as("an abandoned read never reads").isEqualTo(10);
     }
 
     @Test

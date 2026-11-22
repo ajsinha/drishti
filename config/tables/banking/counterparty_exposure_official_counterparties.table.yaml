@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.counterparty_exposure_official_counterparties
-was: counterparty-exposure-official-counterparties
 version: 1.0.0
 title: "Exposure official results: counterparties (latest version)"
 description: "One row per counterparty and business date: the latest result version of the official end-of-day exposure published to risk-results/exposure-official-cpty (the counterparty's own figures, its netting sets netted path by path)."

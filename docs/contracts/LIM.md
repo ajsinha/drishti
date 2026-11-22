@@ -90,7 +90,7 @@ counterparty measure. If the product owner prefers two tables (open question 6),
 | `GROUP` | id | STRING | optional | R | | the group, for a group limit | |
 | `PARENT_LIMIT` | id | STRING | optional | R | | the limit this one sub-allocates (a counterparty limit under a group limit) | `LIM-GRP-ALDERSHOT` |
 | `MEASURE` | text | STRING | required | R | | `PFE`, `EE_PEAK`, `EEPE`, `SACCR_EAD`, `NET_MTM`, `CE`, `NOTIONAL`, `SETTLEMENT` (today the text `PFE 95 peak`) | `PFE` |
-| `CONFIDENCE` | rate | DOUBLE | optional | R | | the PFE's q; default `drishti.ccr.exposure.limit-confidence` | `0.95` |
+| `CONFIDENCE` | rate | DOUBLE | optional | R | | the PFE's q; default `drishti.module.banking.exposure.limit-confidence` | `0.95` |
 | `LIMIT` | amount | DOUBLE | required | R | `CURRENCY` | the overall limit | `7980000000` |
 | `CURRENCY` | ccy | STRING | required | R | | | `USD` |
 | `BUCKETS[]` | record list | doc | optional | R | | tenor buckets: `BUCKET` (label), `FROM_YEARS`, `TO_YEARS` (a grid date t belongs when FROM < t ≤ TO; the first bucket also holds t₀), `LIMIT`; for `SETTLEMENT`, `FROM_DAYS`, `TO_DAYS` | `{"BUCKET": "1-5Y", "FROM_YEARS": 1, "TO_YEARS": 5, "LIMIT": 7980000000}` |

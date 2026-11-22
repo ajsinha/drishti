@@ -15,7 +15,7 @@
 
 """Elements 2.0 (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 19): <drishti-view> drawn by the client-side renderer from the embed API v2, on the
 same host application (tools/elements-demo, ``/?elements=2``) and the same real scratch server as Elements 1.x's acceptance tests, in
-Chromium. Elements 1.x stays as it is (test_embed_elements_browser.py, unchanged); this file runs on its own ports.
+Chromium. Elements 1.x stays as it is (embed_stack.py, unchanged); this file runs on its own ports.
 
 What it proves: the first view is live under the host's strict CSP, drawn from the ViewModel (``"contract": "1.0"``, no HTML over the
 wire), with masks; a link is a ``drishti:navigate`` the host takes over; every panel inside the element is drawn by Drishti Elements'
@@ -32,10 +32,10 @@ import pytest
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-import test_embed_elements_browser as E  # noqa: E402
+import embed_stack as E  # noqa: E402
 from core import render_dist as rd  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
-from test_embed_elements_browser import stack  # noqa: E402,F401 - the fixture
+from embed_stack import stack  # noqa: E402,F401 - the fixture
 
 PORTS = worker_ports(*(os.environ.get(k, d) for k, d in (("DRISHTI_ELEMENTS2_SERVER_PORT", 18973), ("DRISHTI_ELEMENTS2_CONSOLE_PORT", 17977), ("DRISHTI_ELEMENTS2_HOST_PORT", 17978))))
 

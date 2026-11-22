@@ -29,13 +29,13 @@
 tiers:
   everyday:
     - server:drishti.lenses
-    - engines:drishti.var.confidence
-    - engines:drishti.var.es-confidence
+    - engines:drishti.module.banking.var.confidence
+    - engines:drishti.module.banking.var.es-confidence
     - engines:drishti.var.confidences
     - engines:drishti.var.es-confidences
-    - engines:drishti.var.scenario-window
+    - engines:drishti.module.banking.var.window
     - engines:drishti.ccr.exposure.confidence
-    - engines:drishti.ccr.exposure.limit-confidence
+    - engines:drishti.module.banking.exposure.limit-confidence
     - console:features.build
     - console:features.forms
     - console:features.datamap
@@ -231,7 +231,7 @@ schemas:
       - { key: "step-titles.*", type: string, meaning: "One step's title" }
   simm-parameters:
     area: simm
-    title: "A SIMM version's parameter file: `<drishti.simm.parameters-dir>/<version>.yaml` (docs/guides/SIMM_GUIDE.md section 4)"
+    title: "A SIMM version's parameter file: `<drishti.module.banking.simm.parameters-dir>/<version>.yaml` (docs/guides/SIMM_GUIDE.md section 4)"
     file: docs/architecture/capital-parameters/simm.yaml
     applies: server
     change: restart
@@ -448,7 +448,7 @@ schemas:
       - { key: "hierarchies.<name>.levels", type: string, default: none, meaning: "The promoted columns, top first: DIVISION > DESK > TT_BOOK (each in layout.<kind>.columns of every source kind)" }
       - { key: "hierarchies.<name>.level-names", type: string, default: "each column in lower case", meaning: "The level of each column's nodes, also the reference kind their names are read from: division > desk > book" }
       - { key: "hierarchies.<name>.root", type: map, default: "{id: BANK, name: <title>}", meaning: "The root node's id and name" }
-      - { key: "hierarchies.<name>.empty-label", type: string, default: "drishti.var.hierarchy.empty-label", meaning: "The name of a (Blank) node: rows with an empty level value" }
+      - { key: "hierarchies.<name>.empty-label", type: string, default: "drishti.module.banking.var.hierarchy.empty-label", meaning: "The name of a (Blank) node: rows with an empty level value" }
       - { key: "hierarchies.<name>.ids", type: string, default: path, meaning: "path or leaf: how node ids are made" }
       - { key: "hierarchies.<name>.word", type: string, default: none, meaning: "The scope word naming a node (LL:LL-0003)" }
       - { key: "hierarchies.<name>.limits", type: string, default: none, meaning: "The kind its nodes' VaR limits come from (var-limit)" }

@@ -40,9 +40,20 @@ import org.springframework.context.event.EventListener;
  * figures the position, portfolio and desk pages show.
  */
 @Configuration
-@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class,
+@EnableConfigurationProperties({VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class,
         VarExplainProperties.class, VarParametricProperties.class})
 public class VarConfiguration {
+
+    /** The VaR settings: {@code drishti.var.*}, and the ones the banking module owns from {@code drishti.module.banking.var.*} (the manifest's settings). */
+    @Bean
+    public VarProperties varProperties(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.var", VarProperties.class, java.util.Map.ofEntries(
+                java.util.Map.entry("scenario-window", "var.window"), java.util.Map.entry("confidence", "var.confidence"),
+                java.util.Map.entry("es-confidence", "var.es-confidence"), java.util.Map.entry("ten-day-method", "var.ten-day-method"),
+                java.util.Map.entry("rank-rule", "var.rank-rule"), java.util.Map.entry("threads", "var.threads"),
+                java.util.Map.entry("hot-dates", "var.hot-dates"), java.util.Map.entry("root-name", "var.root-name"),
+                java.util.Map.entry("hierarchy.empty-label", "var.hierarchy.empty-label")));
+    }
 
     @Bean(destroyMethod = "close")
     public VarService varService(VarProperties props, VarShardingProperties sharding, SourceRouter router, Entitlements entitlements,
@@ -74,13 +85,13 @@ public class VarConfiguration {
     }
 
     /**
-     * The demo's system baskets (VAR_GUIDE.md section 5.7): when {@code drishti.var.system-baskets.seed} is on (it follows
+     * The demo's system baskets (VAR_GUIDE.md section 5.7): when {@code drishti.module.banking.var.system-baskets.seed} is on (it follows
      * {@code DRISHTI_DEMO_ENABLED}) and the basket store's system scope is empty and was never seeded, the seed file a loaded pack names
      * ({@code system-baskets: {seed: seeds/system-baskets.yaml}} in the market-risk pack) is imported once, audited as
      * {@code var-system-basket-create} by {@code system (seed)}. A bank's installation turns the seed off and imports its own file.
      */
     static int seedSystemBaskets(VarService svc, ObjectProvider<PackRegistry> packs, org.springframework.core.env.Environment env) {
-        if (env != null && !env.getProperty("drishti.var.system-baskets.seed", Boolean.class, Boolean.TRUE)) {
+        if (env != null && !env.getProperty(com.ash.drishti.banking.ModuleBound.PREFIX + "var.system-baskets.seed", Boolean.class, Boolean.TRUE)) {
             return 0;
         }
         PackRegistry r = packs == null ? null : packs.getIfAvailable();

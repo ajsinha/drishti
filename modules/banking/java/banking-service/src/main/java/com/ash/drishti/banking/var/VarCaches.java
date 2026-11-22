@@ -71,7 +71,7 @@ public final class VarCaches implements com.ash.drishti.server.caches.CacheGroup
         heap = svc.openHeapBytesUsed();                                 // every open book's heap, measured (VAR_GUIDE.md section 27.1)
         out.add(new CacheReport(DATES, "var", "Open business dates: every book's heap (base, currencies, stress, intraday), the rows mapped",
                 "heap", null, heap, svc.props().openHeapBytes(), (long) svc.openDates().size(), (long) svc.props().hotDates(), null, null, null,
-                null, "least recently used (drishti.var.hot-dates; the byte safety net drishti.var.open-heap-mb)", true,
+                null, "least recently used (drishti.module.banking.var.hot-dates; the byte safety net drishti.var.open-heap-mb)", true,
                 Map.of("mappedBytes", mapped, "protected", svc.protectedDates(null).stream().map(Object::toString).sorted().toList())));
         out.add(new CacheReport(REFUSALS, "var", "Dates refused for room (capacity, disk), answered at once with Retry-After until room is freed",
                 "heap", null, (long) svc.room().size() * 512, null, (long) svc.room().size(), null, (long) svc.props().refusalTtlSeconds(), null,

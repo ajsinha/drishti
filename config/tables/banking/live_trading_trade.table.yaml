@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.live_trading_trade
-was: live-trading-trade
 version: 1.0.0
 title: "Live trading desk: trade"
 description: The trade table of the model live-trading.

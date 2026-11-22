@@ -122,7 +122,7 @@ final class TestDataBook {
     private record Open(int window, VarBook.Builder builder, ScenarioFx fx, List<LocalDate> scenarios) {}
 
     /**
-     * The date's books in USD, one per window (the newest N scenarios, as drishti.var.scenario-window keeps them), from one pass over the files. A
+     * The date's books in USD, one per window (the newest N scenarios, as drishti.module.banking.var.window keeps them), from one pass over the files. A
      * window is the full window's vectors cut to their newest N; P&amp;L from scenario PVs is computed on the full set first.
      */
     static Map<Integer, Book> books(Path repo, ParallelSums sums, String date, int... windows) throws IOException {

@@ -184,7 +184,7 @@ def test_buttons_fill_with_the_fill_tokens_only():
     """QA2-03: a button (or a pressed control) takes its ground from --d-fill / --d-fill-strong, the pair whose label
     (--d-on-fill) test_labels_on_button_fills_read_in_every_theme checks: a gradient of the bright text accent under a white
     label read 2:1 in Crimson Terminal. A rule that writes --d-on-fill puts it on those fills, never on another token."""
-    sheets = [f for f in sorted(CSS.glob("*.css")) if f.name != "drishti_tokens.css"] + [CSS.parent.parent / "elements" / "drishti-view.css"]
+    sheets = [f for f in sorted(CSS.glob("*.css")) if f.name != "drishti_tokens.css"]
     assert not (bad := button_fill_problems(sheets)), "\n".join(bad)
 
 

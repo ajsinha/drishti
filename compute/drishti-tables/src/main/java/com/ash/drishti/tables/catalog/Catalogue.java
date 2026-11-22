@@ -45,8 +45,8 @@ import java.util.stream.Stream;
 
 /**
  * The catalogue of the table layer: every table and model from {@code config/tables/<domain>/<name>.table.yaml} and {@code .model.yaml}
- * (planned in docs/architecture/ARCHITECTURE.md section 4, built here) and from the item store (Q16), by name, with {@code was:} names resolved for one
- * release (Q18), the checks of every definition and of the catalogue as a whole, and lineage (who uses a table). Immutable: a change is a
+ * (planned in docs/architecture/ARCHITECTURE.md section 4, built here) and from the item store (Q16), by name (an old name is refused, naming the
+ * current one), the checks of every definition and of the catalogue as a whole, and lineage (who uses a table). Immutable: a change is a
  * new catalogue ({@link #load}), swapped in whole by its holder.
  */
 public final class Catalogue {
@@ -59,7 +59,6 @@ public final class Catalogue {
 
     private final Map<String, Entry> tables = new LinkedHashMap<>();
     private final Map<String, Entry> models = new LinkedHashMap<>();
-    private final Map<String, String> was = new LinkedHashMap<>();
     private final List<Problem> problems = new ArrayList<>();
     /** The names two definitions claimed (key: kind + name): refused, so neither is read and every reference to the name fails. */
     private final Map<String, List<String>> refusedTwice = new LinkedHashMap<>();
@@ -100,7 +99,7 @@ public final class Catalogue {
         List<TableDef.Rule> rules = new ArrayList<>(base.get().rules());
         rules.addAll(t.rules());
         List<String> keys = t.keys().isEmpty() ? base.get().keys() : t.keys();
-        return new TableDef(t.name(), t.was(), t.version(), t.about(), t.from(), t.grain(), t.filter(), columns, keys, t.keepLatest(), t.says(),
+        return new TableDef(t.name(), t.version(), t.about(), t.from(), t.grain(), t.filter(), columns, keys, t.keepLatest(), t.says(),
                 t.materialize(), t.asOf(), t.retention(), t.refresh(), rules, t.hiddenFor(), t.tests());
     }
 
@@ -172,19 +171,10 @@ public final class Catalogue {
             // two definitions of one name (in two domain folders, or a file and a stored item): NEITHER is read. Picking one would serve
             // the other's readers a table or model without the rules and masks they were written with (a security hole, not a choice).
             into.remove(e.name());
-            if (before.table() != null && before.table().was() != null && e.name().equals(was.get(before.table().was()))) {
-                was.remove(before.table().was());
-            }
             refusedTwice.put(e.kind() + ":" + e.name(), new ArrayList<>(List.of(before.source(), e.source())));
             problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined twice: " + before.source() + " and " + e.source()
                     + "; neither is read: a name is unique across every domain folder (keep one, rename or remove the other)").in(e.source()));
             return;
-        }
-        if (e.table() != null && e.table().was() != null) {
-            String other = was.putIfAbsent(e.table().was(), e.name());
-            if (other != null) {
-                problems.add(Problem.error(TableCodes.DUPLICATE, "was", "'" + e.table().was() + "' was the name of both " + other + " and " + e.name()).in(e.source()));
-            }
         }
     }
 
@@ -205,12 +195,9 @@ public final class Catalogue {
         return out;
     }
 
-    /** The table a reference names: by name, else by its {@code was:} name; the major honoured. */
+    /** The table a reference names, by its current name only (a retired name is refused: {@link #retiredTo}); the major honoured. */
     public Optional<TableDef> table(TableName.Ref ref) {
         Entry e = tables.get(ref.name());
-        if (e == null && was.containsKey(ref.name())) {
-            e = tables.get(was.get(ref.name()));
-        }
         if (e == null || e.table() == null) {
             return Optional.empty();
         }
@@ -230,9 +217,28 @@ public final class Catalogue {
         return ref.major() == null || ref.major() == e.model().major() ? Optional.of(e.model()) : Optional.empty();
     }
 
-    /** The current name of {@code name} when it is a {@code was:} name, else null. */
-    public String renamed(String name) {
-        return was.get(name);
+    /**
+     * The current name of {@code name} when it is an old way of writing one: a BI dataset's name ({@code trading-risk-trades} for the one table
+     * whose local name is {@code trading_risk_trades}, {@code pack.trading.trade} for {@code trading.trade}), which is not a table's name; else null. Never resolved:
+     * a reference to it is refused, naming the current table.
+     */
+    public String retiredTo(String name) {
+        if (name == null || tables.containsKey(name) || name.contains(".") && !name.startsWith("pack.")) {
+            return null;
+        }
+        if (name.startsWith("pack.")) {
+            String now = TableName.ofDataset(name);
+            return tables.containsKey(now) ? now : null;
+        }
+        String local = TableName.ofDataset(name).substring(TableName.BI_DOMAIN.length() + 1);       // the dataset's name as a table's local name
+        List<String> found = tables.keySet().stream().filter(k -> k.substring(k.indexOf('.') + 1).equals(local)).toList();
+        return found.size() == 1 ? found.get(0) : null;
+    }
+
+    /** The words that end a refusal of {@code name}: empty, or "('old' is retired: use 'new')". */
+    public String retiredNote(String name) {
+        String now = retiredTo(name);
+        return now == null ? "" : " ('" + name + "' is retired: use '" + now + "')";
     }
 
     /** Every problem: each file's reading, each definition's checks, and the catalogue's own (duplicates, references, cycles). */
@@ -253,9 +259,9 @@ public final class Catalogue {
                 references(e.table(), e.source(), out);
             } else if (e.model() != null) {
                 mc.check(e.model(), this::effective).forEach(p -> out.add(p.in(e.source())));
-                e.model().tables().values().stream().filter(u -> renamed(u.table().name()) != null)
-                        .forEach(u -> out.add(Problem.warning(TableCodes.REFERENCE, "tables." + u.alias(), "'" + u.table().name() + "' is now "
-                                + renamed(u.table().name()) + " (the old name resolves for one release)").in(e.source())));
+                e.model().tables().values().stream().filter(u -> retiredTo(u.table().name()) != null)
+                        .forEach(u -> out.add(Problem.error(TableCodes.REFERENCE, "tables." + u.alias(), "'" + u.table().name() + "' is retired: use "
+                                + retiredTo(u.table().name())).in(e.source())));
             }
         }
         cycles(out);
@@ -263,8 +269,7 @@ public final class Catalogue {
     }
 
     /**
-     * Names are unique across virtual tables and stored tables (docs/architecture/ARCHITECTURE.md section 10, V12): each table whose name or {@code was:}
-     * name is a stored table's ({@code stored}: the lakes' tables as {@code <domain>.<name>} and the kinds) is refused, compared without
+     * Names are unique across virtual tables and stored tables (docs/architecture/ARCHITECTURE.md section 10, V12): each table whose name is a stored table's ({@code stored}: the lakes' tables as {@code <domain>.<name>} and the kinds) is refused, compared without
      * case. The server passes what its lakes and packs hold; {@code tables check --stored} a list.
      */
     public List<Problem> clashes(Collection<String> stored) {
@@ -275,9 +280,9 @@ public final class Catalogue {
             if (e.table() == null) {
                 continue;
             }
-            for (String n : java.util.Arrays.asList(e.table().name(), e.table().was())) {
+            for (String n : java.util.List.of(e.table().name())) {
                 if (n != null && names.contains(n.toLowerCase(java.util.Locale.ROOT))) {
-                    out.add(Problem.error(TableCodes.NAME_CLASH, n.equals(e.table().name()) ? "table" : "was", "'" + n + "' is a stored table's name: "
+                    out.add(Problem.error(TableCodes.NAME_CLASH, "table", "'" + n + "' is a stored table's name: "
                             + "a virtual table's name is unique across virtual and stored tables (choose another <domain>.<name>)").in(e.source()));
                 }
             }
@@ -285,20 +290,20 @@ public final class Catalogue {
         return out;
     }
 
-    /** True when {@code name} is free for a new virtual table: neither a table, a {@code was:} name nor a stored table's. */
+    /** True when {@code name} is free for a new virtual table: neither a table, an old name of one nor a stored table's. */
     public boolean free(String name, Collection<String> stored) {
         String n = name.toLowerCase(java.util.Locale.ROOT);
-        return tables.keySet().stream().noneMatch(k -> k.equalsIgnoreCase(n)) && was.keySet().stream().noneMatch(k -> k.equalsIgnoreCase(n))
+        return tables.keySet().stream().noneMatch(k -> k.equalsIgnoreCase(n)) && retiredTo(n) == null
                 && stored.stream().noneMatch(s -> s.equalsIgnoreCase(n));
     }
 
     private void references(TableDef t, String source, List<Problem> out) {
         if (t.from() != null && t.from().form() == TableDef.Source.Form.TABLE && table(t.from().table()).isEmpty()) {
-            out.add(Problem.error(TableCodes.REFERENCE, "from.table", "no table '" + t.from().table() + "' in the catalogue").in(source));
+            out.add(Problem.error(TableCodes.REFERENCE, "from.table", "no table '" + t.from().table() + "' in the catalogue" + retiredNote(t.from().table())).in(source));
         }
         boolean implicit = t.from() != null && t.from().form() == TableDef.Source.Form.MODEL && t.from().model().startsWith("table:");
         if (implicit && table(t.from().model().substring("table:".length())).isEmpty()) {
-            out.add(Problem.error(TableCodes.REFERENCE, "from.model", "no table '" + t.from().model().substring("table:".length()) + "' for its implicit model").in(source));
+            out.add(Problem.error(TableCodes.REFERENCE, "from.model", "no table '" + t.from().model().substring("table:".length()) + "' for its implicit model" + retiredNote(t.from().model().substring("table:".length()))).in(source));
         }
         if (!implicit && t.from() != null && t.from().form() == TableDef.Source.Form.MODEL && model(TableName.Ref.parse(t.from().model())).isEmpty()) {
             out.add(Problem.error(TableCodes.REFERENCE, "from.model", "no model '" + t.from().model() + "' in the catalogue").in(source));
@@ -307,7 +312,7 @@ public final class Catalogue {
             for (String[] rel : related(c.expr())) {
                 Optional<TableDef> other = table(rel[0]);
                 if (other.isEmpty()) {
-                    out.add(Problem.error(TableCodes.REFERENCE, "columns." + c.name() + ".expr", "related(...) names no table '" + rel[0] + "'").in(source));
+                    out.add(Problem.error(TableCodes.REFERENCE, "columns." + c.name() + ".expr", "related(...) names no table '" + rel[0] + "'" + retiredNote(rel[0])).in(source));
                 } else if (!other.get().columns().containsKey(rel[1]) && !TableDef.BUILT_INS.contains(rel[1])) {
                     out.add(Problem.error(TableCodes.REFERENCE, "columns." + c.name() + ".expr", rel[0] + " has no column '" + rel[1] + "'").in(source));
                 }
@@ -360,10 +365,10 @@ public final class Catalogue {
      * through {@link Lineage}.
      */
     public List<Lineage.Use> usedBy(String table) {
-        String name = renamed(table) != null ? renamed(table) : table;
+        String name = table;
         List<Lineage.Use> out = new ArrayList<>();
         for (ModelDef m : models()) {
-            m.tables().values().stream().filter(u -> name.equals(u.table().name()) || name.equals(renamed(u.table().name())))
+            m.tables().values().stream().filter(u -> name.equals(u.table().name()))
                     .forEach(u -> out.add(new Lineage.Use(Entry.MODEL, m.name(), "reads it as " + u.alias() + " (" + u.role() + ")")));
         }
         for (TableDef t : tables()) {

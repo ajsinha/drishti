@@ -16,6 +16,21 @@
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
+  module:
+    banking:       # the settings the banking module owns (module.yaml settings:), read as drishti.module.banking.<key>
+      var:
+        confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
+        es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
+        ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
+        window: ${DRISHTI_VAR_SCENARIO_WINDOW:250}  # the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo)
+        rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
+        threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
+        hot-dates: ${DRISHTI_VAR_HOT_DATES:10}             # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay
+        root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title)
+        hierarchy:
+          empty-label: ${DRISHTI_VAR_HIERARCHY_EMPTY_LABEL:(Blank)}   # the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins
+        system-baskets:
+          seed: ${DRISHTI_VAR_SYSTEM_BASKETS_SEED:${DRISHTI_DEMO_ENABLED:true}}   # import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start
   engines:
     var:
       enabled: ${DRISHTI_VAR_ENABLED:true}   # run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live)
@@ -23,12 +38,9 @@ drishti:
   risk:
     limit-near: 0.8                  # one rule for every limit the banking module holds a figure to (VaR limits, the pre-deal check's credit limit and buckets, sensitivity limits): near from this share, a breach over 100%
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
-    confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
-    es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
     # the confidences a page or a command may choose (the default above is always offered; official records keep the default)
     confidences: [0.95, 0.975, 0.99, 0.995]   # the VaR confidences offered on the VaR page, in commands and the API (the default is always offered)
     es-confidences: [0.95, 0.975, 0.99]       # the ES confidences offered the same way (es-confidence is always offered)
-    ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
     stress:                          # stressed VaR: VaR and ES on the date's stress scenario set (docs/guides/VAR_GUIDE.md section 18.8)
       enabled: ${DRISHTI_VAR_STRESS_ENABLED:true}   # offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart)
       id-prefix: HS-STRESS-          # a scenario set is the stress set when its SET_TYPE is STRESS, or (no SET_TYPE) its id starts with this
@@ -39,12 +51,8 @@ drishti:
       length: 250                    # the days of a window (about 12 months); a request may ask for another (at least 20)
       top: 5                         # the candidate windows listed, none overlapping another
       alert-threshold: 0.05          # alert when the worst window's stressed VaR exceeds the current window's by more than this (5%)
-    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:250}  # the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo)
-    rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
-    threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
     memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory)
-    hot-dates: ${DRISHTI_VAR_HOT_DATES:10}             # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay
     refusal-ttl-seconds: 300         # a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered)
     open-heap-mb: ${DRISHTI_VAR_OPEN_HEAP_MB:0}        # the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave
     fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}       # the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off)
@@ -105,10 +113,7 @@ drishti:
       kafka:                         # the PV topic (the market-risk pack's pv-updates connector, off by default): VAR_GUIDE.md section 8.4
         window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}   # everything received in a window: one intraday batch in the lake, applied
         max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
-    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title)
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
-    hierarchy:                       # what every hierarchy shares (VAR_GUIDE.md section 15.14)
-      empty-label: ${DRISHTI_VAR_HIERARCHY_EMPTY_LABEL:(Blank)}   # the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins
     # hierarchies:                   # VAR_GUIDE.md section 15.14: any number, each from promoted columns; wins over a loaded pack's hierarchies: block
     #   REGION: { title: Regions, levels: "REGION > DESK", word: REG, limits: var-limit }   # (the market-risk pack's: MGMT, LEGAL, LL)
     sharding:                        # VaR sharding (docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): on only with the market-risk pack's sharding: block or enabled: true
@@ -130,8 +135,6 @@ drishti:
       fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
       limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
       valuation: trade-valuation     # the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER_ID)
-    system-baskets:                  # the bank's own baskets (VAR_GUIDE.md section 5.7): kept in the basket store (var/system-baskets/), never read from data
-      seed: ${DRISHTI_VAR_SYSTEM_BASKETS_SEED:${DRISHTI_DEMO_ENABLED:true}}   # import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)

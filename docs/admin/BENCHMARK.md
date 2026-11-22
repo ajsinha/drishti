@@ -2109,7 +2109,7 @@ DuckDB, lz4 and zstd JNI calls (they do not park).
 ## 22. Code volume by release
 
 Lines of code at each release and now, **measured** from git by `python3 tools/code_volume.py --write`, run in each release's preparation: Java under `src/main` and
-`src/test`; the console's Python, without its tests; the console's JavaScript, without `static/vendor`, the frozen `render/1.2.0` and `web/embed`.
+`src/test`; the console's Python, without its tests; the console's JavaScript, without `static/vendor`, and the retired renderer folders.
 
 <!-- code-volume:begin (tools/code_volume.py --write) -->
 | Release | Date | Java main | Java test | Console python | Console js |

@@ -39,7 +39,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The top of the VaR tree named by the settings (VAR_GUIDE.md section 20): {@code drishti.var.root-name} names every hierarchy's root,
+ * The top of the VaR tree named by the settings (VAR_GUIDE.md section 20): {@code drishti.module.banking.var.root-name} names every hierarchy's root,
  * {@code drishti.var.root-names} one hierarchy's root over it; the nodes below keep the data's names; the tree, the headline and a
  * capture show the configured name; a blank setting keeps the data's {@code NAME}; the hot file's digest changes with the names.
  */
@@ -52,10 +52,10 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
-        "drishti.var.root-name=Acme Group", "drishti.var.root-names.legal=Acme Group (legal entities)",
+        "drishti.module.banking.var.root-name=Acme Group", "drishti.var.root-names.legal=Acme Group (legal entities)",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

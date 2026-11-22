@@ -41,7 +41,7 @@ guides:
         about: |
           The ordered list of historical days the scenarios are taken from, the same for every trade on a business date: position *s* of every P&L
           vector and every scenario PV is the market move of `SCENARIO_DATES[s]`. One row per set per business date. `SCENARIO_COUNT` is the set's
-          length (509 in the sample); the engine uses the newest `drishti.var.scenario-window` of them (250 as shipped).
+          length (509 in the sample); the engine uses the newest `drishti.module.banking.var.window` of them (250 as shipped).
 
           - **`SCENARIO_DATES`:** strictly increasing; the newest N are the window. Every vector names its set in `SCENARIO_SET_ID`.
       - kind: scenario-pv

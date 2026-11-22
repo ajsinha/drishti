@@ -17,7 +17,7 @@
 # Embed Drishti in your pages
 
 This guide is for a team that wants Drishti inside **its own web application**: a live view of a trade or a counterparty in a CRM,
-a published report in a portal, a search box on an intranet page, or Drishti's grid and chart components in an application of its
+a live panel of a view in a portal, or Drishti's grid and chart components in an application of its
 own. Everything is drawn in your page's DOM, in a Shadow DOM, with **no iframe**: your layout, your theme tokens, your keyboard focus,
 one network connection for the whole page, and your user signed in as themselves with every masked field masked.
 
@@ -25,7 +25,7 @@ There are three ways in:
 
 | You want | Use | Chapter |
 |---|---|---|
-| Drishti views, panels, reports, About and search as tags in your page | **Drishti Elements**: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, `<drishti-about>`, `<drishti-search>` | [3](#3-five-minutes-a-static-page) to [5](#5-the-elements-one-by-one) |
+| Drishti views and panels as tags in your page | **Drishti Elements**: `<drishti-view>`, `<drishti-panel>` | [3](#3-five-minutes-a-static-page) to [5](#5-the-elements-one-by-one) |
 | A Drishti screen drawn by one function call, with full control of navigation and live updates | **Drishti Render**: `render(container, source, options)` | [6](#6-drishti-render-one-import-one-call) |
 | A grid, a chart or a picker in your own application, with or without a Drishti server | **the Elements libraries** (drishti-core, -grid, -chart, ...) | [13](#13-drishti-elements-libraries-in-your-own-app) and [14](#14-moving-an-ag-grid-enterprise-pivot-app) |
 
@@ -87,8 +87,8 @@ the page, rotating a secret, disabling and the audit events). What a registratio
 | Name, contact | *Client CRM*, `crm-team@bank.example` | shown in the access log |
 | Origins | `https://crm.bank.example` | **exact** origins (scheme, host, port; no path); no wildcards unless `drishti.embed.allow-wildcard-origins` allows a suffix for review apps |
 | Client authentication | a client secret (shown **once**), a public key (JWKS JSON or URL), or both | how your backend proves it is your backend; a public key (`private_key_jwt`, RSA or ECDSA) is recommended in production |
-| Scopes | `embed:view`, `embed:about`, `embed:report`, `embed:search` | views and panels; the About text and `<drishti-about>`; BI reports; `<drishti-search>` |
-| Kinds and reports | `trade, counterparty`, `report:file:report:trades-overview`, `report:*` | what it may show; empty: everything the user's roles open. An application may narrow its users' rights, never widen them |
+| Scopes | `embed:view`, `embed:about` | views and panels; the About text |
+| Kinds | `trade, counterparty` | what it may show; empty: everything the user's roles open. An application may narrow its users' rights, never widen them |
 | Token lifetime | 300 s | at most `drishti.embed.token-max-seconds` |
 | Rates | `callsPerMinute` per application, `userCallsPerMinute` per user | over them: `429 DRS-8004` with `Retry-After` |
 | Enabled | yes | off stops the application at the next call |
@@ -109,7 +109,7 @@ used), and allows the headers `Authorization`, `Content-Type`, `Drishti-Embed-Ap
 3. **Add one script line, a token provider and an element:**
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.5/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v2/elements/2/drishti-elements.js" crossorigin="anonymous"></script>
 <script type="module">
   DrishtiElements.configure({
     tokenProvider: async () => {                      // your backend, not Drishti: it holds your client secret
@@ -124,27 +124,12 @@ used), and allows the headers `Authorization`, `Content-Type`, `Drishti-Embed-Ap
 ```
 
 That is all of it. `server` defaults to the origin the module was loaded from (the console), and several elements on a page share one
-connection.
-
-**Two lines of elements.** Elements **1.x** (version 1.4.5, under `/embed/v1/`) is the line above and carries all five tags. Elements
-**2.x** (under `/embed/v2/`) draws `<drishti-view>` and `<drishti-panel>` with Drishti Render from the ViewModel, adds `<drishti-screen>`
-(an alias of `<drishti-view>`), and keeps 1.x's attributes, events, slots and token provider. The same page on 2.x changes one line:
-
-```html
-<script type="module" src="https://drishti.bank.example/embed/v2/elements/2/drishti-elements.js" crossorigin="anonymous"></script>
-<script type="module">
-  DrishtiElements.configure({ tokenProvider: async () => { const r = await fetch('/api/drishti-token', { cache: 'no-store' });
-    const b = await r.json(); return { token: b.token, expiresAt: Date.now() + b.expiresIn * 1000 }; } });
-</script>
-<drishti-view kind="trade" entity="MX-20000001" theme="light"></drishti-view>
-```
-
-A page uses one major or the other ([5.2](#52-elements-2x-drawn-by-the-renderer)).
+connection. The script is Elements **2.x** (under `/embed/v2/`): it draws `<drishti-view>` and `<drishti-panel>` (and `<drishti-screen>`, an
+alias of `<drishti-view>`) with Drishti Render from the ViewModel ([5.2](#52-elements-2x-drawn-by-the-renderer)).
 
 **A working host to copy.** `tools/elements-demo` in the repository is a complete host application with its own sign-in, a backend doing
-the token exchange, a search box, a recent list, an as-of picker and a report page, served under a strict policy
-(`python3 tools/elements-demo/server.py --help`; `/?elements=2` runs the same page on Elements 2.x, `/?tt=1` also enforces Trusted
-Types).
+the token exchange, a recent list and an as-of picker, served under a strict policy
+(`python3 tools/elements-demo/server.py --help`; `/?tt=1` also enforces Trusted Types).
 
 ## 4. How a user gets in
 
@@ -170,10 +155,10 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 subject_token=<an assertion your backend signs about the user, or the user's OIDC ID token>
 subject_token_type=urn:ietf:params:oauth:token-type:jwt        (or ...:id_token)
 audience=https://drishti.bank.example                           (the console's public URL)
-scope=embed:report                                              (within the application's own scopes)
+scope=embed:view                                                (within the application's own scopes)
 ```
 
-and the answer is `{"access_token": "<JWT>", "token_type": "Bearer", "expires_in": 300, "scope": "embed:report"}`. The field-by-field
+and the answer is `{"access_token": "<JWT>", "token_type": "Bearer", "expires_in": 300, "scope": "embed:view"}`. The field-by-field
 reference, the claims and the refusals are in [API_REFERENCE.md](API_REFERENCE.md).
 
 **Saying who the user is.** Either the user's **ID token** from the identity provider both applications use (needs single sign-on on
@@ -193,7 +178,7 @@ app.get('/api/drishti-token', async (req, res) => {
   const r = await fetch(DRISHTI + '/api/v1/embed/token', {
     method: 'POST', headers: { Authorization: 'Basic ' + Buffer.from('crm:' + SECRET).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange', subject_token: assertion,
-      subject_token_type: 'urn:ietf:params:oauth:token-type:jwt', audience: CONSOLE, scope: 'embed:report' }) });
+      subject_token_type: 'urn:ietf:params:oauth:token-type:jwt', audience: CONSOLE, scope: 'embed:view' }) });
   const t = await r.json();
   res.json({ token: t.access_token, expiresIn: t.expires_in });
 });
@@ -206,7 +191,7 @@ Map<String, Object> token(Principal who) throws Exception {
     long now = Instant.now().getEpochSecond();
     String assertion = signJwt(Map.of("iss", "crm", "sub", who.getName(), "aud", drishti + "/api/v1/embed/token", "iat", now, "exp", now + 60, "jti", UUID.randomUUID().toString()));
     String form = "grant_type=" + enc("urn:ietf:params:oauth:grant-type:token-exchange") + "&subject_token=" + enc(assertion)
-        + "&subject_token_type=" + enc("urn:ietf:params:oauth:token-type:jwt") + "&audience=" + enc(console) + "&scope=embed%3Areport";
+        + "&subject_token_type=" + enc("urn:ietf:params:oauth:token-type:jwt") + "&audience=" + enc(console) + "&scope=embed%3Aview";
     HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(drishti + "/api/v1/embed/token"))
         .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(("crm:" + secret).getBytes()))
         .header("Content-Type", "application/x-www-form-urlencoded").POST(BodyPublishers.ofString(form)).build(), BodyHandlers.ofString());
@@ -291,17 +276,13 @@ the console works the same way.
 |---|---|
 | `<drishti-view kind="trade" entity="MX-20000001">` | a live view of one entity: header, key figures, every panel, as the console draws them |
 | `<drishti-panel kind="trade" entity="MX-20000001" panel="legs">` | **one panel** of a view, in a card of your own |
-| `<drishti-report report="file:report:trades-overview">` | a published **BI report**, one page of it or one visual of it, with its slicers, cross-filter and live updates |
-| `<drishti-about kind="trade" entity="MX-20000001">` | the **About this page** layers of a view (where each number comes from, the masks and rules that applied to this reader) in a panel of your own |
-| `<drishti-search>` | **search across Drishti** from your page: a box and the entities that match, masked for the signed-in user |
 
 Importing the library defines the elements once; importing twice is harmless.
 
 ### 5.1 The reference
 
 Every attribute is reflected to a property of the same name in camelCase (`as-of` is `asOf`). Events are `CustomEvent`s on the element,
-`bubbles: true, composed: true`, named `drishti:<name>`. This reference is **generated** from `drishti-console/core/element_api.py`, the
-same source as the TypeScript declarations, and a test checks it against the elements, so it cannot drift.
+`bubbles: true, composed: true`, named `drishti:<name>`. The TypeScript declarations of the renderer (`drishti-render.d.ts`) hold the same types.
 
 #### `<drishti-view>`
 
@@ -342,7 +323,7 @@ A live Drishti view of one entity.
 | `controls` | `{ query: string; changed: string[] }` | a reader changed a control |
 | `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
 | `loaded` | `{ ref: { kind: string; id: string }; generation: number; title: unknown; live: boolean }` | a view was loaded and painted |
-| `masked` | `{ count?: number; panels?: string[]; columns?: string[] }` | what the user is shown has masked fields (a view: count and panels; a report: the columns) |
+| `masked` | `{ count?: number; panels?: string[]; columns?: string[] }` | what the user is shown has masked fields (count and panels) |
 | `navigate` | `{ kind: string; id: string; href: string; panel?: string; source: 'link' | 'chart' | 'graph' }` | **cancellable**: the user activated a linked entity; not cancelled, the element shows it in place |
 | `paint` | `{ ref: { kind: string; id: string }; generation: number }` | the shadow root was rebuilt |
 | `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
@@ -360,115 +341,6 @@ One panel of a view: `<drishti-view>` with the `panel` attribute and the header 
 | Property | Type | Meaning |
 |---|---|---|
 | `panel` | `string` | the attribute of the same name |
-
-#### `<drishti-report>`
-
-A published BI report, or one page or visual of it, with its slicers, cross-filter and live updates.
-
-| Attribute | Type | Meaning |
-|---|---|---|
-| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
-| `report` | `string` | the id of a **published** report, e.g. `file:report:trades-overview`; required. The host application's `kinds` must list `report:<id>` or `report:*` |
-| `page` | `string` | the page to show first (default: the first page that is not a drill-through target) |
-| `visual` | `string` | show only this visual (its page is found for you): a card, a chart or a table in a card of the host's own |
-| `filters` | `string` | initial filters as JSON: `{"slicers": {"<slicer id>": ["FX"]}, "dates": "2026-10-09", "selections": [{"visual": "by-desk", "field": "trade.DESK", "values": ["FX"]}], "mode": "highlight"}` |
-| `chrome` | `'full' | 'bare'` | `full` (default): title, page tabs, business date, bookmarks, filter chips, live bar. `bare`: the visuals only (the default when `visual` is set) |
-| `theme` | `string` | as `<drishti-view>` |
-| `live` | `'auto' | 'off'` | `off` draws once and never follows the report's live tables |
-| `label` | `string` | the element's accessible name |
-
-| Property | Type | Meaning |
-|---|---|---|
-| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` |
-| `state` (read-only) | `'idle' | 'loading' | 'live' | 'static' | 'stale' | 'failed' | 'reconnecting' | 'paused' | 'error'` | the state machine |
-| `page` | `string` | the page shown (assign to change it) |
-| `filters` | `{ page?: string; slicers?: Record<string, unknown>; dates?: string | { from?: string; to?: string } | null; selections?: { visual: string; field: string; values: unknown[] }[]; carry?: unknown[]; mode?: 'filter' | 'highlight' }` | the filters in force; assign the same shape to set them (anything left out is cleared) |
-| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
-
-| Method | Effect |
-|---|---|
-| `reload()` | full reload: fetch the report again and redraw |
-| `refresh()` | ask every visual again, quietly |
-| `selectPage(id` | show another page (its filters are cleared, as when a reader clicks the tab) |
-| `clearFilters()` | clear slicers, selections and the date (the Reset button) |
-| `pause()` | give the live stream back |
-| `resume()` | take it again |
-
-| Event (`drishti:`) | `detail` | When |
-|---|---|---|
-| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
-| `filter-changed` | `{ page: string; slicers: Record<string, unknown>; dates: unknown; selections: { visual: string; field: string; values: unknown[] }[]; carry: unknown[]; mode: string; source: 'user' | 'api' }` | a reader (or the host, `source: 'api'`) changed a slicer, a selection, the date or the page |
-| `loaded` | `{ report: string; title: string; page: string; visuals: string[]; live: boolean }` | the report was drawn (every visual of the first page has answered or failed) |
-| `masked` | `{ count?: number; panels?: string[]; columns?: string[] }` | what the user is shown has masked fields (a view: count and panels; a report: the columns) |
-| `page-changed` | `{ page: string; title: string; visuals: string[]; phone: boolean }` | a page was drawn (first draw, a tab, `selectPage`, or a swap to or from the phone layout) |
-| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
-| `tick` | `{ generation: number; seq?: number; latencyMs?: number; changed?: { strip: number[]; panels: string[] }; at?: string }` | live data was applied |
-| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
-
-#### `<drishti-about>`
-
-The "About this page" layers of one view (sources, lineage, the masks and rules that applied to this reader) in a panel of the host's own.
-
-| Attribute | Type | Meaning |
-|---|---|---|
-| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
-| `kind` | `string` | an entity kind (`trade`, `counterparty`, ...); required |
-| `entity` | `string` | the entity id; change it to show another entity's About; required |
-| `theme` | `string` | as `<drishti-view>` |
-| `label` | `string` | the element's accessible name (default `About this page`) |
-
-| Property | Type | Meaning |
-|---|---|---|
-| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:about`) |
-| `state` (read-only) | `'idle' | 'loading' | 'loaded' | 'error'` | the state machine |
-| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
-
-| Method | Effect |
-|---|---|
-| `reload()` | ask the console for the About body again |
-
-| Event (`drishti:`) | `detail` | When |
-|---|---|---|
-| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
-| `loaded` | `{ kind: string; entity: string }` | the About body was drawn |
-| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
-| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
-
-#### `<drishti-search>`
-
-Search across Drishti from a host page: a box and the entities that match, masked for the signed-in user.
-
-| Attribute | Type | Meaning |
-|---|---|---|
-| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
-| `theme` | `string` | as `<drishti-view>` |
-| `placeholder` | `string` | the box's placeholder (default `Search`) |
-| `label` | `string` | the box's accessible name (default the placeholder) |
-| `limit` | `number` | most results asked for (1 to 50, default 10; the server caps it at `drishti.embed.search.max-results`) |
-| `min-chars` | `number` | shortest query searched (default 2) |
-| `delay` | `number` | milliseconds of quiet after the last key before a search is made (default 250) |
-| `target` | `string` | a CSS selector of a `<drishti-view>` or `<drishti-panel>`: picking a result points it at that entity (unless `drishti:select` is cancelled) |
-
-| Property | Type | Meaning |
-|---|---|---|
-| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:search`) |
-| `value` | `string` | the text in the box (assign to search for it) |
-| `results` (read-only) | `{ type: string; kind: string; id: string; mnemonic: string; title: string; subtitle: string }[]` | the results now shown |
-| `state` (read-only) | `'idle' | 'loading' | 'error'` | the state machine |
-| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
-
-| Method | Effect |
-|---|---|
-| `search(q?` | search now (the box shows `q`); resolves with the results |
-| `clear(box?` | empty the list, and the box unless `box` is false |
-
-| Event (`drishti:`) | `detail` | When |
-|---|---|---|
-| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
-| `results` | `{ query: string; results: { kind: string; id: string; mnemonic: string; title: string; subtitle: string }[] }` | a search answered |
-| `select` | `{ kind: string; id: string; mnemonic: string; title: string; type: string }` | **cancellable**: the user picked a result; not cancelled, the `target` view (if any) is pointed at it |
-| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
-| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
 
 **The page object, `DrishtiElements`** (one per page): `configure({ server, tokenProvider, auth })` (or `element.tokenProvider = fn`),
 `resolve(text)` (a typed command such as `TRD MX-20000001` to `{ref: {kind, id}, mnemonic, title}`, for your own search box),
@@ -499,111 +371,21 @@ gives its subscription back and, on return, fetches a fresh view and subscribes 
 
 ### 5.2 Elements 2.x: drawn by the renderer
 
-Elements 2.x keeps the 1.x element API for `<drishti-view>` and `<drishti-panel>` and draws them with Drishti Render from the ViewModel
-the embed API v2 answers as JSON. What you get on top of 1.x:
+Elements 2.x draws `<drishti-view>` and `<drishti-panel>` with Drishti Render from the ViewModel the embed API v2 answers as JSON. Its features:
 
-- **`navigation`**: unset, a link changes `kind` and `entity` as in 1.x; `in-place` draws the linked entity in the element with a Back
+- **`navigation`**: unset, a link changes `kind` and `entity`; `in-place` draws the linked entity in the element with a Back
   bar ("← Back to IRS-48213", Alt+← returns); `host` sends only the event.
 - **`auth="popup"`** and `DrishtiElements.configure({ auth: 'popup' })` ([4.2](#42-a-page-without-a-backend-the-sign-in-window)), with the
   element state `sign-in` until the person signs in.
 - **The console's behaviours inside the element**: per-column filter funnels, Chart any table, drill-downs in place, the nested pivot as
   a tree grid, zoom and the Sutra's controls. About this page is a side sheet inside the element (the `?` key or the head's About
   button).
-- **`element.handle`**, the renderer's handle ([6.2](#62-sources-and-the-handle)), and the renderer's events beside 1.x's: `drishti:about`,
+- **`element.handle`**, the renderer's handle ([6.2](#62-sources-and-the-handle)), and the renderer's events: `drishti:about`,
   `drishti:panel`, `drishti:row-click` and `drishti:select`.
 - **`<drishti-screen>`**, an alias of `<drishti-view>`.
 
-`<drishti-report>`, `<drishti-about>` and `<drishti-search>` are 1.x elements. `DrishtiElements.version` names the Elements version and
+`DrishtiElements.version` names the Elements version and
 `renderer`, `contracts` and `api` the rest. A host that enforces Trusted Types names `drishti-render` beside `drishti-elements`.
-
-### 5.3 `<drishti-report>`: a published report
-
-A **published** report, one **page** of it or one **visual** of it, drawn with the console viewer's own code: the page tabs, the
-slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between the visuals, *show as a
-table*, and, for a report over a live table, a live bar and redraws as the data ticks (each tick asks the visuals again, as the person
-looking, so their row rules and masks apply to every update). Not in the element: drill down and through, *Alert me*, *Show the rows
-behind this visual*, Export and Subscribe, creating bookmarks, and cross-filtering **between** two elements. A `perspective-*` visual is
-drawn as in the viewer, Drishti's own grid of the server's answer (no element loads WebAssembly). How reports are made and published:
-[README.md](bi/README.md).
-
-```html
-<drishti-report id="rep" report="file:report:live-trading-desk"
-  filters='{"selections":[{"visual":"by-desk","field":"trade.DESK","values":["DESK-RATES"]}]}'></drishti-report>
-<drishti-report report="file:report:live-trading-desk" visual="by-desk" chrome="bare"></drishti-report>
-```
-
-**`filters`** is the initial state as JSON (and the property reads and sets the same shape): `slicers` (a slicer visual's id to the
-values it selects, or `{from, to}` for a range), `dates` (`"2026-10-09"` or `{from, to}`: the business date), `selections` (the marks
-"clicked": `{visual, field, values}`), `carry` (values carried by a drill-through) and `mode` (`filter` or `highlight`). Anything left
-out is cleared. Assigning it does what a click would: the visuals ask again, and `drishti:filter-changed` comes back with
-`source: "api"`.
-
-**`chrome`**: `full` (default) shows the title, page tabs, business date, bookmarks, the filter chips, Reset and the live bar; `bare`
-shows the visuals only. With `visual` set the element is that one visual, found on whichever page holds it, in a card, and the chrome
-is off.
-
-**What the host hears** (captured from a real page, the demo host with the *Live trading desk* report; the last two are the report
-telling its host which columns it masked and what a click selected):
-
-```
-page-changed rep  {"page":"desk","title":"Desk","visuals":["trades","notional","mtm","losses","pnl","by-desk","rolling","movers","latest"],"phone":false}
-loaded       rep  {"title":"Live trading desk","page":"desk"}
-masked       rep  {"columns":["trade.trader"]}
-filter-changed rep {"page":"desk","slicers":{},"dates":null,"selections":[{"visual":"by-desk","field":"trade.DESK","values":["DESK-RATES"]}],"carry":[],"mode":"filter","source":"user"}
-```
-
-**Masks.** As every embed call ([4.1](#41-the-token-exchange)): the user's trader column reads `•••` in your card and the real name in
-the console. `drishti:masked` lists the columns.
-
-**Which reports a host may show.** The host application's **kinds and reports** list (chapter 2): `report:file:report:live-trading-desk`
-allows one report, `report:*` every report; a host whose list holds only entity kinds may show none; an empty list means everything the
-user's roles open. The application needs the scope `embed:report`, and only a **published** report is embedded. A refusal is `DRS-8005`
-(`drishti:error`, `fatal: true`, the element shows the code). An embed token may never call a report's authoring paths (`DRS-5002`).
-
-**Many visuals.** The query engine's per-person limit (three at a time) applies; the element asks its visuals three at a time and
-retries a `429` by itself.
-
-**On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the
-report has one ([README.md](bi/README.md)), else the automatic single column, and swaps back as it grows, with no reload. A
-hidden visual is not queried. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
-
-![The report in a host's card at 390 px, with its phone layout](img/bi-elements/host-phone-390.png)
-
-**Images.** A report's `image` visual loads its `src` as your page's `img-src` allows; a host that allows none shows the alt text.
-
-### 5.4 `<drishti-about>` and `<drishti-search>`
-
-Two small elements for a host page that has its own layout around a view.
-
-**`<drishti-about>`** is the *About this page* body of a view without the view: where each number comes from (the sources, the lineage,
-the layers), what is masked for **this** reader and why, and the rules that applied. It is the same body the console's own drawer shows,
-without the *Ask* layer and the Discussion tab, drawn in a Shadow DOM; its links open in a new tab on the console. The application needs
-the scope `embed:about`. Point it at the same entity as a view and put it where your page has room:
-
-```html
-<drishti-view id="v" kind="trade" entity="MX-20000001"></drishti-view>
-<drishti-about kind="trade" entity="MX-20000001" label="Where these numbers come from"></drishti-about>
-```
-
-**`<drishti-search>`** is a search box and a short list of what matches, the console's own type-ahead for the signed-in user: kinds they
-may not open are left out, fields masked for them (and every field `drishti.security.redact` names) are neither shown nor matched, and
-the list is cut to the kinds the host application may show. The application needs the scope **`embed:search`**. A search reads and
-writes nothing and is rate-limited per user and application (`drishti.embed.limits.searches-per-user-per-minute`, on top of the call
-rates; `DRS-8004` with `Retry-After`). A query shorter than `drishti.embed.search.min-chars` is not searched; at most
-`drishti.embed.search.max-results` results come back. Results are 44 px targets and everything is drawn as text. Picking one fires the
-cancellable `drishti:select`; with `target="#v"` the element also points that `<drishti-view>` at the pick:
-
-```html
-<drishti-search placeholder="Find a trade or counterparty" target="#v"></drishti-search>
-<drishti-view id="v" kind="trade" entity="MX-20000001"></drishti-view>
-<script type="module">
-  document.querySelector('drishti-search').addEventListener('drishti:select', (e) => {
-    // e.detail = { kind: 'trade', id: 'MX-20000001', mnemonic: 'TRD', title: 'MX-20000001', type: 'entity' }
-    e.preventDefault();                       // take it over yourself instead of letting `target` follow
-    openInMyApp(e.detail.kind, e.detail.id);
-  });
-</script>
-```
 
 ## 6. Drishti Render: one import, one call
 
@@ -811,10 +593,10 @@ A bundler that refuses URL imports copies the version's folder as it is ([10.4](
 `addEventListener`):
 
 ```jsx
-function DeskReport({ onFilter }) {
+function TradeView({ onState }) {
   const ref = useRef(null);
-  useEffect(() => { const el = ref.current; el.addEventListener('drishti:filter-changed', onFilter); return () => el.removeEventListener('drishti:filter-changed', onFilter); }, [onFilter]);
-  return <drishti-report ref={ref} report="file:report:live-trading-desk" theme="light" />;
+  useEffect(() => { const el = ref.current; el.addEventListener('drishti:state', onState); return () => el.removeEventListener('drishti:state', onState); }, [onState]);
+  return <drishti-view ref={ref} kind="trade" entity="MX-20000001" theme="light" />;
 }
 ```
 
@@ -822,18 +604,17 @@ function DeskReport({ onFilter }) {
 (`window:resize`), so bind these events with `addEventListener`:
 
 ```ts
-@ViewChild('rep', { static: true }) rep!: ElementRef<HTMLElement>;
-ngAfterViewInit() { this.rep.nativeElement.addEventListener('drishti:filter-changed', (e) => this.onFilter(e as CustomEvent)); }
-// template: <drishti-report #rep report="file:report:live-trading-desk"></drishti-report>
+@ViewChild('v', { static: true }) v!: ElementRef<HTMLElement>;
+ngAfterViewInit() { this.v.nativeElement.addEventListener('drishti:state', (e) => this.onState(e as CustomEvent)); }
+// template: <drishti-view #v kind="trade" entity="MX-20000001"></drishti-view>
 ```
 
 **Vue 3**: `app.config.compilerOptions.isCustomElement = (t) => t.startsWith('drishti-')`, then
-`<drishti-report report="file:report:live-trading-desk" @drishti:filter-changed="onFilter" />`.
+`<drishti-view kind="trade" entity="MX-20000001" @drishti:state="onState" />`.
 
 ### 7.1 The sample pages
 
-`docs/guides/examples/embed/` holds one host page for each framework, each embedding `<drishti-search>`, `<drishti-view>`,
-`<drishti-about>` and `<drishti-report>`, wired the way that framework wires custom elements: **React 18** (`createElement`, events bound
+`docs/guides/examples/embed/` holds one host page for each framework, each embedding `<drishti-view>` with the page's own box for the entity, wired the way that framework wires custom elements: **React 18** (`createElement`, events bound
 with a ref, the same in JSX), **Vue 3** (the runtime-only build and render functions, so no `eval`), **Angular 18** (a standalone
 component with `CUSTOM_ELEMENTS_SCHEMA`, zoneless). They share `host.js` (the token provider) and `sample.css`, and run against the
 elements demo host (`tools/elements-demo/server.py`), which serves them at `/samples/<framework>/` under a strict policy (script-src
@@ -870,7 +651,7 @@ A token not listed is not part of the contract. `theme="inherit"` uses your valu
 own. One override, for example: `#risk { --d-accent: #0b5cad }`.
 
 **Parts** for spacing and borders without reaching into the shadow root: `::part(header)`, `::part(strip)`, `::part(grid)`,
-`::part(panel)` (views) and `::part(report)`, `::part(tabs)`, `::part(chips)`, `::part(grid)` (reports). The panels' inner HTML is not a
+`::part(panel)`. The panels' inner HTML is not a
 contract: style it only through the custom properties and parts.
 
 **Sizing.** Every element is `display: block`, as wide as its container, as tall as its content; give it a width the way you give any
@@ -902,7 +683,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' https://drishti.b
 `style-src` does not need the console: the style sheets are adopted (`adoptedStyleSheets`), the icon font is added through the
 `FontFace` API, charts are drawn inside the shadow root, and DOM is built with `createElement` and `textContent`, never from markup in
 the data. A host that enforces **Trusted Types** adds `require-trusted-types-for 'script'; trusted-types drishti-elements drishti-render`
-and nothing else (Elements 1.x needs only `drishti-elements`). A report's `image` visual loads its `src` as your `img-src` allows. The
+and nothing else. A view's `image` panel loads its `src` as your `img-src` allows. The
 demo host runs under exactly this policy and its tests assert that no violation is reported.
 
 **What you trust.** The shadow roots are **open**: your scripts can read inside them (and your tests can, [11](#11-cookbook)). That is why
@@ -917,21 +698,15 @@ anyway. Load the library by an exact version with its integrity hash (chapter 10
 |---|---|---|
 | `/static/render/<version>/…` | Drishti Render on the console's own origin (the console's pages, same-origin hosts) | as `/static/` |
 | `/embed/v2/render/<version>/…` | the same files for other origins, with CORS for the registered origins; a partial version (`2`, `2.0`) answers `302` to the exact one | `immutable`, one year |
-| `/embed/v2/elements/<2, 2.4, 2.4.0, 2.2, 2.2.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to the renderer that carries it (the renderer's version is the Elements version, 2.4.0; 2.2.0 is carried by the frozen renderer 1.2.0; `2` answers the newest) | 60 s |
+| `/embed/v2/elements/<2, 2.4, 2.4.0, 2.2, 2.2.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to the renderer that carries it (the renderer's version is the Elements version, 2.4.0; `2` answers the newest) | 60 s |
 | `/embed/v2/elements/<library>/…` | the Elements libraries the current renderer imports (drishti-core, -grid, -chart, -data, -renderer), allow-listed | revalidated |
-| `/embed/v1/elements/1.4.5/drishti-elements.js` | Elements 1.x at its exact version (it imports `./m/<name>.js`, served beside it) | `immutable`, one year |
-| `/embed/v1/elements/1/…`, `/embed/v1/elements/1.4/…` | `302` to the exact version, for a host that accepts updates | 60 s |
-| `/embed/v1/drishti-elements.js` | Elements 1.x as the console serves it now, revalidated on each load (a host that follows the console) | revalidated |
 
-Served renderer version: the current one only (the renderer, like every Elements library, carries the one Elements version). The data routes the library calls (the ViewModel, About, panels, a pivot's rows, the live channel, resolve, search,
-reports) are listed in [API_REFERENCE.md](API_REFERENCE.md).
+Served renderer version: the current one only (the renderer, like every Elements library, carries the one Elements version). The data routes the library calls (the ViewModel, About, panels, a pivot's rows, the live channel and resolve) are listed in [API_REFERENCE.md](API_REFERENCE.md).
 
 ### 10.2 Integrity and SRI
 
 A released version is **immutable**: a version always names **the same bytes**, and a change means a new version. Each version's folder
-holds `integrity.json`, the SHA-384 (subresource integrity) of every distributed file; for Elements 1.x it reads
-`{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` and is served
-at `/embed/v1/elements/1.4.5/integrity.json`. Put the entry's `integrity` on the script line (SRI needs the exact version, not an alias):
+holds `integrity.json`, the SHA-384 (subresource integrity) of every distributed file, served at `/embed/v2/render/<version>/integrity.json`. Put the entry's `integrity` on the script line (SRI needs the exact version, not an alias):
 
 ```html
 <script type="module" src="https://drishti.bank.example/embed/v2/render/3.3.1/drishti-render.js" integrity="sha384-…" crossorigin="anonymous"></script>
@@ -949,30 +724,20 @@ Three contracts, all semantic versions:
   changes only in a major version of the library.
 - **The ViewModel** carries `"contract": "1.0"`; the renderer refuses a major it does not draw (`DRS-9105`)
   ([VIEWMODEL.md](../architecture/VIEWMODEL.md)).
-- **The embed API** (`/embed/v1`, `/embed/v2`) changes additively within a major. The element sends `Drishti-Embed-Api: <major>.<minor>`
+- **The embed API** (`/embed/v2`) changes additively within a major. The element sends `Drishti-Embed-Api: <major>.<minor>`
   and the console answers in the newest compatible shape. A major's end is announced with `Deprecation` and `Sunset` headers and a `Link`
   on every answer (the console's `embed.lifecycle`, one entry per major); from the sunset day its calls are `410 DRS-8006`.
 
 A version this console does not serve answers `410 DRS-8006`, and the answer names the one it serves: after a console upgrade, a page
 pinned to an old version tells you to move the pin.
 
-**Retired renderer paths.** `/static/render/2.0.0/…`, `/embed/v2/render/1.2.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` are gone: the embed answers `410` (`DRS-8006`) naming the version it serves; pin the one renderer.
-
-**Moving from renderer 1.2.0 to 2.4.0.** Change the version in the import (`/static/render/3.3.1/drishti-render.js`, or
-`/embed/v2/render/3.3.1/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What
-you may see: the nested pivot in `behaviours: 'console'` is drishti-grid's tree grid (its own headings, keyboard and density, the grand
-total as a last row), a tree table keeps drishti-grid's own filter box, a figure exactly on a half rounds up, tooltips escape every
-value, and the option `insight` is new. A host that bundled 1.2.0's `m/` files bundles the current version's `m/` and the vendored
-Drishti Elements libraries it imports instead.
+**Retired renderer paths.** Any renderer version but the one this console serves, and any Elements 2.x version but the one it serves, answers `410` (`DRS-8006`) naming the version it serves; pin the one renderer.
 
 **Renderer 3.3.1.** Every panel is drawn by Drishti Elements' painter (`drishti-views`); the API, the options, the events, the element
 attributes and the contract are the same. What you may see: the painter's look (its title line, freshness line and function keys, a
 filter box and pages on long tables, a Data table under each chart), a dash in an empty cell, a pivot's corner in its fields' own case;
 `behaviours: 'console'` gives the painter's tables their tools (column funnels, Chart any table, in the container); the console's nested-pivot grid, drills in place and zoom are the painter's own pivots, trees and tabs; a GenUI stream's messages are not drawn (release i9).
 The `3.1.0` paths are gone (`410` with `DRS-8006` under `/embed/v2/`): pin `3.3.1`.
-
-**Moving from Elements 1.x to 2.x.** Change the script line ([chapter 3](#3-five-minutes-a-static-page)); the token exchange, the
-attributes, the events and the slots are the same. Keep `<drishti-report>`, `<drishti-about>` and `<drishti-search>` pages on 1.x.
 
 ### 10.4 The npm package layout
 
@@ -983,7 +748,7 @@ any public registry): `drishti-render.js`, `drishti-elements.js`, the modules, `
 A host that bundles it must also serve the console's `js/`, `vendor/` and `css/` files beside it, or set `server` so the library loads
 them from the console.
 
-Elements 1.x has no npm package: it is frozen and served from the console. The Drishti Elements libraries are a separate project with
+The Drishti Elements libraries are a separate project with
 their own release tree ([section 13](#13-drishti-elements-libraries-in-your-own-app)).
 
 ## 11. Cookbook
@@ -1012,8 +777,7 @@ v.addEventListener('drishti:navigate', (e) => {
 **Your own search box.** `DrishtiElements.resolve('TRD MX-20000001')` returns `{ref: {kind, id}}` for a typed command (`TRD MX-20000001`,
 `CPTY CP-1042` or a bare id); set `kind` and `entity` from it. A resolved command is not added to the user's command history.
 
-**A live indicator of your own.** `drishti:state` fires on every change (`loading`, `live`, `reconnecting`, `paused`, `error`, and for a
-report `stale` or `failed`): bind it to your page's own badge. `drishti:tick` says a live update was applied.
+**A live indicator of your own.** `drishti:state` fires on every change (`loading`, `live`, `reconnecting`, `paused`, `error`): bind it to your page's own badge. `drishti:tick` says a live update was applied.
 
 **Two elements side by side, one connection.** Elements with the same `server` share one stream; `DrishtiElements.connections()` is `1`
 however many there are, and two elements on the same entity share one subscription. (Twenty elements on ten entities on one page: one
@@ -1031,19 +795,9 @@ back.
 Sutra's controls inside itself; a reader's change asks the console for only the panels that read it, fires `drishti:controls` and
 updates the `controls` property, and never touches your page's address.
 
-**A report in a card, driven by your filters.** Set `filters` when your own control changes; the visuals ask again:
-
-```js
-deskPicker.addEventListener('change', () => {
-  rep.filters = { selections: [{ visual: 'by-desk', field: 'trade.DESK', values: [deskPicker.value] }] };
-});
-rep.addEventListener('drishti:filter-changed', (e) => { if (e.detail.source === 'user') { deskPicker.value = (e.detail.selections[0] || { values: [''] }).values[0]; } });
-```
-
 **Testing a page that embeds Drishti.** The elements have **open** shadow roots, so a test reaches inside: Playwright's CSS selectors
-pierce them (`page.locator('#rep [data-visual="trades"] .bi-card-value')`), and `await expect(el).toHaveAttribute('data-state', 'live')`
-waits for the state machine. A report sets `data-ready="yes"` on itself when its first page has drawn.
-`drishti-console/tests/test_embed_report_browser.py` is a complete example: a host on its own origin under a strict policy against a
+pierce them (`page.locator('#view .pnl')`), and `await expect(el).toHaveAttribute('data-state', 'live')`
+waits for the state machine. `drishti-console/tests/test_embed_elements2_browser.py` is a complete example: a host on its own origin under a strict policy against a
 real server.
 
 ## 12. Troubleshooting by code
@@ -1058,14 +812,12 @@ an embedder meets:
 | `DRS-8002` (403) | this origin is not one of the host application's | register the exact origin (scheme, host, port) in Admin → Embedding; `null` and wildcards are refused unless `drishti.embed.allow-wildcard-origins` |
 | `DRS-8003` (403) | the host application is unknown or disabled | it was disabled or deleted in Admin → Embedding |
 | `DRS-8004` (429) | over the embed call rate, or the console holds `embed.max_streams` streams | the answer carries `Retry-After`; raise the application's rates or `embed.max_streams` |
-| `DRS-8005` (400, or 403 for an unpublished report) | the application may not show this kind or this report | add the kind, `report:<id>` or `report:*` to the application's list; publish the report |
+| `DRS-8005` (400) | the application may not show this kind | add the kind to the application's list |
 | `DRS-8006` (410) | a version or API major this console no longer serves | pin the version the answer names, or upgrade the element |
 | `DRS-4023` (404) | the server's edition (or, in the console, the person's lens) does not include this kind | the answer's `fix` says which and what to do (choose an entity it shows; leave the lens; an administrator adds the command to the edition); it is no typo in the id |
-| `DRS-5002` (403) | a path the embed scope does not open (for example the report's authoring paths), or a scope the application was not given | give the application the scope (`embed:report` for a report); an embed token never writes |
+| `DRS-5002` (403) | a path the embed scope does not open, or a scope the application was not given | give the application the scope (`embed:view`, `embed:about`); an embed token never writes |
 | `DRS-5010` (401) | the user behind the token is disabled or gone | sign the user in again; tokens are checked against the user on every call |
 | `DRS-1001` (404) | no such entity, or one the user may not reach (the two look the same) | check the kind and id, and that the user may open it in the console |
-| `DRS-9001` (404) | no such report for this user (the id is wrong, or it is not in a workspace they can read) | check the id (`file:report:<name>` for shipped content) and that the user may open it in the console |
-| `DRS-9031` / `DRS-9034` (422) | the report has errors and cannot be drawn | open it in the designer; the answer names the first error |
 | `DRS-5003` (503) | the console cannot reach the server | retried by the element; check the server |
 
 **Nothing at all** (the element stays in `loading`, with no event): the token provider never answered. Open the browser's network tab:

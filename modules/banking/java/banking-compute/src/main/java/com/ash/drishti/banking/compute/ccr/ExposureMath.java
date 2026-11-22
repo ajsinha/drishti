@@ -59,7 +59,7 @@ public final class ExposureMath {
         }
     }
 
-    /** How PFE is read from the sorted exposures (drishti.ccr.exposure.rank-rule). */
+    /** How PFE is read from the sorted exposures (drishti.module.banking.exposure.rank-rule). */
     public enum Rule { KTH, INTERPOLATED }
 
     private ExposureMath() {}

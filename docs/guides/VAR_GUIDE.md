@@ -194,7 +194,7 @@ zero means *taking this out would raise the VaR*.
 
 Real vectors have 509 values; here N = 10, so every step can be checked by hand. With N = 10 the 99% rank is the worst value (k = 1),
 which shows little, so this example uses α = 80% for both measures (k = ⌈10 × 0.2⌉ = 2) and a component window of 3 (h = 1): the
-settings `drishti.var.confidence: 0.80`, `es-confidence: 0.80`, `component-window: 3`. One book `BOOK-X` holds two positions: `P1`
+settings `drishti.module.banking.var.confidence: 0.80`, `es-confidence: 0.80`, `component-window: 3`. One book `BOOK-X` holds two positions: `P1`
 (trades `T1` long and `T2` short, one instrument) and `P2` (trade `T3`). Scenario indices 0 to 9, oldest first; USD.
 
 | Vector | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
@@ -902,7 +902,7 @@ that left and entered, and trades out and in are the net churn between the two d
 
 **Only the churn is summed.** S1 and S7 are the scope's own vectors on each date (the engine holds them already); the others are those
 totals plus or minus the summed vectors of the trades that moved (out, in, moved by the hierarchy, amended), so the cost is bounded by
-the churn, not by the book. Both dates are opened through the engine (each counts towards `drishti.var.hot-dates`; the least recently
+the churn, not by the book. Both dates are opened through the engine (each counts towards `drishti.module.banking.var.hot-dates`; the least recently
 used date leaves first, [section 26.8](#268-dates-in-memory-over-years-of-history)), so a second date open is cheap.
 
 **The order is a setting.** Any split of a quantile's change depends on the order the causes are applied in, so the order is stated on
@@ -1531,7 +1531,7 @@ Drishti the file does not name is kept as it is (an import never retires or remo
 
 **The demo's 28** are the market-risk pack's **seed**, `modules/banking/packs/market-risk/seeds/system-baskets.yaml` (named by the pack's
 `system-baskets: {seed: …}`, written by `tools/packgen/var/make_var_data.py`): imported once into an empty system scope at the first start
-while `drishti.var.system-baskets.seed` is on (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`, which follows `DRISHTI_DEMO_ENABLED`), audited as
+while `drishti.module.banking.var.system-baskets.seed` is on (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`, which follows `DRISHTI_DEMO_ENABLED`), audited as
 `var-system-basket-create` by `system (seed)`, and never read again. A bank's installation turns the seed off and imports its own file.
 
 `PORT:PF-USD-RATES` (*USD rates exposure*, a rule): 918 trades in 563 positions, VaR 28,968,862, 69.0% of its 42 million limit. The 28
@@ -2432,21 +2432,21 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/ris
 | Setting | application.yaml | Default when unset or invalid | Meaning |
 |---|---|---|---|
 | `drishti.var.enabled` | `${DRISHTI_VAR_ENABLED:true}` | `true` | the engine, its API and its computed kinds; off: every VaR request answers `403 DRS-5002` (*the VaR engine is switched off on this server*), the explorer included, and no official capture runs |
-| `drishti.var.confidence` | `${DRISHTI_VAR_CONFIDENCE:0.99}` | 0.99 (refused at start outside (0.5, 1)) | VaR's α: 0.99 or 0.95; every label follows it; limits are set against it ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
-| `drishti.var.es-confidence` | `${DRISHTI_VAR_ES_CONFIDENCE:0.975}` | 0.975 (refused outside (0.5, 1)) | ES's α |
+| `drishti.module.banking.var.confidence` | `${DRISHTI_VAR_CONFIDENCE:0.99}` | 0.99 (refused at start outside (0.5, 1)) | VaR's α: 0.99 or 0.95; every label follows it; limits are set against it ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
+| `drishti.module.banking.var.es-confidence` | `${DRISHTI_VAR_ES_CONFIDENCE:0.975}` | 0.975 (refused outside (0.5, 1)) | ES's α |
 | `drishti.var.confidences` | `[0.95, 0.975, 0.99, 0.995]` | the same | the VaR confidences a page, a command or the API may choose; `confidence` is always in and is the default ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
 | `drishti.var.es-confidences` | `[0.95, 0.975, 0.99]` | the same | ES's; `es-confidence` always in |
-| `drishti.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
-| `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:250}` | 250 | N ≥ 20, the newest N scenarios of each date's set (250: one year, the Basel minimum), or `all` (the whole set, 509 in the demo); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
+| `drishti.module.banking.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
+| `drishti.module.banking.var.window` | `${DRISHTI_VAR_SCENARIO_WINDOW:250}` | 250 | N ≥ 20, the newest N scenarios of each date's set (250: one year, the Basel minimum), or `all` (the whole set, 509 in the demo); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
 | `drishti.var.explain.*` | `explain:` block | enabled, the default order, `two` window lines, amendments split, top 10, 2,000 drivers, 10 minutes, 32 MB, 60 children | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): `order` (the causes in sequence; a bad order refuses the start), `window-lines`, `split-amendments`, `top`, `drivers-max`, `cache-minutes`, `cache-mb`, `matrix-max`; off: the tab, the command and the API answer 403 in words |
-| `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
+| `drishti.module.banking.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
-| `drishti.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
+| `drishti.module.banking.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
 | `drishti.var.parallel-rows` | `4096` | 4096 | fewest rows a sum splits across threads |
 | `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | the heap tier (`tier.mode: heap`) only: most bytes of float64 vectors **one date** may hold ([section 27.1](#271-bytes-per-date)); over it the date answers `503 DRS-5204`, never loaded in part. The mapped tier (the default) is bounded by the disk (a hard limit) and the page cache (advisory), not by the heap ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.rows-per-chunk` | `65536` | 65,536 | rows per `double[]` chunk of the vector store |
-| `drishti.var.hot-dates` | `${DRISHTI_VAR_HOT_DATES:10}` | 10 | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
+| `drishti.module.banking.var.hot-dates` | `${DRISHTI_VAR_HOT_DATES:10}` | 10 | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.refusal-ttl-seconds` | `300` | 300 (0: not remembered) | a date refused for room (capacity, disk) is remembered this long: asked again, `503` at once with `Retry-After`, no lake read; forgotten sooner when room is freed or the inputs change |
 | `drishti.var.open-heap-mb` | `${DRISHTI_VAR_OPEN_HEAP_MB:0}` | automatic: 0.4 × heap − 512 MB − `load-threads` × 1.6 GB, at least a tenth of the heap | the byte safety net over every open book's heap; over it the least recently used dates' currency books, then stress books, then whole dates leave (never a protected one) |
 | `drishti.var.fiscal-year-end` | `${DRISHTI_FISCAL_YEAR_END:}` | none | the bank's fiscal year-end, `MM-DD` (for example `10-31`), for the `fiscal-year-end` pin |
@@ -2464,14 +2464,14 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/ris
 | `drishti.var.playground.export-choices`, `export-default` | `[100, 500, 1000, 10000, 0]`, `500` | the same | the export's drop-down (0: All) and the choice selected first |
 | `drishti.var.playground.export-max-cells` | `${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}` | 20,000,000 | the most cells one export may hold on the server; larger is refused in words |
 | `drishti.var.kinds.vector`, `.position`, `.scenario-set`, `.system-basket`, `.limit` | the market-risk kinds | `pnl-vector`, `position`, `scenario-set`, `system-basket`, `var-limit` | the kinds read (and `position`, `system-basket`: the kinds the derived positions and the system baskets are served as) |
-| `drishti.var.system-baskets.seed` (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`) | follows `DRISHTI_DEMO_ENABLED` (`true`) | `true` | import a loaded pack's seed of system baskets once into an empty system scope at start ([section 5.7](#57-system-baskets)); a bank's installation sets `false` |
+| `drishti.module.banking.var.system-baskets.seed` (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`) | follows `DRISHTI_DEMO_ENABLED` (`true`) | `true` | import a loaded pack's seed of system baskets once into an empty system scope at start ([section 5.7](#57-system-baskets)); a bank's installation sets `false` |
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
-| `drishti.var.root-name` | `${DRISHTI_VAR_ROOT_NAME:}` | blank: the hierarchy data's `NAME` | the name of every hierarchy's root node (the top of the tree, breadcrumbs, headline, CLI, `var-result`, captures and new official records; older records keep theirs); applied when a date loads and part of the hot file's digest, so a running server shows it after a restart or a reload of the dates |
+| `drishti.module.banking.var.root-name` | `${DRISHTI_VAR_ROOT_NAME:}` | blank: the hierarchy data's `NAME` | the name of every hierarchy's root node (the top of the tree, breadcrumbs, headline, CLI, `var-result`, captures and new official records; older records keep theirs); applied when a date loads and part of the hot file's digest, so a running server shows it after a restart or a reload of the dates |
 | `drishti.var.inputs` | none | `default: {form: any, grain: any}` | an optional pin per source system (`{ENDUR: {form: pv, grain: position}}`): a record that disagrees is refused (`DRS-5209`); read at start ([section 15.13](#1513-inputs-any-form-any-grain)) |
 | `drishti.var.root-names` | none | none | one hierarchy's root name (`{MGMT: "Group", LEGAL: "Group legal entities"}`), over `root-name` |
 | `drishti.var.hierarchies` | none (commented example) | a loaded pack's `hierarchies:` block, else none | the hierarchies, any number, each from the trades' promoted columns: id to `{title, levels, level-names, root, ids, word, limits, empty-label}`; wins over the pack's block; refused at start when not valid (`DRS-5213`) ([section 15.14](#1514-hierarchies-from-promoted-columns)) |
-| `drishti.var.hierarchy.empty-label` | `(Blank)` | `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | the name of a (Blank) node, the node of rows with an empty (or unpromoted) level value; a hierarchy's own `empty-label` wins ([section 15.14](#1514-hierarchies-from-promoted-columns)) |
+| `drishti.module.banking.var.hierarchy.empty-label` | `(Blank)` | `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | the name of a (Blank) node, the node of rows with an empty (or unpromoted) level value; a hierarchy's own `empty-label` wins ([section 15.14](#1514-hierarchies-from-promoted-columns)) |
 | `drishti.var.kinds.limit` | `var-limit` | `var-limit` | the kind the nodes' VaR limits come from, for a hierarchy whose `limits` names it ([section 15.15](#1515-var-limit-the-nodes-var-limits)) |
 | `drishti.var.currency-retention-dates` | `${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}` | 5 (below 1) | the newest business dates whose listed currencies are built ahead and kept on disk; older dates' listed-currency hot files are deleted (built again on first ask) |
 | `drishti.var.official.currencies` | `[USD]` | `[USD]` (USD always first) | the reporting currencies captured officially; only USD is published ([section 15.10](#1510-reporting-currency)) |
@@ -2841,7 +2841,7 @@ the background ([section 19](#19-official-end-of-day-results)): a date whose inp
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
 vectors); a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
 background, the old figures answered meanwhile with a warning; a date with intraday updates applied is left to its signal); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
-at most `drishti.var.hot-dates` (10) dates stay open, the least recently used leaving first; the date just used, the newest business date
+at most `drishti.module.banking.var.hot-dates` (10) dates stay open, the least recently used leaving first; the date just used, the newest business date
 and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)); a closed date's cached answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
 hot file is built (its name is the digest of the new inputs, [section 26](#26-the-tiered-memory-and-the-hot-file)) and the official
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
@@ -3228,11 +3228,11 @@ hierarchies:
 | `title` | the id | what the explorer's selector and the tree call it |
 | `levels` | none (required) | the level columns, top first: `"DIVISION > DESK > TT_BOOK"` or a list. Each must be a promoted column of every source the engine reads (below) |
 | `level-names` | each column in lower case (`limit-letter`, `desk`) | the level of each column's nodes (`division > desk > book`); also the **reference kind** a node's display name is read from (below) |
-| `root` | `{id: BANK, name: <title>}` | the root's own id (the node `MGMT~BANK`) and name; `drishti.var.root-name` (every hierarchy) and `drishti.var.root-names` (one) win over it |
+| `root` | `{id: BANK, name: <title>}` | the root's own id (the node `MGMT~BANK`) and name; `drishti.module.banking.var.root-name` (every hierarchy) and `drishti.var.root-names` (one) win over it |
 | `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date (use `ids: path` for a hierarchy where that may happen) |
 | `word` | none | the scope word naming the hierarchy's nodes: `LL:LL-0003`, `LL:LL-0003/DESK-RATES`, `LL:0003` (the word's own prefix, as `DESK:RATES`). Not one of the engine's words (`BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET WHERE CAPTURE NSET GROUP`). Every node is also `NODE:<id>` |
 | `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits)). A node without a row has no limit (blank, never zero) |
-| `empty-label` | `drishti.var.hierarchy.empty-label` (`(Blank)`) | the name of a (Blank) node (below) |
+| `empty-label` | `drishti.module.banking.var.hierarchy.empty-label` (`(Blank)`) | the name of a (Blank) node (below) |
 
 Ids, words and level columns are checked at start (a duplicate id or word, a reserved word, a hierarchy without levels, the removed
 `source:` setting: refused, `DRS-5213`).
@@ -3256,7 +3256,7 @@ children: the totals are complete.
 
 | | |
 |---|---|
-| Name | the hierarchy's `empty-label`, else `drishti.var.hierarchy.empty-label` (default `(Blank)`) |
+| Name | the hierarchy's `empty-label`, else `drishti.module.banking.var.hierarchy.empty-label` (default `(Blank)`) |
 | Id | always a **path**, even in an `ids: leaf` hierarchy, each empty value written `~`: `MGMT~DIV-MARKETS/~` (the (Blank) desk of DIV-MARKETS), `MGMT~~` (the (Blank) division), `MGMT~~/~`. Two (Blank) desks under two divisions never collide. `~` is reserved: never a level value |
 | Scope | `NODE:MGMT~DIV-MARKETS/~`, as any node; the hierarchy's word with the path (`LL:~`) |
 | Limit | none (blank) unless a `var-limit` row names its id |
@@ -3390,7 +3390,7 @@ Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer li
 | Component VaR | signed: a hedge has a negative component; components add up to the scope's VaR |
 | Currency | USD for every vector and every figure (`REPORTING_CCY`); no FX conversion in the engine |
 | Rounding | the API and captures round figures to whole currency units (`Math.round`; `NaN` and infinity become `0`); `pct`, `limitUse`, `confidence` and the test statistics are unrounded doubles |
-| Confidence | VaR 99% (`drishti.var.confidence`), ES 97.5% (`drishti.var.es-confidence`); a value outside (0.5, 1) falls back to the default |
+| Confidence | VaR 99% (`drishti.module.banking.var.confidence`), ES 97.5% (`drishti.module.banking.var.es-confidence`); a value outside (0.5, 1) falls back to the default |
 | Rank rule | `kth-worst`: k = ⌈N (1 − α) − 10⁻⁹⌉, clamped to [1, N]. N = 509: k = 6 at 99% (509 × 0.01 = 5.09 → 6), 13 at 97.5% (12.725 → 13) |
 | Ties | scenarios with equal P&L are ordered by index, the older scenario first (the same rule in `VarMath.order` and `varmath.order`) |
 | Horizon | the inputs are 1-day (`HORIZON_DAYS` 1); 10-day VaR is computed from them on request, by √10 or the sum of overlapping 10-day windows ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); official records stay 1-day (`HORIZON` `1D`) |
@@ -3412,7 +3412,7 @@ interpolated  pos = N·(1−α); lo = max(1, floor(pos)); hi = min(N, lo+1); w =
 ```
 
 The **VaR scenario** is `o[k−1]` (reported as `k` and by the path's rank). An empty vector has VaR 0. The rank rule was the design's open
-question 3: the 6th worst of 509 was decided, configurable (`drishti.var.rank-rule: interpolated`).
+question 3: the 6th worst of 509 was decided, configurable (`drishti.module.banking.var.rank-rule: interpolated`).
 
 ### 18.2 ES
 
@@ -3468,7 +3468,7 @@ Not built: ES backtests (the design's Acerbi–Székely tests), and the cross-ch
 
 ### 18.5 The scenario window and the confidences
 
-**The window.** `drishti.var.scenario-window` (`${DRISHTI_VAR_SCENARIO_WINDOW:250}`) is a number N, **250 as shipped** (one year, the
+**The window.** `drishti.module.banking.var.window` (`${DRISHTI_VAR_SCENARIO_WINDOW:250}`) is a number N, **250 as shipped** (one year, the
 Basel minimum): the **newest N scenarios** of the date's set, or `all`, the whole scenario set of each date (its length, 509 in the demo) (its `SCENARIO_DATES` are strictly increasing, so
 the last N). Every row is cut to the same N at load: P&L vectors and scenario PVs alike, and the scenario FX supplied or derived; the
 rank, the ES count and the component window follow N: k = ceil(N·(1 − α)), the 3rd worst of 250 at 99%, ES the mean of the 7 worst at
@@ -3482,7 +3482,7 @@ changed market; two years (about 500) put more days in the tail (the 5th or 6th 
 less from one day's scenario dropping out. The bank's lake can keep receiving longer histories: the window decides what the engine uses.
 **Backtesting is separate** (`drishti.var.history-days`, 250): the window does not change it.
 
-**The confidences.** `drishti.var.confidence` (`${DRISHTI_VAR_CONFIDENCE:0.99}`: 99%, or 95%) and `drishti.var.es-confidence`
+**The confidences.** `drishti.module.banking.var.confidence` (`${DRISHTI_VAR_CONFIDENCE:0.99}`: 99%, or 95%) and `drishti.module.banking.var.es-confidence`
 (`${DRISHTI_VAR_ES_CONFIDENCE:0.975}`); a value outside (0.5, 1) is refused at start. Every answer carries `confidence` and
 `esConfidence`, and the console, the CLI and the Home facts label their figures from them (*VaR 95% · 1 day*), never from a fixed
 99%. **Limits** are set against VaR at the configured confidence: changing the confidence changes limit use. **Backtesting** stays at
@@ -3568,7 +3568,7 @@ API ([section 11](#11-the-api)): `horizon`, `method`, `confidence`, `esConfidenc
 `--method`, `--confidence`, `--es-confidence`. VRES: `VRES BANK~horizon=10d~method=sum~confidence=0.95`. Every answer names its lens
 (`horizon`, `method`, `confidence`, `esConfidence`, the lens's `describe`), and so do captures, the path's CSV and the provenance's *Method*.
 
-**The default 10-day method** is `drishti.var.ten-day-method` (`${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}`): `sqrt10`, the conservative
+**The default 10-day method** is `drishti.module.banking.var.ten-day-method` (`${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}`): `sqrt10`, the conservative
 common practice, or `sum`. It decides what `VAR BANK 10D` and `horizon=10d` without a method mean.
 
 **The full-revaluation slot (designed, not built).** The honest 10-day figure for an option book revalues every position at the 10-day
@@ -3587,7 +3587,7 @@ gives it in full; the ten-scenario example of [section 2.1](#21-by-hand-ten-scen
 | Step | What happens | Formula | Where |
 |---|---|---|---|
 | 1. **Intake** | each trade's scenario PVs become a USD P&L vector (a P&L vector is taken as sent); its USD value today becomes its `PV` | `P&L_USD(s) = PV(s)·FX_c(s) − PV(base)·FX_c(base)` | `VarIntake`, `ScenarioFx.pnlFromPv`; [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
-| 2. **Window** | every vector cut to the newest N scenarios when `drishti.var.scenario-window` is a number | `v ← v[len − N … len − 1]` | [18.5](#185-the-scenario-window-and-the-confidences) |
+| 2. **Window** | every vector cut to the newest N scenarios when `drishti.module.banking.var.window` is a number | `v ← v[len − N … len − 1]` | [18.5](#185-the-scenario-window-and-the-confidences) |
 | 3. **Positions and totals** | trades summed into derived positions, positions into the nodes of every hierarchy (float64 aggregates in the hot file), any other scope summed by the planner from rows and aggregates | `v_scope(s) = Σ_{t ∈ scope} v_t(s)` | [4](#4-positions-derived-never-delivered), [25](#25-one-business-date-in-memory), [26.4](#264-how-a-sum-reads-it) |
 | 4. **Rank** | the scope's vector sorted worst first (ties: the older scenario first); k from the confidence | `k = ⌈N·(1 − α)⌉`, `VaR = −v[o[k−1]]`, `ES = −mean of the k_ES worst` | [18.1](#181-var), [18.2](#182-es) |
 | 5. **Decompose** | components on the tail around rank k (scaled to add up to VaR), component ES on the ES tail, standalone, incremental, marginal, diversification | the table of [18.3](#183-decomposition-of-a-scope-into-parts) | `VarCalc`, `VarMath` |
@@ -3671,7 +3671,7 @@ are refused for the stress set (`DRS-5207`), never valued at zero. A date has at
 
 | | Normal VaR | Stressed VaR |
 |---|---|---|
-| The scenario days | the date's recent history (509 in the demo), cut to `drishti.var.scenario-window` when set | the stress period, **used whole** (about 250 days); the scenario window does not apply |
+| The scenario days | the date's recent history (509 in the demo), cut to `drishti.module.banking.var.window` when set | the stress period, **used whole** (about 250 days); the scenario window does not apply |
 | Choosing the period | rolls forward every day | **fixed**, reviewed periodically: the period that is worst for today's portfolio. The stress window selection ([section 18.9](#189-choosing-the-stress-window)) shows which period that is and records the choice; the stress set's days are what the pricing system's batch sends, recorded on every answer and record (`STRESS_SET_ID`) |
 | Proxies | not needed: every risk factor existed | a risk factor that did not exist in the stress period (a newer index, a currency, a curve) needs a **proxy**: that is the pricing system's job when it revalues today's trades; Drishti records which scenario set was used |
 | Reporting currency | any currency with scenario FX | **USD** (the stress set's own currency); a request in another currency is refused in words |
@@ -4523,7 +4523,7 @@ recommended defaults unless the product owner said otherwise):
 |---|---|
 | Engine 1. Which pack (the market-risk pack, or a new `var` pack)? | the **market-risk** pack |
 | Engine 2. The existing `var` kind: keep it beside the engine or retire it? | kept beside the engine in V0 to V3; **retired** in part 1 ([section 21](#21-var-is-computed-not-stored)): `VAR VAR-RATES` opens the explorer at `DESK:RATES` |
-| Engine 3. Rank rule for N = 509 at 99%: the 6th worst, the 5th, or interpolated? | **the 6th worst of 509** (k = ceil(N (1 − a))), configurable (`drishti.var.rank-rule: interpolated`) |
+| Engine 3. Rank rule for N = 509 at 99%: the 6th worst, the 5th, or interpolated? | **the 6th worst of 509** (k = ceil(N (1 − a))), configurable (`drishti.module.banking.var.rank-rule: interpolated`) |
 | Engine 4 and data model 6. Precision of the hot cache: float64 everywhere (8.1 GB a day for 2 million positions) or float32 with float64 sums? | V0 to V3: **float64** in the lake, in memory and in sums; part 2 (approved 2026-10-25): **float32 position rows in the hot file, float64 aggregates and sums**, the lake float64 ([section 26.6](#266-precision-float32-rows-float64-sums)) |
 | Engine 5. A per-risk-class vector (`PNL_BY_RISK_CLASS`) ? | **not built** |
 | Engine 6 and data model 3 and 4. Retention of vectors and official numbers; the reproducibility horizon | **7 years** of vectors and their time travel, and of official captures (product owner, 2026-10-25) |
@@ -4585,7 +4585,7 @@ as the viewer; packs stay declarative.
 | the explorer | a console page (`/var`, `drishti-console/plugins/banking/routes/var_routes.py`, `drishti-console/plugins/banking/static/js/drishti_var-explorer.js` on drishti-risk's grid and chart presets, `drishti-console/plugins/banking/static/css/drishti_var.css`) over `/api/v1/risk/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
-(`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
+(`drishti.module.banking.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
 [section 8.4](#84-what-if-pricing-and-intraday-recomputes)) is a separate request of whole trades to price, which the compute
 workers of [README.md](bi/README.md) serve: any number of workers (their count is configuration, never
 code), one trade or a batch each, the 509 values each returns joining as a vector. Nothing in the engine assumes one worker or calls
@@ -4867,7 +4867,7 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 
 **Which dates stay in memory.** The product owner's rule, built (`OpenDates`, shared by the VaR and exposure engines):
 
-1. **A configured number of dates in memory**, `drishti.var.hot-dates`, default **10** (two weeks of business dates).
+1. **A configured number of dates in memory**, `drishti.module.banking.var.hot-dates`, default **10** (two weeks of business dates).
 2. **Least recently used out first.** Every request stamps the date it reads (not only its load). A date asked for and not open is
    opened; when that makes one more than the number, the date used longest ago is closed.
 3. **Always kept (protected):** the date just used, the newest business date, and the dates pinned in memory (below; counted within the
@@ -5447,12 +5447,12 @@ the figures. By purpose:
 
 | Purpose | Keys |
 |---|---|
-| the measures | `drishti.var.confidence`, `drishti.var.es-confidence`, `drishti.var.confidences`, `drishti.var.es-confidences`, `drishti.var.ten-day-method`, `drishti.var.scenario-window`, `drishti.var.rank-rule`, `drishti.var.component-window`, `drishti.var.component-scale-to-var` |
+| the measures | `drishti.module.banking.var.confidence`, `drishti.module.banking.var.es-confidence`, `drishti.var.confidences`, `drishti.var.es-confidences`, `drishti.module.banking.var.ten-day-method`, `drishti.module.banking.var.window`, `drishti.module.banking.var.rank-rule`, `drishti.var.component-window`, `drishti.var.component-scale-to-var` |
 | stressed VaR | `drishti.var.stress.enabled`, `drishti.var.stress.id-prefix`, `drishti.var.stress.average-weeks` ([section 18.8](#188-stressed-var)) |
 | the stress window selection | `drishti.var.stress-window.enabled`, `.kind`, `.length`, `.top`, `.alert-threshold` ([section 18.9](#189-choosing-the-stress-window)) |
 | history and backtest | `drishti.var.history-days` |
 | regulatory backtesting, period statistics and reports | `drishti.regulatory.fiscal-year-end`, `drishti.regulatory.pnl-kind`, `drishti.regulatory.average-days`, `drishti.regulatory.reports-dir`, `drishti.regulatory.synthetic-history`, `drishti.regulatory.backtesting.window`, `.confidences`, `.green`, `.amber`, `.multipliers`, `.count` (sections 18.10, 18.11, 18.14) |
-| memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.var.hot-dates`, `drishti.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |
+| memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.module.banking.var.hot-dates`, `drishti.module.banking.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |
 | reporting currencies | `drishti.var.currencies`, `drishti.var.currency-retention-dates` |
 | the official record | `drishti.var.official.enabled`, `drishti.var.official.format`, `drishti.var.official.root`, `drishti.var.official.currencies` |
 | intraday | `drishti.var.intraday.kafka.window`, `drishti.var.intraday.kafka.max-trades`, `drishti.var.version-check` |
@@ -5502,7 +5502,7 @@ hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`
 
 The ordered list of historical days the scenarios are taken from, the same for every trade on a business date: position *s* of every P&L
 vector and every scenario PV is the market move of `SCENARIO_DATES[s]`. One row per set per business date. `SCENARIO_COUNT` is the set's
-length (509 in the sample); the engine uses the newest `drishti.var.scenario-window` of them (250 as shipped).
+length (509 in the sample); the engine uses the newest `drishti.module.banking.var.window` of them (250 as shipped).
 
 - **`SCENARIO_DATES`:** strictly increasing; the newest N are the window. Every vector names its set in `SCENARIO_SET_ID`.
 
@@ -6610,7 +6610,7 @@ $ drishti.py var show BANK --confidence 95
   VaR 95%   68,355,411 USD   (the 26th worst of 509)
 ```
 
-`drishti.py var show BANK --horizon 10d` uses the default method, the setting `drishti.var.ten-day-method` (`sqrt10`). The API takes the
+`drishti.py var show BANK --horizon 10d` uses the default method, the setting `drishti.module.banking.var.ten-day-method` (`sqrt10`). The API takes the
 same as `horizon`, `method`, `confidence` and `esConfidence` (`GET /api/v1/risk/var/scope?scope=BANK&horizon=10d&method=sum`), and VRES as
 parameters (`VRES BANK~horizon=10d~method=sum <GO>`).
 

@@ -24,7 +24,7 @@
  *   <li>{@code expr}: a small reader and printer of Rachana expression text, for the checks and the migration (never an evaluator).</li>
  *   <li>{@code check}: one table, one model and the whole catalogue checked; expressions through
  *       {@link com.ash.drishti.tables.check.ExpressionChecker}, the seam where Rachana's checked mode plugs in.</li>
- *   <li>{@code catalog}: the catalogue (files and stored items), names and {@code was:} aliases, lineage.</li>
+ *   <li>{@code catalog}: the catalogue (files and stored items), names, the retired names (refused, naming the current one), lineage.</li>
  *   <li>{@code preview}: a table's rows over sample documents, and the sample checks (keys unique, paths present).</li>
  *   <li>{@code materialize}: the materialisation's API (none, on-load, live) and its store layout; BI's layers move behind it.</li>
  *   <li>{@code migrate}: BI's datasets and models into tables and layer models, DEL into Rachana through a pluggable step.</li>

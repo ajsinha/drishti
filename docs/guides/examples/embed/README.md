@@ -15,7 +15,7 @@
 -->
 # Drishti Elements in React, Vue and Angular
 
-Three host pages, one per framework, each embedding `<drishti-search>`, `<drishti-view>`, `<drishti-about>` and `<drishti-report>` for a signed-in user. They are the examples of [EMBED_GUIDE.md](../../EMBED_GUIDE.md#71-the-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
+Three host pages, one per framework, each embedding `<drishti-view>` for a signed-in user. They are the examples of [EMBED_GUIDE.md](../../EMBED_GUIDE.md#71-the-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
 
 | Folder | Framework | How it runs without a build step |
 |---|---|---|
@@ -35,7 +35,7 @@ Three host pages, one per framework, each embedding `<drishti-search>`, `<drisht
 
    They are written to `docs/guides/examples/embed/vendor/` (git-ignored). The pages load them from there: no CDN.
 
-2. **Start Drishti with embedding on and the demo host**, as in [tools/elements-demo/README.md](../../../../tools/elements-demo/README.md) (register the host application with the scopes `embed:view embed:about embed:report embed:search`).
+2. **Start Drishti with embedding on and the demo host**, as in [tools/elements-demo/README.md](../../../../tools/elements-demo/README.md) (register the host application with the scopes `embed:view embed:about`).
 
 3. **Open** `http://127.0.0.1:17968/samples/react/`, `/samples/vue/` or `/samples/angular/` (the demo host serves this folder at `/samples/`, under a strict content-security policy: no inline script and only the console beyond itself).
 
@@ -43,8 +43,7 @@ The Angular page is the exception to "strict": Angular has no UMD build, so it n
 
 ## What each page shows
 
-* A search box (`<drishti-search>`): type `1000`, pick a result; the page's own code takes the pick (`drishti:select`) and points the view and the About body at it.
-* The view and its **About this page** body (`<drishti-view>`, `<drishti-about>`), with the page's own live indicator (the `drishti:state` event) and a masked-fields badge (`drishti:masked`).
-* The **report** `file:report:live-trading-desk` (`<drishti-report>`).
+* The page's own box for an entity id (the host decides what a pick means; the element just draws it).
+* The view (`<drishti-view>`), with its **About this page** side sheet, with the page's own live indicator (the `drishti:state` event) and a masked-fields badge (`drishti:masked`).
 
 Events with a colon are bound with `addEventListener` in all three (Vue and Angular read the colon in a template), in `onMounted`, `ngAfterViewInit` or an effect.

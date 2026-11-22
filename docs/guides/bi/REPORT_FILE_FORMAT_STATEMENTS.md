@@ -177,7 +177,7 @@ Format has **Bars** for a histogram, and **Level** and **Drill into countries** 
 **The map shapes.** `world-countries.json` (Natural Earth 1:110m, 177 shapes), `world-points.json` (the
 countries too small for those shapes, as points) and `regions/<ISO3>.json` (one country's admin-1 regions at 1:10m, simplified, coded by
 ISO 3166-2; 251 files, none over 200 KB, loaded when the map first opens that country), in the vendored Drishti Elements (`vendor/echarts/maps/` of its release tree). The console
-serves them, and for `<drishti-report>` `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`.
+serves them, and for an embedded renderer `/embed/v2/vendor/echarts/maps/world-countries.json`, `.../world-points.json` and `.../regions/<ISO3>.json`.
 Natural Earth is public domain ([VENDOR.md](../../../drishti-console/web/static/vendor/VENDOR.md)). The same shapes draw the Sutra `map` panel.
 
 #### 1.5 The entity view

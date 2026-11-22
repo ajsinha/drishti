@@ -56,7 +56,6 @@ the same section wherever it is read; the pivot's sections (1 to 29) run across 
 | Follow a long question that runs in the background | [Background runs](LIVE_REPORTS_AND_BOARDS.md#3-background-runs-long-bi-questions) |
 | Publish, review, certify, trace lineage, move content between servers | [Publishing and governance](GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | Export, subscribe, schedule, alert | [Distribution](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions), [alerts](DISTRIBUTION_AND_ALERTS.md#2-alerts-on-numbers) |
-| Show a report in another web application | [Embedding](DISTRIBUTION_AND_ALERTS.md#3-embedding-a-report-in-another-web-application), [EMBED_GUIDE.md](../EMBED_GUIDE.md) |
 | Compute a measure or a visual in Python | [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) |
 | Open a group, a sector or a correlation computed from the data | [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md) |
 | Grant the powers, set the limits | [ADMIN_GUIDE.md](../ADMIN_GUIDE.md#34-bi-powers-rupaka), [CONFIGURATION.md](../../admin/CONFIGURATION.md) |

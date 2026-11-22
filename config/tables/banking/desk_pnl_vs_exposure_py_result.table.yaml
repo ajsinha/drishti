@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.desk_pnl_vs_exposure_py_result
-was: desk-pnl-vs-exposure-py-result
 version: 1.0.0
 title: "Desk P&L vs counterparty exposure (Python): the Transform's table"
 description: The table the Python Transform pnl-vs-exposure makes from model queries (the derived dataset desk-pnl-vs-exposure-py before 2.2).

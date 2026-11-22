@@ -35,8 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Admin → Modules → a module → Settings: each setting its manifest describes ({@code settings:}, read as {@code drishti.module.<id>.*}), its value now
- * and where it comes from (the module's key, the old server key read for one release, or the default), and the old keys a site still sets (also
- * shown in Health).
+ * and where it comes from (the module's key or the default); the server key a setting had before is retired (a site that sets it stops the start).
  */
 @RestController
 public class ModuleSettingsController {
@@ -65,21 +64,15 @@ public class ModuleSettingsController {
             m.put("type", r.item().type());
             m.put("group", r.item().group());
             m.put("meaning", r.item().meaning());
-            m.put("was", r.item().was());
+            m.put("retired", r.item().retired());
             m.put("source", r.source());
             m.put("value", r.value());
             return m;
         }).toList());
-        out.put("deprecated", deprecated(env));
         return out;
     }
 
-    /** The old keys a site still sets, one note each (read for one release). */
-    static List<String> deprecated(Environment env) {
-        return Arrays.stream(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList();
-    }
-
-    /** The figure Health shows: the old module settings a site still sets. */
+    /** The figure Health shows: the modules that describe settings. */
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
     public static class Health {
         @Bean
@@ -93,7 +86,7 @@ public class ModuleSettingsController {
                 @Override
                 public Object value() {
                     return Map.of("modules", Arrays.stream(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".modules", "").split(","))
-                            .filter(x -> !x.isBlank()).toList(), "deprecated", deprecated(env));
+                            .filter(x -> !x.isBlank()).toList());
                 }
             };
         }

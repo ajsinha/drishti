@@ -23,7 +23,6 @@ import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.server.security.Entitlements;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -34,8 +33,13 @@ import org.springframework.context.event.EventListener;
  * of an input, and once at start for the newest date), and the exposure figures the netting-set and counterparty pages show.
  */
 @Configuration
-@EnableConfigurationProperties(ExposureProperties.class)
 public class ExposureConfiguration {
+
+    /** The settings: {@code drishti.ccr.exposure.*}, and the ones the banking module owns from {@code drishti.module.banking.*} (the manifest's settings). */
+    @Bean
+    public ExposureProperties exposureProperties(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.ccr.exposure", ExposureProperties.class, java.util.Map.ofEntries(java.util.Map.entry("limit-confidence", "exposure.limit-confidence"), java.util.Map.entry("rank-rule", "exposure.rank-rule")));
+    }
 
     @Bean(destroyMethod = "close")
     ExposureService exposureService(ExposureProperties props, SourceRouter router, Entitlements entitlements, ContentStore store,

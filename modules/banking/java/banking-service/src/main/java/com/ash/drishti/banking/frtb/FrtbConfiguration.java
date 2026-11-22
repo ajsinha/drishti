@@ -20,14 +20,18 @@ import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.banking.var.VarService;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /** The beans of position sensitivities and FRTB-SA ({@link FrtbService}) and their settings, {@code drishti.frtb}. */
 @Configuration
-@EnableConfigurationProperties(FrtbProperties.class)
 public class FrtbConfiguration {
+
+    /** The settings: {@code drishti.frtb.*}, and the ones the banking module owns from {@code drishti.module.banking.*} (the manifest's settings). */
+    @Bean
+    public FrtbProperties frtbProperties(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.frtb", FrtbProperties.class, java.util.Map.ofEntries(java.util.Map.entry("parameters-dir", "frtb.parameters-dir"), java.util.Map.entry("cache-minutes", "sensitivities.cache-minutes")));
+    }
 
     @Bean
     FrtbService frtbService(FrtbProperties props, SourceRouter router, ObjectProvider<VarService> var, ObjectProvider<LoadService> loads,

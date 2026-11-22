@@ -765,7 +765,7 @@ def register(groups, srv, ctx: dict) -> None:
         """The lens (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method and (show has its own) the confidences."""
         s.add_argument("--horizon", choices=["1d", "10d"], help="1d (the default) or 10d: from the same 1-day scenarios, no new data")
         s.add_argument("--method", choices=["sqrt10", "sum"], help="the 10-day method: sqrt10 (the 1-day × √10) or sum (10 consecutive "
-                       "days, overlapping windows); none: drishti.var.ten-day-method")
+                       "days, overlapping windows); none: drishti.module.banking.var.ten-day-method")
         if confidences:
             s.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95, 95)")
             s.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences)")
