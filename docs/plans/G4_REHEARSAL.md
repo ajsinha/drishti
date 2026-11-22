@@ -739,3 +739,24 @@ pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenThe
 | `LiveVisualsTest` (`bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | pass | G4 (shims part 2's fixtures) | **open** |
 | `IcebergMovedConnectorFileTest` (health text: `cannot read sa-ccr log: File does not exist` instead of the moved-lake words) | pass | G4 (Lake's read problems word a moved Iceberg table differently) | **open** (Lake's reason words for a moved table) |
 | `BankingPacksTest` (183 vs 186), `ConsoleAnswersRecordTest` (recorded answers older than the code), `DomainPacksTest` (no source holds `dms-score/...`), `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly`, `VarShardClusterTest.anOwnerDown...` | **fail on `main` too** | pre-existing | not changed |
+
+### Pass 3 triage: after the merge with level 1.2, the live fixes and the lake-doc work (`36e82521a`), one full `clean verify`
+
+5,275 tests. The level-1.2 lane's three items: `SutraRegistryTest` and `PathologicalExpressionsTest$LiftedLimits` now expect Rachana's
+documented behaviour (its stack guard, `internal.Deep`, parses, checks and binds again on a 512 MB stack when the host thread's runs out, so
+with the limits lifted a 100,000- or 200,000-deep file is valid and loads, and a 200,000-term chain evaluates; past even that stack the
+binder's refusal is the panel's `RCH-2102`, never a 500): not a Rachana defect. `SutraCliTest` `design --each` failed in-process only:
+the `sutra` command's own context reconfigured the process-wide `DrishtiRachana` settings with its scratch folder's pack formats files,
+deleted when it ended, so the test JVM's server then read formats from a deleted folder (through the jar the command is a JVM of its own);
+`CliLauncher` now puts the settings back (`DrishtiRachana.keep()`). `ViewModelSchemaTest` and `DrishtiProfileConformanceTest` pass at
+level 1.2. `PackagedVarGoldenTest` needs the venv's `drishti_lake` from Lake `main` (the merged tools call `archives.plan(layout=...)`).
+
+Failures left (11):
+
+| Test | Class |
+|---|---|
+| `VarShardClusterTest.anOwnerDown...`, `BankingPacksTest`, `ConsoleAnswersRecordTest`, `DomainPacksTest`, `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly` | fail on `main` too |
+| `AbandonedReadsTest` | timing under load; passes alone |
+| `TypedCallParityTest` (2: the REST `live` search answers 404 where the typed call answers rows) | G4, from the merged live-table work (not in the pre-merge run); open for the live lane |
+| `LiveVisualsTest` (fixture `bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | G4 (shims part 2 fixtures); open |
+| `IcebergMovedConnectorFileTest` (a moved Iceberg table's health words) | G4 (Lake's read-problem words); open |
