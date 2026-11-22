@@ -342,6 +342,9 @@ public class DrishtiLiveTables {
         };
     }
 
+    /** The most records a past day's table lists when no source keeps the day whole. */
+    static final int LIST_MAX = 250_000;
+
     /** The bindings of every kind through the source router. */
     static KindBindings routerBindings(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search, Duration budget) {
         return new KindBindings() {
@@ -379,7 +382,22 @@ public class DrishtiLiveTables {
 
             @Override
             public boolean documents(String kind, AsOf at, Consumer<com.ash.drishti.api.EntityDocument> sink) throws Exception {
-                return at == null || at.isLatest() ? documents(kind, sink) : router.documents(kind, at, sink);
+                if (at == null || at.isLatest()) {
+                    return documents(kind, sink);
+                }
+                java.util.concurrent.atomic.AtomicInteger given = new java.util.concurrent.atomic.AtomicInteger();
+                router.documents(kind, at, d -> {
+                    given.incrementAndGet();
+                    sink.accept(d);
+                });
+                if (given.get() > 0) {
+                    return true;
+                }
+                // a day no source keeps whole (carried from an earlier day, as the search reads it): its records listed, then fetched
+                var hits = router.list(kind, "", LIST_MAX, budget, at, new com.ash.drishti.engine.source.SourceFailures()).hits();
+                router.fetchAll(hits.stream().map(h -> h.ref()).toList(), budget, at, new com.ash.drishti.engine.source.SourceFailures())
+                        .values().forEach(sink);
+                return true;
             }
 
             @Override
