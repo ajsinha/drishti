@@ -105,6 +105,19 @@ python3 --version                   # Python 3.11 or newer  (Windows: py --versi
 sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the console) turns your volumes into memory, CPU and disk:
 [CLUSTER_GUIDE.md › Sizing](guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk), [OPERATIONS_GUIDE.md › Admin → Capacity](guides/OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan).
 
+### 1.2a Windows notes: the four things that stop a first build
+
+| You see | Cause | Fix |
+|---|---|---|
+| Maven: `PKIX path building failed` on the first download | the company network re-signs HTTPS with its own root, which Windows trusts and the JDK does not | let Java trust the Windows store: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, open a new terminal; the same option goes into the IDE's Maven runner and importer ([IDE_GUIDE.md section 1.4](guides/IDE_GUIDE.md#14-maven-behind-a-company-network-pkix-path-building-failed)), and into the server's JVM options when it reaches public feeds on that network |
+| `Drishti needs Java 21 or newer`, or Maven names Java 8 | `JAVA_HOME` points at an older Java | `setx DRISHTI_JAVA_HOME "C:\jdk-21"` (the tools' own lookup, before `JAVA_HOME`) and set `JAVA_HOME` to the same folder for Maven |
+| the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `drishti-console\.venv\Scripts\python.exe -m playwright install chromium` (into your profile, no administrator rights) |
+| the company will not allow an `.exe` | nothing here needs one | Java (the Temurin ZIP), Python and Maven's wrapper only; every Drishti command is `py tools\drishti.py ...`; the products install from their release tags with `mvnw.cmd` |
+
+The platform's source is in `C:\Users\<you>\IdeaProjects\drishti-platform\` (one folder per repository,
+[QUICKSTART_DEVELOPERS.md section 1.2](QUICKSTART_DEVELOPERS.md#12-the-code-a-bundle-or-clone_allpy)); the products install into `%USERPROFILE%\.m2`
+from their tags, in the order tools, Rachana, Lake, Drishti ([section 2](QUICKSTART_DEVELOPERS.md#2-build)).
+
 ### 1.3 The folders
 
 Three folders, each with one job:
@@ -1019,14 +1032,14 @@ another browser profile): browsers share sign-in cookies across the ports of one
 **Verify.** Admin → Health, the Distribution line: the console's and the server's distribution and each module *loaded*. Admin → White
 label: every distribution side by side, the running one first.
 
-### 7.8 From IntelliJ IDEA or PyCharm
+### 7.8 From IntelliJ IDEA, PyCharm or VS Code
 
-The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). Everything about them, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`. IntelliJ's server launchers run the jar the build put in `lib/` (as `start server` does), never IntelliJ's compiled classes, which the modules are not stamped for; a fresh start with a check after every step: [IDE_GUIDE.md › A fresh start](guides/IDE_GUIDE.md#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
+The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). VS Code has the same actions in a workspace file ([VSCODE_GUIDE.md](guides/VSCODE_GUIDE.md)). Everything about the IDE launchers, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`. IntelliJ's server launchers run the jar the build put in `lib/` (as `start server` does), never IntelliJ's compiled classes, which the modules are not stamped for; a fresh start with a check after every step: [IDE_GUIDE.md › A fresh start](guides/IDE_GUIDE.md#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
 
 The same four steps from a terminal:
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py build all
 drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo
@@ -1034,7 +1047,7 @@ python3 tools/drishti.py status
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py build all
 drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start all --demo
@@ -1443,10 +1456,12 @@ Tick one column per operating system tested. *Expected* is what section 9 shows.
 
 | # | Check | Expected | Windows | Linux | macOS |
 |---|---|---|---|---|---|
+| 0 | The platform is built: tools, Rachana and Lake installed from their tags, then `build all` | `lib/drishti-server-<version>-exec.jar` and the module packages; versions as in COMPATIBILITY.md | ☐ | ☐ | ☐ |
 | 1 | `java -version`, Python 3.13, `doctor` | Java 21; `doctor: all clear` | ☐ | ☐ | ☐ |
 | 2 | Windows only: nothing installed but Java and Python | no `.exe` copied; every command is `py tools\drishti.py …`; the lake written by `--engine java` | ☐ | — | — |
 | 2a | The settings file; an older install moved aside | `lake check` under your data folder; nothing left of 3.4's list | ☐ | ☐ | ☐ |
 | 3 | `lake demo` | `Demo lake ready: … tables, 60 business days …` | ☐ | ☐ | ☐ |
+| 3a | the loader's guards: `lake demo` loads again, a file dated in the future is refused | the future date refused before anything is written ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)) | ☐ | ☐ | ☐ |
 | 4 | `lake check` | no error line | ☐ | ☐ | ☐ |
 | 5 | Server start | `Started DrishtiApplication`, no `ERROR` line | ☐ | ☐ | ☐ |
 | 6 | `/actuator/health`, console `/readyz` | `"status":"UP"`; `"server":"reachable"` | ☐ | ☐ | ☐ |
