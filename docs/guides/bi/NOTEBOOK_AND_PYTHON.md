@@ -337,7 +337,7 @@ source: |
 ```
 
 `table` is a DataFrame of the rows the visual hands over (the columns of its `columns` well; the row `id` is dropped). The function returns
-**data, never markup**: an ECharts option drawn by the console's own charts (any `formatter`, `valueFormatter`, `extraCssText` and
+**data, never markup**: an ECharts option drawn by drishti-chart (Drishti Elements' report part; any `formatter`, `valueFormatter`, `extraCssText` and
 `appendToBody` key is removed: those are the places an option can carry HTML), an SVG (refused if it holds `<script`, `javascript:`,
 `<foreignObject`, `<iframe`, `<image`, `xlink:href` or an `on...` handler; shown as an image, which never runs script) or PNG bytes.
 Colours you leave out (text, axes, grid lines) take the page's theme, so a chart reads in the dark and the light theme alike.

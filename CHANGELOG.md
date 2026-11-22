@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **BI charts draw with drishti-chart.** Every chart of a report (bar, column, line, area, combo, small multiples, pie, donut, waterfall, treemap,
+  heatmap, scatter, bubble, gauge, funnel, histogram, box plot, the map, the rolling line and a KPI's sparkline), the Python visual's chart and
+  Chart any table's chart are drawn by Drishti Elements' drishti-chart (its new report part, `drishti_chart-report.js`); the console's own chart
+  builders are gone (`drishti_bi-multiples.js` deleted; `drishti_bi-visuals.js` keeps the cards and the report's adapter; the table chart engine keeps
+  the numbers and the words). BI's maps use drishti-chart's map helper (its geo part): the world is drawn in the Equal Earth projection, as the
+  view painter's maps are. No console script calls ECharts for BI any more (the guard's allow-list lost three files).
 - **Compatibility shims removed (no customer, no tech debt).** The BI and tables migrators (`tables migrate`, `bi migrate`, the start-up
   migration of stored items and of saved pivot formulas, `PivotFormulaMigration`), the DEL reader (`DelParser`, `DelToRachana`; the setting
   `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,
