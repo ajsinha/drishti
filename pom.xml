@@ -85,6 +85,8 @@
   </modules>
 
   <properties>
+    <!-- the one version; the default so no .mvn/maven.config is needed (a -Drevision still wins) -->
+    <revision>2.9.11.i7b</revision>
     <!-- the build installs what it makes into the repository, the install every tool and launcher reads (KERNEL_AND_MODULES.md section 3.3):
          drishti-app the exec jar into drishti.home.lib, packaging/dist the packages and first-party.yaml into drishti.home.modules, each
          through a .part file and one replace. -Ddrishti.install.skip=true leaves everything in target/ (the no-copy option of drishti.py build). The
@@ -93,9 +95,9 @@
     <spring-boot.repackage.skip>false</spring-boot.repackage.skip>
     <drishti.install.skip>false</drishti.install.skip>
     <drishti.install.jar.skip>${drishti.install.skip}</drishti.install.jar.skip>
-    <drishti.home.lib>${maven.multiModuleProjectDirectory}/lib</drishti.home.lib>
-    <drishti.home.modules>${maven.multiModuleProjectDirectory}/modules</drishti.home.modules>
-    <drishti.kernel.jar>${maven.multiModuleProjectDirectory}/kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
+    <drishti.home.lib>${project.rootDirectory}/lib</drishti.home.lib>
+    <drishti.home.modules>${project.rootDirectory}/modules</drishti.home.modules>
+    <drishti.kernel.jar>${project.rootDirectory}/kernel/drishti-server/target/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
     <!-- empty: every package is installed; a,b: only the packages of those module ids -->
     <drishti.modules.ids></drishti.modules.ids>
     <!-- the pinned Drishti Elements (an external component, vendored: drishti-console/web/static/vendor/drishti-elements/<version>/,
@@ -326,7 +328,7 @@
             <!-- where a test finds the repository's shared files (config/, modules/, docs/, examples/) and its own module's: absolute, so a
                  test never depends on the folder the JVM was started in (guarded by TestPathsGuardTest); the names TestRoots reads
                  (com.ash.lake.tck.TestRoots, Drishti Lake's test kit) -->
-            <lake.repo.root>${maven.multiModuleProjectDirectory}</lake.repo.root>
+            <lake.repo.root>${project.rootDirectory}</lake.repo.root>
             <lake.module.root>${project.basedir}</lake.module.root>
           </systemPropertyVariables>
         </configuration>
@@ -424,7 +426,7 @@
       <properties>
         <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
         <drishti.install.jar.skip>true</drishti.install.jar.skip>
-        <drishti.kernel.jar>${maven.multiModuleProjectDirectory}/lib/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
+        <drishti.kernel.jar>${project.rootDirectory}/lib/drishti-server-${revision}-exec.jar</drishti.kernel.jar>
       </properties>
     </profile>
     <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties. Only a module with tests of
