@@ -64,7 +64,7 @@ REFUSED = re.compile(r"switched off|turned off|not enabled|is off|disabled|not a
 #: a route the console does not mount (embedding, a module) answers its own "no page" 404; one a module of the source tree owns may be absent
 NOT_MOUNTED = re.compile(r"has no page at|\"error\":\"Not Found\"")
 #: the server says what input the call lacks
-#: an answer's error code: Drishti's (DRS-1234) or the live tables protocol's (rdp.query.invalid)
+#: an answer's error code: Drishti's (DRS- and four digits) or the live tables protocol's (rdp.query.invalid)
 ERROR_CODE = re.compile(r"DRS-\d+|\brdp\.[a-z]+\.[a-z]+\b")
 INPUT_HINT = re.compile(r"give |name the|name a|names |needs |is required|\?ref=|scope=|is needed|must name|needs at least", re.I)
 #: where the ids of a collection are listed when the collection itself is not a list endpoint
