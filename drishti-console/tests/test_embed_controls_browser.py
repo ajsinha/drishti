@@ -39,7 +39,7 @@ from scratch_ports import worker_ports  # noqa: E402
 PORTS = worker_ports(*(os.environ.get(k, d) for k, d in (("DRISHTI_ELEMENTS_SERVER_PORT", 18966), ("DRISHTI_ELEMENTS_CONSOLE_PORT", 17966), ("DRISHTI_ELEMENTS_HOST_PORT", 17965))))
 
 IRS = "MX-20000001"
-LEG = f"{SR}.querySelectorAll('#p-event-list tbody tr')"
+LEG = f"{SR}.querySelectorAll('[data-panel=event-list] tbody tr')"
 # the panel the controls read since 2.3.0: the trade's events, the leg in the first column ("deal" for an event of the whole deal, which every
 # leg filter keeps)
 ROWS = f"[...{LEG}].filter(r => r.cells.length > 1).map(r => r.cells[0].textContent.trim())"
@@ -60,14 +60,14 @@ def show_irs(h, controls=None):
         el.shadowRoot.addEventListener('drishti:controls-done', (e) => window.__done.push(e.detail));
         el.setAttribute('kind', 'trade'); el.setAttribute('entity', args.id); if (args.controls) { el.setAttribute('controls', args.controls); } }""", {"id": IRS, "controls": controls})
     # a trade is static since 2.3.0 (it changes when its source books a version): the view settles as `static`, with no live subscription
-    h.until(lambda: h.js("!!document.querySelector('#main').shadowRoot.querySelector('#p-event-list') && document.querySelector('#main').getAttribute('data-state') === 'static'"), 30)
+    h.until(lambda: h.js("!!document.querySelector('#main').shadowRoot.querySelector('[data-panel=event-list]') && document.querySelector('#main').getAttribute('data-state') === 'static'"), 30)
 
 
 def test_the_element_draws_the_controls_and_the_attribute_sets_them(host):
     h = host()
     show_irs(h, "legs=2")
     h.until(lambda: h.js(f"!!{SR}.querySelector('[data-ctl=legs]')"), 30)
-    assert h.js(f"{SR}.querySelector('#p-event-list .pnl-h [data-ctl=legs]') !== null")            # in the panel's header, inside the shadow root
+    assert h.js(f"{SR}.querySelector('[data-panel=event-list] .dv-panel-h [data-ctl=legs]') !== null")            # in the panel's header, inside the shadow root
     assert h.js(f"{SR}.querySelector('[data-ctl=when]') !== null")
     assert h.js("document.querySelectorAll('[data-ctl]').length") == 0                                # nothing leaked into the host page
     assert h.js(f"[...{SR}.querySelectorAll('[data-ctl=legs] .di-chip-label')].map(e => e.textContent)") == ["2"]    # drishti-inputs' multi-select
@@ -82,7 +82,7 @@ def test_a_change_asks_for_only_the_panels_that_read_it_and_tells_the_host(host)
     h.until(lambda: h.js(f"!!{SR}.querySelector('[data-ctl=legs]')"), 30)
     total = len(legs(h))
     assert total > 2
-    h.js(f"{SR}.querySelector('#p-ticket').setAttribute('data-mark', 'kept')")
+    h.js(f"{SR}.querySelector('[data-panel=ticket]').setAttribute('data-mark', 'kept')")
     before = len(h.requests)
     h.page.locator("#main").locator("[data-ctl=legs] .di-ms-control").click()                              # its list floats in the host's body
     h.page.locator(".di-ms-pop .di-option").filter(has=h.page.locator(".di-option-label", has_text=re.compile("^1$"))).click()
@@ -91,7 +91,7 @@ def test_a_change_asks_for_only_the_panels_that_read_it_and_tells_the_host(host)
     assert got and set(got) == {"2"} and len(got) < total
     asked = [r for r in h.requests[before:] if "/panels?" in r[1]]
     assert len(asked) == 1 and "panels=event-list" in asked[0][1] and "ctl.legs=2" in asked[0][1]
-    assert h.js(f"{SR}.querySelector('#p-ticket').getAttribute('data-mark')") == "kept"            # the other panels did not move
+    assert h.js(f"{SR}.querySelector('[data-panel=ticket]').getAttribute('data-mark')") == "kept"            # the other panels did not move
     assert h.js("location.search") == ""                                                                   # the host page's address is its own
     ev = h.js("window.__ctl")
     assert ev and ev[-1]["query"] == "ctl.legs=2"                                                         # a composed event the host may listen to
@@ -132,5 +132,5 @@ def test_a_date_range_and_the_keyboard_work_inside_the_shadow_root(host):
     h.until(lambda: h.js("window.__done && window.__done.length > 0"), 30)
     assert len(rows(h)) == 0 and len(rows(h)) < total                                                      # after the last cashflow: no rows
     assert "2099-01-01.." in h.js("document.querySelector('#main').controls")
-    assert re.search(r"Events · 2099-01-01\.\.", h.js(f"{SR}.querySelector('#p-event-list h3').textContent"))
+    assert re.search(r"Events · 2099-01-01\.\.", h.js(f"{SR}.querySelector('[data-panel=event-list] h3').textContent"))
     assert h.js("document.querySelector('#main').getAttribute('data-state')") == "static"
