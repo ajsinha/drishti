@@ -15,6 +15,8 @@
 -->
 # IntelliJ IDEA and PyCharm: build and run Drishti
 
+VS Code has its own guide: [VSCODE_GUIDE.md](VSCODE_GUIDE.md). All three IDEs use the platform's one launcher standard: launchers are named `<Product>: <verb> [<what>]` (`Drishti: build all`, `Drishti: run server (demo)`), live in ONE `run-configs/` folder at the repository root, and use only Java, Python and Maven (no `.exe`, no shell script). The other repositories of the platform (Rachana, Elements, Lake, Tools) follow the same standard, so what you learn here applies to each: section 9 opens them together.
+
 For developers and testers who build and run Drishti from the two IDEs. **IntelliJ IDEA builds Drishti and runs the server with Java
 only**: Maven builds the server jar and the modules and installs them, and the server launchers run that jar (IntelliJ **JAR
 Application** configurations on `lib/`); IntelliJ needs no Python and no Python plugin. **PyCharm, separately, runs the console and the command-line tools**, and prepares the data (the demo
@@ -39,9 +41,8 @@ The three parts follow that order: [1. Build](#1-build-intellij-idea-java-only),
 | **A JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, Windows `C:\jdk-21`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`. Production runs on 21. |
 | **IntelliJ IDEA** (Community or Ultimate) | its bundled Maven builds everything; the repository's `mvnw` is the same Maven for a terminal. |
 
-No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. Two IDEs, two
-projects, **never one folder for both**: opened on the same folder they overwrite each other's `.idea`, and IntelliJ then loses the Maven
-modules (*module not specified*). If that happened, close both, delete the root's `.idea/` (IDE settings only) and reopen.
+No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. IntelliJ and PyCharm open the same project, the repository root, and read the same `run-configs/`. If IntelliJ loses the Maven
+modules (*module not specified*), close it, delete the root's `.idea/` (IDE settings only) and reopen.
 
 ### 1.2 Open the root `pom.xml` in IntelliJ IDEA
 
@@ -593,3 +594,48 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
    Drishti Research** beside Risk, Trading, Market and World; **Admin → Data loads** shows the inbox running. Then `VAR BANK <GO>`
    computes. *If not:* banking *stale*: recipe A; banking missing: recipe B; VaR (or `GET /api/v1/risk/var/…`) answers 404: banking
    is not loaded, Admin → Modules says why (recipe A or B).
+
+## 9. The whole platform in one IDE
+
+Drishti is built on four products that live in their own repositories ([QUICKSTART_DEVELOPERS.md section 1](../QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine)),
+side by side under one folder:
+
+```
+~/IdeaProjects/drishti-platform/            (Windows C:\Users\<you>\IdeaProjects\drishti-platform\)
+    drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/  drishti-stack/
+```
+
+### 9.1 One window per repository, the usual way
+
+Open each repository root as its own project (**File, Open**): in IntelliJ link the repository's `java/pom.xml` in the Maven tool window (Drishti:
+the root `pom.xml`); in PyCharm the Python part (`python/` in Rachana and Lake, `drishti-console/` and `tools/` in Drishti) is marked as sources.
+Each project shows its own launchers in its own run-configuration folder (**Tools**, **Rachana**, **Lake**, **Elements**, **Drishti**), with the verbs
+of the standard: `build all` and `test` everywhere, `install release (tag only)` where a repository publishes jars, `run ...` for programs.
+The install order is **tools, Rachana, Lake, then Drishti**, from release tags only; run each `install release (tag only)` launcher on a checkout of the
+tag, never on a branch ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build) does it in one command).
+
+### 9.2 All repositories in one IntelliJ window
+
+To search, navigate and refactor across repositories, open Drishti and attach the others as modules of the same window:
+
+1. **File, Open** the `drishti/` folder, then **File, Project Structure, Modules, +, Import Module**: choose `drishti-tools/java/pom.xml`, then
+   `drishti-rachana/java/pom.xml`, `drishti-lake/java/pom.xml`, each as a **Maven** project (or, in the Maven tool window, **+** and choose the pom).
+   Elements, which has no Java, is attached with **Import Module, Create module from existing sources** on its `js/` folder.
+2. Set the one project SDK to JDK 21 (section 1.2) and **Maven, Runner, JRE: Use Project JDK**.
+3. A change in an attached repository is compiled in the IDE, but Drishti's build reads the product's jar from `~/.m2` (the installed tag), so to run
+   Drishti against such a change build the product with its own `build all` launcher into a scratch repository
+   (`-Dmaven.repo.local=<folder>`, the product's `BUILD_AND_IDE.md`), never install a branch into `~/.m2`.
+4. Each attached repository keeps its own launchers: add its `run-configs/` by opening that repository in a second window (9.1) when you need to run
+   them, or copy the launcher (Ctrl+D) into this project.
+
+### 9.3 The same in PyCharm
+
+PyCharm: open the `drishti/` root; add the other repositories' Python parts as content roots (**Settings, Project, Project Structure, Add Content
+Root**: `drishti-rachana/python`, `drishti-lake/python`), mark each `src` or package folder as sources, and keep one interpreter, the console's
+`drishti-console/.venv`, for Drishti and a separate one for each product that has its own requirements.
+
+### 9.4 Windows
+
+Paths are the Windows form of the layout above; no `.exe` is needed for any of it. `JAVA_HOME` is `C:\jdk-21`, and behind a company network
+the Maven runner needs `-Djavax.net.ssl.trustStoreType=Windows-ROOT` (section 1.4). Playwright's browsers for the browser tests install into the
+user's profile with `drishti-console\.venv\Scripts\python.exe -m playwright install chromium`.

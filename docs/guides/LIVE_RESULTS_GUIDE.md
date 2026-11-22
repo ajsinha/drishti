@@ -162,7 +162,7 @@ node answering, the embedding app) is in section 7, "Who sees what".
 ## 6. The declaration
 
 `blotters/<name>.live.yaml` in a module, or `config/blotters/` for a site's own: a Rachana live-table declaration
-([LIVE_TABLES.md](https://github.com/ajsinha/drishti-rachana/blob/develop/docs/guides/LIVE_TABLES.md) section 2) with Drishti's profile
+([LIVE_TABLES.md](https://github.com/drishti-platform/drishti-rachana/blob/main/docs/guides/LIVE_TABLES.md) section 2) with Drishti's profile
 keys (`kind`, `links`, the edit's `roles`, `save` and `editable-by`). The trading module's
 [`trade.live.yaml`](../../modules/trading/blotters/trade.live.yaml) in short:
 
@@ -286,7 +286,7 @@ Iceberg and file connectors never write per change.
 
 ## 9. The API
 
-The Data Protocol ([PROTOCOL.md](https://github.com/ajsinha/drishti-rachana/blob/develop/spec/1/data-protocol/PROTOCOL.md)) at `/api/v1/rdp`,
+The Data Protocol ([PROTOCOL.md](https://github.com/drishti-platform/drishti-rachana/blob/main/spec/1/data-protocol/PROTOCOL.md)) at `/api/v1/rdp`,
 as the signed-in person:
 
 | Method | Path | What it does |
@@ -306,7 +306,7 @@ safe (one line of at most 300 characters, a file path cut to its file name, a cr
 The console passes these on as the person (`/api/rdp/...`); the changes are the console's channel (`/api/channel?s=live:{table}`, a FORM's
 result `live:{table}~{filter}`, events `msg` and `gap`). The page is `/live/{name}`; the module's menu entry (`console/plugin.yaml`) links
 to `/live/trade`. The component is the grid's live mode over the Data Protocol
-([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 5.5), mounted by `js/drishti_records.js`.
+([ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md) section 5.5), mounted by `js/drishti_records.js`.
 
 ## 10. Settings
 
