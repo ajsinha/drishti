@@ -24,3 +24,4 @@ Risk is the first engine delivered this way.
 | Lake 0.9.2: newest-wins by commit order in every case | Part 2b item 5 | On a Delta date whose files share one load run id, or whose commits are older than the Delta log keeps, the order falls back to run id and file time; compaction never settles a two-file date. MUST-FIX in Lake 0.9.2 (named in the v0.9.1 release text) |
 | Sutra test-folder `.json` per case (F28 o) | Part 2 F28 | Still read by seven SutraCliTest cases; rewrite them and the CLI reference, then remove |
 | PackStateStore / LoadStore / FileUserStore / FileAuditLog leftovers (F28 l) | Part 2 F28 | Remove once no install holds old state |
+| Iceberg maintenance on REST-catalog lakes (AWS Glue) | Pre-drill (owner OK 2026-11-22) | `LakeMaintain` has no `--set` for catalog settings, so Drishti refuses to maintain Glue/REST-catalog Iceberg lakes with a clear message; Lake 0.9.2 adds it and Drishti routes through it |
