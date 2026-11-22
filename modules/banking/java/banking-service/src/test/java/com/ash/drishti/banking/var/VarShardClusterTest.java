@@ -127,7 +127,7 @@ class VarShardClusterTest {
                 "--drishti.var.hierarchies.LL.levels=LIMIT_LETTER > DESK", "--drishti.var.hierarchies.LL.word=LL",
                 "--drishti.var.hierarchies.LL.limits=var-limit", "--drishti.var.official.on-start=false",
                 "--drishti.var.official.root=" + node.resolve("official"), "--drishti.var.official.currencies[0]=EUR",
-                "--drishti.var.threads=2", "--drishti.var.tier.close-grace-seconds=0", "--drishti.var.currencies[0]=USD",
+                "--drishti.module.banking.var.threads=2", "--drishti.var.tier.close-grace-seconds=0", "--drishti.var.currencies[0]=USD",
                 "--drishti.security.enabled=true", "--drishti.security.secret=" + SECRET, "--drishti.security.registered-users-only=false",
                 "--drishti.security.roles.risk.kinds[0]=*", "--drishti.security.roles.risk.raw=true"));
         return a;
@@ -135,6 +135,9 @@ class VarShardClusterTest {
 
     static List<String> sharded(Path node) {
         List<String> a = common(node);
+        // a stopped member is a member that went down: the test drives the drain itself (test 6); the drain on stop would wait the full
+        // 90 s for a member whose shards nobody can take (the last owner of a shard), long past the grace the test is about
+        a.add("--drishti.node.drain.on-stop=false");
         a.addAll(List.of("--drishti.var.sharding.enabled=true", "--drishti.var.sharding.target-shard-mb=" + TARGET_MB,
                 "--drishti.var.sharding.replicas=2", "--drishti.var.sharding.stable-seconds=15", "--drishti.var.sharding.grace-seconds=3",
                 "--drishti.var.sharding.rebalance-seconds=1", "--drishti.var.sharding.pins.S1=" + C_ID));

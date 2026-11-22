@@ -23,14 +23,18 @@ import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.banking.var.VarService;
 import java.nio.file.Path;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /** The beans of ISDA SIMM ({@link SimmService}) and their settings, {@code drishti.simm}; the sensitivities are FRTB-SA's ({@link FrtbData}). */
 @Configuration
-@EnableConfigurationProperties(SimmProperties.class)
 public class SimmConfiguration {
+
+    /** The settings: {@code drishti.simm.*}, and the ones the banking module owns from {@code drishti.module.banking.*} (the manifest's settings). */
+    @Bean
+    public SimmProperties simmProperties(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.simm", SimmProperties.class, java.util.Map.ofEntries(java.util.Map.entry("parameters-dir", "simm.parameters-dir"), java.util.Map.entry("default-version", "simm.default-version")));
+    }
 
     @Bean
     SimmService simmService(SimmProperties props, SourceRouter router, FrtbService frtb, ObjectProvider<VarService> var, ObjectProvider<LoadService> loads) {

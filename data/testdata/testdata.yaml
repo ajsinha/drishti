@@ -21866,7 +21866,7 @@ datasets:
   documents: 47840
   files:
   - dms-score.2026-11-16.jsonl.gz
-  bytes: 660953
+  bytes: 660971
 - folder: protein-engineering/design
   pack: protein-engineering
   kind: design

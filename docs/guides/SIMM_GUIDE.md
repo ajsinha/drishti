@@ -114,11 +114,11 @@ in `Equity` (paragraph 6).
 ISDA publishes SIMM's methodology; its calibrated numbers are licensed per version. The structure Drishti reads is
 [`docs/architecture/capital-parameters/simm.yaml`](../architecture/capital-parameters/simm.yaml), **shipped with every number empty**.
 
-**To install a version:** copy the structure once per version into `drishti.simm.parameters-dir` (default `simm/` in the configuration folder, `${drishti.config.dir}/simm`), fill
+**To install a version:** copy the structure once per version into `drishti.module.banking.simm.parameters-dir` (default `simm/` in the configuration folder, `${drishti.config.dir}/simm`), fill
 `version`, `effective-from` and every `null` from the licensed methodology, and restart. At start the engine reads every `*.yaml` there,
 checks every number and range (correlation matrices symmetric with a unit diagonal), and lists each file in `GET /api/v1/risk/simm/versions`:
 installed with its SHA-256, or refused with every missing key (`DRS-5333`). A refused file never stops the server. A netting set is
-computed with the version its CSA names; a CSA naming none (and an analytic scope) uses `drishti.simm.default-version`, else the installed
+computed with the version its CSA names; a CSA naming none (and an analytic scope) uses `drishti.module.banking.simm.default-version`, else the installed
 version with the latest effective date. A changed file is a new version; every answer, export and recipe carries the version and the
 file's SHA-256, and a recipe keeps the file itself.
 

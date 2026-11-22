@@ -753,7 +753,7 @@ def build(seed: int = SEED) -> tuple:
         for assay, scan in (("activity", p.activity), ("stability", p.stability)):
             for i in range(p.L):
                 for a, aa in enumerate(AA20):
-                    sid = f"{sym}:{i + 1}:{aa}:{assay}"
+                    sid = f"{sym}:{i + 1}:{aa}:{assay.upper()}"
                     dms_docs[sid] = doc("dms-score", SCORE_ID=sid, PROTEIN=sym, POS=i + 1, AA_REF=p.sequence[i], AA=aa,
                                         MUTATION=f"{p.sequence[i]}{i + 1}{aa}", ASSAY=assay, SCORE=scan[i][a],
                                         SE=round(0.04 + 0.2 * sr.random(), 3), REPLICATES=3)
@@ -783,7 +783,7 @@ def build(seed: int = SEED) -> tuple:
                "design": design_docs, "design-mutation": mutation_docs, "design-round": round_docs}
     lead_variant = next(s["VARIANT_ID"] for s in sites if s["gene"] == LEAD_GENE and s["role"] == "hot1")
     story = {"lead_gene": LEAD_GENE, "lead_variant": lead_variant, "lead_design": lead["id"], "lead_sample": "S0001",
-             "lead_residue": f"{LEAD_GENE}:{lead_prot.centre + 1}", "lead_score": f"{LEAD_GENE}:{lead_prot.centre + 1}:{AA20[lead_prot.worst(lead_prot.centre)]}:activity",
+             "lead_residue": f"{LEAD_GENE}:{lead_prot.centre + 1}", "lead_score": f"{LEAD_GENE}:{lead_prot.centre + 1}:{AA20[lead_prot.worst(lead_prot.centre)]}:ACTIVITY",
              "lead_contact": next(iter(contact_docs)), "lead_round": f"{LEAD_GENE}-R{lead['round']}", "lead_segment": next(iter(genomics["cnv-segment"])),
              "lead_call": next(iter(genomics["variant-call"])), "lead_pathway": next(iter(genomics["pathway-gene"])),
              "lead_mutation": next(iter(mutation_docs))}

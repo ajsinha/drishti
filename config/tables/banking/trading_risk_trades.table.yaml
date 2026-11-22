@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trading_risk_trades
-was: trading-risk-trades
 version: 1.0.0
 title: "Trading and counterparty risk: trades"
 description: The trades table of the model trading-risk.

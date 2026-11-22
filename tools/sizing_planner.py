@@ -433,7 +433,7 @@ def explain() -> list:
          "planned 70% busy at the peak, plus 2 for loads, the collector and the operating system. More users than the cores can serve do not fail, "
          "they wait: the same machine answered 138 requests a second at 100 users and 124 at 200, with p95 about 2 and 5 s."),
         ("The settings",
-         "drishti.var.hot-dates: the dates in memory. drishti.var.open-heap-mb: the byte safety net over every open date's heap; when the dates open "
+         "drishti.module.banking.var.hot-dates: the dates in memory. drishti.var.open-heap-mb: the byte safety net over every open date's heap; when the dates open "
          "exceed it, the least recently used dates' currency books, then stress books, then whole dates close (never a protected one, never one read in "
          "the last 120 seconds). Its automatic value (0.4 × heap − 512 MB − load-threads × 1.6 GB) is often smaller than ten dates need, so the planner "
          "gives an explicit value. drishti.var.memory-budget-mb bounds the heap tier only and stays 0 on the mapped tier. -Dlake.parquet.footer-cache-mb "

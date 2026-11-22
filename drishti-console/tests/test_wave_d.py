@@ -13,19 +13,15 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave D in the console (docs/guides/bi/README.md sections 29.8 to 29.11, bi/README.md, EMBED_GUIDE.md): the Subscribe and alert forms offer webhooks and texts only when the server has them and send them in the server's
-words (no AI summary: AI is not in this release's console); ``<drishti-search>`` and ``<drishti-about>`` are in the library, served, and ``/embed/v1/search`` passes the embed caller to the server and its refusals back."""
+words (no AI summary: AI is not in this release's console)."""
 from __future__ import annotations
 
 import json
 import re
 from urllib.parse import quote, urlencode
 
-from conftest import CONSOLE
-from core import element_dist as dist
-from test_embed import HOST, make_client, token
 
 FORM = {"Content-Type": "application/x-www-form-urlencoded"}
-JS = lambda name: (CONSOLE / "web" / name).read_text(encoding="utf-8")  # noqa: E731
 
 
 def _target():
@@ -97,41 +93,3 @@ def test_the_alert_form_offers_webhooks_and_texts_and_sends_them(client, backend
     backend.notify_kept = {"webhooks": [], "sms": {"configured": False, "maxChars": 160, "phone": ""}}
     bare = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily"}).text
     assert 'name="d_sms"' not in bare and 'name="w_' not in bare
-
-
-# ---- <drishti-search> and <drishti-about> ------------------------------------------------------------------------------------------------------------------
-
-def test_the_library_defines_the_two_new_elements_and_serves_their_modules(backend):
-    c = make_client(backend)
-    entry = JS("embed/drishti-elements.js")
-    assert "./m/about.js" in entry and "./m/search.js" in entry and "DrishtiAbout" in entry and "DrishtiSearch" in entry and "version: '" + dist.VERSION + "'" in entry
-    for name, cls in (("about", "DrishtiAbout"), ("search", "DrishtiSearch")):
-        r = c.get(f"/embed/v1/m/{name}.js", headers={"Origin": HOST})
-        assert r.status_code == 200 and f"class {cls} extends HTMLElement" in r.text and r.headers["access-control-allow-origin"] == HOST
-        v = c.get(f"/embed/v1/elements/{dist.VERSION}/m/{name}.js", headers={"Origin": HOST})
-        assert v.status_code == 200 and v.headers["cache-control"].endswith("immutable") and v.text == r.text
-    assert tuple(int(p) for p in dist.VERSION.split(".")) >= (1, 4, 1)          # the about and search elements are in 1.4.1 and later
-
-
-def test_the_new_elements_draw_text_only_and_never_markup_of_their_own_making():
-    search = JS("embed/search.js")
-    assert not re.search(r"\binnerHTML\b|\beval\(|new Function|insertAdjacentHTML|\.outerHTML|document\.write", search)           # results are text nodes (textContent), no markup from the server
-    assert "setHtml" not in search and "sanitize" not in search
-    assert "min-height:44px" in search                                                                                             # results are 44 px targets
-    about = JS("embed/about.js")
-    assert "setHtml(" in about and not re.search(r"\binnerHTML\b|\beval\(|new Function", about)                                    # the About body goes through the sanitiser and the Trusted Types policy
-    assert "rel', 'noopener'" in about
-
-
-def test_the_search_passes_the_embed_caller_to_the_server_and_its_refusals_back(backend):
-    c = make_client(backend)
-    h = {"Authorization": f"Bearer {token()}", "Origin": HOST}
-    ok = c.get("/embed/v1/search", params={"q": "MX-2000", "limit": 500}, headers=h)
-    assert ok.status_code == 200 and ok.headers["access-control-allow-origin"] == HOST and ok.json()["results"][0]["id"] == "MX-20000001"
-    assert ok.headers["cache-control"] == "no-store"
-    assert backend.calls[-1][:2] == ("embed_search", "MX-2000") and backend.calls[-1][3] == 50                   # the console caps what it asks for; the server caps again
-    assert c.get("/embed/v1/search", params={"q": "x" * 500}, headers=h).status_code == 200 and len(backend.calls[-1][1]) == 200
-    assert c.get("/embed/v1/search", params={"q": "MX"}, headers={"Origin": HOST}).json()["code"] == "DRS-8001"           # no token
-    assert c.get("/embed/v1/search", params={"q": "MX"}, headers={"Authorization": f"Bearer {token()}", "Origin": "http://evil.example"}).status_code == 403
-    denied = c.get("/embed/v1/search", params={"q": "boom"}, headers=h)
-    assert denied.status_code == 403 and denied.json()["code"] == "DRS-5002"                                      # the scope was not granted: the server says so

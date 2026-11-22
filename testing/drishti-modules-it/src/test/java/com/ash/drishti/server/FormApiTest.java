@@ -236,7 +236,8 @@ class FormApiTest {
      */
     @Test
     void aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt(
-            @Autowired com.ash.drishti.server.live.LiveSources sources) throws Exception {
+            @Autowired com.ash.drishti.server.live.LiveSources sources,
+            @Autowired com.ash.rachana.live.LiveTables liveTables) throws Exception {
         String q = "TRD where CURRENCY == 'EUR'";
         var live = json(mvc.perform(get("/api/v1/rdp/searches").param("q", q).header("Authorization", as("searcher"))));
         String table = live.path("table").asText();
@@ -247,6 +248,8 @@ class FormApiTest {
             sources.put("q-other-" + i, new com.ash.drishti.server.live.LiveSources.Source("trade", null, false, null, null));
         }
         org.assertj.core.api.Assertions.assertThat(sources.get(table)).isEmpty();
+        org.assertj.core.api.Assertions.assertThat(liveTables.specs()).as("Rachana holds no spec of the released search")
+                .noneMatch(x -> x.name().equals(table));
         mvc.perform(post("/api/v1/rdp/tables/" + table + "/query").contentType(MediaType.APPLICATION_JSON).content(query)
                         .header("Authorization", as("searcher"))).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error.code").value("rdp.table.unknown"))

@@ -141,13 +141,13 @@ Links: `PROTEIN` → `protein`.
 
 About: Deep mutational scan score.
 
-**Id:** field `SCORE_ID`; for example `HLXK7:177:A:activity`.
+**Id:** field `SCORE_ID`; for example `HLXK7:177:A:ACTIVITY`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SCORE_ID` | string | `HLXK7:177:A:activity` | The protein, position, amino acid and assay, joined by colons. |
+| `SCORE_ID` | string | `HLXK7:177:A:ACTIVITY` | The protein, position, amino acid and assay, joined by colons (the assay in capitals). |
 | `PROTEIN` | string | `HLXK7` | The protein; opens PROT.; link to `protein` |
 | `POS` | integer | `177` | The position changed. |
 | `AA_REF` | string | `H` | The amino acid the protein has there (one letter). |
@@ -255,7 +255,7 @@ Examples:
 |---|---|
 | `PROT HLXK7` | Helixase-7: length, family, sequence and the positions of its active site |
 | `DESIGN DSG-HLXK7-R8-0901` | The lead design of the campaign: its changes, activity and stability |
-| `DMS HLXK7:177:A:activity` | One scan score: what changing one position to one amino acid did to the activity |
+| `DMS HLXK7:177:A:ACTIVITY` | One scan score: what changing one position to one amino acid did to the activity |
 | `RESIDUE HLXK7:177` | The active site's centre: fold, burial, coordinates and mean effects |
 | `DROUND HLXK7-R8` | The round of the lead design: method, best and median activity |
 

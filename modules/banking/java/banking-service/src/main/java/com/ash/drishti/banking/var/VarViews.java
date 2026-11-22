@@ -192,7 +192,7 @@ final class VarViews {
                 + days.get(days.size() - 1) + ")");
         int n = svc.props().window();
         if (n > of) {
-            w.put("warning", "drishti.var.scenario-window is " + n + " but the scenario set has " + of + ": the whole set is used");
+            w.put("warning", "drishti.module.banking.var.window is " + n + " but the scenario set has " + of + ": the whole set is used");
         }
         return w;
     }

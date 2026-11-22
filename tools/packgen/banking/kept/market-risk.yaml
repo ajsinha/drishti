@@ -48,13 +48,13 @@ positions:
 # in the server's settings wins over this block. Every hierarchy is built from the trades' PROMOTED columns: levels names them, top first
 # (each must be in layout.scenario-pv.columns, layout.pnl-vector.columns and layout.exposure-path.columns), and every distinct path of
 # values is a node under one root (MGMT~BANK), its members the rows (a letter may hold part of a book). A row with an empty level value
-# goes under a (Blank) node at that level (empty-label:, else drishti.var.hierarchy.empty-label). level-names: the level of each column's
+# goes under a (Blank) node at that level (empty-label:, else drishti.module.banking.var.hierarchy.empty-label). level-names: the level of each column's
 # nodes, also the reference kind their display names are read from (desk, book, legal-entity; the value itself when there is none).
 # ids: path (default, LL~LL-0003/DESK-RATES) or leaf (MGMT~DESK-RATES, when each value has one parent). word: the scope word naming a
 # node (LL:LL-0003). limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no
 # limit). Every VaR limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes).
 # The system baskets (docs/guides/VAR_GUIDE.md section 5.7) are kept in Drishti's basket store, never read from data. seed: the demo's,
-# imported once into an empty system scope at the first start while drishti.var.system-baskets.seed is on (it follows
+# imported once into an empty system scope at the first start while drishti.module.banking.var.system-baskets.seed is on (it follows
 # DRISHTI_DEMO_ENABLED); written by tools/packgen/var/make_var_data.py. A bank turns the seed off and imports its own file
 # (drishti.py var baskets import FILE --apply, the permission var:system-baskets).
 system-baskets:

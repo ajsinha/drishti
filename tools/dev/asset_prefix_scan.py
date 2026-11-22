@@ -45,22 +45,21 @@ NAMESPACE = "Drishti"
 FOLDERS = ("", "js", "js/build", "css", "img", "img/guide", "img/icons", "calc")
 
 # Published, immutable code: never rewritten, and every name it uses is a contract the rest must keep.
-FROZEN = ("drishti-console/web/static/render/", "drishti-console/web/embed/",
-          "drishti-console/web/elements/integrity.json")
+FROZEN = ("drishti-console/web/static/render/",)
 # History: what was true then stays as it was written.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
 # Never read: test data, third-party code, the tool itself.
 SKIP = ("data/", "external_lib/", "drishti-console/web/static/vendor/", "tools/vendor-js/node_modules/", "tools/dev/asset_prefix",
         "drishti-console/tests/test_asset_names.py",
         # generated sheets: their generators name the sources by public names (core/element_sheet.py public_names)
-        "drishti-console/web/elements/drishti-view.css", "drishti-console/web/elements/drishti-report.css")
+        )
 TEXT = {".py", ".js", ".mjs", ".cjs", ".ts", ".html", ".htm", ".css", ".md", ".yaml", ".yml", ".json", ".txt", ".sh", ".ps1", ".java",
         ".toml", ".ini", ".cfg", ".properties", ".xml", ".webmanifest", ".j2"}
 
 # Our own code, where a bare file name or a bare global means ours.
 OWN_JS = (f"{STATIC}/js/", f"{STATIC}/calc/")
 OWN_WEB = OWN_JS + ("drishti-console/web/templates/", f"{STATIC}/css/")
-CONSOLE_CODE = OWN_WEB + ("drishti-console/core/", "drishti-console/routes/", "drishti-console/tests/", "drishti-console/web/elements/")
+CONSOLE_CODE = OWN_WEB + ("drishti-console/core/", "drishti-console/routes/", "drishti-console/tests/")
 
 GENERIC_CLASSES = sorted(set("""
 active open opened closed hidden hide show shown on off ok bad warn warning error danger success info primary secondary muted disabled

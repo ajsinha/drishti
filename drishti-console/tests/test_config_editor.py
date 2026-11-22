@@ -34,7 +34,7 @@ PATHS = {"roots": [{"name": "data", "path": "/srv/drishti/data", "from": "drisht
                    {"name": "lakes", "path": "/srv/drishti/config/lakes", "from": "default under config", "exists": False}],
          "anchored": [{"key": "drishti.collab.dir", "path": "/srv/drishti/collab", "from": "(application.local.yaml)"}]}
 SERVER = {"settings": [
-    {"key": "drishti.var.confidence", "value": "0.975", "origin": "file", "source": "application.local.yaml", "secret": False},
+    {"key": "drishti.module.banking.var.confidence", "value": "0.975", "origin": "file", "source": "application.local.yaml", "secret": False},
     {"key": "drishti.security.secret", "value": "••••", "origin": "env", "source": "DRISHTI_TOKEN_SECRET", "secret": True},
     {"key": "drishti.lenses", "value": "risk,world", "origin": "env", "source": "DRISHTI_LENSES", "secret": False},
 ]}
@@ -103,15 +103,15 @@ def _keys(page: str) -> list[str]:
 def test_everyday_is_the_first_tier_and_small(editor):
     page = _as(editor).get("/admin/configuration").text
     keys = _keys(page)
-    assert "drishti.lenses" in keys and "drishti.var.confidence" in keys and "features.build" in keys and len(keys) <= 25
+    assert "drishti.lenses" in keys and "drishti.module.banking.var.confidence" in keys and "features.build" in keys and len(keys) <= 25
     counts = dict(re.findall(r'data-tier="(\w+)"[^>]*>[^<]*<small>([\d,]+)</small>', page))
     assert int(counts["everyday"]) == len(keys) and int(counts["admin"]) > 1000 and int(counts["expert"]) > 100
     assert not [k for k in keys if "branding" in k or "ui-kit" in k]
 
 
 def test_each_row_shows_its_value_in_effect_and_where_it_came_from(editor):
-    page = _as(editor).get("/admin/configuration", params={"q": "drishti.var.confidence"}).text
-    row = re.search(r'<tr data-key="drishti.var.confidence".*?</tr>', page, re.S).group(0)
+    page = _as(editor).get("/admin/configuration", params={"q": "drishti.module.banking.var.confidence"}).text
+    row = re.search(r'<tr data-key="drishti.module.banking.var.confidence".*?</tr>', page, re.S).group(0)
     assert "<code>0.975</code>" in row and "file: application.local.yaml" in row and "data-propose" in row and "everyday" in row
 
 
@@ -128,11 +128,11 @@ def test_search_finds_across_every_tier_and_secrets_are_never_shown(editor):
 
 def test_a_change_is_a_proposal_never_a_live_write(editor):
     alice = _as(editor)
-    r = alice.post("/admin/configuration/propose", json={"key": "drishti.var.confidence", "area": "engines", "value": "0.99",
+    r = alice.post("/admin/configuration/propose", json={"key": "drishti.module.banking.var.confidence", "area": "engines", "value": "0.99",
                                                          "was": "0.975", "reason": "the board asked"})
     assert r.status_code == 200 and r.json()["state"] == "proposed"
     assert not editor.state.console_local_file.exists()
-    again = alice.post("/admin/configuration/propose", json={"key": "drishti.var.confidence", "area": "engines", "value": "0.95", "reason": "x"})
+    again = alice.post("/admin/configuration/propose", json={"key": "drishti.module.banking.var.confidence", "area": "engines", "value": "0.95", "reason": "x"})
     assert again.status_code == 409
     secret = alice.post("/admin/configuration/propose", json={"key": "auth.session_secret", "area": "console", "value": "x", "reason": "x"})
     assert secret.status_code == 400 and not any(p["key"] == "auth.session_secret" for p in editor.state.kept)

@@ -17,7 +17,7 @@
 A live stream outlives the token it was opened with, but not unchecked. ``StreamGuard`` watches one ``ChannelSession``:
 
 * at the token's expiry it sends ``event: token`` (``{"ch": "", "d": {"expiresIn": 0}}``); the element answers with a fresh token
-  on ``POST /embed/v1/channel/{cid}/token`` (verified like any call, same user and application) and the stream carries on;
+  on ``POST /embed/v2/channel/{cid}/token`` (verified like any call, same user and application) and the stream carries on;
 * with no fresh token within ``embed.token_grace_seconds`` the stream ends with ``gone`` ``DRS-8001``: expiry is enforced;
 * every ``embed.recheck_seconds`` it asks the server whether the token still passes every check (user, application, scopes) and
   ends the stream with the server's own code when it does not.

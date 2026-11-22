@@ -405,7 +405,7 @@ server is set to 95%), and Explain's *Inputs & lineage* says the scenario window
 `drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
 
 **The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
-can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
+can set any name with `drishti.module.banking.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
 captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 **Hierarchies and limit letters.** The select above the tree lists the date's hierarchies by name: *Management*, *Legal

@@ -167,7 +167,7 @@ def demo_limit(pid: str, var: float) -> int:
 
 
 SEED_NOTE = ("The demo's system baskets (VAR_GUIDE.md section 5.7): the bank's own baskets the VaR engine resolves PORT:<id> by.",
-             "Imported once into an empty system scope of the basket store at the first start while drishti.var.system-baskets.seed is on",
+             "Imported once into an empty system scope of the basket store at the first start while drishti.module.banking.var.system-baskets.seed is on",
              "(it follows DRISHTI_DEMO_ENABLED); from then on they are managed in Drishti (Construct your basket, the permission",
              "var:system-baskets) and this file is never read again. Same file shape as drishti.py var baskets export --scope system.",
              "Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO, NODE_ID the id).",

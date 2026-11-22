@@ -278,7 +278,7 @@
       ratio: hasHeap ? needHeap / hasHeap : null, fix: '-Xmx' + v('XmxGB') + 'g -Xms' + v('XmxGB') + 'g and drishti.var.open-heap-mb: ' + v('SetOpenHeapMB') });
     var needRam = v('RssPlannedMB') + (v('OsReserveGB') + v('ConsoleGB')) * MB, hasRam = s.ramMb || null;
     out.push({ id: 'ram', label: 'RAM', need: needRam, has: hasRam, now: s.rssMb == null ? null : s.rssMb, unit: 'MB',
-      ratio: hasRam ? needRam / hasRam : null, fix: 'a machine of ' + v('RamRecommendedGB') + ' GB, or fewer dates in memory (drishti.var.hot-dates)' });
+      ratio: hasRam ? needRam / hasRam : null, fix: 'a machine of ' + v('RamRecommendedGB') + ' GB, or fewer dates in memory (drishti.module.banking.var.hot-dates)' });
     var needDisk = v('DiskUsedGB'), hasDisk = d && d.totalBytes ? d.totalBytes / 1073741824 : null;
     var perDay = (v('LakeVarDateMB') + v('IntradayUpdatesDay') * v('Scenarios') * v('LakeBytesPerValue') / v('BytesPerMB')
       + v('TradeRowsPerDay') * v('TradeLakeBytesPerRow') / v('BytesPerMB')) / MB;

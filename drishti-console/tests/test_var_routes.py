@@ -154,7 +154,7 @@ def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatc
 
 
 def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
-    """VaR at 99% or 95% (drishti.var.confidence, VAR_GUIDE.md section 18.5): the page, the explorer and the basket label the figures
+    """VaR at 99% or 95% (drishti.module.banking.var.confidence, VAR_GUIDE.md section 18.5): the page, the explorer and the basket label the figures
     from the answer's confidence and esConfidence, never a fixed 99% or 97.5%."""
     from pathlib import Path
     html = client.get("/var?scope=BANK").text

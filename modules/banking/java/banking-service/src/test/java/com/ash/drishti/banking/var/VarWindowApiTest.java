@@ -45,7 +45,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The scenario window and the confidences (VAR_GUIDE.md section 18.5). With {@code drishti.var.scenario-window: 25} a date whose set holds
+ * The scenario window and the confidences (VAR_GUIDE.md section 18.5). With {@code drishti.module.banking.var.window: 25} a date whose set holds
  * 40 scenarios is computed on its newest 25: equal, for the bank and every node, to a date whose set holds only those 25 (its rows cut to
  * them at load); the provenance says the window; a window or a confidence asked per request recomputes the headline, labelled and never
  * official; at 95% the rank is ceil(N x 0.05); a window below 20 or a confidence outside (0.5, 1) is refused at start.
@@ -58,11 +58,11 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
         "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
-        "drishti.var.scenario-window=25",
+        "drishti.module.banking.var.window=25",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
@@ -205,10 +205,10 @@ class VarWindowApiTest {
         assertThat(VarMath.rank(509, 0.95)).isEqualTo(26);                              // ceil(509 x 0.05): the demo set at 95%
         assertThat(VarMath.rank(250, 0.99)).isEqualTo(3);                               // the 3rd worst of 250
         assertThat(VarMath.rank(250, 0.975)).isEqualTo(7);                              // ES: the mean of the 7 worst
-        assertThatThrownBy(() -> VarProperties.checkWindow("10", "drishti.var.scenario-window")).hasMessageContaining("below 20");
-        assertThatThrownBy(() -> VarProperties.checkWindow("two years", "drishti.var.scenario-window")).hasMessageContaining("neither all");
-        assertThatThrownBy(() -> VarProperties.checkConfidence(1.0, "drishti.var.confidence")).hasMessageContaining("not in (0.5, 1)");
-        assertThatThrownBy(() -> VarProperties.checkConfidence(0.4, "drishti.var.es-confidence")).hasMessageContaining("not in (0.5, 1)");
+        assertThatThrownBy(() -> VarProperties.checkWindow("10", "drishti.module.banking.var.window")).hasMessageContaining("below 20");
+        assertThatThrownBy(() -> VarProperties.checkWindow("two years", "drishti.module.banking.var.window")).hasMessageContaining("neither all");
+        assertThatThrownBy(() -> VarProperties.checkConfidence(1.0, "drishti.module.banking.var.confidence")).hasMessageContaining("not in (0.5, 1)");
+        assertThatThrownBy(() -> VarProperties.checkConfidence(0.4, "drishti.module.banking.var.es-confidence")).hasMessageContaining("not in (0.5, 1)");
         assertThat(VarProperties.checkWindow(" ALL ", "x")).isEqualTo("all");
         // the hot file's digest has the window in it: a change is never masked by a file built before
         LocalDate d = LONG;

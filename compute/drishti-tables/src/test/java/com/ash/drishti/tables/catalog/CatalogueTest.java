@@ -26,7 +26,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The catalogue: files by domain folder, stored items (Q16), was: names (Q18), models checked against their tables, cycles, lineage. */
+/** The catalogue: files by domain folder, stored items (Q16), an old name refused naming the current one, models checked against their tables, cycles, lineage. */
 class CatalogueTest {
 
     @TempDir Path root;
@@ -34,7 +34,6 @@ class CatalogueTest {
     static final String TRADES = """
             rachana: 3
             table: trading.trades
-            was: trading-risk-trades
             from: { kind: trade }
             keys: [TRADE_ID]
             columns:
@@ -65,7 +64,7 @@ class CatalogueTest {
             model: trading-risk
             version: 1.0.0
             tables:
-              trades: { table: trading-risk-trades@^1, role: fact }
+              trades: { table: trading.trades@^1, role: fact }
               open:   { table: trading.open_trades, role: fact }
               desks:  { table: core.desks, role: dimension }
             relationships:
@@ -112,11 +111,14 @@ class CatalogueTest {
     }
 
     @Test
-    void aWasNameResolvesForOneReleaseWithAWarning() throws Exception {
-        Catalogue c = sample();
-        assertThat(c.table("trading-risk-trades")).map(t -> t.name()).contains("trading.trades");
+    void anOldNameIsRefusedNamingTheCurrentOne() throws Exception {
+        write("banking/trading_risk_trades.table.yaml", TRADES.replace("trading.trades", "banking.trading_risk_trades"));
+        Catalogue c = Catalogue.load(root, ItemStore.NONE);
+        assertThat(c.table("trading-risk-trades")).as("an old name is never resolved").isEmpty();
+        assertThat(c.retiredTo("trading-risk-trades")).isEqualTo("banking.trading_risk_trades");
+        assertThat(c.retiredTo("banking.trading_risk_trades")).isNull();
+        assertThat(c.retiredNote("trading-risk-trades")).contains("'trading-risk-trades' is retired: use 'banking.trading_risk_trades'");
         assertThat(c.table(TableName.Ref.parse("trading.trades@^2"))).isEmpty();
-        assertThat(c.check()).anyMatch(p -> p.code().equals(TableCodes.REFERENCE) && p.level().equals(Problem.WARNING) && p.message().contains("now trading.trades"));
     }
 
     @Test
@@ -182,7 +184,6 @@ class CatalogueTest {
         l.register(name -> name.equals("trading-risk") ? List.of(new Lineage.Use("report", "desk-wall", "asks MTM by desk")) : List.of());
         assertThat(l.of("trading.trades")).extracting(Lineage.Use::kind, Lineage.Use::name)
                 .contains(org.assertj.core.groups.Tuple.tuple("model", "trading-risk"), org.assertj.core.groups.Tuple.tuple("table", "trading.open_trades"));
-        assertThat(l.of("trading-risk-trades")).isEqualTo(l.of("trading.trades"));
         assertThat(l.of("core.desks")).anyMatch(u -> u.how().contains("looks up NAME"));
         assertThat(l.of("trading-risk")).extracting(Lineage.Use::kind).containsExactly("report");
         assertThat(c.reads(c.models().get(0))).containsEntry("trades", "trading.trades").containsEntry("desks", "core.desks");

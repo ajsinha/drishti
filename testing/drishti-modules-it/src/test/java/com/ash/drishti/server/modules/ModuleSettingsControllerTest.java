@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import com.ash.drishti.kernel.api.security.Principal;
-import com.ash.drishti.packs.module.ModuleSettingsEnvironmentPostProcessor;
 import com.ash.drishti.server.security.Entitlements;
 import java.util.List;
 import java.util.Map;
@@ -37,14 +36,14 @@ class ModuleSettingsControllerTest {
     void listsTheSettingsWithTheirSource() {
         MockEnvironment env = new MockEnvironment().withProperty(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY,
                         com.ash.drishti.api.resolution.ModuleHomes.source(java.nio.file.Path.of(com.ash.lake.tck.TestRoots.repo())).toProperty())
-                .withProperty("drishti.module.banking.var.window", "500").withProperty("drishti.var.es-confidence", "0.9")
-                .withProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated", "drishti.var.hot-dates is read for one release: x");
+                .withProperty("drishti.module.banking.var.window", "500");
         ModuleSettingsController c = new ModuleSettingsController(env, mock(Entitlements.class));
         Map<String, Object> r = c.settings("banking", ADMIN);
         List<Map<String, Object>> rows = (List<Map<String, Object>>) r.get("settings");
         assertThat(rows).anySatisfy(m -> assertThat(m).containsEntry("key", "drishti.module.banking.var.window").containsEntry("source", "module").containsEntry("value", "500"));
-        assertThat(rows).anySatisfy(m -> assertThat(m).containsEntry("key", "drishti.module.banking.var.es-confidence").containsEntry("source", "old-key"));
-        assertThat((List<String>) r.get("deprecated")).hasSize(1);
+        assertThat(rows).anySatisfy(m -> assertThat(m).containsEntry("key", "drishti.module.banking.var.es-confidence").containsEntry("source", "default")
+                .containsEntry("retired", "drishti.var.es-confidence"));
+        assertThat(r).doesNotContainKey("deprecated");
         assertThatThrownBy(() -> c.settings("no-such-module", ADMIN)).hasMessageContaining("declares no settings");
     }
 }

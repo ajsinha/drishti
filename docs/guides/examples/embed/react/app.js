@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* <drishti-search>, <drishti-view>, <drishti-about> and <drishti-report> in a React 18 page, without a build step (createElement instead of JSX; the JSX is
+/* <drishti-view> in a React 18 page, without a build step (createElement instead of JSX; the JSX is
    written in the comments). Custom elements take plain string attributes; events are bound with a ref and addEventListener, because React 18 does not map `onDrishti:select`. */
 import { configureDrishti, demoSignIn, START } from '../host.js';
 
@@ -32,26 +32,20 @@ function App() {
   const [entity, setEntity] = useState({ kind: START.kind, id: START.id });
   const [state, setState] = useState('idle');
   const [masked, setMasked] = useState(0);
-  const search = useRef(null);
   const view = useRef(null);
 
-  // <drishti-search onSelect=...>: take the pick over (preventDefault stops the element pointing a `target` at it)
-  useDrishtiEvent(search, 'drishti:select', (e) => { e.preventDefault(); setEntity({ kind: e.detail.kind, id: e.detail.id }); });
   // <drishti-view onState=... onMasked=...>: a live indicator and a masked-fields badge of the page's own
   useDrishtiEvent(view, 'drishti:state', (e) => setState(e.detail.state));
   useDrishtiEvent(view, 'drishti:masked', (e) => setMasked(e.detail.count || 0));
 
   return h('main', { className: 'sample' },
     h('header', null, h('h1', null, 'Harbour CRM, in React 18'), h('span', { className: 'pill', 'data-testid': 'state' }, state), masked ? h('span', { className: 'pill', 'data-testid': 'masked' }, masked + ' masked') : null),
-    // <drishti-search ref={search} placeholder="Find an entity" />
-    h('drishti-search', { ref: search, placeholder: 'Find an entity', label: 'Find an entity', theme: 'light' }),
+    // the page's own box: the entity to show (the host decides what a pick means, the element just draws it)
+    h('input', { type: 'search', placeholder: 'An entity id', 'aria-label': 'An entity id', defaultValue: entity.id, 'data-testid': 'pick',
+      onKeyDown: (e) => { if (e.key === 'Enter' && e.target.value.trim()) { setEntity({ kind: entity.kind, id: e.target.value.trim() }); } } }),
     h('section', null,
       // <drishti-view ref={view} kind={entity.kind} entity={entity.id} theme="light" />
-      h('drishti-view', { ref: view, id: 'view', kind: entity.kind, entity: entity.id, theme: 'light', 'data-testid': 'view' }),
-      // <drishti-about kind={entity.kind} entity={entity.id} />
-      h('drishti-about', { id: 'about', kind: entity.kind, entity: entity.id, theme: 'light', 'data-testid': 'about' })),
-    // <drishti-report report="file:report:live-trading-desk" />
-    h('drishti-report', { id: 'report', report: START.report, theme: 'light', 'data-testid': 'report' }));
+      h('drishti-view', { ref: view, id: 'view', kind: entity.kind, entity: entity.id, theme: 'light', 'data-testid': 'view' })));
 }
 
 await demoSignIn();

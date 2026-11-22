@@ -2011,7 +2011,7 @@ forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-f
 | Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
 | Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
 | Disk | see the table below; the guard `drishti.disk.min-free-percent` (10) and `min-free-gb` (20), both must hold, else a date is refused `503 DRS-5218` | `df -h` of the data folder |
-| Scenario window | `drishti.var.scenario-window` (default 250: the newest N of the set; `all` uses the whole set) | `config/engines/var.yaml` |
+| Scenario window | `drishti.module.banking.var.window` (default 250: the newest N of the set; `all` uses the whole set) | `config/engines/var.yaml` |
 | Inbox | on, on one owner node | `drishti.py server engines on dataload` (the demo starts it on); in a cluster, the owner node's `<data>/dataload` |
 | A token | scope `loads:write` (an administrator's will do) | My account, API tokens; `--token-file F` or `DRISHTI_TOKEN`; `DRISHTI_SERVER=http://host:18480` |
 
@@ -2672,7 +2672,7 @@ The core pack's `book`, `desk`, `legal-entity`, `counterparty`, `trader` (and `c
 | Point | Rule (tested) |
 |---|---|
 | One tar a date, parts of 200,000 to 400,000 positions | the three folders of the date: `scenario-set/<date>/`, `fx-scenario/<date>/` (a row per non-USD currency), `scenario-pv/<date>/part-NNNN.jsonl.gz`; the tar is three loads, one commit each; 5,005 rows in 11 s |
-| The scenario set and the window | each date's `scenario-set` row (`SCENARIO_COUNT` = the vectors' length). The engine uses the **newest `drishti.var.scenario-window` scenarios of the date's own set** (default 250; `all`): the answer says *all 250 scenarios (2025-07-25 … 2026-07-09)*. The next day's set is the earlier one rolled by one scenario |
+| The scenario set and the window | each date's `scenario-set` row (`SCENARIO_COUNT` = the vectors' length). The engine uses the **newest `drishti.module.banking.var.window` scenarios of the date's own set** (default 250; `all`): the answer says *all 250 scenarios (2025-07-25 … 2026-07-09)*. The next day's set is the earlier one rolled by one scenario |
 | Preload of the previous date | none to do: the two dates are two ordinary loads. **Why it moved needs both dates in the lake** (`var explain` compares D with the date before it); load D-1 the day before. The hot file of a date is built at its first open and reloaded by itself when a load replaces it (tested: the restated date answered the right figure within seconds) |
 | Keep at least two dates | `DRISHTI_VAR_HOT_DATES` (default 10) is how many dates stay open in memory; **keep ≥ 2** (3 in the test) so today and yesterday both answer at once. The lake keeps every date until retention (17.8) |
 | Checks after the load | `var show BANK --date D` (positions = rows sent, `rejected 0`, no warning), `var explain BANK --from D-1 --to D` (*the steps add up: yes*), `var tree --date D` (no **(Blank)** node), `var show "POS:<id>" --date D`: `verify-day.sh` does the first, 17.8 |

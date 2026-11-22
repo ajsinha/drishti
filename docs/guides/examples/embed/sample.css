@@ -20,6 +20,6 @@ body { margin: 0; font: 14px/1.45 system-ui, sans-serif; color: #1b2430; backgro
 .sample h1 { font-size: 20px; margin: 0 .5rem 0 0; }
 .pill { display: inline-block; padding: .1rem .6rem; border-radius: 999px; background: #dfe7f3; font-size: 12px; }
 .sample section { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; margin: 1rem 0; }
-.sample drishti-search { margin-top: .8rem; }
-.sample drishti-view, .sample drishti-about, .sample drishti-report { background: #fff; border: 1px solid #d5dae1; border-radius: 6px; padding: .5rem; min-height: 4rem; }
+.sample input[type=search] { margin-top: .8rem; padding: .3rem .5rem; }
+.sample drishti-view { background: #fff; border: 1px solid #d5dae1; border-radius: 6px; padding: .5rem; min-height: 4rem; }
 @media (max-width: 800px) { .sample section { grid-template-columns: minmax(0, 1fr); } }

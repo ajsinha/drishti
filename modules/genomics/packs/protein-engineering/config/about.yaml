@@ -123,7 +123,7 @@ kinds:
     glossary:
       SCORE_ID:
         term: Score id
-        means: The protein, position, amino acid and assay, joined by colons.
+        means: The protein, position, amino acid and assay, joined by colons (the assay in capitals).
       PROTEIN:
         term: Protein
         means: The protein; opens PROT.

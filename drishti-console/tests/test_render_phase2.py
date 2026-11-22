@@ -109,7 +109,7 @@ def test_v2_serves_the_renderer_immutably_with_partial_versions_and_elements_2(b
     assert e2.status_code == 302 and e2.headers["location"] == f"/embed/v2/render/{rd.VERSION}/drishti-elements.js"
     assert embed.get("/embed/v2/js/tables.js").status_code == 200 and embed.get("/embed/v2/js/app.js").status_code == 404
     assert embed.get("/embed/v2/vendor/echarts/echarts.min.js").status_code == 200 and embed.get("/embed/v2/vendor/../../core/app.py").status_code == 404
-    assert embed.get("/embed/v1/drishti-elements.js").status_code == 200, "Elements 1.x stays, unchanged, beside it"
+    assert embed.get("/embed/v1/drishti-elements.js").status_code == 404, "Elements 1.x is gone"
 
 
 def test_v2_is_off_with_embedding(client):

@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.counterparty_exposure_counterparties
-was: counterparty-exposure-counterparties
 version: 1.0.0
 title: "Counterparty exposure: counterparties"
 description: The counterparties table of the model counterparty-exposure.

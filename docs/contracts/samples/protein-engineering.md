@@ -266,7 +266,7 @@ A real record, the most complete of the 47,840 (the one with the most non-empty 
 
 ```json
 {
-  "SCORE_ID": "HLXK7:1:A:activity",
+  "SCORE_ID": "HLXK7:1:A:ACTIVITY",
   "PROTEIN": "HLXK7",
   "POS": 1,
   "AA_REF": "M",
@@ -285,7 +285,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `SCORE_ID` | string | required | The protein, position, amino acid and assay, joined by colons. | — | `"HLXK7:1:A:activity"` |
+| `SCORE_ID` | string | required | The protein, position, amino acid and assay, joined by colons (the assay in capitals). | — | `"HLXK7:1:A:ACTIVITY"` |
 | `PROTEIN` | string | required | The protein; opens PROT. | links to `protein` | `"HLXK7"` |
 | `POS` | integer | required | The position changed. | — | `1` |
 | `AA_REF` | string | required | The amino acid the protein has there (one letter). | — | `"M"` |

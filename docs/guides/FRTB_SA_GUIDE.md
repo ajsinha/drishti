@@ -733,7 +733,7 @@ drishti:
 
 ### If something goes wrong
 
-- *DRS-5329 the FRTB-SA parameter files are not in …*: `drishti.frtb.parameters-dir` names a folder without `frtb-sa-sbm.yaml`
+- *DRS-5329 the FRTB-SA parameter files are not in …*: `drishti.module.banking.frtb.parameters-dir` names a folder without `frtb-sa-sbm.yaml`
   and `frtb-sa-drc-rrao.yaml`; blank it to read the market-risk pack's `capital/`.
 - `FRSA` answers *engine off* (`DRS-1020`): turn FRTB-SA on in Admin → Engines (it needs VaR and sensitivities).
 - A desk shows no sensitivities: run `drishti.py lake demo` again so `market-risk/position-sensitivity` is in the lake.

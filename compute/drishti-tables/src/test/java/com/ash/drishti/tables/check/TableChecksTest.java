@@ -31,7 +31,6 @@ class TableChecksTest {
     static final String CASHFLOWS = """
             rachana: 3
             table: bi.trading_cashflows_cashflows
-            was: trading-cashflows-cashflows
             version: 1.0.0
             title: "Trade legs and cashflows: cashflows"
             from: { kind: trade }
@@ -84,7 +83,6 @@ class TableChecksTest {
         assertThat(codes(problems(TRADES))).isEmpty();
         TableDef t = TableYaml.read(CASHFLOWS).table();
         assertThat(t.depth()).isEqualTo(2);
-        assertThat(t.was()).isEqualTo("trading-cashflows-cashflows");
     }
 
     @Test

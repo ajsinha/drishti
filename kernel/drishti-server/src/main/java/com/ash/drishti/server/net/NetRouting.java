@@ -297,7 +297,7 @@ public final class NetRouting {
 
     /** The state of {@code live} (gossip's view of the member) as a refusal names it, given whether this node's table routes to it. */
     public static String label(com.ash.drishti.net.member.Member live, boolean inTable) {
-        if (live.drained()) {
+        if (live.drained() && !live.state().gone()) {          // a member that left or died after draining is named by that, not by the drain
             return "drained";
         }
         return live.routable() && !inTable ? "rejoining" : live.state().wire();

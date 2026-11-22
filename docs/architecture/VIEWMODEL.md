@@ -809,8 +809,7 @@ Live: `static/js/drishti_live.js` applies `strip` patches in place (text and ton
 data (`drishti.updateChart`), swaps every other panel for the console-rendered `html` the channel adds, and handles
 `provenance`, `deleted` and `restored` as in section 5.
 
-Elements 1.x (`<drishti-view>`) and the embed API v1 receive HTML rendered by the same macros, not the ViewModel
-([EMBED_GUIDE.md](ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements), [ADR-021](adr/021-embedding-is-html-over-the-wire.md)); Elements 2.0 and the embed API v2 receive the
+Elements 2.x and the embed API v2 receive the
 ViewModel itself and draw it with Drishti Render ([EMBED_GUIDE.md › Drishti Elements: the design, section 19](../guides/EMBED_GUIDE.md#52-elements-2x-drawn-by-the-renderer)).
 
 The client-side renderer ([EMBED_GUIDE.md section 7](ARCHITECTURE.md#302-the-renderer-on-drishti-elements-painter)) ports every row of this

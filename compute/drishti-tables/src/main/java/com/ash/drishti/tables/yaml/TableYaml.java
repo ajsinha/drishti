@@ -37,7 +37,7 @@ public final class TableYaml {
     /** The language version of the layer's files (Q25). */
     public static final int RACHANA = 3;
 
-    static final Set<String> TOP = Set.of("rachana", "table", "was", "version", "from", "grain", "filter", "columns", "keys", "keep", "says",
+    static final Set<String> TOP = Set.of("rachana", "table", "version", "from", "grain", "filter", "columns", "keys", "keep", "says",
             "materialize", "as-of", "refresh", "rules", "hidden-for", "tests");
     static final Set<String> FROM = Set.of("kind", "pack", "connector", "lake", "table", "query", "params", "python", "inputs", "model", "run");
     static final Set<String> COLUMN = Set.of("path", "expr", "python", "type", "role", "meaning", "references", "unit", "additive", "aggregate",
@@ -108,7 +108,7 @@ public final class TableYaml {
         } else if (t != null && !t.isNull()) {
             y.error(TableCodes.UNREADABLE, "tests", "a list of tests");
         }
-        TableDef def = name == null ? null : new TableDef(name, y.text(root, "was", "was", null), y.text(root, "version", "version", null), about, from,
+        TableDef def = name == null ? null : new TableDef(name, y.text(root, "version", "version", null), about, from,
                 y.text(root, "grain", "grain", null), y.text(root, "filter", "filter", null), columns, keys, keepLatest, y.text(root, "says", "says", null),
                 mat, y.text(root, "as-of", "as-of", null), retention, Yaml.map(root.get("refresh")), rules, y.strings(root, "hidden-for", ""), tests);
         return new Result(def, y.problems);
@@ -238,9 +238,6 @@ public final class TableYaml {
         header.forEach(h -> w.line(h.startsWith("#") || h.isEmpty() ? h : "# " + h));
         w.line("rachana: " + RACHANA);
         w.kv("table", t.name());
-        if (t.was() != null) {
-            w.kv("was", t.was());
-        }
         w.kv("version", t.version());
         for (String k : List.of("id", "title", "description", "owner", "sample", "endorsement", "endorsedBy", "audience", "tags", "lifecycle",
                 "replaced-by", "ai", "layout")) {

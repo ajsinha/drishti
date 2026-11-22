@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trading_risk_desks
-was: trading-risk-desks
 version: 1.0.0
 title: "Trading and counterparty risk: desks"
 description: The desks table of the model trading-risk.

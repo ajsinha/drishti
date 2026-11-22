@@ -179,7 +179,7 @@ public final class TablesService {
      */
     public String version(ViewerContext who, String table, String date) {
         Loaded l = current();
-        String name = l.catalogue().renamed(table) != null ? l.catalogue().renamed(table) : table;
+        String name = table;
         TableDef t = l.catalogue().table(name).orElse(null);
         String kind = t == null || l.refused().contains(name) || router == null ? null : rootKind(l.catalogue(), t);
         if (kind == null) {
@@ -210,7 +210,10 @@ public final class TablesService {
     /** Reads {@code table} for {@code p} through {@code reads}; the layer's refusals become the server's codes. */
     public TableReads.Read read(TableReads reads, ViewerContext who, String table, String date, Instant knownAt, String where) {
         Loaded l = current();
-        String name = l.catalogue().renamed(table) != null ? l.catalogue().renamed(table) : table;
+        String name = table;
+        if (l.catalogue().retiredTo(table) != null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no table '" + table + "'" + l.catalogue().retiredNote(table));
+        }
         if (l.refused().contains(name)) {
             throw new DrishtiException(ErrorCode.TABLE_NAME_CLASH, name + " is a stored table's name: the virtual table is not served (choose another"
                     + " <domain>.<name>)");

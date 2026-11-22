@@ -16,6 +16,10 @@
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
+  module:
+    banking:       # the settings the banking module owns (module.yaml settings:), read as drishti.module.banking.<key>
+      sensitivities:
+        cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read
   engines:
     sensitivities:
       enabled: ${DRISHTI_SENSITIVITIES_ENABLED:true}   # run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live)
@@ -23,4 +27,3 @@ drishti:
   frtb:                              # the settings of the position sensitivities, bound as drishti.frtb.* (FrtbProperties); FRTB-SA and SIMM read them
     sensitivity-kind: position-sensitivity   # the position sensitivities (SENS)
     factor-kind: risk-factor         # the factor dictionary (RFAC)
-    cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read

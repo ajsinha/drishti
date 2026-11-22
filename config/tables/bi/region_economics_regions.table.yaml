@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.region_economics_regions
-was: region-economics-regions
 version: 1.0.0
 title: "Region economics: regions"
 description: The regions table of the model region-economics.

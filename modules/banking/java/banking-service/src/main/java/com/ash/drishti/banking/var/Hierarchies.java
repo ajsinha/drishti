@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  * The hierarchies the VaR and exposure engines build (VAR_GUIDE.md section 15.14), shared by both, every one from the trades' promoted
  * columns: the {@code drishti.var.hierarchies} setting when set, else the first loaded pack's {@code hierarchies:} block (the market-risk
  * pack's: MGMT, LEGAL and LL), else none (the engines then answer the bank, positions, trades and baskets, with no tree). Each (Blank)
- * node is named by its hierarchy's {@code empty-label}, else {@code drishti.var.hierarchy.empty-label}.
+ * node is named by its hierarchy's {@code empty-label}, else {@code drishti.module.banking.var.hierarchy.empty-label}.
  *
  * @param specs the configured hierarchies, in order
  * @param origin where they were read from ({@code drishti.var.hierarchies}, {@code pack market-risk}, {@code none})

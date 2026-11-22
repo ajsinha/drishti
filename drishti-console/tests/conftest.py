@@ -958,12 +958,6 @@ class FakeBackend:
         self.phones_set.append(phone)
         return {"phone": "*" * max(0, len(phone) - 2) + phone[-2:]}
 
-    async def embed_search(self, q, ident, limit=None):
-        self.calls.append(("embed_search", q, ident.user, limit))
-        if q.strip() == "boom":
-            raise BackendError(403, "DRS-5002", "an embed token may only read views: this call is not in its scopes")
-        return {"query": q, "results": [{"type": "entity", "kind": "trade", "id": "MX-20000001", "mnemonic": "TRD", "title": "MX-20000001", "subtitle": "Rates"}]}
-
     async def export(self, fmt, target, ident):
         self.exports_made.append((fmt, target, ident.user))
         if target.get("id") == "forbidden":

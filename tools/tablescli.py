@@ -81,7 +81,7 @@ def register(groups, ctx: dict) -> None:
     p = add("preview", "a table's first rows over sample documents (JSON Lines, one entity a line)",
             "examples:\n  drishti.py tables preview banking.trading_cashflows_cashflows --sample trades.jsonl --limit 10\n"
             "  drishti.py tables preview trading.trade_legs --sample trades.jsonl --related core.books=books.jsonl --fx fx-spot.jsonl")
-    p.add_argument("name", metavar="TABLE", help="the table (or its was: name)")
+    p.add_argument("name", metavar="TABLE", help="the table")
     p.add_argument("--sample", action="append", required=True, metavar="FILE.jsonl", help="the sample documents")
     p.add_argument("--related", action="append", metavar="TABLE=FILE.jsonl", help="another table's sample, what related() reads (repeatable)")
     p.add_argument("--fx", metavar="FILE.jsonl", help="spot rates (PAIR_NAME 'EUR/USD', MID), what fx() reads; without it only a currency to itself converts")

@@ -100,7 +100,7 @@ class StudioTest {
         String inferred = mvc.perform(post("/api/v1/studio/inferred").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"kind\":\"widget\",\"id\":\"W-1\",\"name\":\"widget\",\"document\":" + doc + "}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(inferred).contains("rachana: 1.2\nsutra: widget").contains("$.parts");
+        assertThat(inferred).contains("rachana: 1\nsutra: widget").contains("$.parts");
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"document\":[1,2]}"))
                 .andExpect(status().isUnprocessableEntity());
@@ -119,8 +119,8 @@ class StudioTest {
         String body = mvc.perform(get("/api/v1/rachana/schema")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         var schema = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
         org.assertj.core.api.Assertions.assertThat(schema.path("required").toString()).contains("rachana", "sutra", "version", "match");
-        // the level a Sutra is written for, at most this server's (1.2): 1 (that is 1.0), 1.1, 1.2, as a number or a text
-        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/anyOf/1/enum").toString()).isEqualTo("[\"1.0\",\"1.1\",\"1.2\"]");
+        // Rachana 1.x reads one level, 1.2: a number (1 or 1.2) or the text "1.2"
+        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/anyOf/1/enum").toString()).isEqualTo("[\"1.2\"]");
         org.assertj.core.api.Assertions.assertThat(schema.at("/properties/match/properties/kind/enum").toString()).contains("trade");
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(com.ash.rachana.model.PanelKind.values().length);
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/column/properties/fmt/enum").toString()).contains("signed0", "date");

@@ -326,7 +326,7 @@ final class VarLoader {
             }
         }
         List<LocalDate> fullSet = scenarioDates(date, setId, set);
-        // the scenario window (drishti.var.scenario-window, VAR_GUIDE.md section 18.5): the newest N scenarios of the set, every row cut
+        // the scenario window (drishti.module.banking.var.window, VAR_GUIDE.md section 18.5): the newest N scenarios of the set, every row cut
         // to them at load (P&L vectors and scenario PVs alike); a set shorter than N is used whole (said in the provenance). The stress set
         // is the stress window itself: used whole
         List<LocalDate> scenarioDates = stress ? fullSet : window(fullSet);
@@ -346,7 +346,7 @@ final class VarLoader {
         // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
         b.currencyRates(c -> fx(date, scenarioDates, fxSet).rates(c).orElse(null));
         Map<String, Double> limits = limits(asOf, hs);
-        // the hierarchies' cells and nodes, from the trades' promoted columns; their roots named by drishti.var.root-name(s) when set, each
+        // the hierarchies' cells and nodes, from the trades' promoted columns; their roots named by drishti.module.banking.var.root-name(s) when set, each
         // node by its reference entity (desk, book, legal-entity) when there is one
         b.columnHierarchies(hs.specs().stream().map(s -> s.withRootName(props.rootName(s.id(), null, s.rootName()))).toList(), limits,
                 names(asOf, hs));
@@ -391,7 +391,7 @@ final class VarLoader {
      * Streams the date's trades through the intake into the builder, then checks the date is one run: the P&amp;L vectors, then the
      * scenario PVs (converted to USD as they stream, with the date's FX read on the first PV row); a bank may send either or both.
      */
-    /** The newest {@code drishti.var.scenario-window} scenarios of a set (all of it for {@code all}, or when the set is shorter). */
+    /** The newest {@code drishti.module.banking.var.window} scenarios of a set (all of it for {@code all}, or when the set is shorter). */
     List<LocalDate> window(List<LocalDate> fullSet) {
         int n = props.window();
         return n <= 0 || n >= fullSet.size() ? fullSet : List.copyOf(fullSet.subList(fullSet.size() - n, fullSet.size()));
@@ -514,7 +514,7 @@ final class VarLoader {
                     ofSet(pvColumns, keep, shardRows(shard, pvColumns, intake::row)), reads));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
-                    + "drishti.var.memory-budget-mb (the heap tier) or the server's heap, or keep fewer dates open (drishti.var.hot-dates)");
+                    + "drishti.var.memory-budget-mb (the heap tier) or the server's heap, or keep fewer dates open (drishti.module.banking.var.hot-dates)");
         } catch (VarBook.DuplicateTrade e) {
             throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage()
                     + (unmarked == null ? "" : "; " + unmarked));

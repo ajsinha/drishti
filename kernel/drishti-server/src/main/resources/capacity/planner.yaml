@@ -583,7 +583,7 @@ results:
          why: "Only with drishti.var.tier.mode: heap, every vector in float64 on the heap."}
 
 settings:
-  - {name: "SetHotDates", key: "drishti.var.hot-dates", unit: "dates", env: "DRISHTI_VAR_HOT_DATES", envSource: "docs",
+  - {name: "SetHotDates", key: "drishti.module.banking.var.hot-dates", unit: "dates", env: "DRISHTI_VAR_HOT_DATES", envSource: "docs",
      expression: "DatesInMemory",
      why: "Dates in memory."}
   - {name: "SetOpenHeapMB", key: "drishti.var.open-heap-mb", unit: "MB", env: "DRISHTI_VAR_OPEN_HEAP_MB", envSource: "docs",

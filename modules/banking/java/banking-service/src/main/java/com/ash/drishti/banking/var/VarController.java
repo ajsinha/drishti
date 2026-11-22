@@ -63,7 +63,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>The answers of a scope (headline, path, history, contributions, currencies) and the tree take a lens (2.9.7, VAR_GUIDE.md section
  * 18.6): {@code horizon} ({@code 1d}, the default, or {@code 10d}), {@code method} ({@code sqrt10} or {@code sum}; 10-day only, none: the
- * setting {@code drishti.var.ten-day-method}), {@code confidence} and {@code esConfidence} (from {@code drishti.var.confidences} and
+ * setting {@code drishti.module.banking.var.ten-day-method}), {@code confidence} and {@code esConfidence} (from {@code drishti.var.confidences} and
  * {@code es-confidences}, as fractions or percentages); every answer names them ({@code lens}). Official records stay 1-day. A lens may
  * also name the scenario set, {@code set=stressed} (VAR_GUIDE.md section 18.8): the scope on the date's stress scenario set, in USD; a date
  * without one answers {@code 404} in words.
