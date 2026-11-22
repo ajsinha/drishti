@@ -16,10 +16,10 @@
 # storage are the publisher's own settings (drishti.ccr.exposure.official.format, .root, .storage), so the reader follows wherever and however they are
 # published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/DATA_LAKE_GUIDE.md.
 lake: ccr-official
-format: ${drishti.ccr.exposure.official.format:delta}
-root: ${drishti.ccr.exposure.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
-storage: {region: '${drishti.ccr.exposure.official.storage.s3.region:}', endpoint: '${drishti.ccr.exposure.official.storage.s3.endpoint:}', path-style: '${drishti.ccr.exposure.official.storage.s3.path-style:}',
-  access-key: '${drishti.ccr.exposure.official.storage.s3.access-key:}', secret-key: '${drishti.ccr.exposure.official.storage.s3.secret-key:}'}
+format: ${lake.ccr.official.format:delta}
+root: ${lake.ccr.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
+storage: {region: '${lake.ccr.official.storage.s3.region:}', endpoint: '${lake.ccr.official.storage.s3.endpoint:}', path-style: '${lake.ccr.official.storage.s3.path-style:}',
+  access-key: '${lake.ccr.official.storage.s3.access-key:}', secret-key: '${lake.ccr.official.storage.s3.secret-key:}'}
 tables:
   risk-results.exposure-official-cpty:
     promote: [HIERARCHY, NODE_ID, NODE_NAME, PARENT_ID, LEVEL, COUNTERPARTY, LEGAL_ENTITY, RESULT_VERSION, RUN_ID, PATHS, CE, EPE, EEPE, PEAK_EE,
