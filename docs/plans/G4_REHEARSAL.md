@@ -807,3 +807,10 @@ stay by the owner's word; `ToolsAdoptionGuardTest.noJavaCodeRunsAPythonWorkbookW
 
 ### Proof
 
+Merged with `wip/g4-rehearsal-rx` (Rachana 1.0.0, Lake 0.9.0, Tools 1.1.0 tags), offline; every run through the two-slot machine lock.
+
+- **Compile all** (main and test, every module, `install -DskipTests`): green.
+- **Guards**: `ArchitectureRulesTest` (42 with the five new rules), `ToolsAdoptionGuardTest` (4), `LicenseHeaderTest`, `SourceFileSizeTest` (2): green.
+- **Tests of every touched class**: `TempFilesTest`, `JvmTempDirTest`, `BusinessCalendarTest`, `ExportWritersTest`, `RunExportTest`, `PivotExportTest`, `QuestionNormaliserTest`, `RunSourcesReportTest`, `MqParserTest`, `MqEngineTest`, `ModelViewHashTest`, `PackRegistryClientTest`, `RegistryApiTest`, `ConnectorProxyTest`, `IdTokenVerifierTest`, `NotifyChannelsTest`, the feed, news, REST and Yahoo connector tests (source, proxy and TLS), `AiProxyTest`, `ProviderTlsTest`, `ComputeWritesApiTest`, `EnvironmentTest`, `ShardMap*`, `ModulePackTest`, `OutboundClientsHonourSettingsTest` (new); plus the whole of drishti-api, -common, -kernel-api, -identity, -module-runtime, -net and -flight: green.
+- **The four VaR/ES goldens**: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` (2 cases, from the Python of the lake wheel): green, the figures unchanged.
+- **The 60-workbook comparison**: not re-run. This branch changes no workbook writer (`ExportWorkbook`, `PlaygroundWorkbook`, `CapacityWorkbook`, `PivotExport`'s sheet code, `tools-xlsx` calls are untouched; the only edits near them are a hash key and a CSV quote helper), and the export tests that read workbooks pass; the capture needs two full builds of two trees and was left to the drill.
