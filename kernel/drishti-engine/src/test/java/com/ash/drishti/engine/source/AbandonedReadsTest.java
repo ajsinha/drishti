@@ -107,7 +107,8 @@ class AbandonedReadsTest {
         assertThat(store.slots.abandonedCount()).isEqualTo(10_000);
         store.slots.release();
         store.slots.release();
-        assertThat(Thread.activeCount()).isLessThanOrEqualTo(before + 4);
+        // virtual threads run on at most one carrier (platform) thread per core, so the count may grow by that and a few; a thread per read would add 10,000
+        assertThat(Thread.activeCount()).isLessThanOrEqualTo(before + 4 + Runtime.getRuntime().availableProcessors());
         assertThat(System.nanoTime() - t0).isLessThan(Duration.ofSeconds(10).toNanos());
         // with slots free again, a read goes through
         assertThat(r.fetchAll(refs(10), Duration.ofSeconds(2), AsOf.LATEST)).hasSize(10);
