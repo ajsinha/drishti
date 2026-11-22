@@ -53,13 +53,30 @@ class LanguageLevelGuardTest {
     @Test
     void everyShippedSutraFragmentAndBlockDeclaresTheServersLevel() throws IOException {
         Path root = Path.of(com.ash.lake.tck.TestRoots.repo()).toAbsolutePath().normalize();
-        List<String> files;
-        try (Stream<Path> all = Files.walk(root)) {
-            files = all.filter(f -> {
+        List<String> files = new java.util.ArrayList<>();
+        Files.walkFileTree(root, new java.nio.file.SimpleFileVisitor<>() {
+            @Override
+            public java.nio.file.FileVisitResult preVisitDirectory(Path d, java.nio.file.attribute.BasicFileAttributes a) {
+                String n = d.getFileName() == null ? "" : d.getFileName().toString();
+                boolean skip = !d.equals(root) && (n.startsWith(".") || n.equals("target") || n.equals("node_modules")
+                        || d.getParent().equals(root) && (n.equals("data") || n.equals("lib")));
+                return skip ? java.nio.file.FileVisitResult.SKIP_SUBTREE : java.nio.file.FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public java.nio.file.FileVisitResult visitFile(Path f, java.nio.file.attribute.BasicFileAttributes a) {
                 String n = f.getFileName().toString();
-                return n.endsWith(".sutra.yaml") || n.endsWith(".fragment.yaml") || n.endsWith(".block.yaml");
-            }).filter(f -> !root.relativize(f).toString().replace('\\', '/').matches("(.*/)?(target|node_modules|\\.[^/]+)/.*|(data|lib)/.*")).map(f -> root.relativize(f).toString()).sorted().toList();
-        }
+                if (n.endsWith(".sutra.yaml") || n.endsWith(".fragment.yaml") || n.endsWith(".block.yaml")) {
+                    files.add(root.relativize(f).toString());
+                }
+                return java.nio.file.FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public java.nio.file.FileVisitResult visitFileFailed(Path f, IOException e) {
+                return java.nio.file.FileVisitResult.CONTINUE;          // a file another test removed meanwhile
+            }
+        });
         List<String> older = files.stream().filter(f -> {
             try {
                 return !DrishtiRachana.LEVEL.equals(LanguageLevels.declared(Files.readString(root.resolve(f))));

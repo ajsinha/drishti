@@ -14,6 +14,8 @@ import com.ash.rachana.tools.Upgrade;
  */
 public final class LanguageLevels {
 
+    private static final java.util.regex.Pattern PLACEHOLDER = java.util.regex.Pattern.compile("%\\{([^}]*)\\}");
+
     private LanguageLevels() {
     }
 
@@ -25,7 +27,7 @@ public final class LanguageLevels {
         if (text == null) {
             return null;
         }
-        String l = SutraParser.declaredLevel(text);
+        String l = SutraParser.declaredLevel(PLACEHOLDER.matcher(text).replaceAll("__$1_"));   // a fragment's %{param} places read as names
         if (l == null) {
             return null;
         }
