@@ -55,6 +55,7 @@ modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/V
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarRootNameTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarShardNoPvTableTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarShardSingleNodeTest.java
+modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarSiteEngineFileTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarStressApiTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarStressWindowApiTest.java
 modules/banking/java/banking-service/src/test/java/com/ash/drishti/banking/var/VarSystemBasketApiTest.java

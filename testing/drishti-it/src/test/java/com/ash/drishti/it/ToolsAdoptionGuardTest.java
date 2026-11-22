@@ -79,7 +79,7 @@ class ToolsAdoptionGuardTest {
     @Test
     void noCsvFieldIsQuotedByHand() throws IOException {
         assertThat(find("replace(\"\\\"\", \"\\\"\\\"\")", "DuckDbExecutor.java", "ModelAnswers.java", "SimmPlaygroundBook.java", "FrtbPlaygroundBook.java",
-                "Dialect.java", "SqlComposer.java", "CassandraLayout.java", "DuckDbLayout.java"))
+                "Dialect.java", "SqlComposer.java", "CassandraLayout.java", "DuckDbLayout.java", "EntityTable.java"))
                 .as("a doubled quote is CSV quoting (tools-csv CsvWriter.quote) or SQL identifier quoting (the listed files)").isEmpty();
     }
 
