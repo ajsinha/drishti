@@ -474,3 +474,22 @@ the tables' filter box, pages and one-level trees, the Data table disclosure and
 sizing to its content, and Explain's metric panels. Closed here: the candlestick Data table (server texts). New with `behaviours: 'console'`:
 a small funnel after each column heading and a Clear filters and a Chart button in the table's bar. Pass 3's before/after shots are no longer
 on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels × 2 themes × 2 widths) are in the lane's scratch folder.
+
+## Pass 3: triage (2026-11-21, `g4/triage` from `wip/g4-rehearsal-rx` `8346079c8`)
+
+Each failing test was run on Drishti `main` `9ce7c3170` (a scratch worktree) and on the branch, in a scratch Maven repository (Drishti Lake
+`0.9.0-SNAPSHOT` built from Lake `94dd281` with the two Lake fixes below; Lake `main` carries both).
+
+| Test | On `main` | Cause | Fix |
+|---|---|---|---|
+| `VarShardClusterTest`, `VarFormatEqualityTest`, `ExposureFormatEqualityTest` ("the vector field 'PNL' is not a list of numbers") | pass (the shard test's `anOwnerDown...` case fails there too, see below) | **introduced by G4** (`7b0fff1d3`, Iceberg fixtures written by Lake's one loader, `source.format: loader-rows`): a loader row is `{domain, kind, id, date, doc, columns}` with the document holding the vector in its stored form `{"$vector": "PNL"}` and the numbers in `columns.PNL`; Drishti's old loader took them from `columns`, Lake's read only the document, so every P&L and scenario-PV row was rejected and the Iceberg side never loaded | Lake `bcff31d`: a stored-form vector takes the wrapper's `columns` list (null: no vector; missing or not a list: rejected), Java loader and Python path alike, kit case `load/loader-rows-stored-vectors`; `check.py` all green, reference equal |
+| `VarApiTest.aDateThatIsNotOneRun...` (422 expected, 502) | pass | **introduced by G4**: Lake's read wrapper (`Problems.read`) turned any exception inside a read, the caller's own sink included, into `LK-1006` "cannot be read" and a read problem of the date, so the VaR engine's duplicate-trade refusal (`DRS-5202`, 422) answered `DRS-1003` 502 | Lake `d94023b`: a sink's exception is marked as the caller's (`Problems.caller`) and thrown unchanged, no read problem recorded, on Delta, Iceberg and files; `ProblemsCallerTest`; `check.py` all green |
+| `VarApiTest.theOperationsAnswerWhatTheRestPathsAnswer` (seen once) | pass (timing) | pre-existing flake: the comparison removed `computedAt` but not `computeMs`, a wall-clock duration (0 then 9 ms under load) | the test's clock filter drops both |
+| `MapPanelTest` | pass | **introduced by G4** (binder pass): the test calls Rachana's parser and compiler, which say `RCH-`; Drishti maps to `DRS-` at its edge (`DrishtiRachana.drs`) | the test checks the codes as Drishti answers them (same numbers) |
+| `EconomicsSutraNextEquivalenceTest` (missing resource) | pass | **introduced by G4**: the tests use Lake's `TestRoots`, which reads `lake.module.root`/`lake.repo.root`; surefire still set `drishti.*`, so `drishti-modules-it` no longer pointed its module root at `drishti-server` | surefire sets `lake.repo.root`/`lake.module.root`; `ModulePackTest`, test.ini, TEST_HARNESS, CONFIGURATION |
+| `NewsInMemorySentinelTest` (DRS-5219) | pass | **exposed by G4 shims 4**, a defect of `main` too: the memory-only guard took a connector's kinds from its definition, and a connector *file*'s `kinds:` is not read (bindings and routes say which kinds it serves), so a memory connector defined as a file guarded nothing (a scheduled report of memory-only news was accepted); `main`'s test passed only because it defined the connector as properties. And Lake's refusal (`LK-1005`) had no Drishti mapping | `SourceRegistry.kindsOf` (own list plus what the resolution reads from it); `ConnectorRows` uses it; `LK-1005` answers `403 DRS-5219` |
+| `PackagedVarGoldenTest` | pass | environment: needs a Python with `drishti_lake` | passes with the scratch venv (wheel installed), `-Ddrishti.python` |
+
+VaR/ES goldens on the branch with the fixes: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest`
+pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenTheShardMovesAndAnswersAgain` fails identically on `main`
+(503 expected, 200 with `answeredHere: 2`): pre-existing, not G4.
