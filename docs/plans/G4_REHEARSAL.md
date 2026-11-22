@@ -799,3 +799,20 @@ Failures left (11):
 | `TypedCallParityTest` (2: the REST `live` search answers 404 where the typed call answers rows) | G4, from the merged live-table work (not in the pre-merge run); open for the live lane |
 | `LiveVisualsTest` (fixture `bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | G4 (shims part 2 fixtures); open |
 | `IcebergMovedConnectorFileTest` (a moved Iceberg table's health words) | G4 (Lake's read-problem words); open |
+
+## Pass 3: pre-existing failures (2026-11-22, on `g4/preexisting` from `wip/g4-rehearsal-rx`, Lake 0.9.1 `b26cc2e`, Rachana `develop` `76bf5b23`)
+
+Every test below was reproduced on the branch in one build and now passes three runs in a row (`VarShardClusterTest`, `BankingPacksTest`, `ConsoleAnswersRecordTest`, `DomainPacksTest`, `EditionTwoLensesServerTest`, `NetForwardTest`, `AbandonedReadsTest`, `StudioTest`), no `@Disabled`, no retry, no loosened assertion.
+
+| Test | Cause | Fix (product or test) |
+|---|---|---|
+| (build) `DrishtiRachana.keep` | the level-retirement merge left two reads of the removed `level` field: drishti-rachana did not compile | product: the two lines removed; pin Lake 0.9.1 (poms) |
+| `VarShardClusterTest` (start) | Lake 0.9.1 refuses a folder as `target.lake`; the Iceberg fixture mirror named the lake root | test fixture: `target.path` is the table's folder |
+| `VarShardClusterTest.anOwnerDown...` | the test stops members to simulate "an owner down", but the server's own drain on stop waits up to 90 s for the last owner of a shard (nobody can take it), so the stop outlasted the grace and the survivor had put the date together again from the lake: 200, not 503 | test: its members start with `drishti.node.drain.on-stop=false` (the test drives the drain itself in test 6) |
+| `NetForwardTest.withAGoneBAndCSaySoClearly` | a member that left after draining was named `(drained)` in the refusal, hiding that it left | product: `NetRouting.label` names a gone member (left, dead) by that state; drained only while it is still there |
+| `DomainPacksTest` | the console upper-cases every typed id, but the DMS score ids carried a lower-case assay (`HLXK7:177:A:activity`), so the pack's own example could never open | product data: the score id carries the assay in capitals (generator, data, samples, contract, Sutra, docs); `ASSAY` stays as measured |
+| `BankingPacksTest` | the Sutra count (183) predates three Sutras | test: 186 |
+| `ConsoleAnswersRecordTest` | recorded bootstraps older than the server's code | the four recordings re-recorded (`-Ddrishti.record=true`) |
+| `EditionTwoLensesServerTest` | lens files read from `config/lenses` relative to the module under test, where none are | test: `drishti.lenses-dir=../../config/lenses`, as its `bi.dir` and `tables.root` |
+| `StudioTest` (2) | Rachana 1.x has one level: the schema's level texts are `["1.2"]`, the writer starts a Sutra with `rachana: 1` | test: both expectations |
+| `AbandonedReadsTest` | not reproduced in 10 runs (the recorded message does not match this class); it waits on the real condition (queue empty), no sleep decides a result | unchanged |
