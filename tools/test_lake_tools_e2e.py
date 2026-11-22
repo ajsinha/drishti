@@ -34,6 +34,7 @@ HOME = TOOLS.parent
 sys.path.insert(0, str(TOOLS / "lake"))
 sys.path.insert(0, str(TOOLS))
 import laketables  # noqa: E402
+from javacmd import java_cmd  # noqa: E402
 
 D1, D2, D3 = "2026-10-05", "2026-10-06", "2026-10-07"
 
@@ -390,7 +391,7 @@ def server(work, jar):
            "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_PACKS": "core,trading", "DRISHTI_DATALOAD_ENABLED": "true",
            "DRISHTI_DATALOAD_STABLE_SECONDS": "1", "DRISHTI_SERVER": f"http://127.0.0.1:{port}", "DRISHTI_USER": "admin"}
     log = open(data / "server.log", "w")
-    proc = subprocess.Popen(["java", "-Xmx1g", f"-Djava.io.tmpdir={data / 'tmp'}", "-jar", jar], env=env, cwd=str(work.dir), stdout=log,
+    proc = subprocess.Popen(java_cmd("java", ["-Xmx1g", "-jar", jar], tmp=data / "tmp", cwd=str(work.dir), env=env), env=env, cwd=str(work.dir), stdout=log,
                             stderr=subprocess.STDOUT)
     try:
         for _ in range(120):
