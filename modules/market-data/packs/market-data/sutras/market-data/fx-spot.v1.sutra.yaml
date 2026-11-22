@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/fx-spot/FX-AUDUSD"
     - "FX FX-AUDUSD"
+  category: "Market data"
+  tags: ["fx-spot", "market-data"]
+  use-when: "You have one FX spot rate (its id, or a link from another screen) and want to read it in full: spot rate for a currency pair with bid/ask."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One FX spot rate record (kind fx-spot); the page reads PAIR, MID, BID, ASK, CHANGE_1D, SPOT_DATE, HISTORY, CONVENTIONS, FX_FORWARD_CURVE."
+    sample-row: {"PAIR": "FX-AUDUSD", "PAIR_NAME": "AUD/USD", "MID": 0.661, "BID": 0.66097, "ASK": 0.66103, "CHANGE_1D": -0.01092, "SPOT_DATE": "2026-10-02", "FX_FORWARD_CURVE": "FXF-AUDUSD"}
+  example: "FX FX-AUDUSD"
+  see-also: ["fx-forward-curve"]
+  keywords: ["fx spot", "fx spot rate", "market data"]
   since: "2.7.0"
 match: { kind: fx-spot, priority: 10 }
 title: { pill: Market data · FX spot rate, id: $.PAIR }

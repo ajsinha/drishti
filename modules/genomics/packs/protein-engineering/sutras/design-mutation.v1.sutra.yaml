@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/design-mutation/DSG-HLXK7-R1-0001:164
   - DMUT DSG-HLXK7-R1-0001:164
+  category: "Protein engineering"
+  tags: ["design-mutation", "protein-engineering", "record"]
+  use-when: "You have one design change (its id, or a link from another screen) and want to read it in full: one design change, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One design change record (kind design-mutation); the page reads DESIGN_MUTATION_ID, DESIGN_ID, MUTATION, ROUND, PROTEIN, POS, AA_FROM, AA_TO."
+    sample-row: {"DESIGN_MUTATION_ID": "DSG-HLXK7-R1-0001:164", "DESIGN_ID": "DSG-HLXK7-R1-0001", "PROTEIN": "HLXK7", "ROUND": 1, "POS": 164, "AA_FROM": "S", "AA_TO": "E", "MUTATION": "S164E"}
+  example: "DMUT DSG-HLXK7-R1-0001:164"
+  see-also: ["design", "protein"]
+  keywords: ["design mutation", "design change", "protein engineering"]
   since: 2.9.11
 match:
   kind: design-mutation

@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/development-profile/WDI-CAN"
     - "WDI WDI-CAN"
+  category: "Public sector"
+  tags: ["development-profile", "public-sector", "table"]
+  use-when: "You have one development profile (its id, or a link from another screen) and want to read it in full: A country's development profile: the latest value of each World Bank indicator, the world map by GDP per head, the series."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One development profile record (kind development-profile); the page reads PROFILE_ID, COUNTRY_NAME, REGION, INCOME_GROUP, CAPITAL, POPULATION, GDP_PER_CAPITA, INDICATORS, ISO3."
+    sample-row: {"CAPITAL": "Canberra", "CENTRAL_GOVERNMENT_DEBT": 57.8834285733848, "COUNTRY_NAME": "Australia", "DATA_YEAR": "2025", "ELECTRICITY_ACCESS": 100.0, "GDP_GROWTH": 1.35039785076631, "GDP_PER_CAPITA": 65129.7227990563, "INCOME_GROUP": "High income"}
+  example: "WDI WDI-CAN"
+  see-also: ["development-series"]
+  keywords: ["development profile", "public sector"]
   since: "2.9.11"
 match: { kind: development-profile, priority: 10 }
 title: { pill: Public sector · Development profile, id: $.PROFILE_ID, with: $.COUNTRY_NAME }

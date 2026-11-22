@@ -30,6 +30,14 @@ doc:
   examples:
     - "/v/sic-sector/ALL"
     - "SIC ALL"
+  category: "US equities"
+  tags: ["sic-sector", "us-equities", "table"]
+  use-when: "You have one sectors (computed) (its id, or a link from another screen) and want to read it in full: every SIC code of the covered companies with its company count and revenue; revenue by SIC division."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One sectors (computed) record (kind sic-sector, SIC = ALL); the page reads SIC, DESCRIPTION, CODES, COMPANIES, REVENUE, NET_INCOME, BY_DIVISION, PROVENANCE."
+  example: "SIC ALL"
+  keywords: ["sic sector", "sectors (computed)", "us equities"]
   since: "2.7.0"
 match: { kind: sic-sector, where: "$.SIC == 'ALL'", priority: 20 }
 title: { pill: US equities · Sectors (computed), id: $.SIC, with: $.DESCRIPTION }

@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/MX-20000373"
     - "TRD MX-20000373"
+  category: "Commodity"
+  tags: ["trade", "commodity"]
+  use-when: "You have one freight forward agreement (its id, or a link from another screen) and want to read it in full: cash-settled forward on a shipping route index."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One freight forward agreement record (kind trade, SOURCE_SYSTEM = MUREX, PRODUCT_TYPE = FREIGHT_FFA); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-06-18", "INPUT_DATE": "2026-06-18", "TRADE_ID": "MX-20000373", "TRADE_STATUS": "AMENDED", "TRADE_ACTION": "AMEND", "TRADE_VERSION": "2"}
+  example: "TRD MX-20000373"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "freight forward agreement", "commodity"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'FREIGHT_FFA'", priority: 10 }
 title: { pill: "Commodity · Freight forward agreement", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

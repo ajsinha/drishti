@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000085"
     - "TRD CLY-3000085"
+  category: "Credit"
+  tags: ["trade", "credit"]
+  use-when: "You have one single-name CDS (its id, or a link from another screen) and want to read it in full: protection on one reference entity against a running coupon."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One single-name CDS record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = CDS_SINGLE); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2025-05-30", "INPUT_DATE": "2025-05-30", "TRADE_ID": "CLY-3000085", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000085"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "single-name cds", "credit"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'CDS_SINGLE'", priority: 10 }
 title: { pill: "Credit · Single-name CDS", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

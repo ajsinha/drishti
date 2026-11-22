@@ -34,6 +34,15 @@ doc:
   examples:
     - "/v/country-group/ECG-SAS"
     - "ECG ECG-SAS"
+  category: "Economics"
+  tags: ["country-group", "economics", "table"]
+  use-when: "You have one country group (computed) (its id, or a link from another screen) and want to read it in full: A World Bank region or income group computed from its member economies: output, population, growth and inflation, and its largest economies."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One country group (computed) record (kind country-group); the page reads GROUP_ID, NAME, GROUP_TYPE, ECONOMIES, GDP_USD_BN, GDP_PER_CAPITA, POPULATION_M, GROWTH, INFLATION, TOP_ECONOMIES, ROWS, GDP_PATH."
+  example: "ECG ECG-SAS"
+  see-also: ["economy"]
+  keywords: ["country group", "country group (computed)", "economics"]
   since: "2.7.0"
 match: { kind: country-group, priority: 10 }
 title: { pill: Economics · Country group (computed), id: $.GROUP_ID, with: $.NAME }

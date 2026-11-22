@@ -31,6 +31,16 @@ doc:
   examples:
     - "/v/counterparty/CP-ALDERSHOT"
     - "CPTY CP-ALDERSHOT"
+  category: "Counterparty and legal"
+  tags: ["counterparty", "counterparty-and-legal", "network", "record", "table"]
+  use-when: "You have one counterparty (its id, or a link from another screen) and want to read it in full: A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One counterparty record (kind counterparty); the page reads COUNTERPARTY_ID, NAME, LEI, RATING, SECTOR, COUNTRY_OF_RISK, UEN, TYPE, NET_MTM, NETTING_SETS, KYC, HIERARCHY."
+    sample-row: {"COUNTERPARTY_ID": "CP-ALDERSHOT", "NAME": "Aldershot Pension Trust", "LEI": "549300H5KZ2QJHEAMB55", "RATING": "AA-", "SECTOR": "Pensions", "COUNTRY": "GB", "TYPE": "Pension fund", "COUNTRY_OF_RISK": "GB"}
+  example: "CPTY CP-ALDERSHOT"
+  see-also: ["counterparty-group"]
+  keywords: ["counterparty", "counterparty and legal"]
   since: "2.7.0"
 match: { kind: counterparty, priority: 10 }
 title: { pill: Counterparty and legal · Counterparty, id: $.COUNTERPARTY_ID }

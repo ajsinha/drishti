@@ -29,9 +29,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
 import kit_sutras as KS  # noqa: E402  (Sutra Next: panels as Drishti UI kit fragment uses, the generated doc: docstring)
 import layout
 import phone_display
+import sutradoc  # noqa: E402  (the structured doc fields of every non-risk Sutra, written in one place)
 import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped deal screens and the derived trade pages)
 import booking as BK  # noqa: E402
 
@@ -533,7 +535,8 @@ def files() -> dict[Path, str]:
             k, pack in FRAGMENT_PACKS, KS.first_ids(pack_dir(pack) / "samples" / "catalog.jsonl").get(k.kind))
     for k in TS.DERIVED:          # a counterparty's, portfolio's, legal entity's and index's trades from every source system
         out[pack_dir("trading") / "sutras" / "pages" / f"{k}.v1.sutra.yaml"] = sutra_file(TS.derived_yaml(k))
-    out = {f: phone_display.apply(f.name, text) for f, text in out.items()}   # the phone layouts of the Sutras that say one
+    out = {f: sutradoc.enrich(phone_display.apply(f.name, text), f) if f.name.endswith(".sutra.yaml") else phone_display.apply(f.name, text)
+           for f, text in out.items()}   # the phone layouts of the Sutras that say one
     names = [f.name for f in out if f.name.endswith(".sutra.yaml")]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:

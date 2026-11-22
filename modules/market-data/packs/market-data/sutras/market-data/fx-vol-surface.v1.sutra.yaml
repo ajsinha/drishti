@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/fx-vol-surface/FXV-AUDUSD"
     - "FXV FXV-AUDUSD"
+  category: "Market data"
+  tags: ["fx-vol-surface", "market-data", "chart", "table"]
+  use-when: "You have one FX volatility surface (its id, or a link from another screen) and want to read it in full: implied vols by expiry and delta (ATM, 25D RR/BF)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One FX volatility surface record (kind fx-vol-surface); the page reads SURFACE_ID, PAIR, ATM_1M, ATM_1Y, RR_1Y, GRID, FX_SPOT."
+    sample-row: {"SURFACE_ID": "FXV-AUDUSD", "PAIR": "AUDUSD", "ATM_1M": 9.17, "ATM_1Y": 9.9, "RR_1Y": -0.46, "MODEL": "Vanna-volga smile, delta-quoted", "FX_SPOT": "FX-AUDUSD"}
+  example: "FXV FXV-AUDUSD"
+  see-also: ["fx-spot"]
+  keywords: ["fx vol surface", "fx volatility surface", "market data"]
   since: "2.7.0"
 match: { kind: fx-vol-surface, priority: 10 }
 title: { pill: Market data · FX volatility surface, id: $.SURFACE_ID }

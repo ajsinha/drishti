@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/cap-vol-surface/CPV-AUD"
     - "CPV CPV-AUD"
+  category: "Market data"
+  tags: ["cap-vol-surface", "market-data", "chart", "table"]
+  use-when: "You have one cap/floor volatility surface (its id, or a link from another screen) and want to read it in full: cap vols by maturity and strike."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One cap/floor volatility surface record (kind cap-vol-surface); the page reads SURFACE_ID, CURRENCY, ATM_5Y, GRID."
+    sample-row: {"SURFACE_ID": "CPV-AUD", "CURRENCY": "AUD", "ATM_5Y": 124.3, "MODEL": "Normal, stripped caplets"}
+  example: "CPV CPV-AUD"
+  keywords: ["cap vol surface", "cap/floor volatility surface", "market data"]
   since: "2.7.0"
 match: { kind: cap-vol-surface, priority: 10 }
 title: { pill: Market data · Cap/floor volatility surface, id: $.SURFACE_ID }

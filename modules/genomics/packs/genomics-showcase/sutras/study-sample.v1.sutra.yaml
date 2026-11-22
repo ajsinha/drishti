@@ -29,6 +29,15 @@ doc:
   examples:
   - /v/study-sample/S0001
   - SSAMPLE S0001
+  category: "Genomics"
+  tags: ["study-sample", "genomics", "record"]
+  use-when: "You have one study sample (its id, or a link from another screen) and want to read it in full: one study sample, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One study sample record (kind study-sample); the page reads SAMPLE_ID, TUMOUR_TYPE, STAGE, RESPONSE, CLUSTER, COHORT, AGE_BAND, TOXICITY, RELAPSE, EMB_X, EMB_Y, MUTATION_COUNT."
+    sample-row: {"SAMPLE_ID": "S0001", "COHORT": "ONC-1", "TUMOUR_TYPE": "Breast", "STAGE": "III", "AGE_BAND": "60-69", "RESPONSE": "non-responder", "TOXICITY": "severe", "RELAPSE": "relapsed"}
+  example: "SSAMPLE S0001"
+  keywords: ["study sample", "genomics"]
   since: 2.9.11
 match:
   kind: study-sample

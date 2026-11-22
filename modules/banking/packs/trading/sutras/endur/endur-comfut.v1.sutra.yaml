@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/1000004"
     - "TRD 1000004"
+  category: "Commodity"
+  tags: ["trade", "commodity", "record"]
+  use-when: "You have one commodity future (its id, or a link from another screen) and want to read it in full: an Endur exchange-traded commodity future: one leg, one settlement against the index."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One commodity future record (kind trade, SOURCE_SYSTEM = ENDUR, PRODUCT_TYPE = ComFut); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "ENDUR", "TRADE_DATE": "2025-11-08", "TRADE_ID": "1000004", "TRADE_STATUS": "MATURED", "TRADE_VERSION": "1", "TRANSACTION_ID": "700000100", "QUANTITY": 1000.0, "BUY_SELL_CODE": "B"}
+  example: "TRD 1000004"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "commodity future", "commodity"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComFut'", priority: 10 }
 title: { pill: "Commodity · Commodity future", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

@@ -30,6 +30,14 @@ doc:
   examples:
     - "/v/quote/QUOTE-MSFT"
     - "QUOTE QUOTE-MSFT"
+  category: "Market watch"
+  tags: ["quote", "market-watch"]
+  use-when: "You have one quote (its id, or a link from another screen) and want to read it in full: A ticker's quote and recent price history: the closing price line, ranges and size, and every bar as a table."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One quote record (kind quote); the page reads QUOTE_ID, NAME, PRICE, CURRENCY, CHANGE, CHANGE_PCT, MARKET_STATE, EXCHANGE, HISTORY, PROVENANCE."
+  example: "QUOTE QUOTE-MSFT"
+  keywords: ["quote", "market watch"]
   since: "2.7.0"
 match: { kind: quote, priority: 10 }
 title: { pill: "Market watch · Quote", id: $.QUOTE_ID, with: $.NAME }

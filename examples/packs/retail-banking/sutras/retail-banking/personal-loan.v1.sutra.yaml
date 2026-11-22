@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: personal-loan
 version: 1
 description: "An unsecured instalment loan: purpose, instalments and remaining balance."
+doc:
+  summary: "An unsecured instalment loan: purpose, instalments and remaining balance."
+  description: >-
+    An unsecured instalment loan: purpose, instalments and remaining balance. One page per personal loan, its panels: next
+    instalments; how the view was built; the entities it links to. The strip gives Borrower, Purpose, Balance, Instalment, Rate
+    and Days past due. Linked entities: borrower (customer).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/personal-loan/PLN-100238"
+    - "PLN PLN-100238"
+  category: "Retail banking"
+  tags: ["personal-loan", "retail-banking", "schedule"]
+  use-when: "You have one personal loan (its id, or a link from another screen) and want to read it in full: An unsecured instalment loan: purpose, instalments and remaining balance."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One personal loan record (kind personal-loan); the page reads loanId, borrowerName, purpose, balance, instalment, rate, daysPastDue, schedule, customer."
+    sample-row: {"loanId": "PLN-100238", "borrowerName": "James Kowalski", "purpose": "Car", "balance": 7127.96, "instalment": 198.84, "rate": 0.1027, "daysPastDue": 0, "customer": "CUST-100238"}
+  example: "PLN PLN-100238"
+  see-also: ["customer"]
+  keywords: ["personal loan", "retail banking"]
+  since: "2.7.0"
 match: { kind: personal-loan, priority: 10 }
 title: { pill: Retail banking · Personal loan, id: $.loanId }
 strip:
@@ -37,6 +60,6 @@ panels:
       - { label: Principal, bind: "@.principal", fmt: amount2 }
       - { label: Interest, bind: "@.interest", fmt: amount2 }
       - { label: Balance after, bind: "@.balance", fmt: amount2 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.customer, 'customer')", F8: impact, F9: raw }

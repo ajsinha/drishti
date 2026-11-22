@@ -28,6 +28,16 @@ doc:
   examples:
     - "/v/oecd-series/OECDS-USA-CLI"
     - "OECDS OECDS-USA-CLI"
+  category: "Public sector"
+  tags: ["oecd-series", "public-sector", "record"]
+  use-when: "You have one OECD series (its id, or a link from another screen) and want to read it in full: an OECD series: its monthly or quarterly history, the latest value and period, the change."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One OECD series record (kind oecd-series); the page reads SERIES_ID, NAME, TITLE, LATEST, UNIT, LATEST_PERIOD, CHANGE, HISTORY, OECD_COUNTRY, COUNTRY_NAME, FREQUENCY, DATAFLOW."
+    sample-row: {"CHANGE": 0.0529, "COUNTRY_NAME": "United States", "DATAFLOW": "OECD.SDD.STES,DSD_STES@DF_CLI,", "FREQUENCY": "monthly", "ISO3": "USA", "LATEST": 100.9993, "LATEST_PERIOD": "2026-09", "MEASURE": "CLI"}
+  example: "OECDS OECDS-USA-CLI"
+  see-also: ["oecd-country"]
+  keywords: ["oecd series", "public sector"]
   since: "2.9.11"
 match: { kind: oecd-series, priority: 10 }
 title: { pill: Public sector · OECD series, id: $.SERIES_ID, with: $.NAME }

@@ -16,6 +16,26 @@ rachana: 1.2
 sutra: fx-swap
 version: 2
 description: FX swap, near and far legs (mockup drishti-fx-swap.png).
+doc:
+  summary: "FX swap, near and far legs."
+  description: >-
+    FX swap, near and far legs. A tutorial screen of the example pack: one page per fx swap, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade/FXS-20931"
+  category: "Trade"
+  tags: ["trade", "chart", "status", "table", "tabs"]
+  use-when: "You have one FX swap (its id, or a link from another screen) and want to read it in full: FX swap, near and far legs."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One FX swap record (kind trade, productType = FXSWAP); the page reads tradeId, counterparty, pair, nearValue, farValue, nearRate, farRate, swapPoints, mtm, book, legs, cashflows."
+    sample-row: {"tradeId": "FXS-20931", "productType": "FXSWAP", "product": "FX swap", "pair": "EUR/USD", "nearValue": "2026-10-02", "farValue": "2027-01-04", "nearRate": 1.174, "farRate": 1.17958}
+  example: "/v/trade/FXS-20931"
+  see-also: ["netting-set", "curve", "book", "counterparty"]
+  keywords: ["trade", "fx swap"]
+  since: "2.7.0"
 match: { kind: trade, where: "$.productType == 'FXSWAP'", priority: 10 }
 title: { pill: "Trade · FX swap", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:

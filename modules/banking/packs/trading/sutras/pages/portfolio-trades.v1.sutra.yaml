@@ -33,6 +33,15 @@ doc:
   examples:
     - "/v/portfolio-trades/BOOK-RATES-2"
     - "PTRD BOOK-RATES-2"
+  category: "Portfolio trades"
+  tags: ["portfolio-trades", "chart", "schedule"]
+  use-when: "You have one portfolio trades (its id, or a link from another screen) and want to read it in full: every trade of a portfolio (book), from every source system: trades, payments, notional and maturities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One portfolio trades record (kind portfolio-trades); the page reads PORTFOLIO, TRADE_COUNT, NOTIONAL, SOURCE_SYSTEMS, PRODUCT_TYPES, CURRENCIES, LAST_MATURITY, TRADES."
+  example: "PTRD BOOK-RATES-2"
+  see-also: ["book", "trade"]
+  keywords: ["portfolio trades"]
   since: "2.7.0"
 match: { kind: portfolio-trades, priority: 10 }
 title: { pill: "Portfolio trades", id: $.PORTFOLIO, with: "link($.PORTFOLIO, 'book')" }

@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/equity-index/EQX-NDX"
     - "EQX EQX-NDX"
+  category: "Market data"
+  tags: ["equity-index", "market-data", "table"]
+  use-when: "You have one equity index (its id, or a link from another screen) and want to read it in full: index level with its largest constituents."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One equity index record (kind equity-index); the page reads INDEX_ID, NAME, LEVEL, CHANGE_1D, CONSTITUENT_COUNT, CURRENCY, CONSTITUENTS, HISTORY, EQUITY_VOL_SURFACE."
+    sample-row: {"INDEX_ID": "EQX-NDX", "NAME": "Nasdaq-100", "LEVEL": 24530.0, "CHANGE_1D": 0.00986, "CONSTITUENT_COUNT": 101, "CURRENCY": "USD", "EQUITY_VOL_SURFACE": "EQV-NDX", "DIVIDEND_CURVE": "DIV-NDX"}
+  example: "EQX EQX-NDX"
+  see-also: ["equity-vol-surface"]
+  keywords: ["equity index", "market data"]
   since: "2.7.0"
 match: { kind: equity-index, priority: 10 }
 title: { pill: Market data · Equity index, id: $.INDEX_ID }

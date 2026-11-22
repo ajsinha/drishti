@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: collections-case
 version: 1
 description: "A delinquent account in collections: arrears, stage, strategy and contact history."
+doc:
+  summary: "A delinquent account in collections: arrears, stage, strategy and contact history."
+  description: >-
+    A delinquent account in collections: arrears, stage, strategy and contact history. One page per collections case, its
+    panels: contact history; how the view was built; the entities it links to. The strip gives Customer, Arrears, Days past due,
+    Stage, Strategy and Status. Linked entities: customer (customer), loan (personal-loan) and card (card-account).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/collections-case/COLC-2601"
+    - "COLC COLC-2601"
+  category: "Retail banking"
+  tags: ["collections-case", "retail-banking", "schedule"]
+  use-when: "You have one collections case (its id, or a link from another screen) and want to read it in full: A delinquent account in collections: arrears, stage, strategy and contact history."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One collections case record (kind collections-case); the page reads caseId, customerName, arrears, daysPastDue, stage, strategy, status, contacts, customer."
+    sample-row: {"caseId": "COLC-2601", "customerName": "Priya Sharma", "arrears": 529.43, "daysPastDue": 47, "stage": "Early (30-59)", "strategy": "Payment plan", "status": "Open", "customer": "CUST-100231"}
+  example: "COLC COLC-2601"
+  see-also: ["customer"]
+  keywords: ["collections case", "retail banking"]
+  since: "2.7.0"
 match: { kind: collections-case, priority: 10 }
 title: { pill: Retail banking · Collections case, id: $.caseId }
 strip:
@@ -36,6 +59,6 @@ panels:
       - { label: Date, bind: "@.date", fmt: date }
       - { label: Channel, bind: "@.channel" }
       - { label: Outcome, bind: "@.outcome" }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.customer, 'customer')", F8: impact, F9: raw }

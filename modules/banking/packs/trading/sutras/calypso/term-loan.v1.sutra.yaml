@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000133"
     - "TRD CLY-3000133"
+  category: "Credit"
+  tags: ["trade", "credit"]
+  use-when: "You have one term loan (its id, or a link from another screen) and want to read it in full: drawn loan amortising or bullet, floating over SOFR."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One term loan record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = TERM_LOAN); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2024-08-09", "INPUT_DATE": "2024-08-09", "TRADE_ID": "CLY-3000133", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000133"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "term loan", "credit"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'TERM_LOAN'", priority: 10 }
 title: { pill: "Credit · Term loan", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

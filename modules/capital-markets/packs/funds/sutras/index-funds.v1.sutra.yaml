@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/index-funds/SP500"
     - "TRACK NDX"
+  category: "Funds"
+  tags: ["index-funds", "funds", "table"]
+  use-when: "You have one funds tracking an index (its id, or a link from another screen) and want to read it in full: the funds tracking an index, by net assets: type, expense ratio, members held and active share against the computed index."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One funds tracking an index record (kind index-funds); the page reads INDEX, NAME, FUNDS, ETFS, TOTAL_NET_ASSETS, LARGEST, ROWS."
+    sample-row: {"INDEX": "NDX", "NAME": "Nasdaq-100", "FUNDS": 2, "ETFS": 2, "TOTAL_NET_ASSETS": 587254661099.0, "LARGEST": "QQQ"}
+  example: "TRACK NDX"
+  see-also: ["index-membership", "fund"]
+  keywords: ["index funds", "funds tracking an index", "funds"]
   since: "2.9.2"
 match: { kind: index-funds, priority: 10 }
 title: { pill: Funds · Funds tracking an index, id: $.INDEX, with: $.NAME }

@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/commodity/CMD-BRENT"
     - "CMD CMD-BRENT"
+  category: "Market data"
+  tags: ["commodity", "market-data", "chart"]
+  use-when: "You have one commodity (its id, or a link from another screen) and want to read it in full: A traded commodity with its benchmark, unit and venue."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One commodity record (kind commodity); the page reads COMMODITY_ID, NAME, FRONT, UNIT, EXCHANGE, SECTOR, SPEC, OHLC, COMMODITY_CURVE."
+    sample-row: {"COMMODITY_ID": "CMD-BRENT", "NAME": "Brent crude oil", "FRONT": 74.6, "UNIT": "USD/bbl", "EXCHANGE": "ICE", "SECTOR": "Energy", "COMMODITY_CURVE": "CMDC-BRENT", "COMMODITY_VOL_SURFACE": "CMDV-BRENT"}
+  example: "CMD CMD-BRENT"
+  see-also: ["commodity-curve"]
+  keywords: ["commodity", "market data"]
   since: "2.7.0"
 match: { kind: commodity, priority: 10 }
 title: { pill: Market data · Commodity, id: $.COMMODITY_ID }

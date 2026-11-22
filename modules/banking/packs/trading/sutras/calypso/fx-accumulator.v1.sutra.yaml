@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000067"
     - "TRD CLY-3000067"
+  category: "FX"
+  tags: ["trade", "fx"]
+  use-when: "You have one FX accumulator (its id, or a link from another screen) and want to read it in full: buys (or sells) daily at a discount until knock-out."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One FX accumulator record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = FX_ACCUMULATOR); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2024-08-09", "INPUT_DATE": "2024-08-09", "TRADE_ID": "CLY-3000067", "TRADE_STATUS": "AMENDED", "TRADE_ACTION": "AMEND", "TRADE_VERSION": "2"}
+  example: "TRD CLY-3000067"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "fx accumulator", "fx"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'FX_ACCUMULATOR'", priority: 10 }
 title: { pill: "FX · FX accumulator", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

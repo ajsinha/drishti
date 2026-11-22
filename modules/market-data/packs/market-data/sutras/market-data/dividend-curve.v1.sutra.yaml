@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/dividend-curve/DIV-CSCA"
     - "DIV DIV-CSCA"
+  category: "Market data"
+  tags: ["dividend-curve", "market-data"]
+  use-when: "You have one dividend curve (its id, or a link from another screen) and want to read it in full: expected dividends by year (implied from dividend futures and forwards)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One dividend curve record (kind dividend-curve); the page reads CURVE_ID, UNDERLIER, DIVIDEND_YIELD, POINTS, UNDERLYING_EQUITY."
+    sample-row: {"CURVE_ID": "DIV-CSCA", "UNDERLIER": "EQ-CSCA", "DIVIDEND_YIELD": 0.0275, "UNDERLYING_EQUITY": "EQ-CSCA"}
+  example: "DIV DIV-CSCA"
+  see-also: ["equity"]
+  keywords: ["dividend curve", "market data"]
   since: "2.7.0"
 match: { kind: dividend-curve, priority: 10 }
 title: { pill: Market data · Dividend curve, id: $.CURVE_ID }

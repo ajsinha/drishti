@@ -28,6 +28,16 @@ doc:
   examples:
     - "/v/book/BOOK-COMM-1"
     - "BOOK BOOK-COMM-1"
+  category: "Organisation"
+  tags: ["book", "organisation", "table"]
+  use-when: "You have one book (its id, or a link from another screen) and want to read it in full: A trading book: owner desk, trades and risk."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One book record (kind book); the page reads BOOK_ID, NAME, DESK_NAME, TRADE_COUNT, MTM, DV01, TOP_TRADES, DESK."
+    sample-row: {"BOOK_ID": "BOOK-COMM-1", "NAME": "Commodities · book 1", "DESK_NAME": "Commodities", "TRADE_COUNT": 28, "MTM": 7760837, "DV01": 0, "DESK": "DESK-COMM", "ACCOUNTING_TREATMENT": "Fair value (FVTPL)"}
+  example: "BOOK BOOK-COMM-1"
+  see-also: ["desk"]
+  keywords: ["book", "organisation"]
   since: "2.7.0"
 match: { kind: book, priority: 10 }
 title: { pill: Organisation · Book, id: $.BOOK_ID }

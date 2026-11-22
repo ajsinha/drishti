@@ -32,6 +32,16 @@ doc:
   examples:
     - "/v/equity/EQ-CSCA"
     - "EQ EQ-CSCA"
+  category: "Market data"
+  tags: ["equity", "market-data", "chart", "figures"]
+  use-when: "You have one equity (its id, or a link from another screen) and want to read it in full: A listed stock: price, dividends, sector and identifiers."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One equity record (kind equity); the page reads TICKER, NAME, PRICE, CHANGE_1D, MARKET_CAP, SECTOR, EXCHANGE, CURRENCY, HISTORY, IDENTIFIERS, OHLC, ISSUER."
+    sample-row: {"TICKER": "EQ-CSCA", "NAME": "Cascadia Airlines Inc.", "PRICE": 21.84, "CHANGE_1D": 0.03852, "MARKET_CAP": 34324492441, "SECTOR": "Airlines", "EXCHANGE": "TSX", "CURRENCY": "CAD"}
+  example: "EQ EQ-CSCA"
+  see-also: ["issuer"]
+  keywords: ["equity", "market data"]
   since: "2.7.0"
 match: { kind: equity, priority: 10 }
 title: { pill: Market data · Equity, id: $.TICKER }

@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/social-indicator/SOCI-ABW-EDUCATION-SPEND"
     - "SOCI SOCI-ABW-EDUCATION-SPEND"
+  category: "Politics and society"
+  tags: ["social-indicator", "politics-and-society"]
+  use-when: "You have one social indicator (its id, or a link from another screen) and want to read it in full: A social or governance statistic of one country over time, with the regional comparison:."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One social indicator record (kind social-indicator); the page reads INDICATOR_ID, NAME, LATEST, UNIT, LATEST_YEAR, CHANGE_5Y, SOURCE_NAME, SERIES, BY_REGION, MEANING, JURISDICTION."
+    sample-row: {"INDICATOR_ID": "SOCI-ABW-EDUCATION-SPEND", "INDICATOR": "Government expenditure on education", "COUNTRY_NAME": "Aruba", "THEME": "Society", "LATEST": 3.61856, "LATEST_YEAR": "2021", "UNIT": "% of GDP", "CHANGE_5Y": -1.8728}
+  example: "SOCI SOCI-ABW-EDUCATION-SPEND"
+  see-also: ["jurisdiction"]
+  keywords: ["social indicator", "politics and society"]
   since: "2.7.0"
 match: { kind: social-indicator, priority: 10 }
 title: { pill: Politics and society · Social indicator, id: $.INDICATOR_ID }

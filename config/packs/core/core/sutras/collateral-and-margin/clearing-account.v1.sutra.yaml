@@ -28,6 +28,16 @@ doc:
   examples:
     - "/v/clearing-account/CLR-CME-1"
     - "CLR CLR-CME-1"
+  category: "Collateral and margin"
+  tags: ["clearing-account", "collateral-and-margin", "table"]
+  use-when: "You have one clearing account (its id, or a link from another screen) and want to read it in full: an account at a CCP holding cleared trades and margin."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One clearing account record (kind clearing-account); the page reads ACCOUNT_ID, CCP_NAME, IM, VM_TODAY, EXCESS, TRADES, CCP."
+    sample-row: {"ACCOUNT_ID": "CLR-CME-1", "CCP_NAME": "CME Clearing", "IM": 43200000, "VM_TODAY": -559393, "EXCESS": 8640000, "CCP": "CCP-CME"}
+  example: "CLR CLR-CME-1"
+  see-also: ["ccp"]
+  keywords: ["clearing account", "collateral and margin"]
   since: "2.7.0"
 match: { kind: clearing-account, priority: 10 }
 title: { pill: Collateral and margin · Clearing account, id: $.ACCOUNT_ID }

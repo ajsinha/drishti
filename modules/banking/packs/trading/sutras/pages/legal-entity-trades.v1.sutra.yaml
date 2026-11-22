@@ -32,6 +32,15 @@ doc:
   expects: []
   examples:
     - "LTRD"
+  category: "Legal entity trades"
+  tags: ["legal-entity-trades", "chart", "schedule"]
+  use-when: "You have one legal entity trades (its id, or a link from another screen) and want to read it in full: every trade a legal entity of the bank booked, from every source system: trades, payments, notional and maturities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One legal entity trades record (kind legal-entity-trades); the page reads LEGAL_ENTITY, TRADE_COUNT, NOTIONAL, SOURCE_SYSTEMS, PRODUCT_TYPES, CURRENCIES, LAST_MATURITY, TRADES."
+  example: "LTRD"
+  see-also: ["legal-entity", "trade"]
+  keywords: ["legal entity trades"]
   since: "2.7.0"
 match: { kind: legal-entity-trades, priority: 10 }
 title: { pill: "Legal entity trades", id: $.LEGAL_ENTITY, with: "link($.LEGAL_ENTITY, 'legal-entity')" }

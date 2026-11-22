@@ -31,6 +31,15 @@ doc:
   examples:
     - "/v/path-book/BOOK-RATES"
     - "PBOOK BOOK-FX"
+  category: "Compute demo"
+  tags: ["path-book", "compute-demo", "chart", "figures", "record"]
+  use-when: "You have one book (its id, or a link from another screen) and want to read it in full: A book's strips and its P&L path computed on request, twice: by the sample Python engine in a compute pool and by the Java engine."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One book record (kind path-book); the page reads BOOK_ID, NAME, DESK, STRIP_COUNT."
+    sample-row: {"BOOK_ID": "BOOK-CREDIT", "NAME": "Credit book", "DESK": "CREDIT", "STRIP_COUNT": 30, "PATH_ID": "BOOK-CREDIT"}
+  example: "PBOOK BOOK-FX"
+  keywords: ["path book", "book", "compute demo"]
   since: "2.8.0"
 match: { kind: path-book, priority: 10 }
 title: { pill: "Compute demo · Book", id: $.BOOK_ID, with: $.NAME }

@@ -29,6 +29,15 @@ doc:
   examples:
     - "/v/statistics-series/NSTAT-V41690973"
     - "NSTAT NSTAT-V41690973"
+  category: "Public sector"
+  tags: ["statistics-series", "public-sector", "record"]
+  use-when: "You have one national statistic (its id, or a link from another screen) and want to read it in full: A national statistic: its latest value and period, the change on the period and on the year, the release time, the history."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One national statistic record (kind statistics-series); the page reads SERIES_ID, TITLE, LATEST, UNIT, LATEST_PERIOD, CHANGE, CHANGE_PCT, YEAR_ON_YEAR_PCT, RELEASED, HISTORY, TOPIC, TABLE_ID."
+    sample-row: {"CHANGE": 80343.0, "CHANGE_PCT": 0.1926, "FREQUENCY": "quarterly", "GEOGRAPHY": "Canada", "LATEST": 41798407.0, "LATEST_PERIOD": "2026-07-01", "NAME": "Population of Canada", "PREVIOUS": 41718064.0}
+  example: "NSTAT NSTAT-V41690973"
+  keywords: ["statistics series", "national statistic", "public sector"]
   since: "2.9.11"
 match: { kind: statistics-series, priority: 10 }
 title: { pill: Public sector · National statistic, id: $.SERIES_ID, with: $.TITLE }

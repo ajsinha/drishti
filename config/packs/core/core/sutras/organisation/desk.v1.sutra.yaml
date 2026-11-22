@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/desk/DESK-COMM"
     - "DESK DESK-COMM"
+  category: "Organisation"
+  tags: ["desk", "organisation", "pivot", "table"]
+  use-when: "You have one desk (its id, or a link from another screen) and want to read it in full: A trading desk: books, limits and risk results."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One desk record (kind desk); the page reads DESK_ID, NAME, HEAD, BOOKS, VAR_ENGINE, MTM, POSITIONS, LEGAL_ENTITY."
+    sample-row: {"DESK_ID": "DESK-COMM", "NAME": "Commodities", "HEAD": "T. Brennan", "MTM": 14609595, "LEGAL_ENTITY": "LE-NY"}
+  example: "DESK DESK-COMM"
+  see-also: ["legal-entity"]
+  keywords: ["desk", "organisation"]
   since: "2.7.0"
 match: { kind: desk, priority: 10 }
 title: { pill: Organisation · Desk, id: $.DESK_ID }

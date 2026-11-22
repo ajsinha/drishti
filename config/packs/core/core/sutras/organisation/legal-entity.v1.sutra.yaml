@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/legal-entity/LE-FRA"
     - "LE LE-FRA"
+  category: "Organisation"
+  tags: ["legal-entity", "organisation", "chart", "table"]
+  use-when: "You have one bank legal entity (its id, or a link from another screen) and want to read it in full: the bank's own booking entity."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One bank legal entity record (kind legal-entity); the page reads ENTITY_ID, NAME, LEI, JURISDICTION, REGULATOR, VAR_ENGINE, DESKS."
+    sample-row: {"ENTITY_ID": "LE-FRA", "NAME": "Drishti Bank Europe AG", "LEI": "549300Z9DXU4T18OK744", "JURISDICTION": "DE", "REGULATOR": "ECB / BaFin"}
+  example: "LE LE-FRA"
+  keywords: ["legal entity", "bank legal entity", "organisation"]
   since: "2.7.0"
 match: { kind: legal-entity, priority: 10 }
 title: { pill: Organisation · Bank legal entity, id: $.ENTITY_ID }

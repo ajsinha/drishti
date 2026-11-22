@@ -29,6 +29,16 @@ doc:
   examples:
   - /v/residue-contact/HLXK7:68-71
   - CONTACT HLXK7:68-71
+  category: "Protein engineering"
+  tags: ["residue-contact", "protein-engineering", "record"]
+  use-when: "You have one residue contact (its id, or a link from another screen) and want to read it in full: one residue contact, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One residue contact record (kind residue-contact); the page reads CONTACT_ID, PROTEIN, POS_A, POS_B, DISTANCE."
+    sample-row: {"CONTACT_ID": "HLXK7:68-71", "PROTEIN": "HLXK7", "POS_A": 68, "POS_B": 71, "DISTANCE": 2.84}
+  example: "CONTACT HLXK7:68-71"
+  see-also: ["protein"]
+  keywords: ["residue contact", "protein engineering"]
   since: 2.9.11
 match:
   kind: residue-contact

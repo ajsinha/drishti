@@ -32,6 +32,16 @@ doc:
   examples:
     - "/v/macro-indicator/MACRO-BRA-GDP-GROWTH"
     - "MACRO MACRO-BRA-GDP-GROWTH"
+  category: "Economics"
+  tags: ["macro-indicator", "economics"]
+  use-when: "You have one macro indicator (its id, or a link from another screen) and want to read it in full: one headline statistic of one economy: its history, the latest value, the change and its rank among economies."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One macro indicator record (kind macro-indicator); the page reads INDICATOR_ID, NAME, LATEST, UNIT, LATEST_YEAR, PREVIOUS, RANK, HISTORY, FACTS, ECONOMY."
+    sample-row: {"INDICATOR_ID": "MACRO-ABW-AGRICULTURE", "NAME": "Aruba · Agriculture, value added", "INDICATOR": "Agriculture, value added", "COUNTRY_NAME": "Aruba", "UNIT": "% of GDP", "LATEST": 0.0395295, "LATEST_YEAR": "2023", "PREVIOUS": 0.0341749}
+  example: "MACRO MACRO-BRA-GDP-GROWTH"
+  see-also: ["economy"]
+  keywords: ["macro indicator", "economics"]
   since: "2.7.0"
 match: { kind: macro-indicator, priority: 10 }
 title: { pill: Economics · Macro indicator, id: $.INDICATOR_ID }

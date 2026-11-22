@@ -31,6 +31,16 @@ doc:
   examples:
     - "/v/region/REGN-EAS"
     - "REGN REGN-EAS"
+  category: "Politics and society"
+  tags: ["region", "politics-and-society"]
+  use-when: "You have one world region (its id, or a link from another screen) and want to read it in full: A World Bank region:."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One world region record (kind region); the page reads REGION_ID, NAME, COUNTRIES, POPULATION_M, LIFE_EXPECTANCY, WOMEN_PARLIAMENT, INTERNET, GOVERNMENT_TYPES, LIFE_TREND, INTERNET_TREND, MEMBER_STATES."
+    sample-row: {"REGION_ID": "REGN-EAS", "NAME": "East Asia & Pacific", "COUNTRIES": 37, "POPULATION_M": 2390.87, "LIFE_EXPECTANCY": 76.7379, "YEAR": "2024", "INTERNET": 88.4, "WOMEN_PARLIAMENT": 23.3498}
+  example: "REGN REGN-EAS"
+  see-also: ["jurisdiction"]
+  keywords: ["region", "world region", "politics and society"]
   since: "2.7.0"
 match: { kind: region, priority: 10 }
 title: { pill: Politics and society · World region, id: $.REGION_ID }

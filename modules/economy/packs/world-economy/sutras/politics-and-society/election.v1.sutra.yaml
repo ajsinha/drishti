@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/election/ELEC-ABW-EXE"
     - "ELEC ELEC-ABW-EXE"
+  category: "Politics and society"
+  tags: ["election", "politics-and-society", "table"]
+  use-when: "You have one election (its id, or a link from another screen) and want to read it in full: the most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the…."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One election record (kind election); the page reads ELECTION_ID, TITLE, DATE_TEXT, SYSTEM, WINNER, NEXT_ELECTION, RESULTS, SUMMARY, JURISDICTION."
+    sample-row: {"ELECTION_ID": "ELEC-ABW-EXE", "TITLE": "Aruba · executive (head of state)", "COUNTRY_NAME": "Aruba", "CHAMBER": "Executive", "DATE": "2024-12-06", "DATE_TEXT": "6 December 2024", "NEXT_ELECTION": "by December 2028", "JURISDICTION": "JUR-ABW"}
+  example: "ELEC ELEC-ABW-EXE"
+  see-also: ["jurisdiction"]
+  keywords: ["election", "politics and society"]
   since: "2.7.0"
 match: { kind: election, priority: 10 }
 title: { pill: Politics and society · Election, id: $.ELECTION_ID }

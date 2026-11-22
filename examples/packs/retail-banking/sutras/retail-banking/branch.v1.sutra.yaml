@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: branch
 version: 1
 description: "A branch: customers, deposits and lending, product mix and service scores."
+doc:
+  summary: "A branch: customers, deposits and lending, product mix and service scores."
+  description: >-
+    A branch: customers, deposits and lending, product mix and service scores. One page per branch, its panels: balances by
+    product; net promoter score by month; how the view was built; the entities it links to. The strip gives Branch, City,
+    Customers, Deposits, Lending and NPS. Linked entities: legal entity (legal-entity).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/branch/BRN-FRA-MAIN"
+    - "BRN BRN-FRA-MAIN"
+  category: "Retail banking"
+  tags: ["branch", "retail-banking"]
+  use-when: "You have one branch (its id, or a link from another screen) and want to read it in full: A branch: customers, deposits and lending, product mix and service scores."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One branch record (kind branch); the page reads branchId, name, city, customers, deposits, lending, nps, productMix, npsHistory, legalEntity."
+    sample-row: {"branchId": "BRN-FRA-MAIN", "name": "Frankfurt Main", "city": "Frankfurt", "customers": 10569, "deposits": 1485766000.0, "lending": 4700999000.0, "nps": 45, "legalEntity": "LE-FRA"}
+  example: "BRN BRN-FRA-MAIN"
+  see-also: ["legal-entity"]
+  keywords: ["branch", "retail banking"]
+  since: "2.7.0"
 match: { kind: branch, priority: 10 }
 title: { pill: Retail banking · Branch, id: $.branchId }
 strip:
@@ -27,22 +50,8 @@ strip:
   - { label: Lending, bind: $.lending, fmt: compact }
   - { label: NPS, bind: $.nps, fmt: amount0 }
 panels:
-  - id: mix
-    kind: hbar
-    title: Balances by product
-    key: F2
-    rows: $.productMix
-    label: product
-    value: balance
-    fmt: compact
-  - id: nps
-    kind: line
-    title: Net promoter score by month
-    area: right
-    rows: $.npsHistory
-    x: month
-    y: nps
-    fmt: amount0
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: mix, title: Balances by product, key: F2, rows: $.productMix, label: product, value: balance, fmt: compact } }
+  - { use: series-line@1, with: { id: nps, title: Net promoter score by month, area: right, rows: $.npsHistory, x: month, y: nps, fmt: amount0 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.legalEntity, 'legal-entity')", F8: impact, F9: raw }

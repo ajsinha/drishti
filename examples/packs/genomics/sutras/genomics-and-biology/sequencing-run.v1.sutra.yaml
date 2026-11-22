@@ -17,6 +17,28 @@ rachana: 1.2
 sutra: sequencing-run
 version: 1
 description: "An instrument run: yield, quality by cycle, and the samples it carried."
+doc:
+  summary: "An instrument run: yield, quality by cycle, and the samples it carried."
+  description: >-
+    An instrument run: yield, quality by cycle, and the samples it carried. One page per sequencing run, its panels: mean
+    quality score by cycle; samples; how the view was built. The strip gives Instrument, Flow cell, Yield (Gb), Q30, Clusters PF
+    and Status.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/sequencing-run/SEQ-2026-0903-A"
+    - "SEQ SEQ-2026-0903-A"
+  category: "Genomics and biology"
+  tags: ["sequencing-run", "genomics-and-biology", "table"]
+  use-when: "You have one sequencing run (its id, or a link from another screen) and want to read it in full: An instrument run: yield, quality by cycle, and the samples it carried."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One sequencing run record (kind sequencing-run); the page reads runId, instrument, flowcell, yieldGb, q30, clustersPf, status, qualityByCycle, samples."
+    sample-row: {"runId": "SEQ-2026-0903-A", "instrument": "NovaSeq 6000", "flowcell": "233891LT3", "yieldGb": 2222.4, "q30": 0.9198, "clustersPf": 0.7684, "status": "Completed"}
+  example: "SEQ SEQ-2026-0903-A"
+  keywords: ["sequencing run", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: sequencing-run, priority: 10 }
 title: { pill: Genomics and biology · Sequencing run, id: $.runId }
 strip:
@@ -27,14 +49,7 @@ strip:
   - { label: Clusters PF, bind: $.clustersPf, fmt: pct2 }
   - { label: Status, bind: $.status, tone: status }
 panels:
-  - id: quality
-    kind: line
-    title: Mean quality score by cycle
-    key: F2
-    rows: $.qualityByCycle
-    x: cycle
-    y: q
-    fmt: price2
+  - { use: series-line@1, with: { id: quality, title: Mean quality score by cycle, key: F2, rows: $.qualityByCycle, x: cycle, y: q } }
   - id: samples
     kind: table
     title: Samples
@@ -44,5 +59,5 @@ panels:
       - { label: Sample, bind: "@.sample" }
       - { label: Reads (M), bind: "@.readsM", fmt: price2, total: true }
       - { label: Mean coverage, bind: "@.coverage", fmt: amount0 }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

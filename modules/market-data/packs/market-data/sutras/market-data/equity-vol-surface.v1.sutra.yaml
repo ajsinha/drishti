@@ -29,6 +29,15 @@ doc:
   examples:
     - "/v/equity-vol-surface/EQV-CSCA"
     - "EQV EQV-CSCA"
+  category: "Market data"
+  tags: ["equity-vol-surface", "market-data", "chart", "table"]
+  use-when: "You have one equity volatility surface (its id, or a link from another screen) and want to read it in full: implied vols by expiry and moneyness."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One equity volatility surface record (kind equity-vol-surface); the page reads SURFACE_ID, UNDERLIER, ATM_1M, ATM_1Y, SKEW_1Y, GRID."
+    sample-row: {"SURFACE_ID": "EQV-CSCA", "UNDERLIER": "EQ-CSCA", "ATM_1M": 37.54, "ATM_1Y": 36.67, "SKEW_1Y": 3.63, "MODEL": "SVI, moneyness-quoted"}
+  example: "EQV EQV-CSCA"
+  keywords: ["equity vol surface", "equity volatility surface", "market data"]
   since: "2.7.0"
 match: { kind: equity-vol-surface, priority: 10 }
 title: { pill: Market data · Equity volatility surface, id: $.SURFACE_ID }

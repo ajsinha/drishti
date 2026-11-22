@@ -16,6 +16,26 @@ rachana: 1.2
 sutra: irs-vanilla
 version: 3
 description: Vanilla fixed/float interest rate swap (mockup drishti-irs.png).
+doc:
+  summary: "Vanilla fixed/float interest rate swap."
+  description: >-
+    Vanilla fixed/float interest rate swap. A tutorial screen of the example pack: one page per interest rate swap, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade/IRS-48213"
+  category: "Trade"
+  tags: ["trade", "chart", "record", "table", "tabs"]
+  use-when: "You have one interest rate swap (its id, or a link from another screen) and want to read it in full: vanilla fixed/float interest rate swap."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One interest rate swap record (kind trade, productType = IRS); the page reads tradeId, counterparty, notional, direction, effectiveDate, maturityDate, fixedRate, mtm, dv01, book, legs, discountCurve."
+    sample-row: {"tradeId": "IRS-48213", "productType": "IRS", "product": "Interest rate swap", "notional": 50000000, "currency": "USD", "direction": "PAY_FIXED", "effectiveDate": "2026-10-02", "maturityDate": "2031-10-02"}
+  example: "/v/trade/IRS-48213"
+  see-also: ["netting-set", "curve", "book", "counterparty"]
+  keywords: ["trade", "interest rate swap"]
+  since: "2.7.0"
 match: { kind: trade, where: "$.productType == 'IRS' && size($.legs) == 2", priority: 10 }
 title: { pill: "Trade · Interest rate swap", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:

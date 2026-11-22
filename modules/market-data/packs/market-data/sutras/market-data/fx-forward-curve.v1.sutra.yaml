@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/fx-forward-curve/FXF-AUDUSD"
     - "FXF FXF-AUDUSD"
+  category: "Market data"
+  tags: ["fx-forward-curve", "market-data", "table"]
+  use-when: "You have one FX forward curve (its id, or a link from another screen) and want to read it in full: forward points by tenor for a pair."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One FX forward curve record (kind fx-forward-curve); the page reads CURVE_ID, PAIR, SPOT, POINTS_3M, POINTS_1Y, POINTS, FX_SPOT."
+    sample-row: {"CURVE_ID": "FXF-AUDUSD", "PAIR": "AUDUSD", "SPOT": 0.661, "POINTS_3M": 1.7, "POINTS_1Y": 6.6, "FX_SPOT": "FX-AUDUSD"}
+  example: "FXF FXF-AUDUSD"
+  see-also: ["fx-spot"]
+  keywords: ["fx forward curve", "market data"]
   since: "2.7.0"
 match: { kind: fx-forward-curve, priority: 10 }
 title: { pill: Market data · FX forward curve, id: $.CURVE_ID }

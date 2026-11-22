@@ -30,6 +30,16 @@ doc:
   examples:
   - /v/association/GWAS-RESPONSE-HX-004928
   - ASSOC GWAS-RESPONSE-HX-004928
+  category: "Genomics"
+  tags: ["association", "genomics", "record"]
+  use-when: "You have one association of a variant with a trait (its id, or a link from another screen) and want to read it in full: one association of a variant with a trait, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One association of a variant with a trait record (kind association); the page reads ASSOC_ID, TRAIT, GENE, NEG_LOG10_P, BETA, VARIANT_ID, CHROM, POS, P, SE, R2_LEAD."
+    sample-row: {"ASSOC_ID": "GWAS-RESPONSE-HX-004928", "TRAIT": "RESPONSE", "VARIANT_ID": "HX-004928", "CHROM": "7", "POS": 92703082, "GENE": "HLXK7", "P": 9.084e-29, "NEG_LOG10_P": 28.042}
+  example: "ASSOC GWAS-RESPONSE-HX-004928"
+  see-also: ["study-variant", "study-gene"]
+  keywords: ["association", "association of a variant with a trait", "genomics"]
   since: 2.9.11
 match:
   kind: association

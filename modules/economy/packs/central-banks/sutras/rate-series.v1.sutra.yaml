@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/rate-series/CBSER-FRED-DGS10"
     - "CBSER CBSER-FRED-DGS10"
+  category: "Public sector"
+  tags: ["rate-series", "public-sector", "record"]
+  use-when: "You have one central bank series (its id, or a link from another screen) and want to read it in full: A policy-rate or market series: its history over the window, the latest value, the change on the day and the year, the range."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One central bank series record (kind rate-series); the page reads SERIES_ID, TITLE, LATEST, UNIT, LATEST_DATE, CHANGE, CHANGE_1Y, HIGH, LOW, HISTORY, CENTRAL_BANK, SOURCE."
+    sample-row: {"CENTRAL_BANK": "CBANK-BOC", "CHANGE": 0.0, "CHANGE_1Y": 0.25, "CODE": "AVG.INTWO", "FREQUENCY": "Business daily", "HIGH": 2.56, "LATEST": 2.52, "LATEST_DATE": "2026-11-05"}
+  example: "CBSER CBSER-FRED-DGS10"
+  see-also: ["central-bank"]
+  keywords: ["rate series", "central bank series", "public sector"]
   since: "2.9.11"
 match: { kind: rate-series, priority: 10 }
 title: { pill: Public sector · Central bank series, id: $.SERIES_ID, with: $.TITLE }

@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: variant
 version: 1
 description: "A sequence variant: HGVS names, consequence, clinical significance and population frequencies."
+doc:
+  summary: "A sequence variant: HGVS names, consequence, clinical significance and population frequencies."
+  description: >-
+    A sequence variant: HGVS names, consequence, clinical significance and population frequencies. One page per variant, its
+    panels: allele frequency by population; evidence; annotation; how the view was built; the entities it links to. The strip
+    gives Gene, Protein change, HGVS, Consequence, Significance and dbSNP. Linked entities: gene (gene).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/variant/VRNT-APOE-E4"
+    - "VRNT VRNT-APOE-E4"
+  category: "Genomics and biology"
+  tags: ["variant", "genomics-and-biology", "table"]
+  use-when: "You have one variant (its id, or a link from another screen) and want to read it in full: A sequence variant: HGVS names, consequence, clinical significance and population frequencies."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One variant record (kind variant); the page reads variantId, geneSymbol, proteinChange, hgvsC, consequence, significance, rsid, frequencies, evidence, annotation, gene."
+    sample-row: {"variantId": "VRNT-APOE-E4", "geneSymbol": "APOE", "proteinChange": "p.Cys130Arg", "hgvsC": "c.388T>C", "genomic": "chr19:44908684 T>C", "consequence": "Missense", "significance": "Risk factor", "rsid": "rs429358"}
+  example: "VRNT VRNT-APOE-E4"
+  see-also: ["gene"]
+  keywords: ["variant", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: variant, priority: 10 }
 title: { pill: Genomics and biology · Variant, id: $.variantId }
 strip:
@@ -27,14 +50,7 @@ strip:
   - { label: Significance, bind: $.significance }
   - { label: dbSNP, bind: $.rsid }
 panels:
-  - id: frequencies
-    kind: hbar
-    title: Allele frequency by population
-    key: F2
-    rows: $.frequencies
-    label: population
-    value: af
-    fmt: pct4
+  - { use: ranked-bars@1, with: { id: frequencies, title: Allele frequency by population, key: F2, rows: $.frequencies, label: population, value: af, fmt: pct4 } }
   - id: evidence
     kind: table
     title: Evidence
@@ -45,11 +61,7 @@ panels:
       - { label: Assertion, bind: "@.assertion" }
       - { label: Review stars, bind: "@.stars", fmt: amount0 }
       - { label: Last evaluated, bind: "@.date", fmt: date }
-  - id: annotation
-    kind: kv
-    title: Annotation
-    area: right
-    rows: $.annotation
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: annotation, title: Annotation, area: right, rows: $.annotation } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.gene, 'gene')", F8: impact, F9: raw }

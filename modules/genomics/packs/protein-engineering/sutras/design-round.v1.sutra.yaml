@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/design-round/HLXK7-R8
   - DROUND HLXK7-R8
+  category: "Protein engineering"
+  tags: ["design-round", "protein-engineering", "record"]
+  use-when: "You have one design round (its id, or a link from another screen) and want to read it in full: one design round, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One design round record (kind design-round); the page reads ROUND_ID, ROUND, METHOD, BEST_ACTIVITY, MEDIAN_ACTIVITY, PROTEIN, STARTED, DESIGNS, BEST_DESIGN, TRAPPED, NOTE."
+    sample-row: {"ROUND_ID": "HLXK7-R8", "PROTEIN": "HLXK7", "ROUND": 8, "METHOD": "Final polish around the lead", "STARTED": "2026-04-20", "DESIGNS": 1500, "BEST_DESIGN": "DSG-HLXK7-R8-0901", "BEST_ACTIVITY": 16.07}
+  example: "DROUND HLXK7-R8"
+  see-also: ["protein", "design"]
+  keywords: ["design round", "protein engineering"]
   since: 2.9.11
 match:
   kind: design-round

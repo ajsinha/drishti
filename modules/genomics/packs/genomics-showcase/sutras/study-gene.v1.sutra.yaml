@@ -29,6 +29,15 @@ doc:
   examples:
   - /v/study-gene/HLXK7
   - SGENE HLXK7
+  category: "Genomics"
+  tags: ["study-gene", "genomics", "record"]
+  use-when: "You have one study gene (its id, or a link from another screen) and want to read it in full: one study gene, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One study gene record (kind study-gene); the page reads GENE, CHROM, ROLE, PROTEIN_LENGTH, ALTERED_FRACTION, START, END, STRAND, DRIVER, VARIANTS, ALTERED_SAMPLES."
+    sample-row: {"GENE": "HLXK7", "CHROM": "7", "START": 92648590, "END": 92745191, "STRAND": "+", "ROLE": "kinase (drug target)", "PROTEIN_LENGTH": 312, "VARIANTS": 220}
+  example: "SGENE HLXK7"
+  keywords: ["study gene", "genomics"]
   since: 2.9.11
 match:
   kind: study-gene

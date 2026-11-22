@@ -29,6 +29,16 @@ doc:
   examples:
     - "LEIM APLEUS66XXX"
     - "LEIM US0378331005"
+  category: "GLEIF"
+  tags: ["lei-mapping", "gleif", "record"]
+  use-when: "You have one identifier (its id, or a link from another screen) and want to read it in full: an identifier (ISIN, BIC or MIC) and the LEI it maps to, with the entity's key facts."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One identifier record (kind lei-mapping); the page reads IDENTIFIER, ENTITY_NAME, TYPE, ENTITY_LEI, COUNTRY, LEI_GROUP, ISIN_COUNT, MAPPING_FILE."
+    sample-row: {"IDENTIFIER": "WABTUS3WXXX", "TYPE": "BIC", "ENTITY_LEI": "06BTX5UWZD0GQ5N5Y745", "COUNTRY": "US", "LEI_GROUP": "06BTX5UWZD0GQ5N5Y745", "MAPPING_FILE": "LEI-BIC-20260925.zip"}
+  example: "LEIM APLEUS66XXX"
+  see-also: ["lei-entity", "lei-group", "lei-country"]
+  keywords: ["lei mapping", "identifier", "gleif"]
   since: "2.7.0"
 match: { kind: lei-mapping, priority: 10 }
 title: { pill: GLEIF · Identifier, id: $.IDENTIFIER, with: $.ENTITY_NAME }

@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/protein/HLXK7
   - PROT HLXK7
+  category: "Protein engineering"
+  tags: ["protein", "protein-engineering", "record"]
+  use-when: "You have one protein (its id, or a link from another screen) and want to read it in full: one protein, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One protein record (kind protein); the page reads PROTEIN, NAME, LENGTH, FAMILY, DESIGN_ROUNDS, GENE, SEQUENCE, ACTIVE_SITE."
+    sample-row: {"PROTEIN": "HLXK7", "GENE": "HLXK7", "NAME": "Helixase-7", "LENGTH": 312, "FAMILY": "Helicase-like kinase", "DESIGN_ROUNDS": 8}
+  example: "PROT HLXK7"
+  see-also: ["study-gene"]
+  keywords: ["protein", "protein engineering"]
   since: 2.9.11
 match:
   kind: protein

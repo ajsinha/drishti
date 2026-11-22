@@ -17,6 +17,27 @@ rachana: 1.2
 sutra: pathway
 version: 1
 description: A biological pathway and the genes that take part in it.
+doc:
+  summary: "A biological pathway and the genes that take part in it."
+  description: >-
+    A biological pathway and the genes that take part in it. One page per pathway, its panels: member genes; how the view was
+    built. The strip gives Pathway, Category and Genes.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/pathway/PWY-HR"
+    - "PWY PWY-HR"
+  category: "Genomics and biology"
+  tags: ["pathway", "genomics-and-biology", "table"]
+  use-when: "You have one pathway (its id, or a link from another screen) and want to read it in full: A biological pathway and the genes that take part in it."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One pathway record (kind pathway); the page reads pathwayId, name, category, geneCount, members."
+    sample-row: {"pathwayId": "PWY-HR", "name": "Homologous recombination repair", "category": "DNA repair", "geneCount": 2}
+  example: "PWY PWY-HR"
+  keywords: ["pathway", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: pathway, priority: 10 }
 title: { pill: Genomics and biology · Pathway, id: $.pathwayId }
 strip:
@@ -33,5 +54,5 @@ panels:
       - { label: Gene, bind: "@.symbol" }
       - { label: Role, bind: "@.role" }
       - { label: Location, bind: "@.location" }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

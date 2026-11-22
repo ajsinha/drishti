@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/press-release/PREL-FED-0224349908"
     - "PREL PREL-FED-0224349908"
+  category: "Public sector"
+  tags: ["press-release", "public-sector", "record"]
+  use-when: "You have one press release (its id, or a link from another screen) and want to read it in full: A press release: the title, the publisher, when it was published, its category, the summary and the original's address."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One press release record (kind press-release); the page reads RELEASE_ID, TITLE, PUBLISHER_NAME, PUBLISHED, CATEGORY, COUNTRY, INTERNAL_ONLY, SUMMARY, URL, RELEASE_SOURCE."
+    sample-row: {"CATEGORY": "Enforcement Actions", "COUNTRY": "USA", "DATE": "2026-11-05", "PUBLISHED": "2026-11-05T16:00:00Z", "PUBLISHER_NAME": "Federal Reserve Board", "PUBLISHER_TYPE": "central bank", "RELEASE_ID": "PREL-FED-0224349908", "RELEASE_SOURCE": "PRESS-FED"}
+  example: "PREL PREL-FED-0224349908"
+  see-also: ["release-source"]
+  keywords: ["press release", "public sector"]
   since: "2.9.11"
 match: { kind: press-release, priority: 10 }
 title: { pill: Public sector · Press release, id: $.RELEASE_ID, with: $.TITLE }

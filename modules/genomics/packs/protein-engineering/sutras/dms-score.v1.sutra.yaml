@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/dms-score/HLXK7:177:A:ACTIVITY
   - DMS HLXK7:177:A:ACTIVITY
+  category: "Protein engineering"
+  tags: ["dms-score", "protein-engineering", "record"]
+  use-when: "You have one deep mutational scan score (its id, or a link from another screen) and want to read it in full: one deep mutational scan score, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One deep mutational scan score record (kind dms-score); the page reads SCORE_ID, MUTATION, ASSAY, SCORE, SE, PROTEIN, POS, AA_REF, AA, REPLICATES."
+    sample-row: {"SCORE_ID": "HLXK7:177:A:ACTIVITY", "PROTEIN": "HLXK7", "POS": 177, "AA_REF": "H", "AA": "A", "MUTATION": "H177A", "ASSAY": "activity", "SCORE": -3.2}
+  example: "DMS HLXK7:177:A:ACTIVITY"
+  see-also: ["protein"]
+  keywords: ["dms score", "deep mutational scan score", "protein engineering"]
   since: 2.9.11
 match:
   kind: dms-score

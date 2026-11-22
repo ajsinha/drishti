@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/calendar/CAL-EUTA"
     - "CAL CAL-EUTA"
+  category: "Market data"
+  tags: ["calendar", "market-data", "table"]
+  use-when: "You have one holiday calendar (its id, or a link from another screen) and want to read it in full: business-day calendar (USNY, TARGET, GBLO, JPTO…)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One holiday calendar record (kind calendar); the page reads CALENDAR_ID, NAME, HOLIDAYS_2026, HOLIDAYS_2027, NEXT_HOLIDAY, NEXT_HOLIDAY_DATE, HOLIDAYS."
+    sample-row: {"CALENDAR_ID": "CAL-EUTA", "NAME": "TARGET2", "HOLIDAYS_2026": 5, "HOLIDAYS_2027": 3, "NEXT_HOLIDAY": "Christmas Day", "NEXT_HOLIDAY_DATE": "2026-12-25"}
+  example: "CAL CAL-EUTA"
+  keywords: ["calendar", "holiday calendar", "market data"]
   since: "2.7.0"
 match: { kind: calendar, priority: 10 }
 title: { pill: Market data · Holiday calendar, id: $.CALENDAR_ID }

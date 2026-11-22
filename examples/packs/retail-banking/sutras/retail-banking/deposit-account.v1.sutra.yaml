@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: deposit-account
 version: 1
 description: "A current or savings account: balance, rate, recent transactions and balance history."
+doc:
+  summary: "A current or savings account: balance, rate, recent transactions and balance history."
+  description: >-
+    A current or savings account: balance, rate, recent transactions and balance history. One page per deposit account, its
+    panels: recent transactions; month-end balance; how the view was built; the entities it links to. The strip gives Type,
+    Holder, Balance, Currency, Rate and Status. Linked entities: holder (customer).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/deposit-account/ACCT-100231-CUR"
+    - "ACCT ACCT-100231-CUR"
+  category: "Retail banking"
+  tags: ["deposit-account", "retail-banking", "schedule"]
+  use-when: "You have one deposit account (its id, or a link from another screen) and want to read it in full: A current or savings account: balance, rate, recent transactions and balance history."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One deposit account record (kind deposit-account); the page reads accountId, type, holderName, balance, currency, rate, status, transactions, history, customer."
+    sample-row: {"accountId": "ACCT-100231-CUR", "type": "Current account", "holderName": "Priya Sharma", "balance": 6555.09, "currency": "USD", "rate": 0.001, "status": "Active", "customer": "CUST-100231"}
+  example: "ACCT ACCT-100231-CUR"
+  see-also: ["customer"]
+  keywords: ["deposit account", "retail banking"]
+  since: "2.7.0"
 match: { kind: deposit-account, priority: 10 }
 title: { pill: Retail banking · Deposit account, id: $.accountId }
 strip:
@@ -37,14 +60,7 @@ panels:
       - { label: Description, bind: "@.description" }
       - { label: Amount, bind: "@.amount", fmt: signed2, tone: sign }
       - { label: Balance, bind: "@.balance", fmt: amount2 }
-  - id: history
-    kind: line
-    title: Month-end balance
-    area: right
-    rows: $.history
-    x: month
-    y: balance
-    fmt: compact
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: history, title: Month-end balance, area: right, rows: $.history, x: month, y: balance, fmt: compact } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.customer, 'customer')", F8: impact, F9: raw }

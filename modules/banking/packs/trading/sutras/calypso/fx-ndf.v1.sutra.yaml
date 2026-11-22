@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000013"
     - "TRD CLY-3000013"
+  category: "FX"
+  tags: ["trade", "fx"]
+  use-when: "You have one non-deliverable forward (its id, or a link from another screen) and want to read it in full: cash-settled forward in USD on a restricted currency."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One non-deliverable forward record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = FX_NDF); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-09-10", "INPUT_DATE": "2026-09-10", "TRADE_ID": "CLY-3000013", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000013"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "non-deliverable forward", "fx"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'FX_NDF'", priority: 10 }
 title: { pill: "FX · Non-deliverable forward", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

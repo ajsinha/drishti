@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/pathway-gene/PWG-0001
   - PATHWAY PWG-0001
+  category: "Genomics"
+  tags: ["pathway-gene", "genomics", "record"]
+  use-when: "You have one pathway membership (its id, or a link from another screen) and want to read it in full: one pathway membership, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One pathway membership record (kind pathway-gene); the page reads PATHWAY_GENE_ID, PATHWAY, GENE, ROLE_IN_PATHWAY."
+    sample-row: {"PATHWAY_GENE_ID": "PWG-0001", "PATHWAY": "Growth signalling", "GENE": "HLXAN97", "ROLE_IN_PATHWAY": "regulator"}
+  example: "PATHWAY PWG-0001"
+  see-also: ["study-gene"]
+  keywords: ["pathway gene", "pathway membership", "genomics"]
   since: 2.9.11
 match:
   kind: pathway-gene

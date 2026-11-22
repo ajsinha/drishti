@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/counterparty-group/GRP-ALDERSHOT"
     - "GRP GRP-ALDERSHOT"
+  category: "Counterparty and legal"
+  tags: ["counterparty-group", "counterparty-and-legal", "table"]
+  use-when: "You have one counterparty group (its id, or a link from another screen) and want to read it in full: economic group of related counterparties (obligor group)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One counterparty group record (kind counterparty-group); the page reads GROUP_ID, NAME, MEMBERS, LIMIT, UTILISATION."
+    sample-row: {"GROUP_ID": "GRP-ALDERSHOT", "NAME": "Aldershot Pension Trust", "LIMIT": 337000000.0, "UTILISATION": 0.6671}
+  example: "GRP GRP-ALDERSHOT"
+  keywords: ["counterparty group", "counterparty and legal"]
   since: "2.7.0"
 match: { kind: counterparty-group, priority: 10 }
 title: { pill: Counterparty and legal · Counterparty group, id: $.GROUP_ID }

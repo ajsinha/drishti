@@ -31,6 +31,15 @@ doc:
   examples:
     - "/v/lei-group/ALL"
     - "LEIG ALL"
+  category: "GLEIF"
+  tags: ["lei-group", "gleif", "table"]
+  use-when: "You have one search and browse (its id, or a link from another screen) and want to read it in full: search the legal entities by name or LEI, and browse every ownership group (a click opens the group's summary beside)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One search and browse record (kind lei-group, GROUP_ID = ALL); the page reads GROUP_ID, NAME, MEMBERS, GROUPS, COUNTRIES, LAPSED, LATE_RENEWALS, GROUP_ROWS, BY_SEGMENT, BY_COUNTRY, PROVENANCE."
+  example: "LEIG ALL"
+  see-also: ["lei-country", "lei-entity"]
+  keywords: ["lei group", "search and browse", "gleif"]
   since: "2.7.0"
 match: { kind: lei-group, where: "$.GROUP_ID == 'ALL'", priority: 20 }
 title: { pill: GLEIF · Search and browse, id: $.GROUP_ID, with: $.NAME }

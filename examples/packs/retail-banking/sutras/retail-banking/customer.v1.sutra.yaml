@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: customer
 version: 1
 description: "A retail customer: segment, products held, KYC risk and total relationship."
+doc:
+  summary: "A retail customer: segment, products held, KYC risk and total relationship."
+  description: >-
+    A retail customer: segment, products held, KYC risk and total relationship. One page per customer, its panels: products
+    held; profile; how the view was built; the entities it links to. The strip gives Customer, Segment, Deposits, Lending, KYC
+    risk and Customer since. Linked entities: home branch (branch).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/customer/CUST-100231"
+    - "CUST CUST-100231"
+  category: "Retail banking"
+  tags: ["customer", "retail-banking", "table"]
+  use-when: "You have one customer (its id, or a link from another screen) and want to read it in full: A retail customer: segment, products held, KYC risk and total relationship."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One customer record (kind customer); the page reads customerId, name, segment, totalDeposits, totalLending, kycRisk, since, products, profile, branch."
+    sample-row: {"customerId": "CUST-100231", "name": "Priya Sharma", "segment": "Mass market", "totalDeposits": 6555.09, "totalLending": 560718.0, "kycRisk": "Medium", "since": "2008-04-23", "branch": "BRN-NY-5AVE"}
+  example: "CUST CUST-100231"
+  see-also: ["branch"]
+  keywords: ["customer", "retail banking"]
+  since: "2.7.0"
 match: { kind: customer, priority: 10 }
 title: { pill: Retail banking · Customer, id: $.customerId }
 strip:
@@ -36,12 +59,7 @@ panels:
       - { label: Product, bind: "@.product" }
       - { label: Account, bind: "@.id" }
       - { label: Balance, bind: "@.balance", fmt: signed2, tone: sign, total: true }
-  - id: profile
-    kind: kv
-    title: Profile
-    key: F3
-    area: right
-    rows: $.profile
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: profile, title: Profile, key: F3, area: right, rows: $.profile } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.branch, 'branch')", F8: impact, F9: raw }

@@ -32,6 +32,16 @@ doc:
   examples:
     - "/v/jurisdiction/JUR-ABW"
     - "JUR JUR-ABW"
+  category: "Politics and society"
+  tags: ["jurisdiction", "politics-and-society", "map", "table"]
+  use-when: "You have one jurisdiction (its id, or a link from another screen) and want to read it in full: A country:."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One jurisdiction record (kind jurisdiction); the page reads JURISDICTION_ID, NAME, CAPITAL, GOVERNMENT_TYPE, POPULATION_M, AREA_KM2, CURRENCY, ISO3, LEGISLATURE, INDICATORS, PROFILE, PARTIES_LISTED."
+    sample-row: {"JURISDICTION_ID": "JUR-ABW", "NAME": "Aruba", "ISO3": "ABW", "OFFICIAL_NAME": "Country of Aruba", "CAPITAL": "Oranjestad", "REGION_NAME": "Latin America & Caribbean", "POPULATION_M": 0.108785, "AREA_KM2": 180.0}
+  example: "JUR JUR-ABW"
+  see-also: ["region"]
+  keywords: ["jurisdiction", "politics and society"]
   since: "2.7.0"
 match: { kind: jurisdiction, priority: 10 }
 title: { pill: Politics and society · Jurisdiction, id: $.JURISDICTION_ID }

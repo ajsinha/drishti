@@ -28,6 +28,16 @@ doc:
   examples:
   - /v/variant-call/CALL-000001
   - VCALL CALL-000001
+  category: "Genomics"
+  tags: ["variant-call", "genomics", "record"]
+  use-when: "You have one variant call (its id, or a link from another screen) and want to read it in full: one variant call, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One variant call record (kind variant-call); the page reads CALL_ID, SAMPLE_ID, VARIANT_ID, GENOTYPE, VAF, GENE, DEPTH."
+    sample-row: {"CALL_ID": "CALL-000001", "SAMPLE_ID": "S0001", "VARIANT_ID": "HX-000413", "GENE": "HLXQW89", "GENOTYPE": "0/1", "VAF": 0.271, "DEPTH": 185}
+  example: "VCALL CALL-000001"
+  see-also: ["study-sample", "study-variant", "study-gene"]
+  keywords: ["variant call", "genomics"]
   since: 2.9.11
 match:
   kind: variant-call

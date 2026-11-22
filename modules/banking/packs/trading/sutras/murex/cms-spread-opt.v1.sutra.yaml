@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/MX-20000121"
     - "TRD MX-20000121"
+  category: "Rates"
+  tags: ["trade", "rates"]
+  use-when: "You have one CMS spread option (its id, or a link from another screen) and want to read it in full: option on the spread between two CMS rates (e.g. 10Y–2Y)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One CMS spread option record (kind trade, SOURCE_SYSTEM = MUREX, PRODUCT_TYPE = CMS_SPREAD_OPT); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-03-02", "INPUT_DATE": "2026-03-02", "TRADE_ID": "MX-20000121", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD MX-20000121"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "cms spread option", "rates"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'CMS_SPREAD_OPT'", priority: 10 }
 title: { pill: "Rates · CMS spread option", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

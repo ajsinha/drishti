@@ -31,6 +31,14 @@ doc:
   examples:
     - "/v/sic-sector/3674"
     - "SIC 6021"
+  category: "US equities"
+  tags: ["sic-sector", "us-equities"]
+  use-when: "You have one SIC sector (computed) (its id, or a link from another screen) and want to read it in full: the companies of one SIC code ranked by revenue, with a click opening one beside the table."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One SIC sector (computed) record (kind sic-sector); the page reads SIC, DESCRIPTION, SECTOR, COMPANIES, REVENUE, NET_INCOME, NET_MARGIN, NON_USD, ROWS, BY_REVENUE, PROVENANCE."
+  example: "SIC 6021"
+  keywords: ["sic sector", "sic sector (computed)", "us equities"]
   since: "2.7.0"
 match: { kind: sic-sector, priority: 10 }
 title: { pill: US equities · SIC sector (computed), id: $.SIC, with: $.DESCRIPTION }

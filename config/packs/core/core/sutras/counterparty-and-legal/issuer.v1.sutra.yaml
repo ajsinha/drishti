@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/issuer/ISS-BUND"
     - "ISS ISS-BUND"
+  category: "Counterparty and legal"
+  tags: ["issuer", "counterparty-and-legal", "table"]
+  use-when: "You have one issuer (its id, or a link from another screen) and want to read it in full: issuer of bonds and reference entity for CDS."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One issuer record (kind issuer); the page reads ISSUER_ID, NAME, RATING, SECTOR, COUNTRY, BONDS, CREDIT_CURVE."
+    sample-row: {"ISSUER_ID": "ISS-BUND", "NAME": "Federal Republic of Germany", "RATING": "AAA", "SECTOR": "Sovereign", "COUNTRY": "DE", "CREDIT_CURVE": "CDS-BUND", "LEI": "549300PJ21SGLK7KWI16"}
+  example: "ISS ISS-BUND"
+  see-also: ["credit-curve"]
+  keywords: ["issuer", "counterparty and legal"]
   since: "2.7.0"
 match: { kind: issuer, priority: 10 }
 title: { pill: Counterparty and legal · Issuer, id: $.ISSUER_ID }

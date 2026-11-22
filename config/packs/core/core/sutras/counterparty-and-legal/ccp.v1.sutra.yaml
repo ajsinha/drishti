@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/ccp/CCP-CME"
     - "CCP CCP-CME"
+  category: "Counterparty and legal"
+  tags: ["ccp", "counterparty-and-legal", "table"]
+  use-when: "You have one central counterparty (its id, or a link from another screen) and want to read it in full: A clearing house with its default fund and margin model."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One central counterparty record (kind ccp); the page reads CCP_ID, NAME, DEFAULT_FUND, IM_POSTED, MARGIN_MODEL, ACCOUNTS."
+    sample-row: {"CCP_ID": "CCP-CME", "NAME": "CME Clearing", "DEFAULT_FUND": 720000000.0, "IM_POSTED": 43200000, "MARGIN_MODEL": "SPAN 2"}
+  example: "CCP CCP-CME"
+  keywords: ["ccp", "central counterparty", "counterparty and legal"]
   since: "2.7.0"
 match: { kind: ccp, priority: 10 }
 title: { pill: Counterparty and legal · Central counterparty, id: $.CCP_ID }

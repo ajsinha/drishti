@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/repo-curve/REPO-AUD"
     - "REPO REPO-AUD"
+  category: "Market data"
+  tags: ["repo-curve", "market-data", "table"]
+  use-when: "You have one repo curve (its id, or a link from another screen) and want to read it in full: general-collateral or specials repo rates by term."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One repo curve record (kind repo-curve); the page reads CURVE_ID, CURRENCY, COLLATERAL, OVERNIGHT, AS_OF, POINTS."
+    sample-row: {"CURVE_ID": "REPO-AUD", "CURRENCY": "AUD", "COLLATERAL": "General collateral (government)", "OVERNIGHT": 0.0352, "AS_OF": "2026-09-30"}
+  example: "REPO REPO-AUD"
+  keywords: ["repo curve", "market data"]
   since: "2.7.0"
 match: { kind: repo-curve, priority: 10 }
 title: { pill: Market data · Repo curve, id: $.CURVE_ID }

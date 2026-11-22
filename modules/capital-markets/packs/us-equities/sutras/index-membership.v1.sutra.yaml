@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/index-membership/SP500"
     - "IDX DJIA"
+  category: "US equities"
+  tags: ["index-membership", "us-equities", "table"]
+  use-when: "You have one index (its id, or a link from another screen) and want to read it in full: an index's members, filterable; a click opens the member's key facts and financials beside the table."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One index record (kind index-membership); the page reads INDEX, NAME, MEMBERS, ROWS, PROVENANCE."
+    sample-row: {"INDEX": "DJIA", "NAME": "Dow Jones Industrial Average", "MEMBERS": 30}
+  example: "IDX DJIA"
+  see-also: ["fund"]
+  keywords: ["index membership", "index", "us equities"]
   since: "2.7.0"
 match: { kind: index-membership, priority: 10 }
 title: { pill: US equities · Index, id: $.INDEX, with: $.NAME }

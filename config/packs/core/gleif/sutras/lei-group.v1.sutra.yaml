@@ -33,6 +33,15 @@ doc:
   examples:
     - "/v/lei-group/8I5DZWZKVSZI1NUHU748"
     - "LEIG MLU0ZO3ML4LN2LL2TL39"
+  category: "GLEIF"
+  tags: ["lei-group", "gleif", "record", "table"]
+  use-when: "You have one ownership group (computed) (its id, or a link from another screen) and want to read it in full: an ownership group computed from the entities: the ultimate parent's tree (a tree table), its members (a click opens one beside), counts by country and legal form."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One ownership group (computed) record (kind lei-group); the page reads GROUP_ID, NAME, MEMBERS, MEMBERS_IN_GLEIF, LEVELS, COUNTRIES, LATE_RENEWALS, LEI_COUNTRY, COUNTRY_NAME, TREE, ROWS, ENTITY_LEI."
+  example: "LEIG MLU0ZO3ML4LN2LL2TL39"
+  see-also: ["lei-entity", "lei-country", "us-company"]
+  keywords: ["lei group", "ownership group (computed)", "gleif"]
   since: "2.7.0"
 match: { kind: lei-group, where: "$.GROUP_ID != 'ALL'", priority: 10 }
 title: { pill: GLEIF · Ownership group (computed), id: $.GROUP_ID, with: $.NAME }

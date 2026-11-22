@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/oecd-country/OECD-CAN"
     - "OECD OECD-CAN"
+  category: "Public sector"
+  tags: ["oecd-country", "public-sector", "table"]
+  use-when: "You have one OECD country (its id, or a link from another screen) and want to read it in full: an OECD member's cycle, jobs, prices and growth: the latest of each measure, the members on a map by inflation, each series a click away."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One OECD country record (kind oecd-country); the page reads COUNTRY_ID, COUNTRY_NAME, LEADING_INDICATOR, UNEMPLOYMENT, INFLATION, GDP_GROWTH, INFLATION_PERIOD, MEASURES, ISO3."
+    sample-row: {"COUNTRY_ID": "OECD-AUS", "COUNTRY_NAME": "Australia", "GDP_GROWTH": 0.419502713, "GDP_GROWTH_PERIOD": "2026-Q2", "INFLATION": 4.34, "INFLATION_PERIOD": "2026-09", "ISO3": "AUS", "LEADING_INDICATOR": 99.9505}
+  example: "OECD OECD-CAN"
+  see-also: ["oecd-series"]
+  keywords: ["oecd country", "public sector"]
   since: "2.9.11"
 match: { kind: oecd-country, priority: 10 }
 title: { pill: Public sector · OECD country, id: $.COUNTRY_ID, with: $.COUNTRY_NAME }
