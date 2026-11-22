@@ -778,3 +778,32 @@ computed from a double keeps its point (`125.0`, was `125`), and a division of e
 conditional, the same tree as `c ? a : b`), no longer refused; `ShippedInRachanaTest` holds that the printed text reads back as itself
 (1.2's printer writes `where=`, `and` and `a if c else b`). `LanguageLevelGuardTest` no longer exists (deleted with the level setting in
 `g4/finish`). Not run here: the console's Python suites (their conftest refuses the stale `.dmod` packages of the worktree).
+
+## Gate 4 fixes: F9 (T3–T11), on `g4/tools-adopt` from `wip/g4-rehearsal-rx` (2026-11-21)
+
+Owner decision on Fable's F9: Drishti keeps no copy of anything Drishti Tools provides. Tools 1.1.0 (the `v1.1.0` tag) is the pin (`drishti.tools.version`);
+the build is offline against a scratch repository with that tag installed. The Python xlsx writers (`drishti-console/core/export.py`, `tools/sizing_planner.py`)
+stay by the owner's word; `ToolsAdoptionGuardTest.noJavaCodeRunsAPythonWorkbookWriter` holds that no Java main source names or runs them (only two messages in
+`CapacityWorkbook` and `CapacityPlanner` name the generator), and the server writes every workbook with `tools-xlsx`.
+
+| Row | Result |
+|---|---|
+| T3 hashes | Done. Every `MessageDigest.getInstance` in 75 files (main and test) is `Hashes` (`sha256Hex`, `of`, `digest` for streams and `SHA-1` where a stored identity needs it); the `NoSuchAlgorithmException` catches that could no longer happen are gone; `MessageDigest.isEqual` (constant-time compare) stays. Rule: `ArchitectureRulesTest.noMessageDigestOutsideTools`, text guard `ToolsAdoptionGuardTest.noDigestIsMadeByHand` (tests too). Same bytes: the stored identities and the four VaR/ES goldens are unchanged. |
+| T4 canonical JSON | Done in `RunSources.canonical`, `QuestionNormaliser` (`canonical`, `text`), `MqParser` (`hash`, `json`) and `reactive/Results.hash`: Jackson turns the value into plain data first, then `CanonicalJson` writes it (same text as `ORDER_MAP_ENTRIES_BY_KEYS` for plain data). Not changed: `net/Digest.hash` writes a record, whose property order is the declaration order, not sorted: a different job, and a node's gossiped hash must not change between builds. |
+| T5 CSV | Done. `plugin/file/CsvReader` became `CsvRows` (the typing of a cell into a `DataNode` only; records are read by `tools-csv`, which also reads a quoted line break); `Feeds.csv` reads through `tools-csv`; `dist/CsvWriter` became `ExportCsv` (lays an `ExportDoc` out as records; BOM, formula guard and quoting are `tools-csv`); the four hand-written quoting helpers (`PivotExport.q`, `VarCaptures.cell`, `SqlController.cell`, `SearchController.cell`) call `CsvWriter.quote`. A newline inside a field of the VaR capture export is now quoted (it was not). |
+| T6 temp files | Done. `TempFiles` (266 lines) is the server's policy on `tools-files` `TempFolder` (the base from `drishti.tmp-dir`, the JVM-flag warning, `java.io.tmpdir`, the health report); the folder, marker, clean-up hook, usage count, stale listing and `deleteTree` are the tools'. The disabled `removeStale` and the legacy-marker are gone. `JvmTempDir` stays: it reads the JVM's own temp folder and sweeps unpacked native libraries, which no tools module does (see the tools gaps). |
+| T7 `RowFeed` | Already done by the Lake step (Drishti's copy was replaced by the product's); now held: `ArchitectureRulesTest.commonDoesNotDependOnTheLake` and the no-copy rule. One unrelated nested interface of the same name in `DuckDbExecutor` is `StagedRows`. |
+| T8 calendar | Done. `common/BusinessCalendar` and `rachana/HostCalendars` are deleted; Rachana Core's `BusinessCalendar` is a `Calendars.Calendar`, so the adapter had no job. `BusinessCalendarTest` (holidays of the five centres, joint calendars, observed days) now runs on Rachana's class. The two sources were equal rule for rule (a diff of the two files). |
+| T9 HTTP clients | Done. `DrishtiTools.httpBuilder` is the one place an `HttpClient` starts, with the proxy (`ProxySettings`) and the TLS material (`TlsHttp`) applied. The seven that bypassed it (`JavaLibraries`, `BridgeClient`, `PackRegistryClient`, `ReportService`, `OidcConfiguration`, the feed connector's default client, `MinioServer`) use it, as do the eleven that applied both by hand (notify, the four AI clients, the five connectors) and the peer client (no proxy, the node's mutual TLS). Rule: `ArchitectureRulesTest.httpClientsStartInDrishtiTools`; text guard on main sources. Test: `OutboundClientsHonourSettingsTest` (a call through the fake proxy, the TLS context on the client, the bridge and registry clients' proxy selector); the per-connector `*ProxyTest`, `*TlsTest`, `AiProxyTest`, `ProviderTlsTest` pass. A client built for a target not known at construction (registry, reports, OIDC, bridge, libraries) resolves the proxy for an `https://` target. |
+| T10 guards | Done where Drishti duplicated the kit: `LicenseHeaderTest` uses the kit's `HeaderAndLineCap.withoutHeader`, `SourceFileSizeTest` its `overCap` and holds `tools/code_cap.py` equal to the kit's cap. Not adopted: `kernel-api ApiSurfaceTest` (it checks a hand-named value-class list and its own baseline format; the kit's `ApiSurface` writes another format, so adopting it is a baseline rewrite for a later release). |
+| T11 zips | Not done as written: `tools-codec` has no `Zips.write` (see the tools gaps). The four archives written with the JDK stay (`Dmod`, `PackFragment`, `ModulePublicController`, `ExportService`), named in `ArchitectureRulesTest.zipWritingOnlyWhereItIsToday`: the list only shrinks, and a fifth writer fails the build. |
+
+### Tools gaps (for a tools 1.2.0)
+
+- `tools-codec` has no `Zips` (a deterministic and a plain zip writer from entries); T11 waits on it.
+- `tools-net` has no client factory (`HttpClients.builder(proxy, tls)`): `DrishtiTools.httpBuilder` is Drishti's three lines; the guard keeps it the only place.
+- `tools-files` has no JVM-temp-folder helper (the `-Djava.io.tmpdir` check and the native-copy sweep of `JvmTempDir`).
+- `tools-guards` kit: the header mark is fixed to the owner's name and its window is 20 lines; a configurable mark would let the branding rule use it.
+
+### Proof
+
