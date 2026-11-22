@@ -93,7 +93,28 @@ class FormResultsParityTest {
             assertThat(live.path("page").path("total").asLong()).as("matched: " + q).isEqualTo(searched.path("matched").asLong());
             assertThat(ids(live.path("page"))).as("rows: " + q).containsExactlyElementsOf(want);
             assertThat(live.path("search").path("columns")).as("columns: " + q).isEqualTo(searched.path("columns"));
+            assertThat(titles(live.path("page"))).as("titles: " + q).isEqualTo(titlesOf(searched));
         }
+    }
+
+    /** Each row's title as the search gives it (the id when it has none). */
+    static java.util.Map<String, String> titlesOf(JsonNode searched) {
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        searched.path("rows").forEach(r -> out.put(r.path("ref").path("id").asText(),
+                r.hasNonNull("title") ? r.path("title").asText() : r.path("ref").path("id").asText()));
+        return out;
+    }
+
+    /** Each row's title as the FORM result's table keeps it (LS1: the Title column; the id when it says no more). */
+    static java.util.Map<String, String> titles(JsonNode page) {
+        List<String> cols = new ArrayList<>();
+        page.path("columns").forEach(c -> cols.add(c.isTextual() ? c.asText() : c.path("name").asText()));
+        int id = cols.indexOf(SearchFilter.KEY);
+        int t = cols.indexOf(com.ash.drishti.server.live.KindSnapshot.TITLE);
+        assertThat(t).as("a FORM result's table has its Title column").isGreaterThanOrEqualTo(0);
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        page.path("values").forEach(v -> out.put(v.get(id).asText(), v.get(t).isNull() ? v.get(id).asText() : v.get(t).asText()));
+        return out;
     }
 
     @Test

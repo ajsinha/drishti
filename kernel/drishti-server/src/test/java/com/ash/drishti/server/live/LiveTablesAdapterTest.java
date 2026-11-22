@@ -356,6 +356,7 @@ class LiveTablesAdapterTest {
         b.docs.add(trade("T1", 7, "B1", null));
         List<Map<String, Object>> audit = new CopyOnWriteArrayList<>();
         List<JsonNode> sent = new CopyOnWriteArrayList<>();
+        Map<String, Map<String, Object>> kept = new java.util.concurrent.ConcurrentHashMap<>();
         String[] off = {"editing is off on this server (edit.enabled in config/edit/edit.yaml)"};
         Map<String, LiveTableSpec> specs = new LinkedHashMap<>();
         DrishtiAuthoriser.Rights rights = new DrishtiAuthoriser.Rights() {
@@ -376,8 +377,9 @@ class LiveTablesAdapterTest {
         lt.authoriser(new DrishtiAuthoriser(specs::get, rights)).audit(audit::add)
                 .sink(new DrishtiChangeSink(specs::get, (p, body) -> {
                     sent.add(body);
-                    return List.of(Map.of("id", "chg-1", "state", "awaiting", "needed", 1));
-                }));
+                    kept.put(body.path("id").asText(), Map.of("id", body.path("id").asText(), "state", "awaiting", "needed", 1, "by", p.user()));
+                    return List.of(Map.of("id", body.path("id").asText(), "state", "awaiting", "needed", 1));
+                }, id -> java.util.Optional.ofNullable(kept.get(id))));
         LiveTableSpec spec = LiveTableSpec.read(EDITABLE, "trade.live.yaml", PROFILE, f -> true);
         specs.put("trade", spec);
         lt.declare(spec);
@@ -412,6 +414,29 @@ class LiveTablesAdapterTest {
         // the same change id again: its first answer, never handed over twice
         assertThat(DrishtiChangeSink.as(ann, () -> lt.write("trade", change, ann))).containsEntry("state", "held");
         assertThat(sent).hasSize(1);
+        // the write-back keeps Rachana's change id: a repeat is answered from its durable record (another engine, a restart), only to its maker
+        LiveTables again = new LiveTables(new LiveTables.Resolver() {
+            public SnapshotSource snapshot(String kind) { return new KindSnapshot(kind, b, List.of("TRADE_ID")); }
+            public LiveStream stream(String kind) { return new KindStream(kind, b, List.of("TRADE_ID")); }
+        }, LiveTables.Options.DEFAULTS.withUpkeepMs(0), Clock.systemUTC());
+        again.authoriser(new DrishtiAuthoriser(specs::get, rights)).audit(audit::add).sink(new DrishtiChangeSink(specs::get, (p, body) -> {
+            sent.add(body);
+            return List.of(Map.of("id", body.path("id").asText(), "state", "queued"));
+        }, id -> java.util.Optional.ofNullable(kept.get(id))));
+        again.declare(spec);
+        assertThat(DrishtiChangeSink.as(ann, () -> again.write("trade", change, ann))).containsEntry("change", "01JCHANGE0001")
+                .containsEntry("state", "held");
+        assertThat(sent).hasSize(1);
+        Principal kim = new Principal("kim", List.of("trader"));
+        assertThatThrownBy(() -> DrishtiChangeSink.as(kim, () -> again.write("trade", change, kim))).isInstanceOf(ProtocolError.class)
+                .hasMessageContaining("another's");
+        // the caller reaches the sink: a write the mount did not mark as the person's is refused, never submitted as someone else
+        assertThat(again.write("trade", q("id", "01JCHANGE0009", "key", List.of("T1"), "basedOn", 7L, "set", Map.of("BOOK", "B3")), ann))
+                .containsEntry("state", "refused");
+        assertThat(sent).hasSize(1);
+        // the audit records carry the caller and the change id
+        assertThat(audit).anyMatch(e -> "write-held".equals(e.get("event")) && e.get("caller") == ann && "01JCHANGE0001".equals(e.get("change")));
+        again.close();
         assertThat(DrishtiLiveTables.rules(List.of(spec))).extracting(r -> r.field().recordField()).containsExactly("BOOK");
         lt.close();
     }

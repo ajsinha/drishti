@@ -48,8 +48,8 @@ RabbitMQ, ActiveMQ), merged **by key and version**, plus an optional edit path a
 | User | What it is |
 |---|---|
 | A blotter | a declaration (`<name>.live.yaml`) with columns, grouping, links and, optionally, edits |
-| A FORM or the search page | the search compiled to a query on a table of the kind: a filter tree, an order and a limit |
-| A bare mnemonic (`POS <GO>`, `TRD`, `NEWS`) | the kind's own table; a default declaration is made from its contract |
+| A FORM or the search page | the search compiled to a query on a table of the kind: a filter tree, an order and a limit; each row keeps the search's title (`_title`, shown as **Title** when it says more than the id) |
+| A bare mnemonic (`POS <GO>`, `TRD`, `NEWS`) | the kind's own table; a default declaration is made from its contract; the page carries the as-of notices a search's answer carries (the sources answering from an earlier date) |
 | A monitor, drill-through, a preview | the same table, opened from another page |
 | A SQL or BI table | the static grid: the same component without the live channel |
 
@@ -123,7 +123,13 @@ per field) come with the security release.
   the **same change id**; the source treats a repeat as already applied.
 - **Four eyes.** The site's policy (`config/edit/policy.yaml`, `source:`) asks for approvals for amendments sent to a source; nobody approves their own
   change; a form's `approval:` may ask for more, never fewer ([APPROVALS_GUIDE.md](APPROVALS_GUIDE.md)).
-- **Audit.** Every submit, approval, refusal (`edit-refused`), send and result is audited with who, when, why and the values.
+- **One change id, end to end.** A write's `id` (the client's, 1 to 64 letters, digits, `-` or `_`) is the change's id in the write-back too: the
+  approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message carry it. The same id again is answered with that change's
+  answer (its state now: `held`, `queued`, `applied`, ...), never made twice, on any node and after a restart; from another person it is
+  refused (`the change id ... is another's`).
+- **Audit.** Every submit, approval, refusal (`edit-refused`), send and result is audited with who, when, why and the values. The person who made
+  the change is the caller of every record: the table's (`live-write-submitted`, `live-write-held`, ... with the change id and its columns) and the
+  write-back's (`edit-submitted` with the same id); a write the server cannot tie to a signed-in request is refused.
 - **Write-back** goes to the record's own source system: section 8.
 
 ## 5. Row rules and per-person isolation
@@ -216,7 +222,9 @@ One engine behind every blotter and every FORM result: Rachana's live tables, wi
    `flush-ms` (50 ms).
 4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`: a filter tree on the columns as the reader sees them).
    The console's grid follows a table on the browser's one live channel: every patch of the table reaches it, merged by key and version;
-   a row it does not hold (it shows a page of a larger table) moves the count and a **N new** button that reads the newest page again. A
+   a row it does not hold (it shows a page of a larger table) moves the count and a **N new** button that reads the newest page again.
+   This is by design: a paged grid never jumps under the reader's eyes (a row inserted at the top would move the row they are reading);
+   they read the newest page when they choose. A
    windowed stream of the protocol (`POST /changes` with `window`; the reader names the keys it shows and `top` when its page starts at the
    first row of a newest-first order) is sent only the changes of those rows, new and changed rows on top, and the count of the others. A
    reader more than `window-capacity` (5,000) rows behind is sent one `gap` instead of a queue (back-pressure: a burst never queues without
@@ -289,8 +297,11 @@ as the signed-in person:
 | `POST` | `/api/v1/rdp/tables/{name}/write` | a change: `{id, op: update, key, basedOn, set, from?, reason?}`; `{change, state, message}` (`held` while it waits for four eyes); `403 rdp.write.forbidden` read-only (why), `409 rdp.write.conflict` stale (who changed it), `422 rdp.write.invalid` a field rule |
 | `GET`, `POST` | `/api/v1/rdp/changes` | server-sent events of a table (`table`, `after`, `filter`, `window`): `msg` frames with a patch (`reset`, `remove`, `update`, `add`, `total`, `top`), `gap` when the reader must read again |
 | `POST` | `/api/v1/rdp/changes/{sub}/window` | the rows a windowed stream sends: `{keys, top}`; only its own reader |
-| `GET` | `/api/v1/rdp/searches?q=` | a search as a query on a table (FORM, the search page), on the person's business date: `{table, query, live, page, search}` |
-| `GET` | `/api/v1/rdp/kinds/{word}` | the table of a kind by its mnemonic or name (`POS <GO>`): `{table}` |
+| `GET` | `/api/v1/rdp/searches?q=` | a search as a query on a table (FORM, the search page), on the person's business date: `{table, query, live, page, search, asOfNotices}` |
+| `GET` | `/api/v1/rdp/kinds/{word}` | the table of a kind by its mnemonic or name (`POS <GO>`): `{table, asOfNotices}` |
+
+A read the source cannot answer is `503 rdp.unavailable`; its `message` ends with what the source said and `source` holds those words, made
+safe (one line of at most 300 characters, a file path cut to its file name, a credential in a URL or a `password=`/`token:` value as `***`).
 
 The console passes these on as the person (`/api/rdp/...`); the changes are the console's channel (`/api/channel?s=live:{table}`, a FORM's
 result `live:{table}~{filter}`, events `msg` and `gap`). The page is `/live/{name}`; the module's menu entry (`console/plugin.yaml`) links

@@ -161,7 +161,7 @@ class LakeTest(unittest.TestCase):
             self.assertIn("maintained by its publisher", by["risk/published"]["skipped"])
             self.assertEqual(by["trading/trade"]["after"]["files"], 4)               # one file per date after compaction
             from deltalake import DeltaTable
-            self.assertEqual(len(maintain.add_actions(DeltaTable(pub))), 2)            # the foreign table untouched
+            self.assertEqual(len(DeltaTable(pub).get_add_actions(flatten=True)), 2)            # the foreign table untouched
             named = quiet(maintain.run_detailed, cfg, False, date(2026, 10, 16), tables_spec=["risk/published"])
             self.assertEqual(named["failures"], 1)
             self.assertIn("refused", named["tables"][0]["error"])
@@ -174,19 +174,19 @@ class LakeTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "lake"
             uri = self.build(root, "trade")
-            self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 4)
+            self.assertEqual(len(DeltaTable(uri).get_add_actions(flatten=True)), 4)
             self.build(root, "trade", days=("2026-10-15", "2026-10-16"))                  # two more small files
             cfg = {"history": str(Path(tmp) / "data" / "lakes" / "maintenance-history.jsonl"),
                    "lakes": [{"root": str(root), "max-drop-share": 0.9, "tables": {"trading/trade": {"keep-business-days": 1, "vacuum-hours": 0}}}]}
             dry = quiet(maintain.run_detailed, cfg, True, date(2026, 10, 16))
             t = dry["tables"][0]
             self.assertEqual(t["before"]["files"], 6)
-            self.assertEqual(t["retention"]["dates"], ["2026-10-13", "2026-10-14", "2026-10-15"])     # keep-business-days 1: the newest date kept (Lake's rule)
-            self.assertEqual((t["estimate"]["files"], t["estimate"]["dates"]), (1, 1))
-            self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 6)             # nothing changed
+            self.assertEqual(t["retention"]["dates"], ["2026-10-13", "2026-10-14"])     # keep-business-days 1: today and one business day before
+            self.assertEqual((t["estimate"]["files"], t["estimate"]["dates"]), (2, 2))
+            self.assertEqual(len(DeltaTable(uri).get_add_actions(flatten=True)), 6)             # nothing changed
             real = quiet(maintain.run_detailed, cfg, False, date(2026, 10, 16))
             t = real["tables"][0]
-            self.assertEqual(t["after"]["files"], 1)
+            self.assertEqual(t["after"]["files"], 2)
             self.assertTrue(maintain.changed(t))
             (pack, table, body), = maintain.signal_bodies(real["tables"], "run-1")
             self.assertEqual((pack, table, body["kind"], body["businessDate"], body["rows"], body["source"]),

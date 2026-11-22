@@ -24,6 +24,20 @@
   builders are gone (`drishti_bi-multiples.js` deleted; `drishti_bi-visuals.js` keeps the cards and the report's adapter; the table chart engine keeps
   the numbers and the words). BI's maps use drishti-chart's map helper (its geo part): the world is drawn in the Equal Earth projection, as the
   view painter's maps are. No console script calls ECharts for BI any more (the guard's allow-list lost three files).
+- **Live tables, G4 fixes (LS1, LS3, LS4, LS7, LV4).** A live table's write keeps Rachana's change id end to end: the write-back takes a
+  client's id (1 to 64 letters, digits, `-`, `_`), so the approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message
+  carry it, and the same id again answers that change's state from the write-back's own record (any node, after a restart), never made
+  twice; another person's repeat is refused (PROTOCOL 16). The person who made a change reaches the write-back and every audit record
+  (`live-write-*` with the change id and its columns, `edit-submitted` with the same id; `edit-repeated` for a repeat); a write not tied to
+  a signed-in request is refused. A source that fails a read answers `503 rdp.unavailable` with its own words added (`source`; made safe:
+  one line, 300 characters at most, file paths cut to the name, credentials as `***`). A FORM's rows keep the search's title (Title column).
+  A bare mnemonic's table page carries the as-of notices, as a search's answer does. A paged grid's **N new** (no jump) is by design, now
+  said in LIVE_RESULTS_GUIDE.md.
+- **Delta upkeep without delta-rs.** `tools/lake/maintain.py` keeps a Delta table through Drishti Lake's `lake maintain` alone: a laid-out
+  table's drifted dates are rewritten sorted by id by `--relayout` (the pack's `file-rows`; `maintain.py relayout --dates --force` as
+  before), the report's files, MB and latest date come from Lake. Retention keeps today and `keep-business-days` business days before it
+  again (Drishti's rule before the move; Lake had kept one date fewer).
+
 - **Compatibility shims removed (no customer, no tech debt).** The BI and tables migrators (`tables migrate`, `bi migrate`, the start-up
   migration of stored items and of saved pivot formulas, `PivotFormulaMigration`), the DEL reader (`DelParser`, `DelToRachana`; the setting
   `drishti.bi.expr.legacy`), `LegacyNames` (hidden `.uploads` and `.previous` folders), the demo-lake relocation at start and `lake relocate`,

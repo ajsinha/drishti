@@ -176,6 +176,8 @@ class KafkaTradeEditTest {
         assertThat(sent.path("state").asText()).as("four eyes: the site's policy for a source amendment").isEqualTo("held");
         JsonNode mine = call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes").get(0);
         String id = mine.path("id").asText();
+        assertThat(id).as("the write-back keeps Rachana's change id end to end").isEqualTo("01JKAFKAEDIT0000000000001");
+        assertThat(mine.path("by").asText()).as("the caller reaches the write-back").isEqualTo("tia");
         assertThat(mine.path("state").asText()).isEqualTo("awaiting");
         assertThat(topic()).as("nothing is written before the approval").hasSize(1);
         assertThat(call("POST", "/api/v1/approvals/change/" + id + "/approve", tia, Map.of(), 403).path("code").asText()).isNotBlank();
@@ -183,7 +185,16 @@ class KafkaTradeEditTest {
         waitFor(id, "applied", kim);
         List<Map<String, Object>> after = topic();
         assertThat(after).as("exactly one new version written to Endur's own topic").hasSize(2);
-        assertThat(after.get(1)).containsEntry("PORTFOLIO", "BOOK-B").containsEntry("TRADE_VERSION", 2).containsKey("DRISHTI_CHANGE_ID");
+        assertThat(after.get(1)).containsEntry("PORTFOLIO", "BOOK-B").containsEntry("TRADE_VERSION", 2)
+                .containsEntry("DRISHTI_CHANGE_ID", "01JKAFKAEDIT0000000000001");
+        // the same change id again (a retry): the change's answer as it is now, never made or written twice; another person's repeat refused
+        Map<String, Object> again = Map.of("id", "01JKAFKAEDIT0000000000001", "op", "update", "key", List.of("EN-1"), "basedOn", 1,
+                "reason", "booked to the wrong book", "set", Map.of("PORTFOLIO", "BOOK-B"), "from", Map.of("PORTFOLIO", "BOOK-A"));
+        JsonNode repeat = call("POST", "/api/v1/rdp/tables/trade/write", tia, again, 200);
+        assertThat(repeat.path("change").asText()).isEqualTo("01JKAFKAEDIT0000000000001");
+        assertThat(call("POST", "/api/v1/rdp/tables/trade/write", as("tom", "trader"), again, 403).toString()).contains("another's");
+        assertThat(call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes")).hasSize(1);
+        assertThat(topic()).as("a repeat writes nothing").hasSize(2);
 
         // made on version 1 after version 2 was written: refused, naming who made version 2
         until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);

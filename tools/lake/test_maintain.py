@@ -35,6 +35,13 @@ def own(uri: str, pack: str = "trading", kind: str = "trade") -> None:
     ownership.record(p.parent.parent, {"table": uri, "pack": pack, "kind": kind, "run": "test", "finishedAt": "2026-09-30T00:00:00+00:00"})
 
 
+def actions(uri: str) -> list[dict]:
+    """The table's live files as an independent reader (delta-rs, test only: maintenance itself is Drishti Lake's) lists them."""
+    import pyarrow as pa
+    from deltalake import DeltaTable
+    return pa.table(DeltaTable(uri).get_add_actions(flatten=True)).to_pylist()
+
+
 def business_days(end: date, n: int) -> list[date]:
     out, d = [], end
     while len(out) < n:
@@ -62,21 +69,21 @@ class MaintainTest(unittest.TestCase):
         from deltalake import DeltaTable
         with tempfile.TemporaryDirectory() as tmp:
             uri = self.lake(Path(tmp))
-            files_before = len(maintain.add_actions(DeltaTable(uri)))
+            files_before = len(actions(uri))
             self.assertEqual(files_before, 90)
             config = {"lakes": [{"root": tmp, "keep-business-days": 10, "max-drop-share": 0.7, "compact": True, "checkpoint": True, "vacuum-hours": 0}]}
             self.assertEqual(maintain.run(config, dry_run=True, today=date(2026, 9, 30)), 0)
-            self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 90)        # a dry run changes nothing
+            self.assertEqual(len(actions(uri)), 90)        # a dry run changes nothing
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 0)
             dt = DeltaTable(uri)
             import pyarrow as pa
             rows = pa.table(dt.to_pyarrow_table()).to_pylist()
             dates = sorted({r["business_date"] for r in rows})
-            self.assertEqual(dates, business_days(date(2026, 9, 30), 10))                             # the newest ten business dates (Lake's rule)
-            self.assertEqual(len(rows), 10 * 15)                                                      # every kept row intact
-            self.assertEqual(len(maintain.add_actions(dt)), 10)                   # one file per day
+            self.assertEqual(dates, business_days(date(2026, 9, 30), 11))                             # today and ten business days before it
+            self.assertEqual(len(rows), 11 * 15)                                                      # every kept row intact
+            self.assertEqual(len(actions(uri)), 11)                   # one file per day
             parquet_on_disk = list(Path(uri).rglob("*.parquet"))
-            self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 10)  # vacuumed
+            self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 11)  # vacuumed
             self.assertTrue(any(Path(uri, "_delta_log").glob("*.checkpoint.parquet")))
 
     def test_the_lake_files_settings_are_read_in_this_modules_keys(self):
@@ -106,29 +113,28 @@ class MaintainTest(unittest.TestCase):
             self.assertIn("keep-business-days", report["tables"][0]["lake-file"])
             import pyarrow as pa
             dates = sorted({r["business_date"] for r in pa.table(DeltaTable(uri).to_pyarrow_table()).to_pylist()})
-            self.assertEqual(len(dates), 10)                                                          # the lake file's retention
+            self.assertEqual(len(dates), 11)                                                          # the lake file's retention
 
     def test_retention_that_would_delete_most_of_a_table_needs_force_drop(self):
-        from deltalake import DeltaTable
         with tempfile.TemporaryDirectory() as tmp:
             uri = self.lake(Path(tmp))
             config = {"lakes": [{"root": tmp, "keep-business-days": 10, "compact": False, "checkpoint": False, "vacuum-hours": None}]}
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 1)      # 19 of 30 days: refused
-            self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 90)                       # nothing deleted
+            self.assertEqual(len(actions(uri)), 90)                       # nothing deleted
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30), force_drop=True), 0)
-            self.assertEqual(len({a["partition.business_date"] for a in maintain.add_actions(DeltaTable(uri))}), 10)
+            self.assertEqual(len({a["partition.business_date"] for a in actions(uri)}), 11)
 
     def test_retention_counts_back_from_today_never_from_a_future_date_in_the_table(self):
         import pyarrow as pa
-        from deltalake import DeltaTable, write_deltalake
+        from deltalake import write_deltalake
         with tempfile.TemporaryDirectory() as tmp:
             uri = self.lake(Path(tmp))
             write_deltalake(uri, pa.table({"id": ["T-TYPO"], "doc": ["{}"], "business_date": pa.array([date(2099, 3, 1)], pa.date32())}),
                             mode="append", partition_by=["business_date"])
             config = {"lakes": [{"root": tmp, "keep-business-days": 25, "compact": False, "checkpoint": False, "vacuum-hours": None}]}
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 0)
-            dates = {str(a["partition.business_date"]) for a in maintain.add_actions(DeltaTable(uri))}
-            self.assertEqual(len(dates), 26)                     # the newest 25 business dates up to today, and the typo
+            dates = {str(a["partition.business_date"]) for a in actions(uri)}
+            self.assertEqual(len(dates), 27)                     # today and the 25 business days before it, and the typo
             self.assertIn("2099-03-01", dates)
 
     def test_a_failing_table_does_not_stop_the_others(self):
@@ -141,21 +147,22 @@ class MaintainTest(unittest.TestCase):
             config = {"lakes": [{"root": tmp, "compact": True, "checkpoint": False, "vacuum-hours": None}]}
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 1)
 
-    def test_relayout_promotes_sorts_and_is_idempotent(self):
+    def test_relayout_sorts_into_the_layouts_files_and_is_idempotent(self):
         import pyarrow as pa
         import pyarrow.parquet as pq
         from deltalake import DeltaTable
-        from samplegen.layout import Layout
-        lay = Layout(["mtm", "counterparty.id"], file_rows=4, row_group_rows=2)
+        import maintain_iceberg
         with tempfile.TemporaryDirectory() as tmp:
             uri = self.lake(Path(tmp))                                  # three unsorted files a day, id and doc only
-            before = DeltaTable(uri).to_pyarrow_table()
-            self.assertEqual(before.column_names, ["id", "doc", "business_date"])
             dates = business_days(date(2026, 9, 30), 30)
-            done = maintain.relayout(uri, lay, dates=f"{dates[-2]}..{dates[-1]}")
-            self.assertEqual((done["rewritten"], done["rows"], done["files"]), ([str(dates[-2]), str(dates[-1])], 30, 8))
+
+            def relayout() -> list[str]:
+                cmd = maintain.lake_command(uri, {}, date(2026, 9, 30), False, False, 0, False, relayout=True, file_rows=4)
+                return json.loads(maintain_iceberg.json_line(cmd, "lake maintain"))["relayout"]["dates"]
+
+            self.assertEqual(relayout(), [str(d) for d in dates])        # every date drifted (three files sharing no order)
             dt = DeltaTable(uri)
-            acts = maintain.add_actions(dt)
+            acts = actions(uri)
             for d in dates[-2:]:
                 files = sorted((a for a in acts if a["partition.business_date"] == d), key=lambda a: a["min.id"])
                 self.assertEqual([a["num_records"] for a in files], [4, 4, 4, 3])
@@ -163,17 +170,11 @@ class MaintainTest(unittest.TestCase):
                 for a in files:
                     ids = pq.read_table(str(Path(uri) / a["path"]), columns=["id"]).column("id").to_pylist()
                     self.assertEqual(ids, sorted(ids))
-                    meta = pq.ParquetFile(str(Path(uri) / a["path"])).metadata
-                    self.assertTrue(all(meta.row_group(i).num_rows <= 2 for i in range(meta.num_row_groups)))
             rows = pa.table(dt.to_pyarrow_table()).to_pylist()
             self.assertEqual(len(rows), 30 * 15)                                                      # nothing lost
-            for r in (r for r in rows if r["business_date"] in dates[-2:]):
-                self.assertEqual(r["mtm"], float(json.loads(r["doc"])["mtm"]))
-                self.assertIsNone(r["counterparty__id"])                                              # not in these documents
-            self.assertEqual(maintain.relayout(uri, lay, dates=f"{dates[-2]}..{dates[-1]}")["skipped"], [str(dates[-2]), str(dates[-1])])
-            self.assertEqual(DeltaTable(uri).version(), dt.version())                                 # a second run changes nothing
-            self.assertEqual(maintain.relayout(uri, lay, dates=str(dates[-1]), force=True)["files"], 4)
-            self.assertEqual(len(DeltaTable(uri).to_pyarrow_table()), 30 * 15)
+            version = dt.version()
+            self.assertEqual(relayout(), [])                                                          # a second run changes nothing
+            self.assertEqual(DeltaTable(uri).version(), version)
 
     def test_relayout_command_reads_the_pack_layout(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -184,10 +185,10 @@ class MaintainTest(unittest.TestCase):
                                             "      layout:\n        trade:\n          columns: [mtm]\n          file-rows: 100\n")
             args = ["relayout", "--root", str(Path(tmp) / "lake"), "--domain", "trading", "--packs", str(Path(tmp) / "packs"), "--dates", "2026-09-30"]
             self.assertEqual(maintain.main(args), 0)
-            self.assertEqual(maintain.main(args[:-2] + ["--kind", "book"]), 1)                        # no layout for that kind
+            self.assertEqual(maintain.main(args + ["--force"]), 0)
+            self.assertEqual(maintain.main(args + ["--kind", "book"]), 1)                        # no layout for that kind
 
     def test_nightly_maintenance_keeps_a_laid_out_table_sorted(self):
-        from deltalake import DeltaTable
         from samplegen.layout import write_partition
         with tempfile.TemporaryDirectory() as tmp:
             uri = str(Path(tmp) / "trading" / "trade_endur")            # trade-endur's table: the trading pack declares its layout
@@ -203,12 +204,10 @@ class MaintainTest(unittest.TestCase):
             conf = {**maintain.DEFAULTS, "checkpoint": False, "vacuum-hours": None}
             done = maintain.maintain(uri, conf, date(2026, 9, 30), dry_run=False)
             self.assertEqual(done["compact"]["relaid-dates"], ["2026-09-30"])                   # the untouched day stays
-            dt = DeltaTable(uri)
-            self.assertEqual(dt.metadata().configuration["delta.dataSkippingStatsColumns"], maintain.stats_columns_of(lay))
-            actions = [a for a in maintain.add_actions(dt) if str(a["partition.business_date"]) == "2026-09-30"]
-            self.assertEqual(len(actions), 1)                                                  # merged, and in id order
-            self.assertEqual((actions[0]["min.id"], actions[0]["max.id"], actions[0]["num_records"]), ("T-00000", "T-00038", 22))
-            self.assertNotIn("min.doc", actions[0])                                            # no document in the log
+            day = [a for a in actions(uri) if str(a["partition.business_date"]) == "2026-09-30"]
+            self.assertEqual(len(day), 1)                                                      # merged, and in id order
+            self.assertEqual((day[0]["min.id"], day[0]["max.id"], day[0]["num_records"]), ("T-00000", "T-00038", 22))
+            self.assertNotIn("min.doc", day[0])                                                # no document in the log
             again = maintain.maintain(uri, conf, date(2026, 9, 30), dry_run=False)
             self.assertEqual(again["compact"]["relaid-dates"], [])
 
@@ -245,10 +244,10 @@ class MaintainTest(unittest.TestCase):
             rows = dt.to_pyarrow_table().to_pylist()
             self.assertEqual(len(rows), 30)
             self.assertTrue(all(r["PRODUCT_TYPE"] == json.loads(r["doc"])["PRODUCT_TYPE"] for r in rows))
-            for a in maintain.add_actions(dt):
+            for a in actions(uri):
                 self.assertIn(a["partition.PRODUCT_TYPE"], ("ComSwap", "ComFut"))
-                self.assertIsNotNone(a.get("min.TRADE_ID"))                                    # the promoted columns have statistics
-            self.assertEqual(maintain.relayout(uri, lay, dates="2026-09-30")["skipped"], ["2026-09-30"])
+                self.assertIsNotNone(a.get("min.id"))                                          # each file its own id range, by statistics
+            self.assertEqual(maintain.maintain(uri, conf, day, dry_run=False)["compact"].get("relaid-dates"), [])   # in the layout now
 
     def test_the_schedule(self):
         from datetime import datetime

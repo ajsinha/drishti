@@ -51,7 +51,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * table), {@code POST /tables/{name}/write} (an edit, checked by the guard and handed to the write-back as the person),
  * {@code GET|POST /changes} (the minimal SSE stream; a windowed one starts with {@code subd}) and {@code POST /changes/{sub}/window}
  * (only the stream's own caller). A bare mnemonic's table ({@code kind-<kind>}) is declared from its contract on first use; a search
- * ({@code GET /searches?q=}: a FORM's result, the search page's) is opened as a query on a table ({@link FormResults}).
+ * ({@code GET /searches?q=}: a FORM's result, the search page's) is opened as a query on a table ({@link FormResults}). A bare mnemonic's
+ * table answer and a search's carry {@code asOfNotices} (the sources answering from an earlier date). A source's failure answers the
+ * protocol's {@code 503 rdp.unavailable} with the source's own words added, made safe ({@link ReadFailures}).
  */
 @RestController
 @RequestMapping(LiveTablesController.BASE)
@@ -71,10 +73,12 @@ public class LiveTablesController {
 
     private final com.ash.drishti.engine.command.Mnemonics mnemonics;
     private final com.ash.drishti.engine.source.SourceRouter router;
+    private final ReadFailures failures;
 
     public LiveTablesController(LiveTables tables, FormResults forms, com.ash.drishti.engine.command.Mnemonics mnemonics,
-            com.ash.drishti.engine.source.SourceRouter router, ObjectMapper json) {
+            com.ash.drishti.engine.source.SourceRouter router, KindBindings bindings, ObjectMapper json) {
         this.router = router;
+        this.failures = bindings.failures();
         this.tables = tables;
         this.forms = forms;
         this.mnemonics = mnemonics;
@@ -82,7 +86,10 @@ public class LiveTablesController {
         this.json = json;
     }
 
-    /** The table of a kind (its own declaration of that name, else the kind's default one), declared on first use: {@code {table}}. */
+    /**
+     * The table of a kind (its own declaration of that name, else the kind's default one), declared on first use:
+     * {@code {table, asOfNotices}}, the notices as a search's answer carries them (the table is the live day's).
+     */
     @GetMapping("/kinds/{kind}")
     public Map<String, Object> kindTable(@PathVariable("kind") String word, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         // a mnemonic (POS) or a kind (position)
@@ -90,13 +97,38 @@ public class LiveTablesController {
         String name = tables.has(kind) ? kind : DrishtiLiveTables.defaultTable(tables, kind).orElseThrow(() -> ProtocolError.of("rdp.table.unknown", 404,
                 kind + " has no columns to list", "table", kind));
         tables.schemaDoc(name, principal);                    // a reader who may not read it is refused here
-        return Map.of("table", name);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("table", name);
+        out.put("asOfNotices", forms.asOfNotices(kind, null));
+        return out;
     }
 
     /** A refusal of the protocol answered as the protocol says: its status and {@code {error: {code, message, ...}}}. */
     @org.springframework.web.bind.annotation.ExceptionHandler(ProtocolError.class)
     public ResponseEntity<Object> refused(ProtocolError e) {
-        return ResponseEntity.status(e.status()).contentType(MediaType.APPLICATION_JSON).body(e.body());
+        return ResponseEntity.status(e.status()).contentType(MediaType.APPLICATION_JSON).body(explained(e.status(), e.body()));
+    }
+
+    /**
+     * A {@code 503 rdp.unavailable} with the source's words added (the engine says only that the read failed): {@code message} ends with
+     * what the source said and {@code source} holds it, made safe; any other answer as it is.
+     */
+    @SuppressWarnings("unchecked")
+    Object explained(int status, Object body) {
+        if (status != 503 || failures == null || !(body instanceof Map<?, ?> b) || !(b.get("error") instanceof Map<?, ?> err)
+                || !"rdp.unavailable".equals(err.get("code")) || !(err.get("table") instanceof String table)) {
+            return body;
+        }
+        com.ash.rachana.table.LiveTableSpec spec = DrishtiLiveTables.spec(tables, table);
+        String kind = spec == null ? table : DrishtiAuthoriser.kind(spec);
+        return failures.of(kind).<Object>map(said -> {
+            Map<String, Object> e = new LinkedHashMap<>((Map<String, Object>) err);
+            e.put("message", e.get("message") + ": " + said);
+            e.put("source", said);
+            Map<String, Object> out = new LinkedHashMap<>((Map<String, Object>) b);
+            out.put("error", e);
+            return out;
+        }).orElse(body);
     }
 
     /**
@@ -130,7 +162,7 @@ public class LiveTablesController {
         try {
             sub = host.subscribe(name, new TableProvider.Subscribe(from, b.get("filter"), every, window, top), f -> send(emitter, sending, f), principal);
         } catch (ProtocolError e) {
-            return ResponseEntity.status(e.status()).contentType(MediaType.APPLICATION_JSON).body(e.body());
+            return ResponseEntity.status(e.status()).contentType(MediaType.APPLICATION_JSON).body(explained(e.status(), e.body()));
         }
         Runnable done = () -> {
             sub.close();
@@ -212,6 +244,6 @@ public class LiveTablesController {
                 return ResponseEntity.ok(doc);
             }
         }
-        return ResponseEntity.status(a.status()).body(a.body());
+        return ResponseEntity.status(a.status()).body(explained(a.status(), a.body()));
     }
 }

@@ -294,14 +294,15 @@ class BackendClient:
 
     async def live_kind(self, word: str, ident=None, offset: int = 0, limit: int = 100, sort: str = "", descending: bool = False) -> dict:
         """A page of a kind's own live table (a bare mnemonic, ``POS <GO>``): its module's declaration, else the default one made from its
-        contract (``GET /api/v1/rdp/kinds/{word}``, then the table's schema and a query): ``{table, schema, page}``."""
-        table = (await self._get(f"/rdp/kinds/{quote(word, safe='')}", ident))["table"]
+        contract (``GET /api/v1/rdp/kinds/{word}``, then the table's schema and a query): ``{table, schema, page, asOfNotices}``."""
+        kind = await self._get(f"/rdp/kinds/{quote(word, safe='')}", ident)
+        table = kind["table"]
         schema = await self._get(f"/rdp/tables/{quote(table, safe='')}", ident)
         query: dict = {"limit": limit, **({"offset": offset} if offset else {})}
         if sort:
             query["sort"] = [{"col": sort, "dir": "desc" if descending else "asc"}]
         page = await self._send("POST", f"/rdp/tables/{quote(table, safe='')}/query", ident, json=query)
-        return {"table": table, "schema": schema, "page": page, "offset": offset}
+        return {"table": table, "schema": schema, "page": page, "offset": offset, "asOfNotices": kind.get("asOfNotices") or []}
 
     async def form(self, pack: str, kind: str = "", ident=None, kinds_only: bool = False) -> dict:
         """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open;
