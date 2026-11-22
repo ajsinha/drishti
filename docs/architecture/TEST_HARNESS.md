@@ -236,20 +236,10 @@ nothing. `var_server` sets it; a file that starts its own server over the lake (
 holds every trade set, and at 768 MB a server ran out of heap at start and its pages never loaded. `tests/test_lake_builds_cached.py` (a
 quick file check) fails on any test that does otherwise and is not parked.
 
-**Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
-trade-grain variant) is parked until i6: it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
-with the reason "parked to i6: writes to a lake (owner 2026-11-15)", so every run and drill report shows it as skipped, never silently
-gone. The parked tests:
-
-| File | Tests | Why it writes |
-|---|---|---|
-| `test_admin_lakes_browser.py` | a file becomes a lake (1 of 2) | the same from the browser |
-| `test_admin_lake_maintain_browser.py` | all (2) | the same from the browser |
-| `test_public_sector_browser.py` | all (6) | the recorded feeds are loaded into lakes of its own |
-| `test_bi_multi_dataset_browser.py` | all (6) | the BI sample lake (`bi_report_stack.make_lake`), a lake of its own |
-| `test_bi_reports_cross_browser.py` | all (8) | the same |
-| `test_var_explorer_browser.py` | the six over the trade-grain date (`trade_stack`) | a trade-grain morning written into a lake |
-| `test_var_currency_browser.py` | a trade page's currency (1 of 4) | the same |
+**Tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a trade-grain
+variant) runs, and writes only under its own `tmp_path` / `mktemp` folder or the lake cache's own folder, never into the shared lake
+(`trade_grain_stack.py` builds the trade-grain copy once per source hash in the cache). These files are listed in
+`ALLOWED` of `tests/test_lake_builds_cached.py`, which fails on any other test that builds, copies or subsets a lake. Nothing is parked or skipped for it.
 
 ### 3.13 A component on a page of its own
 

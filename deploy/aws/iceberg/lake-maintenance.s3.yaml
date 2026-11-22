@@ -19,10 +19,10 @@ schedule:
   zone: ${LOAD_SCHEDULE_ZONE}
 lakes:
   - root: s3://${LAKE_BUCKET}/${ICEBERG_PREFIX}
-    format: iceberg                                        # Drishti's Iceberg maintenance (Delta stays the default elsewhere)
+    format: iceberg                                        # maintained by Lake's lake maintain (Delta stays the default elsewhere)
     domains: ["*"]
     storage-options: { AWS_REGION: "${AWS_REGION}" }      # credentials: the task role, through the AWS default chain
-    keep-business-days: ${ICEBERG_KEEP_BUSINESS_DAYS}      # the newest N business dates kept (risk, risk-results: 7 years at least)
+    keep-business-days: ${ICEBERG_KEEP_BUSINESS_DAYS}      # today and the N business days before it kept (risk, risk-results: 7 years at least)
     max-drop-share: 0.5                                    # a run that would remove more than half a table removes nothing
     compact: true                                          # days that drifted from the layout are rewritten sorted by id
     vacuum-hours: ${ICEBERG_EXPIRE_HOURS}                  # snapshots older than this are expired, the files only they used deleted, and the files no snapshot names removed (72 at least)

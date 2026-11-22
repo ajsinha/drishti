@@ -323,7 +323,7 @@ tables:
 |---|---|---|
 | Memory | the compaction (section 13.5) | the rewrite leaves out the dropped rows |
 | Delta | `drishti.py lake maintain` (a step before compaction and vacuum; Admin → Lakes → Maintain, its schedules) | each business date holding a dropped row is rewritten without it, one Delta commit per date (a date left empty has its files removed); the files the commit stopped using are removed by the table's vacuum (`maintenance.vacuum`). Any Delta reader sees the result, and delta-rs and Spark read it |
-| Iceberg | the same run (`IcebergMaintenance --ttl --on --max-rows`) | each day holding a dropped row is replaced by one Iceberg commit (a day left empty: its partition is deleted); the old files go when snapshot expiry (`maintenance.expire-snapshots`) says |
+| Iceberg | the same run (`lake maintain --format iceberg`, with `--ttl --on --max-rows`) | each day holding a dropped row is replaced by one Iceberg commit (a day left empty: its partition is deleted); the old files go when snapshot expiry (`maintenance.expire-snapshots`) says |
 | Files | the same run for a maintenance lake of `format: files` (`<root>/<domain>/<date>/<kind>.jsonl`) | each affected day file is rewritten through a temporary file moved into place, so a running server never reads half a day |
 
 Where the block is written: a lake file's table entry (the table's own), or `row-retention:` in the maintenance file's lake or table settings

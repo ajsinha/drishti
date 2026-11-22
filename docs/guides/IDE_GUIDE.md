@@ -704,7 +704,7 @@ debugger, `debugpy`). To start both without a debugger, run their tasks. Both re
 To work across the platform (a change in Drishti that needs one in Lake), use one **multi-root workspace**: **File, Open Workspace from File**
 on any one product's workspace, then **File, Add Folder to Workspace** for each of the others under `~/IdeaProjects/drishti-platform/`
 (`drishti`, `drishti-rachana`, `drishti-elements`, `drishti-lake`, `drishti-tools`), then **File, Save Workspace As** into
-`platform/` itself (beside the clones, outside every repository, so it is never committed; the index repository `drishti-platform` also ships a ready `drishti-platform.code-workspace`). The
+`~/IdeaProjects/drishti-platform/` itself (beside the clones, outside every repository, so it is never committed; the index repository `drishti-platform` also ships a ready `drishti-platform.code-workspace`). The
 tasks and launches of the workspaces you did not open are not merged into it; run them from their own workspace (a second VS Code window
 costs nothing), and use the multi-root one for searching, reading and editing across repositories. A change in a product repository reaches Drishti only
 through a tag installed into `~/.m2` ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); to try an unreleased change,

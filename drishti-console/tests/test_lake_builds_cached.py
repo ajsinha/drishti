@@ -15,7 +15,7 @@
 """Every console test reads the ONE shared test lake (docs/architecture/TEST_HARNESS.md, "The shared test lake", owner 2026-11-15): the full
 demo lake of the saved test data, built once per source hash by the parallel Java loader (tools/drillkit/lake_cache.py, var_stack.shared_lake),
 read only. No test builds a lake of its own, asks for a subset of it, copies it or names the Python writer; a test that has to write to a
-lake is parked to i6 (var_stack.PARKED_I6, a visible skip) and only a parked file may still do so. A drill's browser lane once spent most
+lake does it under its own tmp or cache folder and its file is named in ALLOWED below; no other file may. A drill's browser lane once spent most
 of its time on fixtures that built their own lakes with the Python writer."""
 import re
 from pathlib import Path
@@ -32,36 +32,37 @@ ALLOWED = {
     "bi_exposure_fixture.py": "the script make_lake runs (the BI samples' official exposure table)",
     "test_admin_lakes.py": "Admin -> Lakes builds a lake: under the test's tmp_path only (owner 2026-11-22)",
     "test_admin_lake_maintain.py": "maintenance compacts a copy of its own small lake: under tmp_path and the cache's own folder only",
+    "trade_grain_stack.py": "the trade-grain copy of the shared lake, built once per source hash in the cache's own folder",
+    "test_admin_lakes_browser.py": "a file becomes a lake: under the test's mktemp folder only",
+    "test_admin_lake_maintain_browser.py": "maintenance of a small lake of its own: under the test's mktemp folder only",
+    "test_public_sector_browser.py": "the recorded feeds loaded into lakes of its own: under the test's mktemp folder only",
+    "test_bi_multi_dataset_browser.py": "the BI sample lake (bi_report_stack.make_lake): under the test's mktemp folder only",
+    "test_bi_reports_cross_browser.py": "the BI sample lake (bi_report_stack.make_lake): under the test's mktemp folder only",
+    "test_var_explorer_browser.py": "the trade-grain copy (trade_grain_stack): the cache's own folder only",
+    "test_var_currency_browser.py": "the trade-grain copy (trade_grain_stack): the cache's own folder only",
     "test_lake_builds_cached.py": "this guard",
 }
 #: the Python writer, or a lake built, loaded or copied by a test
 WRITER = re.compile(r"""["']--engine["'],\s*["']deltalake["']|engine\s*=\s*["']deltalake["']|write_deltalake\(|load_rows\.py|load\s*=\s*["']python["']""")
 BUILDS = re.compile(r"""["']lake["'],\s*["'](demo|build)["']|build_demo_lakes|\.cached\(|lake_copy\(|copytree\([^)\n]*(lake|delta)\b""")
 SUBSET = re.compile(r"""demo_lake\(\s*(?!["']{2})["']|["']--only["']""")      # a lake of some datasets: the shared lake holds them all
-PARKED = re.compile(r"\bPARKED_I6\b")
 
 
 def _files():
     return sorted(HERE.glob("*.py"))
 
 
-def _parked(text: str) -> bool:
-    return bool(PARKED.search(text))
-
-
-def test_no_test_builds_copies_or_subsets_a_lake_unless_it_is_parked():
+def test_no_test_builds_copies_or_subsets_a_lake_unless_it_is_allowed():
     bad = []
     for p in _files():
         if p.name in ALLOWED or p.name == "var_stack.py":
             continue
         text = p.read_text(encoding="utf-8")
-        if _parked(text):
-            continue
         for n, line in enumerate(text.splitlines(), 1):
             if WRITER.search(line) or BUILDS.search(line) or SUBSET.search(line):
                 bad.append(f"{p.name}:{n}: {line.strip()[:120]}")
     assert not bad, ("read the ONE shared lake (var_stack.shared_lake / shared_folder), read only; a test that must write to a lake is "
-                     "parked to i6 (@PARKED_I6):\n  " + "\n  ".join(bad))
+                     "named in ALLOWED (under its own tmp folder):\n  " + "\n  ".join(bad))
 
 
 def test_the_shared_lake_is_the_only_lake_var_stack_makes():
@@ -69,15 +70,6 @@ def test_the_shared_lake_is_the_only_lake_var_stack_makes():
     calls = re.findall(r"demo_lake\(([^)]*)\)", text)
     assert calls == ['"", SHARED_AS_OF, SHARED_EXTRA'], calls
     assert not WRITER.search(text) and not re.search(r"lake_copy|copytree|\.cached\(", text)
-
-
-def test_the_parked_tests_say_why():
-    from var_stack import PARKED_I6_REASON
-    assert PARKED_I6_REASON == "parked to i6: writes to a lake (owner 2026-11-15)"
-    listed = (HERE.parents[1] / "docs" / "architecture" / "TEST_HARNESS.md").read_text(encoding="utf-8")
-    parked = sorted(p.name for p in _files() if p.name != "var_stack.py" and p.name not in ALLOWED and _parked(p.read_text(encoding="utf-8")))
-    missing = [n for n in parked if n not in listed]
-    assert not missing, "parked to i6 but not in TEST_HARNESS.md's parked list: " + ", ".join(missing)
 
 
 def test_a_shared_lake_server_asks_for_no_less_than_the_var_heap():

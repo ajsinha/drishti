@@ -45,7 +45,6 @@ from pathlib import Path
 
 import pytest
 
-from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
@@ -68,9 +67,11 @@ def stack(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def trade_stack():
-    """The explorer over a trade-grain date: the trade-grain morning writes into a lake, so its tests are parked to i6 (var_stack.PARKED_I6)."""
-    pytest.skip(PARKED_I6.kwargs["reason"])
+def trade_stack(tmp_path_factory):
+    """A small trade-grain date (trade_grain_stack: a copy of the shared lake in the cache's own folder): the engine\'s trade paths."""
+    from trade_grain_stack import trade_grain_lake
+    from var_stack import shared_lake, var_server
+    yield from var_server(tmp_path_factory, trade_grain_lake(shared_lake(tmp_path_factory)), DRISHTI_COMPUTE_ENABLED="false", DRISHTI_VAR_SCENARIO_WINDOW="all")
 
 
 def _engine_ready(base, seconds=120, opener=None):
@@ -131,7 +132,6 @@ def tree_go(pg, scope):
         pg.locator('[data-vx-tree-crumb] a[href="?scope=%s"]' % urllib.parse.quote(scope, safe="~")).click()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_place(trade_stack, browser):
     pg = open_var(browser, str(trade_stack), "/go?q=" + "VAR DESK DESK-RATES <GO>".replace(" ", "+"))
     assert "/var?scope=DESK%3ADESK-RATES" in pg.url or "/var?scope=DESK:DESK-RATES" in pg.url
@@ -194,7 +194,6 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
     pg.close()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(trade_stack, browser):
     """2.9.5 (docs/guides/VAR_GUIDE.md section 15.14): the selector lists the date's hierarchies by title (the pack's MGMT, LEGAL and LL);
     LL is kept in the link; a letter carries its limit bar; a drill from the letter to its desk node to a position and a trade stays in
@@ -237,7 +236,6 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(trade_stack, brows
     pg.close()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_the_tabs_path_history_and_contributions(trade_stack, browser):
     pg = open_var(browser, str(trade_stack), "/var?scope=DESK:DESK-FX")
     painted(pg, "DESK:DESK-FX")
@@ -300,7 +298,6 @@ def paste(pg, text):
         document.querySelector('[data-vb-sheet]').dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); }""", text)
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(trade_stack, browser):
     pg = open_var(browser, str(trade_stack), "/var?scope=BOOK:BOOK-RATES-1")
     pg.evaluate("localStorage.removeItem(window.Drishti.key('drishti.varBasket2'))")
@@ -465,7 +462,6 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(tr
     ctx.close()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_the_pre_deal_what_if_under_the_sheet(trade_stack, browser):
     """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the server's VaR engine."""
     pg = open_var(browser, str(trade_stack), "/var?scope=DESK:DESK-FX")
@@ -498,7 +494,6 @@ def test_an_id_that_is_not_a_live_trade_says_so(stack, browser):
     pg.close()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_trade_page_has_its_risk_links(trade_stack, browser):
     """risk-links@1 on every deal Sutra: the P&L vector and the VaR of a live trade one click away; no exposure run here, said so."""
     trd = urllib.request.urlopen(str(trade_stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=trade", timeout=60)

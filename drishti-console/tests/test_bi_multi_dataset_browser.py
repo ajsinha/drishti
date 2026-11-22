@@ -26,8 +26,6 @@ import sys
 
 import pytest
 
-from var_stack import PARKED_I6  # noqa: E402 - parked to i6
-pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
 
 os.environ.setdefault("DRISHTI_BI_REPORT_SERVER_PORT", "18944")
 os.environ.setdefault("DRISHTI_BI_REPORT_CONSOLE_PORT", "17944")

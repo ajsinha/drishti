@@ -31,7 +31,6 @@ import urllib.request
 
 import pytest
 
-from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
 
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
@@ -44,9 +43,11 @@ def stack(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def trade_stack():
-    """A trade-grain date: the trade-grain morning writes into a lake, so its test is parked to i6 (var_stack.PARKED_I6)."""
-    pytest.skip(PARKED_I6.kwargs["reason"])
+def trade_stack(tmp_path_factory):
+    """A small trade-grain date (trade_grain_stack: a copy of the shared lake in the cache's own folder): the engine\'s trade paths."""
+    from trade_grain_stack import trade_grain_lake
+    from var_stack import shared_lake, var_server
+    yield from var_server(tmp_path_factory, trade_grain_lake(shared_lake(tmp_path_factory)))
 
 
 def requests_to(pg, part):
@@ -144,7 +145,6 @@ def test_on_a_phone_the_picker_and_the_tab_fit(stack, browser):
     pg.close()
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_trade_page_says_its_trade_currency(trade_stack, browser):
     """An Endur trade sent as scenario PVs in EUR: the strip's Trade currency is EUR, as priced; its Risk group says where it comes from and
     its base PV in it; the VaR contributions by trade list it too."""

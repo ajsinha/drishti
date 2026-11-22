@@ -16,9 +16,9 @@
 full demo lake of the saved test data (every dataset, ending SHARED_AS_OF, the committed exposure run), built once per hash of the test
 data, generators and loaders by the parallel Java loader (tools/drillkit/lake_cache.py) and reused across runs and drills. It is read
 only: no test builds a lake of its own, takes a subset of it or copies it; a server over it writes to its own folders (own_folders). A
-test that has to write to a lake is parked (PARKED_I6). A real server over it per file (wb_live's pool), the demo connector off.
+test that has to write to a lake does it under its own tmp or cache folder (trade_grain_stack.py). A real server over it per file (wb_live's pool), the demo connector off.
 
-PARKED_I6 lists the tests parked to i6 because they write to a lake (owner 2026-11-15); TEST_HARNESS lists them too."""
+"""
 from __future__ import annotations
 
 import datetime
@@ -64,9 +64,6 @@ SHARED_EXTRA = ("--exposure", "committed")
 #: connector's lookback-days (10) for the newest date, and eleven days after SHARED_AS_OF every live read found nothing (drill of 2026-11-17)
 SHARED_TODAY = {"DRISHTI_BUSINESS_TODAY": SHARED_AS_OF}
 
-#: the tests parked to i6 because they write to a lake (owner 2026-11-15): shown as skipped with this reason in every run and drill report
-PARKED_I6_REASON = "parked to i6: writes to a lake (owner 2026-11-15)"
-PARKED_I6 = pytest.mark.skip(reason=PARKED_I6_REASON)
 
 
 def _lake_cache():

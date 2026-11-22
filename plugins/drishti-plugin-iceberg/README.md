@@ -318,7 +318,7 @@ python tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceber
 - **Writing and committing**: each day sorted by id (an external sort within the loader's memory budget, spilling to the build's staging
   folder), one overwrite of its partition; the vector fields of a document become `list<double>` columns, and a vector that is not a list
   of numbers is a reject (the row is not loaded, the others are).
-- **Retention and guards**: keeping the newest N days is `IcebergMaintenance --keep-days` (the lake maintenance), dropping more than
+- **Retention and guards**: retention is today and N business days through Lake's `lake maintain --format iceberg` (a Glue/REST-catalog lake is refused with a clear message; Lake 0.9.2 adds it), dropping more than
   `--max-drop-share` (0.5) needs `--force-drop`. A row dated after tomorrow is not loaded. A failed load ends with one line naming the
   cause (`-Dlake.loader.trace=true` adds the stack trace). The loader's heap is `DRISHTI_LAKE_LOADER_HEAP` (4g).
 
@@ -379,24 +379,14 @@ reaches.
 
 ## Retention and maintenance
 
-`IcebergMaintenance` keeps tables bounded and in the layout, each step one commit (Admin → Lakes and `lake maintain` run it,
-[OPERATIONS_GUIDE.md section 8](../../docs/guides/OPERATIONS_GUIDE.md#163-iceberg-lakes)):
+Maintenance of an Iceberg table is Drishti Lake's `lake maintain --format iceberg` (Admin → Lakes and `drishti.py lake maintain` run it,
+[OPERATIONS_GUIDE.md section 16.3](../../docs/guides/OPERATIONS_GUIDE.md#163-iceberg-lakes)), each step one commit and the options and order those of Delta:
 
-```bash
-java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./data/iceberg --domain trading,market \
-     --keep-days 1800 --relayout --rewrite-manifests --expire-hours 168
-```
-
-| Option | What it does |
-|---|---|
-| `--keep-days N` | a metadata-only delete of business days older than the table's newest N; more than `--max-drop-share` (0.5) of the rows needs `--force-drop` |
-| `--relayout` (`--force`: every day) | rewrites, sorted into files of `file-rows`, only days that drifted (overlapping id ranges, oversized or too many files, delete files, a missing promoted column); one validated commit per day |
-| `--columns kind:path,path` | adds promoted columns and fills them from the documents |
-| `--rewrite-manifests` | regroups manifests one per month of business dates |
-| `--expire-hours H` | expires snapshots older than H hours (168), keeping the current one and every branch's and tag's snapshot (as the Apache library does); `-1` skips it |
-| `--remove-orphans --older-than-hours H` | deletes unreferenced files older than H hours (at least 72) ([DATA_ARCHITECTURE.md section 16](../../docs/architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files)) |
-| `--floor-days D` | never drops a date, nor expires a snapshot, within D days (`lake maintain` passes 2,557 for `risk` and `risk-results`) |
-| `--dry-run`, `--json`, `--kinds`, `--spill-dir`, `--buffer-mb`, `--catalog …`, `--set` | report only; one JSON line a table; scope; the sort; the catalog |
+- **Retention** is one rule: today and the N business days before it are kept (`keep-business-days`), older dates are dropped in one metadata-only delete;
+  more than `--max-drop-share` (0.5) of the rows needs `--force-drop`; the 7-year floor of `risk` and `risk-results` holds (`--floor-days 2557`).
+- **Layout**: compaction rewrites only the days that drifted; **vacuum** expires snapshots older than `vacuum-hours` (168), keeping the current one and every branch's and tag's snapshot, and removes the files no snapshot names (never under 72 hours).
+- **Glue and other REST-catalog lakes are refused** with a clear message (`lake maintain` takes a path-based table); maintain them in the catalog's own tools. Lake 0.9.2 adds it.
+- `--dry-run` reports only.
 
 Expire snapshots regularly: each snapshot stays in the metadata JSON every commit rewrites (1,800 daily commits read in 33 ms after
 regrouping and expiry). Managed platforms do the same with their own tools (Glue table optimizers, Athena `OPTIMIZE`/`VACUUM`, Snowflake's
@@ -513,7 +503,7 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
   [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 1. Choose the catalog: a REST catalog when other engines also write the tables; path-based tables when only Drishti's loader does.
-2. Declare `layout.<kind>.columns` for every large kind and write the layout, or let `IcebergMaintenance --relayout` bring other
+2. Declare `layout.<kind>.columns` for every large kind and write the layout, or let `lake maintain` (compaction) bring other
    writers' days into it.
 3. Load with the spill directory on a disk; check Admin → Health: `UP`, no `not laid out`.
 4. Run maintenance nightly (`--keep-days`, `--relayout`, `--rewrite-manifests`, `--expire-hours`), or the platform's own.
@@ -528,9 +518,9 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 |---|---|---|
 | `DOWN: cannot reach …` | the root folder, bucket or catalog namespace is not reachable | check `root` / `uri`, credentials, `s3.*` |
 | `DOWN: no Iceberg tables under …` | nothing loaded in that domain, or the wrong `domain` / `namespace` | load it; check the domain |
-| `UP (not laid out as the pack declares: trade (12 of 19 columns) …)` | the writer did not write all promoted columns | `IcebergMaintenance --columns trade:path,…` or reload |
+| `UP (not laid out as the pack declares: trade (12 of 19 columns) …)` | the writer did not write all promoted columns | reload the day |
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, then `--columns` |
-| single reads slow, `daysWithDeletes` > 0 | many equality deletes | `IcebergMaintenance --relayout` |
+| single reads slow, `daysWithDeletes` > 0 | many equality deletes | `lake maintain` (compaction) |
 | single reads slow on a table another engine wrote | large row groups or unsorted days | `--relayout --force`, or the engine's sorted compaction |
 | *known at* finds nothing | the snapshots of that time were expired | keep more history (`--expire-hours`) |
 | new data not visible | the refresh has not run yet | wait `refresh-seconds`; check the catalog's current snapshot |

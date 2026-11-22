@@ -61,10 +61,10 @@ class RowRetentionConfig(unittest.TestCase):
     def test_iceberg_gets_the_options_and_a_table_without_a_block_none(self):
         base = {"vacuum-hours": 168, "compact": False}
         block = {"ttl": "8h", "on": "UPDATED_AT", "max-rows": "5"}
-        cmd = maintain_iceberg.command("/lake/news/items", {**base, "row-retention": block}, date(2026, 11, 14), False, False, 0, Path("/data"),
-                                       jar="x.jar", java="java")
+        cmd = maintain.lake_command("/lake/news/items", {**base, "row-retention": block}, date(2026, 11, 14), False, False, 0, False, Path("/data"),
+                                    jar="x.jar", java="java", fmt="iceberg")
         self.assertEqual(["8h", "UPDATED_AT", "5"], [cmd[cmd.index(k) + 1] for k in ("--ttl", "--on", "--max-rows")])
-        plain = maintain_iceberg.command("/lake/news/items", base, date(2026, 11, 14), False, False, 0, Path("/data"))
+        plain = maintain.lake_command("/lake/news/items", base, date(2026, 11, 14), False, False, 0, False, Path("/data"), jar="x.jar", java="java", fmt="iceberg")
         self.assertNotIn("--ttl", plain)
 
     def test_the_delta_and_files_command_and_its_answer(self):

@@ -15,7 +15,7 @@
 
 # Nightly maintenance of the Iceberg tables in S3: retention (with the 7-year floor of the risk and risk-results domains), the relayout
 # of drifted days, snapshot expiry (and the files no snapshot names, older than the vacuum window), by `drishti.py lake maintain` (the engine of
-# Admin -> Lakes; tools/lake/maintain_iceberg.py runs Drishti's Iceberg maintenance), one table at a time under the table's lock, so it
+# Admin -> Lakes; Lake's `lake maintain --format iceberg` does the work), one table at a time under the table's lock, so it
 # never runs beside a load or a backfill of that table. Then the storage-tier rules are written again (setup-lifecycle.sh).
 USAGE="maintain.sh [--tables domain/table,...] [--maintain-dry-run] [--dry-run] [--env FILE]
 
@@ -26,7 +26,7 @@ USAGE="maintain.sh [--tables domain/table,...] [--maintain-dry-run] [--dry-run] 
 The tables in S3 are not built by lake build in a local lake, so lake maintain's ownership rule sees them as foreign: this script
 passes --force-foreign (lake maintain prints a warning and its history marks the run forced).
 Settings: deploy/aws/iceberg/lake-maintenance.s3.yaml with ICEBERG_KEEP_BUSINESS_DAYS, and ICEBERG_EXPIRE_HOURS (the vacuum window, which also removes unreferenced files);
-ICEBERG_CATALOG=glue maintains the tables of the Glue databases through Glue's Iceberg REST endpoint.
+ICEBERG_CATALOG=glue is refused with a clear message: a REST-catalog (Glue) lake is not maintained by lake maintain yet (Lake 0.9.2 adds it).
 Exit: 0 every table maintained, 1 a table failed, 3 a table was locked by a load (it is maintained on the next run)."
 source "$(dirname "$0")/../lib/common.sh"
 drishti_init "$@"

@@ -3221,7 +3221,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
   over each, one after the other: six trade pages, `TRD <id> 10` for each, two counterparty-trades pages, three searches and a BI model query
   (sum of `QUANTITY` by source system, currency and product type). Measured on 2026-10-21: **18 answers, the same** (only timings, the
   data-version stamps and the table generation in the provenance panel differ, as they name the storage).
-- **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergMaintenance --keep-days` (the Iceberg maintenance) of
+- **Maintenance:** `lake maintain` for the Delta and the Iceberg tables (`--format iceberg`; today and N business days; a Glue/REST-catalog lake is refused with a clear message, Lake 0.9.2 adds it), see
   [ICEBERG_CONNECTOR.md, section 9](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance).
 - **Default:** an option; the demo default is Delta.
 
