@@ -1295,18 +1295,12 @@ drishti:
 site's `config/engines/<id>.yaml`; the copy of the same file inside the server jar; `application.yaml` (which holds no engine keys). A site
 that deletes a file gets the shipped values. A lens's feature presets (`var: off`) sit above the engine files.
 
-**Other names that still decide.** `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled`
-and `drishti.pivot.enabled`, set anywhere above the shipped files (most often `application.local.yaml`), decide the engine's switch, and the
-server says so once at start:
+**Old switch names stop the start.** `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled`
+and `drishti.pivot.enabled` are not read: a site that still sets one gets a refusal naming the key to use instead
+(`drishti.engines.<id>.enabled`, in `config/engines/<id>.yaml`).
 
-```
-WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in local file); it still works.
-      Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
-```
-
-`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings. The in-memory lake is on when its
-stores are configured in `application.local.yaml` (`drishti.lake.memory.stores`) and nothing sets its switch. To tidy up, move the engine
-keys from `application.local.yaml` to the engine's file; `drishti.py server engines show var --sources` says where each key comes from.
+`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings.
+`drishti.py server engines show var --sources` says where each key comes from.
 
 ### 21.3 What "off" means
 
@@ -1439,7 +1433,7 @@ where the switch comes from, restart needed), `GET /api/v1/admin/engines/{id}/im
 answering each change's outcome), `GET /api/v1/admin/engines/history`; `GET /api/v1/about` carries `engines: [{id, title, here, cluster}]`,
 what the console needs to show or hide. The codes: `DRS-1020` (not running here or anywhere, 404), `DRS-1021` (a dependency refuses the
 change, 409), `DRS-1022` (an engine blocked at start by a missing need, logged), `DRS-1023` (the engine file changed on disk or cannot be
-written, 409), `DRS-1024` (another name of the switch in use, a warning).
+written, 409).
 
 ## 22. Modules on or off
 
@@ -1669,7 +1663,7 @@ lists what the console hosts, what is gone and what it refused, with the reasons
 | Turning an engine on or off is refused (`DRS-1021`) | another engine needs it, or it needs one that is off | turn both on or off together (**Turn on both**, `--with-needs`, `--with-dependents`) |
 | An engine shows `blocked` after a start (`DRS-1022` in the log) | its file turns it on but a need is off | turn the need on |
 | Apply answers `DRS-1023` | the engine file was edited by hand since the page read it, or the folder is not writable | reload the page; check `DRISHTI_ENGINES_DIR` and the folder's permissions |
-| The page says a change is written but another setting still decides | the switch is set in the environment, `application.local.yaml` or by another name (`DRS-1024` in the log) | remove that setting, or change it there |
+| The page says a change is written but another setting still decides | the switch is set in the environment or in `application.local.yaml` | remove that setting, or change it there |
 | An engine stays *restart needed* | `memory-lake` and `flight` start only at a server start | restart the server |
 | An engine shows *not installed* | its module is off | switch the module on ([section 22](#22-modules-on-or-off)) |
 | An engine's pages are missing from the Risk menu for some people | the engine's `opens:` does not name their role | add the role to its `opens:` in the banking jar's `META-INF/drishti/engines.yaml` (the console keeps no copy) |

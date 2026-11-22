@@ -1990,8 +1990,7 @@ presets (`EditionEnvironmentPostProcessor`) sit above the engine files.
 
 **Switch and source** (`EngineSwitches`) reads Spring's own property sources in order and reports which one decided each switch. The keys
 `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled` and `drishti.pivot.enabled`, set above
-the shipped files, decide their engine's switch (`DRS-1024` logged once); the in-memory lake is on when its stores are configured in the
-local file and nothing sets its switch. Each lens's `config/distributions/kernel.yaml `features:`` entry names the engine switch
+the shipped files, stop the start (the refusal names the key to use). Each lens's `config/distributions/kernel.yaml `features:`` entry names the engine switch
 (`var: { server: [drishti.engines.var.enabled] }`).
 
 ### 27.3 The lifecycle and what off means on the server

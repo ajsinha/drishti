@@ -508,9 +508,6 @@ Move the whole tree with one setting: `DRISHTI_DATA_DIR=/var/lib/drishti` puts t
 resolved value to them as the system property `drishti.data.dir`, and command-line tools read `DRISHTI_DATA_DIR`).
 The `<data>/...` defaults shown in this page are the defaults of this setting.
 
-**Moved:** the packs folder was `<home>/packs` and is now `<config>/packs` (`git mv packs config/packs`). For one release a server
-whose packs folder does not exist, and that finds `<home>/packs`, uses it and logs a warning; the console does the same with `../packs`.
-
 ### Temporary folders: `drishti.tmp-dir` and the console's `tmp_dir`
 
 Both processes keep **one folder of their own** for everything temporary, so a crash or a full `/tmp` can be traced to a process and nothing is left behind.
@@ -4402,7 +4399,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/DATA\_LAKE\_GUIDE.md); the caps add to -XX:MaxDirectMemorySize | restart |  | expert |
 | `drishti.lake.memory.tables` | list | `[]` |  | server (each node its own) | the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd), retention { ttl, on, max-rows } (none: rows kept; the compaction drops older rows) | restart |  | expert |
 | `drishti.lake.memory.history-keep` | integer | `50` |  | server (each node its own) | the runs kept per table for Admin -&gt; Lakes and drishti.py lake memory jobs (in memory) | restart |  | expert |
 | `drishti.lake.memory.job-threads` | integer | `2` |  | server (each node its own) | replenish jobs that may run at once (one per table at most) | restart |  | expert |

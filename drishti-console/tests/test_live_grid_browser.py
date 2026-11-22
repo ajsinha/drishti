@@ -146,6 +146,7 @@ def test_a_row_opens_the_record_panel_with_links_and_an_edit_with_a_reason(brows
     assert sent["entity"] == "T-005" and sent["basedOn"] == 1 and sent["reason"] == "Booked at the wrong price: ticket 4411"
     assert sent["items"] == [{"field": "PRICE", "from": 1.05, "to": 1.5}]
     assert "waiting for 1 approver" in panel.locator(".dg-live-status").inner_text()          # four eyes
+    pg.wait_for_function("() => (document.querySelector('[data-act=tray]') || {}).textContent.includes('My changes (1)')")   # the tray's own signal
     assert "My changes (1)" in pg.locator("[data-act=tray]").inner_text()                     # the tray
     pg.click("[data-act=tray]")
     assert "T-005" in pg.locator(".dg-live-tray").inner_text() and "PRICE 1.05 → 1.5" in pg.locator(".dg-live-tray").inner_text()
