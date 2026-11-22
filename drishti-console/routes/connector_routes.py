@@ -259,6 +259,17 @@ async def api_enabled(request: Request, name: str):
         return _problem(e)
 
 
+@router.post("/api/{name}/lifecycle/{transition}")
+async def api_lifecycle(request: Request, name: str, transition: str):
+    """Suspend or resume a connector (docs/architecture/LIFECYCLE.md): suspended, it stops pulling and answers 503 DRS-1037; resumed, it carries on."""
+    if transition not in ("suspend", "resume"):
+        return JSONResponse({"code": "DRS-5001", "detail": "a connector is suspended or resumed here"}, status_code=400)
+    try:
+        return await _server(request, "POST", f"/{quote(name)}/lifecycle/{transition}", timeout=60.0)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/{name}/reset")
 async def api_reset(request: Request, name: str):
     try:
