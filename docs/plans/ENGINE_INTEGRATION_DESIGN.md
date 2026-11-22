@@ -25,7 +25,7 @@ For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drisht
 and genomics module manifests, `META-INF/drishti/engines.yaml`); [DRISHTI_RISK_DESIGN](DRISHTI_RISK_DESIGN.md);
 [DRISHTI_TOOLS_DESIGN](DRISHTI_TOOLS_DESIGN.md); `drishti-lake` `main` (`docs/design/READ_API.md`, the L11 contracts commit);
 `drishti-rachana` `develop` (`spec/1/SPEC.md`, `spec/1/data-protocol/PROTOCOL.md`, `docs/design/{LIBRARIES,LIVE_TABLES}.md`,
-`conformance/1/`). The normative text an engine author implements is [../specs/ENGINE_SPEC.md](../specs/ENGINE_SPEC.md); this
+`conformance/1/`). The normative text an engine author implements is [spec/1/SPEC.md in drishti-engine](https://github.com/drishti-platform/drishti-engine/blob/develop/spec/1/SPEC.md); this
 document is the reasoning, the Drishti side and the plan. Where the two differ, the specification wins.
 
 **The owner's direction (2026-11-21).** Establish interfaces so that people can write engines; a test kit proves an engine

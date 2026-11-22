@@ -18,14 +18,14 @@ build. This is the acceptance test of the engine design (ENGINE_INTEGRATION_DESI
 Risk is the first engine delivered this way.
 
 Designed 2026-11-22: ENGINE_INTEGRATION_DESIGN.md section 0 (the test as A1 to A8, the JAR, the lib folder, class loading,
-compatibility, trust) and ENGINE_SPEC.md section 17; DRISHTI_RISK_DESIGN.md section 0a (Risk as one JAR). EN-29 to EN-44 are
+compatibility, trust) and [ENGINE_SPEC](https://github.com/drishti-platform/drishti-engine/blob/develop/spec/1/SPEC.md) section 17; DRISHTI_RISK_DESIGN.md section 0a (Risk as one JAR). EN-29 to EN-44 are
 accepted (owner, 2026-11-22).
 
 ## Owner direction for engines (2026-11-22): everything that computes
 
 "We will expand the engine concept to literally everything where computations are done: design it well." Designed in
 ENGINE_INTEGRATION_DESIGN.md section 2 (inventory, five ways of interacting on the same two interfaces, the rules every engine keeps,
-the handover and the benchmark gate, the order M1 to M5) and section 11 (the minimal host); ENGINE_SPEC.md draft 3. Combined i8 is step
+the handover and the benchmark gate, the order M1 to M5) and section 11 (the minimal host); [ENGINE_SPEC](https://github.com/drishti-platform/drishti-engine/blob/develop/spec/1/SPEC.md) draft 3. Combined i8 is step
 M1 and its scope does not grow. Open for the owner: EN-45 to EN-55, each with a recommendation.
 
 ## Also carried (G4 gate part 2b)
