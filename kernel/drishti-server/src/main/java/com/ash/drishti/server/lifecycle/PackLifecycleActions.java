@@ -44,8 +44,8 @@ final class PackLifecycleActions implements PackLifecycles.Actions {
     }
 
     @Override
-    public void validate(String pack) {
-        reloader.check(pack);
+    public Pack validate(String pack) {
+        return reloader.check(pack);
     }
 
     @Override

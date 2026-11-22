@@ -758,7 +758,7 @@ public final class PackReloader implements AutoCloseable {
      * {@code init}: reads {@code name} and checks it together with the running packs (what a load would check), changing nothing. Throws an
      * {@link IllegalStateException} with the words of what is wrong.
      */
-    public void check(String name) {
+    public Pack check(String name) {
         lock.lock();
         try {
             com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();
@@ -773,6 +773,7 @@ public final class PackReloader implements AutoCloseable {
             if (bad != null) {
                 throw new IllegalStateException(bad);
             }
+            return p;
         } finally {
             lock.unlock();
         }

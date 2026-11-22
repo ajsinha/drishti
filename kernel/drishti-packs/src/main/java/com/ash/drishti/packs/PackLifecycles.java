@@ -54,8 +54,8 @@ public final class PackLifecycles {
 
     /** What a pack transition does to the server: the pack reloader and the connector registry, wired by the server. */
     public interface Actions {
-        /** Reads {@code pack} and checks it with the running packs, changing nothing; throws with the words of what is wrong. */
-        void validate(String pack);
+        /** Reads {@code pack} and checks it with the running packs, changing nothing; the pack as read, or throws with the words of what is wrong. */
+        Pack validate(String pack);
 
         /** Registers and serves {@code pack} (and the packs it extends, already running or started first by the graph's order). */
         void load(String pack, String actor);
@@ -78,7 +78,9 @@ public final class PackLifecycles {
     }
 
     private final PackRegistry registry;
-    private final Map<String, LifecycleMachine> machines = new ConcurrentHashMap<>();
+    private final Map<String, LifecycleMachine> machines = new java.util.concurrent.ConcurrentSkipListMap<>();   // by name: stable listings
+    /** Packs initialized and not started yet, as read: in the graph, so a start checks what they declare. */
+    private final Map<String, Pack> pending = new ConcurrentHashMap<>();
     /** The connectors a pack's suspend suspended, given back at its resume. */
     private final Map<String, List<String>> suspendedParts = new ConcurrentHashMap<>();
     private final List<LifecycleMachine.Listener> listeners = new CopyOnWriteArrayList<>();
@@ -200,7 +202,7 @@ public final class PackLifecycles {
         if (m == null || m.state() == LifecycleState.SHUTDOWN || m.state() == LifecycleState.FAILED) {
             m = newMachine(pack);
         }
-        m.transition(Transition.INIT, actor, () -> actions().validate(pack));
+        m.transition(Transition.INIT, actor, () -> pending.put(pack, actions().validate(pack)));
     }
 
     /**
@@ -208,18 +210,19 @@ public final class PackLifecycles {
      * packs it extends that are not running start first (dependencies first), then the pack. A pack never initialized is initialized first.
      */
     public synchronized void start(String pack, String actor) {
-        DependencyGraph g = graph();
         String node = DependencyGraph.id(Lifecycle.Type.PACK, pack);
         LifecycleMachine m = machines.get(pack);
         if (m != null && (m.state() == LifecycleState.RUNNING || m.state() == LifecycleState.SUSPENDED)) {
             m.transition(Transition.START, actor, null);                    // refused by the table, naming the state
         }
+        if (m == null || m.state() != LifecycleState.INITIALIZED) {
+            init(pack, actor);                                              // read and validated first: the graph then knows what it declares
+            m = machines.get(pack);
+        }
+        DependencyGraph g = graph();
         String problem = g.startProblem(List.of(node));
         if (problem != null) {
-            if (m == null || m.state() == LifecycleState.SHUTDOWN || m.state() == LifecycleState.FAILED) {
-                m = newMachine(pack);
-            }
-            m.refuse(Transition.START, actor, problem);
+            m.refuse(Transition.START, actor, problem);                     // it stays INITIALIZED: fix the dependency, then start
         }
         for (String n : g.startOrder(List.of(node))) {
             if (n.startsWith("pack:")) {
@@ -231,6 +234,7 @@ public final class PackLifecycles {
                 }
                 if (pm.state() == LifecycleState.INITIALIZED) {
                     pm.transition(Transition.START, actor, () -> actions().load(p, actor));
+                    pending.remove(p);
                 }
             }
         }
@@ -346,6 +350,7 @@ public final class PackLifecycles {
         w.engines().get().forEach(e -> b.node(DependencyGraph.engine(e)));
         Map<String, Pack> packs = new LinkedHashMap<>();
         registry.packs().forEach(p -> packs.put(p.name(), p));
+        pending.forEach(packs::putIfAbsent);
         machines.keySet().forEach(n -> b.node("pack:" + n));
         for (Pack p : packs.values()) {
             String from = "pack:" + p.name();
