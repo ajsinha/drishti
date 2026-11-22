@@ -3917,7 +3917,7 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 
 Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
 `tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
-([USING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/USING.md)). Drishti has no `elements` command; how the console
+([USING.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/USING.md)). Drishti has no `elements` command; how the console
 holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md).
 
 ### `feed`: the data feeds

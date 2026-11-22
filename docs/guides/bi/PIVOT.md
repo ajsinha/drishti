@@ -75,7 +75,7 @@ switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_EN
 
 The screen is Excel's PivotTable as people know it, with what Excel lacks in the places Excel's equivalents would be. It gives the grid
 most of the screen: the fields live behind pickers, not in a list beside it. One component draws every pivot (drishti-grid's wells,
-[ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)): Views → Pivot, the MR and CCR cubes, the Pivot under a page's table and above search results all open this screen.
+[ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md)): Views → Pivot, the MR and CCR cubes, the Pivot under a page's table and above search results all open this screen.
 
 **Three ways to hold the fields, one model.** The screen opens in the first; **Customize ›** (or `\`) moves between the line and the panes.
 

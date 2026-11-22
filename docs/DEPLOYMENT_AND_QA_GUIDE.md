@@ -258,21 +258,25 @@ is listed in [CONFIGURATION.md › Profiles](admin/CONFIGURATION.md#profiles-con
 From nothing to the console in a browser, on one machine, with the demo lake. Each step says what you should see; the sections after this
 one have every option.
 
-**1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or clone and build the jar (JDK 21 only; the
-repository carries Maven as `mvnw`):
+**1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
+only; every repository carries Maven as `mvnw`). The source is five repositories under one folder, `~/IdeaProjects/drishti-platform/`
+(Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
+`git clone https://github.com/drishti-platform/drishti-platform.git` and run its `clone_all.py`; then `build_all.py` installs the
+products from their tags in order (tools, Rachana, Lake) and builds Drishti. The steps have one home,
+[QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
+repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git /home/you/drishti && cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py build all
 ```
 
 ```powershell
-git clone https://github.com/ajsinha/drishti.git C:\Users\you\IdeaProjects\drishti; cd C:\Users\you\IdeaProjects\drishti
-py tools\drishti.py build jar
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
+py tools\drishti.py build all
 ```
 
-You should see `building the server jar with Java 21 (…): …/mvnw -q clean package -DskipTests -pl :drishti-app -am`, a few minutes of
-Maven, then `built drishti-server-<version>-exec.jar; copied into /home/you/drishti/lib`.
+You should see Maven's progress, then `lib/drishti-server-<version>-exec.jar` and the module packages in `modules/`.
 
 **2 · Prepare the machine:** `python3 tools/drishti.py setup` (Windows `py tools\drishti.py setup`). You should see every line `ok` or
 `made` and the next steps ([1.6](#16-the-settings-file-and-drishtipy-setup)).
@@ -384,16 +388,16 @@ environment (step 6), start again.
 
 ## 4. Get the release
 
-**A. Build it** from a clone (needs the JDK only; the repository carries Maven 3.9 as `mvnw`):
+**A. Build it** from the platform's source (needs the JDK only; the products are installed first, [QUICKSTART_DEVELOPERS.md section 2](QUICKSTART_DEVELOPERS.md#2-build); the repository carries Maven 3.9 as `mvnw`):
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py build all           # one Maven clean package: it installs the jar into lib/, the module packages into modules/
 ls lib/ modules/                             # drishti-server-<version>-exec.jar  ext/ ; banking-1.0.0.dmod ... first-party.yaml
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py build all
 dir lib modules
 ```
@@ -1221,9 +1225,9 @@ day (or a week, a month end, a date you pick) in steps that add up ([VAR_GUIDE.m
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py var show BANK
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-06
-  horizon    1-day   (1-day · 99% VaR, ES 97.5% · historical simulation, 250 scenarios)
-  VaR 99%   139,096,039 USD   (the 3th worst of 250)
-  ES 97.5%   222,732,223 USD   (mean of the 7 worst)
+  horizon    1-day   (1-day · 99% VaR, ES 97.5% · historical simulation)
+  VaR 99%   167,372,692 USD
+  ES 97.5%   210,131,972 USD
   limit      150,000,000 USD   use 92.7%
   parts      2 division   standalone sum 173,258,800   diversification 34,162,761
   backtest   green  2 exceptions in 249 days   Kupiec p 0.747   Christoffersen p 0.857
@@ -1260,7 +1264,7 @@ Details: [guides/bi/README.md](guides/bi/README.md), [guides/bi/README.md](guide
 
 **In the UI.** **Create → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
 (grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
-([ELEMENTS.md section 8.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
+([ELEMENTS.md section 8.4](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
 either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)
@@ -1450,7 +1454,7 @@ Tick one column per operating system tested. *Expected* is what section 9 shows.
 | 8 | Sign in, change the password, make a token | Home opens; `doctor --token-file` green | ☐ | ☐ | ☐ |
 | 9 | Home through Risk and through World | each lens's Home with its cards | ☐ | ☐ | ☐ |
 | 10 | Admin → Lakes | the demo lake's tables with rows and dates | ☐ | ☐ | ☐ |
-| 11 | `VAR BANK`, `VAR DESK RATES`; Explain ›, Why it moved | the bank's VaR and ES, the scope tree; one desk; the change in steps that add up | ☐ | ☐ | ☐ |
+| 11 | `VAR BANK`, `VAR DESK RATES`; Explain ›, Why it moved | the bank's VaR 167,372,692 and ES 210,131,972 on 2026-11-06 (`VAR DESK RATES` 74,633,680 and 79,246,576), the scope tree; one desk; the change in steps that add up | ☐ | ☐ | ☐ |
 | 12 | `EXP BANK`, Pre-deal check | the exposure explorer; the check's form | ☐ | ☐ | ☐ |
 | 13 | BI Trades overview; `MCUBE` | the report with live slicers; VaR by desk | ☐ | ☐ | ☐ |
 | 14 | Create → Elements gallery, a Playground page | every component drawn; an edited cell redraws the visual | ☐ | ☐ | ☐ |

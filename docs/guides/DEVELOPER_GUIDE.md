@@ -532,7 +532,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 [data/testdata/README.md](../../data/testdata/README.md) walk through; measured on a 24-core laptop):
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git && cd drishti
+git clone https://github.com/drishti-platform/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
@@ -1708,7 +1708,7 @@ live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` f
 
 ### 5.9 The multi-select and the date fields
 
-The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 8.2),
+The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md) section 8.2),
 loaded on every page by `base.html`. A form stays a plain server form: `drishti_app.js` calls `upgradeFields(document)`, which turns
 every `<input type="date">` into the business-date picker (the field becomes a hidden input with the same name and value, so the form
 sends `2026-11-06` as before) and every group marked `data-multiselect` with more than six checkboxes into the multi-select (chips, a
@@ -4037,7 +4037,7 @@ forwards its requests once to a placed node (`X-Drishti-Placement` names who ran
 ### 12.6 How to create a custom visual
 
 A chart Drishti does not have is a **kind of drishti-chart's registry** in the module's own Elements library, never a drawing of its own
-([ELEMENTS.md section 7.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
+([ELEMENTS.md section 7.4](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md)):
 
 ```bash
 python3 tools/drishti.py module visual . --id freight --name lane-flow --title "Lane flow"     # in the module project

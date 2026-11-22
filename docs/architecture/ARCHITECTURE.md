@@ -2678,7 +2678,7 @@ test between the two. Base VaR needs neither: it adds precomputed vectors.
 
 How other web applications show Drishti screens without an iframe, and how the code that draws them is built. The how-to for host
 developers (the elements, tokens, the sign-in window, the render API, theming, versions) is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md);
-the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md).
+the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md).
 Decisions: [ADR-021](adr/021-embedding-is-html-over-the-wire.md) (embedding, the token, served versions) and
 [ADR-022](adr/022-one-renderer-in-the-browser.md) (one renderer in the browser).
 
@@ -2859,7 +2859,7 @@ against every renderer version before it ships, and a hostile ViewModel (markup 
 Drishti Elements is two things with one name: the **embedding elements** above, and the **component libraries** (drishti-core,
 -inputs, -grid, -chart, -data, -insight, -renderer, -risk) that the console, the renderer and outside applications all draw with. The
 libraries' design (their APIs, the grid and its pivot, the AG Grid-style adapter, the chart spec and maps, packaging and licensing, the
-guards) is [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md); using them in another application is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) chapters 13 and 14.
+guards) is [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md); using them in another application is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) chapters 13 and 14.
 The renderer is library 7, so "no bespoke UI" holds for embeds too: a fix in a component reaches the console, the renderer and every host
 at once.
 
