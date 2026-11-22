@@ -342,11 +342,10 @@ def _names_in(path: Path, start: str) -> set[str]:
 
 def standalone_scripts() -> list[Path]:
     """The console's scripts that a page without drishti-core may load: embed v1's enhancers, what the renderers load beside themselves
-    (2.x through /embed/v2/js/, the frozen 1.2.0), the maps and the live hub's SharedWorker."""
+    (through /embed/v2/js/), the maps and the live hub's SharedWorker."""
     names = (_names_in(CONSOLE / "routes" / "embed_routes.py", "ENHANCERS = (")
              | _names_in(CONSOLE / "web" / "embed" / "assets.js", "ENHANCERS = [")
              | _names_in(CONSOLE / "routes" / "embed_v2_routes.py", "SCRIPTS = {")
-             | _names_in(STATIC / "render" / "1.2.0" / "m" / "console.js", "SCRIPTS = [")
              | {"geomap", "live-hub"})
     files = [STATIC / "js" / f"drishti_{n}.js" for n in sorted(names) if not n.startswith("elements-")]
     return [f for f in files if f.exists()]

@@ -29,14 +29,14 @@ VIEW = {"node": "drishti-main", "dir": "/srv/config/engines", "memoryBytes": 3 <
         "engines": [
             {"id": "var", "title": "VaR", "state": "running", "on": True, "liveOn": True, "installed": True, "memoryBytes": 3_300_000_000,
              "needs": [], "uses": [], "neededBy": ["frtb-sa"], "usedBy": [], "file": "config/engines/var.yaml", "source": "engine file",
-             "alias": "", "overridden": False, "hides": {"words": ["VAR", "SMAT"]}, "threads": 6, "fileExists": True},
+             "overridden": False, "hides": {"words": ["VAR", "SMAT"]}, "threads": 6, "fileExists": True},
             {"id": "frtb-sa", "title": "FRTB-SA", "state": "off", "on": False, "liveOn": True, "installed": True, "memoryBytes": 0,
              "needs": ["var", "sensitivities"], "uses": [], "neededBy": [], "usedBy": ["mr-cube"], "file": "config/engines/frtb-sa.yaml",
-             "source": "local file (old name drishti.frtb.enabled)", "alias": "drishti.frtb.enabled", "overridden": True,
+             "source": "local file (old name drishti.frtb.enabled)", "overridden": True,
              "hides": {"words": ["FRSA", "PLAY FRTB"]}, "threads": 0, "fileExists": False},
             {"id": "memory-lake", "title": "In-memory lake", "state": "off", "on": False, "liveOn": False, "installed": True, "memoryBytes": 0,
              "needs": [], "uses": [], "neededBy": [], "usedBy": [], "file": "config/engines/memory-lake.yaml", "source": "shipped copy",
-             "alias": "", "overridden": False, "hides": {}, "threads": 0, "fileExists": True}],
+             "overridden": False, "hides": {}, "threads": 0, "fileExists": True}],
         "cluster": {"on": True, "self": "drishti-main", "peers": {"drishti-b": {"var": "off", "frtb-sa": "running"}},
                     "available": {"var": True, "frtb-sa": True, "memory-lake": False}}}
 
@@ -74,11 +74,11 @@ class Engines(unittest.TestCase):
         self.assertRegex(out, r"frtb-sa\s+off\s+running\s+yes")
         self.assertRegex(out, r"memory-lake\s+off\s+-\s+no")
 
-    def test_show_with_sources_names_the_old_name(self):
+    def test_show_with_sources_names_where_the_switch_comes_from(self):
         code, out, _ = self.go("server", "engines", "show", "frtb-sa", "--sources")
         self.assertEqual(0, code)
         self.assertIn("off hides words: FRSA, PLAY FRTB", out)
-        self.assertIn("the switch comes from: local file (old name drishti.frtb.enabled) (old name drishti.frtb.enabled, DRS-1024)", out)
+        self.assertIn("the switch comes from: local file", out)
         self.assertIn("not written yet", out)
 
     def test_on_with_needs_sends_one_batch_and_says_the_outcome(self):

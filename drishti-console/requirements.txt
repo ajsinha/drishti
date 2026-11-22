@@ -12,9 +12,10 @@ brotli>=1.1      # optional: Brotli for embed payloads (gzip otherwise)
 # Arrow streams of BI answers and Notebook extracts (the console computes nothing: Python runs on the server's compute pool, whose libraries are
 # pinned in config/compute/locks/python.lock; tests/test_console_runs_no_compute.py bans pandas, NumPy and the like in the console's code).
 pyarrow>=16
-# Drishti Lake's Python path (the load rules, the Python loader, the archive guards, the Java tools' launcher): the pinned wheel, found in
-# ../lib/wheels (put there by the release: the product's `uv build` output). Its dependencies (deltalake, pyarrow, pyyaml, jsonschema)
-# come with it, at the versions it pins; a wheel is pure Python and installs the same on Linux, macOS and Windows.
+# Drishti Lake's Python path (the load rules, the Python loader, the archive guards, the Java tools' launcher): the wheel built from the Lake
+# ref Drishti pins (lib/lake-wheel.pin: ref, version and SHA-256; how to build it is written there and in docs/QUICKSTART_DEVELOPERS.md), put in
+# ../lib/wheels. Its dependencies (deltalake, pyarrow, pyyaml, jsonschema) come with it, at the versions it pins; a wheel is pure Python and installs
+# the same on Linux, macOS and Windows. The version below is held to the pin's by tools/lake/test_lakewheel.py.
 --find-links ../lib/wheels
-drishti-lake==0.9.0.dev0
+drishti-lake==0.9.1
 # optional, allow-listed when installed: scipy>=1.13, statsmodels>=0.14

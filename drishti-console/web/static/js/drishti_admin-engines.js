@@ -70,7 +70,7 @@
       var state = pill(e.state) + (e.restartNeeded ? ' ' + pill('restart needed').replace('eng-pill n', 'eng-pill a') : '')
         + (s ? ' <span class="eng-pill a">' + (s.on ? 'on' : 'off') + ' staged</span>' : '')
         + (e.reason ? ' <span class="eng-muted" title="' + esc(e.reason) + '">' + esc(e.reason) + '</span>' : '');
-      var source = esc(e.source) + (e.alias ? '<br><span class="eng-warn">old name ' + esc(e.alias) + ' (DRS-1024)</span>' : '');
+      var source = esc(e.source);
       return '<tr data-engine="' + esc(e.id) + '"' + (s ? ' class="staged"' : '') + (installed ? '' : ' class="eng-dim"') + '>'
         + '<td class="l"><b>' + esc(e.title) + '</b> <span class="eng-id">' + esc(e.id) + '</span></td>'
         + '<td class="l">' + (installed

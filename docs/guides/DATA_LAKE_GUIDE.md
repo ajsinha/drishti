@@ -468,7 +468,7 @@ python3 tools/drishti.py lake build --from drop/trade_endur.2026-11-06.jsonl.gz 
 ```
 
 ```text
-engine: drishti (Drishti's Java writer in server.jar)
+engine: java-loader (the parallel lake loader (the default engine))
 business date  PRODUCT_TYPE           rows
 2026-11-06     CDS                     130
 2026-11-06     CDS_INDEX               140
@@ -477,7 +477,7 @@ business date  PRODUCT_TYPE           rows
 documents read: 2000, rows written: 2000, rejected: 0
   business date 2026-11-06 from the file name: trade_endur.2026-11-06.jsonl.gz
 summary: data/delta/risklake/_drishti-lake/runs/20261107T080146.064-1786979.json
-2026-11-07T08:01:53-05:00 lake-build ok exit=0 run=20261107T080146.064-1786979 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=15 seconds=7.012
+2026-11-07T08:01:53-05:00 lake-build ok exit=0 run=20261107T080146.064-1786979 domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=15 seconds=7.012
 ```
 
 The useful options (the full list: `drishti.py lake build --help`, [CLI_REFERENCE.md](CLI_REFERENCE.md)):
@@ -737,7 +737,7 @@ python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lak
 ```
 
 ```text
-… lake-build ok exit=0 … domain=trading kind=trade engine=drishti mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.573
+… lake-build ok exit=0 … domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.573
 ```
 
 #### (b) Java: the JDK alone

@@ -56,14 +56,14 @@ public final class EngineCatalogue {
      * @param file its file under config/engines/
      * @param switchKey its switch ({@code drishti.engines.frtb-sa.enabled})
      * @param env the switch's environment variable
-     * @param aliases the switch's old names, still accepted (DRS-1024)
+     * @param retired the switch's old names: a site that sets one is refused at start, naming the switch
      * @param shipped the switch as shipped
      * @param installed whether this build holds the engine (false: known to the switch framework, built later)
      * @param liveOn whether turning it on takes effect without a restart
      * @param lists every other list of the entry by its key: prefixes, needs, uses, api, console, opens, words, menus, help, landings, tiles,
      *     lenses, bi, cli, playgrounds, connectors, kinds, inputs, ai-tools
      */
-    public record Entry(String id, String title, String about, String file, String switchKey, String env, List<String> aliases, boolean shipped,
+    public record Entry(String id, String title, String about, String file, String switchKey, String env, List<String> retired, boolean shipped,
             boolean installed, boolean liveOn, Map<String, List<String>> lists) {
 
         public List<String> list(String key) {
@@ -169,7 +169,7 @@ public final class EngineCatalogue {
         }
         String id = n.path("id").asText();
         return new Entry(id, n.path("title").asText(id), n.path("about").asText(""), n.path("file").asText(id + ".yaml"),
-                n.path("switch").asText("drishti.engines." + id + ".enabled"), n.path("env").asText(""), strings(n.path("aliases")),
+                n.path("switch").asText("drishti.engines." + id + ".enabled"), n.path("env").asText(""), strings(n.path("retired")),
                 n.path("shipped").asBoolean(false), n.path("installed").asBoolean(false), n.path("live-on").asBoolean(true), Map.copyOf(lists));
     }
 

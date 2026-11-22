@@ -137,8 +137,7 @@ def register(server_sub, admin_sub, srv, ctx: dict) -> None:
                 for k, v in (e.get("hides") or {}).items():
                     print(f"  off hides {k}: {', '.join(v)}")
                 if a.sources:
-                    print(f"  the switch comes from: {e.get('source')}" + (f" (old name {e['alias']}, DRS-1024)" if e.get("alias") else "")
-                          + ("; a change is written to the file but this still decides until it is removed" if e.get("overridden") else ""))
+                    print(f"  the switch comes from: {e.get('source')}" + ("; a change is written to the file but this still decides until it is removed" if e.get("overridden") else ""))
                 return 0
             if a.json:
                 say_json(view)

@@ -57,26 +57,23 @@ class EngineFilesTest {
         EngineCatalogue c = EngineCatalogue.load();
         var s = new EngineSwitches(c, env(new Object[] {FILE, Map.of("drishti.engines.var.enabled", "false")},
                 new Object[] {SHIPPED, Map.of("drishti.engines.var.enabled", "true")}));
-        assertThat(s.of("var")).isEqualTo(new EngineSwitches.Switch(false, "engine file", null, false));
-        assertThat(s.warnings()).isEmpty();
+        assertThat(s.of("var")).isEqualTo(new EngineSwitches.Switch(false, "engine file", false));
         s = new EngineSwitches(c, env(new Object[] {LOCAL, Map.of("drishti.engines.var.enabled", "true")},
                 new Object[] {FILE, Map.of("drishti.engines.var.enabled", "false")}));
-        assertThat(s.of("var")).isEqualTo(new EngineSwitches.Switch(true, "local file", null, true));
+        assertThat(s.of("var")).isEqualTo(new EngineSwitches.Switch(true, "local file", true));
         s = new EngineSwitches(c, env(new Object[] {SHIPPED, Map.of("drishti.engines.var.enabled", "true")}));
         assertThat(s.of("var").source()).isEqualTo("shipped copy");
         assertThat(s.of("var").overridden()).isFalse();
     }
 
     @Test
-    void anOldSwitchNameStillWorksWithOneWarning() {
+    void anOldSwitchNameStopsTheStartAndNamesTheNewKey() {
         EngineCatalogue c = EngineCatalogue.load();
-        var s = new EngineSwitches(c, env(new Object[] {LOCAL, Map.of("drishti.var.enabled", "false", "drishti.frtb.enabled", "false")},
-                new Object[] {FILE, Map.of("drishti.engines.var.enabled", "true")}));
-        assertThat(s.of("var")).isEqualTo(new EngineSwitches.Switch(false, "local file (old name drishti.var.enabled)", "drishti.var.enabled", true));
-        assertThat(s.of("frtb-sa").on()).isFalse();
-        assertThat(s.warnings()).containsExactly(
-                "drishti.var.enabled is the old name of drishti.engines.var.enabled (set in local file); it still works. Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).",
-                "drishti.frtb.enabled is the old name of drishti.engines.frtb-sa.enabled (set in local file); it still works. Move it to config/engines/frtb-sa.yaml, or use Admin -> Engines (DRS-1024).");
+        assertThatThrownBy(() -> new EngineSwitches(c, env(new Object[] {LOCAL, Map.of("drishti.var.enabled", "false", "drishti.frtb.enabled", "false")},
+                new Object[] {FILE, Map.of("drishti.engines.var.enabled", "true")})))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("drishti.var.enabled (set in local file) is retired: use drishti.engines.var.enabled")
+                .hasMessageContaining("drishti.frtb.enabled (set in local file) is retired: use drishti.engines.frtb-sa.enabled");
     }
 
     @Test

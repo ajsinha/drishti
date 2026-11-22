@@ -3356,9 +3356,9 @@ Some feeds may not, by contract, be saved on a disk. How it is used, every setti
 ### 9.1 The idea
 
 A table of a memory-only feed is an ordinary **Delta table** (its `_delta_log` and its Parquet files) whose files live in the server's
-memory instead of on a disk or in S3. Every Java reader and writer reaches a lake through one interface, `com.ash.drishti.lakeio.Storage`
-(`LocalStorage` for disk, `S3Storage` for S3); a third implementation, **`MemoryStorage`**, answers paths of the scheme **`mem://`**
-from off-heap memory under a **hard byte cap**. A server **replenish job** reads the feed (any connector) and writes the table with the
+memory instead of on a disk or in S3. Every reader and writer reaches a lake through Drishti Lake's one storage interface, `com.ash.lake.spi.Storage`
+(local disk, S3, and a third implementation, **`MemoryStorage`**, which answers paths of the scheme **`mem://`**
+from off-heap memory under a **hard byte cap**). A server **replenish job** reads the feed (any connector) and writes the table with the
 Java lake writer, exactly as it writes a disk lake; the Delta connector reads it with `root: mem://…` like any other. When memory runs
 short the store gives up what it can lose without harm, in a fixed order, and asks the job to refill it; it never writes a byte to disk,
 and a guard refuses every other way the data could reach one. It is a general lake, not a VaR feature, though VaR may read from it.
@@ -3473,16 +3473,12 @@ The in-memory lake is one package, **`memlake`** of the module `lake-load` (load
 memory budget and busy protection; `MemoryLakeController` is Admin → Lakes' REST API. The engine switch (`config/engines/memory-lake.yaml`)
 acts there too.
 
-**Which way the dependencies go.** The package `memlake` depends on `lake-io` and `lake-delta` (it writes its tables with the
-lake writer and reads them back with Delta Kernel) and on the engine's connector registry. The lake readers must reach `mem://` without
-depending on it, which would be a cycle. So `lake-io` defines a small service interface, **`StorageProvider`** (a scheme, the
-storage for a path, whether the scheme is memory-only), and **`StorageProviders`**, which finds the providers on the class path once with
-Java's `ServiceLoader`. `lake-load` lists `MemoryStorageProvider` in `META-INF/services/com.ash.drishti.lakeio.StorageProvider`.
-The native Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders`
-for a path's storage and whether it is memory-only; none names a class of `memlake`
-(`ArchitectureRulesTest.lakeReadersDoNotSeeTheMemoryLake`). So: no cycle; one code path for every storage (a later scheme is one more
-provider); and it **fails closed**: a tool built without the module cannot read or write a memory table at all and gets an error naming
-the missing module, never a quiet detour through a disk.
+**Which way the dependencies go.** The memory lake and the storage service interfaces (`StorageProvider`, found on the class path with Java's
+`ServiceLoader`; `Storage`) are Drishti Lake's: how a scheme such as `mem://` reaches every reader and writer, and why a build without the memory
+module fails closed (an error naming the missing module, never a detour through a disk), is described in Lake's design
+([DRISHTI_LAKE_DESIGN](https://github.com/drishti-platform/drishti-lake/blob/main/docs/design/DRISHTI_LAKE_DESIGN.md)). Drishti's side is the wiring
+only: `com.ash.drishti.server.memlake` hands the lake the server's cron parser and its memory budget, and the Delta and Iceberg connectors ask the
+lake runtime for a path's storage; none of them names a class of the memory lake's package.
 
 ### 9.9 Tests
 

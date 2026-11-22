@@ -83,8 +83,6 @@ def cmd_list(cli, a, extra) -> int:
            ["name", "origin", "plugin", "kinds", "state", "used by", "problems"])
     for n in res.get("misnamed") or []:
         print(f"  not a connector file (ignored): {n}")
-    for n in res.get("deprecated") or []:
-        print(f"  deprecated: {n} is defined in the server's own configuration; apply a file to replace it")
     return 0
 
 

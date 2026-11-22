@@ -157,3 +157,33 @@ def test_the_java25_list_names_real_modules_and_tests():
             assert any(ROOT.glob(f"**/src/test/java/**/{line[1:]}.java")), line
         elif line:
             assert (ROOT / line / "src/test/java").is_dir(), line
+
+
+def test_the_key_changes_with_the_loader(tmp_path, monkeypatch):
+    """F10: a Lake re-pin, a changed pin or wheel, and a rebuilt loader jar under the same version each make a new cache hash."""
+    import zipfile
+    r = _repo(tmp_path)
+    monkeypatch.delenv("LAKE_CLASSPATH", raising=False)
+    (r / "pom.xml").write_text("<p><drishti.lake.version>0.9.0</drishti.lake.version></p>")
+    (r / "lib" / "wheels").mkdir(parents=True)
+    (r / "lib" / "lake-wheel.pin").write_text("ref=v0.9.0\nversion=0.9.0\nsha256=x\n")
+    seen = {lake_cache.source_hash(r)}
+
+    def new() -> None:
+        h = lake_cache.source_hash(r)
+        assert h not in seen
+        seen.add(h)
+
+    (r / "pom.xml").write_text("<p><drishti.lake.version>0.9.1</drishti.lake.version></p>")
+    new()                                                                   # the pinned Lake version
+    (r / "lib" / "wheels" / "drishti_lake-0.9.0-py3-none-any.whl").write_bytes(b"one")
+    new()                                                                   # the wheel in use
+    (r / "lib" / "wheels" / "drishti_lake-0.9.0-py3-none-any.whl").write_bytes(b"two")
+    new()
+    (r / "lib" / "lake-wheel.pin").write_text("ref=v0.9.1\nversion=0.9.0\nsha256=y\n")
+    new()                                                                   # the pin
+    for body in (b"loader one", b"loader two"):                             # the loader jar, same version
+        with zipfile.ZipFile(r / "lib" / "drishti-server-1-exec.jar", "w") as z:
+            z.writestr("BOOT-INF/lib/lake-load-0.9.1-SNAPSHOT.jar", body)
+        new()
+    assert lake_cache.source_hash(r) == lake_cache.source_hash(r)

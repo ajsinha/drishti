@@ -25,7 +25,7 @@ import org.springframework.core.env.PropertySource;
  * Each engine's switch as the server starts with it (docs/guides/ADMIN_GUIDE.md sections 3.3 and 4): its value, and where it
  * comes from, read from Spring's own sources in their order (the command line, the environment, the packs overlay, application.local.yaml,
  * the edition, the site's engine file, the jar's copy). An old switch name ({@code drishti.var.enabled}) set anywhere above the shipped files
- * wins, with one warning (DRS-1024). The in-memory lake is on when its stores are configured in the old place and nothing sets its switch.
+ * stops the start, naming the new key ({@link com.ash.drishti.packs.module.RetiredNames}). The in-memory lake is on when its stores are configured in the old place and nothing sets its switch.
  */
 public final class EngineSwitches {
 
@@ -34,20 +34,21 @@ public final class EngineSwitches {
      *
      * @param on whether the engine is to run here
      * @param source where the value comes from, in words ({@code engine file}, {@code environment DRISHTI_FRTB_ENABLED}, {@code local file})
-     * @param alias the old name that decided it, or null
      * @param overridden whether the value comes from above the engine's file (a change written to the file waits for that to be removed)
      */
-    public record Switch(boolean on, String source, String alias, boolean overridden) {}
+    public record Switch(boolean on, String source, boolean overridden) {}
 
     private final Map<String, Switch> switches = new java.util.concurrent.ConcurrentHashMap<>();
-    private final List<String> warnings = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final ConfigurableEnvironment env;
 
     public EngineSwitches(EngineCatalogue catalogue, ConfigurableEnvironment env) {
         this.env = env;
+        List<String> retired = new java.util.ArrayList<>();
         for (EngineCatalogue.Entry e : catalogue.all()) {
+            retired.addAll(retiredNames(e, env));
             switches.put(e.id(), read(e, env));
         }
+        com.ash.drishti.packs.module.RetiredNames.refuse(retired);
     }
 
     /**
@@ -56,6 +57,7 @@ public final class EngineSwitches {
      */
     public void learn(EngineCatalogue.Entry e) {
         if (env != null) {
+            com.ash.drishti.packs.module.RetiredNames.refuse(retiredNames(e, env));
             switches.put(e.id(), read(e, env));
         }
     }
@@ -66,29 +68,26 @@ public final class EngineSwitches {
     }
 
     public Switch of(String id) {
-        return switches.getOrDefault(id, new Switch(false, "not in the catalogue", null, false));
+        return switches.getOrDefault(id, new Switch(false, "not in the catalogue", false));
     }
 
-    /** The DRS-1024 lines of the old names in use (logged once at start, shown beside the switch on Admin, Engines). */
-    public List<String> warnings() {
-        return List.copyOf(warnings);
-    }
-
-    private Switch read(EngineCatalogue.Entry e, ConfigurableEnvironment env) {
+    /** The refusal lines of the engine's retired switch names that a site sets (never the shipped files, the environment's own variable or Spring's view). */
+    private static List<String> retiredNames(EngineCatalogue.Entry e, ConfigurableEnvironment env) {
+        List<String> out = new java.util.ArrayList<>();
         for (PropertySource<?> ps : env.getPropertySources()) {
             if (skipForAliases(ps) || shipped(ps) || attached(ps)) {
                 continue;
             }
-            for (String alias : e.aliases()) {
-                if (ps.containsProperty(alias)) {
-                    boolean on = env.getProperty(alias, Boolean.class, e.shipped());
-                    String where = describe(ps);
-                    warnings.add(alias + " is the old name of " + e.switchKey() + " (set in " + where + "); it still works. Move it to config/engines/"
-                            + e.file() + ", or use Admin -> Engines (DRS-1024).");
-                    return new Switch(on, where + " (old name " + alias + ")", alias, true);
+            for (String old : e.retired()) {
+                if (ps.containsProperty(old)) {
+                    out.add(com.ash.drishti.packs.module.RetiredNames.line(old, describe(ps), e.switchKey() + " (config/engines/" + e.file() + ", or Admin -> Engines)"));
                 }
             }
         }
+        return out;
+    }
+
+    private Switch read(EngineCatalogue.Entry e, ConfigurableEnvironment env) {
         boolean on = Boolean.TRUE.equals(env.getProperty(e.switchKey(), Boolean.class, e.shipped()));
         PropertySource<?> from = null;
         for (PropertySource<?> ps : env.getPropertySources()) {
@@ -100,13 +99,13 @@ public final class EngineSwitches {
         boolean envSet = !e.env().isBlank() && System.getenv(e.env()) != null;
         String raw = from == null ? "" : String.valueOf(from.getProperty(e.switchKey()));
         if (envSet && (from == null || raw.contains("${" + e.env() + ":") || raw.contains("${" + e.env() + "}"))) {
-            return new Switch(on, "environment " + e.env(), null, true);
+            return new Switch(on, "environment " + e.env(), true);
         }
         if (from == null) {
-            return memoryLake(e, env, new Switch(on, "shipped default", null, false));
+            return memoryLake(e, env, new Switch(on, "shipped default", false));
         }
         boolean fileOrShipped = shipped(from) || EngineFiles.isEngineFile(from.getName());
-        return memoryLake(e, env, new Switch(on, describe(from), null, !fileOrShipped));
+        return memoryLake(e, env, new Switch(on, describe(from), !fileOrShipped));
     }
 
     /** The in-memory lake on, when the switch is only the shipped one and stores are configured in the old place (application.local.yaml). */
@@ -120,7 +119,7 @@ public final class EngineSwitches {
             }
             for (String n : en.getPropertyNames()) {
                 if (n.startsWith("drishti.lake.memory.stores.")) {
-                    return new Switch(true, "stores configured in " + describe(ps) + " (the old place)", null, true);
+                    return new Switch(true, "stores configured in " + describe(ps) + " (the old place)", true);
                 }
             }
         }

@@ -373,7 +373,10 @@ foreach ($d in 'run','logs','tmp','dumps','modules','delta') { New-Item -ItemTyp
 ([5.1](#51-the-settings-file)). The secrets go into an env-file only the service account can read (`chmod 600`; on Windows the folder's
 permissions), or a second settings file (`secrets.ini`) given last: never into `config/` or git ([7.4](#74-the-secrets-in-an-env-file)).
 
-**6 · The console's environment:**
+**6 · The console's environment.** `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
+wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The release bundle carries it there; from a source tree build it from the tag with
+`uv build --wheel <drishti-lake checkout at the pinned ref>/python --out-dir lib/wheels` (the build is reproducible), and check it with
+`python tools/lake/lakewheel.py` (exit 0 and `(ok)`). Then:
 
 ```bash
 python3 -m venv /opt/drishti/drishti-console/.venv
@@ -431,6 +434,7 @@ the jar into `<drishti>/lib` (removing an older server jar there) and the packag
 | `modules/` | the modules (banking, capital markets, economy, market data, trading and one per trading system): their packs, connector templates, Sutras and help. The server refuses to start without this folder |
 | `config/` | the kernel's packs, the lakes, the module switches, lenses, engines, tables, BI files and the example settings files (`config/settings.examples/`): the site's configuration |
 | `drishti-console/` | the console's code and `requirements.txt` (its `.venv` is made on the machine, never copied) |
+| `lib/lake-wheel.pin`, `lib/wheels/` | the pin of Drishti Lake's Python wheel (ref, version, SHA-256) and the wheel itself, which `requirements.txt` installs |
 | `tools/` | `drishti.py` (every command: setup, build, start, stop, status, lake, …) and what it runs |
 | `data/testdata/` | the committed test data the demo lake is built from (about 140 MB of `.jsonl.gz`) |
 | `docs/`, `LICENSE`, `CHANGELOG.md`, `RELEASE_NOTES.md`, `THIRD-PARTY-NOTICES.md` | shown by the console's Help |

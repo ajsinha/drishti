@@ -1,0 +1,11 @@
+# The Drishti Lake Python wheel this Drishti pins: the one place its version is written (tools/lake/lakewheel.py reads it; a test holds
+# drishti-console/requirements.txt to it). It is built from the Lake commit below (Lake 0.9.1), and the build is reproducible (the same bytes every
+# time). When Lake tags v0.9.1 the ref moves from the commit to the tag; the content does not change.
+#
+# To get it (Linux, macOS, Windows; needs uv, https://docs.astral.sh/uv/):
+#     git clone https://github.com/ajsinha/drishti-lake.git && git -C drishti-lake checkout b26cc2e5176573c141f5e35e500312adf5a419d6
+#     uv build --wheel drishti-lake/python --out-dir <drishti home>/lib/wheels
+# or take it from the release bundle into <drishti home>/lib/wheels. Then `python tools/lake/lakewheel.py` checks it.
+ref=b26cc2e5176573c141f5e35e500312adf5a419d6
+version=0.9.1
+sha256=75293a89f600161b4a1c6c1e83d4cbe2c360ebf3e3224208d83f947ac34068fe

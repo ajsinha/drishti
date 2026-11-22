@@ -72,17 +72,17 @@
   // ---- opening an extract -----------------------------------------------------------------------------------------------------
   var dsSel = q('[data-dataset]', root), fieldsBox = q('[data-fields-box]', root), fieldsEl = q('[data-fields]', root), go = q('[data-open-go]', root);
 
-  /** The sources a person can open, grouped: models, their datasets, each pack's datasets, then the version 1 datasets. Shared with the extra extracts (drishti_bi-notebook-extracts.js). */
+  /** The sources a person can open, grouped: models, their datasets, each pack's datasets, Shared with the extra extracts (drishti_bi-notebook-extracts.js). */
   X.sources = function () {
-    return B.layer.groups({ legacy: function () { return B.api('GET', '/datasets').then(function (d) { return Array.isArray(d) ? d : (d.datasets || []); }); } });
+    return B.layer.groups();
   };
-  /** The fields of a source in the extract's shape ({title, tables[{name, columns[]}]}): a model or a dataset through its model, a version 1 dataset as it is. */
+  /** The fields of a source in the extract's shape ({title, tables[{name, columns[]}]}): a model or a dataset through its model. */
   X.fieldsOf = function (value) {
     if (/^(mq|dataset):/.test(value)) {
       var ref = value.indexOf('mq:') === 0 ? value.slice(3) : value;
       return B.layer.get('fields?ref=' + encodeURIComponent(ref));
     }
-    return B.api('GET', '/datasets/' + B.id2path(value));
+    return Promise.reject(new Error('"' + value + '" is not a model or a dataset: choose one of the sources offered'));
   };
   function loadDatasets() {
     return X.sources().then(function (groups) { B.layer.fillSelect(dsSel, groups, '(choose a model or a dataset)'); });

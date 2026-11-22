@@ -184,7 +184,7 @@ one your team already uses. Drishti needs only its packages installed in it.
 
 1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
    `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
-2. Install Drishti's packages into it, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
+2. Put Drishti Lake's pinned Python wheel in `lib/wheels` (the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md](../QUICKSTART_DEVELOPERS.md); `python tools/lake/lakewheel.py` checks it). Then install Drishti's packages into the Python, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
 
    ```bash
    <that python> -m pip install -r drishti-console/requirements.txt
@@ -432,7 +432,6 @@ Two servers must never share a data folder.
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
 | A PyCharm launcher (**Build demo lakes**, a `lake build`) says Java is too old, or names Java 1.8 from `JAVA_HOME` | Recipe E. Add one line to your `dev.ini` (the file the launcher passes with `--settings`): `drishti.java.home=C:/jdk-21` (the JDK 21 folder; forward slashes). The tools find Java in this order: `--java FILE`, `--java-home DIR`, **`drishti.java.home`** of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the PATH, so `JAVA_HOME` can stay Java 8 for other programs. (Alternatives: `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm, or **Edit Configurations → Environment variables** for one launcher.) The folder IntelliJ builds with is shown in IntelliJ's **Project Structure → SDKs** (a downloaded one is under `C:\Users\you\.jdks\`). |
-| The server's start-up stops after *connector … waits for the modules to load* and never prints `Started DrishtiApplication` (typically a laptop with few cores) | Older builds only: the connectors started side by side on virtual threads, and a virtual thread that loads a class from the server jar or initialises a class holds its carrier thread; with as many starts as cores every carrier was held and the start-up waited for ever. A thread dump (`jcmd <pid> Thread.print`) shows virtual threads under `SourceRegistry.<init>` in `ClassLoader.loadClass` waiting on `NestedJarFile`, or in `StorageProviders.forPath` waiting on `StorageProviders$Loaded`, and `main` inside Spring's bean creation. Fixed in the product: the connectors now start on a small pool of ordinary (platform) threads. On an older build add two lines to `~/drishti-envs/jvm-demo.args` (and to the other `jvm-*.args` you use): `-Djdk.virtualThreadScheduler.parallelism=64` and `-Djdk.virtualThreadScheduler.maxPoolSize=256`; `launchers --machine` and `setup` rewrite the file, so add them again after either. |
 | A server launcher says *could not open …/drishti-envs/jvm-demo.args* | this machine's arguments files were never written (or `dev.ini` moved): `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini launchers --machine` (or `py tools\drishti.py setup`); recipe G. |
 | A run configuration is missing or shows `<no module>` | IntelliJ: the project is not the root `pom.xml`; open the root and let the Maven import finish. The consoles and the tools are PyCharm's (`drishti-console/`). |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration: clear them in the JUnit template |
@@ -585,8 +584,7 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
    lines, and in the start-up log the modules line *Modules: banking, capitalmarkets, economy, …* with no *module refused* after it and no
    *lens … is not offered* ERROR. *If not:* *module refused: banking …
    this is an unknown build*: the server did not run the jar, recipe A; *the modules beside the jar are not current*: step 2 again;
-   *dev.ini … not a file*: recipe F; *Port 18480 was already in use*: section 5; the log stops after *… waits for the modules to load*:
-   section 6 (start-up hangs on a few-core machine).
+   *dev.ini … not a file*: recipe F; *Port 18480 was already in use*: section 5.
 6. **PyCharm: Drishti console** (section 3.2). *You should see* `Uvicorn running on http://0.0.0.0:17480`. *If not:* *Python
    interpreter is not configured*: section 2.3 step 2; *Unknown configuration type*: recipe D.
 7. **Sign in and check.** `http://localhost:17480`, `drishti-dev-admin` / `drishti-dev-admin123`; **Admin → Modules**: *You should

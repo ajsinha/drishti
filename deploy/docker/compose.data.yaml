@@ -19,8 +19,7 @@
 # Development only: the database user and password are drishti, and every port is bound to 127.0.0.1 (DRISHTI_BIND=0.0.0.0 to
 # widen it; then set DRISHTI_PG_PASSWORD too). Never point a shared or production server at this stack.
 # Then start the server with DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres (or aerospike) and DRISHTI_PACKS=market-risk,counterparty-risk.
-# (The profiles are deprecated since 1.19 and still work; the current way is a connector file per store, see config/connectors.examples/
-#  and docs/guides/DATA_GUIDE.md section 9.)
+# (Store profiles no longer exist: a store is a connector file, see config/connectors.examples/ and docs/guides/DATA_GUIDE.md section 9.)
 services:
   postgres:
     image: postgres:18-alpine
