@@ -31,8 +31,11 @@ import java.util.function.Supplier;
  */
 public final class DrishtiRachana {
 
-    /** Drishti's Sutras are compiled at the frozen language level 1.0 (proven byte-identical by the corpus); 1.1 and 1.2 change meanings. */
-    public static final String LEVEL = "1.0";
+    /**
+     * The language level of this server: the newest (G4, after {@code rachana upgrade}); every shipped Sutra and fragment declares it
+     * (LanguageLevelGuardTest). A Sutra of an older level is read at its own level and offered the upgrade ({@link LanguageLevels}).
+     */
+    public static final String LEVEL = "1.2";
     private static volatile String level = LEVEL;
 
     private static final Object LOCK = new Object();
@@ -132,7 +135,12 @@ public final class DrishtiRachana {
                 .withFormats(props.formatsFile(), props.packFormatsFiles());
     }
 
-    /** The one language level every Sutra of this server compiles at ({@code drishti.rachana.language-level}, default 1.0); G4 switches it to the latest. */
+    /** The server's language level now ({@code drishti.rachana.language-level}, default {@link #LEVEL}). */
+    public static String level() {
+        return level;
+    }
+
+    /** The one language level of this server ({@code drishti.rachana.language-level}, default {@link #LEVEL}, the newest). */
     public static void level(String l) {
         synchronized (LOCK) {
             level = l == null || l.isBlank() ? LEVEL : l.strip();
@@ -193,6 +201,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
                 .build();
-        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call, never the tools' default (1.2)
+        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call (the server's setting), never a library default
     }
 }

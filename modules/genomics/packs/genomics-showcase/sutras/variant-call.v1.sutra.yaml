@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: variant-call
 version: 1
 description: 'Variant call: One sample carrying one variant: the genotype, the fraction of reads that show it and the read depth.'

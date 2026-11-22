@@ -66,7 +66,7 @@ mock:
     - match: "TASK: draft-report"          # "Describe a report": answer with this YAML
       reply: |
         ```yaml
-        rachana: 1
+        rachana: 1.2
         report: gdp-by-region
         ...
     - match: "(?i)QUESTION: [^\\n]*per capita"     # "Ask the data": answer with a query (names only)

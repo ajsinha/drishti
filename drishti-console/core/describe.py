@@ -294,7 +294,7 @@ def currency_of(record) -> str | None:
 def sutra(p: Parsed, line: str, name: str = "", currency: str | None = None) -> dict:
     """The Sutra the parse describes, as a document (a fragment for each part; the YAML is :func:`dump`'s). ``currency`` is the trade
     form's notional currency (:func:`currency_of`)."""
-    doc: dict = {"rachana": 1, "sutra": slug(name or f"my-{p.kind}-{p.id}"), "version": 1, "description": line.strip()[:300],
+    doc: dict = {"rachana": 1.2, "sutra": slug(name or f"my-{p.kind}-{p.id}"), "version": 1, "description": line.strip()[:300],
                  "match": {"kind": p.kind}}
     if p.refresh:
         doc["refresh"] = p.refresh

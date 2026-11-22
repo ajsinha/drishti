@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class DesignAboutApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final String SUTRA = "rachana: 1\nsutra: about-demo\nversion: 1\ndescription: A demo thing.\n"
+    private static final String SUTRA = "rachana: 1.2\nsutra: about-demo\nversion: 1\ndescription: A demo thing.\n"
             + "match: { kind: about-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
             + "panels:\n  - id: terms\n    kind: kv\n    columns:\n      - { label: Label, bind: $.label }\n";
     private static final String ABOUT = "about: 1\nkinds:\n  about-thing:\n    title: About thing\n"

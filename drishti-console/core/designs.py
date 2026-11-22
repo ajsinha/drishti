@@ -25,7 +25,7 @@ from core.backend import BackendError
 
 LOG = logging.getLogger("drishti.console.designs")
 
-NEW_SUTRA = """rachana: 1
+NEW_SUTRA = """rachana: 1.2
 sutra: my-layout
 version: 1
 description: What this layout shows, and for which entities.

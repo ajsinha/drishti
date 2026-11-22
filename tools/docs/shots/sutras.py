@@ -28,7 +28,7 @@ from shotlib import ROOT, Ctx, register, showcase  # noqa: E402,F401
 S_OUT = ROOT / "docs" / "guides" / "img" / "sutras"
 shot = register("sutras")
 
-SHORT = """rachana: 1
+SHORT = """rachana: 1.2
 sutra: bond-short
 version: 1
 description: "A short bond layout, the strip leading with what is checked first."

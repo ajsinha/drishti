@@ -73,7 +73,7 @@
     function add(kind, at, options, why) {
       var blank = !store.state.yaml.trim();
       // a design with no Sutra yet starts from the smallest valid one (the server edits a Sutra, it does not invent one), and the placeholder goes again
-      var starter = 'rachana: 1\nsutra: my-layout\nversion: 1\nmatch: { kind: ' + store.state.kind + ' }\ntitle: { pill: "' + store.state.kind + '", id: $.id }\npanels:\n  - { id: refs, kind: links, title: Linked entities, area: right }\n';
+      var starter = 'rachana: 1.2\nsutra: my-layout\nversion: 1\nmatch: { kind: ' + store.state.kind + ' }\ntitle: { pill: "' + store.state.kind + '", id: $.id }\npanels:\n  - { id: refs, kind: links, title: Linked entities, area: right }\n';
       var before = blank ? starter : store.state.yaml, op = { op: 'addPanel', kind: kind, at: toAt(at) };
       options = Object.assign({ title: kind.charAt(0).toUpperCase() + kind.slice(1) }, defaults(kind), options || {});
       why = why || note;

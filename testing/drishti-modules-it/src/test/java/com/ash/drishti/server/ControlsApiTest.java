@@ -212,7 +212,7 @@ class ControlsApiTest {
     @Test
     void optionsNeverListAMaskedValueToAReaderWithoutRaw() throws Exception {
         String yaml = """
-                rachana: 1
+                rachana: 1.2
                 sutra: ctl-mask
                 version: 1
                 match: { kind: deal }
@@ -251,7 +251,7 @@ class ControlsApiTest {
     @Test
     void aMaskedConditionNeverMatchesARow() throws Exception {
         String yaml = """
-                rachana: 1
+                rachana: 1.2
                 sutra: ctl-mask2
                 version: 1
                 match: { kind: deal }

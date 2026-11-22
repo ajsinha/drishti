@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: ranked-bars@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: ranked-bars
 version: 1
 description: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."

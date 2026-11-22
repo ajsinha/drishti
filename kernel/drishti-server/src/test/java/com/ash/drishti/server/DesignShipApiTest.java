@@ -64,7 +64,7 @@ class DesignShipApiTest {
     @org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp;
 
     private static String sutra(String name) {
-        return "rachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: ship-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
+        return "rachana: 1.2\nsutra: " + name + "\nversion: 1\nmatch: { kind: ship-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
                 + "panels:\n  - id: terms\n    kind: kv\n    columns:\n      - { label: Label, bind: $.label }\n";
     }
 

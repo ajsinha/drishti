@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: quote
 version: 2
 description: "A quote and recent price history for a ticker, as the yfinance connector computed them."

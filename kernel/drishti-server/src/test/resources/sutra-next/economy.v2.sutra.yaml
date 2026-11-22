@@ -14,7 +14,7 @@
 
 # The economy Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
 # version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: economy
 version: 2
 description: "An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data."

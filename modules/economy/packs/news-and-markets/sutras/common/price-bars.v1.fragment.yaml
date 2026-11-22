@@ -14,7 +14,7 @@
 
 
 # The news-and-markets pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: news-and-markets/price-bars@1 }.
-rachana: 1
+rachana: 1.2
 fragment: price-bars
 version: 1
 description: "Every bar of a price history as a table: date, open, high, low, close and volume."

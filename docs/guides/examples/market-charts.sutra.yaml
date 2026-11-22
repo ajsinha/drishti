@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: market-charts
 version: 1
 description: "Market data charts: candlestick bars with volume, a rotatable volatility surface and a line of closes."

@@ -133,7 +133,7 @@ public final class AutoDesigner {
             plan.prune(samples, previewer, pruned);
         }
         Sutra sutra = plan.assemble();
-        String yaml = writer.write(sutra, plan.name(), 1, "Drafted by auto-design from " + total + " sample" + (total == 1 ? "" : "s") + ". Edit freely.");
+        String yaml = com.ash.drishti.rachana.LanguageLevels.written(writer.write(sutra, plan.name(), 1, "Drafted by auto-design from " + total + " sample" + (total == 1 ? "" : "s") + ". Edit freely."));
         ViewModel first = previewer != null && total > 0 ? previewer.preview(yaml, k, samples.get(0).document()) : null;
         return new Design(yaml, plan.reasons, plan.alternatives(), List.copyOf(pruned), first, total);
     }
@@ -685,7 +685,7 @@ public final class AutoDesigner {
         /** Renders the current draft against every sample (through {@link SampleChecker}, the one checker) and tallies, per panel and strip figure, where it came out empty or broken. */
         private Counts count(List<Sample> samples, DesignPreviewer previewer) {
             Counts c = new Counts();
-            String yaml = writer.write(assemble(), name(), 1, "draft");
+            String yaml = com.ash.drishti.rachana.LanguageLevels.written(writer.write(assemble(), name(), 1, "draft"));
             RuntimeException[] failure = new RuntimeException[1];
             SampleChecker.Matrix m = CHECKER.check(List.of(), samples.stream().map(x -> new SampleChecker.Input(x.name(), x.document(), null)).toList(), in -> {
                 try {

@@ -14,7 +14,7 @@
 
 # The capital-protected-note Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: capital-protected-note
 version: 2
 description: "Zero plus a call option on an index."

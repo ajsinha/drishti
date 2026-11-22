@@ -14,7 +14,7 @@
 
 # The trading pack's deal-footer block as make_sutras.py generated it before Sutra Next, renamed old-deal-footer so the old deal
 # layouts (version 2, beside it) draw the panels they drew. Test data only.
-rachana: 1
+rachana: 1.2
 block: old-deal-footer
 version: 1
 description: "How the view was built and the entities the deal refers to."

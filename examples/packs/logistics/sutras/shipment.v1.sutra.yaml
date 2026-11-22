@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: shipment
 version: 1
 description: An ocean shipment in transit, with its route, milestones and the reefer container's temperature.

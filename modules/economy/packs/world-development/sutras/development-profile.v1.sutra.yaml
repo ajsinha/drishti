@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
-rachana: 1
+rachana: 1.2
 sutra: development-profile
 version: 1
 description: "One country's World Development Indicators: the latest of each, the world map shaded by GDP per head, each series one click away."

@@ -113,8 +113,8 @@ Words used throughout:
 | **kind** | a type of entity; a kind belongs to exactly one pack | `ticket`, `agent`, `trade` |
 | **mnemonic** | the short command that opens a kind | `TKT` opens a `ticket` |
 | **id** | one entity's identifier | `TKT-1001` |
-| **Sutra** | a layout for a kind, one YAML file starting `rachana: 1` | `sutras/ticket.v1.sutra.yaml` |
-| **block** | panels several Sutras share, one YAML file starting `rachana: 1` with `block:` | `sutras/common/legs.v1.block.yaml` |
+| **Sutra** | a layout for a kind, one YAML file starting `rachana: 1.2` | `sutras/ticket.v1.sutra.yaml` |
+| **block** | panels several Sutras share, one YAML file starting `rachana: 1.2` with `block:` | `sutras/common/legs.v1.block.yaml` |
 | **connector** | a configured source of data; a site resource (one file in `config/connectors/`) that the pack names, and may suggest a template for | `agent-totals` (a derived one) |
 | **route** | which connector answers a kind | `agent-load: agent-totals` |
 | **template** | a pack's suggestion for a connector, written to the connector file once | the `connectors:` mapping of a shipped pack |
@@ -465,7 +465,7 @@ every field a Sutra shows that has no glossary entry (step 17).
 Inference is a good start; a **Sutra** fixes the layout. `sutras/ticket.v1.sutra.yaml`: the copyright header as `#` comments, then:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: ticket
 version: 1
 description: A support ticket with its history, agent and client.
@@ -1521,7 +1521,7 @@ An operations view of any trade: who booked it where, its version, its parties, 
 design you started above and preview it:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: trade-operations
 version: 1
 description: Operations view of any trade, from any source system, read from its legs, flows, resets and events.
@@ -2223,7 +2223,7 @@ drafting 3 Sutra(s) with one `sutra design --each` run ...
 ```
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: instrument-bond
 version: 1
 description: "Instrument documents where Type BOND. Generated from instrument.schema.json."
@@ -2719,7 +2719,7 @@ does not carry (a quantity that is always null, resets that are always empty, a 
 ## 11. What a Sutra is, and when one applies
 
 A **Sutra** is one YAML file, `<name>.v<N>.sutra.yaml`, that holds one layout: which panels to draw, in which order, bound to which parts of a JSON
-document. Its first key is always `rachana: 1`, the version of the Rachana language it is written in. It says nothing about pixels or code. One Sutra
+document. Its first key is always `rachana: 1.2`, the Rachana language level it is written in. It says nothing about pixels or code. One Sutra
 lays out a whole *family* of entities: every counterparty, or every Murex fixed/float swap. Sections 11 to 27 teach Sutras by doing, against the demo
 lakes; every key, option, format, tone, function and problem code is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), and twelve small working Sutras
 with their own documents, together using every panel kind, are in [examples](examples/README.md) (in the workbench, Create → New screen → Examples opens
@@ -2753,7 +2753,7 @@ formats or the choice of chart should be what a person who knows the domain woul
 ### 11.1 Anatomy at a glance
 
 ```yaml
-rachana: 1                           # the language version, always first
+rachana: 1.2                           # the language version, always first
 sutra: irs-fixfloat                  # name: lower-case kebab
 version: 1
 description: Exchanges fixed for floating RFR-compounded payments.
@@ -2767,7 +2767,7 @@ keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 
 | Part | What it does |
 |---|---|
-| `rachana` | The Rachana language version: `1`. Without it, or with one this server does not read, the file is refused (`DRS-2009`) |
+| `rachana` | The Rachana language level: `1.2`. Without it, or with one this server does not read, the file is refused (`DRS-2009`); an older level (`1`) is read at that level and offered `drishti.py sutra upgrade` |
 | `sutra`, `version` | The identity, `name@version`, unique. Keep old versions: saved views and history reproduce with the version they used |
 | `description`, `notes` | Plain text for people (not Markdown): one paragraph, and longer notes for the next author and the reviewer. Never change the view |
 | `match` | Which documents this Sutra lays out: a `kind`, an optional `where` over the document, and a `priority` ([section 15](#15-matching-several-sutras)) |
@@ -2817,7 +2817,7 @@ list of four objects, and `$.NETTING_SETS[0].ID` is `NS-MERIDIAN-RE-FRA`. A path
 ### 12.2 The smallest Sutra that works, and its preview
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: counterparty-mine
 version: 1
 match: { kind: counterparty, priority: 20 }
@@ -2951,7 +2951,7 @@ expressions (no `@.`), and `id` would not find `ID`. You should see four bars, `
 ### 12.6 Linked entities, provenance and keys: the whole Sutra
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: counterparty-mine
 version: 1
 description: Counterparties for the credit desk.
@@ -3088,7 +3088,7 @@ tab, previewing each.
 ### 14.1 Identity, title and strip
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: swap-desk
 version: 1
 description: Fixed/float swaps for the rates desk.
@@ -3425,7 +3425,7 @@ Each product Sutra is a title, a strip, the two controls of the events table, an
 its strip shortened:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: irs-fixfloat
 version: 1
 description: "Exchanges fixed for floating RFR-compounded payments."
@@ -3507,7 +3507,7 @@ key-figure has the name of a Drishti UI kit fragment: the kit's wins; use tradin
 leaves an optional key such as `code`, `key` or `area` out), `panels:` whose text reads `%{param}`, and a complete **`doc:`**:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 fragment: ranked-bars
 version: 1
 description: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."
@@ -4073,8 +4073,8 @@ All the problems of a file are reported at once. `sutra lint` and the server log
 | `where: "@.ID == ctl.set"` with no control `set` | `DRS-2036 'ctl.set' reads a control the Sutra does not declare (it has no controls:)` | declare the control ([22.4](#224-controls-let-the-reader-choose)) |
 | `{ use: deal-ticket@3 }` | `DRS-2048 no block deal-ticket@3 (blocks: deal-footer, deal-ticket, events, legs, flow-schedule, payments)` | a version that exists, or `use: deal-ticket` for the newest |
 | saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/config/packs/core/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
-| no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
-| `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
+| no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1.2` as the first key |
+| `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1.2` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
 | `counterparty-mine.v1.sutra.md` (a Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
 | `counterparty-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename counterparty-mine.yaml` | `counterparty-mine.v1.sutra.yaml` |
@@ -4794,7 +4794,7 @@ drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta
 ```text
 config/packs/library/
   pack.yaml                            kinds, mnemonics, id patterns, link fields, badges, roles, connector, routes, examples
-  sutras/library/book-title.v1.sutra.yaml   one YAML Sutra per kind (rachana: 1, with a description)
+  sutras/library/book-title.v1.sutra.yaml   one YAML Sutra per kind (rachana: 1.2, with a description)
   sutras/library/author.v1.sutra.yaml
   samples/book-title.jsonl             the documents, one a line, for the built-in demo source
   samples/author.jsonl

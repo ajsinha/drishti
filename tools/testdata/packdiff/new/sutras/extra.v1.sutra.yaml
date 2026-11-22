@@ -12,6 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+rachana: 1.2
 sutra: trade-extra
 match: {kind: trade, where: "qty > 100", priority: 5}
 panels: []

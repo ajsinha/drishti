@@ -339,6 +339,8 @@ def cmd_sutra(a, extra: list[str]) -> int:
         args.append("--strict")
     if a.each:
         args.append("--each")
+    if getattr(a, "write", False):
+        args.append("--write")
     return run_java(a, args + extra).returncode
 
 

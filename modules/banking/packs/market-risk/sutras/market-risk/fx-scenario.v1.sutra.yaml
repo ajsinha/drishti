@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written (docs/guides/VAR_GUIDE.md section 15.9): a currency's rate today and under each scenario day. Data: tools/packgen/var/scenario_fx.py.
-rachana: 1
+rachana: 1.2
 sutra: fx-scenario
 version: 1
 description: "A currency's USD rate today and under each scenario day of the date's scenario set."

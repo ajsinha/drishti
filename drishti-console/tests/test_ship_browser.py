@@ -25,7 +25,7 @@ from wb_live import BROWSER_WAIT_MS, live_ship_console, new_design  # noqa: F401
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: ship-e2e
 version: 1
 match: { kind: trade, priority: 100 }

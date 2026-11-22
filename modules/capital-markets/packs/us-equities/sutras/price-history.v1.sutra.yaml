@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments). Read live by the us-equities-prices connector (off as shipped).
-rachana: 1
+rachana: 1.2
 sutra: price-history
 version: 1
 description: "A company's quote, a year of daily prices and their analytics (returns, volatility, beta), read live by the us-equities-prices connector: off as shipped, internal use only."

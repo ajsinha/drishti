@@ -23,6 +23,7 @@ Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-containe
 |---|---|---|
 | [all-panels-showcase](all-panels-showcase.md) | Every panel kind on one screen | all twenty-two |
 | [metric](metric.md) | Big-number tiles: a toned figure, its change, unit and caption | `metric` |
+| [level-1-2-panels](level-1-2-panels.md) | The kinds of levels 1.1 and 1.2: grid, tree, chart, treemap, bullet, form, live | `grid`, `tree`, `chart`, `treemap`, `bullet`, `form`, `live` |
 | [map](map.md) | A country on the world map and its own regions | `map`, `kv` |
 | [pivot-row-groups](pivot-row-groups.md) | Nested row groups with subtotals and expand | `pivot` |
 | [tree-table](tree-table.md) | Rows that hold child rows | `table`, `ladder` |

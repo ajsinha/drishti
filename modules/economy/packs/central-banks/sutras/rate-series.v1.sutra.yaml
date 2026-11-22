@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
-rachana: 1
+rachana: 1.2
 sutra: rate-series
 version: 1
 description: "One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year."

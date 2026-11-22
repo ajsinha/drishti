@@ -537,3 +537,50 @@ on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels
 | Python result | | `tools` (1,464 tests, 4 workers): 1,427 pass, 30 skipped, 7 fail, none from these changes: `test_sdk_builds_genomics` x2 and `test_pack_new_source` (Maven offline, the boms above), `test_tablescli` x2 (the `migrate` command Lake removed), `test_clusterlakes` (lake nodes switch off the stores' connectors), `genomics_showcase` generator drift. `test_maintain`, `test_maintain_admin` (on Lake's class path): 20 pass. VaR and ES goldens: no Java changed |
 | WebKit | closed | `tools/browser/webkit_env.py` (no root: `apt-get download` + `dpkg -x` of four libraries and what they need, `LD_PRELOAD`, validation switched off; `--check`), used by `drishti-console/tests/browser_engine.py`: `DRISHTI_BROWSER=webkit` makes every test's `p.chromium` the chosen engine (TEST_HARNESS.md 3.31). Playwright 1.64.0 matches the installed WebKit build |
 | WebKit run | | The 59 console browser files that start no server of their own (the others need a built server jar for this branch, which this machine has not): 376 pass, 247 skip, 64 fail, 4 error. Causes: 32 `render.test` does not resolve (Chromium's `--host-resolver-rules` has no WebKit equivalent: the render harness's origin), 15 `clipboard-write` is not a WebKit permission (`test_live_grid`, `test_records`), 4 errors the VaR engine (needs the server), 5 a sideways-scroll at phone width (`test_page_widths`, 477 px against 390: a real WebKit layout finding), 3 a Content-Security-Policy refusal of an evaluated string, the rest single tests (`test_panel_polish` 4, `test_smat`, `test_table_chart`, `test_help_hub`, `test_bi_catalogue_tabs`, `test_admin_samples`). The 178 server-starting files were not run on WebKit |
+
+## Pass 3: level 1.2 (2026-11-21), on `g4/level-12` from `wip/g4-rehearsal-rx` (`d06a8d6e2`)
+
+Owner direction: the latest language level everywhere, no tech debt. Built against Rachana `develop` `73c76065` (with `rachana upgrade`,
+fragment keys and the cross-level refusal) and Drishti Tools `v1.1.0` from a scratch repository. **Drishti Lake `main` (0.9.0) cannot run
+this branch's server**: since G3 F5 it refuses `${drishti.data.dir}` in a lake file ("a host's setting: name `${lake.data.dir}`"), and every
+`config/lakes/*.yaml` names it; the server proof used Lake 0.9.0-SNAPSHOT (`94dd281`, the rehearsal's) until the lake re-pin moves the lake
+files to `${lake.data.dir}` (a lake-pin item, not done here).
+
+### What was done
+
+| Item | Done |
+|---|---|
+| Upgrade | `rachana upgrade --to 1.2 --write` over every `*.sutra.yaml`, `*.fragment.yaml`, `*.block.yaml` (548: modules, packs, config, UI kit, samples, tutorials, docs examples, test fixtures): 540 upgraded, every change the `declare` rule (no `span` or `named` rewrite needed), 0 blocked. The 8 refused were the `packdiff` test inputs (Sutras with no `rachana:` key at all): they now declare `rachana: 1.2`. Report: `G4_LEVEL_1_2_UPGRADE_REPORT.json`. A second run finds 0 to upgrade |
+| Inline and documented Sutras | 98 Sutras inside Java and Python tests and the complete Sutras in the guides (`RACHANA_REFERENCE`, `BUILD_GUIDE`, `OPERATIONS_GUIDE`, `CLI_REFERENCE`, `API_REFERENCE`, `USER_GUIDE`, tutorials, the finance example guide) upgraded the same way; the prose that named `rachana: 1` names the level |
+| Writers | The pack generators (`make_sutras.py` `LEVEL`, the genomics showcase, source modules), the console's starters (`designs.py`, `describe.py`, the schema kit, the designer's blank Sutra) and the screenshot scripts write 1.2; the server's inferred and auto-designed Sutras (Core's writer declares the major only) go through `LanguageLevels.written` (upgraded, same meaning). `make_sutras.py` regenerates the 183 committed Sutras byte for byte |
+| The one setting | `drishti.rachana.language-level` defaults to 1.2 (`DrishtiRachana.LEVEL`, the newest the runtime implements) |
+| Guard | `LanguageLevelGuardTest`: the holder runs the newest level; no other main source builds an instance or picks a level; **every shipped Sutra, fragment and block declares the server's level**; a Sutra of an older level is read at its own level and offered the upgrade |
+| Older user Sutras | Never silent: `LanguageLevels` (declared level, `older`, one line of advice, `upgrade` with the server's function table). `drishti.py sutra lint` prints a warning per older file; **`drishti.py sutra upgrade <paths> [--write]`** (Java `SutraCli upgrade`) lists every change and flag and writes only with `--write`; the registry logs the advice for a site Sutra; the designer: the design and every operation answer carry `language {level, server, older}`, the Problems tab shows a `level` item, a click runs `POST /api/v1/designs/{id}/upgrade` (one step of the log, undo takes it back) and says each place to review. Docs: RACHANA_REFERENCE (Language level), CLI_REFERENCE (`sutra upgrade`), BUILD_GUIDE |
+| Stricter checks (RCH-2048, S11 names, RCH-2008) | Nothing to fix: every pack Sutra and fragment compiles at 1.2 with no problem (`PackSutrasTest`; the server binds the same set before and after); the inline test Sutras that use UI kit fragments moved to 1.2 with them (a 1.0 Sutra on a 1.2 fragment is RCH-2008) |
+| `rank(x, 'sideways')` | The refusal case is back in `WindowFunctionsTest` |
+| Conformance inside Drishti | The runner reads its instance as level 1.0 and derives each case's level from it; Drishti's holder now runs 1.2, so `DrishtiProfileConformanceTest` hands it over at 1.0 (`language("1.0")`): every case runs at its own level on Drishti's instance |
+
+### The flags (21 exact, 7 text by code point; the corpus proof's 18 and 6 plus the copies in docs and test fixtures)
+
+Decision rule: exact decimals are the rule from 1.2; a Sutra is changed only where its screen needs a binary double. **None does.** Every
+flagged Sutra that binds gives a ViewModel identical to the 1.0 one (below), and the reasoning per flag:
+
+| Sutra (and its copies) | Expression | 1.2 result | Outcome |
+|---|---|---|---|
+| credit-limit (pack, `sutra-next` v2) | `$.USED / $.LIMIT`, `$.USED / $.LIMIT - $.UTILISATION` | the record's `LIMIT` is a double (`337000000.0`), so the division stays double; a bucket's integers would divide exactly, which is the right utilisation | keep (pct0/pct2 text identical) |
+| stress-result (pack, v2) | `max(-$.PNL, 0) / $.LIMIT` and its `> 1` breach test | `LIMIT` double: unchanged; with exact operands the breach test is exact (no false breach at exactly 100%) | keep |
+| fx-scenario | `(@ - $.RATE) / $.RATE * 100` | rates are doubles: unchanged | keep |
+| flow-schedule, legs (pack fragments, the two `old-*` test blocks) | the average reset rate `sum(...) / size(...)` | rates are doubles; were they exact, the exact mean is the intended rate (`%{rate-fmt}` rounds it) | keep |
+| us-company, annual-financials, company-card | `NET_INCOME / REVENUE * 100` (net margin) | integers (EDGAR dollars): exact decimal, `pct`/2-digit text identical; no screen compares it for equality | keep: the exact margin is the intended number |
+| us-company, financial-fact | year-on-year change `(a - b) / abs(b) * 100` | integers: exact; text identical | keep |
+| metric example (`docs/guides/examples`), var-desk (architecture example) | `$.VAR99 / $.VAR99_YESTERDAY - 1`, `VAR / LIMIT` | exact where the inputs are exact: the delta is the true ratio | keep |
+| desk-book (tutorial), netting-set (pack, v2) | `@.NOTIONAL >= ctl.minNotional` and the control filters (info) | texts compared by code point: the same unless a text holds a character beyond U+FFFF; the codes and dates are ASCII | keep |
+| legs, endur-callnot (pack, test copies) | date texts compared with `today()` (info) | ISO dates are ASCII: the same order | keep |
+
+### Proof
+
+| Check | Result |
+|---|---|
+| Every Sutra bound on its sample by a real server (`/api/v1/studio/preview`, every pack on): the base build at level 1.0 against this branch at 1.2 | **303 bound, 301 byte-identical**, 2 differ only in an async compute panel's request id and timestamp (`path-book`, `correlation-matrix`: the run's own request id and time). The 203 that do not bind fail identically before and after (test fixtures that need their own old blocks, architecture illustrations, kinds with no sample). Every flagged Sutra that binds is among the identical |
+| drishti-rachana | 71 of 72: `SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem` fails on the base too with Rachana `develop` (100,000 nested parentheses no longer overflow, so the test's "unforeseen failure" does not happen): a test premise for its owner, not a level effect |
+| Console and tools Python | designer, ship, schema kit, governance, Studio, pack deploy, packdiff, GLEIF, US equities, pack layout and guides: pass. Failing on the base as well: `test_studio_folded::test_the_studio_help_guide_moved_to_the_designer_guide` (Help's old addresses removed by the shims pass) and the genomics showcase `--check` (`help.yaml` `category`) |

@@ -21,7 +21,7 @@ from test_workbench_browser import browser, open_design, page, settle, state, wa
 from wb_live import live_console, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 SHIPMENT = json.dumps({"shipmentId": "S-1", "carrier": "Maersk", "legs": [{"from": "SIN", "to": "RTM"}], "valueUsd": 1200})
-SHIPMENT_SUTRA = """rachana: 1
+SHIPMENT_SUTRA = """rachana: 1.2
 sutra: shipments
 version: 1
 match: { kind: shipment }

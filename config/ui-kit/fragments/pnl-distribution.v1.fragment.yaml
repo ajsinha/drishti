@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: pnl-distribution@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: pnl-distribution
 version: 1
 description: "A P&L vector's scenario distribution, with its VaR and expected shortfall marked: the shape of the loss tail at a glance."

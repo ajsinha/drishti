@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: metric
 version: 1
 description: "A desk's headline numbers as big-number tiles: a toned figure, its change, a unit and a caption."

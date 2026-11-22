@@ -14,7 +14,7 @@
 
 # Hand-written since 2.9.2 (tools/packgen/banking/make_sutras.py HAND_WRITTEN): a correlation set keeps its factors only; its
 # correlations are the computed kind correlation-result (corr_kinds.py), read here with the page's window and estimator.
-rachana: 1
+rachana: 1.2
 sutra: correlation-matrix
 version: 1
 description: "A factor set's pairwise correlations, computed when the page opens from the factors' price history, for a window and an estimator."

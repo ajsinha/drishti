@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
-rachana: 1
+rachana: 1.2
 sutra: lei-country
 version: 1
 description: "A country's legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and cities."

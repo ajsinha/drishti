@@ -14,7 +14,7 @@
 
 # The economic-forecast Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
 # version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: economic-forecast
 version: 2
 description: "The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031."

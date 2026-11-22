@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: cnv-segment
 version: 1
 description: 'Copy-number segment: One stretch of a sample''s genome with a copy number other than two: an amplification or a deletion over a

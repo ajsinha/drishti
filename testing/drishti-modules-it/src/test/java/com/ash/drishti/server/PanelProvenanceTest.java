@@ -59,7 +59,7 @@ class PanelProvenanceTest {
     static void site(DynamicPropertyRegistry r) throws Exception {
         Path site = PackSutraNextEquivalence.site(r, "panel-provenance");
         Files.writeString(site.resolve("own-sources.v1.sutra.yaml"), """
-                rachana: 1
+                rachana: 1.2
                 sutra: own-sources
                 version: 1
                 match: { kind: news-topic, priority: 50 }

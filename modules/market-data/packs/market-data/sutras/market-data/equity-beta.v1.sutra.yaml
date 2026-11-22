@@ -15,7 +15,7 @@
 # Hand-written (2.9.2): the computed kind equity-beta (EQB), an equity's beta against its index worked out by the server's Java engine
 # (the reactive connector equity-analytics, tools/packgen/banking/corr_kinds.py) when the page opens; never stored. Without a Sutra the
 # inferred layout rounded the beta, alpha and correlation to whole numbers ("0"): the figures here carry the EQ page's formats.
-rachana: 1
+rachana: 1.2
 sutra: equity-beta
 version: 1
 description: "An equity's beta, alpha, correlation and R squared against its index, computed from both price histories when asked."

@@ -14,7 +14,7 @@
 
 # The stress-result Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
 # wins while the market-risk equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: stress-result
 version: 2
 description: "P&L of a desk under a scenario, by book."

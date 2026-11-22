@@ -22,7 +22,7 @@ from test_workbench_browser import browser, open_design, page, settle, state, wa
 from wb_live import live_console, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 SHIP = json.dumps({"shipmentId": "S-1", "carrier": "Maersk", "valueUsd": 1200, "legs": [{"from": "SIN", "to": "RTM"}]})
-SUTRA = ("rachana: 1\nsutra: ux\nversion: 1\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\npanels:\n"
+SUTRA = ("rachana: 1.2\nsutra: ux\nversion: 1\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\npanels:\n"
          "  - { id: facts, kind: kv, title: Facts, columns: [ { label: Carrier, bind: $.carrier } ] }\n  - { id: legs, kind: table, title: Legs, rows: $.legs, columns: [ { label: From, bind: \"@.from\" } ] }\n")
 
 

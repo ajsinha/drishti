@@ -14,7 +14,7 @@
 
 # The ir-curve Sutra as make_sutras.py generated it before Sutra Next phase 1 (written inline, no fragments), as version 2 so it
 # wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: ir-curve
 version: 2
 description: "Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency."

@@ -14,7 +14,7 @@
 
 # The funds pack's own block: the funds holding one company, from a fund-holder record (the HELD page, and the us-equities company
 # page's "Held by funds" tab, which reads the record as its source).
-rachana: 1
+rachana: 1.2
 fragment: holder-list
 version: 1
 description: "The funds that hold one company, by value: each fund's weight, value and shares as it filed them on Form N-PORT."

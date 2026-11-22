@@ -35,7 +35,7 @@ class SutraRegistryTest {
     Path dir;
 
     private static String sutra(String name, int version, String kind) {
-        return "rachana: 1\nsutra: " + name + "\nversion: " + version + "\nmatch: { kind: " + kind + " }\npanels:\n  - { id: p, kind: links }\n";
+        return "rachana: 1.2\nsutra: " + name + "\nversion: " + version + "\nmatch: { kind: " + kind + " }\npanels:\n  - { id: p, kind: links }\n";
     }
 
     private SutraRegistry registry(boolean hot) {
@@ -57,7 +57,7 @@ class SutraRegistryTest {
 
             List<Set<String>> changes = new CopyOnWriteArrayList<>();
             r.onChange(changes::add);
-            Files.writeString(dir.resolve("b.sutra.yaml"), "rachana: 1\nsutra: beta\nversion: 1\nmatch: { kind: curve }\npanels: 7\n");
+            Files.writeString(dir.resolve("b.sutra.yaml"), "rachana: 1.2\nsutra: beta\nversion: 1\nmatch: { kind: curve }\npanels: 7\n");
             r.reload();
             assertThat(r.latest("beta")).isPresent();
             assertThat(r.problems()).hasSize(1);
@@ -87,8 +87,8 @@ class SutraRegistryTest {
     @Test
     void filesThatAreNotYamlSutrasAreReportedNotRead(@org.junit.jupiter.api.io.TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("old.v1.sutra.md"), "# old\n```sutra\nsutra: old\nversion: 1\nmatch: { kind: trade }\n```\n");
-        Files.writeString(dir.resolve("plain.yaml"), "rachana: 1\nsutra: plain\nversion: 1\nmatch: { kind: trade }\n");
-        Files.writeString(dir.resolve("good.v1.sutra.yaml"), "rachana: 1\nsutra: good\nversion: 1\nmatch: { kind: trade }\n");
+        Files.writeString(dir.resolve("plain.yaml"), "rachana: 1.2\nsutra: plain\nversion: 1\nmatch: { kind: trade }\n");
+        Files.writeString(dir.resolve("good.v1.sutra.yaml"), "rachana: 1.2\nsutra: good\nversion: 1\nmatch: { kind: trade }\n");
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null),
                 new com.ash.rachana.el.ElCompiler())) {
             assertThat(r.all()).extracting(x -> x.name()).containsExactly("good");
@@ -101,7 +101,7 @@ class SutraRegistryTest {
 
     /** The QA reproduction (GRAM-01): a bind with thousands of nested parentheses. */
     static String deep(String name, int depth) {
-        return "rachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\npanels:\n  - { id: a, kind: kv, columns: [{label: x, bind: '"
+        return "rachana: 1.2\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\npanels:\n  - { id: a, kind: kv, columns: [{label: x, bind: '"
                 + "(".repeat(depth) + "$.mtm" + ")".repeat(depth) + "'}] }\n";
     }
 

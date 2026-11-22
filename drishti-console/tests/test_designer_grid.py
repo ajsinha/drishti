@@ -30,7 +30,7 @@ PACK_SUTRAS = sorted((ROOT / "config").glob("**/*.sutra.yaml"))
 #: the shipped Sutras that place their panels with `layout: areas` (the fund page, the company page since 2.9.2): a spreadsheet of areas, not one column
 AREA_SUTRAS = [p for p in PACK_SUTRAS if "\nlayout:" in p.read_text()]
 FLOW_SUTRAS = [p for p in PACK_SUTRAS if p not in AREA_SUTRAS]
-AREAS = """rachana: 1
+AREAS = """rachana: 1.2
 sutra: qa-book-grid
 version: 1
 match: { kind: portfolio-trades }
@@ -106,7 +106,7 @@ def test_a_screen_with_areas_round_trips_and_reads_as_a_spreadsheet():
     assert cells["A2"]["kept"] == [["columns", "emits"]] and cells["A1:B1"]["grid"] == [{"span": 4}]
 
 
-KIDS = """rachana: 1
+KIDS = """rachana: 1.2
 sutra: qa-kids
 version: 1
 match: { kind: portfolio-trades }
@@ -159,7 +159,7 @@ def test_a_panel_a_click_opens_is_a_cell_of_its_own():
     assert "children" not in doc["panels"][0]
 
 
-DEEP = """rachana: 1
+DEEP = """rachana: 1.2
 sutra: qa-deep
 version: 1
 match: { kind: portfolio-trades }

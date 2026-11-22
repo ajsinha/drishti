@@ -14,7 +14,7 @@
 
 # The gas-swing Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: gas-swing
 version: 2
 description: "Flexible daily volume within limits at a fixed price."

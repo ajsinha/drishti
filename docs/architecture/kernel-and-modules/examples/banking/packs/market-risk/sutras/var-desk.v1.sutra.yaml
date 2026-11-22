@@ -16,7 +16,7 @@
 # banking-3.0.0.dmod (docs/architecture/KERNEL_AND_MODULES.md section 3). Rachana grammar 1, unchanged: the same file a pack holds today.
 # Nothing in it names where the data lives: the desk and its positions are read through the kernel's bindings (data/needs.yaml), the VaR
 # figures come from the module's computed kind var-result (a KindProvider) through the view augmenter.
-rachana: 1
+rachana: 1.2
 sutra: var-desk
 version: 1
 description: "A desk's VaR on one page: the headline figures, its books' contributions, its limit use and the P&L distribution."

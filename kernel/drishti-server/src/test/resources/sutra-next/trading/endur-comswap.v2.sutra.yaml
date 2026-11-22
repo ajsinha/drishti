@@ -14,7 +14,7 @@
 
 # The endur-comswap Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: endur-comswap
 version: 2
 description: "An Endur commodity swap: fixed price against the average of a floating index (or two indexes, a basis), month by month."

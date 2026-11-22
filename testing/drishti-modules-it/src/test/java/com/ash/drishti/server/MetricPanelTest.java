@@ -49,7 +49,7 @@ class MetricPanelTest {
 
     private static Sutra sutra(String panel) {
         return com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
-                rachana: 1
+                rachana: 1.2
                 sutra: metric-demo
                 version: 1
                 match: { kind: trade }

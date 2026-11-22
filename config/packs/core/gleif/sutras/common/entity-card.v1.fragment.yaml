@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The gleif pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: gleif/entity-card@1 }.
-rachana: 1
+rachana: 1.2
 fragment: entity-card
 version: 1
 description: "A legal entity's key facts from its LEI record: name, legal form, where it is registered, its status, its group and parent."

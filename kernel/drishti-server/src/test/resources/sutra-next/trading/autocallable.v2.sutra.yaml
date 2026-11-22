@@ -14,7 +14,7 @@
 
 # The autocallable Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: autocallable
 version: 2
 description: "Redeems early when the underlier is above a trigger on an observation date."

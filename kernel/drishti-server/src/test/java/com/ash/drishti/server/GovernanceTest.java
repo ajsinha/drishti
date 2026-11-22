@@ -48,7 +48,7 @@ class GovernanceTest {
     }
 
     private static String sutra(String name, String title) {
-        return "# " + title + "\nrachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n";
+        return "# " + title + "\nrachana: 1.2\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n";
     }
 
     private String propose(String text, String by) throws Exception {

@@ -455,7 +455,7 @@ def sutra(kp: KindPlan, sp: SutraPlan, plan: Plan | None, strip_lines: list) -> 
     """The whole Sutra text (header lines are set again by decorate.header)."""
     kp = typed(kp, sp)
     where = f"where: {q(sp.where)}, " if sp.where else ""
-    L = ["rachana: 1", f"sutra: {sp.name}", "version: 1", f"description: {q(kp.description or kp.title)}",
+    L = ["rachana: 1.2", f"sutra: {sp.name}", "version: 1", f"description: {q(kp.description or kp.title)}",
          f"match: {{ kind: {kp.kind}, {where}priority: {sp.priority} }}", title_line(kp)]
     if strip_lines:
         L.append("strip:")

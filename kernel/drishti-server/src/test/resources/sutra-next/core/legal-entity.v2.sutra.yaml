@@ -14,7 +14,7 @@
 
 # The legal-entity Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
 # wins while the core equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: legal-entity
 version: 2
 description: "The bank's own booking entity."

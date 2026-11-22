@@ -559,7 +559,7 @@ def form_drawer(c: Ctx):
 # ---- the designer's later waves: linked records, refresh and freshness, layout, Outline, Grid (the browser tests make the same pictures:
 # test_designer_browser.py, test_refresh_browser.py, test_screen_grid_browser.py, test_designer_grid_browser.py) ---------------------
 
-_GRID_BOOK = """rachana: 1
+_GRID_BOOK = """rachana: 1.2
 sutra: qa-book-grid
 version: 1
 match: { kind: portfolio-trades }

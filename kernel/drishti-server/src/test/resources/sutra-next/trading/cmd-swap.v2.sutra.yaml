@@ -14,7 +14,7 @@
 
 # The cmd-swap Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: cmd-swap
 version: 2
 description: "Fixed price against the average of a floating index, with a fee and, on some trades, a location differential: three or four legs."

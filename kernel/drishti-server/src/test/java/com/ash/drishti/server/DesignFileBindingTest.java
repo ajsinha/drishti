@@ -52,7 +52,7 @@ class DesignFileBindingTest {
     @Autowired TokenVerifier tokens;
 
     private static String sutra(String title) {
-        return "rachana: 1\nsutra: bind-thing\nversion: 1\nmatch: { kind: bind-thing, priority: 100 }\ntitle: { id: $.thingId }\n# " + title + "\n"
+        return "rachana: 1.2\nsutra: bind-thing\nversion: 1\nmatch: { kind: bind-thing, priority: 100 }\ntitle: { id: $.thingId }\n# " + title + "\n"
                 + "panels:\n  - id: terms\n    kind: kv\n    columns:\n      - { label: Label, bind: $.label }\n";
     }
 

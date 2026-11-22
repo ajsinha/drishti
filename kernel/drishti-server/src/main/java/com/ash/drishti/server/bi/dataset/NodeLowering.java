@@ -162,6 +162,10 @@ public final class NodeLowering {
                 args.add(node(ranked));
                 Expr desc = value(c, params, 1);
                 List<Node> partition = fields(value(c, params, 2));
+                if (desc != null && !(desc instanceof Expr.Lit dl && dl.value() instanceof Boolean)) {
+                    throw refused(c, name + "'s direction is desc = true or desc = false, by name (" + name + "(sum(t.x), desc = false)), not "
+                            + com.ash.rachana.el.Printer.print(desc));   // a word by place was read as desc and its meaning lost
+                }
                 if (desc != null || !partition.isEmpty()) {
                     boolean d = !(desc instanceof Expr.Lit l && l.value() instanceof Boolean b) || b;
                     args.add(new Node.Str(d ? "desc" : "asc"));

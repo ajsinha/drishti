@@ -637,7 +637,7 @@ it never stands for the pack's Sutra:
 
 ```yaml
 # My page, saved by the Sutra designer (Customize). Only I see it until I share it; Reset goes back to the pack's page.
-rachana: 1
+rachana: 1.2
 sutra: my-portfolio-trades
 version: 1
 match: { kind: portfolio-trades }
@@ -816,7 +816,7 @@ under a trade you click.
 **What it writes** (shortened; the whole text is under **Show the Sutra**):
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-portfolio-trades-book-rates-2
 version: 1
 description: TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s · ...

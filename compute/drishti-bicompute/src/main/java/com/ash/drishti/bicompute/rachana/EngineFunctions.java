@@ -91,7 +91,6 @@ public final class EngineFunctions implements FunctionProvider {
             if (!"E".equals(s.runs()) || done.contains(s.name()) || "measure".equals(s.name()) || "related".equals(s.name()) || "related_rows".equals(s.name())) {
                 continue;
             }
-            long positional = s.params().stream().filter(p -> !p.keywordOnly()).count();
             long required = s.params().stream().filter(p -> !p.keywordOnly() && !p.optional()).count();
             String args = String.join(", ", s.params().stream().map(p -> p.keywordOnly() ? p.name() + " = …" : p.name()).toList());
             if ("ratio".equals(s.name())) {
@@ -103,7 +102,9 @@ public final class EngineFunctions implements FunctionProvider {
                 continue;
             }
             String name = s.name();
-            out.add(new Provided(name, (int) required, (int) positional, args, "measure", s.description(), s.examples().get(0).expr(), (a, c) -> {
+            // at most every parameter: one written by place where its name is wanted is Core's catalogue check to refuse, in Core's words
+            // (level 1.1 and later: "takes at most 1 argument by place before its named ones"), as on the reference instance
+            out.add(new Provided(name, (int) required, s.params().size(), args, "measure", s.description(), s.examples().get(0).expr(), (a, c) -> {
                 throw OnceAggregates.error(name, "belongs to a measure of a model: the engine computes it over a query's answer (its groups, dates "
                         + "or filters), never over a list");
             }));

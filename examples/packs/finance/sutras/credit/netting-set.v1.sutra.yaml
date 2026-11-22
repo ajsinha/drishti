@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: netting-set
 version: 1
 description: Netting set with exposure profile, member trades, CSA and collateral (mockup drishti-netting-set.png).

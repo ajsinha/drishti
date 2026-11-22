@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: news
 version: 2
 description: "The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed."

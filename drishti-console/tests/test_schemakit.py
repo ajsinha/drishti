@@ -30,7 +30,7 @@ from schemakit.resolve import Resolver, SchemaDoc, SchemaError, parse_text  # no
 
 FIX = pathlib.Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "schemas"
 
-DRAFT = """rachana: 1
+DRAFT = """rachana: 1.2
 sutra: trade-auto
 version: 1
 description: Drafted by auto-design from 2 samples. Edit freely.

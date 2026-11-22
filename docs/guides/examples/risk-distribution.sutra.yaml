@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: risk-distribution
 version: 1
 description: "How risk is spread: a histogram of scenario P&L with VaR markers, a scatter of books and a gauge of a limit."

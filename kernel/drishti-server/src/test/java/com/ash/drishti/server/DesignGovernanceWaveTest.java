@@ -74,7 +74,7 @@ class DesignGovernanceWaveTest {
     @Autowired TokenVerifier tokens;
 
     private static String sutra(String name, int version, String panel) {
-        return "rachana: 1\nsutra: " + name + "\nversion: " + version + "\nmatch: { kind: w1-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
+        return "rachana: 1.2\nsutra: " + name + "\nversion: " + version + "\nmatch: { kind: w1-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
                 + "panels:\n  - id: " + panel + "\n    kind: kv\n    columns:\n      - { label: Label, bind: $.label }\n";
     }
 

@@ -14,7 +14,7 @@
 
 # The party Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
 # wins while the world-economy equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: party
 version: 2
 description: "A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."

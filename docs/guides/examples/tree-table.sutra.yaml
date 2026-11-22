@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: tree-table
 version: 1
 description: Tables and ladders whose rows hold their own children, opened in place with expand.

@@ -14,7 +14,7 @@
 
 # The trading pack's events block as make_sutras.py generated it before Sutra Next, renamed old-events so the old deal
 # layouts (version 2, beside it) draw the panels they drew. Test data only.
-rachana: 1
+rachana: 1.2
 block: old-events
 version: 1
 description: "The events by leg (a timeline) and as a table filtered by the Sutra's legs and dates controls (ctl.legs, ctl.when)."

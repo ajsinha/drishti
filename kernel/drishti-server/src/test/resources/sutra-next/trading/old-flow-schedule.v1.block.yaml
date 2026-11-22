@@ -14,7 +14,7 @@
 
 # The trading pack's flow-schedule block as make_sutras.py generated it before Sutra Next, renamed old-flow-schedule so the old deal
 # layouts (version 2, beside it) draw the panels they drew. Test data only.
-rachana: 1
+rachana: 1.2
 block: old-flow-schedule
 version: 1
 description: "Every cash flow of every leg in one schedule."

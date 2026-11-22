@@ -50,7 +50,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class DesignFormApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final String SUTRA = "rachana: 1\nsutra: form-demo\nversion: 1\ndescription: A demo thing.\n"
+    private static final String SUTRA = "rachana: 1.2\nsutra: form-demo\nversion: 1\ndescription: A demo thing.\n"
             + "match: { kind: form-thing, priority: 100 }\ntitle: { id: $.thingId }\n"
             + "panels:\n  - id: terms\n    kind: kv\n    columns:\n      - { label: Label, bind: $.label }\n";
     private static final String FORM = "- {path: thingId, label: Thing id, type: id}\n- {path: amount, type: amount, operators: ['>', between]}\n"

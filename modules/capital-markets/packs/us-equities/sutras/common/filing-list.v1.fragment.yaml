@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The us-equities pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: us-equities/filing-list@1 }.
-rachana: 1
+rachana: 1.2
 fragment: filing-list
 version: 1
 description: "SEC filings as a table whose rows, clicked, fire open with the filing's accession number: the master of a filings screen."

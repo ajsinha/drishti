@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: study-variant
 version: 1
 description: 'Study variant: One variant site of the synthetic genome: its place, the change it makes to the gene''s protein (the amino acids
