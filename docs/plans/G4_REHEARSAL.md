@@ -416,7 +416,7 @@ blotter page, the trading landing) paint through the same LiveSetGrid over a Dat
 | LS1 | A FORM's rows have no title column (a table row has no search title); the id is shown |
 | LS2 | The console's grid follows the table unwindowed on the shared live channel: a change of a row a paged grid does not hold moves its count and **N new** (no top insertion within a second); a windowed stream remains the protocol's (`POST /changes` with `window`) for a client that holds its own connection |
 | LS3 | A source failure answers `503 rdp.unavailable` without the source's words (POS/PORT on a server with no VaR inputs) |
-| LS4 | `asOfNotices` (a trading system answering from an earlier date) are not carried by a search's table yet |
+| LS4 | `asOfNotices` are carried by a search's answer (`/rdp/searches`); a bare mnemonic's table page does not carry them |
 | LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
 | LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
 

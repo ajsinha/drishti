@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """Every "rows of records" result is a live result set (core/live_results.py): a FORM's result and the search page's come from the server's
-live set of the search (GET /api/v1/live/query), the same rows, columns and order as before, marked with the set so the grid's live mode can
+live table of the search (GET /api/v1/rdp/searches), the same rows, columns and order as before, marked with the table so the grid's live mode can
 follow it (ticking only when the kind has a live binding); a bare mnemonic (POS <GO>) opens the kind's own set a page at a time."""
 from __future__ import annotations
 

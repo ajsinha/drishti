@@ -143,7 +143,8 @@ public class FormResults {
 
     /**
      * The search's result as the console's result tables read it: {@code {table, query, live, page, search}}, the first page read for the
-     * person and the search's summary (kind, mnemonic, columns and labels, matched).
+     * person, the search's summary (kind, mnemonic, columns and labels, matched) and {@code asOfNotices} (the sources answering from an earlier
+     * date).
      */
     public Map<String, Object> answer(String command, AsOf asOf, Principal p) {
         long t0 = System.nanoTime();
@@ -161,7 +162,20 @@ public class FormResults {
         out.put("live", o.live());
         out.put("page", page);
         out.put("search", answers.summary(command.strip(), q, r, asOf == null ? AsOf.LATEST : asOf));
+        out.put("asOfNotices", asOfNotices(f.kind(), asOf == null || asOf.live() ? null : asOf.businessDate()));
         return out;
+    }
+
+    /**
+     * The sources of the kind (each trading system's connector) that answer the date (null: the latest) from an earlier one, in words: the
+     * records page shows them per source system, so a date with no load is never shown silently with an older date's rows.
+     */
+    List<Map<String, Object>> asOfNotices(String kind, java.time.LocalDate date) {
+        try {
+            return com.ash.drishti.server.pivot.KindSources.asOfNotices(router.carried(kind, date));
+        } catch (RuntimeException e) {
+            return List.of();                                          // a source that cannot say never fails the page
+        }
     }
 
     /** The members besides this node that hold other records of the kind for this person (none outside a cluster). */

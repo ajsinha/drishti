@@ -132,7 +132,7 @@ public final class KindSnapshot implements SnapshotSource {
             }
         }
         int k = key.size() == 1 ? columns.indexOf(key.get(0)) : -1;
-        s.project(kept, (id, got) -> {
+        boolean read = s.project(kept, (id, got) -> {
             Object[] values = new Object[at.length];
             for (int i = 0; i < at.length; i++) {
                 values[i] = at[i] >= 0 ? got[at[i]] : null;
@@ -142,6 +142,20 @@ public final class KindSnapshot implements SnapshotSource {
             }
             sink.accept(values);
         });
+        if (!read) {
+            // the lake cannot answer the day by its columns (a day carried from an earlier one, a source of documents only): its documents,
+            // projected, so a day is never empty only because it is not kept as columns
+            bindings.documents(kind, this.at, d -> {
+                if (!d.deleted()) {
+                    Map<String, Object> row = KindRows.row(d, key);
+                    Object[] values = new Object[columns.size()];
+                    for (int i = 0; i < values.length; i++) {
+                        values[i] = row.get(columns.get(i));
+                    }
+                    sink.accept(values);
+                }
+            });
+        }
     }
 
     @Override
