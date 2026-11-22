@@ -540,7 +540,7 @@ on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels
 
 ## Pass 3: level 1.2 (2026-11-21), on `g4/level-12` from `wip/g4-rehearsal-rx` (`d06a8d6e2`)
 
-Owner direction: the latest language level everywhere, no tech debt. Built against Rachana `develop` `73c76065` (with `rachana upgrade`,
+Owner direction: the latest language level everywhere, no tech debt. Built against Rachana `develop` (`73c76065`, then `7b16e0a0` for the merged live tables; with `rachana upgrade`,
 fragment keys and the cross-level refusal) and Drishti Tools `v1.1.0` from a scratch repository. **Drishti Lake `main` (0.9.0) cannot run
 this branch's server**: since G3 F5 it refuses `${drishti.data.dir}` in a lake file ("a host's setting: name `${lake.data.dir}`"), and every
 `config/lakes/*.yaml` names it; the server proof used Lake 0.9.0-SNAPSHOT (`94dd281`, the rehearsal's) until the lake re-pin moves the lake
