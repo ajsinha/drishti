@@ -16,3 +16,11 @@ Drishti Lake and Rachana. Its own test kit runs with no server. To use it, its J
 server finds it at start and binds it by configuration. No engine is compiled into Drishti, and adding or upgrading one needs no Drishti
 build. This is the acceptance test of the engine design (ENGINE_INTEGRATION_DESIGN.md, refreshed at the start of combined i8), and Drishti
 Risk is the first engine delivered this way.
+
+## Also carried (G4 gate part 2b)
+
+| Item | From | What |
+|---|---|---|
+| Lake 0.9.2: newest-wins by commit order in every case | Part 2b item 5 | On a Delta date whose files share one load run id, or whose commits are older than the Delta log keeps, the order falls back to run id and file time; compaction never settles a two-file date. MUST-FIX in Lake 0.9.2 (named in the v0.9.1 release text) |
+| Sutra test-folder `.json` per case (F28 o) | Part 2 F28 | Still read by seven SutraCliTest cases; rewrite them and the CLI reference, then remove |
+| PackStateStore / LoadStore / FileUserStore / FileAuditLog leftovers (F28 l) | Part 2 F28 | Remove once no install holds old state |
