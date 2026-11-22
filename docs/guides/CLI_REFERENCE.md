@@ -405,7 +405,7 @@ could do there and nothing more:
 
 A refusal is exit code 1 with the server's own words, for example `the server said 403 DRS-5002: ...`.
 
-## 4. `sutra`: shape, design, gen, lint, test, preview, upgrade
+## 4. `sutra`: shape, design, gen, lint, test, preview
 
 `sutra shape|design|lint|test|preview` run the **Java tool** in the exec jar (`java -jar ... sutra <command>`) with your
 arguments; its output, its `--junit` report and its exit code (0 ok, 1 problems, 2 usage) come straight through. What each
@@ -585,28 +585,6 @@ skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pa
 ([below](#pack-new-a-complete-pack-from-json-lines)).
 
 It needs the built server jar (`./mvnw package -DskipTests`) and a JDK 21: all groups are designed in one Java run.
-
-### `sutra upgrade`: a Sutra of an older language level
-
-Drishti runs Rachana language level 1.2 and every Sutra it ships declares `rachana: 1.2`. A Sutra of your own that declares an older
-level (`rachana: 1` is 1.0) is still read at its own level; `sutra lint` prints a warning for it, and `sutra upgrade` rewrites it (and
-fragments and blocks) for 1.2 with the same meaning, with Rachana's `rachana upgrade` and the server's functions. Without `--write` it
-is a dry run; every change and every place to review is printed (exit 1 when a file is refused or has a blocking flag, which is then
-not written):
-
-```bash
-```
-
-```text
-config/sutras/desk/limits.v1.sutra.yaml: sutra 1.0 -> 1.2, 1 change(s), 1 flag(s)
-  change declare /rachana (line 1): 1  ->  1.2
-  review exact /panels/0/columns/2/bind (line 9): computed exactly from 1.1 (SPEC 4.16): '$.USED / $.LIMIT' divides: ...
-1 file(s): 1 to upgrade (dry run: --write writes them), 0 refused or blocked
-```
-
-A `review` flag marks a place whose answer 1.2 can compute differently for some data: there, exact numbers are divided exactly
-(decimals) where 1.0 used binary doubles. That is the rule from 1.2 on; write `* 1e0` on an operand only where a screen needs the
-double. Upgrade a Sutra and the fragments it uses together: a Sutra uses fragments of its own level only (`DRS-2008`).
 
 ### Testing Sutras: `expect.yaml`, the tests convention and CI
 

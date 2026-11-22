@@ -87,8 +87,7 @@ of Rachana it is written in. Values are plain YAML; strings may hold Rachana-EL 
 second dialect to learn, and any YAML tool (syntax highlighting, linters, JSON Schema completion, `yq`, code review diffs) works on a
 Sutra as it is.
 
-**Language level.** Drishti runs Rachana's one language level, **1.2**, and every Sutra, fragment and block declares `rachana: 1.2` (`rachana: 1` is 1.2 too). At 1.2 arithmetic on exact numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double arithmetic. A Sutra or fragment that declares 1.0 or 1.1 is refused: move it first with `rachana upgrade` of Rachana 0.12.0. A Sutra uses fragments
-of its own level only (`DRS-2008` otherwise), so upgrade a Sutra and its own fragments together.
+**Language level.** Drishti runs Rachana's one language level, **1.2**, and every Sutra, fragment and block declares `rachana: 1.2` (`rachana: 1` is 1.2 too). At 1.2 arithmetic on exact numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double arithmetic. A Sutra or fragment that declares 1.0 or 1.1 is refused: move it first with `rachana upgrade` of Rachana 0.12.0.
 
 ```yaml
 rachana: 1.2

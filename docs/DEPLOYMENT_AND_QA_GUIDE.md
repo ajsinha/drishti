@@ -46,7 +46,7 @@ and, where a file decides it, **in YAML**. The pictures show a server and consol
 4. [Get the release](#4-get-the-release) (and [upgrading an older install](#41-upgrading-an-older-install-start-from-clean-state))
 5. [Configure](#5-configure) (and [the settings file](#51-the-settings-file))
 6. [Build the demo lake](#6-build-the-demo-lake)
-7. [Start the server and the console](#7-start-the-server-and-the-console) (and [from IntelliJ IDEA or PyCharm](#78-from-intellij-idea-or-pycharm))
+7. [Start the server and the console](#7-start-the-server-and-the-console) (and [from IntelliJ IDEA or PyCharm](#78-from-intellij-idea-pycharm-or-vs-code))
 8. [Run them as services](#8-run-them-as-services)
 9. [Verify, step by step](#9-verify-step-by-step)
 10. [The QA checklist](#10-the-qa-checklist)
@@ -420,7 +420,7 @@ It always builds with `clean` (an older jar never stays beside the new one), wit
 the jar into `<drishti>/lib` (removing an older server jar there) and the packages into `<drishti>/modules`; Maven's own copies stay in
 `kernel/drishti-server/target/` and `packaging/dist/target/dmod/`. So the same build runs with no Python at all: `./mvnw clean package
 -DskipTests -pl :drishti-app,:drishti-modules -am` (Windows `mvnw.cmd …`), or IntelliJ's **Drishti: build all**.
-`--offline` runs Maven offline, `--no-copy` (`-Ddrishti.install.skip=true`) installs nothing, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-or-pycharm).
+`--offline` runs Maven offline, `--no-copy` (`-Ddrishti.install.skip=true`) installs nothing, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-pycharm-or-vs-code).
 
 **B. Copy a release** built elsewhere (Java bytecode is the same on every operating system). The release folder holds:
 
@@ -1832,7 +1832,7 @@ $py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\
    ([DATA_LAKE_GUIDE.md › Routing, business dates, modes](guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
    `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its
    date is refused, with the name to give it.
-3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-or-pycharm)
+3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-pycharm-or-vs-code)
    (IntelliJ: **Drishti: build all**, **Drishti: run server (demo)**; PyCharm: **Drishti: build demo lakes**, **Drishti: run console**, **Load ENDUR file
    into the lake**). With PyCharm for the console, PyCharm opens `<drishti>\drishti-console` and IntelliJ `<drishti>`, never one folder in both
    (they overwrite each other's `.idea`; IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).
