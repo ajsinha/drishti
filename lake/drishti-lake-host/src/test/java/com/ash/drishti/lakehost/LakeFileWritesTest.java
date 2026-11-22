@@ -81,7 +81,7 @@ class LakeFileWritesTest {
                 # and its description
                 lake: risklake
                 format: delta
-                root: ${drishti.data.dir:./data}/delta/risklake
+                root: ${drishti.data.dir}/delta/risklake
                 defaults: {load-mode: replace}
                 tables: {}
                 """;

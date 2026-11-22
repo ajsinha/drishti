@@ -5,7 +5,7 @@ kinds:
 - simulation-run
 - exposure-path
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   domain: risk
   layout.simulation-run.columns: RUN_ID,CALIBRATION,PATHS,STATUS,BATCH_ID
   layout.exposure-path.columns: TRADE_ID,NETTING_SET,COUNTERPARTY,LEGAL_ENTITY,DESK,TT_BOOK,ASSET_CLASS,PRODUCT,SOURCE_SYSTEM,MATURITY_DATE,NOTIONAL,GRID_INDEX,GRID_DATE,RUN_ID,BATCH_ID,STATUS

@@ -656,7 +656,7 @@ the parameters change:
 ```yaml
 drishti:
   frtb:
-    recipes-dir: ${drishti.data.dir:./data}/frtb/recipes
+    recipes-dir: ${drishti.data.dir}/frtb/recipes
 ```
 
 **You should see** the notice *Saved as recipe FR-…* after **Save recipe**, and on the replay the notice *reproduced to the cent: the inputs and every figure equal the recipe's*.

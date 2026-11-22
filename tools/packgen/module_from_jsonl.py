@@ -54,7 +54,7 @@ import childkinds as CK  # noqa: E402
 
 SG = PFJ.SG
 DATE_DIR = re.compile(r"^\d{4}-\d\d-\d\d$")
-FILES_ROOT = "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}"
+FILES_ROOT = "${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}"
 sys.path.insert(0, str(ROOT / "tools"))
 import license_headers as LH  # noqa: E402
 from elements_range import elements_range  # noqa: E402

@@ -19,6 +19,6 @@
 # with lake: capitalmarket.
 lake: capitalmarket
 format: delta
-root: ${lake.data.dir:./data}/delta/capitalmarket
+root: ${lake.data.dir:${drishti.data.dir}}/delta/capitalmarket
 defaults: {load-mode: replace}
 tables: {}

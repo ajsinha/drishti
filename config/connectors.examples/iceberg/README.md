@@ -44,7 +44,7 @@ other domain files carry none. Delta is the default for every domain: a file her
 
 | Setting or variable | Default in the files | Meaning |
 |---|---|---|
-| `DRISHTI_ICEBERG_ROOT` (`root`) | `${drishti.data.dir:./data}/iceberg` | The warehouse root for path-based tables (a folder or `s3://…`) |
+| `DRISHTI_ICEBERG_ROOT` (`root`) | `${drishti.data.dir}/iceberg` | The warehouse root for path-based tables (a folder or `s3://…`) |
 | `DRISHTI_ICEBERG_CATALOG` (`catalog`) | `hadoop` | `hadoop` (path-based) or `rest` |
 | `DRISHTI_ICEBERG_URI` (`uri`) | empty | A REST catalog's URI |
 | `DRISHTI_ICEBERG_WAREHOUSE` (`warehouse`) | empty | A REST catalog's warehouse |

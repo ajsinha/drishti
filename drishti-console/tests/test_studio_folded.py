@@ -130,8 +130,7 @@ def test_the_build_menu_is_create_learn_with_no_studio_entry_and_approvals_is_on
 
 
 def test_the_studio_help_guide_moved_to_the_designer_guide(app_client):
-    r = app_client.get("/help/sutra-studio", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
+    assert app_client.get("/help/sutra-studio", follow_redirects=False).status_code == 404       # a retired page has no alias: its content is in the designer guide
     assert app_client.get("/help/rachana-reference#screen-designer-and-the-build-workbench").status_code == 200
     assert "sutra-studio" not in app_client.get("/help").text
     assert app_client.app.state.settings.get("studio.enabled") is None     # no studio switch: /studio follows Build (features.build)

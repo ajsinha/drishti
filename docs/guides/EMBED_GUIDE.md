@@ -956,7 +956,7 @@ Three contracts, all semantic versions:
 A version this console does not serve answers `410 DRS-8006`, and the answer names the one it serves: after a console upgrade, a page
 pinned to an old version tells you to move the pin.
 
-**Retired renderer paths.** `/static/render/2.0.0/…`, `/embed/v2/render/1.2.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` are gone: the embed answers `410` (`DRS-8006`) naming the version it serves; pin the one renderer.
+**Other renderer versions.** The embed serves one renderer and one Elements version: a path that names any other version is answered `410` (`DRS-8006`), naming the version it serves; pin that one.
 
 **Moving from renderer 1.2.0 to 2.4.0.** Change the version in the import (`/static/render/3.3.1/drishti-render.js`, or
 `/embed/v2/render/3.3.1/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What

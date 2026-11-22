@@ -68,8 +68,7 @@ def test_the_history_page_offers_the_chart_on_shift_k_in_its_bar_key_line_and_ke
 
 
 def test_the_dialogs_help_opens_the_user_guides_section(client):
-    r = client.get("/help/table-chart", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/help/user-guide#chart-any-table"
+    assert client.get("/help/table-chart", follow_redirects=False).status_code == 404            # a retired page has no alias: its content is in the user guide
     assert 'id="chart-any-table"' in client.get("/help/user-guide").text
 
 

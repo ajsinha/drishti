@@ -1096,7 +1096,7 @@ plugin: delta                     # required: which source plugin (delta, jdbc, 
 enabled: true                     # optional, default true
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
-  root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+  root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
   domain: trading
 ```
 
@@ -1331,7 +1331,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [order, position]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
       domain: equity           # <root>/equity/order/, <root>/equity/position/
       mode.position: snapshot
       mode.order: effective    # an order row is written only when the order changes
@@ -1491,7 +1491,7 @@ plugin: delta                     # required: which source plugin (delta, jdbc, 
 enabled: "${DRISHTI_LAKE_ENABLED:true}"   # optional, default true
 description: ENDUR trades         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
-  root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}"
+  root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}"
   domain: trading
   table.trade: trade_endur        # the table under <root>/<domain>/ that holds the kind (default: the kind's name)
   union: "true"                   # one slice of 'trade' among several connectors
@@ -1558,7 +1558,7 @@ enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
 - trade
 settings:
-  root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}"
+  root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}"
   domain: trading
   layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
   layout.trade.sort-by: id
@@ -1617,7 +1617,7 @@ settings:
   id-field: TRADE_ID
   stale-after: "${DRISHTI_STREAM_STALE_AFTER:15m}"
   disk-cache.enabled: "${DRISHTI_STREAM_DISK_CACHE:true}"
-  disk-cache.root: "${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}"
+  disk-cache.root: "${DRISHTI_CACHE_ROOT:${drishti.data.dir}/cache}"
   …
 ```
 
@@ -1771,7 +1771,7 @@ connectors:                         # a mapping: each entry is a TEMPLATE, read 
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
       domain: trading
       layout:
         trade:
@@ -2137,7 +2137,7 @@ connector trade-endur   origin file   plugin delta   running   version 1a3893dbc
   settings (credentials masked):
   setting                      value
   ---------------------------  ------------------------------------------------------------------
-  root                         ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+  root                         ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
   domain                       trading
   layout.trade.columns         TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,…
   layout.trade.sort-by         id

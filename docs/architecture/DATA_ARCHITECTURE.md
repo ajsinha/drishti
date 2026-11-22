@@ -2685,9 +2685,9 @@ Iceberg table, and BI can query who changed what and when. Not built.
 # config/store/store.yaml
 backend: filesystem              # filesystem | sqlite | postgres | s3
 filesystem:
-  root: ${drishti.data.dir:./data}/fstore
+  root: ${drishti.data.dir}/fstore
 sqlite:
-  url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (the usual choice)
+  url: jdbc:sqlite:${drishti.data.dir}/identity/drishti.db   # the Drishti database itself (the usual choice)
 postgres:
   url: jdbc:postgresql://db:5432/drishti
   user: drishti

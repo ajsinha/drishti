@@ -13,7 +13,7 @@ kinds:
 - calendar
 - clearing-account
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   domain: reference
   mode.counterparty: effective
   mode.counterparty-group: effective

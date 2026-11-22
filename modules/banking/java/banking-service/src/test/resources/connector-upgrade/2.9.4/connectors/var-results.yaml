@@ -5,6 +5,6 @@ description: 'The official end-of-day VaR results the server publishes (risk-res
 kinds:
 - var-official
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   domain: risk-results
   layout.var-official.columns: HIERARCHY,NODE_ID,NODE_NAME,PARENT_ID,LEVEL,CAPTURE_ID,RESULT_VERSION,VAR,ES,LIMIT,LIMIT_USE,DIVERSIFICATION,HYPO_PNL,EXCEPTIONS_250,TRAFFIC_LIGHT

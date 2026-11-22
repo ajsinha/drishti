@@ -2483,7 +2483,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/ris
 | `drishti.var.intraday.kafka.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | 5 minutes | the PV topic's window: everything received in it is one intraday batch ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
 | `drishti.var.intraday.kafka.max-trades` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | 500 | a window is applied earlier once this many trades wait |
 | `drishti.var.tier.mode` | `${DRISHTI_VAR_TIER:mapped}` | `mapped` (anything but `heap`) | `mapped`: each loaded date a memory-mapped hot file ([section 26](#26-the-tiered-memory-and-the-hot-file)); `heap`: float64 rows on the heap |
-| `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date; put it on fast local disk |
+| `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date; put it on fast local disk |
 | `drishti.var.tier.disk-dates` | `60` | 60 (below 1) | hot files kept on disk; the least recently used beyond it are deleted |
 | `drishti.var.tier.max-disk-gb` | `0` (half the disk) | 0 (below 0) | the most disk every hot file (dates, currencies, shard books) takes; the least recently used beyond go, never an open one; a build that would leave the disk under the guard is refused (`DRS-5218`) |
 | `drishti.var.tier.keep-on-shutdown` | `false` | `false` | keep the hot files when the server stops for the next start (reused when their digest matches; else they are deleted then, and any left over at start) |
@@ -2589,7 +2589,7 @@ Every dataset below, whether it is required and the links to its data contract a
 ### 15.1 Where they live
 
 All VaR inputs are tables in the **common risk lake**, domain `risk`, one table per kind, served by the market-risk pack's
-connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}`, `domain: risk`). Delta is the
+connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}`, `domain: risk`). Delta is the
 default; the same tables may be Iceberg tables, read by the same connector switched to `plugin: iceberg`
 (`build_demo_lakes.py --store risk=iceberg` writes both the tables and the file; [section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector)),
 with the same VaR to the cent. The engine reads the kinds named by `drishti.var.kinds` (defaults below), whichever connector the kind
@@ -6260,7 +6260,7 @@ drishti:
     hot-dates: 2                     # dates open at once
     tier:
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: a float32 hot file per date; heap: float64 on the heap
-      dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}
+      dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir}/var/hot}
       disk-dates: 60                 # hot files kept on disk
       keep-on-shutdown: false
       close-grace-seconds: 60

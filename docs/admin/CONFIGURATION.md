@@ -401,7 +401,7 @@ Each row was tried against a scratch server. Points to know:
   the same placeholder.
 * **Nested.** The default may itself be a placeholder: `${A:${B:18480}}` uses `A`, else `B`, else `18480` (tried
   with `--server.port='${NOPE_A:${NOPE_B:18989}}'`). A placeholder may also sit inside a longer value
-  (`optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
+  (`optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
   The bundled file nests none.
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
 
@@ -1147,7 +1147,7 @@ What the bundled file sets under `plugins`:
 | Plugin | `enabled` default | Bundled settings |
 |---|---|---|
 | `demo` | `true` (`DRISHTI_DEMO_ENABLED`) | sample directories come from the packs |
-| `file` | `true` | `root: ${DRISHTI_FEEDS:${drishti.data.dir:./data}/feeds}`, `source-name: feed-file`, `rescan-seconds: 30` |
+| `file` | `true` | `root: ${DRISHTI_FEEDS:${drishti.data.dir}/feeds}`, `source-name: feed-file`, `rescan-seconds: 30` |
 | `rest` | `false` (`DRISHTI_REST_ENABLED`) | `base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}`, `path: /{kind}/{id}`, `source-name: rest`, `timeout-ms: 2000` |
 | `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc` (`pool-size` is inherited from [`drishti.db.pool`](#drishtidbpool--database-connection-pools)) |
 | `delta` | `false` | runs only as named connectors (the packs declare one per data domain) |
@@ -1843,7 +1843,7 @@ else by `drishti.var.positions`.
 | `load-threads` | `2` | The threads that load business dates from the lake (and shard books, and listed currencies on first ask): a pool of their own (`drishti-var-load-*`, `drishti-var-shard-load-*`), never the common pool that parallel streams share. A load waiting for another on the pool is compensated, never deadlocked. |
 | `view-cache-mb` | `64` | The most memory the viewers' views take (each a bitset of the trades a role set sees, per date, version and currency); an idle view goes after an hour, and a date's views go when the date leaves memory or is reloaded ([CLUSTER_GUIDE.md 5.3](../guides/CLUSTER_GUIDE.md#156-memory)). |
 | `tier.mode` | `mapped` (`DRISHTI_VAR_TIER`) | `mapped`: each loaded date is written once to a local **hot file** (float32 position rows in hierarchy order, the trades of fungible positions, the aggregates in float64, columns and links) and memory-mapped; the heap keeps only the aggregates, columns and links, and a history date opens again from its file without reading the lake ([VAR_GUIDE.md section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). `heap`: every trade's vector in float64 on the heap. |
-| `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
+| `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
 | `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
 | `tier.max-disk-gb` | `0` (`DRISHTI_VAR_MAX_DISK_GB`) | The most disk every hot file takes (dates, listed currencies, shard books); `0` is half the disk's size (PO-4). The least recently used beyond go, never an open one; `disk-dates` stays a second bound. |
 | `tier.keep-on-shutdown` | `false` (`DRISHTI_VAR_KEEP_HOT_FILES`; the server images: `true`, PO-10) | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
@@ -1863,7 +1863,7 @@ else by `drishti.var.positions`.
 | `positions.rules` | `[]` | First match wins: `{name, groups: [PRODUCT_GROUP…], types: [PRODUCT_TYPE…], key: [SECURITY_ID, ISIN…]}`; a trade's position is `POS-<TT_BOOK>~<the first key field it carries>`, else (no rule, no key) one position per trade, `POS-<TT_BOOK>~<TRADE_ID>` ([VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti)). A loaded pack's `positions:` section wins. |
 | `official.enabled` | `true` (`DRISHTI_VAR_OFFICIAL`) | Capture every node of every hierarchy officially when a date's inputs are complete (after the data-load signal of an input, and once at start for the newest date without a record). The node history reads these captures. |
 | `official.publish` | `true` | Also append the official figures to `<root>/risk-results/var-official` (Delta or Iceberg by `official.format`, append-only: a restated date adds rows with the next `RESULT_VERSION`). No engine reads that folder. |
-| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The root the results are published under: a local or shared folder, or `s3://bucket/prefix` (before, an `s3://` root ended in `publishError`). |
+| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}` | The root the results are published under: a local or shared folder, or `s3://bucket/prefix` (before, an `s3://` root ended in `publishError`). |
 | `official.format` | `delta` | `delta` (Drishti's lake writer) or `iceberg` (Drishti's Iceberg engine: append commits only, 7 years of snapshots, every metadata file kept); anything else is refused at start. [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results). |
 | `official.storage` | none | The `s3.*` settings for an `s3://` root, as in a connector file: `s3.region`, `s3.endpoint`, `s3.access-key`/`s3.secret-key` (none: the default AWS credential chain), `s3.path-style`. Each Delta commit on S3 is an exclusive create. |
 | `official.retention-years` | `7` | The published table keeps its log and its removed files this long (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`): its time travel reaches back that far. |
@@ -1932,7 +1932,7 @@ pool; the check's one setting is `limit-near`.
 | `version-check` | `30s` (`DRISHTI_EXPOSURE_VERSION_CHECK`) | The version watch, as VaR's: an open date restated in the lake without a signal is reloaded in the background within this interval (`0`: off). |
 | `view-cache-mb` | `16` | The most memory the viewers' views take (per date, version and role set); idle ones go after an hour, a date's with the date. |
 | `memory-budget-gb` | `0` (`DRISHTI_EXPOSURE_MEMORY_GB`) | Most memory one date's netting-set value matrices take while it loads (float64, G × P per set); `0` is a quarter of the heap. A date over it is refused whole (`503 DRS-5445`). |
-| `hot-folder` | `${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}` | The hot files, one folder per business date (`run-<digest>.xhot`, format `DRSHEXP1`: each set's value, exposure and negative exposure in float32, one row of P paths per grid date). Local disk: sets × P × (G + 2 × primary dates) × 4 bytes a date. |
+| `hot-folder` | `${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir}/ccr/hot}` | The hot files, one folder per business date (`run-<digest>.xhot`, format `DRSHEXP1`: each set's value, exposure and negative exposure in float32, one row of P paths per grid date). Local disk: sets × P × (G + 2 × primary dates) × 4 bytes a date. |
 | `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped`: each loaded date written once to its hot file and memory-mapped (reopened without the lake while its inputs are unchanged); `heap`: float64 matrices on the heap. |
 | `disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted, never an open date's nor one the retention keeps (`retention.set-matrices-*`). |
 | `max-disk-gb` | `0` (`DRISHTI_EXPOSURE_MAX_DISK_GB`) | The most disk the hot files take; `0` is a quarter of the disk's size (PO-4). **It wins over the retention** (PO-3): a retained date beyond it is deleted from local disk and read from the lake when asked. |
@@ -1947,7 +1947,7 @@ pool; the check's one setting is `limit-near`.
 | `access` | `{}` | Per role and counterparty, group or legal entity: `trades`, `aggregate` (figures, no netting set or trade below it) or `none` (`drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate`); a role with entries sees nothing else, a role without sees all at `trades` when it may open `exposure-path`. |
 | `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | Capture every netting set, counterparty, group and hierarchy node officially when a date's run is complete (after the data-load signal, and once at start). |
 | `official.publish` | `true` | Also append the official figures to `<root>/risk-results/exposure-official` (hierarchy nodes) and `exposure-official-cpty` (netting sets, counterparties, groups: restricted). Append-only; no engine reads them. |
-| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The root the results are published under: a folder or `s3://bucket/prefix`. |
+| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}` | The root the results are published under: a folder or `s3://bucket/prefix`. |
 | `official.format` | `delta` | `delta` or `iceberg`, as VaR's `drishti.var.official.format`. |
 | `official.storage` | none | The `s3.*` settings for an `s3://` root, as VaR's `drishti.var.official.storage`. |
 | `official.retention-years` | `7` | The published tables keep their log and removed files this long (time travel). |
@@ -2738,7 +2738,7 @@ DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres DRISHTI_PG_URL=jdbc:p
 | `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | A profile of your own (`application-<profile>.yaml` beside the site files); the stores are chosen by connector files, not by a profile ([above](#stores-another-store-instead-of-delta-lake)). |
 | `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine). |
 | `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
-| `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`. |
+| `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}`. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `drishti.security.token-read-posts` | `/api/v1/search/pivot/**`, `/api/v1/command` | The `POST` paths (ant patterns) a personal API token may call because they only read. Every other non-`GET` request stays refused for a token. |
 | `drishti.security.token-scopes` | `design:write`, `design:approve`, `packs:admin`, `loads:write` | The write scopes a personal API token may be given: for each, a `description` (shown on the account page) and the `allow` list of `METHOD path` patterns it opens (`*` for any method). Keys with a colon are written `"[design:write]":`. A scope is only a door: the controller still checks the user's roles at the time of each call. A write no scope opens is refused. |

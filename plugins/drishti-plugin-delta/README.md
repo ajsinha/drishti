@@ -238,7 +238,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}     # one switch for every pack's lake
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}   # one variable moves every pack's lake
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta/demo}   # one variable moves every pack's lake
       domain: trading
       table: { trade: trade_endur }           # <root>/trading/trade_endur
       union: true                             # one source system of several: the union serves the kind
@@ -261,7 +261,7 @@ Reference data that changes rarely is `effective` (`config/packs/core/core/pack.
     plugin: delta
     kinds: [counterparty, counterparty-group, issuer, ccp, legal-entity, book, desk, trader, calendar, clearing-account]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta/demo}
       domain: reference
       mode.counterparty: effective            # one mode.<kind> line per kind
 ```

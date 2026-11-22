@@ -46,19 +46,19 @@ ROOT = Path(__file__).resolve().parents[2]
 ALLOWED: dict[str, list[tuple[str, str]]] = {
     # the lake files' default root is matched as this exact text by the Python lake builders (tools/lake/demo.py, stores.py, lakeconfig.py),
     # which substitute their own data folder for it; the server always has drishti.data.dir (LaunchRoots), so the default is never used there
-    "config/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
-    "config/connectors.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
-    "config/lakes.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
-    "config/store.examples/": [("${drishti.data.dir:./data}", "a copy-me example; the server resolves drishti.data.dir")],
+    "config/lakes/": [("${drishti.data.dir}", "the lake builders' text")],
+    "config/connectors.examples/": [("${drishti.data.dir}", "a copy-me example; the server resolves drishti.data.dir")],
+    "config/lakes.examples/": [("${drishti.data.dir}", "a copy-me example; the server resolves drishti.data.dir")],
+    "config/store.examples/": [("${drishti.data.dir}", "a copy-me example; the server resolves drishti.data.dir")],
     # the lake files shipped in the jars: the same text the lake builders substitute (above)
-    "lake/drishti-lake-host/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
-    "modules/banking/java/banking-service/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
+    "lake/drishti-lake-host/src/main/resources/drishti/lakes/": [("${drishti.data.dir}", "the lake builders' text")],
+    "modules/banking/java/banking-service/src/main/resources/drishti/lakes/": [("${drishti.data.dir}", "the lake builders' text")],
     # a pack's own files (formats:, semantics:, help:) are relative to the pack folder (PackResolver), not the working folder
     "config/packs/": [(": config/", "relative to the pack folder")],
     # not paths of the server: a check that refuses '../' in an uploaded zip, and an xlsx part's relationship target
     "kernel/drishti-server/src/main/java/com/ash/drishti/server/design/PackFragment.java": [('contains("../")', "a zip-slip check")],
     "testing/drishti-testkit/src/main/java/com/ash/drishti/testkit/s3/MinioServer.java": [('Path.of("")', "the test kit looks for the repository from its Maven module")],
-    "config/store/store.yaml": [("${drishti.data.dir:./data}", "the store file is also read by tools/storecli; the server resolves drishti.data.dir")],
+    "config/store/store.yaml": [("${drishti.data.dir}", "the store file is also read by tools/storecli; the server resolves drishti.data.dir")],
     # benchmarks and the test kit run under Maven in their own module folder: their scratch is target/ there by design
     "testing/": [("Path.of(\"target\"", "a benchmark's or the test kit's scratch under its module's target/"),
                  ("Path.of(\"examples/packs", "a benchmark's fixture, run from the repository")],
@@ -69,8 +69,8 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
                  (": sutras/", "relative to the module folder"), (": packs/", "relative to the module folder"), (": blotters/", "relative to the module folder"),
                  (": ../", "relative to the module's help file"), (": config/", "a pack's own files, relative to the pack folder"),
                  # a connector setting's placeholder, resolved where the connector starts (ConnectorLayers, wip/i4-dailyfix's scope)
-                 ("${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}", "a connector setting, resolved by the connector layers"),
-                 ("${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "a copy-me connector example, resolved by the connector layers")],
+                 ("${DRISHTI_CACHE_ROOT:${drishti.data.dir}/cache}", "a connector setting, resolved by the connector layers"),
+                 ("${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}", "a copy-me connector example, resolved by the connector layers")],
     # an ES module import in the conformance check of module JavaScript, not a path of the server
     "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/conformance/ModuleConformance.java": [("startsWith(\"./\")", "an ES import specifier")],
 }

@@ -1676,6 +1676,20 @@ Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), 
 | `lake delete` | whole business dates removed from one table, one commit, then the server told ([7.15](#715-lake-delete-whole-business-dates-out-of-a-table)) |
 | `lake memory` | the in-memory lake's stores, jobs and refills (`status`, `jobs`, `refill`; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) |
 
+The commands above are built from these scripts in `tools/lake/`; a person runs a command, and the script is the file to read when one does not behave:
+
+| Script | What it is |
+|---|---|
+| `tools/lake/lakewheel.py` | finds the pinned Drishti Lake Python wheel (`lib/lake-wheel.pin`, the wheel in `lib/wheels`, or `LAKE_PYTHON` for development), checks its SHA-256 and puts it on the path; `python tools/lake/lakewheel.py` checks the install |
+| `tools/lake/deltaread.py` | how the Python tools read a Delta table's rows: through Delta Kernel, the reader the server uses |
+| `tools/lake/hostdates.py` | Drishti's half of the business-date rule: the calendar day of a moment and the date of a load input (the rest of the rule is the Lake wheel's) |
+| `tools/lake/ownership.py` | the record of the tables `lake build` made (`_drishti-lake/tables-built.json`), so maintenance touches only those |
+| `tools/lake/maintain.py` | `lake maintain` for Delta: retention, relayout, compaction, checkpoint and vacuum, through Drishti Lake's `LakeMaintain` |
+| `tools/lake/maintain_iceberg.py` | the same steps for an Iceberg lake, each one Iceberg commit |
+| `tools/lake/maintain_rows.py` | row retention (`retention: {ttl, on, max-rows}`) as a step of `lake maintain` |
+| `tools/lake/maintconfig.py` | the maintenance YAML (`lake maintain --config`, Admin -> Lakes) and the history of runs |
+| `tools/lake/maintschedule.py` | the one scheduler of `lake maintain --daemon` and of Admin -> Lakes: cron text or `after-build` |
+
 `drishti.py lake build` reads an export of any size (a JSON array, pretty-printed or on one line, JSON Lines, either gzipped, one
 file or a folder of them, or a `.zip`, `.tar.gz`, `.tgz` or `.tar` archive of them) **as a stream**, and writes it as a Delta table
 the Delta connector reads:
@@ -1981,7 +1995,7 @@ connectors:
     plugin: delta
     kinds: [trade]
     settings:
-      root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}"
+      root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}"
       domain: trading
       table.trade: trade_endur
       layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"

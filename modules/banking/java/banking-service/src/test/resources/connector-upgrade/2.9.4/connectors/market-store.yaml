@@ -23,5 +23,5 @@ kinds:
 - bond
 - correlation-matrix
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   domain: market

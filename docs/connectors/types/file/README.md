@@ -138,7 +138,7 @@ A line is one JSON object, in either form (a file may mix them):
 plugin: file
 kinds: [trade]
 settings:
-  root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}
+  root: ${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}
   domain: trading                     # reads <root>/trading
   layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,CURRENCY,QUANTITY,COUNTERPARTY,PORTFOLIO
 ```

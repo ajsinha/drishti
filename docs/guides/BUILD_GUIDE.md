@@ -686,7 +686,7 @@ connectors:
     plugin: file
     kinds: [ticket]
     settings:
-      root: ${HELPDESK_FILES_ROOT:${drishti.data.dir:./data}/files}   # <root>/<domain>/<yyyy-mm-dd>/<kind>.jsonl
+      root: ${HELPDESK_FILES_ROOT:${drishti.data.dir}/files}   # <root>/<domain>/<yyyy-mm-dd>/<kind>.jsonl
       domain: helpdesk
       id-field: TICKET_ID           # a plain document per line: its id is this field
       rescan-seconds: 30
@@ -803,7 +803,7 @@ Last, [verify the pack](#295-verifying-a-pack): Admin → Health, `sutras/proble
 ### 4.1 Every key at a glance
 
 Only `pack` is required; a pack with nothing else loads and does nothing. Keys not listed are ignored. Values may use `${VARIABLE:default}`,
-resolved from the environment when the server starts (`root: ${HELPDESK_FILES_ROOT:${drishti.data.dir:./data}/files}`).
+resolved from the environment when the server starts (`root: ${HELPDESK_FILES_ROOT:${drishti.data.dir}/files}`).
 
 | Key | Read by | One-line example | What it does | Details |
 |---|---|---|---|---|
@@ -1081,12 +1081,12 @@ connectors:                     # a mapping NAME: { plugin, enabled?, kinds, set
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [agreement, csa]
     settings:                   # passed to the plugin as-is (credentials only as ${ENV})
-      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
       domain: legal             # reads <root>/legal/<kind>/
   credit-store:
     plugin: delta
     kinds: [netting-set, credit-limit, cva, sa-ccr]
-    settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: credit }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}", domain: credit }
 
 routes:                         # KIND: CONNECTOR — which connector answers each kind
   agreement: legal-store
@@ -1101,7 +1101,7 @@ A pack names its connectors as a mapping, each with the definition it suggests (
 
 ```yaml
 connectors:                                         # what to suggest if the site has none yet
-  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
@@ -1132,7 +1132,7 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
 **Checklist for a pack author:**
 
 1. List every connector the pack reads through in `connectors:`, and route every kind that is not served by the demo `samples` in `routes:`.
-2. Give each a template with settings that work on a developer machine (`${VAR:default}` for paths and URLs, under `${drishti.data.dir:./data}` for folders).
+2. Give each a template with settings that work on a developer machine (`${VAR:default}` for paths and URLs, under `${drishti.data.dir}` for folders).
 3. Never write a literal credential, not even in a template: use `${ENV_VAR}` or `file:/path` (the server refuses a literal in a connector file).
 4. Do not rename a connector in a later version unless you must: the site's file is named after it.
 5. Start a scratch server on an empty `config/connectors/` and check that the files are written and Admin → Health shows no `connectorsNotConfigured`.
@@ -1177,7 +1177,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
       domain: trading
       table: { trade: trade_endur }    # the kind's table under <root>/trading/ (default: the kind's name)
       union: true                      # one part of a kind several connectors serve together (5.2)
@@ -2129,7 +2129,7 @@ routes: {trade: desk-pack-store}         # which connector answers each kind
 connectors:                              # the logical names the pack reads through, with the connection settings as its suggestion
   desk-pack-store:
     plugin: delta
-    settings: {root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
+    settings: {root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}", domain: desk-pack, ...}
 ```
 
 **Reported rather than decided:** unresolved `$ref`s (an open object), a schema file that is not JSON or YAML, kinds with the same name, an ambiguous
@@ -2484,7 +2484,7 @@ connectors:
     plugin: file
     kinds: [deals]
     settings:
-      root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}
+      root: ${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}
       domain: book
       layout:
         deals:

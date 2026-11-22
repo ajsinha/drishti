@@ -498,7 +498,7 @@ tables on disk. Each step shows the UI, the command line and the YAML behind it.
 ```yaml
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
+root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   trading.trade_endur:
@@ -1329,7 +1329,7 @@ bindings) is where a site binds them elsewhere:
 # Written by tools/build_demo_lakes.py --store risk=iceberg: every risk table in Iceberg (data/iceberg/risk), …
 plugin: iceberg
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:${lake.data.dir:./data}/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${lake.data.dir:${drishti.data.dir}}/iceberg}
   domain: risk
   layout:
     pnl-vector:
@@ -1457,7 +1457,7 @@ nothing to do. A site override of `var-results` (`config/connectors/var-results.
 ```text
 $ drishti.py connector get var-results
 connector var-results   origin file   plugin iceberg   running   …
-  root                         ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
+  root                         ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta}}
   domain                       risk-results
   engine                       native
 ```
@@ -1467,7 +1467,7 @@ connector var-results   origin file   plugin iceberg   running   …
 ```yaml
 plugin: iceberg
 settings:
-  root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
+  root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta}}
   domain: risk-results
 ```
 

@@ -44,7 +44,7 @@ pack's `layout.<kind>.columns` to a copied file.
 
 | Setting or variable | Default in the files | Meaning |
 |---|---|---|
-| `DRISHTI_DUCKDB_PATH` (`path`) | `${drishti.data.dir:./data}/duckdb/drishti.duckdb` | The DuckDB file; files with the same path share one instance |
+| `DRISHTI_DUCKDB_PATH` (`path`) | `${drishti.data.dir}/duckdb/drishti.duckdb` | The DuckDB file; files with the same path share one instance |
 | `DRISHTI_DUCKDB_MEMORY` (`memory-limit`) | `1GB` | DuckDB's native memory limit for the shared instance |
 | `domain` | the file's domain (`trading`, …) | The data domain |
 | `table` | `<domain>.entities` | The domain's table |

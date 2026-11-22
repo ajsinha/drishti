@@ -230,7 +230,7 @@ def manifest(name: str) -> dict:
                                                           "stale-after": "${DRISHTI_STREAM_STALE_AFTER:15m}",
                                                           # the day's live trades on local disk, in this connector's own RocksDB store
                                                           "disk-cache.enabled": "${DRISHTI_STREAM_DISK_CACHE:true}",
-                                                          "disk-cache.root": "${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}",
+                                                          "disk-cache.root": "${DRISHTI_CACHE_ROOT:${drishti.data.dir}/cache}",
                                                           "disk-cache.max-gb": "${DRISHTI_STREAM_CACHE_GB:10}",
                                                           "disk-cache.reset-at": "${DRISHTI_CACHE_RESET_AT:02:00}",
                                                           "disk-cache.zone": "America/New_York"}}

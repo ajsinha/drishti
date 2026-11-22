@@ -6,5 +6,5 @@ kinds:
 settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
-  lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   pack: market-risk

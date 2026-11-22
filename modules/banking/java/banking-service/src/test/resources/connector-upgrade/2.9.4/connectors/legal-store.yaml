@@ -5,7 +5,7 @@ kinds:
 - agreement
 - csa
 settings:
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}
   domain: legal
   mode.agreement: effective
   mode.csa: effective

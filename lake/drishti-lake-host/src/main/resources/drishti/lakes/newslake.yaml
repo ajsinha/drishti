@@ -20,7 +20,7 @@
 # below daily (official-news, gdelt-events); every other shipped connector reads the demo lake.
 lake: newslake
 format: delta
-root: ${lake.data.dir:./data}/delta/newslake
+root: ${lake.data.dir:${drishti.data.dir}}/delta/newslake
 defaults: {load-mode: replace}
 tables:
   officialnews.release-source:

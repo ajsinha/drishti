@@ -16,7 +16,7 @@
 # config/connectors.examples/iceberg/ name. Copy it to config/lakes/iceberg.yaml. Secrets only as ${ENV} or file:/path references.
 lake: iceberg
 format: iceberg
-root: ${DRISHTI_ICEBERG_ROOT:${lake.data.dir:./data}/iceberg}
+root: ${DRISHTI_ICEBERG_ROOT:${lake.data.dir:${drishti.data.dir}}/iceberg}
 catalog: {type: '${DRISHTI_ICEBERG_CATALOG:hadoop}', uri: '${DRISHTI_ICEBERG_URI:}', warehouse: '${DRISHTI_ICEBERG_WAREHOUSE:}', credential: '${DRISHTI_ICEBERG_CREDENTIAL:}'}
 tables:
   collateral.collateral-balance: null

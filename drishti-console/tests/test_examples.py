@@ -25,6 +25,7 @@ from core.examples import Examples
 EXAMPLES = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples"
 KINDS = {"kv", "table", "tabs", "line", "area", "hbar", "ladder", "links", "status", "provenance", "markdown", "gauge", "surface",
          "metric", "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "map"}
+LEVEL_1_2_KINDS = {"bullet", "chart", "form", "grid", "live", "tree", "treemap"}      # the kinds of the Level 1.2 grammar: shown in level-1-2-panels and others, not in the showcase
 
 
 def _panels(node):
@@ -44,7 +45,7 @@ def test_every_example_has_its_three_files_and_parses():
     assert len(sutras) >= 10
     index = (EXAMPLES / "README.md").read_text(encoding="utf-8")
     for name, sutra in sutras.items():
-        assert sutra["rachana"] == 1 and sutra["sutra"] == name, name
+        assert sutra["rachana"] == 1.2 and sutra["sutra"] == name, name
         assert isinstance(json.loads((EXAMPLES / f"{name}.json").read_text(encoding="utf-8")), dict), name
         assert (EXAMPLES / f"{name}.json").stat().st_size < 60_000, f"{name}.json is not small"
         assert any(ln.startswith("# ") for ln in (EXAMPLES / f"{name}.md").read_text(encoding="utf-8").splitlines()), name
@@ -53,7 +54,7 @@ def test_every_example_has_its_three_files_and_parses():
 
 def test_the_set_covers_every_panel_kind_a_nested_pivot_and_a_tree_table():
     panels = [p for s in _sutras().values() for p in _panels(s)]
-    assert {p["kind"] for p in panels} == KINDS
+    assert {p["kind"] for p in panels} == KINDS | LEVEL_1_2_KINDS
     assert any(p["kind"] == "pivot" and isinstance(p.get("by"), list) and len(p["by"]) > 1 for p in panels), "no nested pivot"
     assert any(p["kind"] in ("table", "ladder") and p.get("children") for p in panels), "no tree table"
     showcase = {p["kind"] for p in _panels(_sutras()["all-panels-showcase"])}

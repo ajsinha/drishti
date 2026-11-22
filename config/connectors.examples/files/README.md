@@ -43,7 +43,7 @@ promoted columns: add the pack's `layout.<kind>.columns` to a copied file for fa
 
 | Setting or variable | Default in the files | Meaning |
 |---|---|---|
-| `DRISHTI_FILES_ROOT` (`root`) | `${drishti.data.dir:./data}/files` | The folder holding the domain folders |
+| `DRISHTI_FILES_ROOT` (`root`) | `${drishti.data.dir}/files` | The folder holding the domain folders |
 | `domain` | the file's domain (`trading`, …) | The domain folder under the root |
 | `mode.<kind>` | `effective` for the 12 reference kinds | How a date is read |
 

@@ -18,7 +18,7 @@ kinds:
 - trade
 description: SwapOne trades read from files
 settings:
-  root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}
+  root: ${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}
   domain: trading
   source-name: trade-swapone
   where: SOURCE_SYSTEM = 'SWAPONE'

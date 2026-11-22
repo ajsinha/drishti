@@ -20,7 +20,7 @@
 # (world-development, central-banks, national-statistics, oecd); every other shipped connector reads the demo lake.
 lake: worldlake
 format: delta
-root: ${lake.data.dir:./data}/delta/worldlake
+root: ${lake.data.dir:${drishti.data.dir}}/delta/worldlake
 defaults: {load-mode: replace}
 tables:
   development.development-profile:

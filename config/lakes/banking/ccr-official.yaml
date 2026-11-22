@@ -17,7 +17,7 @@
 # published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/DATA_LAKE_GUIDE.md.
 lake: ccr-official
 format: ${lake.ccr.official.format:delta}
-root: ${lake.ccr.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
+root: ${lake.ccr.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta}}
 storage: {region: '${lake.ccr.official.storage.s3.region:}', endpoint: '${lake.ccr.official.storage.s3.endpoint:}', path-style: '${lake.ccr.official.storage.s3.path-style:}',
   access-key: '${lake.ccr.official.storage.s3.access-key:}', secret-key: '${lake.ccr.official.storage.s3.secret-key:}'}
 tables:

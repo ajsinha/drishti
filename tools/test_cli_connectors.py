@@ -21,7 +21,7 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from test_pack_deploy import Fake, ServerCase, run  # noqa: E402
 
-LIST = {"directory": "/srv/config/connectors", "watch": "WATCHING", "misnamed": ["Upper.yaml"], "deprecated": ["legacy"], "fileProblems": {}, "knownKinds": ["trade"],
+LIST = {"directory": "/srv/config/connectors", "watch": "WATCHING", "misnamed": ["Upper.yaml"], "fileProblems": {}, "knownKinds": ["trade"],
         "connectors": [
             {"name": "trading-lake", "origin": "file", "plugin": "delta", "kinds": ["trade"], "state": "RUNNING", "usedBy": [{"pack": "trading", "kinds": ["trade"]}], "problems": []},
             {"name": "legacy", "origin": "application", "plugin": "file", "kinds": [], "state": "FAILED", "usedBy": [], "problems": ["no plugin named 'x'"]}]}
@@ -48,11 +48,11 @@ class Connector(ServerCase):
         self.file = pathlib.Path(self.tmp.name) / "trading-lake.yaml"
         self.file.write_text("plugin: delta\nsettings:\n  root: /mnt/lake\n", encoding="utf-8")
 
-    def test_list_shows_origin_state_users_problems_and_deprecations(self):
+    def test_list_shows_origin_state_users_and_problems(self):
         code, out, _ = run("connector", "list", "--server", self.url)
         self.assertEqual(0, code)
         for text in ("2 connector(s) in /srv/config/connectors", "trading-lake", "file", "delta", "running", "trading", "legacy", "application", "failed",
-                     "no plugin named 'x'", "Upper.yaml", "deprecated: legacy"):
+                     "no plugin named 'x'", "Upper.yaml"):
             self.assertIn(text, out)
         code, out, _ = run("connector", "list", "--origin", "application", "--json", "--server", self.url)
         self.assertEqual(["legacy"], [c["name"] for c in json.loads(out)["connectors"]])

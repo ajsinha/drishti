@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "launch"))
 import drishti  # noqa: E402
 import envsetup  # noqa: E402
+import sdkbuild  # noqa: E402
 
 GENOMICS = ROOT / "modules" / "genomics"
 
@@ -54,10 +55,13 @@ def _version() -> str:
 
 
 def _repository_tail() -> Path:
-    """The read-only repository the build falls back to: the one the environment's MAVEN_ARGS names (``-Dmaven.repo.local.tail=``: where
-    the product's pinned Drishti Lake and Drishti Tools boms are installed on a build machine), else ~/.m2."""
+    """The read-only repository the build falls back to: where the pinned Drishti Rachana, Lake and Tools are installed, found the way ``build sdk``
+    and the drill find them: ``DRISHTI_LOCAL_MAVEN_REPO``, else the ``-Dmaven.repo.local.tail=`` of ``MAVEN_ARGS``, else ``sdkbuild.local_maven_repository``
+    (the ``-Dmaven.repo.local`` of ``MAVEN_ARGS``, else ``~/.m2/repository``)."""
+    if os.environ.get("DRISHTI_LOCAL_MAVEN_REPO"):
+        return Path(os.environ["DRISHTI_LOCAL_MAVEN_REPO"]).expanduser()
     m = re.search(r"-Dmaven\.repo\.local\.tail=(\S+)", os.environ.get("MAVEN_ARGS", ""))
-    return Path(m.group(1)) if m else Path.home() / ".m2" / "repository"
+    return Path(m.group(1)) if m else sdkbuild.local_maven_repository()
 
 
 def _no_build_output(src: str, names: list[str]) -> set[str]:

@@ -3253,7 +3253,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; DATA_LAKE_GUIDE.md sections 1, 4 and 7,
   OPERATIONS.md *The lakes' folders*):
   - **A lake's root defaults to `<data>/delta/<lake>`** (`Lakes.defaultRoot`): a lake file without `root:` is in its own folder, and a lake
-    file may still name any root. The demo lake is `data/delta/demo` (`config/lakes/demo.yaml`: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`;
+    file may still name any root. The demo lake is `data/delta/demo` (`config/lakes/demo.yaml`: `${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta/demo}`;
     `DRISHTI_DELTA_ROOT`, when a site sets it, still names its root). The official results stay at `<data>/delta/risk-results`.
   - **The one-time move** of a demo lake built in the older layout (`data/delta/<domain>/<table>`) into `data/delta/demo/`
     (`LakeRelocate`, drishti-lakeload): at the server's start before any connector opens a table (`drishti.lakes.relocate-on-start`,
@@ -3263,7 +3263,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
     for an Iceberg table, for a table that does not open, or while a build or load holds the lake's lock; it never deletes; it runs once,
     recorded in `data/delta/demo/_drishti-lake/relocated.json`.
   - **`lake:` in a `.ready` file** names the lake a file goes to, over a rule's `lake:` and the inbox's default; a lake with no file yet is
-    **created** by the load (`config/lakes/<lake>.yaml`: format delta, root `${drishti.data.dir:./data}/delta/<lake>`, the routed pack's
+    **created** by the load (`config/lakes/<lake>.yaml`: format delta, root `${drishti.data.dir}/delta/<lake>`, the routed pack's
     recommended entry), its tables at `data/delta/<lake>/<domain>/<table>` (`risklake/trading/trade_endur`, `risklake/risk/scenario-pv`).
     The Data loads page, the load report (`warning`) and `drishti.py dataload status` say *loaded into risklake, but no connector reads
     it: point market-risk's connectors at it (lake: risklake) and restart* (`SourceRegistry.lakesRead`).
@@ -3666,7 +3666,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 
 - **`pack make`, `schema pack`, the pack catalogue and the lake-maintenance settings default to the repository's data folder** (or DRISHTI_DATA_DIR), never `./data` of wherever the command was started.
 
-- **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
+- **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
 
 - **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
   definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
@@ -3750,7 +3750,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
   `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
   module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
-  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}`).
   The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
   out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
   `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**
@@ -4045,7 +4045,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
   `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
   module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
-  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}`).
   The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
   out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
   `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**

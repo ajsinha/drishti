@@ -77,10 +77,26 @@ def test_the_catalogue_lists_all_twenty_two_kinds_each_with_its_own_anchor():
     assert "## Panels: the twenty-two kinds" in PANELS.read_text()
 
 
+# The kinds the grammar added at Level 1.2, which the twenty-two-kind catalogue of this reference does not describe as panel kinds; a kind the
+# pinned Rachana adds that is in neither list fails the test below.
+LEVEL_1_2_KINDS = {"bullet", "chart", "form", "grid", "live", "tree", "treemap"}
+
+
+def _grammar() -> dict:
+    """The pinned Rachana release's published catalogue (``spec/1/rachana.lang.json`` in ``rachana-conformance-cases``), read from the local Maven
+    repository the way the SDK build finds the products: ``DRISHTI_LOCAL_MAVEN_REPO``, else the ``-Dmaven.repo.local`` of ``MAVEN_ARGS``, else ``~/.m2``."""
+    import json
+    import zipfile
+    from launch import sdkbuild
+    version = sdkbuild.pinned_versions(ROOT)["com.ash.rachana"]
+    jar = sdkbuild.local_maven_repository() / "com/ash/rachana/rachana-conformance-cases" / version / f"rachana-conformance-cases-{version}.jar"
+    assert jar.is_file(), f"{jar} is not there: install the pinned Rachana release in the local Maven repository (or set DRISHTI_LOCAL_MAVEN_REPO)"
+    with zipfile.ZipFile(jar) as z:
+        return json.loads(z.read("spec/1/rachana.lang.json"))
+
+
 def test_the_kinds_of_the_grammar_are_exactly_these_twenty_two():
-    java = (ROOT / "compute/drishti-rachana" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "rachana" / "model" / "PanelKind.java").read_text()
-    declared = re.findall(r"^    ([A-Z]+)\(Set\.of", java, re.M)
-    assert sorted(k.lower() for k in declared) == sorted(KINDS)
+    assert {k["name"] for k in _grammar()["panelKinds"]} == set(KINDS) | LEVEL_1_2_KINDS
 
 
 def test_each_kind_has_a_picture_options_linked_to_the_reference_and_a_yaml_example_that_is_a_real_excerpt():
@@ -121,20 +137,26 @@ def test_the_catalogue_does_not_copy_option_tables_from_the_reference():
 
 def test_the_developer_guide_walks_through_metric_with_the_real_code():
     text = DEV_DOC.read_text()
+    rachana = [         # Rachana's own sources: the guide quotes them; the kind's line is also checked against the pinned release's catalogue below
+        "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
+        "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
+        "case METRIC -> metric(p, c);",
+        '"sum", "delta", "highlight", "region");',
+    ]
+    for snippet in rachana:
+        assert snippet in text, f"the guide no longer quotes Rachana's {snippet}"
+    metric = next(k for k in _grammar()["panelKinds"] if k["name"] == "metric")
+    assert 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),' in text
+    assert metric["required"] == ["value"] and sorted(metric["optional"]) == sorted(["label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"])
     sources = {
-        "compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java": 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),',
-        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java": "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
-        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
-        "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
         "drishti-console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
         "drishti-console/web/static/js/build/drishti_palette.js": "['metric', 'hash',",
         "drishti-console/web/static/css/drishti_terminal.css": ".metric-v { font-size: var(--d-fs-display-5);",
-        "compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta", "highlight", "region");',
     }
     for path, snippet in sources.items():
         assert snippet in (ROOT / path).read_text(), f"{path} no longer has the snippet the guide quotes"
         assert snippet in text, f"the guide does not quote {path}"
-    for step in ("PanelKind.java", "PanelOptions.java", "SutraExpressions.java", "RachanaSchema.java", "PanelData.java", "Emptiness.java", "Binder.java",
+    for step in ("PanelKind", "PanelOptions.java", "SutraExpressions", "RachanaSchema", "PanelData", "Emptiness.java", "Binder",
                  "panels.html", "drishti_terminal.css", "drishti_charts.js", "export.py", "Bind.java", "PanelChooser.java", "AutoDesigner.java", "drishti_palette.js", "drishti_actions.js",
                  "SampleChecker", "test_terminal.py", "StudioTest", "test_examples.py", "test_workbench_options_browser.py", "CHANGELOG.md"):
         assert step in text, step
@@ -145,16 +167,15 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
 
 
 def test_the_help_centre_serves_the_catalogue_with_an_anchor_per_kind_and_its_pictures(client):
-    """The help.yaml entry ``rachana-reference`` (doc: guides/RACHANA_REFERENCE.md); the retired ``panels``, ``panel-kinds`` and ``panel-developer-guide`` redirect to it."""
+    """The help.yaml entry ``rachana-reference`` (doc: guides/RACHANA_REFERENCE.md); the retired ``panels``, ``panel-kinds`` and ``panel-developer-guide`` are gone (no aliases)."""
     page = client.get("/help/rachana-reference")
     assert page.status_code == 200 and "twenty-two kinds" in page.text and "data-unavailable" not in page.text
     for kind in KINDS:
         assert f'id="{kind}"' in page.text, kind
     srcs = [s for s in re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text) if "/img/panels/" in s]
     assert len(srcs) >= 21 and all(s.startswith("/help/files/guides/img/panels/") for s in srcs)
-    assert client.get("/help/panels", follow_redirects=False).headers["location"] == "/help/rachana-reference"   # no section: #<kind> survives
+    for retired in ("panels", "panel-kinds", "panel-developer-guide"):                 # retired pages have no alias: the reference holds their content
+        assert client.get(f"/help/{retired}", follow_redirects=False).status_code == 404, retired
     for s in srcs[:5]:
         assert client.get(s).status_code == 200, s
-    assert client.get("/help/panel-kinds", follow_redirects=False).headers["location"] == "/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one"
-    assert client.get("/help/panel-developer-guide", follow_redirects=False).headers["location"] == "/help/rachana-reference#developing-a-panel-kind"
     assert "metric" in page.text and "Developing a panel kind" in page.text

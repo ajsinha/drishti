@@ -18,9 +18,9 @@
 backend: filesystem                # filesystem | sqlite | postgres | s3
 filesystem:
   # A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI_STORE_ROOT overrides it.
-  root: ${drishti.data.dir:./data}/fstore
+  root: ${drishti.data.dir}/fstore
 sqlite:
-  url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (one node)
+  url: jdbc:sqlite:${drishti.data.dir}/identity/drishti.db   # the Drishti database itself (one node)
 postgres:
   url: ${db.store.url:}             # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
   user: ${db.store.user:drishti}  # the database user

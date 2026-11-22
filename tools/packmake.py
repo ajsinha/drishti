@@ -293,7 +293,7 @@ def readme_text(v: dict) -> str:
             w(f"  and the connector itself: python3 tools/drishti.py server health --server http://localhost:18480   ('{n}-store' should be UP).\n")
         else:
             w(f"  The documents are JSON Lines under data/files/{n}/<date>/{kind}.jsonl (one folder per business date), read by the 'file' connector")
-            w(f"  with root ${{DRISHTI_FILES_ROOT:${{drishti.data.dir:./data}}/files}} (the connector file config/connectors/{n}-store.yaml, written from the pack's suggestion at the first start). New days: python3 tools/drishti.py data ingest --from NEW --pack pack/{n} --store files --root /path/to/files")
+            w(f"  with root ${{DRISHTI_FILES_ROOT:${{drishti.data.dir}}/files}} (the connector file config/connectors/{n}-store.yaml, written from the pack's suggestion at the first start). New days: python3 tools/drishti.py data ingest --from NEW --pack pack/{n} --store files --root /path/to/files")
             w("  (the server rescans every 30 seconds). Point at another folder by setting DRISHTI_FILES_ROOT. Check as in step 4.\n")
     w("6. UPDATE AND ROLL BACK")
     w("-" * 72)

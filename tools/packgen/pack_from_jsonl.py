@@ -406,7 +406,7 @@ def run(opts, say=print, an: Analysis | None = None) -> int:
     if stored:                                   # pack make only: the pack folder with its own store
         if store == "files":
             conn = {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": stored,
-                    "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": opts.name, "id-field": "id",
+                    "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir}/files}", "domain": opts.name, "id-field": "id",
                                  "layout": {k: {"columns": lake_cols[k]} for k in stored}}}
         else:
             conn = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": stored,

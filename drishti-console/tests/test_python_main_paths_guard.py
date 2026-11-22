@@ -37,13 +37,13 @@ SKIP_DIRS = {".git", "target", "node_modules", ".venv", "data", "__pycache__", "
 
 # Allowed, each with its reason: (file suffix, text on the line, reason).
 ALLOWED: list[tuple[str, str, str]] = [
-    ("tools/lake/lakeconfig.py", "${drishti.data.dir:./data}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
-    ("tools/lake/stores.py", "${drishti.data.dir:./data}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
-    ("tools/lake/demo.py", "${drishti.data.dir:./data}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
-    ("core/schemakit/build.py", "${drishti.data.dir:./data}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
-    ("tools/packgen/pack_from_jsonl.py", "${drishti.data.dir:./data}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
-    ("tools/packgen/module_from_jsonl.py", "${drishti.data.dir:./data}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
-    ("tools/packgen/banking/make_packs.py", "${drishti.data.dir:./data}", "text of a generated server setting; the server resolves drishti.data.dir"),
+    ("tools/lake/lakeconfig.py", "${drishti.data.dir}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
+    ("tools/lake/stores.py", "${drishti.data.dir}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
+    ("tools/lake/demo.py", "${drishti.data.dir}", "the placeholder text the Java lake files carry; substituted with the real data folder, never opened"),
+    ("core/schemakit/build.py", "${drishti.data.dir}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
+    ("tools/packgen/pack_from_jsonl.py", "${drishti.data.dir}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
+    ("tools/packgen/module_from_jsonl.py", "${drishti.data.dir}", "text of a generated server connector setting; the server resolves drishti.data.dir"),
+    ("tools/packgen/banking/make_packs.py", "${drishti.data.dir}", "text of a generated server setting; the server resolves drishti.data.dir"),
     ("tools/lake/stage.py", 'pathlib.Path("")', "a placeholder for a staged part with no folder; never opened"),
     ("tools/storeload.py", "cwd = Path.cwd()", "a path the operator typed on drishti.py data load resolves from where it was typed"),
     ("tools/api_docs.py", 'APIDOCS = Path("target")', "a suffix joined onto each Maven module's folder, never opened from the working folder"),

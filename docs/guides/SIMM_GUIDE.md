@@ -655,7 +655,7 @@ python3 tools/drishti.py play simm --recipe SM-…        # exit 0 when reproduc
 ```yaml
 drishti:
   simm:
-    recipes-dir: ${drishti.data.dir:./data}/simm/recipes
+    recipes-dir: ${drishti.data.dir}/simm/recipes
 ```
 
 **You should see** the notice *Saved as recipe SM-…* and, on the replay, *reproduced to the cent*.

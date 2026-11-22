@@ -114,7 +114,7 @@ Trades from Endur, positions and their scenario PVs, and the VaR limits of the h
 ```yaml
 lake: risklake                    # its name: the file's name (lower-case letters, digits, - and _)
 format: delta                     # delta (the default) | iceberg
-# root: not given: the lake's own folder, ${lake.data.dir:./data}/delta/risklake
+# root: not given: the lake's own folder, ${lake.data.dir:${drishti.data.dir}}/delta/risklake
 defaults:                         # every table, unless its entry says otherwise
   load-mode: replace              # a load replaces each business date it holds (section 5.3)
   compression: zstd
@@ -176,7 +176,7 @@ Check the file before you load: `drishti.py lake show` lists it as the server re
 |---|---|
 | `lake` | the lake's name; must equal the file's name |
 | `format` | `delta` (default) or `iceberg` |
-| `root` | where it is: a local folder, `s3://bucket/prefix`, or `mem://<store>`. Not given: `${lake.data.dir:./data}/delta/<lake>` (`…/iceberg/<lake>` for Iceberg) |
+| `root` | where it is: a local folder, `s3://bucket/prefix`, or `mem://<store>`. Not given: `${lake.data.dir:${drishti.data.dir}}/delta/<lake>` (`…/iceberg/<lake>` for Iceberg) |
 | `storage` | how to reach it: `region`, `endpoint`, `path-style`, `tls.*`, `proxy.*`. Credentials come from the platform (an instance or task role, a profile) or as `${ENV}` references; a secret written as a value is refused |
 | `catalog` | Iceberg only: `none` (path tables, the default), `rest`, `glue`, `s3tables`, `hadoop`, with their settings (`uri`, `warehouse`, `token: ${…}`) |
 | `defaults` | any table key, for every table that does not set it |
@@ -185,7 +185,7 @@ Check the file before you load: `drishti.py lake show` lists it as the server re
 | `description` | free text, shown on Admin → Lakes |
 
 Values may name environment variables or server settings: `${NAME}`, `${NAME:default}`, nested
-(`${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}`). A variable that is not set and has no default refuses the file, naming
+(`${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}`). A variable that is not set and has no default refuses the file, naming
 it. An unknown key, a format that is not delta or iceberg, a fifth partition column, a load mode that is not replace or append, a
 secret written as a value, or a `lake:` that differs from the file's name: each refuses the file with the key named.
 

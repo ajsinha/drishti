@@ -1980,7 +1980,7 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
       # ... one pair per engine, in the catalogue's order
       - optional:file:./application.local.yaml
-      - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
+      - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}
 ```
 
 Spring Boot's order gives, strongest first: the command line and environment, the packs overlay (no engine keys), `application.local.yaml`,

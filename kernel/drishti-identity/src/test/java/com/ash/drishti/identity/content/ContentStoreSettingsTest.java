@@ -32,7 +32,7 @@ import org.junit.jupiter.api.io.TempDir;
 class ContentStoreSettingsTest {
 
     private static final Path DATA = Path.of(TestRoots.module(), "target", "content-tests", "data");
-    private static final UnaryOperator<String> RESOLVE = s -> s.replace("${drishti.data.dir:./data}", DATA.toString())
+    private static final UnaryOperator<String> RESOLVE = s -> s.replace("${drishti.data.dir}", DATA.toString())
             .replaceAll("\\$\\{[A-Z_]+:([^}]*)}", "$1");
 
     @Test

@@ -15,4 +15,4 @@
 # One machine (the default): a folder under the data folder. Copy to config/store/store.yaml.
 backend: filesystem
 filesystem:
-  root: ${drishti.data.dir:./data}/fstore
+  root: ${drishti.data.dir}/fstore
