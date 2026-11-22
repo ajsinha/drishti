@@ -881,3 +881,75 @@ with its `sleep(3)`), `test_elements_vendored.py`, `DeltaAfterMaintenanceTest` (
 
 Nothing running, nothing built. My five scratch clones are deleted. `/home/ashutosh/IdeaProjects/drishti`, the owner's stack, `~/.m2`,
 `main`, every tag and every repository but this plan branch were not written.
+
+---
+
+# Pre-drill: final (2026-11-22 07:10)
+
+Read: the diff `4abfa33f3..00101ff1e` of `wip/g4-rehearsal-rx` (36 files of code and pages, then one commit of three PDFs), the five logs in
+`~/.cache/drishti-lanes/g4-pd/`, `~/drishti-bench-scratch/i7b-drill.sh`, `tools/drill.sh`, the tags on GitHub. Nothing was built or run.
+
+## 1. The must-do list of part 2b
+
+| Item | State | Evidence |
+|---|---|---|
+| D1 version | done | `.mvn/maven.config`: `-Drevision=2.9.11.i7b`; README names the release, not a number |
+| D2 vendored README | done | the tag's bytes are back (`941b73dd5`); `vendored.log`: 1 passed |
+| D3 one line of history | done | `origin/develop` and `origin/main` (`9ce7c3170`) are both ancestors of `00101ff1e`: `main` fast-forwards |
+| D4 the wheel in the drill | done, one hole (S1) | `drill.sh:448` copies `lib/wheels` into each Java copy; `i7b-drill.sh` step 3 builds the wheel from the `v0.9.1` clone, step 4 installs it before the requirements |
+| L2 one retention rule | done, one test left behind (**B1**) | `maintain_iceberg.maintain` goes through `maintain.maintain(fmt="iceberg")` (`LakeMaintain --format iceberg`); the e2e test asks 2 dates on both stores; `e2e.log` 17 passed, 1 skipped (duckdb) |
+| D5 Playwright, script | done | `playwright~=1.64.0`; the script: `v1.0.0`, `v0.9.1`, `v1.1.0`, the organisation URL, Lake's `check.py --skip-build` once (the option exists at the tag), `prepare` ends at `build all` |
+| D6 the documents | done but M1 | QUICKSTART (wheel first, `--release i7b`, the folder above), DEPLOYMENT step 1 and 6, IDE guide; the three PDFs regenerated (`00101ff1e`) |
+| F29 | **the owner's word is half kept (O1)** | the marker is off four files (`test_admin_lake_maintain`, `test_admin_lakes`, `test_python_runtime_answers`, `test_expression_recipes`) |
+| Carry-in | done | F28 o and l, the Lake order limit, Glue/REST maintenance in `I8_CARRY_IN.md` |
+| Tags | right | `v1.0.0` = `bfb6799b`, `v0.9.1` = `2d22533c` (the pin's `ref=v0.9.1` is the same bytes), `v3.3.1` = `20661f09`, `v1.1.0` = `4d3567a2` |
+| The two watch items | now on disk | `var-inputs.log`: `VarInputsApiTest` 10 of 10, the sleep replaced by a wait on both tables' versions; the inbox test waits on the real condition |
+
+## 2. New, in the diff
+
+**B1. BLOCKER: one tools test is red by reading.** `tools/lake/test_maintain_rows.py:64` and `:67`
+(`test_iceberg_gets_the_options_and_a_table_without_a_block_none`) call `maintain_iceberg.command(...)`, which `cb06daab2`/`14cb73a07`
+deleted (the module now has no `command`): `AttributeError` in the tools lane. `lake-unit.log` (11 passed) ran `test_maintain_iceberg.py`
+and `test_undo.py`, not this file. Fix: the test builds the command with `maintain.lake_command(..., fmt="iceberg")` as
+`test_maintain_iceberg.py:86` does (`--ttl`, `--on`, `--max-rows` are in `lake_command` for every format); run that one file.
+
+**S1. Drill script (not in git): the wheel proof does not stop the drill.** Step 3, `( cd "$ROOT" && python3 tools/lake/lakewheel.py ) | tee -a ... || die`:
+the pipe's status is `tee`'s and the script has no `pipefail`, so a wheel that is not the pinned one goes on (pip then installs it: the
+requirements hold only the version; readiness marks it WARN). Add `set -o pipefail` at the top, or drop the `tee`.
+
+**O1. Owner: about 30 browser tests still skip.** `PARKED_I6` (`pytest.mark.skip`) is still on `test_admin_lakes_browser` (1),
+`test_admin_lake_maintain_browser` (2), `test_public_sector_browser` (6), `test_bi_multi_dataset_browser` (6),
+`test_bi_reports_cross_browser` (8), `test_var_explorer_browser` (6), `test_var_currency_browser` (1), and TEST_HARNESS still lists them as
+parked. I could not count the 76 without collecting (the recipes are parametrised), so: either the 76 were only the four files above and
+these stay parked by the owner's word (one row in `I8_CARRY_IN.md`, since the plan's rule is zero skips), or they were meant too and the
+marker comes off. One sentence from the owner; not a code finding.
+
+**M1. Must fix, pages only (same commit as B1, no test reads them):** after L2 these still describe the retired path:
+`OPERATIONS_GUIDE.md:2662-2663` ("run by `IcebergMaintenance`", "the table's newest N business dates") and its Glue example below
+(a REST-catalog lake is now refused); `CONFIGURATION.md:818` (`iceberg-settings` "passed to maintenance as `--set`");
+`deploy/aws/iceberg/maintain.sh` usage ("ICEBERG_CATALOG=glue maintains the tables of the Glue databases");
+`DATA_GUIDE.md:3224`, `DATA_LAKE_GUIDE.md:326`, `plugins/drishti-plugin-iceberg/README.md:321,382`.
+`IDE_GUIDE.md` section 10: "Save Workspace As into `platform/` itself" lost half its name. Regenerate the PDFs of the guides touched.
+
+**Not verified (no test in the drill reaches it):** Iceberg maintenance of an S3 lake now gives the store's settings as `AWS_*`
+environment names only (before: `--set s3.endpoint=...`). Whether `LakeMaintain --format iceberg` reads them I did not check; say it in
+the Glue carry-in row or prove it in i8. Nice: `test_admin_lake_maintain.py:39` and `drishti_admin-lake-maintain.js:156` (`t.orphans`),
+`maintain.py:405` still name what is gone.
+
+Everything else in the diff reads right: `orphan-hours` refused in the file, the lake entry and the form, naming `vacuum-hours`; undo
+through `LakeUndo` for every store; the `bothTablesChanged` wait; `copy_verify`.
+
+## 3. DRILL: NO-GO on `00101ff1e`. GO on its child that holds B1
+
+Shortest list:
+1. **B1**: `test_maintain_rows.py` uses `maintain.lake_command(fmt="iceberg")`; that file green (one pytest file, seconds).
+2. **S1**: `set -o pipefail` in `i7b-drill.sh` (before the freeze).
+3. **M1** in the same commit (pages, PDFs).
+4. **O1**: the owner's sentence on the ~30 browser tests still parked (run, or a carry-in row).
+
+The drill then runs that commit by its hash (`i7b-drill.sh <hash> prepare`, never the branch name), products from `v1.1.0`, `v1.0.0`,
+`v0.9.1`, the wheel from the `v0.9.1` clone. If the commit touches only `tools/lake/test_maintain_rows.py`, pages and PDFs, it needs no
+further review from me: it is GO as it stands. Readiness today (06:48): 31 PASS, 2 WARN (two `g4pd` worktrees, three stale drill copies:
+remove both), 2 FAIL that `prepare` step 4 cures (the venv, Playwright 1.64.x).
+
+Nothing running, nothing built; only this file was written.
