@@ -272,20 +272,20 @@ From nothing to the console in a browser, on one machine, with the demo lake. Ea
 one have every option.
 
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
-only; every repository carries Maven as `mvnw`). The source is five repositories under one folder, `~/IdeaProjects/drishti-platform/`
-(Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` and run its `clone_all.py`; then `build_all.py` installs the
-products from their tags in order (tools, Rachana, Lake) and builds Drishti. The steps have one home,
+only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/platform/`
+(Windows `C:\Users\you\IdeaProjects\platform\`): download the source bundle from the index repository's release, or
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7b`; then
+`build_all.py --release i7b` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 
 ```bash
-cd /home/you/IdeaProjects/drishti-platform/drishti
+cd /home/you/IdeaProjects/platform/drishti
 python3 tools/drishti.py build all
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti-platform\drishti
+cd C:\Users\you\IdeaProjects\platform\drishti
 py tools\drishti.py build all
 ```
 
@@ -374,8 +374,8 @@ foreach ($d in 'run','logs','tmp','dumps','modules','delta') { New-Item -ItemTyp
 permissions), or a second settings file (`secrets.ini`) given last: never into `config/` or git ([7.4](#74-the-secrets-in-an-env-file)).
 
 **6 · The console's environment.** `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
-wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The release bundle carries it there; from a source tree build it from the tag with
-`uv build --wheel <drishti-lake checkout at the pinned ref>/python --out-dir lib/wheels` (the build is reproducible), and check it with
+wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The release bundle does not carry it (it archives the tags, and git ignores `lib/wheels`): build it from the tag with
+`uv build --wheel <drishti-lake checkout at the pinned tag>/python --out-dir lib/wheels` (the build is reproducible), and check it with
 `python tools/lake/lakewheel.py` (exit 0 and `(ok)`). Then:
 
 ```bash
@@ -407,13 +407,13 @@ environment (step 6), start again.
 **A. Build it** from the platform's source (needs the JDK only; the products are installed first, [QUICKSTART_DEVELOPERS.md section 2](QUICKSTART_DEVELOPERS.md#2-build); the repository carries Maven 3.9 as `mvnw`):
 
 ```bash
-cd /home/you/IdeaProjects/drishti-platform/drishti
+cd /home/you/IdeaProjects/platform/drishti
 python3 tools/drishti.py build all           # one Maven clean package: it installs the jar into lib/, the module packages into modules/
 ls lib/ modules/                             # drishti-server-<version>-exec.jar  ext/ ; banking-1.0.0.dmod ... first-party.yaml
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti-platform\drishti
+cd C:\Users\you\IdeaProjects\platform\drishti
 py tools\drishti.py build all
 dir lib modules
 ```
@@ -1043,7 +1043,7 @@ The repository carries run configurations for IntelliJ IDEA (the Maven builds an
 The same four steps from a terminal:
 
 ```bash
-cd /home/you/IdeaProjects/drishti-platform/drishti
+cd /home/you/IdeaProjects/platform/drishti
 python3 tools/drishti.py build all
 drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo
@@ -1051,7 +1051,7 @@ python3 tools/drishti.py status
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti-platform\drishti
+cd C:\Users\you\IdeaProjects\platform\drishti
 py tools\drishti.py build all
 drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start all --demo

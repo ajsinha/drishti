@@ -83,7 +83,8 @@ class CommandTest(unittest.TestCase):
 
     def command(self, conf, dry=False, floor=0):
         with mock.patch("stores.loader_command", lambda data, jar=None, java=None, main=None: ["<launcher>", main]):
-            return maintain_iceberg.command("/l/risk/pnl-vector", conf, date(2026, 10, 16), dry, False, floor, Path("/d"))
+            return maintain.lake_command("/l/risk/pnl-vector", conf, date(2026, 10, 16), dry, False, floor, bool(conf.get("compact")),
+                                         Path("/d"), fmt="iceberg")
 
     def test_the_current_metadata_is_found_as_the_java_engine_finds_it(self):
         import gzip
@@ -106,25 +107,23 @@ class CommandTest(unittest.TestCase):
     def test_the_settings_become_the_maintenance_options(self):
         cmd = self.command({"keep-business-days": 260, "compact": True, "vacuum-hours": 168, "orphan-hours": 12,
                             "storage-options": {"AWS_ENDPOINT_URL": "http://127.0.0.1:9000", "AWS_REGION": "us-east-1"}}, dry=True, floor=2557)
-        self.assertEqual(cmd[:2], ["<launcher>", maintain_iceberg.MAINT])
+        self.assertEqual(cmd[:2], ["<launcher>", maintain.LAKE_MAINTAIN])
         text = " ".join(cmd)
-        for want in ("/l --domain risk --kinds pnl-vector --engine native --as-of 2026-10-16 --json", "--keep-days 260", "--relayout",
-                     "--expire-hours 168", "--remove-orphans --older-than-hours 72", "--floor-days 2557", "--dry-run",
-                     "--set s3.endpoint=http://127.0.0.1:9000", "--set s3.region=us-east-1"):
+        for want in ("--lake /l --format iceberg --table risk/pnl-vector --as-of 2026-10-16 --json", "--keep-days 260", "--compact",
+                     "--vacuum-hours 168", "--floor-days 2557", "--dry-run"):
             self.assertIn(want, text)
-        none = " ".join(self.command({"vacuum-hours": None, "remove-orphans": False}))
-        self.assertIn("--expire-hours -1", none)
-        self.assertNotIn("--remove-orphans", none)
+        none = " ".join(self.command({"vacuum-hours": None}))
+        self.assertNotIn("--vacuum-hours", none)
         self.assertNotIn("--keep-days", none)
 
-    def test_a_rest_catalog_lake_names_its_tables_and_passes_its_settings(self):
+    def test_a_rest_catalog_lake_names_its_tables_and_is_refused_by_lake_maintain(self):
         glue = {"catalog": "rest", "uri": "https://glue.eu-west-2.amazonaws.com/iceberg", "catalog.rest.signing-name": "glue"}
         lake = {"root": "s3://b/iceberg", "format": "iceberg", "iceberg-settings": glue, "tables": {"risk/pnl-vector": {}}}
         self.assertEqual(maintain_iceberg.catalog_tables(lake, None), ["s3://b/iceberg/risk/pnl-vector"])
         self.assertEqual(maintain_iceberg.catalog_tables(lake, {"risk/x"}), ["s3://b/iceberg/risk/x"])
         self.assertIsNone(maintain_iceberg.catalog_tables({"root": "s3://b/iceberg"}, None))
-        text = " ".join(self.command({"iceberg-settings": glue}))
-        self.assertIn("--set catalog=rest --set uri=https://glue.eu-west-2.amazonaws.com/iceberg --set catalog.rest.signing-name=glue", text)
+        with self.assertRaisesRegex(RuntimeError, "REST catalog"):
+            maintain_iceberg.maintain("s3://b/iceberg/risk/pnl-vector", {"iceberg-settings": glue}, date(2026, 10, 16), True)
 
     def test_the_floor_days_of_the_risk_domains(self):
         self.assertEqual(maintconfig.floor_days("risk/pnl-vector"), 2557)
@@ -156,8 +155,8 @@ class RunTest(unittest.TestCase):
                 seen.append(cmd)
                 line = {"table": "risk/pnl-vector", "dryRun": "--dry-run" in cmd, "before": {"files": 2, "mb": 1.0, "dates": 2},
                         "after": {"files": 2, "mb": 1.0, "dates": 2, "latestDate": "2026-10-16", "latestRows": 20},
-                        "keepDays": {"wouldRemove": []}, "orphans": {"olderThanHours": 72, "files": 1, "wouldRemove": 1, "first": ["x"]},
-                        "floor": {"days": 2557, "keepsDatesFrom": "2019-10-17", "expireHours": 61368}, "expireHours": 61368}
+                        "keepDays": {"from": "2026-10-02", "dates": [], "rows": 0},
+                        "vacuum": {"hours": 61368, "files": 1, "bytes": 10, "first": ["x"]}}
                 return subprocess.CompletedProcess(cmd, 0, json.dumps(line) + "\n", "")
             cfg = {"lakes": [{"root": str(root), "format": "iceberg", "keep-business-days": 10, "vacuum-hours": 168}],
                    "history": str(Path(tmp) / "history.jsonl")}
@@ -173,12 +172,12 @@ class RunTest(unittest.TestCase):
             text = " ".join(seen[0])
             self.assertIn("--keep-days 1827", text)
             self.assertIn("--floor-days 2557", text)
-            self.assertIn("--expire-hours 61368", text)                                       # vacuum-hours raised to 7 years too
+            self.assertIn("--vacuum-hours 61368", text)                                       # vacuum-hours raised to 7 years too
             self.assertIn("--dry-run", text)
-            self.assertEqual(t["orphans"]["wouldRemove"], 1)
+            self.assertEqual(t["vacuum"]["files"], 1)
             entry = maintain.history_entry(report, True, "admin")
             kept = {x["name"]: x for x in entry["tables"]}["risk/pnl-vector"]
-            self.assertEqual((kept["format"], kept["orphans"]["wouldRemove"], kept["floor"]["days"]), ("iceberg", 1, 2557))
+            self.assertEqual((kept["format"], kept["vacuum"]["files"]), ("iceberg", 1))
 
 
 @unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or LAKE_CLASSPATH)")
@@ -204,16 +203,16 @@ class RealTableTest(unittest.TestCase):
             dead.write_bytes(b"left by a load that died")
             old = time.time() - 100 * 3600
             os.utime(dead, (old, old))
-            cfg = {"lakes": [{"root": str(root), "keep-business-days": 2, "vacuum-hours": 168}], "history": str(Path(tmp) / "h.jsonl")}
+            cfg = {"lakes": [{"root": str(root), "keep-business-days": 1, "vacuum-hours": 168}], "history": str(Path(tmp) / "h.jsonl")}
             dry = quiet(maintain.run_detailed, cfg, True, date(2026, 10, 16), force_drop=True)
             t = dry["tables"][0]
             self.assertEqual(dry["failures"], 0, t)
-            self.assertEqual((t["format"], t["orphans"]["wouldRemove"], t["retention"]["dates"]), ("iceberg", 1, ["2026-10-14"]))
+            self.assertEqual((t["format"], t["vacuum"]["files"], t["retention"]["dates"]), ("iceberg", 1, ["2026-10-14"]))
             self.assertTrue(dead.exists())
             done = quiet(maintain.run_detailed, cfg, False, date(2026, 10, 16), force_drop=True)
             t = done["tables"][0]
             self.assertEqual(done["failures"], 0, t)
-            self.assertEqual((t["orphans"]["removed"], t["retention"]["removed"], t["after"]["dates"]), (1, 1, 2))
+            self.assertEqual((t["vacuum"]["files"], t["retention"]["dates"], t["after"]["dates"]), (1, ["2026-10-14"], 2))
             self.assertFalse(dead.exists())
 
 

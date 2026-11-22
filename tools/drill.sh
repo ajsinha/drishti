@@ -445,6 +445,8 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   # PythonPathEqualityTest): the copy's lib/, the one place they look, gets the jar the gate built from this same commit
   wait_gate_jar || return 1
   mkdir -p "$copy/lib" && cp "$REPO"/lib/drishti-server-*-exec.jar "$copy/lib/"
+  # the pinned Drishti Lake wheel beside it (git ignores lib/wheels): the Python lake tools and DeltaAfterMaintenanceTest need it there
+  [[ -d "$REPO/lib/wheels" ]] && { mkdir -p "$copy/lib/wheels" && cp "$REPO"/lib/wheels/* "$copy/lib/wheels/" || return 1; }
   # the modules beside the jar (the gate built them): the copy's tests that start a server over packages find them where the install does
   cp "$REPO"/modules/*.dmod "$REPO"/modules/first-party.yaml "$copy/modules/" || return 1
   cd "$copy"

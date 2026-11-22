@@ -3252,7 +3252,7 @@ Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.datalo
 
 The business date comes from outside the data (command line, `.ready`, name, business today), never from a row; a plain file is one
 table and one date, a tar the one container for several; the `.ready` file is the control file; nothing is guessed; every load can be
-undone (`_load_id`, `_source_file`). Python (`tools/lake/filedate.py`) and Java (`FileDates`) read one list of example names with their
+undone (`_load_id`, `_source_file`). Python (`drishti_lake.filedate` (the Lake wheel)) and Java (`FileDates`) read one list of example names with their
 expected outcome, `tools/lake/testdata/file-dates/names.json`, so the two cannot drift. A table made before `_load_id` gains the two
 nullable columns on its first load (one metadata commit, no file rewritten); its earlier rows count as the oldest load. Our own
 generators write dated names or tars with date folders; the conversion was checked by counts and checksums per table and date.

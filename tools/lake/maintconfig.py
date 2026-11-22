@@ -47,7 +47,7 @@ from datetime import datetime
 import yaml
 
 SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "orphan-hours", "row-retention")
-#: orphan-hours is read for Iceberg tables only (files no snapshot references, older than that, are removed: 72 at least)
+#: orphan-hours is accepted for Iceberg tables; Lake's vacuum removes files no snapshot names once they are 72 hours old (the least this allows)
 TABLE_DEFAULTS = {"row-retention": None, "keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168, "orphan-hours": 72}
 ORPHAN_MIN_HOURS = 72
 VACUUM_SAFE_HOURS = 168

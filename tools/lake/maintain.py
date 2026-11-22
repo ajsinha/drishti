@@ -49,8 +49,8 @@ overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.j
                             a date already in the layout is left as it is (unless --force), so running it again is harmless
 
 Iceberg lakes (a lake with ``format: iceberg``, or tables with metadata/*.metadata.json under a local root; Delta is the default) are
-maintained by Drishti's Iceberg maintenance instead (tools/lake/maintain_iceberg.py: retention, relayout, snapshot expiry for vacuum-hours,
-and orphan files older than orphan-hours, 72 at least), under the same floor, ownership rule, lock, schedules and history.
+maintained by the same Lake upkeep with ``--format iceberg`` (tools/lake/maintain_iceberg.py: the one retention rule, compaction,
+snapshot expiry for vacuum-hours, and orphan files older than 72 hours), under the same floor, ownership rule, lock, schedules and history.
 
 Every table of every configured domain is visited; one failing table is reported and the rest go on. A line of JSON
 is printed per table and step (size and file counts before and after), for logs and monitoring."""
@@ -111,13 +111,14 @@ LAKE_MAINTAIN = "com.ash.lake.load.LakeMaintain"
 
 
 def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, floor_days: int, compact: bool,
-                 data: Path | None = None, jar: str | None = None, java: str | None = None, relayout: bool = False, file_rows: int | None = None) -> list[str]:
-    """Drishti Lake's ``lake maintain`` for one Delta table (``<root>/<domain>/<table>``): retention (business dates, then rows), relayout
+                 data: Path | None = None, jar: str | None = None, java: str | None = None, relayout: bool = False, file_rows: int | None = None,
+                 fmt: str = "delta") -> list[str]:
+    """Drishti Lake's ``lake maintain`` for one Delta (or, with ``fmt="iceberg"``, one Iceberg) table (``<root>/<domain>/<table>``): retention (business dates, then rows), relayout
     (a laid-out table), compaction, checkpoint and vacuum, by Lake's options and in Lake's order."""
     import stores
     root, name = uri.rsplit("/", 2)[0], "/".join(uri.rstrip("/").split("/")[-2:])
     cmd = stores.loader_command(data or Path(root) / "_drishti-lake", jar, java, main=LAKE_MAINTAIN) + [
-        "--lake", root, "--format", "delta", "--table", name, "--as-of", today.isoformat(), "--json"]
+        "--lake", root, "--format", fmt, "--table", name, "--as-of", today.isoformat(), "--json"]
     if conf.get("keep-business-days"):
         cmd += ["--keep-days", str(int(conf["keep-business-days"])), "--max-drop-share", str(conf.get("max-drop-share", 0.5))]
     for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
@@ -141,17 +142,17 @@ def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: b
 
 
 def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False, floor_days: int = 0,
-             runner=None, data: Path | None = None) -> dict:
-    """One Delta table maintained (or a dry run) by Drishti Lake's ``lake maintain`` (one set of options for every store): retention, a
+             runner=None, data: Path | None = None, fmt: str = "delta") -> dict:
+    """One Delta (or, with ``fmt="iceberg"``, one Iceberg) table maintained (or a dry run) by Drishti Lake's ``lake maintain`` (one set of options for every store): retention, a
     laid-out table's relayout (the dates that drifted from its id order rewritten sorted), compaction, checkpoint and vacuum. The result
     in lake maintain's form (before, after or estimate: files, mb, dates, latestDate, latestRows; retention, row-retention, compact,
     checkpoint, vacuum). ``runner(cmd)`` gives the JSON line (tests). Raises RuntimeError on failure."""
     import maintain_iceberg
     opts = conf.get("storage-options") or {}
     compact = bool(conf.get("compact"))
-    lay = layout_of(uri) if compact else None
+    lay = layout_of(uri) if compact and fmt == "delta" else None
     cmd = lake_command(uri, conf, today, dry_run, force_drop, floor_days, compact, data, relayout=lay is not None,
-                       file_rows=lay.file_rows if lay is not None else None)
+                       file_rows=lay.file_rows if lay is not None else None, fmt=fmt)
     old = {k: os.environ.get(k) for k in opts}
     os.environ.update({k: str(v) for k, v in opts.items()})     # an S3 lake: Lake's runtime reads the AWS_* names
     try:

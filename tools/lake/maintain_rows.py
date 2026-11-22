@@ -16,7 +16,7 @@
 (a lake file's table entry, or ``row-retention:`` in the maintenance file's lake or table settings) drops the rows past their age, by the one
 rule every store shares (the Java ``RowRetention``: the memory lake's compaction applies it too). It runs as a step of ``lake maintain``, the one
 upkeep schedule: a Delta table by the lake loader's ``LakeRetention`` (each business date holding dropped rows rewritten, one commit a date, the
-old files vacuumed after by the table's own vacuum step), an Iceberg table by ``IcebergMaintenance`` (its ``--ttl``, ``--on`` and ``--max-rows``,
+old files vacuumed after by the table's own vacuum step), an Iceberg table by the same ``LakeMaintain`` (``--format iceberg``: its ``--ttl``, ``--on`` and ``--max-rows``,
 see :mod:`maintain_iceberg`, the old snapshots expired by its own step), a files store (``format: files``: ``<root>/<domain>/<date>/<kind>.jsonl``)
 by ``LakeRetention`` too, the affected day files rewritten. Absent: nothing changes.
 """

@@ -14,16 +14,16 @@
 
 """Iceberg tables in ``lake maintain`` and Admin -> Lakes (docs/guides/OPERATIONS_GUIDE.md, "Iceberg lakes"). Delta stays the default;
 a lake whose ``format: iceberg`` (or whose tables are Iceberg tables: ``<root>/<domain>/<table>/metadata/*.metadata.json``) is maintained
-by Drishti's own Iceberg maintenance (IcebergMaintenance in the server's exec jar, engine native), each step one Iceberg commit:
+by Drishti Lake's ``lake maintain --format iceberg`` (the one upkeep of every store), each step one Iceberg commit:
 
-    retention   keep-business-days: the table's newest N business dates are kept (a metadata-only delete of older days), refused past
-                max-drop-share unless --force-drop
-    compact     the days that drifted from the layout are rewritten sorted by id (relayout)
-    vacuum      vacuum-hours: snapshots older than that are expired and the files only they used deleted (time travel reaches that far)
-    orphans     remove-orphans (true) with orphan-hours (72, the least): files under the table no snapshot references, older than that
+    retention   keep-business-days: today and the N business days before it are kept, counted on the calendar as for Delta (a
+                metadata-only delete of older days), refused past max-drop-share unless --force-drop
+    compact     the days that drifted from the layout are rewritten sorted by id
+    vacuum      vacuum-hours: snapshots older than that are expired and the files only they used deleted (time travel reaches that far);
+                a file no snapshot names goes only when it is older than 72 hours too
 
 The domains' retention floor (maintconfig.RETAIN_YEARS: risk and risk-results keep 7 years) is applied as for Delta and is also given to
-the Java side (``--floor-days``), which never drops a date or expires a snapshot inside it. The ownership rule is the same: only tables
+Lake (``--floor-days``), which never drops a date or expires a snapshot inside it. The ownership rule is the same: only tables
 ``lake build --format iceberg`` built (its build record) are maintained, unless --force-foreign."""
 from __future__ import annotations
 
@@ -33,8 +33,6 @@ import re
 import subprocess
 from datetime import date, datetime, timezone
 
-MAINT = "com.ash.lake.iceberg.table.IcebergMaintenance"
-ORPHAN_HOURS = 72
 VERSION = re.compile(r"^v?(\d+)[.-]")
 
 
@@ -133,39 +131,6 @@ def split_uri(uri: str) -> tuple[str, str, str]:
     return "/".join(parts[:-2]), parts[-2], parts[-1]
 
 
-def command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, floor_days: int, data: pathlib.Path,
-            jar: str | None = None, java: str | None = None) -> list[str]:
-    """The IcebergMaintenance command for one table with these settings (a JSON line of what it did comes back)."""
-    import stores
-    root, domain, table = split_uri(uri)
-    cmd = stores.loader_command(data, jar, java, main=MAINT) + [root, "--domain", domain, "--kinds", table, "--engine", "native",
-                                                                  "--as-of", today.isoformat(), "--json"]
-    if conf.get("keep-business-days"):
-        cmd += ["--keep-days", str(int(conf["keep-business-days"])), "--max-drop-share", str(conf.get("max-drop-share", 0.5))]
-    for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
-        if (conf.get("row-retention") or {}).get(key):
-            cmd += [f"--{key}", str(conf["row-retention"][key])]
-    if conf.get("compact"):
-        cmd += ["--relayout"]
-    cmd += ["--expire-hours", str(int(conf["vacuum-hours"])) if conf.get("vacuum-hours") is not None else "-1"]
-    if conf.get("remove-orphans", True):
-        cmd += ["--remove-orphans", "--older-than-hours", str(max(ORPHAN_HOURS, int(conf.get("orphan-hours") or ORPHAN_HOURS)))]
-    if floor_days:
-        cmd += ["--floor-days", str(floor_days)]
-    if dry_run:
-        cmd += ["--dry-run"]
-    if force_drop:
-        cmd += ["--force-drop"]
-    for key, value in (conf.get("iceberg-settings") or {}).items():   # a REST catalog (AWS Glue: catalog, uri, warehouse, catalog.rest.*)
-        cmd += ["--set", f"{key}={value}"]
-    opts = conf.get("storage-options") or {}
-    for key, setting in (("AWS_ENDPOINT_URL", "s3.endpoint"), ("AWS_ACCESS_KEY_ID", "s3.access-key"), ("AWS_SECRET_ACCESS_KEY", "s3.secret-key"),
-                         ("AWS_REGION", "s3.region")):
-        if opts.get(key):
-            cmd += ["--set", f"{setting}={opts[key]}"]
-    return cmd
-
-
 def json_line(cmd: list[str], what: str) -> str:
     """Runs a Java maintenance command and returns the last line of JSON it printed; RuntimeError (naming ``what`` and the last word of its
     output) when it printed none."""
@@ -179,27 +144,13 @@ def json_line(cmd: list[str], what: str) -> str:
 
 def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False, floor_days: int = 0,
              data: pathlib.Path | None = None, runner=None) -> dict:
-    """One Iceberg table maintained (or a dry run): the result in lake maintain's form (before, after or estimate, retention, compact,
-    vacuum, orphans, floor). ``runner(cmd)`` gives the JSON line (tests); by default the command runs. Raises RuntimeError on failure."""
-    data = data or pathlib.Path(uri).parent.parent / "_drishti-lake"
-    cmd = command(uri, conf, today, dry_run, force_drop, floor_days, data)
-    r = json.loads(runner(cmd) if runner is not None else json_line(cmd, "Iceberg maintenance"))
-    if r.get("error"):
-        raise RuntimeError(r["error"])
-    out: dict = {"table": uri, "format": "iceberg", "before": r.get("before")}
-    out["estimate" if dry_run else "after"] = r.get("after")
-    keep = r.get("keepDays") or {}
-    if keep:
-        out["retention"] = {"dates": keep.get("wouldRemove")} if dry_run else {"removed": keep.get("removed")}
-    if "rowRetention" in r:
-        days = r["rowRetention"]
-        out["row-retention"] = {"dropped": sum(int(d.get("dropped", 0)) for d in days), "dates": days, "dry_run": dry_run}
-    if "relayout" in r:
-        out["compact"] = {"relaid-dates": r["relayout"]}
-    if "expireHours" in r:
-        out["vacuum"] = {"hours": r["expireHours"], "dry_run": dry_run}
-    if r.get("orphans"):
-        out["orphans"] = r["orphans"]
-    if r.get("floor"):
-        out["floor"] = r["floor"]
-    return out
+    """One Iceberg table maintained (or a dry run) by Drishti Lake's ``lake maintain`` with ``--format iceberg``: the one rule of every store
+    (retention keeps today and the N business days before it, counted on the calendar), the same options and the same answer as for Delta
+    (maintain.maintain). ``runner(cmd)`` gives the JSON line (tests). Raises RuntimeError on failure."""
+    import maintain
+    if str((conf.get("iceberg-settings") or {}).get("catalog", "")).lower() == "rest":
+        raise RuntimeError("a lake read through a REST catalog is not maintained by lake maintain (it takes a path-based table): "
+                           "maintain it in its catalog's own tools")
+    done = maintain.maintain(uri, conf, today, dry_run, force_drop, floor_days, runner=runner, data=data, fmt="iceberg")
+    done["format"] = "iceberg"
+    return done

@@ -2532,7 +2532,7 @@ business days) and the run reports `retention-floor`; `lake build` creates their
 `retain-years:` changes the floor per domain (`{risk: 10}`; `0` turns it off on purpose).
 
 **Who owns a table: whoever writes it.** Drishti maintains only the tables its own `lake build` (or `lake demo`) built, recorded in
-`<lake>/_drishti-lake/tables-built.json` (older builds found once in `_drishti-lake/runs/*.json`). A table with no build record was published by another
+`<lake>/_drishti-lake/tables-built.json`. A table with no build record was published by another
 system (a vendor feed, another team's Spark job): that system compacts and vacuums it, and Drishti lists it read-only, because doing it too could remove
 files the publisher still expects or rewrite files under a reader mid-scan. `lake maintain` refuses a foreign table you name and skips it in a run over
 every table; `--force-foreign` overrides with a warning (only with the publisher's agreement; the page never offers it). `lake demo` writes a checkpoint

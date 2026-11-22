@@ -255,7 +255,7 @@ def test_maintain_compacts_keeps_days_and_vacuums(fmt, work, jar):
     assert count(fmt, root)[1] == 3, p.stdout
     cli(work, "lake", "maintain", "--config", conf, "--once", "--as-of", D3, "--tables", f"{root}|dm/tk")
     rows2, dates2 = count(fmt, root)
-    assert dates2 == (2 if fmt == "delta" else 1) and rows2 < rows     # Delta keeps today and N business days before; Iceberg the newest N dates                                       # keep-days: the oldest date left
+    assert dates2 == 2 and rows2 < rows     # the one rule on both stores: today and the N business days before it
     assert (laketables.summary(root / "dm" / "tk").get("files") or 0) <= (files_before or 99)
     cli(work, "lake", "maintain", "--history")
     cli(work, "lake", "delete", "--lake", root, "--table", "dm/tk", "--format", fmt, "--from", D1, "--to", D3, "--yes", "--no-signal", "--jar", jar)
@@ -441,5 +441,11 @@ def test_the_inbox_loads_a_file_the_server_reads_it_and_delete_removes_it(server
     assert cli(w, "data", "landed", "--pack", "core", "--kind", "desk", "--date", day, "--rows", "10", "--batch", "e2e").returncode == 0
     assert "desk" in cli(w, "data", "loads", "--pack", "core").stdout
     cli(w, "lake", "delete", "--lake", "demo", "--table", "reference/desk", "--date", day, "--yes", "--jar", jar)       # tells the server
-    time.sleep(3)
-    assert _rows_of(w, "desk", day) == 0
+    for _ in range(60):                       # the server has heard of the delete when it no longer finds the date: 0 rows, or no such folder
+        p = cli(w, "data", "get", "desk", "--date", day, "--count", ok=False)
+        if p.returncode != 0 or int(p.stdout.split("rows ")[1].split(" of")[0]) == 0:
+            break
+        time.sleep(0.5)
+    else:
+        raise AssertionError("the server still reads the deleted date: " + p.stdout[-300:])
+    assert p.returncode != 0 or _rows_of(w, "desk", day) == 0

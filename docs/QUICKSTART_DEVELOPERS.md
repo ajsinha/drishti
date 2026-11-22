@@ -48,7 +48,7 @@ with which Drishti is stated in one place, the index repository's
 | [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements, the JavaScript libraries every screen is made of | JavaScript | the release bundles (a WebJar) |
 | [drishti](https://github.com/drishti-platform/drishti) | the server, the console, the modules and the demo data | Java 21, Python | `lib/` and `modules/` |
 
-`drishti-stack` (the three-node local cluster) is a sixth, optional repository for operators. The index repository,
+The index repository,
 [drishti-platform/drishti-platform](https://github.com/drishti-platform/drishti-platform), holds `clone_all.py`, `build_all.py`,
 `make_bundle.py` and COMPATIBILITY.md.
 
@@ -71,41 +71,47 @@ network that re-signs HTTPS, Maven needs Java to trust the Windows store ([IDE_G
 
 ### 1.2 The code: a bundle, or `clone_all.py`
 
-The platform lives in one folder, every repository a sibling:
+The platform lives in one folder, every repository a sibling of the index repository (`drishti-platform`, which holds `clone_all.py`,
+`build_all.py` and `platform.yaml`, the tags that go together):
 
 ```
-~/IdeaProjects/drishti-platform/                   (Windows: C:\Users\<you>\IdeaProjects\drishti-platform\)
-    drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/  drishti-stack/
+~/IdeaProjects/platform/                           (Windows: C:\Users\<you>\IdeaProjects\platform\)
+    drishti-platform/  drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/
 ```
 
-**A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release, unpack it into
-`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`.
+**A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release and unpack it into
+`~/IdeaProjects/platform/`. It holds every repository at the tags that go together, with `build_all.py`; the Lake wheel is not in it (section 2 builds it).
 
-**B. With git:** clone the index repository and let it clone the rest at the same tags:
+**B. With git:** clone the index repository into the folder that will hold them all, and let `clone_all.py` clone the rest at the release's
+tags (it puts the repositories in the folder *above* the index repository, so the index repository goes one level down):
 
 ```bash
-mkdir -p ~/IdeaProjects && cd ~/IdeaProjects
+mkdir -p ~/IdeaProjects/platform && cd ~/IdeaProjects/platform
 git clone https://github.com/drishti-platform/drishti-platform.git
 cd drishti-platform
-python3 clone_all.py                       # Windows: py clone_all.py
+python3 clone_all.py --release i7b         # Windows: py clone_all.py --release i7b; --parent <folder> puts them elsewhere
 ```
 
-`make_bundle.py` (the same index repository) makes the ZIP of A from the clones. To work on a branch rather than the tags, clone the repository
-you change by hand into the same folder: `git clone https://github.com/drishti-platform/drishti.git`.
+`--release` is required (a release name from `platform.yaml`; `--develop` clones every repository at `develop` instead). `make_bundle.py` (the
+same index repository) makes the ZIP of A from the clones. To work on a branch rather than the tags, clone the repository you change by hand
+into the same folder: `git clone https://github.com/drishti-platform/drishti.git`.
 
 ### 1.3 The console's environment
 
 From the `drishti` folder (every command below runs from it):
 
 ```bash
-cd ~/IdeaProjects/drishti-platform/drishti
+cd ~/IdeaProjects/platform/drishti
+uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
+python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt
 drishti-console/.venv/bin/python -m playwright install chromium        # the browser tests' Chromium, once
 drishti-console/.venv/bin/python tools/drishti.py doctor
 ```
 
-On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
+The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
+must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7b` leaves it there). On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
 `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`); Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
@@ -117,34 +123,37 @@ user's profile, no administrator rights needed.
 ## 2. Build
 
 The products install into `~/.m2` at the versions the root `pom.xml` pins (`drishti.tools.version`, `drishti.rachana.version`,
-`drishti.lake.version`), in this order: **tools, Rachana, Lake, then Drishti** (each builds on the one before). The index repository does all of it:
+`drishti.lake.version`), in this order: **tools, Rachana, Lake, then Drishti** (each builds on the one before). The index repository does the Maven part:
 
 ```bash
-cd ~/IdeaProjects/drishti-platform
-python3 build_all.py                       # Windows: py build_all.py
+cd ~/IdeaProjects/platform/drishti-platform
+python3 build_all.py --release i7b [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7b
 ```
 
-`build_all.py` checks out the tag of each product named in COMPATIBILITY.md, installs its jars into `~/.m2` (skipping what is already there), builds the Elements
-bundles and then builds Drishti. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
+`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release i7b` puts them there), then runs
+`mvnw -B clean install` in `drishti-tools/java`, `drishti-rachana/java` and `drishti-lake/java` in that order (their tests included unless `--skip-tests`),
+and then `mvnw -B clean verify` in `drishti`: the whole Drishti suite, not `build all`. It repeats what is already built (nothing is skipped), builds neither the
+Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/ELEMENTS_IN_DRISHTI.md)) nor the Lake wheel, and does not start Drishti.
+`--repo-local` installs into `<parent>/.m2-drishti` instead of `~/.m2`; `--dry-run` prints the commands. For the Drishti jar and modules alone, with the products already
+installed, use `python tools/drishti.py build all` below. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
 names its launchers):
 
 ```bash
-cd ~/IdeaProjects/drishti-platform/drishti-tools/java && git checkout <tag> && ./mvnw -q install -DskipTests
-cd ../../drishti-rachana/java                      && git checkout <tag> && ./mvnw -q install -DskipTests
-cd ../../drishti-lake/java                         && git checkout <tag> && ./mvnw -q install -DskipTests
-cd ../../drishti                                   && python tools/drishti.py build all
+cd ~/IdeaProjects/platform/drishti-tools/java && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti-rachana/java                 && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti-lake/java                    && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti                              && python tools/drishti.py build all
 ```
 
 `<tag>` is the tag in COMPATIBILITY.md for your Drishti; install the version `pom.xml` pins, and check `~/.m2` holds no other build of it. Windows:
-`mvnw.cmd`. The Elements bundles are built in `drishti-elements` (`python tools/elements/cli.py dist`, or its `Elements: build all`
-launcher) and read by Drishti from the release tree its pin names.
+`mvnw.cmd`.
 
 **The Lake wheel.** The console and the tools use Lake's Python path (`drishti_lake`), a pure-Python wheel. `lib/lake-wheel.pin` names the one
-wheel Drishti uses: the Lake ref (a release tag, or the release commit until it is tagged), its exact version and its SHA-256 (the build is reproducible). Build it from that tag into `lib/wheels`
-(`build_all.py` does this; by hand, `uv` is needed), then install the console's requirements:
+wheel Drishti uses: the Lake tag, its exact version and its SHA-256 (the build is reproducible). Build it from that tag into `lib/wheels` before the console's
+requirements are installed (section 1.3; `uv` is needed):
 
 ```bash
-git clone https://github.com/drishti-platform/drishti-lake.git ../drishti-lake-tag && git -C ../drishti-lake-tag checkout <ref in lib/lake-wheel.pin>
+git clone --branch <tag in lib/lake-wheel.pin> https://github.com/drishti-platform/drishti-lake.git ../drishti-lake-tag     # or use ../drishti-lake when it is at that tag
 uv build --wheel ../drishti-lake-tag/python --out-dir lib/wheels
 python tools/lake/lakewheel.py             # prints the pin and whether lib/wheels holds exactly that wheel (exit 1 if not)
 ```

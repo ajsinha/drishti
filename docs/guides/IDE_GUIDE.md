@@ -184,7 +184,7 @@ one your team already uses. Drishti needs only its packages installed in it.
 
 1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
    `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
-2. Put Drishti Lake's pinned Python wheel in `lib/wheels` (the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md](../QUICKSTART_DEVELOPERS.md); `python tools/lake/lakewheel.py` checks it). Then install Drishti's packages into the Python, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
+2. Put Drishti Lake's pinned Python wheel in `lib/wheels` **first** (the requirements below name it and no index has it; the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then install Drishti's packages into the Python, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
 
    ```bash
    <that python> -m pip install -r drishti-console/requirements.txt
@@ -600,8 +600,8 @@ Drishti is built on four products that live in their own repositories ([QUICKSTA
 side by side under one folder:
 
 ```
-~/IdeaProjects/drishti-platform/            (Windows C:\Users\<you>\IdeaProjects\drishti-platform\)
-    drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/  drishti-stack/
+~/IdeaProjects/platform/            (Windows C:\Users\<you>\IdeaProjects\platform\)
+    drishti-platform/  drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/
 ```
 
 ### 9.1 One window per repository, the usual way
@@ -659,7 +659,7 @@ then run the tasks **Drishti: build demo lakes**, **Drishti: run server (demo)**
 | **JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`, Windows `C:\jdk-21` |
 | **Python 3.13** and the console's environment | `uv venv --python 3.13 drishti-console/.venv` and the requirements ([QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment)) |
 | **VS Code** with the extensions the workspace recommends | Extension Pack for Java (`vscjava.vscode-java-pack`), Python (`ms-python.python`, `ms-python.debugpy`, `ms-python.vscode-pylance`), YAML (`redhat.vscode-yaml`); VS Code offers them when the workspace opens |
-| The platform's other repositories, built and installed | tools, Rachana and Lake from their tags into `~/.m2`, in that order ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); their versions: the index repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md) |
+| The platform's other repositories, built and installed | tools, Rachana and Lake from their tags into `~/.m2`, in that order (`build_all.py --release <name>` does it) ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); their versions: the index repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md) |
 
 ### 10.2 Open a repository
 
@@ -702,9 +702,9 @@ debugger, `debugpy`). To start both without a debugger, run their tasks. Both re
 ### 10.5 Several repositories at once
 
 To work across the platform (a change in Drishti that needs one in Lake), use one **multi-root workspace**: **File, Open Workspace from File**
-on any one product's workspace, then **File, Add Folder to Workspace** for each of the others under `~/IdeaProjects/drishti-platform/`
-(`drishti`, `drishti-rachana`, `drishti-elements`, `drishti-lake`, `drishti-tools`, `drishti-stack`), then **File, Save Workspace As** into
-`drishti-platform/` itself (`drishti-platform.code-workspace`, beside the clones, outside every repository, so it is never committed). The
+on any one product's workspace, then **File, Add Folder to Workspace** for each of the others under `~/IdeaProjects/platform/`
+(`drishti`, `drishti-rachana`, `drishti-elements`, `drishti-lake`, `drishti-tools`), then **File, Save Workspace As** into
+`platform/` itself (beside the clones, outside every repository, so it is never committed; the index repository `drishti-platform` also ships a ready `drishti-platform.code-workspace`). The
 tasks and launches of the workspaces you did not open are not merged into it; run them from their own workspace (a second VS Code window
 costs nothing), and use the multi-root one for searching, reading and editing across repositories. A change in a product repository reaches Drishti only
 through a tag installed into `~/.m2` ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); to try an unreleased change,
