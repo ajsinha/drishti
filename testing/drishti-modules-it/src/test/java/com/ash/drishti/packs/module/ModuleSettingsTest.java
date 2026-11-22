@@ -71,6 +71,47 @@ class ModuleSettingsTest {
                 .hasMessageNotContaining("drishti.module.banking.var.window (set in");
     }
 
+    /** An empty application: a real start runs every settings post-processor (the launch roots, the module boot, the engine files). */
+    @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
+    static class Nothing {
+    }
+
+    /** A real start over a site whose config/engines/var.yaml holds {@code varYaml}, with the banking package booted as a launch boots it. */
+    private static org.springframework.context.ConfigurableApplicationContext start(Path work, String varYaml) throws Exception {
+        Path modules = java.nio.file.Files.createDirectories(work.resolve("modules"));
+        for (String id : java.util.List.of("market-data", "banking")) {
+            try (var s = java.nio.file.Files.list(com.ash.drishti.it.BootedPackages.packages())) {
+                Path dmod = s.filter(f -> f.getFileName().toString().startsWith(id + "-") && f.getFileName().toString().endsWith(".dmod")).findFirst().orElseThrow();
+                java.nio.file.Files.copy(dmod, modules.resolve(dmod.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        Path engines = java.nio.file.Files.createDirectories(work.resolve("config/engines"));
+        java.nio.file.Files.writeString(engines.resolve("var.yaml"), varYaml);
+        org.springframework.boot.SpringApplication app = new org.springframework.boot.SpringApplication(Nothing.class);
+        app.setWebApplicationType(org.springframework.boot.WebApplicationType.NONE);
+        return app.run("--drishti.home=" + work, "--drishti.modules.home=" + modules, "--drishti.data.dir=" + work.resolve("data"),
+                "--drishti.config.dir=" + work.resolve("config"));
+    }
+
+    @Test
+    void aRetiredNameInTheSitesEngineFileStopsARealStart(@org.junit.jupiter.api.io.TempDir Path work) {
+        // a site upgraded with its edited engine file (main's place of these keys): it never starts on 250 / 0.99 without a word
+        assertThatThrownBy(() -> start(work, "drishti:\n  var:\n    scenario-window: 400\n    confidence: 0.95\n"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("drishti.var.scenario-window (set in Config resource 'file [").hasMessageContaining("use drishti.module.banking.var.window")
+                .hasMessageContaining("drishti.var.confidence (set in Config resource 'file [").hasMessageContaining("use drishti.module.banking.var.confidence")
+                .hasMessageContaining("engines/var.yaml");
+    }
+
+    @Test
+    void theNewKeysInTheSitesEngineFileAreTheOnesRead(@org.junit.jupiter.api.io.TempDir Path work) throws Exception {
+        try (var ctx = start(work, "drishti:\n  module:\n    banking:\n      var:\n        window: 400\n        confidence: 0.95\n")) {
+            var env = ctx.getEnvironment();
+            assertThat(env.getProperty("drishti.module.banking.var.window")).isEqualTo("400");
+            assertThat(env.getProperty("drishti.module.banking.var.confidence")).isEqualTo("0.95");
+        }
+    }
+
     @Test
     void theNewNamesAloneStartTheServer(@org.junit.jupiter.api.io.TempDir Path work) {
         StandardEnvironment env = new StandardEnvironment();

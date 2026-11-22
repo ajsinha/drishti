@@ -71,17 +71,14 @@ public final class EngineSwitches {
         return switches.getOrDefault(id, new Switch(false, "not in the catalogue", false));
     }
 
-    /** The refusal lines of the engine's retired switch names that a site sets (never the shipped files, the environment's own variable or Spring's view). */
+    /** The refusal lines of the engine's retired switch names that a site sets: {@link com.ash.drishti.packs.module.RetiredNames#in}'s one rule. */
     private static List<String> retiredNames(EngineCatalogue.Entry e, ConfigurableEnvironment env) {
         List<String> out = new java.util.ArrayList<>();
-        for (PropertySource<?> ps : env.getPropertySources()) {
-            if (skipForAliases(ps) || shipped(ps) || attached(ps)) {
-                continue;
-            }
-            for (String old : e.retired()) {
-                if (ps.containsProperty(old)) {
-                    out.add(com.ash.drishti.packs.module.RetiredNames.line(old, describe(ps), e.switchKey() + " (config/engines/" + e.file() + ", or Admin -> Engines)"));
-                }
+        com.ash.drishti.packs.module.RetiredNames.Check check = com.ash.drishti.packs.module.RetiredNames.in(env);
+        for (String old : e.retired()) {
+            String where = check.whereSet(old);
+            if (where != null) {
+                out.add(com.ash.drishti.packs.module.RetiredNames.line(old, describe(where), e.switchKey() + " (config/engines/" + e.file() + ", or Admin -> Engines)"));
             }
         }
         return out;
@@ -131,12 +128,7 @@ public final class EngineSwitches {
         return "configurationProperties".equals(ps.getName());
     }
 
-    private static boolean skipForAliases(PropertySource<?> ps) {
-        // the environment's DRISHTI_VAR_ENABLED binds to drishti.var.enabled too; it is the switch's own variable, not an old name
-        return "systemEnvironment".equals(ps.getName());
-    }
-
-    private static final String MODULE_COPY = "module shipped copy ";
+    private static final String MODULE_COPY = com.ash.drishti.packs.module.RetiredNames.MODULE_COPY;
 
     /**
      * The name of a module's shipped copy of an engine's settings ({@code engines/<file>} in the module's own jars), as the module host adds
@@ -148,13 +140,20 @@ public final class EngineSwitches {
 
     /** The jar's own files: application.yaml and the engines' shipped copies, the server's and each module's. */
     static boolean shipped(PropertySource<?> ps) {
-        String n = ps.getName();
-        return n.startsWith("Config resource") && n.contains("class path resource") || n.startsWith(MODULE_COPY);
+        return com.ash.drishti.packs.module.RetiredNames.shipped(ps);
     }
 
     /** A source's name in words for Admin, Engines and {@code drishti.py server engines show --sources}. */
     static String describe(PropertySource<?> ps) {
-        String n = ps.getName().replace('\\', '/');
+        return describe(ps.getName());
+    }
+
+    /** {@link #describe(PropertySource)} by the source's name ({@code environment NAME} as it is). */
+    static String describe(String name) {
+        String n = name.replace('\\', '/');
+        if (n.startsWith("environment ")) {
+            return n;
+        }
         if ("commandLineArgs".equals(n)) {
             return "command line";
         }

@@ -107,6 +107,35 @@ class PostgresLayoutTest extends DatedSourceContract {
         assertThat(p.lastUpdate()).isNotNull();
     }
 
+    /** The rows of a read, one line each ({@code id|nettingSet|mtm}), sorted (the database's order is its own), those {@code keep} accepts. */
+    private static List<String> lines(ColumnSet c, java.util.function.Predicate<String> keep) {
+        List<String> out = new java.util.ArrayList<>();
+        for (int i = 0; i < c.size(); i++) {
+            String ns = String.valueOf(c.value("nettingSet", i));
+            if (keep.test(ns)) {
+                out.add(c.ids()[i] + "|" + ns + "|" + c.value("mtm", i));
+            }
+        }
+        java.util.Collections.sort(out);
+        return out;
+    }
+
+    @Test
+    void aConnectorsWhereIsInTheQuerysWhereAndTheAnswerIsTheSame() throws Exception {
+        SourcePlugin p = plugin();
+        List<String> paths = List.of("mtm", "nettingSet");
+        ColumnSet whole = p.columns("trade", paths, AsOf.of(D1)).orElseThrow();
+        var b = new com.ash.drishti.api.ScanRequest.Filter("nettingSet", com.ash.drishti.api.ScanRequest.Op.EQ, List.of("NS-B"));
+        ColumnSet some = p.columns("trade", paths, AsOf.of(D1), List.of(b)).orElseThrow();
+        assertThat(lines(some, x -> true)).as("only the rows the where accepts come back from the database")
+                .isEqualTo(lines(whole, "NS-B"::equals)).isNotEmpty().hasSizeLessThan(whole.size());
+        var both = new com.ash.drishti.api.ScanRequest.Filter("nettingSet", com.ash.drishti.api.ScanRequest.Op.IN, List.of("NS-A", "NS-B"));
+        assertThat(lines(p.columns("trade", paths, AsOf.of(D1), List.of(both)).orElseThrow(), x -> true))
+                .isEqualTo(lines(whole, x -> x.equals("NS-A") || x.equals("NS-B")));
+        var a = new com.ash.drishti.api.ScanRequest.Filter("nettingSet", com.ash.drishti.api.ScanRequest.Op.EQ, List.of("NS-A"));
+        assertThat(p.columns("trade", paths, AsOf.of(D1), List.of(a, b)).orElseThrow().size()).as("no value meets both").isZero();
+    }
+
     @Test
     void aTableWithoutTheDeclaredColumnsSaysSo() throws Exception {
         plugin();

@@ -31,7 +31,6 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.PropertySource;
 
 /**
  * A module's settings, described by its manifest ({@link ModuleSettingsSchema}) and read as {@code drishti.module.<id>.*}. The server key a
@@ -51,22 +50,38 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
-        Map<String, ModuleSettingsSchema> schemas;
-        try {
-            schemas = schemas(env);
-        } catch (RuntimeException e) {
-            System.getLogger(ModuleSettingsEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING,
-                    "module settings: the manifests could not be read: {0}", e.getMessage());
-            return;
-        }
+        Map<String, ModuleSettingsSchema> schemas = schemas(env);   // a manifest that cannot be read stops the start: its retired names would go unchecked
+        List<Path> dirs = Distributions.homes(env).homes().values().stream().map(com.ash.drishti.api.resolution.ModuleHomes.Home::dir).toList();
+        RetiredNames.Check check = RetiredNames.in(env, dirs);
         List<String> retired = new ArrayList<>();
         for (ModuleSettingsSchema s : schemas.values()) {
-            retired.addAll(s.retiredLines(k -> siteSets(env, k)));
+            retired.addAll(s.retiredLines(check::whereSet));
         }
         RetiredNames.refuse(retired);
         Map<String, Object> info = new LinkedHashMap<>();
         info.put(INFO + ".modules", String.join(",", schemas.keySet()));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE + "-info", info));
+    }
+
+    /**
+     * The refusal lines of one module's retired setting names that a site sets (its manifest in {@code moduleDir}; none without one): the
+     * check a module loaded after the start runs before it joins (the module host), as the start runs it for every module.
+     */
+    public static List<String> retired(ConfigurableEnvironment env, Path moduleDir) {
+        Map<String, ModuleSettingsSchema> one = new LinkedHashMap<>();
+        Path f = moduleDir == null ? null : moduleDir.resolve("module.yaml");
+        if (f == null || !Files.isRegularFile(f)) {
+            return List.of();
+        }
+        try {
+            add(one, YAML.readTree(f.toFile()));
+        } catch (IOException e) {
+            throw new IllegalStateException("the module manifest " + f + " cannot be read: " + e.getMessage(), e);
+        }
+        RetiredNames.Check check = RetiredNames.in(env, List.of(moduleDir));
+        List<String> out = new ArrayList<>();
+        one.values().forEach(s -> out.addAll(s.retiredLines(check::whereSet)));
+        return out;
     }
 
     /** The settings schema of every module whose manifest declares one, by module id (the module boot's modules, then the packaged ones). */
@@ -93,24 +108,8 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
         }
     }
 
-    /** Where the site (not the product's defaults, nor an engine's shipped file) sets {@code key} (a property source's name), or null. The environment's own variables are never read here: {@code DRISHTI_VAR_THREADS} is a name the shipped engine file
-     * gives its placeholder, not the key. */
+    /** Where a site sets {@code key} (a property source's name, or {@code environment NAME}), or null: {@link RetiredNames#in}'s one rule. */
     static String siteSets(ConfigurableEnvironment env, String key) {
-        for (PropertySource<?> ps : env.getPropertySources()) {
-            String n = ps.getName();
-            if ("configurationProperties".equals(n)) {
-                continue;     // Spring's attached view over every source, the environment's variables among them (relaxed names): the real sources are visited one by one
-            }
-            if (n.startsWith(SOURCE) || "systemEnvironment".equals(n) || n.startsWith("drishti-edition") || n.startsWith("drishti-packs")
-                    || (n.startsWith("Config resource") && n.contains("class path resource"))
-                    || (n.startsWith("Config resource") && n.replace('\\', '/').matches("(?s).*engines/[a-z0-9-]+\\.yaml\\].*"))) {
-                continue;
-            }
-            Object v = ps.containsProperty(key) ? ps.getProperty(key) : null;
-            if (v != null && !v.toString().isBlank()) {
-                return n;
-            }
-        }
-        return null;
+        return RetiredNames.in(env).whereSet(key);
     }
 }

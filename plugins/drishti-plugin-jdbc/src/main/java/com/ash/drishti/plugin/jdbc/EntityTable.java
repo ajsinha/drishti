@@ -313,6 +313,12 @@ final class EntityTable {
      * document is read.
      */
     void columns(Connection c, String k, LocalDate day, String from, String to, List<String> columns, ColumnRow each) throws SQLException {
+        columns(c, k, day, from, to, columns, Map.of(), each);
+    }
+
+    /** As above, only the rows whose text column holds one of the values given for it ({@code "COL" IN (?, ?)}: a connector's where at the source). */
+    void columns(Connection c, String k, LocalDate day, String from, String to, List<String> columns, Map<String, java.util.Set<String>> where,
+            ColumnRow each) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT ").append(id);
         columns.forEach(col -> sql.append(", \"").append(col).append('"'));
         sql.append(" FROM ").append(table).append(" WHERE ").append(kind).append(" = ? AND ").append(date).append(" = ?");
@@ -322,6 +328,20 @@ final class EntityTable {
         if (to != null) {
             sql.append(" AND ").append(id).append(" < ?");
         }
+        List<String> bound = new ArrayList<>();
+        where.forEach((col, values) -> {
+            if (values.isEmpty()) {
+                sql.append(" AND FALSE");                            // comparisons that no value meets
+                return;
+            }
+            sql.append(" AND \"").append(col.replace("\"", "\"\"")).append("\" IN (");
+            List<String> sorted = values.stream().sorted().toList();
+            for (int v = 0; v < sorted.size(); v++) {
+                sql.append(v == 0 ? "?" : ", ?");
+                bound.add(sorted.get(v));
+            }
+            sql.append(')');
+        });
         streaming(c, () -> {
             try (PreparedStatement ps = c.prepareStatement(sql.toString())) {
                 ps.setFetchSize(20_000);
@@ -332,7 +352,10 @@ final class EntityTable {
                     ps.setString(i++, from);
                 }
                 if (to != null) {
-                    ps.setString(i, to);
+                    ps.setString(i++, to);
+                }
+                for (String v : bound) {
+                    ps.setString(i++, v);
                 }
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {

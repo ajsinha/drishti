@@ -100,7 +100,7 @@ AREAS = [
     Area("engines", "Compute engines: `config/engines/*.yaml`",
          "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), "
          "`config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: "
-         "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under its own prefix (`drishti.var.*`), except the few the banking module owns (`drishti.module.banking.*`: the manifest's `settings:`; their old `drishti.var.*` names are retired and a site that sets one stops the start, naming the new key). "
+         "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under its own prefix (`drishti.var.*`), except the few the banking module owns (`drishti.module.banking.*`: the manifest's `settings:`; their old `drishti.var.*` names are retired and a site that sets one anywhere (this file included, the command line, a system property, `application.local.yaml`, or an environment variable Spring binds to the old name and no file names as a placeholder) stops the start, naming the new key). "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
          "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "

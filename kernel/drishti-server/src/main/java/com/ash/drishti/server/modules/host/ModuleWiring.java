@@ -126,6 +126,8 @@ public final class ModuleWiring {
         if (env == null || !(loader instanceof com.ash.drishti.module.runtime.ModuleClassLoader ml)) {
             return;
         }
+        // a module loaded after the start: a retired name of its settings set by the site refuses it, as the start would have
+        com.ash.drishti.packs.module.RetiredNames.refuse(com.ash.drishti.packs.module.ModuleSettingsEnvironmentPostProcessor.retired(env, c.dir()));
         List<String> names = new ArrayList<>();
         try {
             org.springframework.core.io.support.PathMatchingResourcePatternResolver r = new org.springframework.core.io.support.PathMatchingResourcePatternResolver(ml);

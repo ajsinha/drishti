@@ -370,6 +370,12 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
         return catalog == null ? Optional.empty() : catalog.columns(kind, paths, asOf.businessDate());
     }
 
+    /** The columns with a connector's where in the query's {@code WHERE} (its text comparisons). */
+    @Override
+    public Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf, java.util.List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        return catalog == null ? Optional.empty() : catalog.columns(kind, paths, asOf.businessDate(), where);
+    }
+
     @Override
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
         return com.ash.drishti.api.ColumnScans.over(this, request);

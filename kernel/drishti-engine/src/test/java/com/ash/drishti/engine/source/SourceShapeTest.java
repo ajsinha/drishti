@@ -152,6 +152,21 @@ class SourceShapeTest {
             return Optional.of(new ColumnSet(ids.toArray(String[]::new), numbers, texts, null));
         }
 
+        /** The where each read was given (the connector's pushdown). */
+        static final List<List<ScanRequest.Filter>> WHERES = new CopyOnWriteArrayList<>();
+
+        @Override
+        public Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf, List<ScanRequest.Filter> where) {
+            WHERES.add(where);
+            return columns(kind, paths, asOf);                    // a store that leaves nothing out: the connector's own test decides
+        }
+
+        @Override
+        public boolean documents(String kind, AsOf asOf, List<ScanRequest.Filter> where, Consumer<EntityDocument> sink) {
+            WHERES.add(where);
+            return documents(kind, asOf, sink);
+        }
+
         @Override
         public Optional<com.ash.drishti.api.ArrowScan> scan(ScanRequest request) {
             throw new AssertionError("a shaped connector never scans its plugin directly");
@@ -282,6 +297,18 @@ class SourceShapeTest {
         assertThat(bySystem).containsEntry("ENDUR", 300.0).containsEntry("CALYPSO", 300.0).hasSize(2);
         assertThat(r.registry().shape("trade-endur").orElseThrow().where().pushdown())
                 .as("pushed down for partition and file pruning").containsExactly(new ScanRequest.Filter("SOURCE_SYSTEM", ScanRequest.Op.EQ, List.of("ENDUR")));
+    }
+
+    @Test
+    void theWhereReachesTheStoreOnEveryBulkRead() throws Exception {
+        Store.WHERES.clear();
+        SourceRouter r = sharedSplit();
+        assertThat(all(r).keySet()).containsExactly("C1", "E1", "E2");
+        assertThat(r.columns("trade", List.of("TRADE_ID", "SOURCE_SYSTEM", "NOTIONAL"), AsOf.LATEST, Duration.ofSeconds(2)).orElseThrow().size()).isEqualTo(3);
+        ScanRequest.Filter endur = new ScanRequest.Filter("SOURCE_SYSTEM", ScanRequest.Op.EQ, List.of("ENDUR"));
+        ScanRequest.Filter calypso = new ScanRequest.Filter("SOURCE_SYSTEM", ScanRequest.Op.EQ, List.of("CALYPSO"));
+        assertThat(Store.WHERES).as("documents and columns, each connector its own where").contains(List.of(endur), List.of(calypso));
+        assertThat(Store.WHERES).allSatisfy(w -> assertThat(w).hasSize(1));
     }
 
     @Test

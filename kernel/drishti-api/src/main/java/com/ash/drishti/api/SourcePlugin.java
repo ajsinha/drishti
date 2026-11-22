@@ -197,6 +197,17 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * As {@link #columns(String, java.util.Collection, AsOf)}, for a reader that keeps only the rows {@code where} accepts (a connector's
+     * {@code where}, its top-level comparisons: docs/guides/DATA_LAKE_GUIDE.md, "Several source systems"): the source may leave out, at
+     * the source, rows the filters exclude (a lake's partitions and file statistics, a database's {@code WHERE}); it may still give rows
+     * they exclude, and it never leaves out a row they accept: the reader tests every row. By default the whole date, as the plain read.
+     */
+    default Optional<ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf, java.util.List<ScanRequest.Filter> where)
+            throws Exception {
+        return columns(kind, paths, asOf);
+    }
+
+    /**
      * The document paths this source keeps as vector columns for the kind (a Delta table's {@code layout.<kind>.vectors}: a
      * {@code list<double>} column such as a P&amp;L vector), empty when it keeps none.
      */
@@ -231,6 +242,15 @@ public interface SourcePlugin extends AutoCloseable {
      */
     default boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) throws Exception {
         return false;
+    }
+
+    /**
+     * As {@link #documents(String, AsOf, Consumer)} under a connector's {@code where}, as
+     * {@link #columns(String, java.util.Collection, AsOf, java.util.List)}: rows the filters exclude may be left out at the source, a row
+     * they accept never is.
+     */
+    default boolean documents(String kind, AsOf asOf, java.util.List<ScanRequest.Filter> where, Consumer<EntityDocument> sink) throws Exception {
+        return documents(kind, asOf, sink);
     }
 
     /**
