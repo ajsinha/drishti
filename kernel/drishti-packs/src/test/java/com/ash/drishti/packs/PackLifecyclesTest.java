@@ -196,7 +196,7 @@ class PackLifecyclesTest {
     void aShutDownPackStartsAgainAsANewInstance() {
         lc.shutdown("desk-views", "ops", false);
         lc.init("desk-views", "ops");
-        assertThat(lc.state("desk-views")).isEqualTo(LifecycleState.INITIALIZED);
+        assertThat(lc.state("desk-views")).isEqualTo(LifecycleState.INITIALISED);
         assertThat(registry.packs()).extracting(Pack::name).doesNotContain("desk-views");     // init registers nothing
         lc.start("desk-views", "ops");
         assertThat(lc.state("desk-views")).isEqualTo(LifecycleState.RUNNING);
@@ -219,7 +219,7 @@ class PackLifecyclesTest {
         registry.replace(new ArrayList<>(List.of(CORE, RISK, DESK, a, b)));       // as a folder edit would bring them
         assertThatThrownBy(() -> lc.start("a", "ops")).isInstanceOf(LifecycleRefused.class).hasMessageContaining("depend on each other in a cycle")
                 .hasMessageContaining("pack:a").hasMessageContaining("pack:b");
-        assertThat(lc.state("a")).as("refused: still only initialized").isEqualTo(LifecycleState.INITIALIZED);
+        assertThat(lc.state("a")).as("refused: still only initialized").isEqualTo(LifecycleState.INITIALISED);
     }
 
     @Test

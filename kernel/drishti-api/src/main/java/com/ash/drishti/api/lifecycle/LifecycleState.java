@@ -24,7 +24,7 @@ import java.util.Locale;
  *   <caption>The states and what may follow</caption>
  *   <tr><th>State</th><th>Entered by</th><th>Allowed next</th></tr>
  *   <tr><td>{@code NEW}</td><td>construction</td><td>init; shutdown</td></tr>
- *   <tr><td>{@code INITIALIZED}</td><td>init returned: read and validated, nothing served, no I/O</td><td>start; shutdown</td></tr>
+ *   <tr><td>{@code INITIALISED}</td><td>init returned: read and validated, nothing served, no I/O</td><td>start; shutdown</td></tr>
  *   <tr><td>{@code RUNNING}</td><td>start or resume returned: serving</td><td>suspend; shutdown</td></tr>
  *   <tr><td>{@code SUSPENDED}</td><td>suspend returned: no new request, state and caches kept</td><td>resume; shutdown</td></tr>
  *   <tr><td>{@code FAILED}</td><td>init or start threw</td><td>shutdown</td></tr>
@@ -32,13 +32,13 @@ import java.util.Locale;
  * </table>
  */
 public enum LifecycleState {
-    NEW, INITIALIZED, RUNNING, SUSPENDED, FAILED, SHUTDOWN;
+    NEW, INITIALISED, RUNNING, SUSPENDED, FAILED, SHUTDOWN;
 
     /** The state {@code t} leads to from this one, or null when the table does not allow it. A shutdown of a shut-down part stays. */
     public LifecycleState after(Transition t) {
         return switch (t) {
-            case INIT -> this == NEW ? INITIALIZED : null;
-            case START -> this == INITIALIZED ? RUNNING : null;
+            case INIT -> this == NEW ? INITIALISED : null;
+            case START -> this == INITIALISED ? RUNNING : null;
             case SUSPEND -> this == RUNNING ? SUSPENDED : null;
             case RESUME -> this == SUSPENDED ? RUNNING : null;
             case SHUTDOWN -> SHUTDOWN;

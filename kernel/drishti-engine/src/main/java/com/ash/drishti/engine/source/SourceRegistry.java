@@ -668,7 +668,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     private final Map<String, Prepared> prepared = new java.util.concurrent.ConcurrentHashMap<>();
 
-    /** {@code init}: a new machine, a fresh instance and its settings; null when it is INITIALIZED, else the status it failed with. */
+    /** {@code init}: a new machine, a fresh instance and its settings; null when it is INITIALISED, else the status it failed with. */
     private ConnectorStatus initLocked(String name, SourcesProperties.ConnectorSettings c, String actor) {
         com.ash.drishti.api.lifecycle.LifecycleMachine m = newMachine(name);
         try {
@@ -1270,7 +1270,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         lock.lock();
         try {
             com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
-            if (m != null && m.state() == com.ash.drishti.api.lifecycle.LifecycleState.INITIALIZED) {
+            if (m != null && m.state() == com.ash.drishti.api.lifecycle.LifecycleState.INITIALISED) {
                 return startLocked(name, actor);
             }
             if (m != null && (m.state() == com.ash.drishti.api.lifecycle.LifecycleState.RUNNING

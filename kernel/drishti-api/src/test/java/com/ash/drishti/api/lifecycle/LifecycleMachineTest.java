@@ -43,7 +43,7 @@ class LifecycleMachineTest {
         LifecycleMachine m = machine(new ArrayList<>());
         switch (s) {
             case NEW -> { }
-            case INITIALIZED -> m.transition(Transition.INIT, "t", null);
+            case INITIALISED -> m.transition(Transition.INIT, "t", null);
             case RUNNING -> {
                 m.transition(Transition.INIT, "t", null);
                 m.transition(Transition.START, "t", null);
@@ -74,7 +74,7 @@ class LifecycleMachineTest {
         LifecycleMachine m = machine(events);
         assertThat(m.state()).isEqualTo(LifecycleState.NEW);
         m.transition(Transition.INIT, "ops", null);
-        assertThat(m.state()).isEqualTo(LifecycleState.INITIALIZED);
+        assertThat(m.state()).isEqualTo(LifecycleState.INITIALISED);
         m.transition(Transition.START, "ops", null);
         assertThat(m.state()).isEqualTo(LifecycleState.RUNNING);
         m.transition(Transition.SUSPEND, "ops", null);
@@ -113,7 +113,7 @@ class LifecycleMachineTest {
     void theTableItself() {
         assertThat(LifecycleState.NEW.allows(Transition.INIT)).isTrue();
         assertThat(LifecycleState.NEW.allows(Transition.START)).isFalse();
-        assertThat(LifecycleState.INITIALIZED.allows(Transition.START)).isTrue();
+        assertThat(LifecycleState.INITIALISED.allows(Transition.START)).isTrue();
         assertThat(LifecycleState.RUNNING.allows(Transition.SUSPEND)).isTrue();
         assertThat(LifecycleState.RUNNING.allows(Transition.RESUME)).isFalse();
         assertThat(LifecycleState.SUSPENDED.allows(Transition.RESUME)).isTrue();

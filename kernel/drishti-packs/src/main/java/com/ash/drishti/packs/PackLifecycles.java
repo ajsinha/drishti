@@ -215,14 +215,14 @@ public final class PackLifecycles {
         if (m != null && (m.state() == LifecycleState.RUNNING || m.state() == LifecycleState.SUSPENDED)) {
             m.transition(Transition.START, actor, null);                    // refused by the table, naming the state
         }
-        if (m == null || m.state() != LifecycleState.INITIALIZED) {
+        if (m == null || m.state() != LifecycleState.INITIALISED) {
             init(pack, actor);                                              // read and validated first: the graph then knows what it declares
             m = machines.get(pack);
         }
         DependencyGraph g = graph();
         String problem = g.startProblem(List.of(node));
         if (problem != null) {
-            m.refuse(Transition.START, actor, problem);                     // it stays INITIALIZED: fix the dependency, then start
+            m.refuse(Transition.START, actor, problem);                     // it stays INITIALISED: fix the dependency, then start
         }
         for (String n : g.startOrder(List.of(node))) {
             if (n.startsWith("pack:")) {
@@ -232,7 +232,7 @@ public final class PackLifecycles {
                     init(p, actor);
                     pm = machines.get(p);
                 }
-                if (pm.state() == LifecycleState.INITIALIZED) {
+                if (pm.state() == LifecycleState.INITIALISED) {
                     pm.transition(Transition.START, actor, () -> actions().load(p, actor));
                     pending.remove(p);
                 }

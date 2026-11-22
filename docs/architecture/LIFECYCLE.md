@@ -54,7 +54,7 @@ and the drain, counts the stats (`StatsRecorder`), and raises one `LifecycleEven
 | State | Entered by | Allowed next |
 |---|---|---|
 | `NEW` | construction | init; shutdown |
-| `INITIALIZED` | init returned | start; shutdown |
+| `INITIALISED` | init returned | start; shutdown |
 | `RUNNING` | start or resume returned | suspend; shutdown |
 | `SUSPENDED` | suspend returned | resume; shutdown |
 | `FAILED` | init or start threw | shutdown |
@@ -73,7 +73,7 @@ and the drain, counts the stats (`StatsRecorder`), and raises one `LifecycleEven
 
 | State | For a pack |
 |---|---|
-| `INITIALIZED` | `pack.yaml`, its about, formats and semantics files read and checked together with the running packs (what a load checks). Nothing registered. |
+| `INITIALISED` | `pack.yaml`, its about, formats and semantics files read and checked together with the running packs (what a load checks). Nothing registered. |
 | `RUNNING` | Its kinds, mnemonics, Sutras, routes, roles, connector templates and settings registered through the pack reloader, the same path a pack folder change takes. |
 | `SUSPENDED` | Its kinds and mnemonics answer `503 DRS-1037` ("pack market-risk is suspended (by ops at ...)"). The connectors that only it uses stop pulling, so its live tables pause. Everything registered and every cache is kept. |
 | `SHUTDOWN` | Unregistered: no kind, mnemonic, Sutra, route or template of it remains. The connectors only it used stop. An open view of its kinds says the pack was removed. |
@@ -91,7 +91,7 @@ and the drain, counts the stats (`StatsRecorder`), and raises one `LifecycleEven
 
 | State | For a connector |
 |---|---|
-| `INITIALIZED` | A fresh instance of its plugin, its own settings merged (`[connector.<name>]`, named brokers and databases, lake files) and its secrets resolved. Not started: no I/O. |
+| `INITIALISED` | A fresh instance of its plugin, its own settings merged (`[connector.<name>]`, named brokers and databases, lake files) and its secrets resolved. Not started: no I/O. |
 | `RUNNING` | The plugin started (pools, consumers), registered by name and source name, routed. |
 | `SUSPENDED` | A stand-in takes its place in routing at once. Every read, search, scan, new subscription and write answers `503 DRS-1037`. What describes it (manifest, health, freshness, caches, pool) still reaches the plugin. Reads in flight finish on the plugin. Then `SourcePlugin.suspend()` stops pulling. The instance, offsets, caches and pools are kept. |
 | `SHUTDOWN` | Out of routing, drained for `connectors-drain`, closed. Its settings are kept, so a start brings it back as configured. |

@@ -162,7 +162,7 @@ class ConnectorLifecycleTest {
         r.apply("ticks", on());
         r.shutdown("ticks", "ops");
         Puller.LOG.clear();
-        assertThat(r.init("ticks", "ops")).isEqualTo(LifecycleState.INITIALIZED);
+        assertThat(r.init("ticks", "ops")).isEqualTo(LifecycleState.INITIALISED);
         assertThat(Puller.LOG).as("init does no I/O: nothing started").isEmpty();
         assertThat(r.plugin("ticks")).isEmpty();
         assertThat(r.start("ticks", "ops").state()).isEqualTo("RUNNING");
