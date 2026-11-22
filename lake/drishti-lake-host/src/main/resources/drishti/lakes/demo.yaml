@@ -21,7 +21,7 @@
 # adds a missing one), so the server never writes it; a table only a site's own connector reads is added at the end, every line kept.
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
+root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   compute-demo.path-book:

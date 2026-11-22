@@ -68,7 +68,7 @@ drishti:
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
         publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
-        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}   # a folder or s3://bucket/prefix
+        root: ${DRISHTI_DELTA_ROOT:${lake.data.dir}/delta}   # a folder or s3://bucket/prefix
         format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's exposure-results connector follows it
         storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long

@@ -17,7 +17,7 @@
 # published (Delta by default; Iceberg: the server makes the reader an Iceberg connector). docs/guides/DATA_LAKE_GUIDE.md.
 lake: var-official
 format: ${drishti.var.official.format:delta}
-root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
+root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta}}
 storage: {region: '${drishti.var.official.storage.s3.region:}', endpoint: '${drishti.var.official.storage.s3.endpoint:}', path-style: '${drishti.var.official.storage.s3.path-style:}',
   access-key: '${drishti.var.official.storage.s3.access-key:}', secret-key: '${drishti.var.official.storage.s3.secret-key:}'}
 tables:
