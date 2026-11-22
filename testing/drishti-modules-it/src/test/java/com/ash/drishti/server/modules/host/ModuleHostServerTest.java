@@ -180,6 +180,11 @@ class ModuleHostServerTest {
         assertThat(eval("greeter_greet('Ravi')")).isEqualTo("Hello, Ravi, from the greeter module");
     }
 
+    /** A loaded module's candidate (its folder and manifest), taken in a frame of its own so nothing of its loader stays on the stack. */
+    private com.ash.drishti.module.runtime.ModuleCandidate candidate(String id) {
+        return node.runtime().loaded(id).orElseThrow().candidate();
+    }
+
     private int page(String path) {
         return node.runtime().routes().lookup(path).orElseThrow().status();
     }
@@ -205,6 +210,7 @@ class ModuleHostServerTest {
                 .post("/api/v1/studio/preview").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body);
         mvc.perform(preview).andExpect(status().isOk()).andExpect(jsonPath("$.strip[0].text").value("Hello, Ravi, from the greeter module"));
 
+        com.ash.drishti.module.runtime.ModuleCandidate greeter = candidate("greeter");   // its folder and manifest, no class of it
         com.ash.drishti.module.runtime.ModuleRuntime.UnloadReport r = node.runtime().unload("greeter", true);
         assertThat(r.failures()).isEmpty();
         assertThat(r.leakFree()).as("nothing of the server keeps the stopped module's class loader").isTrue();
@@ -212,7 +218,7 @@ class ModuleHostServerTest {
         assertThat(refused).contains("the function 'greeter_greet' is off: its module 'greeter' is not running on this server");
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> eval("greeter_greet('Ravi')")).hasMessageContaining("greeter_greet");
 
-        node.runtime().start(List.of(folder), id -> true);              // started again, after the server is up
+        node.runtime().load(greeter, List.of());                        // started again, after the server is up
         assertThat(node.runtime().loaded("greeter")).isPresent();
         mvc.perform(preview).andExpect(status().isOk()).andExpect(jsonPath("$.strip[0].text").value("Hello, Ravi, from the greeter module"));
         assertThat(eval("greeter_greet('Asha')")).isEqualTo("Hello, Asha, from the greeter module");

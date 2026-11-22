@@ -36,7 +36,11 @@ public final class DrishtiRachana {
 
     private static final Object LOCK = new Object();
     private static final BlockLibrary BLOCKS = new BlockLibrary();
-    private static final Map<Object, FunctionProvider> MODULES = new LinkedHashMap<>();
+    /**
+     * The started modules' functions by module id and function names, the latest registration in use: two servers in one JVM (a test's two
+     * contexts) that both start a module never provide its functions twice, and one stopping leaves the other's in place.
+     */
+    private static final Map<String, java.util.Deque<FunctionProvider>> MODULES = new LinkedHashMap<>();
     private static volatile RachanaOptions options = RachanaOptions.DEFAULTS;
     private static volatile Supplier<? extends Collection<String>> kinds = List::of;
     private static volatile Rachana current;
@@ -149,17 +153,23 @@ public final class DrishtiRachana {
      * the module is off ({@link #drs(com.ash.rachana.SutraProblem)}).
      */
     public static Runnable addFunctions(String module, FunctionProvider provider) {
-        Object key = new Object();
         List<String> names = provider.functions().stream().map(FunctionProvider.Provided::name).toList();
+        String key = module + "\u001f" + String.join(",", names);
         synchronized (LOCK) {
-            MODULES.put(key, provider);
+            MODULES.computeIfAbsent(key, k -> new java.util.ArrayDeque<>()).push(provider);
             names.forEach(OFF::remove);
             changed();
         }
         return () -> {
             synchronized (LOCK) {
-                MODULES.remove(key);
-                names.forEach(n -> OFF.put(n, module));
+                java.util.Deque<FunctionProvider> d = MODULES.get(key);
+                if (d != null) {
+                    d.removeIf(x -> x == provider);
+                    if (d.isEmpty()) {
+                        MODULES.remove(key);
+                        names.forEach(n -> OFF.put(n, module));
+                    }
+                }
                 changed();
             }
         };
@@ -234,7 +244,7 @@ public final class DrishtiRachana {
         for (FunctionProvider p : ServiceLoader.load(FunctionProvider.class)) {
             providers.add(p);
         }
-        providers.addAll(MODULES.values());
+        MODULES.values().forEach(d -> providers.add(d.peek()));
         Profile drishti = Entities.addTo(Profile.named("drishti"), () -> kinds.get(), BLOCKS)
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
