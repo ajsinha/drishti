@@ -19,6 +19,12 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parents[2] / "tools"))
+import tmpguard  # noqa: E402
+from tmpguard import pytest_sessionfinish  # noqa: E402,F401 - the session end: its temp folder removed (tools/tmpguard.py)
+
+tmpguard.install()      # first: every temp path of this session, its workers and its children is inside one folder removed at the end
+
 import pytest
 from fastapi.testclient import TestClient
 

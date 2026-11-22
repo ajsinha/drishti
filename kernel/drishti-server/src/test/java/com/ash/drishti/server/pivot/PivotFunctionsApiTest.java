@@ -136,8 +136,11 @@ class PivotFunctionsApiTest {
             }
         });
         assertThat(types.size()).isGreaterThanOrEqualTo(2);
-        JsonNode e = call("asha", "analyst", post("/api/v1/pivot/explain"), Map.of("view", view, "from", Map.of("productType", types.get(0)),
-                "to", Map.of("productType", types.get(1)), "by", text), 200);
+        // the one Explain of the cell (kind pivot, POST with the pivot's own body): the same steps, drawn as panels
+        Map<String, Object> body = new java.util.LinkedHashMap<>(Map.of("kind", "pivot", "view", view, "from", Map.of("productType", types.get(0)),
+                "to", Map.of("productType", types.get(1)), "by", text));
+        JsonNode x = call("asha", "analyst", post("/api/v1/explain"), body, 200);
+        JsonNode e = x.at("/why/answer");
         double sum = 0;
         for (JsonNode s : e.path("steps")) {
             sum += s.path("step").asDouble();
@@ -145,10 +148,6 @@ class PivotFunctionsApiTest {
         sum += e.path("residual").path("value").asDouble();
         assertThat(sum).isCloseTo(e.path("difference").asDouble(), org.assertj.core.data.Offset.offset(1e-6 * Math.max(1,
                 Math.abs(e.path("difference").asDouble()))));
-        // the one Explain of the cell (kind pivot, POST with the pivot's own body): the same steps, drawn as panels
-        Map<String, Object> body = new java.util.LinkedHashMap<>(Map.of("kind", "pivot", "view", view, "from", Map.of("productType", types.get(0)),
-                "to", Map.of("productType", types.get(1)), "by", text));
-        JsonNode x = call("asha", "analyst", post("/api/v1/explain"), body, 200);
         assertThat(x.at("/why/answer/steps")).isEqualTo(e.path("steps"));
         assertThat(x.at("/why/change").asDouble()).isEqualTo(e.path("difference").asDouble());
         assertThat(x.get("value").asDouble()).isEqualTo(e.at("/to/value").asDouble());

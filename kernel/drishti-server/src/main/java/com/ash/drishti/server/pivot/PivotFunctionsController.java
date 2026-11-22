@@ -28,13 +28,10 @@ import com.ash.drishti.bicompute.whatif.WhatIf;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.kernel.api.explain.ExplainRequest;
-import com.ash.drishti.server.explain.NumberExplainService;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,16 +58,13 @@ public class PivotFunctionsController {
     private final CustomFunctions functions;
     private final AuditLog audit;
     private final PivotViewVersions versions;
-    private final ObjectProvider<NumberExplainService> explain;
 
-    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit, PivotViewVersions versions,
-            ObjectProvider<NumberExplainService> explain) {
+    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit, PivotViewVersions versions) {
         this.pivot = pivot;
         this.core = core;
         this.functions = functions;
         this.audit = audit;
         this.versions = versions;
-        this.explain = explain;
     }
 
     // ---- view versions --------------------------------------------------------------------------------------------------------------
@@ -214,28 +208,6 @@ public class PivotFunctionsController {
 
     // ---- explain and what-if --------------------------------------------------------------------------------------------------------
 
-    /**
-     * DEPRECATED, kept for one release: the one Explain is {@code POST /api/v1/explain {kind: pivot, measure: cell, value, view, from, to,
-     * fromDate, toDate, by, order, price, quantity}} (PivotCellExplainer). This alias asks it (the old body's {@code measure} is the
-     * value's label) and answers the engine's own answer ({@code why.answer}: words, method, steps, residual, difference) as before, with
-     * the headers {@code Deprecation: true} and a {@code Link} to its successor.
-     */
-    @PostMapping("/explain")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<Map<String, Object>> explainAlias(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
-        Map<String, Object> args = new LinkedHashMap<>(body == null ? Map.of() : body);
-        args.remove("kind");
-        args.remove("part");
-        Object value = args.remove("measure");
-        if (value != null && !args.containsKey("value")) {
-            args.put("value", value);
-        }
-        Map<String, Object> x = explain.getObject().explain(p, new ExplainRequest("pivot", "cell", "why", args));
-        Map<String, Object> why = (Map<String, Object>) x.get("why");
-        Map<String, Object> answer = why == null ? null : (Map<String, Object>) why.get("answer");
-        return ResponseEntity.ok().header("Deprecation", "true").header("Link", "</api/v1/explain>; rel=\"successor-version\"")
-                .body(answer == null ? x : answer);
-    }
 
     /** {@code {view, whatIf: {exclude, changes, add}}}: the view with the overlay beside the original, cell by cell. Never written anywhere. */
     @PostMapping("/whatif")

@@ -69,7 +69,7 @@ market risk as a pivot, is [section 29](PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-p
 The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([ADMIN_GUIDE.md](../ADMIN_GUIDE.md#21-compute-engines-on-or-off)):
 switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
 `drishti.py admin engines`, live. Off, `/api/v1/pivot` answers `404 DRS-1020` in words, and `PIVOT`, Views → Pivot, its Help pages and
-`drishti.py pivot` disappear. The old name `drishti.pivot.enabled` still works (it is also the Pivot tab's switch). The MR cube needs it.
+`drishti.py pivot` disappear. The MR cube needs it.
 
 ### 2. The screen
 
@@ -593,7 +593,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/functions/test` | a definition and sample rows: the harness and the playground; nothing saved |
 | `POST /api/v1/pivot/functions` | save a new version after its harness passes |
 | `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit`, `/approve`, `/revoke` | sharing: approval by someone who is not the author, withdrawal |
-| `POST /api/v1/explain` `{kind: pivot, measure: cell, view, from, to, fromDate, toDate, by, order, price, quantity}` | the one Explain of a cell: the difference in steps that add up (section 20); `POST /api/v1/pivot/explain` is its deprecated alias for one release |
+| `POST /api/v1/explain` `{kind: pivot, measure: cell, view, from, to, fromDate, toDate, by, order, price, quantity}` | the one Explain of a cell: the difference in steps that add up (section 20) |
 | `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
 | `GET /api/v1/pivot/views/{owner}/{name}/versions`, `/versions/{n}`, `/diff?from=&to=`; `POST /views/{name}/restore` `{version}` | a saved view's versions (every save kept), one version, what changed between two, an old one restored as the next version |
 | `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](PIVOT_SCALE_AND_CUBES.md#11-sketches-with-a-stated-error-and-exact-on-request)) |
@@ -1239,9 +1239,6 @@ sum(NOTIONAL) moved from 35,644,171,130 to 25,679,859,409 (-9,964,311,721); the 
  "view": {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": ["sum(NOTIONAL)"]},
  "from": {"PRODUCT_TYPE": "FX_SWAP"}, "to": {"PRODUCT_TYPE": "FX_FORWARD"}, "by": "COUNTERPARTY"}
 ```
-
-The old `POST /api/v1/pivot/explain` still answers for one release, as a deprecated alias of this (it says so in its `Deprecation` and
-`Link` headers); move scripts to `/api/v1/explain`.
 
 ![Why did it move: two product types split by counterparty, one step per counterparty and the difference](../../tutorials/img/t37/04-explain.jpg)
 

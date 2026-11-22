@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param plugins per-plugin switch and settings, keyed by plugin name
  * @param fetchTimeout the longest a single fetch may take
  * @param pluginDir not read: a start-up line says to use the lib folder ({@code drishti.lib.path}) instead
- * @param connectors connectors defined in the server's own configuration (deprecated: use connector files)
+ * @param connectors the connectors in force (read from the connector files, template, override and secrets, never from the server's own configuration)
  * @param connectorsDir the folder of connector files, one {@code <name>.yaml} per connector (default {@code ./config/connectors})
  * @param connectorsWatch {@code auto} (file events, polling when unavailable), {@code poll}, or {@code off}
  * @param connectorsPoll how often files are looked at when polling (and as a safety net beside file events)

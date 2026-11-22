@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.loop_a
-was: loop-a
 version: 1.0.0
 from: { model: "loop-model@1", query: { select: { fields: [a.desk], measures: [Total] } } }
 keys: [desk]

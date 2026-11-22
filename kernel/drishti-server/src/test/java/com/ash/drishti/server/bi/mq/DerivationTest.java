@@ -48,7 +48,6 @@ class DerivationTest {
     static final String TOP_PER_DESK = """
             rachana: 3
             table: bi.top_per_desk
-            was: top-per-desk
             version: 1.0.0
             from: { table: bi.trades }
             filter: "$.notional > 0"
@@ -67,7 +66,6 @@ class DerivationTest {
     static final String DESK_CCY = """
             rachana: 3
             table: bi.desk_ccy
-            was: desk-ccy
             version: 1.0.0
             from: { model: "table:bi.desk_ccy_rows", query: { select: { fields: [desk_ccy_rows.desk, desk_ccy_rows.currency], measures: [notional, notionalK, mtm, trades] }, define: { notional: sum(desk_ccy_rows.notional), notionalK: sum(desk_ccy_rows.notionalK), mtm: sum(desk_ccy_rows.mtm), trades: count(desk_ccy_rows) } } }
             says: One row per desk and currency
@@ -103,7 +101,6 @@ class DerivationTest {
     static final String DESK_USD = """
             rachana: 3
             table: bi.desk_usd
-            was: desk-usd
             version: 1.0.0
             from: { model: "table:bi.desk_usd_rows", query: { select: { fields: [desk_usd_rows.desk], measures: [notional, trades] }, define: { notional: sum(desk_usd_rows.notional), trades: count(desk_usd_rows) } } }
             keys: [desk]

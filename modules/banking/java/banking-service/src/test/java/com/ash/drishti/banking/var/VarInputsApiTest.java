@@ -318,15 +318,6 @@ class VarInputsApiTest {
             assertThat(got[j]).as("scenario " + j).isCloseTo(cadPnl[j] * cad.scenarios()[j], within(0.01));
         }
         assertThat(ask("/api/v1/risk/var/scope", "BANK", CAD_PNL).at("/provenance/inputsBySystem/MUREX/tradesWithoutPv").asInt()).isPositive();
-        // REPORTING_CCY, a deprecated alias, must say the same as CURRENCY
-        for (Map<String, Object> r : v) {
-            if (r.get("TRADE_ID").equals("T1")) {
-                r.put("REPORTING_CCY", "USD");
-            }
-        }
-        rewrite(CAD_PNL, v, VarIntradayLake.morningPvs(CAD_PNL));
-        assertThat(ask("/api/v1/risk/var/scope", "BANK", CAD_PNL).at("/provenance/rejections").toString())
-                .contains("DRS-5208 T1: REPORTING_CCY USD is not the CURRENCY CAD");
     }
 
     /** A date as a test wants it: the same book with another record of its matured items, for one reader's view. */

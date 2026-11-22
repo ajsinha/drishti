@@ -77,17 +77,6 @@ class EngineFilesTest {
     }
 
     @Test
-    void theInMemoryLakeIsOnWhenItsStoresAreConfiguredInTheOldPlace() {
-        EngineCatalogue c = EngineCatalogue.load();
-        var s = new EngineSwitches(c, env(new Object[] {LOCAL, Map.of("drishti.lake.memory.stores.news.max-mb", "512")},
-                new Object[] {SHIPPED, Map.of("drishti.engines.memory-lake.enabled", "false")}));
-        assertThat(s.of("memory-lake").on()).isTrue();
-        assertThat(s.of("memory-lake").source()).isEqualTo("stores configured in local file (the old place)");
-        s = new EngineSwitches(c, env(new Object[] {SHIPPED, Map.of("drishti.engines.memory-lake.enabled", "false")}));
-        assertThat(s.of("memory-lake").on()).isFalse();
-    }
-
-    @Test
     void theWriteKeepsEveryCommentAndKeyAndTheVariableAndWritesChanged() throws Exception {
         EngineCatalogue.Entry frtb = EngineCatalogue.load().get("frtb-sa").orElseThrow();
         EngineFiles files = new EngineFiles(dir, n -> null);

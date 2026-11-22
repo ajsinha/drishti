@@ -160,9 +160,12 @@ document.addEventListener('click', function (e) {
     if (tool) { tool.setAttribute('aria-label', n + ' approvals waiting for you' + soon); tool.classList.toggle('due', j.dueSoon > 0); }
     document.querySelectorAll('[data-approvals-count]').forEach(function (b) { b.textContent = n; b.hidden = false; b.setAttribute('aria-label', n + ' waiting'); });
   };
+  var gone = typeof AbortController === 'function' ? new AbortController() : null, timer = 0;
   var ask = function () {
-    fetch(drishti_url('/approvals/api/count'), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+    fetch(drishti_url('/approvals/api/count'), { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: gone ? gone.signal : undefined })
       .then(function (r) { return r.ok ? r.json() : null; }).then(show).catch(function () { /* the count is a hint: no count, no badge */ });
   };
-  if (document.readyState === 'complete') { setTimeout(ask, 300); } else { window.addEventListener('load', function () { setTimeout(ask, 300); }); }
+  // a page left before the count came back cancels it itself: a navigation's own cancel is logged by WebKit as a failed fetch ("access control checks")
+  window.addEventListener('pagehide', function () { clearTimeout(timer); if (gone) { gone.abort(); } });
+  if (document.readyState === 'complete') { timer = setTimeout(ask, 300); } else { window.addEventListener('load', function () { timer = setTimeout(ask, 300); }); }
 })();

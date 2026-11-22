@@ -65,8 +65,6 @@ public enum ErrorCode {
     ENGINE_BLOCKED("DRS-1022", 503),
     /** The engine's file changed on disk since the page read it, or its folder cannot be written (DRISHTI_ENGINES_DIR). */
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
-    /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
-    ENGINE_OLD_KEY("DRS-1024", 400),
     /**
      * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
      * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
@@ -270,7 +268,7 @@ public enum ErrorCode {
      * than the budget is refused with the count, never cut short; narrow it with a filter, collapse a level or show the top N.
      */
     PIVOT_TOO_MANY_CELLS("DRS-5702", 422),
-    /** The pivot engine is switched off on this server ({@code drishti.pivot.enabled: false}): its API, screen and words are not offered. */
+    /** The pivot engine is switched off on this server ({@code drishti.engines.pivot.enabled: false}): its API, screen and words are not offered. */
     PIVOT_OFF("DRS-5703", 404),
     /** A saved pivot view, a cell reference or a provenance id that is not there or not shared with the caller. */
     PIVOT_NOT_FOUND("DRS-5704", 404),

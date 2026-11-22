@@ -78,12 +78,10 @@ class EditionsTest {
     }
 
     @Test
-    void aSitesOldEditionKeyNoLongerSelectsALensFile() {
-        StandardEnvironment env = env(map("drishti.edition", "risk", "DRISHTI_EDITION", "risk"), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
-        new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
-        assertThat(Editions.of(env)).isSameAs(Edition.NONE);               // a lens never filters: what exists is the distribution's
-        assertThat(PackPaths.enabled(env)).isEqualTo(PackPaths.defaultEnabled(env));
-        assertThat(env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated")).contains("drishti.edition is no longer read");
+    void aSitesOldEditionKeyStopsTheStartNamingTheNewWay() {
+        StandardEnvironment env = env(map("drishti.edition", "risk"), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication()))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("drishti.edition").hasMessageContaining("is retired");
     }
 
     @Test

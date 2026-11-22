@@ -210,15 +210,12 @@ public final class PackSamples {
 
     /** The catalogue's file: one entry a line, {@code {kind, id, title, subtitle}} (2.9.4, docs/guides/DATA_GUIDE.md). */
     public static final String CATALOG = "catalog.jsonl";
-    /** The catalogue of earlier releases, one JSON array: still read when there is no {@link #CATALOG}. */
-    public static final String OLD_CATALOG = "catalog.json";
-
-    /** True for a samples folder's catalogue file (either form): never a kind's samples. */
+    /** True for a samples folder's catalogue file: never a kind's samples. */
     public static boolean isCatalog(String fileName) {
-        return CATALOG.equals(fileName) || OLD_CATALOG.equals(fileName);
+        return CATALOG.equals(fileName);
     }
 
-    /** The catalogue's entries in order: {@code catalog.jsonl}, else the {@code catalog.json} array of earlier releases; empty with neither. */
+    /** The catalogue's entries in order: {@code catalog.jsonl}; empty without it. */
     public static List<JsonNode> catalogEntries(Path samples) throws IOException {
         List<JsonNode> out = new ArrayList<>();
         Path lines = samples.resolve(CATALOG);
@@ -229,10 +226,6 @@ public final class PackSamples {
                 }
             }
             return out;
-        }
-        Path f = samples.resolve(OLD_CATALOG);
-        if (Files.isRegularFile(f)) {
-            JSON.readTree(f.toFile()).forEach(out::add);
         }
         return out;
     }

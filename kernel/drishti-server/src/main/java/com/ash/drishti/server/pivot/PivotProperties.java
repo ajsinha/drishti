@@ -20,10 +20,8 @@ import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The pivot engine's settings (bi/PIVOT.md, configuration), {@code drishti.pivot}: the same section as the Pivot tab's (whose keys this
- * record leaves alone); {@code enabled} switches both.
+ * The pivot engine's settings (bi/PIVOT.md, configuration), {@code drishti.pivot}.
  *
- * @param enabled the engine (and the Pivot tab): off, {@code /api/v1/pivot} answers {@code 404 DRS-5703} in words
  * @param maxCells visible cells a view may have, totals included
  * @param maxHolisticCells the same for a view with a holistic measure
  * @param busyCells a view of more cells asks busy protection before it opens deeper levels
@@ -38,7 +36,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param export export limits
  */
 @ConfigurationProperties("drishti.pivot")
-public record PivotProperties(Boolean enabled, Integer maxCells, Integer maxHolisticCells, Integer busyCells, Integer cacheMb, Integer provenanceKept,
+public record PivotProperties(Integer maxCells, Integer maxHolisticCells, Integer busyCells, Integer cacheMb, Integer provenanceKept,
         Integer localShards, Long stageMaxRows, Integer stageKeep, Duck duckdb, Estimate estimate, AggregateOnly aggregateOnly, Export export) {
 
     /** {@code drishti.pivot.duckdb}. */
@@ -54,7 +52,6 @@ public record PivotProperties(Boolean enabled, Integer maxCells, Integer maxHoli
     public record Export(Integer xlsxMaxRows, Integer rowsMax) {}
 
     public PivotProperties {
-        enabled = enabled == null || enabled;
         maxCells = pos(maxCells, 20_000);
         maxHolisticCells = pos(maxHolisticCells, 5_000);
         busyCells = pos(busyCells, 2_000);

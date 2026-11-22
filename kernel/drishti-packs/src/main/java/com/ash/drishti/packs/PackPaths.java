@@ -15,9 +15,6 @@
  */
 package com.ash.drishti.packs;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.core.env.Environment;
 
 /**
@@ -34,8 +31,6 @@ public final class PackPaths {
     public static String defaultEnabled(Environment env) {
         return String.join(",", com.ash.drishti.packs.distribution.Distributions.defaultPacks(env));
     }
-    private static final String LEGACY_PACKS = "packs";
-    private static final AtomicBoolean WARNED = new AtomicBoolean();
 
     private PackPaths() {
     }
@@ -80,21 +75,9 @@ public final class PackPaths {
         return d.endsWith("/") || d.endsWith("\\") ? d.substring(0, d.length() - 1) : d;
     }
 
-    /**
-     * The packs folder. For one release the old location still works: when the configured folder (the default or not)
-     * does not exist and {@code ./packs} does, that one is used, with a warning.
-     */
+    /** The packs folder: {@code drishti.packs.dir}, else config/packs of the home. */
     public static String packsDir(Environment env) {
-        String dir = env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
-        if (!Files.isDirectory(Path.of(dir)) && Files.isDirectory(Path.of(com.ash.drishti.api.Roots.home(LEGACY_PACKS)))) {
-            if (WARNED.compareAndSet(false, true)) {
-                System.getLogger(PackPaths.class.getName()).log(System.Logger.Level.WARNING,
-                        "The packs folder {0} does not exist; using the old location {1}. Move it with: git mv packs config/packs "
-                                + "(or set drishti.packs.dir / DRISHTI_PACKS_DIR). This fallback ends in the next release.", dir, LEGACY_PACKS);
-            }
-            return com.ash.drishti.api.Roots.home(LEGACY_PACKS);
-        }
-        return dir;
+        return env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
     }
 
     /**

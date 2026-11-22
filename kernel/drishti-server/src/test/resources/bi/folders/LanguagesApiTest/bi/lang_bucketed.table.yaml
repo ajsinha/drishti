@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.lang_bucketed
-was: lang-bucketed
 version: 1.0.0
 from: { table: bi.lang_trade }
 columns:

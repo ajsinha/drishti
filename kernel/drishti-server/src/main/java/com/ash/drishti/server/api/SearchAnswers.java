@@ -94,9 +94,6 @@ public class SearchAnswers {
      * arrangement as the view): {@code {source, fields, view}}; null when its pack does not opt in (or says what cannot be read).
      */
     private Map<String, Object> offered(String kind) {
-        if (!pivots.enabled()) {
-            return null;
-        }
         try {
             return searchProps.pivotOf(kind).map(spec -> {
                 Map<String, Object> m = new LinkedHashMap<>();

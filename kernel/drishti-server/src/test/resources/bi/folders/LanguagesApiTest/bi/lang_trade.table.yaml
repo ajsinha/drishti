@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.lang_trade
-was: lang-trade
 version: 1.0.0
 from: { kind: trade, connector: lang-lake }
 keys: [id]

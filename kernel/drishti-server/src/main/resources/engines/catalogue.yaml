@@ -18,8 +18,8 @@
 # engine's settings. An engine still to be built is listed with installed: false: the switch framework knows it, Admin -> Engines shows it
 # as not installed, and its build only registers its ComputeEngine bean (and sets installed: true here).
 #
-# Per engine: id, title, about, file (config/engines/<file>), switch (its key), env (the switch's environment variable), aliases (the old
-# switch names, still accepted: DRS-1024), shipped (the switch as shipped), installed, live-on (false: turning it on needs a restart),
+# Per engine: id, title, about, file (config/engines/<file>), switch (its key), env (the switch's environment variable), retired (the old
+# switch names: refused at start), shipped (the switch as shipped), installed, live-on (false: turning it on needs a restart),
 # prefixes (the settings it owns), needs (hard, on the same node: refused without them, DRS-1021), uses (soft: its parts that read the other
 # are hidden), api (server path prefixes: 404 DRS-1020 when it runs nowhere), console (console path prefixes; "=/path" is that path only),
 # words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/sitemap.yaml), help (help.yaml slugs), landings, tiles

@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.st_trade
-was: st-trade
 version: 1.0.0
 from: { kind: trade, connector: stmt-lake }
 keys: [id]
