@@ -1,0 +1,343 @@
+// Project Drishti. Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary: see LICENSE.
+//
+// Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run
+// configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by
+// python tools/drishti.py launchers: never edit this file, edit the table. JDK 21: change the Java path below.
+// Build and run in the IDE: README.md#build-and-run-in-the-ide.
+{
+  "folders": [
+    {
+      "name": "drishti",
+      "path": "."
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.debugpy",
+      "vscjava.vscode-java-pack",
+      "redhat.vscode-yaml"
+    ]
+  },
+  "settings": {
+    "python.defaultInterpreterPath": "python3",
+    "java.configuration.runtimes": [
+      {
+        "name": "JavaSE-21",
+        "path": "/usr/lib/jvm/java-21-openjdk-amd64",
+        "default": true
+      }
+    ],
+    "files.exclude": {
+      "**/__pycache__": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Drishti: build all",
+        "type": "shell",
+        "command": "./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am",
+        "windows": {
+          "command": "mvnw.cmd clean package -DskipTests -pl :drishti-app,:drishti-modules -am"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: test",
+        "type": "shell",
+        "command": "./mvnw clean verify",
+        "windows": {
+          "command": "mvnw.cmd clean verify"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "test",
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: build modules",
+        "type": "shell",
+        "command": "./mvnw clean package -DskipTests -pl :drishti-modules -am -Pmodules-only",
+        "windows": {
+          "command": "mvnw.cmd clean package -DskipTests -pl :drishti-modules -am -Pmodules-only"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run server (demo)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py start server --profile demo",
+        "windows": {
+          "command": "python tools/drishti.py start server --profile demo"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run server (built-in samples)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py start server --profile samples",
+        "windows": {
+          "command": "python tools/drishti.py start server --profile samples"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run server (QA, port 18580)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py start server --profile qa",
+        "windows": {
+          "command": "python tools/drishti.py start server --profile qa"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run console",
+        "type": "shell",
+        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo",
+        "windows": {
+          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run console (QA, port 17580)",
+        "type": "shell",
+        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile qa",
+        "windows": {
+          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile qa"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run console (Risk)",
+        "type": "shell",
+        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=risk",
+        "windows": {
+          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=risk"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run console (Finance)",
+        "type": "shell",
+        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=finance --server.port=17481",
+        "windows": {
+          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=finance --server.port=17481"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: build demo lakes",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: run loader (file into the lake)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: check environment",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini --profile demo doctor",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile demo doctor"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: check environment (QA)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa doctor",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa doctor"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Drishti: run console",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "demo"
+        ]
+      },
+      {
+        "name": "Drishti: run console (QA, port 17580)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "qa"
+        ]
+      },
+      {
+        "name": "Drishti: run console (Risk)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "demo",
+          "--distribution=risk"
+        ]
+      },
+      {
+        "name": "Drishti: run console (Finance)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "demo",
+          "--distribution=finance",
+          "--server.port=17481"
+        ]
+      },
+      {
+        "name": "Drishti: build demo lakes",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "lake",
+          "demo",
+          "--engine",
+          "java"
+        ]
+      },
+      {
+        "name": "Drishti: run loader (file into the lake)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "lake",
+          "build",
+          "--from",
+          "$USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl",
+          "--kind",
+          "trade",
+          "--mode",
+          "overwrite-dates",
+          "--lake",
+          "demo"
+        ]
+      },
+      {
+        "name": "Drishti: check environment",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "demo",
+          "doctor"
+        ]
+      },
+      {
+        "name": "Drishti: check environment (QA)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "--profile",
+          "qa",
+          "doctor"
+        ]
+      }
+    ]
+  }
+}

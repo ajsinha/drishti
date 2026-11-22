@@ -84,7 +84,7 @@ def test_every_launcher_asks_the_one_place_and_passes_arrows_cap():
     assert 'run_command("server", "start"' in (ROOT / "tools" / "launch" / "clusterctl.py").read_text(encoding="utf-8")   # a cluster's nodes too
     ecs = (ROOT / "deploy" / "docker" / "ecs" / "server-entrypoint.sh").read_text(encoding="utf-8")
     assert "DRISHTI_ARROW_MB" in ecs and "drishti.arrow.max-bytes" in ecs
-    for f in (ROOT / "run-configs").glob("Drishti server*.run.xml"):
+    for f in (ROOT / "run-configs").glob("Drishti run server*.run.xml"):
         text = f.read_text(encoding="utf-8")
         # the IDE launchers name the JVM options file that serverstart.jvm_flags writes (one source: memory_flags runs memory_caps.py for the
         # direct-memory limit and Arrow's cap); the exec jar's manifest grants native access, so no --add-opens is passed

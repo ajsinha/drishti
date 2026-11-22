@@ -13,29 +13,27 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti console: the console on 17480 for the server on 18480, sign-in on.
-  Use it when: with either 18480 server.
-  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
+  Drishti: run loader (file into the lake): one file of yours into the demo lake, by its kind (a template; copy it and name your file).
+  Use it when: you hold a file of your own (never committed).
+  A template: copy it (Ctrl+D) and name your own file in Parameters; the copy lives in the git-ignored .idea/.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti console" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
-    <module name="drishti-console" />
+  <configuration default="false" name="Drishti: run loader (file into the lake)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+    <module name="drishti" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
-      <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_drishti_web.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake build --from &quot;$USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl&quot; --kind trade --mode overwrite-dates --lake demo" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

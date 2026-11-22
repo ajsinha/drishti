@@ -124,8 +124,8 @@ DRISHTI_DEMO_ENABLED=false java -jar lib/drishti-server-*-exec.jar
 java -jar lib/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=false
 ```
 
-The run configuration **Drishti server (demo lakes)** starts with the demo off, so every page reads the lakes `drishti.py lake demo`
-built ([../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#11-the-demo-data)); **Drishti server (built-in samples)** (and a bare `java -jar`) leaves it on, for what only it
+The run configuration **Drishti: run server (demo)** starts with the demo off, so every page reads the lakes `drishti.py lake demo`
+built ([../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#11-the-demo-data)); **Drishti: run server (built-in samples)** (and a bare `java -jar`) leaves it on, for what only it
 gives: values that tick live (live BI and boards) and screens with no store at all. With the demo off, `default-route: demo` names a
 connector that does not run and the router skips it; a kind no other connector (nor the `file` plugin) serves then answers
 `DRS-1002 no source serves kind '<kind>'`.

@@ -14,8 +14,8 @@
 
 """``drishti.py launchers``: the IDE launchers generated from one table, ``tools/launch/launchers.yaml`` (LAUNCHER_REVIEW.md 4.2).
 
-* ``launchers`` writes ``run-configs/*.run.xml`` (IntelliJ), ``drishti-console/run-configs/*.run.xml`` (PyCharm) and the tables of
-  ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed, never made only locally.
+* ``launchers`` writes ``run-configs/*.run.xml`` (IntelliJ and PyCharm: one folder, one project at the repository root), the VS Code
+  workspace ``drishti.code-workspace`` and the tables of ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed, never made only locally.
 * ``launchers --check`` changes nothing and fails (exit 1) naming each committed file that differs from the table, a launcher file the
   table does not name, or a stale IDE_GUIDE section 4.
 * ``launchers --machine`` writes this machine's JVM arguments files, ``<settings folder>/jvm-<profile>.args``, which every server launcher
@@ -42,7 +42,8 @@ import javacmd  # noqa: E402
 TABLE = HERE / "launchers.yaml"
 GUIDE = "docs/guides/IDE_GUIDE.md"   # under the install folder (home / GUIDE)
 BEGIN, END = "<!-- generated: launchers begin (python tools/drishti.py launchers) -->", "<!-- generated: launchers end -->"
-FOLDERS = {"intellij": "run-configs", "pycharm": "drishti-console/run-configs"}   # under the install folder
+FOLDERS = {"intellij": "run-configs", "pycharm": "run-configs"}   # under the install folder: the one folder of the launcher standard (docs/plans/LAUNCHER_STANDARD.md)
+WORKSPACE = "drishti.code-workspace"                                     # VS Code: a task or launch of every launcher's name
 DEV_INI = "$USER_HOME$/drishti-envs/dev.ini"
 ENVS = "$USER_HOME$/drishti-envs"
 JAR = "$PROJECT_DIR$/lib/drishti-server-exec.jar"
@@ -139,12 +140,12 @@ def render(home: Path, ide: str, row: dict) -> str:
                    '    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />\n'
                    '    <option name="ALTERNATIVE_JRE_PATH" />\n' + envs(SERVER_ENV) + '    <method v="2" />\n  </configuration>\n')
     else:
-        script = "$PROJECT_DIR$/run_drishti_web.py" if kind == "console" else "$PROJECT_DIR$/../tools/drishti.py"
+        script = "$PROJECT_DIR$/drishti-console/run_drishti_web.py" if kind == "console" else "$PROJECT_DIR$/tools/drishti.py"
         out.append(f'  <configuration default="false" name="{esc(name)}" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">\n'
-                   '    <module name="drishti-console" />\n    <option name="ENV_FILES" value="" />\n'
+                   '    <module name="drishti" />\n    <option name="ENV_FILES" value="" />\n'
                    '    <option name="INTERPRETER_OPTIONS" value="" />\n    <option name="PARENT_ENVS" value="true" />\n'
                    + envs(CONSOLE_ENV if kind == "console" else TOOL_ENV) +
-                   '    <option name="SDK_HOME" value="" />\n    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />\n'
+                   '    <option name="SDK_HOME" value="" />\n    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />\n'
                    '    <option name="IS_MODULE_SDK" value="false" />\n    <option name="ADD_CONTENT_ROOTS" value="true" />\n'
                    '    <option name="ADD_SOURCE_ROOTS" value="true" />\n'
                    f'    <option name="SCRIPT_NAME" value="{script}" />\n'
@@ -154,6 +155,43 @@ def render(home: Path, ide: str, row: dict) -> str:
                    '    <option name="INPUT_FILE" value="" />\n    <method v="2" />\n  </configuration>\n')
     out.append("</component>\n")
     return "".join(out)
+
+
+def workspace(doc: dict) -> str:
+    """The VS Code workspace: a task for every launcher (Maven through mvnw, the Python ones through the interpreter, a server through
+    drishti.py start server) and a debugpy launch of the same name for every Python one; JDK 21 (LAUNCHER_STANDARD.md section 4)."""
+    import json
+    tasks, launches = [], []
+    for ide in FOLDERS:
+        for r in doc.get(ide) or []:
+            name, kind = r["name"], r["kind"]
+            if kind == "maven":
+                tasks.append({"label": name, "type": "shell", "command": " ".join(["./mvnw", *r["goals"].split()]),
+                              "windows": {"command": " ".join(["mvnw.cmd", *r["goals"].split()])}, "options": {"cwd": "${workspaceFolder}"},
+                              "group": "test" if name.endswith(": test") else "build", "problemMatcher": []})
+                continue
+            if kind == "server":
+                args = ["tools/drishti.py", "start", "server", "--profile", r["profile"]]
+            elif kind == "console":
+                args = ["drishti-console/run_drishti_web.py", "--settings", "~/drishti-envs/dev.ini"] + (["--profile", r["profile"]] if r.get("profile") else []) + list(r.get("args") or [])
+            else:
+                args = ["tools/drishti.py", "--settings", "~/drishti-envs/dev.ini"] + (["--profile", r["profile"]] if r.get("profile") else []) + r["command"].split()
+            tasks.append({"label": name, "type": "shell", "command": "python3 " + " ".join(args), "windows": {"command": "python " + " ".join(args)},
+                          "options": {"cwd": "${workspaceFolder}"}, "problemMatcher": []})
+            if kind != "server":
+                launches.append({"name": name, "type": "debugpy", "request": "launch", "cwd": "${workspaceFolder}", "console": "integratedTerminal",
+                                 "program": "${workspaceFolder}/" + args[0], "args": args[1:]})
+    head = ("// Project Drishti. Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary: see LICENSE.\n"
+            "//\n// Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run\n"
+            "// configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by\n"
+            "// python tools/drishti.py launchers: never edit this file, edit the table. JDK 21: change the Java path below.\n"
+            "// Build and run in the IDE: README.md#build-and-run-in-the-ide.\n")
+    body = {"folders": [{"name": "drishti", "path": "."}],
+            "extensions": {"recommendations": ["ms-python.python", "ms-python.debugpy", "vscjava.vscode-java-pack", "redhat.vscode-yaml"]},
+            "settings": {"python.defaultInterpreterPath": "python3", "java.configuration.runtimes": [{"name": "JavaSE-21", "path": "/usr/lib/jvm/java-21-openjdk-amd64", "default": True}],
+                         "files.exclude": {"**/__pycache__": True}},
+            "tasks": {"version": "2.0.0", "tasks": tasks}, "launch": {"version": "0.2.0", "configurations": launches}}
+    return head + json.dumps(body, indent=2) + "\n"
 
 
 def guide_section(doc: dict) -> str:
@@ -201,7 +239,8 @@ def expected(home: Path) -> dict:
     out = {p: deploy_args(heap, why) for p, (why, heap) in DEPLOY.items()}
     for ide, folder in FOLDERS.items():
         for row in doc.get(ide) or []:
-            out[f"{folder}/{row['name']}.run.xml"] = render(home, ide, row)
+            out[f"{folder}/{row['name'].replace(':', '')}.run.xml"] = render(home, ide, row)
+    out[WORKSPACE] = workspace(doc)
     text = (home / GUIDE).read_text(encoding="utf-8")
     if BEGIN not in text or END not in text:
         raise LauncherError(f"{GUIDE}: the markers of the generated section 4 are missing ({BEGIN} ... {END})")
@@ -215,7 +254,7 @@ def check(home: Path) -> list[str]:
     want = expected(home)
     problems = [f"{p}: differs from tools/launch/launchers.yaml (python tools/drishti.py launchers rewrites it)"
                 for p, text in want.items() if not (home / p).is_file() or (home / p).read_text(encoding="utf-8") != text]
-    for folder in FOLDERS.values():
+    for folder in sorted(set(FOLDERS.values())):
         for f in sorted((home / folder).glob("*.run.xml")):
             if f"{folder}/{f.name}" not in want:
                 problems.append(f"{folder}/{f.name}: a launcher the table does not name (add a row to tools/launch/launchers.yaml, or delete it)")
@@ -232,7 +271,7 @@ def write(home: Path) -> list[str]:
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(text, encoding="utf-8", newline="\n")
             changed.append(p)
-    for folder in FOLDERS.values():
+    for folder in sorted(set(FOLDERS.values())):
         for f in sorted((home / folder).glob("*.run.xml")):
             if f"{folder}/{f.name}" not in want:
                 f.unlink()
@@ -268,12 +307,12 @@ def machine(home: Path, envs_dir: Path, dev_ini: Path | None) -> list[Path]:
 def argv(xml: Path, home: Path, user_home: Path) -> tuple[list[str], dict]:
     """The command line a committed launcher runs, as the IDE builds it: (argv, the environment it adds). A JarApplication becomes
     ``java <VM options> -jar <jar> <program args>`` (``java`` is the first word: the caller's JDK); a Python configuration becomes
-    ``python <script> <parameters>``. Macros: $PROJECT_DIR$ is the repository (IntelliJ) or drishti-console (PyCharm), $USER_HOME$."""
+    ``python <script> <parameters>``. Macros: $PROJECT_DIR$ is the repository, $USER_HOME$."""
     import xml.etree.ElementTree as ET
     conf = ET.parse(xml).getroot().find("configuration")
     o = {e.get("name"): e.get("value") for e in conf.findall("option")}
     env = {e.get("name"): e.get("value") for e in conf.iter("env")}
-    project = home if conf.get("type") != "PythonConfigurationType" else home / "drishti-console"
+    project = home                                                 # the one project: the repository root (every launcher folder is run-configs/)
 
     def expand(s: str) -> str:
         return (s or "").replace("$PROJECT_DIR$", project.as_posix()).replace("$USER_HOME$", user_home.as_posix())

@@ -13,12 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti build all: the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar.
+  Drishti: build all: the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar.
   Use it when: after a clone or a pull (the one to click).
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti build all" type="MavenRunConfiguration" factoryName="Maven" folderName="Drishti">
+  <configuration default="false" name="Drishti: build all" type="MavenRunConfiguration" factoryName="Maven" folderName="Drishti">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />

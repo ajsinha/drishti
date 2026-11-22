@@ -13,13 +13,14 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Build demo lakes: the demo lakes with the Java loader of the jar in `lib/`.
-  Use it when: after a build, with the server stopped.
+  Drishti: check environment (QA): the same for the QA server on 18580.
+  Use it when: with the QA pair.
+  The profile config/profiles/qa.ini (after your dev.ini) holds its settings.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
-    <module name="drishti-console" />
+  <configuration default="false" name="Drishti: check environment (QA)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+    <module name="drishti" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -27,12 +28,12 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake demo --engine java" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile qa doctor" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

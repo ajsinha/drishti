@@ -206,7 +206,7 @@ today, and a past date says *No data held for <date>*.
 ### 2.5 Start the server
 
 **On the demo lakes, with sign-in**: the demo profile, `config/profiles/demo.ini`, the one file that describes the demo; the run
-configuration **Drishti server (demo lakes)** names the same file, so both start the same server:
+configuration **Drishti: run server (demo)** names the same file, so both start the same server:
 
 ```bash
 cd /home/you/drishti
@@ -249,7 +249,7 @@ connector from the modules' templates and **writes no connector file**; a site p
 ### 2.6 Start the console
 
 `python tools/drishti.py start console --demo --server http://<this machine's address>:18480` (Windows `py tools\drishti.py …`; the run configuration
-**Drishti console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
+**Drishti: run console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
 `--env-file` gives your own:
 
 ```bash
@@ -367,7 +367,7 @@ Opening the project, the run configurations, running and debugging the server: [
 
 ### 3.3 PyCharm: run and debug the console
 
-The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-open-drishti-console) and [section 6.2](IDE_GUIDE.md#36-debug-the-console-pycharm).
+The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-open-the-repository-root) and [section 6.2](IDE_GUIDE.md#36-debug-the-console-pycharm).
 
 ### 3.4 Running the tests from the IDEs
 

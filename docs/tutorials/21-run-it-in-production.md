@@ -26,7 +26,7 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 ## Before you start
 
 - A running server and console with sign-in on: the quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes,
-  the run configurations **Drishti server (demo lakes)** and **Drishti console**, whose variables are the development values this tutorial replaces);
+  the run configurations **Drishti: run server (demo)** and **Drishti: run console**, whose variables are the development values this tutorial replaces);
   you have used Admin, Users and Roles in tutorial 1 and the reports tutorial, and the personal API token of tutorial 1, Part A is in `DRISHTI_TOKEN`.
 - Shell access to the machine that runs the server (you restart it a few times) and `tar`, `curl` and `python3`.
 - The pictures and outputs were made on ports 18943 and 17943; yours are 18480 and 17480. Paths and ports in the outputs are shortened to `~/drishti` and the defaults.

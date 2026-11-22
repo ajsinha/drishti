@@ -903,7 +903,7 @@ reported in the state `OFFLINE`, shown as **off (offline mode)** in Admin → Co
 the other connectors that hold them. The shipped packs keep a snapshot for exactly that: the news-and-markets pack's `news-store` serves
 `quote` and `news` from the market snapshot committed in `data/testdata/news-and-markets` (built into the lake by `drishti.py lake demo`;
 [data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)), and the market-data pack's
-`market-store` serves the kinds of its public-data feeds. The run configuration **Drishti server (demo lakes)** sets it. Read once at
+`market-store` serves the kinds of its public-data feeds. The run configuration **Drishti: run server (demo)** sets it. Read once at
 start: a connector file saved in Admin while the server runs cannot start an internet connector either; restart without it to go live.
 
 The same holds with offline mode **off** for a connector of an internet plugin whose file switches it off (its shipped state, such as

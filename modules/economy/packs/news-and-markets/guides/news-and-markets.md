@@ -91,7 +91,7 @@ With no internet (a demonstration laptop) the pack still works: the repository k
 daily bars) and of the companies' and topics' headlines, captured through these same connectors (`drishti.py testdata capture-market`,
 [data/testdata/README.md](../../../../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)). `drishti.py lake demo`
 builds it into `news/quote` and `news/news`, which `news-store` serves whenever the live connectors are off, and always in **offline
-mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti server (demo lakes)**): the `news` and `yfinance` connectors then
+mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti: run server (demo)**): the `news` and `yfinance` connectors then
 never start, and Admin → Connectors shows them *off (offline mode)*. With offline mode off and the live connectors switched off (as
 shipped: `DRISHTI_NEWS_ENABLED` and `DRISHTI_YFINANCE_ENABLED` unset) it is the same: their kinds are read from `news-store`, and Admin →
 Connectors shows them *off (served from the snapshot)*. A lake built before the snapshot was committed has no `news/news` or `news/quote`
