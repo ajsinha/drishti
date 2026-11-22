@@ -59,7 +59,7 @@
 
 
 - **The client renderer draws every panel with Drishti Elements' painter.** Drishti Elements is pinned at **3.2.0**. Embeds (`<drishti-view>`,
-  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
+  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.3.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
   `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
   page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
   filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` gives the painter's tables their tools

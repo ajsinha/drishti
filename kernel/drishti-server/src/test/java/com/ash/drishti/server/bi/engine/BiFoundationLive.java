@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
