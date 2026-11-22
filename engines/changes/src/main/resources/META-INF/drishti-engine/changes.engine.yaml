@@ -1,0 +1,85 @@
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Project Drishti. Proprietary: see LICENSE.
+# What changed since a reference cut-off: the figures of the cut-off against the figures now, by subject and measure, with the drivers
+# of each move named from attribution rows the host supplies. It computes the change and the shares; it never re-runs another engine.
+engine: 1
+id: changes
+version: 1.0.0
+title: What changed
+about: >-
+  Compares the values of measures at a reference cut-off with their values now, by subject (desk, book, trade, counterparty, risk
+  factor) and measure, keeps the moves above a threshold, adds the events that happened (new or amended trades, loads, limit state
+  changes) and, where attribution rows are supplied, names the drivers of each move with their shares.
+publisher: { id: com.ash.drishti, name: Drishti }
+product: drishti-engines
+api: "0.1"
+platform: { tools: "1.1" }
+snapshot:
+  dimensions: [ { name: date, type: date, label: Business date } ]
+inputs:
+  then:
+    contract: drishti/measure-value@1
+    about: The values at the reference cut-off (the stored snapshot of the measures the person's role follows), read as the caller.
+    mode: request
+    key: [ SUBJECT_KIND, SUBJECT, MEASURE ]
+    columns: [ SUBJECT_KIND, SUBJECT, MEASURE, VALUE ]
+    scope-columns: [ SUBJECT ]
+  now:
+    contract: drishti/measure-value@1
+    about: The values now, from the same measures, read as the caller.
+    mode: request
+    key: [ SUBJECT_KIND, SUBJECT, MEASURE ]
+    columns: [ SUBJECT_KIND, SUBJECT, MEASURE, VALUE ]
+    scope-columns: [ SUBJECT ]
+  thresholds:
+    contract: drishti/change-threshold@1
+    about: One row per measure with the smallest absolute and relative move worth showing; a measure with no row uses the parameters.
+    optional: true
+    key: [ MEASURE ]
+    columns: [ MEASURE, MIN_ABS, MIN_REL ]
+  events:
+    contract: drishti/change-event@1
+    about: What happened since the cut-off that is not a value move: a new or amended trade, a load, a limit state change.
+    optional: true
+    mode: request
+    key: [ SUBJECT_KIND, SUBJECT, KIND, AT ]
+    columns: [ SUBJECT_KIND, SUBJECT, KIND, AT, TEXT ]
+    scope-columns: [ SUBJECT ]
+  drivers:
+    contract: drishti/change-driver@1
+    about: >-
+      For a subject and measure, the part of the move each driver accounts for (new trades, amended trades, market data, rolled
+      window), found by the host running the measure's own engine with one group of inputs swapped at a time. Rows that do not add
+      up to the move leave an unexplained remainder, which is shown.
+    optional: true
+    mode: request
+    key: [ SUBJECT_KIND, SUBJECT, MEASURE, DRIVER ]
+    columns: [ SUBJECT_KIND, SUBJECT, MEASURE, DRIVER, DELTA ]
+    scope-columns: [ SUBJECT ]
+params:
+  min-abs: { type: number, default: 0, min: 0, label: Smallest absolute move, help: Moves smaller than this are left out unless the measure has its own threshold. }
+  min-rel: { type: number, default: 0.05, min: 0, label: Smallest relative move, help: Moves smaller than this share of the earlier value are left out unless the measure has its own threshold. }
+  limit: { type: integer, default: 200, min: 1, label: Most rows, help: The most rows answered; the largest moves come first. }
+outputs:
+  changes:
+    title: What changed
+    about: >-
+      One row per move above its threshold, per subject and measure that exists only then or only now, and per event; the largest
+      absolute move first, then events by time. WHY names up to three drivers with their shares of the move, or says the move is
+      unexplained when no attribution was supplied.
+    params: [ min-abs, min-rel, limit ]
+    key: [ SUBJECT_KIND, SUBJECT, MEASURE, KIND ]
+    columns:
+      - { name: SUBJECT_KIND, type: string,  nullable: false, label: Kind of subject }
+      - { name: SUBJECT,      type: string,  nullable: false, label: Subject }
+      - { name: MEASURE,      type: string,  nullable: false, label: Measure }
+      - { name: KIND,         type: string,  nullable: false, label: Kind of change, help: "move, new, removed or the event's own kind" }
+      - { name: THEN,         type: number,  nullable: true,  label: Then }
+      - { name: NOW,          type: number,  nullable: true,  label: Now }
+      - { name: CHANGE,       type: number,  nullable: false, label: Change, measure: true, exact: bits }
+      - { name: WHY,          type: string,  nullable: false, label: Why }
+      - { name: COMMAND,      type: string,  nullable: false, label: Command that opens the explanation }
+capabilities: [ explain ]
+limits:
+  memory: { fixed-bytes: 65536, per-row-bytes: { then: 96, now: 96, events: 160, drivers: 120 } }
+  cancel-latency: 200ms
+ui: { group: Risk, words: [ CHG, WHY ] }

@@ -1,0 +1,117 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The trader's Home (milestone H1, the hybrid): the same shape as the risk manager's; the working area is positions and P&L, a pre-deal
+# check and market tiles. Built only from library fragments. Tables: ROLE_HOME_SUTRAS 2. Not yet run.
+rachana: 1.2
+sutra: home-trader
+version: 1
+libraries: [core@1, finance@1]
+title: { id: "'Trader'" }
+data:
+  meta:      { table: home_meta }
+  kpis:      { table: home_kpis,      key: [LABEL] }
+  kpi_hist:  { table: home_kpi_history }
+  exc:       { table: home_exceptions }
+  chg:       { table: home_changes }
+  pos:       { table: home_positions, key: [INSTRUMENT] }
+  pnl:       { table: home_pnl_days }
+  mkt:       { table: home_market_tiles }
+  mnem:      { table: home_mnemonics }
+  cal:       { table: home_calendar }
+  news:      { table: home_news }
+layout:
+  user-can-arrange: true
+  areas:
+    - "kpis kpis kpis"
+    - "exc chg rail"
+    - "pos pre rail"
+    - "pnl mkt rail"
+  columns: [4, 5, 3]
+  phone: [kpis, exc, chg, pos, pre, pnl, mkt, rail]
+panels:
+  - use: core/kpi-strip@1
+    as: kpi
+    area: kpis
+    with:
+      items: "map($.kpis, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION, open: @.OPEN})"
+      history: { from: $.kpi_hist, columns: { label: LABEL, date: DATE, value: VALUE } }
+      fmt: compact
+  - use: core/exceptions-list@1
+    as: exc
+    area: exc
+    with:
+      title: Exceptions first
+      rows: { from: $.exc, columns: { severity: SEVERITY, message: MESSAGE, key: SUBJECT, open: COMMAND } }
+  - use: core/change-feed@1
+    as: chg
+    area: chg
+    with:
+      title: Since
+      since: "first($.meta).SINCE"
+      rows: { from: $.chg, columns: { key: SUBJECT, measure: MEASURE, before: THEN, after: NOW, change: CHANGE, why: WHY, kind: KIND, open: COMMAND } }
+  - use: finance/position-table@1
+    as: pos
+    area: pos
+    requires: mnemonic.POS
+    with:
+      title: Positions and P&L
+      rows: { from: $.pos, columns: { instrument: INSTRUMENT, quantity: QTY, value: VALUE, price: PRICE, pnl: PNL } }
+  - use: core/entry-form@1
+    as: pre
+    area: pre
+    requires: mnemonic.PREDEAL
+    on:
+      submit: [ { host: predeal.check, with: { deal: event.values } } ]      # the host action is wired when the effects land (I1); until then the form only collects
+    with:
+      title: Pre-deal check
+      submit-label: Check
+      fields:
+        - { id: instrument, label: Instrument, type: text, required: true }
+        - { id: side, label: Side, type: enum, options: [BUY, SELL], required: true }
+        - { id: quantity, label: Quantity, type: number, required: true }
+        - { id: price, label: Price, type: number }
+  - use: finance/pnl-history@1
+    as: pnl
+    area: pnl
+    with:
+      title: P&L
+      rows: { from: $.pnl, columns: { date: DATE, pnl: PNL } }
+  - use: core/tile-grid@1
+    as: mkt
+    area: mkt
+    with:
+      title: Markets
+      fmt: amount2
+      delta-fmt: signed2
+      tiles: "map($.mkt, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION})"
+  - use: core/data-table@1
+    as: mnem
+    area: rail
+    with:
+      title: Quick mnemonics
+      search: false
+      limit: 12
+      rows: $.mnem
+      columns: [ { label: Mnemonic, bind: "@.MNEMONIC" }, { label: About, bind: "@.ABOUT" } ]
+  - use: core/calendar-list@1
+    as: cal
+    area: rail
+    with:
+      rows: { from: $.cal, columns: { date: DATE, time: TIME, title: TITLE, kind: KIND, open: COMMAND } }
+  - use: core/headline-rail@1
+    as: news
+    area: rail
+    with:
+      rows: { from: $.news, columns: { date: AT, headline: HEADLINE, source: SOURCE, link: LINK } }

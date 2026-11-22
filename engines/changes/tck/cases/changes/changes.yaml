@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Project Drishti. Proprietary: see LICENSE.
+# Kit cases of the changes engine, synthetic data; written by hand, not run when written.
+suite: changes/changes
+engine: changes
+since: "1.0"
+description: A move above the threshold, a new subject, drivers with an unexplained remainder, a viewer, a missing input and a refusal.
+given:
+  inputs:
+    then:
+      rows:
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-A, MEASURE: VAR, VALUE: 5200000 }
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-B, MEASURE: VAR, VALUE: 3000000 }
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-C, MEASURE: VAR, VALUE: 4000000 }
+    now:
+      rows:
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-A, MEASURE: VAR, VALUE: 6100000 }
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-B, MEASURE: VAR, VALUE: 3010000 }
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-D, MEASURE: VAR, VALUE: 900000 }
+    drivers:
+      rows:
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-A, MEASURE: VAR, DRIVER: new trades, DELTA: 640000 }
+        - { SUBJECT_KIND: desk, SUBJECT: DESK-A, MEASURE: VAR, DRIVER: market data, DELTA: 160000 }
+cases:
+  - id: moves-and-new
+    source: "by hand: A moved +900000 (17.3%), B +10000 (0.3%, under 5%), C left (removed, -4000000), D is new (+900000)"
+    reference: true
+    request: { outputs: [ changes ], params: { min-abs: 0, min-rel: 0.05, limit: 200 }, visibility: all, seed: 0 }
+    expect:
+      status: complete
+      tables:
+        changes:
+          columns: [ SUBJECT_KIND, SUBJECT, MEASURE, KIND, THEN, NOW, CHANGE, WHY, COMMAND ]
+          rows:
+            - [ desk, DESK-C, VAR, removed, 4000000, null, -4000000, "No attribution supplied: the move is unexplained", "WHY DESK-C" ]
+            - [ desk, DESK-A, VAR, move, 5200000, 6100000, 900000, "new trades 71%, market data 18%, unexplained 11%", "WHY DESK-A" ]
+            - [ desk, DESK-D, VAR, new, null, 900000, 900000, "No attribution supplied: the move is unexplained", "WHY DESK-D" ]
+  - id: a-viewer-of-desk-a
+    source: "by hand: the host delivers DESK-A rows only"
+    request: { outputs: [ changes ], params: { min-abs: 0, min-rel: 0.05, limit: 200 }, visibility: { then: { eq: [ SUBJECT, DESK-A ] }, now: { eq: [ SUBJECT, DESK-A ] }, drivers: { eq: [ SUBJECT, DESK-A ] }, events: { eq: [ SUBJECT, DESK-A ] } }, seed: 0 }
+    expect:
+      status: complete
+      tables:
+        changes:
+          columns: [ SUBJECT_KIND, SUBJECT, MEASURE, KIND, THEN, NOW, CHANGE, WHY, COMMAND ]
+          rows: [ [ desk, DESK-A, VAR, move, 5200000, 6100000, 900000, "new trades 71%, market data 18%, unexplained 11%", "WHY DESK-A" ] ]
+  - id: no-then-table
+    source: "ENGINE_SPEC 8.2"
+    given: { inputs: { then: absent } }
+    request: { outputs: [ changes ], params: { min-abs: 0, min-rel: 0.05, limit: 200 }, visibility: all, seed: 0 }
+    expect: { status: not-found, missing: [ { input: then, outputs: [ changes ] } ] }
+  - id: a-request-without-rows-is-refused
+    source: "ENGINE_SPEC 8.6 rule 1"
+    request: { outputs: [ changes ], params: { min-abs: 0, min-rel: 0.05, limit: 200 }, visibility: {}, seed: 0 }
+    expect: { refused: ENG-4002 }

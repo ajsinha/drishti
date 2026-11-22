@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the operations Home follows (ROLE_HOME_SUTRAS 4). Same layout as risk-manager.measures.yaml; measure codes are answered by the engines' own
+# views (VAR, ES, LIM_USE, PNL_DAY, BREACHES: var; PFE, EXPOSURE: exposure); a code with no view yet answers nothing and its figure is left out.
+home: operations
+reference: { cut-off: "17:00", zone: site, day: previous-business-day }
+kpis:
+follow:
+events: [ load, limit-state ]
+exceptions:
+  - { when: load-failed,       severity: medium, text: "{subject} failed the load check",         open: "LOADS" }
+  - { when: feed-late,         severity: low,    text: "{subject} is {minutes} minutes late",     open: "FEEDS" }
+mnemonics:
+  - { mnemonic: "LOADS", about: "Loads and their checks" }
+  - { mnemonic: "FEEDS", about: "Data feeds" }
+  - { mnemonic: "HEALTH", about: "Server health" }
+  - { mnemonic: "APPROVALS", about: "Held and pending changes" }
