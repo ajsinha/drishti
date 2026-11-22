@@ -467,6 +467,12 @@ statistics for the id, the date, the load id and the promoted columns only). The
 rewritten for Lake's rules and relayout) were not run: they need `LAKE_CLASSPATH` on a Lake build holding `--relayout` (78a8422) or the
 re-pin of `drishti.lake.version` to v0.9.1; the four VaR/ES goldens and `ArchitectureRulesTest` were not run on this branch (no engine,
 VaR or test-data file changed); the console's `test_form_routes` three failures (present before the change) are not investigated.
+**Lake side not merged:** the Lake work (keep-days rule restored, `lake maintain --relayout` on all three stores, compaction keeping the
+newest copy and each older load's copies apart, `read-layout` kit verb, kit case `maintain/sorted-layout`) is on drishti-lake
+`wip/g4-live-fixes-lake`, **not on main**: tools/ci/check.py is not green. Delta interop 3/3 and the Python path pass; the kit ran twice;
+`LakeMaintainTest.compactsAndVacuumsAlike` fails on Delta (data files after compaction plus vacuum not fewer than before: the three
+appends of the same ids now keep three files) and Iceberg (a second compaction rewrites again: the compacted form is not recognised from
+its `_load_id` bounds). Until that lands and Drishti pins the Lake tag, `maintain.py` calls `--relayout`, which Lake 0.9.0 refuses.
 
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
