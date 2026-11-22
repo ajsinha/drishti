@@ -774,7 +774,7 @@ budget and alert path.
 
 ## 4. Server-side pricing: the quant service (proposed)
 
-**Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](../architecture/IMPLEMENTATION_PLAN.md#roadmap); the decision is
+**Status: proposed; not in a planned release, a later candidate in [the release notes](../../RELEASE_NOTES.md); the decision is
 [ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
 **Read [README.md](bi/README.md) first.** The product owner decided that computations,

@@ -365,7 +365,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived.
+- The boundary: a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived.
 
 **To review (6)**
 

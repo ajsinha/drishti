@@ -8,7 +8,7 @@
 
 *Revision 1.0 · 2026-11-01 · Author: Ashutosh Sinha*
 
-Status: **proposed** (design, not built). Release placement is in [IMPLEMENTATION_PLAN.md › High-performance native integration (proposed)](IMPLEMENTATION_PLAN.md#high-performance-native-integration-proposed); this document names work only by phase (P0 to P5).
+Status: **proposed** (design, not built). Release placement is in [the release notes](../../RELEASE_NOTES.md); this document names work only by phase (P0 to P5).
 
 This is the roadmap for making Drishti faster where it matters: the VaR and exposure engines, the loaders, BI and the Python
 console. It covers three levers, in the order they should be pulled:

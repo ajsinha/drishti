@@ -7,7 +7,7 @@
 # TVAL, trade valuation totals: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap: [the release notes](../../RELEASE_NOTES.md)*
 
 This is the planned data contract of **TVAL**: the valuation of any set of trades, summed and broken down when asked, from one
 valuation row per trade that an upstream engine delivers. It replaces the stored kind `trade-valuation`. Everything here is a
@@ -46,7 +46,7 @@ are in [README.md](README.md); the scope grammar, captures, baskets, official en
 **What it is.** The mark-to-market (MtM), one-day P&L, DV01 and notional of **any set of trades**, summed and broken down by any
 column of the trades (desk, book, counterparty, netting set, product, currency, maturity bucket, legal entity …), in USD or any
 reporting currency, for any business date. The per-trade values stay **inputs** from the upstream valuation engine (the boundary of
-[IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25));
+[the release notes](../../RELEASE_NOTES.md));
 Drishti computes everything above the trade.
 
 **Commands.** `TVAL <scope> <GO>` (`TVAL DESK RATES <GO>`, `TVAL CPTY CP-SUMMIT <GO>`, `TVAL TRD 1000001 <GO>`); the API

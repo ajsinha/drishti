@@ -3781,7 +3781,7 @@ every request form and the clients: [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md)
 
 Every number on a market-risk or counterparty-risk page is one of three classes, and the class decides where it is made. This is the rule
 the packs follow and the mechanisms that apply it; the open steps (the engines still to build, the stored figures still to retire) are in
-[IMPLEMENTATION_PLAN.md, "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps).
+[the release notes](../../RELEASE_NOTES.md).
 
 ### 12.1 Three classes, and the rule for deciding which
 

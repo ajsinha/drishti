@@ -16,7 +16,7 @@
 # IFRS 9 expected credit loss: staging, PD, LGD, EAD, scenarios and the provision explained
 
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put IFRS 9 expected credit loss on the roadmap; design
-first"); proposed for release 2.9.20, placement to confirm ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2920-ifrs-9-expected-credit-loss-proposed)).
+first"); proposed for release 2.9.20, placement to confirm ([the release notes](../../RELEASE_NOTES.md)).
 It follows the engine pattern of [SENSITIVITIES_AND_FRTB_SA.md](../guides/FRTB_SA_GUIDE.md): the method with its formulas, the data
 contracts, the API, command line and screens, the playground with its critique-and-reproduce switches, hand-built cases, parameters as
 configuration and the decisions.
