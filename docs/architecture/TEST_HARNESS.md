@@ -183,6 +183,9 @@ production too, so the lane also tests that one person's session never leaks int
 - **How.** The first process that asks starts the server and the console (a process of its own, `lane_console.py`), each in a session of
   its own, under a file lock in the lane's folder, and writes `state.json` (pids, URLs, folder); every other worker attaches (a file named
   after its pid under `attached/`). Heap: `DRILL_TEST_SERVER_HEAP` (default 12g; 16g allowed).
+- **One desk user's room.** With sign-in off every worker's test is the same desk user, so the lane's designs all count against one
+  person's limits (`drishti.builder.designs`: 50 named, 10 scratch with the oldest evicted). The lane server gives that user the room of the
+  whole lane (`wb_live.LANE_DESIGNS`), as its heap is the room of every worker; a file that tests the limits keeps a server of its own.
 - **No orphans.** A watchdog per server (`lane_servers.py watch`) stops the server and the console once no attached process is alive and
   the lane's holder (`DRISHTI_LANE_HOLDER_PID`, the drill's lane shell) is gone; a worker killed outright is pruned by its pid. The last
   worker out stops them at once; the drill stops every lane server at the lane's end (`lane_servers.py stop <dir>`).

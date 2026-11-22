@@ -237,6 +237,19 @@ public final class DrishtiRachana {
                 : new com.ash.rachana.SutraProblem(drs(p.code()), p.severity(), words, p.location(), p.path(), p.range());
     }
 
+    /**
+     * An edit's outcome with each problem's code mapped by {@link #drs(String)}: the design operations ({@code /builder/edit}, a Design's
+     * ops and its rebase) answer Drishti's {@code DRS-} codes as every other Sutra check does.
+     */
+    public static com.ash.rachana.design.ops.OpResult drs(com.ash.rachana.design.ops.OpResult r) {
+        if (r == null || r.problems().stream().noneMatch(p -> p.code() != null && p.code().startsWith("RCH-"))) {
+            return r;
+        }
+        List<com.ash.rachana.design.ops.OpProblem> mapped = r.problems().stream()
+                .map(p -> new com.ash.rachana.design.ops.OpProblem(p.op(), p.name(), drs(p.code()), p.message(), p.line())).toList();
+        return new com.ash.rachana.design.ops.OpResult(r.yaml(), mapped, r.applied());
+    }
+
     /** A refusal's words with "unknown function 'f'" of a stopped module's function said as "the module is off". */
     public static String offWords(String message) {
         if (message == null || OFF.isEmpty()) {

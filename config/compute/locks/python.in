@@ -17,7 +17,7 @@
 # hashes); the server checks the pool's interpreter against python.lock before any run, and a locked environment is built from it.
 numpy==2.5.3
 pandas==3.0.6
-pyarrow==26.0.0
+pyarrow==26.0.1
 scipy==1.18.1
 python-dateutil==2.9.0.post0
 six==1.17.0

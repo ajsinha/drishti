@@ -176,7 +176,7 @@ public class BuilderController {
         if (!b.path("yaml").isTextual()) {
             throw bad("'yaml' is required: the Sutra text to edit");
         }
-        OpResult r = applier.apply(b.get("yaml").asText(), ops(b));
+        OpResult r = com.ash.drishti.rachana.DrishtiRachana.drs(applier.apply(b.get("yaml").asText(), ops(b)));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("yaml", r.yaml());
         out.put("problems", r.problems());
