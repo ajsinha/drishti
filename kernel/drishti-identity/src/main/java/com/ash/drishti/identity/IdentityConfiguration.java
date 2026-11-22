@@ -34,7 +34,7 @@ public class IdentityConfiguration {
 
     /**
      * The audit trail: the content store ({@code drishti.audit.store=content}, the default; per-node day segments merged when read,
-     * DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9; the table's rows are imported once) or, one node only, the identity database ({@code jpa}).
+     * DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9) or, one node only, the identity database ({@code jpa}).
      */
     @Bean
     public JpaAuditLog auditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals,
@@ -42,18 +42,6 @@ public class IdentityConfiguration {
         JpaAuditLog log = new JpaAuditLog(audit, seals);
         if (!"jpa".equalsIgnoreCase(env.getProperty("drishti.audit.store", "content").trim())) {
             ContentAuditLog c = new ContentAuditLog(content, nodeName(env));
-            String marker = "system/imports/audit-jpa.json";
-            if (new com.ash.drishti.identity.content.ContentDocs(content).create(marker, java.util.Map.of("at", System.currentTimeMillis()))) {
-                try {
-                    int n = log.copyTo(c);                               // the marker first: only one node copies
-                    if (n > 0) {
-                        org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).info("audit: imported {} events into the content store", n);
-                    }
-                } catch (RuntimeException e) {
-                    content.deleteLatest(marker);
-                    throw e;
-                }
-            }
             log.useContent(c);
         }
         return log;
@@ -108,8 +96,7 @@ public class IdentityConfiguration {
     }
 
     /**
-     * The Build workbench's Designs: the content store ({@code drishti.builder.designs.store=content}, the default; the old file folder and
-     * database rows are imported once at start), or, one node only, files ({@code file}) or this database ({@code jpa}).
+     * The Build workbench's Designs: the content store ({@code drishti.builder.designs.store=content}, the default), or, one node only, files ({@code file}) or this database ({@code jpa}).
      */
     @Bean
     public com.ash.drishti.identity.design.DesignStore designStore(com.ash.drishti.identity.design.DesignProperties props,
@@ -118,8 +105,6 @@ public class IdentityConfiguration {
         com.ash.drishti.identity.design.JpaDesignStore jpa = new com.ash.drishti.identity.design.JpaDesignStore(designs, samples, identityTransactions);
         if (props.content()) {
             com.ash.drishti.identity.design.ContentDesignStore store = new com.ash.drishti.identity.design.ContentDesignStore(content);
-            com.ash.drishti.identity.design.DesignImport.fromFiles(java.nio.file.Path.of(props.dir()), store);
-            com.ash.drishti.identity.design.DesignImport.fromDatabase(jpa, store);
             return store;
         }
         return props.jpa() ? jpa : new com.ash.drishti.identity.design.FileDesignStore(java.nio.file.Path.of(props.dir()));
@@ -245,7 +230,7 @@ public class IdentityConfiguration {
 
     /**
      * Business intelligence (Rupaka): workspaces, items, versions and marks. {@code drishti.bi.store: content} (the default) keeps them in the content
-     * store, which every node of a cluster reaches, importing the identity database's {@code drishti_bi_*} rows once; {@code jpa} keeps them in
+     * store, which every node of a cluster reaches; {@code jpa} keeps them in
      * this node's identity database (docs/architecture/DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9).
      */
     @Bean
@@ -270,7 +255,6 @@ public class IdentityConfiguration {
         com.ash.drishti.identity.bi.ContentBiStore store = new com.ash.drishti.identity.bi.ContentBiStore(content,
                 node.isBlank() ? com.ash.drishti.identity.content.ContentStoreNodes.localName(env.getProperty("server.port", "")) : node,
                 org.springframework.boot.convert.DurationStyle.detectAndParse(env.getProperty("drishti.bi.store-list-ttl", "1s")).toMillis());
-        com.ash.drishti.identity.bi.BiImport.fromDatabase(jpa, store);
         return store;
     }
 
@@ -323,9 +307,7 @@ public class IdentityConfiguration {
             org.springframework.core.env.Environment env, com.ash.drishti.identity.content.ContentStore content) {
         EmbedAppRows rows = EmbedAppRows.of(apps);
         if (!"jpa".equalsIgnoreCase(env.getProperty("drishti.embed.store", "content").trim())) {
-            EmbedAppRows.Content c = new EmbedAppRows.Content(content);
-            c.importFrom(apps);
-            rows = c;
+            rows = new EmbedAppRows.Content(content);
         }
         return new EmbedAppStore(rows, identityTransactions, auditLog,
                 Boolean.parseBoolean(env.getProperty("drishti.embed.allow-wildcard-origins", "false")),

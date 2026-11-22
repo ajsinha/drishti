@@ -35,26 +35,9 @@ public final class JpaAuditLog implements AuditLog {
     /** When set ({@code drishti.audit.store=content}, the default), events are kept in the content store instead of this table. */
     private volatile ContentAuditLog content;
 
-    /** Keeps the trail in the content store from now on (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9); the table's rows are imported once beforehand. */
+    /** Keeps the trail in the content store from now on (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9). */
     public void useContent(ContentAuditLog c) {
         this.content = c;
-    }
-
-    /** Copies every row of the table, oldest first, into {@code to}; returns how many. */
-    public int copyTo(ContentAuditLog to) {
-        int n = 0;
-        long after = 0;
-        for (;;) {
-            List<AuditEventEntity> page = audit.findByIdGreaterThanOrderByIdAsc(after, PageRequest.of(0, 500));
-            if (page.isEmpty()) {
-                return n;
-            }
-            for (AuditEventEntity e : page) {
-                after = e.id;
-                to.recordAt(new Event(e.at, e.actor, e.action, e.subject, e.detail));
-                n++;
-            }
-        }
     }
 
     public JpaAuditLog(IdentityRepositories.Audit audit) {

@@ -208,8 +208,8 @@ class MaskCoverageTest(unittest.TestCase):
 
 
 class SoakConfigurationTest(unittest.TestCase):
-    """SOAK-10: retry warnings for pack stores the lake does not hold, and `deprecated` warnings from the soak's own
-    --drishti.sources.connectors.*.enabled=false flags."""
+    """SOAK-10: retry warnings for pack stores the lake does not hold; the soak switches connectors off with files, never with
+    drishti.sources.connectors.*.enabled flags."""
 
     def lake(self, root: Path, tables) -> Path:
         for t in tables:

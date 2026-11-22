@@ -35,14 +35,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * Searches over a laid-out Delta table (the connector's fixture: 40 trades, mtm, book, nettingSet and counterparty.id
  * promoted) are answered from columns, exactly, with role redaction applied to column values as to documents.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.layout-lake.plugin=delta",
-        "drishti.sources.connectors.layout-lake.kinds[0]=trade",
-        "drishti.sources.connectors.layout-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake-layout",
-        "drishti.sources.connectors.layout-lake.settings.domain=desk",
-        "drishti.sources.connectors.layout-lake.settings.layout.trade.columns=mtm,book,nettingSet,counterparty.id",
-        "drishti.sources.routes.trade=layout-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/calc-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.trade=layout-lake",
         "drishti.search.columns.trade[0]=$.book", "drishti.search.columns.trade[1]=$.mtm",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact[0]=book",
@@ -50,6 +44,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class ColumnarSearchTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("calc-api");
+    }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

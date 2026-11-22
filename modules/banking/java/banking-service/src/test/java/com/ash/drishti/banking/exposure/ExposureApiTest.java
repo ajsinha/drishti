@@ -50,19 +50,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * published tables, the what-if proxy and the exact paths method (an unwind, a copy of its own, a set outside the scope refused), the hot
  * file reopened, the computed kind exposure-result and the netting-set page's figures.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.ccr-lake.plugin=delta",
-        "drishti.sources.connectors.ccr-lake.kinds[0]=simulation-run", "drishti.sources.connectors.ccr-lake.kinds[1]=exposure-path",
-        "drishti.sources.connectors.ccr-lake.kinds[2]=netting-set", "drishti.sources.connectors.ccr-lake.kinds[3]=csa",
-        "drishti.sources.connectors.ccr-lake.kinds[4]=collateral-balance", "drishti.sources.connectors.ccr-lake.kinds[5]=counterparty",
-        "drishti.sources.connectors.ccr-lake.kinds[6]=counterparty-group",
-        "drishti.sources.connectors.ccr-lake.settings.domain=risk",
-        "drishti.sources.connectors.ccr-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.columns=TRADE_ID,NETTING_SET,COUNTERPARTY,LEGAL_ENTITY,DESK,TT_BOOK,"
-                + "ASSET_CLASS,PRODUCT,SOURCE_SYSTEM,MATURITY_DATE,NOTIONAL,GRID_INDEX,GRID_DATE,RUN_ID,BATCH_ID,STATUS",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.vectors=MTM",
-        "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
         "drishti.sources.routes.netting-set=ccr-lake", "drishti.sources.routes.csa=ccr-lake", "drishti.sources.routes.collateral-balance=ccr-lake",
         "drishti.sources.routes.counterparty=ccr-lake", "drishti.sources.routes.counterparty-group=ccr-lake",
         "drishti.sources.routes.exposure-result=exposure-engine",
@@ -80,6 +69,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ExposureApiTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("exposure-api");
+    }
+
     static Path lake;
     static final double M = ExposureLakeFixture.M;
 
@@ -87,7 +80,7 @@ class ExposureApiTest {
     static void lake(DynamicPropertyRegistry r) throws Exception {
         lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "exposure-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureLakeFixture.write(lake);
-        r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
+        r.add("test-connectors.ccr-lake.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);
     }
 

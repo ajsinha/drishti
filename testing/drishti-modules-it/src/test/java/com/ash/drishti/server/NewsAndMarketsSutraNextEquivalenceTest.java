@@ -25,7 +25,7 @@ import org.springframework.test.context.DynamicPropertySource;
  * committed samples, quote and news (which the live connectors answer, with no committed sample) on a synthetic quote and headline
  * set kept with the test resources ({@code sutra-next-data/news-and-markets}) and served by a file connector of the test's own.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/news-and-markets-sutra-next-equivalence", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.packs.enabled=news-and-markets",
         "drishti.security.redact=NAME,TICKER,ENTITY",
@@ -33,6 +33,10 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
 class NewsAndMarketsSutraNextEquivalenceTest extends PackSutraNextEquivalence {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("news-and-markets-sutra-next-equivalence");
+    }
 
     @DynamicPropertySource
     static void site(DynamicPropertyRegistry r) throws Exception {

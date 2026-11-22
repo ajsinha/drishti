@@ -65,13 +65,8 @@ import org.springframework.test.web.servlet.MvcResult;
  * the API; a scheduled report and an Ask are refused in words with the contract. Then the run's data folder, the process's temporary
  * folder and everything logged are searched for the markers: none may be found.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=news-and-markets",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.news-store.enabled=false",
-        "drishti.sources.connectors.news-mem.plugin=delta",
-        "drishti.sources.connectors.news-mem.kinds[0]=news", "drishti.sources.connectors.news-mem.kinds[1]=quote",
-        "drishti.sources.connectors.news-mem.kinds[2]=news-topic", "drishti.sources.connectors.news-mem.kinds[3]=listed-company",
-        "drishti.sources.connectors.news-mem.settings.root=mem://news",
-        "drishti.sources.routes.news=news-mem", "drishti.sources.routes.quote=news-mem",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/news-in-memory-sentinel", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=news-and-markets",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.news=news-mem", "drishti.sources.routes.quote=news-mem",
         "drishti.sources.routes.news-topic=news-mem", "drishti.sources.routes.listed-company=news-mem",
         "drishti.lake.memory.stores.news.max-mb=32", "drishti.lake.memory.stores.news.chunk-kb=256",
         "drishti.lake.memory.stores.news.contract=NEWS-TEST-1",
@@ -81,6 +76,10 @@ import org.springframework.test.web.servlet.MvcResult;
 @Import(PinnedBusinessDate.class)
 @ExtendWith(OutputCaptureExtension.class)
 class NewsInMemorySentinelTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("news-in-memory-sentinel");
+    }
 
     private static final ObjectMapper JSON = new ObjectMapper();
     /** Every value the feed sends carries this, so a marker found anywhere on a disk proves a leak. */

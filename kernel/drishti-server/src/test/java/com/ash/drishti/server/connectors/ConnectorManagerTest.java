@@ -185,45 +185,19 @@ class ConnectorManagerTest {
     }
 
     @Test
-    void applicationYamlConnectorsStillWorkAndAreReportedAsDeprecated(@TempDir Path dir) throws Exception {
-        var app = Map.of("legacy", new SourcesProperties.ConnectorSettings("fake", true, List.of(), Map.of("url", "db://legacy")));
-        build(dir, PACK, null, null, app);
-        assertThat(registry.plugin("legacy")).isPresent();
-        assertThat(manager.origin("legacy")).isEqualTo("application");
-        // saving creates the file; from then on origin is file
-        manager.save("legacy", "plugin: fake\nsettings:\n  url: db://moved\n", null, false);
-        assertThat(manager.origin("legacy")).isEqualTo("file");
-        assertThat(files.exists("legacy")).isTrue();
-    }
-
-    @Test
-    void deprecationIsLoggedNamingTheEquivalentFile(@TempDir Path dir) throws Exception {
+    void aConnectorSetAsAPropertyRefusesTheStartAndNamesTheFileToWrite(@TempDir Path dir) throws Exception {
         MockEnvironment env = new MockEnvironment();
         env.getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("applicationConfig: [classpath:/application.yaml]",
                 Map.of("drishti.sources.connectors.legacy.plugin", "fake", "drishti.sources.connectors.legacy.settings.url", "x")));
-        var logs = new java.util.ArrayList<String>();
-        var appender = new ch.qos.logback.core.AppenderBase<ch.qos.logback.classic.spi.ILoggingEvent>() {
-            @Override
-            protected void append(ch.qos.logback.classic.spi.ILoggingEvent e) {
-                logs.add(e.getFormattedMessage());
-            }
-        };
-        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ConnectorManager.class);
-        appender.setContext(logger.getLoggerContext());
-        appender.start();
-        logger.addAppender(appender);
-        try {
-            Path pack = Files.createDirectories(dir.resolve("packs/risk"));
-            Files.writeString(pack.resolve("pack.yaml"), "pack: risk\nkinds: [trade]\n");
-            MockEnvironment penv = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString()).withProperty("drishti.packs.loaded", "risk");
-            penv.getPropertySources().addFirst(env.getPropertySources().get("applicationConfig: [classpath:/application.yaml]"));
-            var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, Map.of(), dir.resolve("c").toString(), "off", null, Duration.ZERO);
-            new ConnectorManager(new ConnectorFiles(dir.resolve("c")), new SourceRegistry(List.of(new Fake()), props, new JsonCodec()), props, new PackRegistry(penv), penv,
-                    new SettingCatalogue(List.of(new Fake())), new ConnectionProbe(List.of(new Fake()), new JsonCodec()), 2, 5);
-        } finally {
-            logger.detachAppender(appender);
-        }
-        assertThat(logs).anyMatch(m -> m.contains("deprecated") && m.contains("'legacy'") && m.contains("legacy.yaml"));
+        Path pack = Files.createDirectories(dir.resolve("packs/risk"));
+        Files.writeString(pack.resolve("pack.yaml"), "pack: risk\nkinds: [trade]\n");
+        MockEnvironment penv = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString()).withProperty("drishti.packs.loaded", "risk");
+        penv.getPropertySources().addFirst(env.getPropertySources().get("applicationConfig: [classpath:/application.yaml]"));
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, Map.of(), dir.resolve("c").toString(), "off", null, Duration.ZERO);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new ConnectorManager(new ConnectorFiles(dir.resolve("c")),
+                new SourceRegistry(List.of(new Fake()), props, new JsonCodec()), props, new PackRegistry(penv), penv, new SettingCatalogue(List.of(new Fake())),
+                new ConnectionProbe(List.of(new Fake()), new JsonCodec()), 2, 5))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("[legacy]").hasMessageContaining("<name>.yaml");
     }
 
     @Test

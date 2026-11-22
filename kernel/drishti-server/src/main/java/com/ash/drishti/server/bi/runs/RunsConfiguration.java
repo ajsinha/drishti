@@ -79,8 +79,6 @@ public class RunsConfiguration {
         RunRecords records;
         RunStore results;
         if (content != null) {
-            RunImport.run(content, ds == null ? null : new RunRecords.Jdbc(ds), ds == null ? null : new RunShares.Jdbc(ds),
-                    ds == null ? null : new RunSchedules.Jdbc(ds), props.store().dir());
             records = new ContentRunRecords(content, org.springframework.boot.convert.DurationStyle.detectAndParse(
                     env.getProperty("drishti.bi.store-list-ttl", "1s")).toMillis());
             results = new ContentRunStore(props, content);

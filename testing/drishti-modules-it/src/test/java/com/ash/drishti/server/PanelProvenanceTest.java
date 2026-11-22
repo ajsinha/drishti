@@ -41,10 +41,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * panel that reads the page's record carries none (the page's provenance stands for it). The quotes come from a synthetic file
  * whose connector has a stale-after of one minute and whose file is a year old, so their panels are stale while the page is not.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=news-and-markets", "drishti.sources.connectors.panel-provenance-lake.settings.stale-after=PT1M"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/panel-provenance", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+        "drishti.packs.enabled=news-and-markets"})
 @AutoConfigureMockMvc
 class PanelProvenanceTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("panel-provenance");
+    }
 
     static final String LAKE = "panel-provenance-lake";
 

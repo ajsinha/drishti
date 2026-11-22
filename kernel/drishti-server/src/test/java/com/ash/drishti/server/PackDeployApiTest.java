@@ -55,11 +55,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-deploy/packs",
         "drishti.packs.installed-dir=${drishti.test.dir}/pack-deploy/installed", "drishti.packs.overlay=${drishti.test.dir}/pack-deploy/added.yaml",
         "drishti.packs.settings-dir=${drishti.test.dir}/pack-deploy/settings",
-        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-deploy/connectors",
         "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-deploy/history.jsonl",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=lakepack", "drishti.packs.deploy.max-archive-mb=1",
-        "drishti.sources.connectors.item-store.settings.lookback-days=7"})
+        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-deploy/connectors",
+        "drishti.packs.enabled=lakepack", "drishti.packs.deploy.max-archive-mb=1"})
 @AutoConfigureMockMvc
 class PackDeployApiTest {
 

@@ -37,7 +37,7 @@ config/bi/
                                   (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
                                   region-economics, world-economics, market-risk-var (VaR from the published official results), the boards desk-wall
                                   and python-wall, and pnl-vs-exposure over two datasets: bi/NOTEBOOK_AND_PYTHON.md › Reports: the YAML, the visuals and how they behave, section 16)
-  boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
+  boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages (POST /api/v1/bi/boards/convert shows the report)
   themes/     <id>.theme.yaml     theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
   python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run on the server's compute pool python

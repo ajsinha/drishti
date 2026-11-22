@@ -49,13 +49,17 @@ import org.springframework.test.web.servlet.MockMvc;
  * beside them as version 2 (test data) and the views compared, leaving out only what names the layout itself (its version and
  * fingerprint) and the timings. Written the way {@link SutraNextEquivalenceTest} proves ir-curve.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/internal-imf-fixture", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.packs.enabled=world-economy", "drishti.security.redact=GDP_USD_BN,GROWTH,DEBT,UNEMPLOYMENT,LATEST,ISO3",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
 class EconomicsSutraNextEquivalenceTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("internal-imf-fixture");
+    }
 
     /**
      * Each migrated Sutra and a committed sample it draws. The country group (ECG) left the list in 2.9.2: it is computed from its member

@@ -43,20 +43,6 @@ class SharedLoadOverridesTest {
     }
 
     @Test
-    void theOldFilesAreImportedOnceAndKept(@TempDir Path dir) throws Exception {
-        Path old = Files.createDirectories(dir.resolve("a/config"));
-        Files.writeString(old.resolve("trading.yaml"), "notify:\n  roles: [desk]\n");
-        ContentStore store = new FileContentStore(dir.resolve("fstore"));
-        LoadsConfig.Overrides a = new LoadsConfig.Overrides(dir.resolve("a"), List.of("admin"), 10, store);
-        assertThat(a.overridden("trading")).isTrue();
-        assertThat(store.get("system/imports/loads-config.json")).isPresent();
-        assertThat(old.resolve("trading.yaml")).exists();
-        a.reset("trading");
-        new LoadsConfig.Overrides(dir.resolve("a"), List.of("admin"), 10, store);                 // a restart: the marker keeps it from coming back
-        assertThat(a.overridden("trading")).isFalse();
-    }
-
-    @Test
     void withFilesItStaysOnTheNode(@TempDir Path dir) {
         LoadsConfig.Overrides a = new LoadsConfig.Overrides(dir.resolve("a"), List.of("admin"), 10);
         a.write("trading", Map.of("notify", Map.of("roles", List.of("ops"))));
