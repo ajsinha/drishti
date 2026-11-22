@@ -167,26 +167,28 @@ class IcebergMovedConnectorFileTest {
         // present at start
         awaitRunning("qa-ice-moved");
         String pair = "relocate: '" + base.resolve("ice1") + " -> " + base.resolve("ice2") + "'";
-        String sentence = "DEGRADED: cannot read " + String.join(", ", CREDIT) + ": their metadata names files under the folder they were written in";
+        // Lake words the problem; the test holds the state (DEGRADED, the tables, the relocate pair) and the error code (DRS-1003), never Lake's sentence
+        org.hamcrest.Matcher<String> health = allOf(startsWith("DEGRADED:"), containsString("credit-limit"), containsString("cva"), containsString("netting-set"),
+                containsString("sa-ccr"), containsString(pair));
         mvc.perform(get("/api/v1/admin/connectors")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-moved')].level").value("warn"))
                 .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-moved')].label").value("degraded"))
-                .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-moved')].health").value(hasItem(allOf(startsWith(sentence), containsString(pair)))));
+                .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-moved')].health").value(hasItem(health)));
         mvc.perform(get("/api/v1/admin/health")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.sources[?(@.name == 'qa-ice-moved')].status").value("DEGRADED"));
         // the connector's Test: not ok, the same health, and the kind says why it lists nothing
         mvc.perform(post("/api/v1/admin/connectors/qa-ice-moved/test")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.ok").value(false))
-                .andExpect(jsonPath("$.health").value(allOf(startsWith(sentence), containsString(pair))))
-                .andExpect(jsonPath("$.kinds[0].note").value(startsWith("cannot read: the table credit-limit names files that are not there")));
+                .andExpect(jsonPath("$.health").value(health))
+                .andExpect(jsonPath("$.kinds[0].note").value(allOf(startsWith("cannot read"), containsString("credit-limit"))));
         for (int i = 0; i < 2; i++) {
             int before = out.getAll().length();
             mvc.perform(get("/api/v1/entities/credit-limit/LIM-ALDERSHOT/raw").param("asOf", "2026-09-30"))
                     .andExpect(status().isBadGateway()).andExpect(jsonPath("$.code").value("DRS-1003"))
-                    .andExpect(jsonPath("$.detail").value(containsString("credit-limit names files that are not there (it was moved")))
+                    .andExpect(jsonPath("$.detail").value(containsString("credit-limit")))
                     .andExpect(jsonPath("$.detail").value(not(containsString(base.toString()))));
             String logged = out.getAll().substring(before);
-            assertThat(logged).contains("request failed: DRS-1003 qa-ice-moved failed reading credit-limit/LIM-ALDERSHOT: the table credit-limit names files");
+            assertThat(logged).contains("request failed: DRS-1003 qa-ice-moved failed reading credit-limit/LIM-ALDERSHOT");
             assertThat(logged).as("no stack trace").doesNotContain("\tat ").doesNotContain("CancellationException").doesNotContain("NoSuchFileException");
         }
 
@@ -197,7 +199,7 @@ class IcebergMovedConnectorFileTest {
         mvc.perform(get("/api/v1/admin/connectors")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-hot')].label").value("degraded"))
                 .andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-hot')].health").value(hasItem(allOf(
-                        startsWith("DEGRADED: cannot read bond, fx-rate: their metadata names files"), containsString(pair),
+                        startsWith("DEGRADED:"), containsString("bond"), containsString("fx-rate"), containsString(pair),
                         containsString("(relocate C:/Users/qa/ice1 -> D:/lake/ice2 is set, but no old folder in it holds " + base.resolve("ice1") + ")")))));
         mvc.perform(post("/api/v1/admin/connectors/qa-ice-hot/test")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.ok").value(false))
@@ -205,7 +207,7 @@ class IcebergMovedConnectorFileTest {
         int before = out.getAll().length();
         mvc.perform(get("/api/v1/entities/bond/BON-ALDERSHOT/raw").param("asOf", "2026-09-30"))
                 .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.detail").value(containsString("the table bond names files that are not there")));
+                .andExpect(jsonPath("$.detail").value(containsString("bond")));
         assertThat(out.getAll().substring(before)).as("no stack trace").doesNotContain("\tat ");
 
         // QA4-05: a relocate it cannot read fails the start naming the pair, in one line; each retry closes the half-started connector quietly
