@@ -53,28 +53,26 @@ settings:
     trade:
       columns: [TRADE_ID, TRADE_DATE, PORTFOLIO, CURRENCY, QUANTITY, PRICE, PRODUCT_TYPE, COUNTERPARTY]
 """
-PREP_DATASET = """rachana: 2
-dataset: prep-trades
+PREP_TABLE = """rachana: 3
+table: banking.prep_trades
 version: 1.0.0
 title: Prep trades
-source: { connector: prep-store, kind: trade }
-grain: { keys: [TRADE_ID] }
+from: { kind: trade, connector: prep-store }
+keys: [TRADE_ID]
 columns:
-  TRADE_ID:  { type: string, role: key }
-  PORTFOLIO: { type: string }
-  CURRENCY:  { type: string }
-  QUANTITY:  { type: decimal, aggregate: sum }
-  PRICE:     { type: decimal, aggregate: max }
-  TRADE_DATE: { type: string }
-security:
-  masked: [PRICE]
+  TRADE_ID:   { path: "$.TRADE_ID", type: string, role: key, key: true }
+  PORTFOLIO:  { path: "$.PORTFOLIO", type: string }
+  CURRENCY:   { path: "$.CURRENCY", type: string }
+  QUANTITY:   { path: "$.QUANTITY", type: decimal }
+  PRICE:      { path: "$.PRICE", type: decimal, masked: true }
+  TRADE_DATE: { path: "$.TRADE_DATE", type: string }
 """
-PREP_MODEL = """rachana: 2
+PREP_MODEL = """rachana: 3
 model: prep-model
 version: 1.0.0
 title: Prep model
-datasets:
-  trades: { dataset: prep-trades, role: fact }
+tables:
+  trades: { table: banking.prep_trades, role: fact }
 measures:
   Quantity: { expr: "sum(trades.QUANTITY)" }
 """
@@ -101,9 +99,10 @@ class PrepStack(bi_report_stack.ReportStack):
         (work / "config" / "connectors" / "trade-endur.yaml").write_text(PREP_STORE.format(root=lake))
         # which connector serves a kind is the site's bindings file (a connector file's kinds: is no longer read): trade from trade-endur
         (work / "config" / "bindings.yaml").write_text("format: 1\nbindings:\n  trade: { read: [trade-endur] }\n")
-        (work / "config" / "bi" / "datasets" / "prep-trades.dataset.yaml").write_text(PREP_DATASET)
-        (work / "config" / "bi" / "models").mkdir(parents=True, exist_ok=True)
-        (work / "config" / "bi" / "models" / "prep-model.model.yaml").write_text(PREP_MODEL)
+        # a model and its table in the tables layer (config/tables/<domain>/, as the shipped samples: bi_samples.copy_samples)
+        (work / "config" / "tables" / "banking").mkdir(parents=True, exist_ok=True)
+        (work / "config" / "tables" / "banking" / "prep_trades.table.yaml").write_text(PREP_TABLE)
+        (work / "config" / "tables" / "banking" / "prep-model.model.yaml").write_text(PREP_MODEL)
 SHOTS = os.environ.get("DRISHTI_DOC_SHOTS")
 
 

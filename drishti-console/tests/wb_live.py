@@ -357,6 +357,12 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
 LANE_HEAP = os.environ.get("DRILL_TEST_SERVER_HEAP") or os.environ.get("DRISHTI_LANE_HEAP", "12g")
 #: the environment as the test run set it, before any file changed it for a console of its own: the lane console's
 _BASE_ENV = dict(os.environ)
+#: the lane server's room for Designs: with sign-in off every worker's test is the one desk user, so the whole lane's designs count against
+#: ONE person's limits (drishti.builder.designs: 50 named, 10 scratch with the oldest evicted, 250 MB). The lane gives that user the room of
+#: every test of the lane, as its heap is the room of every worker (drill of 2026-11-22: the 51st named design of the lane was refused,
+#: DRS-5005, and a scratch design could be evicted by another worker's). A file that tests the limits themselves keeps a server of its own.
+LANE_DESIGNS = {"DRISHTI_BUILDER_DESIGNS_MAXPERUSER": "100000", "DRISHTI_BUILDER_DESIGNS_MAXSCRATCH": "10000",
+                "DRISHTI_BUILDER_DESIGNS_MAXUSERMB": "100000"}
 
 
 def _lane_base(tmp_path_factory) -> Path:
@@ -369,7 +375,7 @@ def _lane_start(extra_env: dict, auth: bool, heap: str, ready):
     def start(work: Path) -> dict:
         _prepare_work(work)
         port = free_port()
-        proc = _launch_server(work, port, extra_env, heap, own_session=True)
+        proc = _launch_server(work, port, {**LANE_DESIGNS, **extra_env}, heap, own_session=True)
         try:
             _wait_server(proc, port, work)
         except BaseException:

@@ -17,7 +17,10 @@ fixed sets are selects, and markers, the table's pivot object and the pivot's `b
 import yaml
 
 from test_workbench_browser import browser, open_design, page, settle, state, type_formula, wait  # noqa: F401 - fixtures and helpers
-from wb_live import live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+from wb_live import EXAMPLES, live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+
+#: the kinds of the Level 1.2 grammar are not in the showcase (its twenty-two, test_examples.py): the level-1-2-panels example holds them
+LEVEL_1_2 = "level-1-2-panels"
 
 NAMES = r"""() => {
   const box = document.querySelector('[data-inspector]'), out = new Set(), unnamed = [];
@@ -46,18 +49,25 @@ def option_value(page, panel, option):
 
 
 def test_every_option_of_every_kind_in_the_schema_has_a_labelled_editor(live_console, page):
-    open_design(page, live_console, "every option", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
-    kinds = kinds_of(page, live_console)
-    ids = {p["kind"]: p["id"] for p in yaml.safe_load(showcase_sutra())["panels"]}
-    assert set(ids) == set(kinds) and len(kinds) == 22
-    missing = []
-    for kind, then in kinds.items():
-        pick(page, ids[kind])
-        wait(page, f"document.querySelector('[data-inspector] .bs-role').textContent === '{kind}'")
-        got = page.evaluate(NAMES)
-        assert not got["yamlOnly"], f"{kind}: an option is left to the YAML tab"
-        assert not got["unnamed"], f"{kind}: controls without a name {got['unnamed']}"
-        missing += [f"{kind}.{o}" for o in then["x-rachana-options"] if o not in ("id", "kind") and o not in got["names"]]
+    level = (EXAMPLES / f"{LEVEL_1_2}.sutra.yaml").read_text()
+    designs = [("every option", showcase_sutra(), {"showcase.json": showcase_json()}, "trade"),
+               ("every option, level 1.2", level, {f"{LEVEL_1_2}.json": (EXAMPLES / f"{LEVEL_1_2}.json").read_text()}, yaml.safe_load(level)["match"]["kind"])]
+    kinds, seen, missing = None, set(), []
+    for name, sutra, files, kind_of in designs:
+        open_design(page, live_console, name, sutra=sutra, files=files, kind=kind_of)
+        kinds = kinds or kinds_of(page, live_console)
+        ids = {p["kind"]: p["id"] for p in yaml.safe_load(sutra)["panels"]}
+        assert not set(ids) & seen, f"{name}: a kind the other design already shows"
+        seen |= set(ids)
+        for kind in ids:
+            then = kinds[kind]
+            pick(page, ids[kind])
+            wait(page, f"document.querySelector('[data-inspector] .bs-role').textContent === '{kind}'")
+            got = page.evaluate(NAMES)
+            assert not got["yamlOnly"], f"{kind}: an option is left to the YAML tab"
+            assert not got["unnamed"], f"{kind}: controls without a name {got['unnamed']}"
+            missing += [f"{kind}.{o}" for o in then["x-rachana-options"] if o not in ("id", "kind") and o not in got["names"]]
+    assert seen == set(kinds) and len(kinds) == 29, sorted(set(kinds) ^ seen)      # the showcase's 22 and the Level 1.2 grammar's 7
     assert not missing, missing
 
 

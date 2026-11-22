@@ -125,7 +125,7 @@ public class DesignRebase {
             problems.add(new OpProblem(-1, "log", "DRS-5025", "the step log is full (drishti.builder.designs.max-ops): older steps were dropped and"
                     + " cannot be replayed on " + newBase, 0));
         }
-        OpResult r = applier.apply(baseText, flat);
+        OpResult r = com.ash.drishti.rachana.DrishtiRachana.drs(applier.apply(baseText, flat));
         Set<Integer> failed = new HashSet<>();
         for (OpProblem p : r.problems()) {
             failed.add(p.op());

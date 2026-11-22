@@ -108,6 +108,10 @@ class BuilderOpsApiTest {
         assertThat(r.path("problems").get(0).path("op").asInt()).isEqualTo(1);
         assertThat(r.path("problems").get(0).path("code").asText()).isEqualTo("DRS-5021");
         assertThat(r.path("yaml").asText()).contains("# the terms", "title: Legs", "kind: gauge");
+        // a check of the language itself answers Drishti's code (DRS-), never the Rachana core's (RCH-) of the same number
+        JsonNode bad = ok(send("/api/v1/builder/edit", who, json("yaml", SUTRA, "ops", tree("""
+                [{"op":"setControls","items":[{"id":"c","kind":"date-range","default":"soon"}]}]"""))));
+        assertThat(bad.path("problems").get(0).path("code").asText()).isEqualTo("DRS-2039");
         send("/api/v1/builder/edit", who, json("yaml", SUTRA, "ops", tree("[{\"op\":\"remove\"},{\"op\":\"zap\"}]")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-5001"))
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("operation 0")));
