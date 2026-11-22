@@ -36,3 +36,4 @@ M1 and its scope does not grow. Open for the owner: EN-45 to EN-55, each with a 
 | Sutra test-folder `.json` per case (F28 o) | Part 2 F28 | Still read by seven SutraCliTest cases; rewrite them and the CLI reference, then remove |
 | PackStateStore / LoadStore / FileUserStore / FileAuditLog leftovers (F28 l) | Part 2 F28 | Remove once no install holds old state |
 | Iceberg maintenance on REST-catalog lakes (AWS Glue) | Pre-drill (owner OK 2026-11-22) | `LakeMaintain` has no `--set` for catalog settings, so Drishti refuses to maintain Glue/REST-catalog Iceberg lakes with a clear message; Lake 0.9.2 adds it and Drishti routes through it |
+| Elements 3.3.3: `selects` and `remember` in drishti-views | Patch gate 1.0.1 / 3.3.2 | A row click setting a control (ViewModel.selects, e.g. netting-set.v1 on-select) and remembered control values (ControlView.remember via the options.remember {get,set} hook) — embed v1 behaviour not yet restored by 3.3.2 |
