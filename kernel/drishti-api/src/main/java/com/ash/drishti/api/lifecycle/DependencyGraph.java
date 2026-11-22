@@ -271,6 +271,9 @@ public final class DependencyGraph {
             return;
         }
         for (Dependency d : dependants(id)) {
+            if (d.edge() == Edge.CONTAINS) {
+                continue;                                       // a part's transition never takes its module along
+            }
             if (!suspendOnly || d.edge() == Edge.EXTENDS) {
                 collect(d.from(), set, suspendOnly);
             }
