@@ -144,7 +144,7 @@ wheel Drishti uses: the Lake ref (a release tag, or the release commit until it 
 (`build_all.py` does this; by hand, `uv` is needed), then install the console's requirements:
 
 ```bash
-git clone https://github.com/ajsinha/drishti-lake.git ../drishti-lake-tag && git -C ../drishti-lake-tag checkout <ref in lib/lake-wheel.pin>
+git clone https://github.com/drishti-platform/drishti-lake.git ../drishti-lake-tag && git -C ../drishti-lake-tag checkout <ref in lib/lake-wheel.pin>
 uv build --wheel ../drishti-lake-tag/python --out-dir lib/wheels
 python tools/lake/lakewheel.py             # prints the pin and whether lib/wheels holds exactly that wheel (exit 1 if not)
 ```

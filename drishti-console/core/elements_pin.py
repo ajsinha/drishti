@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The pinned Drishti Elements: an external component (github.com/ajsinha/drishti-elements), vendored as its release tree under
+"""The pinned Drishti Elements: an external component (github.com/drishti-platform/drishti-elements), vendored as its release tree under
 ``web/static/vendor/drishti-elements/<version>/`` (docs/architecture/ELEMENTS_IN_DRISHTI.md). The pin has one home: the name of the
 single folder there. Everything the console reads of Elements (the ten libraries, their sheets, the engines, the gallery, the two
 tables) is read through this module, never from a path of its own.

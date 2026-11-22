@@ -660,7 +660,7 @@ and the scan are run again, the preview is rebuilt, and the owner looks again.
 ```bash
 # 8a. Run the scan of step 4 one last time, 4e included, on the exact commit to be pushed: every count 0, one identity. Then:
 gh repo view ajsinha/drishti-elements --json visibility -q .visibility        # PUBLIC, as confirmed on 2026-11-16
-git clone -q https://github.com/ajsinha/drishti-elements.git $TARGET && cd $TARGET
+git clone -q https://github.com/drishti-platform/drishti-elements.git $TARGET && cd $TARGET
 git ls-files; git log --oneline | wc -l            # README.md only; one or a few commits
 git remote add extract $EXTRACT && git fetch -q extract main
 git merge --allow-unrelated-histories -X theirs extract/main \
@@ -715,7 +715,7 @@ xargs -a $WORK/move-paths.txt -I{} sh -c 'test -f "{}" && cat "{}"' | wc -l
 python3 tools/docs/code_volume.py > $WORK/reports/volume-before.txt
 
 # 9b. The vendored copy: the release tree built from the tag in a fresh clone, never from a working folder.
-git clone -q --branch v$V https://github.com/ajsinha/drishti-elements.git $WORK/pin && cd $WORK/pin
+git clone -q --branch v$V https://github.com/drishti-platform/drishti-elements.git $WORK/pin && cd $WORK/pin
 test "$(git rev-parse HEAD)" = "$(cat $WORK/elements-tag-commit.txt)" && echo tag-ok
 python3 tools/elements/cli.py dist --out dist && cd -
 mkdir -p $S/vendor/drishti-elements && cp -r $WORK/pin/dist/drishti-elements-$V $S/vendor/drishti-elements/$V
@@ -751,7 +751,7 @@ git rm -q compute/drishti-rachana/src/main/resources/world-regions.yaml compute/
 they now come inside Drishti Elements (their rows and licence files are in its own `vendor/`).
 
 ```text
-| **Drishti Elements** (an external component with its own repository and docs: github.com/ajsinha/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit; with its engines: Apache ECharts, CodeMirror, the Natural Earth map shapes) | 2.4.0 (github.com/ajsinha/drishti-elements, tag v2.4.0, commit <id from $WORK/elements-tag-commit.txt>; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` | `drishti-elements/3.1.0/` | yes | every page |
+| **Drishti Elements** (an external component with its own repository and docs: github.com/drishti-platform/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit; with its engines: Apache ECharts, CodeMirror, the Natural Earth map shapes) | 2.4.0 (github.com/drishti-platform/drishti-elements, tag v2.4.0, commit <id from $WORK/elements-tag-commit.txt>; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` | `drishti-elements/3.1.0/` | yes | every page |
 ```
 
 Below it, "Updating": clone the Elements repository at the new tag into an empty folder outside this repository, check the commit
@@ -767,13 +767,13 @@ id, run `python3 tools/elements/cli.py dist`, copy the tree into `drishti-elemen
   Drishti libraries, the two tables read from the copy, the render folder policy, and the checklist that was `ELEMENTS.md`
   section 12. It links to the Elements docs for everything else.
 - Every other link to the deleted text (171 files name one of the three documents today) goes to the Elements repository's `docs/`
-  (`https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/…`, the tag taken from the pin) or to the new short doc:
+  (`https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/…`, the tag taken from the pin) or to the new short doc:
   `git grep -lE "ELEMENTS\.md|ELEMENTS_API\.md|EMBED_GUIDE\.md#1[34]"` must end with only correct targets, and
   `tests/test_docs_rot.py` must pass. Help's "Elements gallery" entry opens the vendored gallery (offline).
 - **Drishti's root `README.md`** (Sonnet): wherever it describes Elements as part of Drishti, it now says, in one short
   paragraph, that Drishti Elements is a separate project by the same owner, which Drishti uses as an external, vendored component
   at a pinned version (`static/vendor/drishti-elements/<pin>/`, see `VENDOR.md`), with a link to
-  `https://github.com/ajsinha/drishti-elements` and to its docs site. Counts of JavaScript lines and libraries in the README are
+  `https://github.com/drishti-platform/drishti-elements` and to its docs site. Counts of JavaScript lines and libraries in the README are
   taken again from the file system. The `VENDOR.md` row of 9d says the same ("external component, its own repository") and
   carries both links.
 - `CHANGELOG.md`: one entry for the release this lands in.

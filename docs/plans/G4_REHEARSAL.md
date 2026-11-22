@@ -158,7 +158,7 @@ Two failures are older than this branch (`test_memory_caps` run-config check, `t
 
 ### What was done
 
-Drishti Tools (`github.com/ajsinha/drishti-tools`, `main` at `b3a451d`, no tag yet: `1.0.0-SNAPSHOT`) built into a scratch Maven repository, pinned once as
+Drishti Tools (`github.com/drishti-platform/drishti-tools`, `main` at `b3a451d`, no tag yet: `1.0.0-SNAPSHOT`) built into a scratch Maven repository, pinned once as
 `drishti.tools.version` and imported through `tools-bom`. Taken from it, with the copies deleted:
 
 | Tools module | What Drishti no longer carries | Where Drishti's names go |

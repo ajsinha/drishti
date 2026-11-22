@@ -103,7 +103,7 @@
     <drishti.elements.version>3.3.1</drishti.elements.version>
     <!-- G4 rehearsal: the pinned Rachana release (SPLIT_PLAN step 11). A tag. -->
     <drishti.rachana.version>1.0.0</drishti.rachana.version>
-    <!-- Drishti Tools (github.com/ajsinha/drishti-tools): the shared, domain-free utilities (settings and placeholders, TLS and proxy, single-flight,
+    <!-- Drishti Tools (github.com/drishti-platform/drishti-tools): the shared, domain-free utilities (settings and placeholders, TLS and proxy, single-flight,
          the load guard, the xlsx writer, test fixtures); one version for every module, through tools-bom. -->
     <drishti.tools.version>1.1.0</drishti.tools.version>
     <!-- G4 rehearsal: the pinned Drishti Lake release (DRISHTI_LAKE_DESIGN D1): 0.9.1, the final candidate 7649778 until Lake tags v0.9.1 (then the tag, no content change) -->

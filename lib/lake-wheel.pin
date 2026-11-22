@@ -3,7 +3,7 @@
 # time). When Lake tags v0.9.1 the ref moves from the commit to the tag; the content does not change.
 #
 # To get it (Linux, macOS, Windows; needs uv, https://docs.astral.sh/uv/):
-#     git clone https://github.com/ajsinha/drishti-lake.git && git -C drishti-lake checkout 2d22533c0580f9c25712f3b4630b6e2454b83bc6
+#     git clone https://github.com/drishti-platform/drishti-lake.git && git -C drishti-lake checkout 2d22533c0580f9c25712f3b4630b6e2454b83bc6
 #     uv build --wheel drishti-lake/python --out-dir <drishti home>/lib/wheels
 # or take it from the release bundle into <drishti home>/lib/wheels. Then `python tools/lake/lakewheel.py` checks it.
 ref=2d22533c0580f9c25712f3b4630b6e2454b83bc6
