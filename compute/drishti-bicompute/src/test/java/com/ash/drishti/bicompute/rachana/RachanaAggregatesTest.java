@@ -155,9 +155,7 @@ class RachanaAggregatesTest {
         assertThat(num(eval("measure('VAR', 'DESK:DESK-COMM', 'confidence=0.99')"))).isEqualByComparingTo("1234567");
         assertThat(eval("measure('VAR', 'DESK:DESK-RATES')")).isNull();
         assertThatThrownBy(() -> eval("measure('NOPE')")).isInstanceOf(ElException.class).hasMessageContaining("no measure NOPE");
-        // cell's arguments are read at level 1.0: Rachana's catalogue gives cell no parameters, so its 1.1+ check refuses any by place
-        // (a Rachana finding, G4_REHEARSAL Pass 3: level 1.2)
-        ElCompiler at10 = com.ash.drishti.rachana.DrishtiRachana.current().language(com.ash.rachana.profile.Grammar.LEVEL_1_0).compiler();
+        ElCompiler at10 = com.ash.drishti.rachana.DrishtiRachana.current().compiler();
         assertThat(at10.compile("cell('desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')").eval(EvalContext.of(DOC, F))).isEqualTo(42.5);
         assertThatThrownBy(() -> at10.compile("cell('desk-pnl', 'DESK')").eval(EvalContext.of(DOC, F))).isInstanceOf(ElException.class).hasMessageContaining("pairs");
     }
