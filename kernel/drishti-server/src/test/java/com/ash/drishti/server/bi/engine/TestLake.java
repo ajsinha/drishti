@@ -116,7 +116,7 @@ public class TestLake implements SourceGateway {
                   MTMperM:   { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
                   Names:     { expr: distinct(trades.cpty) }
                   P50:       { expr: "percentile(trades.mtm, 0.5)" }
-                  EurMTM:    { expr: "sum(trades.mtm, where = trades.currency == 'EUR')" }
+                  EurMTM:    { expr: "calc(sum(trades.mtm), where = trades.currency == 'EUR')" }
                   Biggest:   { expr: max(trades.notional) }
                   Share:     { expr: "measure('MTM') / measure('Notional')" }
                   NotionalM: { expr: "round(sum(trades.notional) / 1000000, 1)" }

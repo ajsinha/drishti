@@ -346,14 +346,14 @@ def standalone_scripts() -> list[Path]:
     names = (_names_in(CONSOLE / "routes" / "embed_routes.py", "ENHANCERS = (")
              | _names_in(CONSOLE / "web" / "embed" / "assets.js", "ENHANCERS = [")
              | _names_in(CONSOLE / "routes" / "embed_v2_routes.py", "SCRIPTS = {")
-             | {"geomap", "live-hub"})
+             | {"live-hub"})
     files = [STATIC / "js" / f"drishti_{n}.js" for n in sorted(names) if not n.startswith("elements-")]
     return [f for f in files if f.exists()]
 
 
 def test_scripts_loaded_without_drishti_core_guard_drishti_url():
     files = standalone_scripts()
-    assert len(files) >= 20 and STATIC / "js" / "drishti_geomap.js" in files and STATIC / "js" / "drishti_bi-lib.js" in files
+    assert len(files) >= 20 and STATIC / "js" / "drishti_bi-lib.js" in files
     offenders = []
     for f in files:
         src = f.read_text(encoding="utf-8")

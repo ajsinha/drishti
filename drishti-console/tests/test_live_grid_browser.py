@@ -114,7 +114,7 @@ def test_a_page_says_which_source_systems_it_excludes(browser, stack):
 def test_the_grid_follows_the_tables_changes_without_a_window(browser, stack):
     url, backend = stack
     pg = opened(browser, url)
-    pg.wait_for_timeout(300)
+    pg.evaluate("() => window.Drishti.settled({quiet: 300, timeout: 10000})")                       # the page quiet for 300 ms: a window would have been asked for by now (the settled signal)
     assert backend.windows == []                                              # the channel's stream carries the table's changes: no window to move
     assert not pg.errors, pg.errors
 

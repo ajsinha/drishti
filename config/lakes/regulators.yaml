@@ -19,6 +19,6 @@
 # with lake: regulators.
 lake: regulators
 format: delta
-root: ${drishti.data.dir:./data}/delta/regulators
+root: ${lake.data.dir:./data}/delta/regulators
 defaults: {load-mode: replace}
 tables: {}

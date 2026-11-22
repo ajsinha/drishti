@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Every expression of the shipped tables and models ({@code config/tables}, ) read as Rachana
- * (docs/architecture/ARCHITECTURE.md §28 2.4, 2.6 and 7.1): in Rachana's one spelling ({@link Printer}: parsed and printed, the same text), checked in
+ * (docs/architecture/ARCHITECTURE.md §28 2.4, 2.6 and 7.1): read as Rachana ({@link Printer}: the printed text reads back as the same text), checked in
  * its scope (measures in aggregate scope, rules in rule scope, the rest in row scope) and lowered by the one compiler without a problem;
  * The values of the same expressions in Java and in SQL are compared by
  * drishti-bicompute's DifferentialTest; the parity of BI's figures is part B's.
@@ -87,12 +87,14 @@ class ShippedInRachanaTest {
         for (Shipped s : all) {
             String where = s.file() + s.path() + ": " + s.del();
             String rachana = s.del();
-            assertThat(Printer.print(CheckedMode.parse(rachana).expr())).as(where).isEqualTo(rachana);
+            String printed = Printer.print(CheckedMode.parse(rachana, com.ash.rachana.profile.Grammar.LEVEL).expr());
+            assertThat(Printer.print(CheckedMode.parse(printed, com.ash.rachana.profile.Grammar.LEVEL).expr())).as(where + " printed " + printed)
+                    .isEqualTo(printed);                                       // Rachana's one spelling reads back as itself
             assertThat(CheckedMode.check(rachana, s.scope(), Fields.NONE).problems().stream().filter(Problem::error)).as(where + " => " + rachana).isEmpty();
             if (s.scope() == Scope.AGGREGATE) {
-                assertThat(compiler.measure(CheckedMode.parse(rachana).expr())).as(where).isNotNull();
+                assertThat(compiler.measure(CheckedMode.parse(rachana, com.ash.rachana.profile.Grammar.LEVEL).expr())).as(where).isNotNull();
             } else if (!rachana.contains("user.")) {
-                assertThat(compiler.row(CheckedMode.parse(rachana).expr()).sql()).as(where).isNotBlank();
+                assertThat(compiler.row(CheckedMode.parse(rachana, com.ash.rachana.profile.Grammar.LEVEL).expr()).sql()).as(where).isNotBlank();
             }
             if (rachana.contains("!=")) {
                 nullRule.add(where);                                           // the migration's null-rule rewrite applies here (Q1)

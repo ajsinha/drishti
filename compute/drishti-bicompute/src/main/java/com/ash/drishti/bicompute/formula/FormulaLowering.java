@@ -27,14 +27,15 @@ import java.util.Set;
 
 /**
  * A pivot formula (ARCHITECTURE.md section 26.5) read by Rachana's one parser and lowered to the engine's formula tree ({@link FormulaAst}):
- * arithmetic over aggregate calls of the built-ins, each aggregating a row expression with an optional {@code where =} condition.
+ * arithmetic over aggregate calls of the built-ins, each aggregating a row expression, over the rows where a condition holds when it is
+ * written {@code calc(agg, where = c)}.
  *
  * <pre>
  * sum(PNL) / sum(abs(PNL))
- * sum(NOTIONAL_USD, where = DESK == 'RATES') / sum(NOTIONAL_USD)
+ * calc(sum(NOTIONAL_USD), where = DESK == 'RATES') / sum(NOTIONAL_USD)
  * wavg(PRICE, QUANTITY)
  * percentile(PNL_1D, 0.99) - percentile(PNL_1D, 0.01)
- * count(where = PNL &lt; 0) / count()
+ * calc(count(), where = PNL &lt; 0) / count()
  * </pre>
  *
  * Rachana's spelling: {@code &&}, {@code ||}, {@code !}, {@code c ? a : b}, {@code true}, {@code false}, {@code null}, lists {@code [a, b]}
@@ -103,7 +104,7 @@ public final class FormulaLowering {
         }
         CheckedMode.Parsed p;
         try {
-            p = CheckedMode.parse(text);
+            p = CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL);
         } catch (ElException e) {
             throw new FormulaException(e.getMessage(), Math.max(0, e.position()));
         }
@@ -136,7 +137,7 @@ public final class FormulaLowering {
             case Expr.Lit l when l.value() instanceof Boolean b -> new FormulaAst.Bool(b);
             case Expr.Lit l when l.value() instanceof String s -> new FormulaAst.Str(s);
             case Expr.Lit l when l.value() instanceof Number n -> new FormulaAst.Num(n.doubleValue());
-            case Expr.Neg n -> {
+            case Expr.Minus n -> {
                 FormulaAst f = node(n.e());
                 yield f instanceof FormulaAst.Num x ? new FormulaAst.Num(-x.value()) : new FormulaAst.Unary("-", f);
             }
@@ -146,9 +147,9 @@ public final class FormulaLowering {
             case Expr.Ternary t -> new FormulaAst.IfExp(node(t.then()), node(t.cond()), node(t.otherwise()));
             case Expr.ListLit l -> new FormulaAst.ListLit(l.items().stream().map(this::node).toList());
             case Expr.In i -> new FormulaAst.Compare(operand(i.value()), List.of(i.negated() ? "not in" : "in"), List.of(node(i.list())));
-            case Expr.Binary b when List.of("==", "!=", "<", "<=", ">", ">=").contains(b.op()) ->
+            case Expr.Op b when List.of("==", "!=", "<", "<=", ">", ">=").contains(b.op()) ->
                     new FormulaAst.Compare(operand(b.l()), List.of(b.op()), List.of(operand(b.r())));
-            case Expr.Binary b when List.of("+", "-", "*", "/", "%").contains(b.op()) -> new FormulaAst.Binary(b.op(), node(b.l()), node(b.r()));
+            case Expr.Op b when List.of("+", "-", "*", "/", "%").contains(b.op()) -> new FormulaAst.Binary(b.op(), node(b.l()), node(b.r()));
             case Expr.Field f -> field(f);
             case Expr.Call c -> call(c);
             default -> throw new FormulaException("'" + com.ash.rachana.el.Printer.print(e) + "' is not part of a formula: arithmetic, comparisons "
@@ -198,10 +199,33 @@ public final class FormulaLowering {
         return new FormulaAst.Field(name);
     }
 
+    /** {@code calc(agg, where = c)}: the one aggregate over the rows where the condition holds (a formula edits no other filter). */
+    private FormulaAst restricted(Expr.Call c, int at) {
+        Expr where = c.named().get("where");
+        List<Expr> positional = c.args().stream().filter(a -> !(a instanceof Expr.Absent)).toList();
+        if (inAgg || where == null || c.named().size() != 1 || positional.size() != 1 || !(positional.get(0) instanceof Expr.Call inner)
+                || !AGGREGATES.containsKey(Functions.oneName(inner.name()).toLowerCase(Locale.ROOT))) {
+            throw new FormulaException("calc in a formula restricts one aggregate to the rows where a condition holds: calc(sum(x), where = c)", at);
+        }
+        if (!(call(inner) instanceof FormulaAst.Agg a) || a.where() != null) {
+            throw new FormulaException("calc(" + inner.name() + "(...), where = c): the aggregate has its condition already", at);
+        }
+        boolean outer = inAgg;
+        inAgg = true;
+        try {
+            return new FormulaAst.Agg(a.name(), a.args(), a.numbers(), node(where));
+        } finally {
+            inAgg = outer;
+        }
+    }
+
     private FormulaAst call(Expr.Call c) {
         String w = c.name();
         String fn = Functions.oneName(w).toLowerCase(Locale.ROOT);
         int at = at(c);
+        if ("calc".equals(fn)) {
+            return restricted(c, at);
+        }
         boolean agg = AGGREGATES.containsKey(fn);
         if (!agg && !SCALARS.containsKey(fn)) {
             throw new FormulaException("no function '" + w + "' in a formula: aggregates " + new java.util.TreeSet<>(AGGREGATES.keySet()) + "; row functions "

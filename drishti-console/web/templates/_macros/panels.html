@@ -286,7 +286,7 @@
 {%- endmacro %}
 
 {% macro geomap(p) -%}
-{# the shapes are vendored files drawn by static/js/drishti_geomap.js and drishti_charts.js; this holds the codes and figures (data-xchart) and, for keyboards, screen readers and print,
+{# the shapes are vendored files drawn by drishti-chart's geo part and static/js/drishti_charts.js; this holds the codes and figures (data-xchart) and, for keyboards, screen readers and print,
    the same figures as a table and a list of the places a click opens #}
 {% set d = p.data %}{% set sh = d.shade or {} %}{% set fig = sh.get('items') or [] %}
 {{ xchart(p, (('regions of ' ~ d.region) if d.mode == 'region' else ('world map' ~ ((', ' ~ d.highlight ~ ' highlighted') if d.highlight else ''))) ~ (', shaded by ' ~ sh.label if fig else ''), ' xmap') }}

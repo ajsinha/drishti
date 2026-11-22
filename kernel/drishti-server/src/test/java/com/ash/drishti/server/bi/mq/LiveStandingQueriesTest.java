@@ -66,7 +66,7 @@ class LiveStandingQueriesTest {
               PerTrade: { expr: "measure('MTM') / measure('Trades')" }
               Biggest:  { expr: max(trades.notional) }
               Pct:      { expr: "share_of(measure('MTM'), over = ALL)" }
-              Big MTM:  { expr: "sum(trades.mtm, where = trades.notional > 1000)" }
+              Big MTM:  { expr: "calc(sum(trades.mtm), where = trades.notional > 1000)" }
             security:
               rows:
                 trades:

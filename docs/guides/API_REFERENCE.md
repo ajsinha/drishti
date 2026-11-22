@@ -1005,7 +1005,6 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/designs/{id}/save-file` | writes the Sutra to the bound file in your development folder (`409 DRS-5007` if the file changed on disk first); never makes it live, that is `propose` |
 | `POST` | `/builder/designs/{id}/sync` | reads the bound file: an outside edit becomes a step of the design (`changed: true`). A POST because it changes the design: personal API tokens (read-only) cannot call it |
 | `POST` | `/builder/designs/{id}/rebase` | body `{baseRev}`; the design's base `name@v` has a newer live version (`baseMoved` on the design, on `check` and on `propose`): replays the design's operations on it. Answers the design, `replayed` and `problems` (steps that no longer apply, text edits that cannot be replayed; each says which step and why). `400` when the base has not moved |
-| `POST` | `/builder/designs/{id}/upgrade` | body `{baseRev, sample?}`; the design's Sutra is written for an older Rachana language level (the design and every operation answer carry `language: {level, server, older}`): rewritten for the server's level with the same meaning (Rachana's `rachana upgrade`), one step of the log. Answers as `/ops` plus `upgrade: {from, to, changes, flags}` (each `review` flag a place to look at). `400` when the upgrade refuses the text |
 | `DELETE` | `/builder/designs?scratch=true` | deletes all your scratch (unnamed) designs; `{deleted}` |
 | `POST` | `/builder/designs/{id}/samples` | `{samples: [{name, document}]}` and/or `{refs: {kind, ids \| count}}` (stored entities, kept as references) and/or `{schema, count}` (synthetic documents generated from a JSON Schema or shape.json, labelled `synthetic`); a sample of an existing name replaces it |
 | `DELETE` | `/builder/designs/{id}/samples?name=` | remove a sample by name |
@@ -1841,7 +1840,7 @@ read-only token).
 The validate answer (captured; `rita` on the test model `lang-model`):
 
 ```json
-{"expr": "sum(trades.notional, where=trades.desk == 'DESK-A') / measure('m_trades')", "scope": "aggregate", "type": "decimal",
+{"expr": "calc(sum(trades.notional), where=trades.desk == 'DESK-A') / measure('m_trades')", "scope": "aggregate", "type": "decimal",
  "uses": {"functions": ["sum", "measure"], "fields": ["trades.notional", "trades.desk"], "measures": ["Trades"]},
  "syntax": "del2", "valid": true, "problems": [],
  "model": {"id": "file:model:lang-model", "name": "lang-model", "version": "1.0.0", "implicit": false, "compat": false}}
@@ -1851,7 +1850,7 @@ A problem has `code`, `level` (`error` or `warning`), `message`, `fix` (or null)
 underlines it and offers the fix as a button (captured):
 
 ```json
-{"expr": "count(trades, where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
+{"expr": "calc(count(trades), where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
  "problems": [{"code": "DRS-9161", "level": "error", "message": "'trades.mtm' is masked for you: a filter on it (<) is refused",
                "fix": "filter on a field that is not masked", "at": {"start": 20, "end": 30}}], ...}
 ```

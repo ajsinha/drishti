@@ -139,7 +139,7 @@ drishti:
     official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
       enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
       publish: true                  # also append them to <root>/risk-results/var-official (append-only) for other systems
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}   # a folder or s3://bucket/prefix
+      root: ${DRISHTI_DELTA_ROOT:${lake.data.dir}/delta}   # a folder or s3://bucket/prefix
       format: ${DRISHTI_VAR_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg)
       storage: {}                    # the s3.* settings for an s3:// root (s3.region, s3.endpoint, keys; none: the default credential chain)
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long

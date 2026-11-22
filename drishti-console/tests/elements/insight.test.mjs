@@ -27,7 +27,7 @@ const require = createRequire(import.meta.url);
 test('the entry exports the components and the workbook export; the bundle loads under Node and installs nothing without a page', () => {
   assert.deepEqual(['install', 'installExplain', 'installSearch', 'startApprovals', 'workbookLinks', 'exportWorkbook'].map((n) => typeof I[n]),
     ['function', 'function', 'function', 'function', 'function', 'function']);
-  require('../../web/static/vendor/drishti-elements/3.2.0/elements/drishti-core/drishti_core.js');
+  require('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-core/drishti_core.js');
   const lib = require('../../web/static/elements/drishti-insight/drishti_insight.js');
   assert.equal(typeof lib.exportWorkbook, 'function');
   assert.equal(globalThis.Drishti && globalThis.Drishti.insightInstalled, undefined);       // no document: nothing installed
