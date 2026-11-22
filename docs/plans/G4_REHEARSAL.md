@@ -935,3 +935,22 @@ member for every reader of the shared table, proved on a cluster test: more than
 
 
 F8 a, c, e verification (2026-11-22): tables (17), `SettingProposalsTest`, `EngineFilesTest`, banking (62: `VarGoldenMatrixTest` with the headline 167,372,692 / ES 210,131,972 assertion, `VarApiTest`, `VarWindowApiTest`, `ModuleBoundTest`, the exposure, FRTB, SIMM, MR cube and regulatory tests) green; `AbandonedReadsTest` without its fixed sleep, five runs in a row green; console tests for embed, maps, views, guards, distributions, explain, elements version green except `test_every_module_range_follows_the_one_version` (needs the kernel jar). **Not run here:** `ModuleSettingsTest` and `ModuleSettingsControllerTest` in `testing/drishti-modules-it` (the reactor's `drishti-modules` packaging step fails on this machine before the tests; the refusal itself is covered by the module's own unit tests of `ModuleSettingsSchema`), `LicenseHeaderTest` (its check, `tools/license_headers.py`, is clean; the unused import is removed), the Playwright browser tests (no browser stack here).
+
+
+## Pass 3: Python suites (2026-11-22, branch `g4/py-green`)
+
+Environment: the pinned Lake 0.9.1 wheel (sha-256 as in `lib/lake-wheel.pin`) in a fresh virtual environment; a scratch Maven repository holding drishti-tools 1.1.0, Rachana `develop` (`66b3c9c7`) and Lake 0.9.1; the exec jar and the `.dmod` packages built once with `drishti.py build all` through `heavy.sh`, `DRISHTI_LOCAL_MAVEN_REPO` and `MAVEN_ARGS` naming that repository.
+
+| Item | What was done |
+|---|---|
+| Lake wheel (48 `plan() ... layout` errors) | gone with the 0.9.1 wheel. `test_maintain.py`'s relayout case ("another writer committed while relayout read the date") is a Lake defect fixed by the Lake pin that another lane owns; not touched here |
+| `test_sdk_builds_genomics` | finds the pinned products the way `build sdk` and the drill do: `DRISHTI_LOCAL_MAVEN_REPO`, else the tail of `MAVEN_ARGS`, else `sdkbuild.local_maven_repository` |
+| Panel kinds (`test_panel_kinds`, `test_examples`) | the grammar's kinds are read from Rachana's published catalogue (`spec/1/rachana.lang.json` in `rachana-conformance-cases`, from the same repository); the seven Level 1.2 kinds are named in the tests, so a kind added later fails them; the examples are Level 1.2 documents |
+| Relative data root | `${lake.data.dir:./data}` and `${drishti.data.dir:./data}` became `${lake.data.dir:${drishti.data.dir}}` and `${drishti.data.dir}` in every config file, tool, generator and guide (67 files); no relative default is left |
+| `test_tools_guide` | the nine Lake scripts are listed in the CLI reference |
+| View sheet budget | the sheet was removed with embed v1; the test and its budget are gone |
+| Retired-name check (a server start failure) | `DRISHTI_VAR_SYSTEM_BASKETS_SEED` is a placeholder's source, yet Spring's `configurationProperties` view read it as the retired `drishti.var.system-baskets.seed` and the server refused to start; the check now looks at the real sources only (`ModuleSettingsSiteSetsTest`) |
+| Default live tables | a kind's default table carries its narrowing fields as columns (Rachana refuses a `narrow` that names none: DRS-2071) |
+| Business-date rule in the console | the lake upload reads `drishti_lake.filedate` (the deleted `tools/lake/filedate.py` made the date silently absent) |
+| Docs and generated files | PDFs, README code volume and the sizing planner (workbook, template, vectors) regenerated; `test_docs_rot` reads the engines' own files and the modules' `settings:` for the settings that exist; links and paths of the embed v1 removal fixed; unused pictures of the host pages deleted |
+| Stale tests | retired help addresses answer 404 (no aliases), the 1.2.0 parity cases of the Node tests went with the frozen renderer, the Data Protocol refuses a table of a kind with no inputs in words at the table, scores' ids in capitals |

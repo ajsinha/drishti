@@ -87,7 +87,9 @@ def _grammar() -> dict:
     repository the way the SDK build finds the products: ``DRISHTI_LOCAL_MAVEN_REPO``, else the ``-Dmaven.repo.local`` of ``MAVEN_ARGS``, else ``~/.m2``."""
     import json
     import zipfile
-    from launch import sdkbuild
+    import sys
+    sys.path.insert(0, str(ROOT / "tools" / "launch"))          # sdkbuild imports its neighbours by name, as drishti.py does
+    import sdkbuild
     version = sdkbuild.pinned_versions(ROOT)["com.ash.rachana"]
     jar = sdkbuild.local_maven_repository() / "com/ash/rachana/rachana-conformance-cases" / version / f"rachana-conformance-cases-{version}.jar"
     assert jar.is_file(), f"{jar} is not there: install the pinned Rachana release in the local Maven repository (or set DRISHTI_LOCAL_MAVEN_REPO)"

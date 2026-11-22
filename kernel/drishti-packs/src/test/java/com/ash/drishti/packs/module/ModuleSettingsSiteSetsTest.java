@@ -30,7 +30,7 @@ class ModuleSettingsSiteSetsTest {
     void anEnvironmentVariableThatSpringReadsAsTheRetiredNameIsNotTheSiteSettingIt() {
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().replace(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
-                new MapPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, Map.of("DRISHTI_VAR_THREADS", "4")));
+                new org.springframework.core.env.SystemEnvironmentPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, Map.of("DRISHTI_VAR_THREADS", "4")));
         ConfigurationPropertySources.attach(env);
         assertThat(env.getProperty("drishti.var.threads")).isEqualTo("4");      // Spring does read it so ...
         assertThat(ModuleSettingsEnvironmentPostProcessor.siteSets(env, "drishti.var.threads")).isNull();   // ... and the retired-name check does not count it
