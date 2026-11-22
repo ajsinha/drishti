@@ -600,10 +600,10 @@ class VarExplainApiTest {
                 assertThat(timeless(a)).as(path).isEqualTo(timeless(why));
             }
         }
-        JsonNode d1 = ask("/api/v1/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
+        JsonNode d1 = ask("/api/v1/risk/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
         assertThat(timeless(d1)).isEqualTo(timeless(explain("NODE:MGMT~DESK-X")));
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
+        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
                 .contains("planned");
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
+        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
     }
 }
