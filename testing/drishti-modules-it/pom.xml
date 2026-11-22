@@ -67,6 +67,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- every test of this project runs on packaged modules and the exec jar (packaging/dist, drishti-app), which exist after the package
+                 phase: the tests run in the integration-test step (./mvnw verify), so ./mvnw test on a clean tree builds nothing of them and fails nowhere -->
+            <id>default-test</id>
+            <phase>integration-test</phase>
+          </execution>
+        </executions>
         <configuration>
           <!-- a JVM per test class: a module's functions are registered once per JVM (Rachana's function table is the process's), so two servers on the
                same packages in one JVM refuse the second ("provided twice") -->

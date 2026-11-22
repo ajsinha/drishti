@@ -49,7 +49,7 @@ class ModuleSettingsTest {
     @Test
     void theModulesKeyIsTheOnlyOneRead() throws Exception {
         ModuleSettingsSchema s = ModuleSettingsSchema.of("banking", manifest());
-        Map<String, String> env = Map.of("drishti.module.banking.var.confidence", "0.95", "drishti.module.banking.var.es-confidence", "0.9");
+        Map<String, String> env = Map.of("drishti.module.banking.var.confidence", "0.95", "drishti.var.es-confidence", "0.9");
         var by = s.resolve(env::get).stream().collect(java.util.stream.Collectors.toMap(r -> r.item().key(), r -> r));
         assertThat(by.get("var.confidence").source()).isEqualTo("module");
         assertThat(by.get("var.confidence").value()).isEqualTo("0.95");
