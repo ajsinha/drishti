@@ -23,6 +23,15 @@ final class RachanaFunctions {
     private RachanaFunctions() {
     }
 
+    /** The arguments as plain values (a document's field is a node inside Rachana; a module's function takes its value). */
+    private static java.util.List<Object> plain(java.util.List<Object> args) {
+        java.util.List<Object> out = new java.util.ArrayList<>(args.size());
+        for (Object a : args) {
+            out.add(com.ash.rachana.el.Values.simplify(a));
+        }
+        return out;
+    }
+
     /** Adds the module's functions to Rachana while it is loaded; the returned action takes them out (the module named as off). */
     static Runnable register(String moduleId, FunctionProvider module) {
         return com.ash.drishti.rachana.DrishtiRachana.addFunctions(moduleId, new com.ash.rachana.el.FunctionProvider() {
@@ -34,7 +43,7 @@ final class RachanaFunctions {
             @Override
             public java.util.List<Provided> functions() {
                 return module.functions().stream().map(f -> new Provided(f.name(), f.minArgs(), f.maxArgs(), f.args(), "scalar",
-                        f.description(), "", (args, context) -> f.body().apply(args))).toList();
+                        f.description(), "", (args, context) -> f.body().apply(plain(args)))).toList();
             }
         });
     }
