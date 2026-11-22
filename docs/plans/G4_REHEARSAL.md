@@ -857,8 +857,9 @@ two more: a document's field reached a module's function as Rachana's node, not 
 two servers in one JVM provided a module's function twice once the compiler followed the instance (module functions are now kept by
 module and names, the latest registration in use). Proved: `ModuleHostServerTest`, `FormApiTest`, `LiveIsolationTest`,
 `KafkaTradeEditTest`, `TypedCallParityTest` (both classes), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`,
-`PackagedVarGoldenTest`. Not this branch's: `StudioTest` (2: the inferred Sutra written as `rachana: 1`, the schema's level) fails the same way from the level-1.2 merge; the merged
-`docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict markers from `g4/level-12`.
+`PackagedVarGoldenTest`, `SutraRegistryTest`, on the merge with `wip/g4-rehearsal-rx` `951cd5b69`, whose `DrishtiRachana.keep()` named the
+removed `level` field (it did not compile; it keeps options and kinds now and drops what followed the compiler). Not this branch's: the
+merged `docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict markers from `g4/level-12`.
 
 F4 (a FORM table spanning Drishti\*net members read as its first opener): not done here, parked to the combined i8 by name. Option A
 needs a node identity on the on-behalf-of token carrying the audience's rights, the member trusting it, and a per-read audit call to each
