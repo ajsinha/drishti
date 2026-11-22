@@ -15,14 +15,16 @@
 -->
 # The Drishti engine specification, `engine: 1`
 
-**Status: draft 1 (2026-11-21). Nothing in it is built.** Normative once the owner approves it and the first kit is cut. The
+**Status: draft 2 (2026-11-22). Nothing in it is built.** Draft 2 puts the owner's acceptance test into the text: an engine is
+built and proven with no host, delivered as one JAR, found by `ServiceLoader`, checked for compatibility and refused in words
+(section 17). Keys of draft 1 that it supersedes are marked DELETED where they stood. Normative once the owner approves it and the first kit is cut. The
 design it is made from is [../plans/ENGINE_INTEGRATION_DESIGN.md](../plans/ENGINE_INTEGRATION_DESIGN.md); where the two differ,
 this text wins. It moves to the `drishti-engine` repository (`spec/1/`) when that repository exists, with the machine-readable
 files beside it.
 
 | File | Normative for | State |
 |---|---|---|
-| this text | meaning: the model, obligations, errors, versions | draft 1 |
+| this text | meaning: the model, obligations, errors, versions, delivery | draft 2 |
 | `descriptor.schema.json` (section 6.3) | the descriptor's structure | draft, printed here |
 | `config.schema.json` (section 9.2) | a host's engine file | draft, printed here |
 | `case.schema.json` (section 12.2) | kit cases | draft, summarised here |
@@ -37,7 +39,8 @@ files beside it.
 9. [The host's engine file](#9-the-hosts-engine-file) · 10. [Packs and binding](#10-packs-and-binding) ·
 11. [Errors](#11-errors) · 12. [The kit](#12-the-kit) · 13. [Versioning](#13-versioning) ·
 14. [The process binding](#14-the-process-binding) · 15. [Generated artefacts](#15-generated-artefacts) ·
-16. [A worked example](#16-a-worked-example)
+16. [A worked example](#16-a-worked-example) ·
+17. [Delivery](#17-delivery-the-engine-jar-discovery-class-loading-compatibility)
 
 ## 0. Conventions
 
@@ -62,6 +65,9 @@ files beside it.
    schedule, a data change or a stream; only the host knows, through `Request.requestClass` for admission (section 3.4).
 4. A host MUST be able to run a conforming engine from its descriptor and one configuration file, with no code written for
    that engine.
+5. An engine MUST be buildable, unit-testable and provable by the kit with no host present, and is delivered as one JAR that a
+   host built before it can load. A host MUST NOT need to be compiled, packaged or released again to add or upgrade an engine
+   (section 17).
 
 ## 2. Model
 
@@ -219,7 +225,8 @@ rows in the declared `order`. [K] A host MAY read the arrays without copying; an
 
 ## 4. Interfaces an engine implements
 
-Package `com.ash.engine`, artifact `com.ash.engine:engine-api`, which depends on the JDK only.
+Package `com.ash.engine`, artifact `com.ash.engine:engine-api`, which depends on the JDK only. An engine with no capability
+implements two interfaces and eight methods.
 
 ### 4.1 `Engine` (required)
 
@@ -238,13 +245,18 @@ public interface Engine extends AutoCloseable {
      */
     Session session(Snapshot snapshot, Inputs inputs, Control control) throws EngineException;
 
+    /** Status words for a host's administrator (a native library loaded, or fallen back to Java). Cheap; never row values. */
+    default List<String> notes() { return List.of(); }
+
     /** Releases everything. Sessions are already closed. */
     @Override void close();
 }
 ```
 
-The class named by the descriptor's `entry` MUST be public with a public constructor without parameters, which MUST do no
-work. A host creates one object per engine instance (per tenant, per test) and MAY create several in one JVM. [K]
+An engine's class MUST be registered for `java.util.ServiceLoader` in its JAR (17.2), MUST be public and MUST have a public
+constructor without parameters, which MUST do no work. A host finds the class only through `ServiceLoader`
+(`Provider.type()`), creates one object with that constructor per engine instance (per tenant, per test) and MAY create several
+in one JVM. [K]
 
 ### 4.2 `Session` (required)
 
@@ -396,7 +408,8 @@ An engine MUST call `check()` at least once per batch read and at least once per
 ### 6.1 Place and form
 
 One YAML 1.2 document, read strictly (a repeated key, a tag or an unknown key is an error, `ENG-1001`), in the jar at
-`META-INF/drishti-engine/<id>.engine.yaml`. A jar MAY hold several engines. The first key is `engine: 1`.
+`META-INF/drishti-engine/<id>.engine.yaml`. A jar MAY hold several engines. The first key is `engine: 1`. A descriptor does
+not name the engine's class: the JAR's `META-INF/services/com.ash.engine.Engine` does (17.2).
 
 ### 6.2 Keys
 
@@ -405,8 +418,10 @@ One YAML 1.2 document, read strictly (a repeated key, a tag or an unknown key is
 | `engine` | yes | the descriptor format: `1` |
 | `id`, `version`, `title`, `about` | yes | identity; `version` is semantic |
 | `publisher` | yes | `{ id, name }` |
-| `api` | yes | the range of `engine-api` it was built for: `">=1.0 <2"` |
-| `entry` | yes | the class implementing `Engine` |
+| `api` | yes | the `major.minor` of `engine-api` the JAR was compiled against: `"1.4"` (17.5). DELETED: the range form of draft 1 |
+| `platform` | | `{ tools, lake, rachana }`: the `major.minor` of each family library the JAR references (17.5) |
+| `entry` | | **DELETED** (draft 2): the class is registered for `ServiceLoader` (17.2) |
+| `worker` | | `python:<module>:<Class>`: a non-Java engine carried in the JAR's resources and run by the process binding (14.1); such an engine registers no Java class |
 | `codes` | | the prefix of its own error codes (`RSK`); section 11.3 |
 | `licence` | | `{ feature }`: a host's licence feature name |
 | `snapshot` | | `dimensions: [ { name, type, label } ]`; absent: none |
@@ -465,7 +480,7 @@ handed through unchanged (a host masks it for a viewer who has that input column
   "$id": "urn:drishti:engine:1:descriptor",
   "type": "object",
   "additionalProperties": false,
-  "required": ["engine", "id", "version", "title", "about", "publisher", "api", "entry", "inputs", "outputs"],
+  "required": ["engine", "id", "version", "title", "about", "publisher", "api", "inputs", "outputs"],
   "properties": {
     "engine": { "const": 1 },
     "id": { "$ref": "#/$defs/name" },
@@ -474,8 +489,10 @@ handed through unchanged (a host masks it for a viewer who has that input column
     "about": { "type": "string", "minLength": 1 },
     "publisher": { "type": "object", "additionalProperties": false, "required": ["id", "name"],
                    "properties": { "id": { "type": "string" }, "name": { "type": "string" } } },
-    "api": { "type": "string" },
-    "entry": { "type": "string", "pattern": "^[A-Za-z_][\\w.$]*$" },
+    "api": { "$ref": "#/$defs/built" },
+    "platform": { "type": "object", "additionalProperties": false, "properties": {
+      "tools": { "$ref": "#/$defs/built" }, "lake": { "$ref": "#/$defs/built" }, "rachana": { "$ref": "#/$defs/built" } } },
+    "worker": { "type": "string", "pattern": "^python:[A-Za-z_][\\w.]*:[A-Za-z_]\\w*$" },
     "codes": { "type": "string", "pattern": "^[A-Z]{2,5}$", "not": { "enum": ["ENG", "DRS", "RCH", "LK"] } },
     "licence": { "type": "object", "additionalProperties": false, "properties": { "feature": { "type": "string" } } },
     "snapshot": { "type": "object", "additionalProperties": false, "properties": {
@@ -507,6 +524,7 @@ handed through unchanged (a host masks it for a viewer who has that input column
   },
   "$defs": {
     "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+    "built": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
     "contract": { "type": "string", "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@\\d+$" },
     "typed": { "type": "object", "additionalProperties": false, "required": ["type"], "properties": {
       "type": { "enum": ["text", "int", "number", "decimal", "bool", "date", "enum", "list", "records"] },
@@ -558,6 +576,7 @@ handed through unchanged (a host masks it for a viewer who has that input column
 3. Every option, parameter, input, output and column MUST have words (`about`, `label` or `help`). [K]
 4. `key` columns MUST be non-nullable and MUST NOT be measures. [K]
 5. `Engine.descriptor()` MUST equal the file. [K]
+6. The JAR's registered classes and its descriptors without `worker` MUST correspond one to one (17.2). [K]
 
 ## 7. Lifecycle
 
@@ -650,8 +669,9 @@ For every output column with `measure: true`:
 An engine MUST NOT: open a network connection; start a process; load native code other than from its own jar, behind a guard
 that falls back to Java; read or write a file outside `workDir()` (reading its own jar's resources is allowed); create a
 thread or an executor; call `System.exit` or `Runtime.halt`; read environment variables or system properties for behaviour;
-hold mutable static state; use reflection to reach a host class. [K, by scan] An engine MUST NOT read data except through
-`Inputs` and `Supplier`.
+hold mutable static state; use reflection to reach a host class; reference a class outside its own JAR, the platform packages
+of 17.1 and the JDK. [K, by scan] An engine MUST NOT read data except through `Inputs` and `Supplier`, whatever library it
+carries or is given.
 
 ### 8.5 Resources
 
@@ -691,17 +711,17 @@ Normative for Drishti; another host MAY use the same schema.
 
 ### 9.1 Keys
 
-`config/engines/<id>.yaml`, under `drishti.engines.<id>`:
+`config/engines/<id>.yaml`, under `drishti.engines.<id>`. The file's name is the engine id; it names no JAR and no class.
 
 | Key | Required | Meaning |
 |---|---|---|
 | `enabled` | yes | the switch |
 | `changed` | | `{ by, at, reason }`, written by the server |
-| `engine.artifact` | yes | Maven coordinates `group:artifact`, or a jar path anchored to a named root (`${module.dir}/lib/x.jar`) |
-| `engine.version` | yes | exact; MUST equal the descriptor's |
-| `engine.sha384` | yes | of the jar; a mismatch refuses the start (`ENG-1011`) |
+| `engine.artifact` | | **DELETED** (draft 2): the JAR is found in the engine lib folder by the engine id it registers (17.4) |
+| `engine.version` | | a pin: exact; another installed version is refused (`ENG-1011`). Required under trust `pinned` (17.6) |
+| `engine.sha384` | | a pin of the JAR; a mismatch refuses the start (`ENG-1011`). Required under trust `pinned` |
 | `engine.run` | | `in-process` (default) or `process` |
-| `engine.allow-uncertified` | | default `false` (12.6) |
+| `engine.allow-uncertified` | | **DELETED** (draft 2): a certificate is required only under trust `pinned` (17.6) |
 | `snapshot` | | `hot` (sessions kept open), `pinned`, `idle-close` |
 | `inputs.<name>` | | binding left open by contracts (10.2): `kinds: [..]` or `table: <lake table>`; `columns: { <contract column>: <table column> }`; `where:` one Rachana-EL expression over a row (`@.`), hermetic |
 | `options` | | the engine's options; checked against the descriptor |
@@ -721,14 +741,14 @@ Normative for Drishti; another host MAY use the same schema.
   "$id": "urn:drishti:engine:1:config",
   "type": "object",
   "additionalProperties": false,
-  "required": ["enabled", "engine", "access"],
+  "required": ["enabled", "access"],
   "properties": {
     "enabled": { "type": ["boolean", "string"] },
     "changed": { "type": "object" },
-    "engine": { "type": "object", "additionalProperties": false, "required": ["artifact", "version", "sha384"], "properties": {
-      "artifact": { "type": "string" }, "version": { "type": "string" },
+    "engine": { "type": "object", "additionalProperties": false, "properties": {
+      "version": { "type": "string" },
       "sha384": { "type": "string", "pattern": "^[0-9a-f]{96}$" },
-      "run": { "enum": ["in-process", "process"] }, "allow-uncertified": { "type": "boolean" } } },
+      "run": { "enum": ["in-process", "process"] } } },
     "snapshot": { "type": "object", "additionalProperties": false, "properties": {
       "hot": { "type": "integer", "minimum": 1 }, "idle-close": { "type": "string" }, "pinned": { "type": "object" } } },
     "inputs": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": false, "properties": {
@@ -785,10 +805,11 @@ Normative for Drishti; another host MAY use the same schema.
 
 ### 9.4 Start checks
 
-A host MUST refuse to start an engine (state `blocked`, with the words and the key) when: the jar is absent or its hash
-differs; the descriptor is invalid or outside the host's API range; an option is unknown or invalid; a required input is
-unbound or ambiguous (10.2); `access.visibility` names no rule; the certificate is absent or does not match and
-`allow-uncertified` is false. None of these stops the host or any other engine.
+A host MUST refuse to start an engine (state `blocked`, with the words and the key) when: a check of 17.2 or 17.5 fails (the
+JAR's form, the versions it was built against, two JARs for one id); the descriptor is invalid; the engine file's pin differs
+from the JAR; trust is `pinned` and the pin or the certificate is absent or does not match (17.6); an option is unknown or
+invalid; a required input is unbound or ambiguous (10.2); `access.visibility` names no rule. None of these stops the host or
+any other engine. An engine whose JAR is absent is `not installed`, and one without an engine file `not configured` (17.4).
 
 ## 10. Packs and binding
 
@@ -828,11 +849,11 @@ A host MUST show, for every engine, each input's bound table, the rule that boun
 
 ### 10.3 Absence
 
-When an engine a pack uses is not installed, is off, is blocked, or is outside the pack's version range:
+When an engine a pack uses is not installed, is not configured, is off, is blocked, or is outside the pack's version range:
 
 1. Everything derived from the use is not offered: the virtual kinds and their mnemonics, the screens and menu entries that
    read them, Help pages, tiles, command words, pivot measures, AI tools.
-2. Opened directly, each answers in words with the reason and who can change it (`ENG-5030` to `ENG-5033`).
+2. Opened directly, each answers in words with the reason and who can change it (`ENG-5030` to `ENG-5034`).
 3. With `optional: true` the screen renders and only the panels reading the output show their empty state with the reason.
 4. The pack, its module and the host MUST start. No absence of an engine is a start failure.
 
@@ -880,12 +901,15 @@ public final class EngineException extends Exception {
 | Code | Kind | Meaning |
 |---|---|---|
 | `ENG-1001` | REFUSED | the descriptor is not valid (position and key in the words) |
-| `ENG-1002` | REFUSED | the descriptor's `api` range does not include this host's |
-| `ENG-1003` | REFUSED | `entry` cannot be loaded, or `Engine.descriptor()` differs from the file |
+| `ENG-1002` | REFUSED | the JAR was built for another engine API major, or a newer minor, than this host provides (both versions and what to do in the words) |
+| `ENG-1003` | REFUSED | a registered engine class cannot be loaded, or `Engine.descriptor()` differs from the file |
 | `ENG-1004` | REFUSED | a capability is listed without its interface, or the reverse |
+| `ENG-1005` | REFUSED | the JAR was built for a tools, Lake or Rachana version this host does not provide (the library and both versions in the words) |
+| `ENG-1006` | REFUSED | two JARs register one engine id (both files in the words) |
+| `ENG-1007` | REFUSED | the JAR's form: registrations and descriptors disagree, or it is not readable as an engine JAR |
 | `ENG-1010` | REFUSED | the engine file is not valid (key in the words) |
-| `ENG-1011` | REFUSED | the jar's hash or version differs from the pin |
-| `ENG-1012` | REFUSED | no certificate for the pinned jar, or it does not match |
+| `ENG-1011` | REFUSED | the JAR's hash or version differs from the engine file's pin |
+| `ENG-1012` | REFUSED | trust is `pinned` and the engine file has no pin, or no certificate beside the JAR matches it |
 | `ENG-1013` | REFUSED | an option is unknown or outside what is allowed |
 | `ENG-2001` | REFUSED | an input name the descriptor does not declare |
 | `ENG-2003` | REFUSED | a column the input does not declare was asked for |
@@ -913,7 +937,8 @@ public final class EngineException extends Exception {
 | `ENG-5030` | UNAVAILABLE | the engine is not installed on this server |
 | `ENG-5031` | UNAVAILABLE | the engine is off (who, when, why) |
 | `ENG-5032` | UNAVAILABLE | the engine is blocked (the start check that failed) |
-| `ENG-5033` | UNAVAILABLE | the installed version is outside the range a pack needs |
+| `ENG-5033` | UNAVAILABLE | the installed version is outside the range a pack needs, or lacks an output or column the pack uses (the names in the words) |
+| `ENG-5034` | UNAVAILABLE | the engine is installed but has no engine file |
 | `ENG-6001` to `ENG-6099` | | kit findings, one per rule marked [K]; never thrown at run time |
 | `ENG-7001` | UNAVAILABLE | the engine's process is not running or did not answer |
 | `ENG-7002` | FAILED | the process and the host disagree on the wire version |
@@ -934,7 +959,10 @@ engine tck run --engine <jar> [--id <engine id>] --cases <dir> [--binding in-pro
 ```
 
 writes `results.jsonl` (one line per case and law, doubles as raw-bit hex), `report.md` and `certificate.json`. Exit status
-0 only when every rule marked [K] holds. The command needs a JDK 21 runtime and nothing else: no host, no network.
+0 only when every rule marked [K] holds. The command needs a JDK 21 runtime and nothing else: no host, no network. It opens
+the JAR through the loader of 17.3. The kit's artifact also holds a JUnit harness (`com.ash.engine.tck.EngineHarness`): an
+engine class, in-memory rows per input, a budget and a temporary work folder give a session to ask, so an author's unit tests
+need no JAR, no case file and no host.
 
 ### 12.2 Case files
 
@@ -983,6 +1011,7 @@ is exact: all rows, in order, all listed columns; an unlisted column of the outp
 
 | Group | Rule |
 |---|---|
+| Delivery | 17.1 to 17.3 and 17.5 rule 1, on the JAR as it will be copied to a host |
 | Descriptor | 6.3, 6.4 |
 | Scan | 8.4, 8.1 rule 3, over the jar and its declared dependencies |
 | Contracts | 3.2, 3.4, 5.2 rule 1: a recording `Inputs` and a checking `Tables` |
@@ -1028,8 +1057,9 @@ is exact: all rows, in order, all listed columns; an unlisted column of the outp
   "opaque-steps": 0, "results-sha384": "…", "at": "2026-11-21T20:00:00Z" }
 ```
 
-It is written beside the jar as `<jar name>.certificate.json`. A host MUST verify `jar-sha384` and that `tck`'s major is one
-it accepts. A certificate is a statement by whoever ran the kit; a host that needs more than that signs or re-runs (the kit
+It is written beside the jar as `<jar name>.certificate.json`. It is evidence, not a condition of loading: a host shows it, or
+its absence, for every JAR, and requires it only where its own trust rule says so (Drishti: 17.6). A host that uses it MUST
+verify `jar-sha384` and that `tck`'s major is one it accepts. A certificate is a statement by whoever ran the kit; a host that needs more than that signs or re-runs (the kit
 runs inside Drishti against the configured engine with `drishti.py engine tck <id>`).
 
 ## 13. Versioning
@@ -1038,14 +1068,15 @@ runs inside Drishti against the configured engine with `drishti.py engine tck <i
    MAY be added. A host MUST refuse a descriptor key it does not know (`ENG-1001`), so an engine that needs a newer minor
    says so in `api`.
 2. **`engine-api`** follows semantic versioning on its public packages. Within a major: no method is removed from an
-   interface an engine implements; a method added to one has a default. A descriptor's `api` range MUST include the version
-   the engine was compiled against.
+   interface an engine implements; a method added to one has a default. A descriptor's `api` MUST be the version the engine
+   was compiled against, and a host applies the one rule of 17.5 to it. [K]
 3. **An engine** follows semantic versioning. Within a major it MUST NOT: remove or rename an output, column, parameter or
    option; change a type, key, order or default; change any value an existing case expects; make an optional input
    required. It MAY add outputs, nullable columns at the end, parameters and options with defaults that reproduce the old
    behaviour, optional inputs.
 4. **Contracts** are referred to by major. A new major of an input contract is a new major of the engine.
-5. **A host pins** one exact version and hash. Two versions of one engine MAY run side by side only under two ids.
+5. **A host loads** at most one JAR per engine id and MAY pin its exact version and hash (9.1, 17.6). Two versions of one
+   engine MAY run side by side only under two ids.
 6. **Stored answers** carry their stamp; a host MUST NOT serve an answer whose stamp names another engine version,
    descriptor, options or input stamp than the current ones.
 7. **The kit** has a major matching this specification's. Laws added in a minor are reported but do not fail an engine
@@ -1057,13 +1088,12 @@ runs inside Drishti against the configured engine with `drishti.py engine tck <i
 
 1. An engine listing `process` MUST give the same answers when its `Engine` runs in another process than the host
    (law `binding`).
-2. A host starts the worker as `java` (or, for an engine whose `entry` is of the form `python:<module>:<Class>`, `python`)
-   with an explicit command line. No native launcher is used, so a site that cannot place executables runs every engine.
-   Artifacts come from the local repository or a named folder; nothing is fetched at run time.
+2. A host starts the worker as `java` (or `python`, for an engine whose descriptor carries `worker`) with an explicit command
+   line. No native launcher is used, so a site that cannot place executables runs every engine. The worker loads the same JAR
+   from the same engine lib folder; nothing is fetched at run time.
 3. A worker crash is `ENG-7001` for the requests in flight; the host restarts the worker and reopens hot sessions; the
    engine's switch stays on.
-4. A host MUST run in a separate process any engine that is neither first-party nor approved for in-process use by the
-   site's own rule.
+4. A host MUST run in a separate process any engine its site does not trust in the host's own process (17.6).
 
 ### 14.2 Wire forms
 
@@ -1113,8 +1143,7 @@ version: 1.0.0
 title: Weighted mean
 about: The weighted mean of a value by group, from observations supplied under a contract.
 publisher: { id: org.example, name: Example Lab }
-api: ">=1.0 <2"
-entry: org.example.wmean.WmeanEngine
+api: "1.0"
 snapshot:
   dimensions: [ { name: date, type: date, label: Business date } ]
 inputs:
@@ -1147,6 +1176,9 @@ ui: { group: Statistics, words: [ WMEAN ] }
 ```
 
 ### 16.2 Implementation sketch
+
+`META-INF/services/com.ash.engine.Engine` in the JAR holds one line: `org.example.wmean.WmeanEngine`. The build has
+`engine-api` in scope `provided` and nothing else: this engine uses no family library and has no private one.
 
 ```java
 package org.example.wmean;
@@ -1299,7 +1331,8 @@ The form of the output (nothing is built yet; the counts are what these six case
 
 ```
 $ engine tck run --engine wmean-engine-1.0.0.jar --cases tck/cases --out target/tck
-descriptor   wmean 1.0.0  api >=1.0 <2  ok        scan  0 findings
+delivery     loads through EngineJarLoader  1 engine registered  0 platform classes bundled  links closed  built for api 1.0
+descriptor   wmean 1.0.0  ok        scan  0 findings
 cases        6 of 6
 laws         repeat 5  threads 5  batching 5  order 5  filter-equivalence 5  interleaving 5
              incremental 5  additivity 5  absence 0 (no optional input)  seed 5  explain 8 cells  binding - (not declared)
@@ -1321,10 +1354,8 @@ drishti:
     wmean:
       enabled: ${DRISHTI_WMEAN_ENABLED:true}
       changed: { by: "", at: "", reason: "" }
-      engine:
-        artifact: org.example:wmean-engine
-        version: 1.0.0
-        sha384: "9f2c…"                        # 96 hex digits
+      # engine: nothing to say under trust `folder`. wmean-engine-1.0.0.jar was copied into <home>/lib/engines and registers `wmean`.
+      # Under trust `pinned`:  engine: { version: 1.0.0, sha384: "9f2c…" }      (96 hex digits)
       snapshot: { hot: 5 }
       # inputs: nothing to say. One kind of the modules that are on conforms to stats/observation@1.
       triggers:
@@ -1396,3 +1427,108 @@ panels:
 
 Nothing in sections 16.5 and 16.6 was written by the engine's author beyond the descriptor of 16.1, and nothing in Drishti
 was written for this engine.
+
+## 17. Delivery: the engine JAR, discovery, class loading, compatibility
+
+*An engine is built and proven with no host present, and is installed by copying one file.* Sections 17.1 to 17.3 and 17.5 bind
+every engine and every host; 17.4, 17.6 and 17.7 are normative for Drishti.
+
+### 17.1 What an engine may depend on
+
+1. An engine's build MUST resolve, compile, run its unit tests and pass the kit with no host artifact present. Its sources and
+   build files MUST NOT name a host (for Drishti: `com.ash.drishti`, a `drishti.` setting, Spring, a servlet type). [K, by scan]
+2. The **platform packages** are `com.ash.engine..` and the public packages of `com.ash.tools..`, `com.ash.lake..` (the API and
+   the contract model) and `com.ash.rachana..` (core). An engine MAY compile against them and MUST NOT carry them: a host
+   provides them (17.3).
+3. Every other library an engine uses is its own and MUST be inside its JAR (17.2).
+4. Lake's readers and loader, the input adapters (`engine-inputs-files`, `engine-inputs-lake`) and the kit are for an engine's
+   tests and its standalone command line. Inside a host an engine MUST read rows only through `Inputs` and `Supplier` (8.4).
+
+### 17.2 The JAR
+
+1. An engine is delivered as **one JAR file**. It holds the engine's classes, its private libraries merged in (their own
+   package names; no relocation is required), and for each engine: a descriptor at `META-INF/drishti-engine/<id>.engine.yaml`
+   and, unless the descriptor carries `worker`, one line naming its class in `META-INF/services/com.ash.engine.Engine`.
+2. A JAR MAY hold several engines; they share the JAR's classes. The registered classes and the descriptors MUST correspond one
+   to one: each registered class's `descriptor()` equals exactly one descriptor file of the JAR. [K]
+3. A JAR MUST NOT contain a class of a platform package. [K] Every class reference in the JAR MUST resolve in the JAR itself,
+   the platform packages or the JDK (a closed-world link check). [K]
+4. Native code MAY be carried as resources only, behind a guard that falls back to Java (8.4), and is unpacked under
+   `workDir()`. A JAR MUST NOT need a file beside it in order to load.
+5. The file name is `<name>-<version>.jar`; a host identifies engines by descriptor id and version, never by file name.
+
+### 17.3 Class loading
+
+A host MUST load each engine JAR in a class loader of its own, such that:
+
+1. a class of a platform package is the host's own, always, whatever the JAR holds (parent-first for those packages);
+2. every other class comes from the JAR and from nowhere else except the JDK: no class of the host, of a library the host
+   happens to ship, of another engine or of any other plug-in is visible (child-only);
+3. resources are the JAR's own;
+4. the thread's context class loader is the engine's loader during every call into the engine;
+5. engines of one JAR share one loader; engines of two JARs share nothing but the platform packages and the JDK.
+
+A host passes an engine only JDK types and `com.ash.engine` types. The loader is `com.ash.engine.host.EngineJarLoader`; the kit
+and every host use the same class, so a JAR that loads in the kit loads in a host. The loader separates names. It is **not** a
+security boundary: an engine loaded in process runs with the host's rights (17.6).
+
+### 17.4 Discovery and states (Drishti)
+
+1. Engine JARs are the `.jar` files directly in the engine lib folder: `drishti.engine-lib.path`, default
+   `<home>/lib/engines`, absolute or anchored to a named root. An engine JAR in another folder (the site's `lib/ext`) MUST NOT
+   be loaded, and Health MUST say where it belongs.
+2. At start, for each JAR in name order, the host opens its loader, reads the providers of
+   `ServiceLoader.load(Engine.class, loader)` and the descriptors, applies 17.2 and 17.5, and registers each engine by id. It
+   then reads `config/engines/<id>.yaml` (section 9).
+3. An engine is in exactly one state, shown with its words:
+
+   | State | When |
+   |---|---|
+   | `running` | JAR, engine file, every start check of 9.4 passes, `enabled` |
+   | `off` | the same, not `enabled` |
+   | `not configured` | a JAR registers the id and no engine file exists (`ENG-5034`); the host offers a template made from the descriptor |
+   | `not installed` | an engine file exists, or a pack uses the id, and no JAR registers it (`ENG-5030`) |
+   | `blocked` | a check of 17.2, 17.5, 17.6 or 9.4 fails; the words say which, with both sides of the difference |
+
+4. No state of any engine stops the host, a module, a pack or another engine. A JAR that cannot be read at all is listed by
+   file name with the reason.
+5. A host MUST list every JAR of the folder with its file name, SHA-384, the engines and versions it registers, their
+   publishers, and whether a certificate (12.6) is beside it.
+
+### 17.5 Compatibility
+
+1. A descriptor's `api` MUST be the `major.minor` of the `engine-api` its JAR was compiled against, and `platform` MUST state
+   the same for each of `tools`, `lake` and `rachana` whose classes the JAR references. [K]
+2. A host provides one version of each. For each, the JAR is compatible exactly when the majors are equal and the host's minor
+   is not less than the JAR's; for a version below 1.0 the minor is compared as the major and the patch as the minor.
+3. An incompatible JAR's engines are `blocked` (`ENG-1002` for the API, `ENG-1005` for a platform library) with one sentence
+   that names the engine, its version and file, the version it was built for, the version the host provides, and what to do:
+
+   > market-risk 1.2.0 (drishti-risk-1.2.0.jar) was built for engine API 1.5; this server provides 1.4. Install a Drishti
+   > release that provides 1.5 or later, or the engine build for 1.4. Nothing else is affected.
+
+4. Two JARs that register one engine id are both `blocked` (`ENG-1006`), each naming the other file. An upgrade replaces the
+   file.
+5. A host MUST state the versions it provides in its release text and at run time (Drishti: Admin → Engines and
+   `GET /api/v1/engines/platform`).
+6. The other version rules are section 13 (an engine's own versions, contracts, stored answers) and 10.3 (a pack's range).
+
+### 17.6 Trust (Drishti)
+
+`drishti.engine-lib.trust`:
+
+| Value | An engine may start when |
+|---|---|
+| `folder` (default) | its JAR is in the engine lib folder |
+| `pinned` | also: its engine file carries `engine.version` and `engine.sha384`, both equal to the JAR's (`ENG-1011`), and a certificate beside the JAR names that hash and a kit major the host accepts (`ENG-1012`) |
+
+A value `signed` is reserved: when Drishti verifies signed `.dmod` modules, the same verifier and key store apply to engine
+JARs signed the JDK's standard way. Nothing in this draft depends on it.
+
+### 17.7 When the set of engines changes (Drishti)
+
+1. The folder is read at start only. Adding, replacing or removing a JAR takes effect at the next start of that node; on a
+   cluster, node by node, with requests routed to the nodes that run the engine.
+2. Without a restart a host MUST support: the switch; closing and reopening an engine instance on the same JAR after its
+   engine file changed; rebinding of inputs.
+3. A host MUST NOT load two versions of one engine id in one process.

@@ -15,7 +15,10 @@
 -->
 # Engine integration: engines by contract, run by configuration
 
-**Status: design for the owner, written 2026-11-21. Nothing built, nothing run, no decision taken.** Read from git only: Drishti
+**Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0).
+Nothing built, nothing run. EN-1 to EN-28 are accepted; EN-29 to EN-44 are open, each with a recommendation (section 16).**
+For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
+`ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
 `kernel/drishti-server/.../server/engines`, `compute/drishti-compute/.../compute/reactive`, `config/engines/*.yaml`, the banking
 and genomics module manifests, `META-INF/drishti/engines.yaml`); [DRISHTI_RISK_DESIGN](DRISHTI_RISK_DESIGN.md);
@@ -29,9 +32,16 @@ adheres to them; Drishti invokes and runs engines almost entirely through config
 configuration, dynamic proxies, run-time compiled code. Think of the whole of Drishti, not only risk. Answer: how does a pack
 become aware of an engine, and how does an engine help a pack.
 
+**The owner's requirement (2026-11-22).** An engine is developed and unit-tested without the Drishti application. It depends
+only on a small JDK-only engine API and, if it wants them, drishti-tools, Drishti Lake and Rachana. Its own test kit runs with
+no server. Deploying is copying its JAR into the server's lib folder: the server discovers it at start, checks API
+compatibility, and binds it from `config/engines/<name>.yaml`. No engine is compiled into Drishti; adding or upgrading one
+needs no Drishti build. Drishti Risk is engine #1 delivered this way. **This is the acceptance test of the design, and
+section 0 is built on it.** Text of the first design that it supersedes is marked DELETED where it stood; git keeps it.
+
 ## Contents
 
-0. [The answer in one page](#0-the-answer-in-one-page) · 1. [What exists today](#1-what-exists-today) ·
+0. [The acceptance test, and the answer in one page](#0-the-acceptance-test-and-the-answer-in-one-page) · 1. [What exists today](#1-what-exists-today) ·
 2. [Drishti-wide view](#2-drishti-wide-view) · 3. [The engine model](#3-the-engine-model) ·
 4. [Packs and engines](#4-packs-and-engines) · 5. [Drishti's configuration surface](#5-drishtis-configuration-surface) ·
 6. [The engine kit (TCK)](#6-the-engine-kit-tck) · 7. [The generation ladder](#7-the-generation-ladder) ·
@@ -39,16 +49,233 @@ become aware of an engine, and how does an engine help a pack.
 10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
-16. [Decisions EN-1 to EN-28](#16-decisions-en-1-to-en-28)
+16. [Decisions EN-1 to EN-44](#16-decisions-en-1-to-en-44)
 
-## 0. The answer in one page
+## 0. The acceptance test, and the answer in one page
+
+**The owner's acceptance test (2026-11-22, [I8_CARRY_IN](I8_CARRY_IN.md)).** Every line must hold. A design choice that breaks
+one of them is wrong, whatever else it buys.
+
+| # | The test | How the design meets it | What proves it |
+|---|---|---|---|
+| A1 | An engine is developed and unit-tested **without the Drishti application** | it compiles against `engine-api` (JDK only) and, if it wants them, drishti-tools, Drishti Lake and Rachana; no Drishti artifact is on its class path, in any scope (0.2) | the "names no host" guard of every engine repository; its build resolves on a machine that holds no `com.ash.drishti` artifact |
+| A2 | Its own test kit runs **with no server** | `engine-tck`: a JUnit harness and a command that need a JDK 21 and nothing else (section 6) | the kit's run in the engine's own build |
+| A3 | Deploying is **copying the engine JAR** into the server's lib folder | one self-contained JAR per product, into `<home>/lib/engines` (0.3, 0.4) | the drop-in test (0.11) |
+| A4 | The server **discovers it at start** | `ServiceLoader` over each JAR's own class loader (0.4, 0.5) | the start log; Admin → Engines |
+| A5 | It checks **API-version compatibility and refuses in words** | the descriptor says what the JAR was built against; one rule; one sentence naming both versions and what to do (0.6) | the kit's delivery group; the drop-in test's too-new JAR |
+| A6 | It **binds from `config/engines/<name>.yaml`** | inputs mapped to lake tables and contracts, parameters, outputs to lake and live tables, schedules, access (sections 4.2, 5) | the Admin card: every input's table and the rule that bound it |
+| A7 | **Never compiled into Drishti**; adding or upgrading an engine needs no Drishti build | no engine class and no engine dependency in Drishti's reactor; the same server jar, by hash, runs engine version N and N+1 (0.8, 0.11) | two guards in Drishti; the drop-in test |
+| A8 | **Drishti Risk** (risk-kernel, market, CCR) is engine #1 delivered this way | one JAR that registers `market-risk` and `ccr` (section 9) | the R2 gate: Drishti's goldens through the dropped JAR |
+
+### 0.1 The shape in three lines
+
+1. **An engine is a JAR made somewhere else.** Its source names no host. It compiles against a small JDK-only API and, if it
+   wants them, the three family libraries; its kit runs on a laptop with a JDK.
+2. **The server is a host that was built before the engine existed.** At start it opens each JAR of `<home>/lib/engines` in its
+   own class loader, finds the engines by `ServiceLoader`, compares versions, and refuses in a sentence what does not fit.
+3. **Configuration joins them.** `config/engines/<id>.yaml` maps the engine's inputs to lake tables, sets its options and
+   schedules, sends its outputs to lake and live tables and says who may ask. A pack names engine outputs, never a JAR.
+
+### 0.2 What an engine may depend on
+
+| Library | Scope in the engine's build | Used for | In a server it comes from |
+|---|---|---|---|
+| `com.ash.engine:engine-api` | provided | the contract (section 3) | the server, shared (0.5) |
+| drishti-tools (`com.ash.tools:tools-*`) | provided, optional | the xlsx writer for workbooks, settings, codec, time and concurrency helpers | the server, shared |
+| Rachana core (`com.ash.rachana`) | provided, optional | evaluating its own explanation formulas; EL values | the server, shared |
+| Drishti Lake, API only (`lake-api`, `lake-contracts`) | provided, optional | contract definitions; the read API's types | the server, shared |
+| Lake's readers and loader, `engine-inputs-lake`, `engine-inputs-files`, `engine-tck` | test, and the engine's own command line | inputs from files or a lake with no server; a test lake built from JSONL | not used inside a server: the host supplies `Inputs` |
+| Anything else (Arrow, a maths library, a native binding behind a Java fallback) | compile, **merged into the engine JAR** | the engine's own business | the engine's JAR only (0.5) |
+| Any `com.ash.drishti` artifact, Spring, a servlet or web type | **forbidden** | | invisible: the engine's class loader cannot reach them |
+
+**Data in a host comes only through `Inputs`** (EN-40). The owner allows an engine to use Lake's read API and loader, and it
+does: standalone, `engine-inputs-lake` binds its inputs to lake tables with no server, and the loader builds its test lakes.
+Inside a server the same rows arrive through `Inputs`, which Drishti implements over the same Lake read API, with the site's
+binding, row rules and masks applied. One reading code serves both; an engine that opened a lake by path inside a server would
+pass by the access rules, so the specification forbids it (8.4) and the kit runs every case through a recording `Inputs`.
+
+### 0.3 The engine JAR
+
+| Rule | Why |
+|---|---|
+| One file, `<name>-<version>.jar`, with the engine's classes **and its private libraries merged in** (no relocation is needed: the loader isolates them) | deploying is copying one file (A3) |
+| No class of the platform packages (`com.ash.engine`, `com.ash.tools`, `com.ash.lake`, `com.ash.rachana`) inside | they are the server's (0.5); the kit refuses a JAR that bundles one |
+| `META-INF/services/com.ash.engine.Engine` lists each engine class; `META-INF/drishti-engine/<id>.engine.yaml` is each engine's descriptor | discovery (0.4); the kit checks the two lists agree |
+| A JAR may register several engines; they share its classes | Drishti Risk: one JAR, `market-risk` and `ccr`, one risk kernel |
+| Native code only as resources of the JAR, behind a guard that falls back to Java, unpacked under the engine's work folder | no executable is placed on a server (the Windows machine) |
+| The kit's certificate (`<jar name>.certificate.json`) travels beside it when the site asks for evidence (0.7) | never a second file the server needs in order to load it |
+
+`engine gen stubs` writes a build file that does all of this (the merge, the services file, the provided scopes).
+
+### 0.4 The folder, and discovery at start
+
+- **The folder is `<home>/lib/engines`** (`drishti.engine-lib.path`, `DRISHTI_ENGINE_LIB_PATH`; absolute or anchored to a named
+  root). It sits beside `lib/ext` and, like it, is kept on an upgrade. It is not `lib/ext` itself, because that folder is one
+  shared class loader that connectors and modules see, and engines need a loader each (0.5). An engine JAR found in `lib/ext`
+  is not loaded from there; Health says where it belongs, as it does today for a server jar found there.
+- **At start**, for each JAR in name order: open its loader; `ServiceLoader.load(Engine.class, loader)`; for each provider make
+  one instance (the constructor does no work) and read `descriptor()`; run the checks of 0.6; register the engine under its id
+  in the one engine registry (today's switch registry); then read `config/engines/<id>.yaml`.
+
+| What is there | State in Admin → Engines | Words |
+|---|---|---|
+| JAR and engine file, the checks pass, `enabled: true` | `running` | |
+| the same, `enabled: false` | `off` | who, when, why (as today) |
+| JAR, no engine file | `not configured` | "market-risk 1.0.0 is installed but has no config/engines/market-risk.yaml. `python tools/drishti.py engine template market-risk` prints one from its descriptor." |
+| engine file, no JAR that registers the id | `not installed` | "config/engines/market-risk.yaml names an engine that no JAR in /opt/drishti/lib/engines provides." |
+| JAR that fails a check | `blocked` | the sentence of 0.6 |
+
+None of these stops the server, a module or another engine (the optional-externals rule). A JAR whose descriptor cannot be read
+has no id yet: it is listed by file name with the reason.
+
+### 0.5 Class loading: what is shared, what is isolated
+
+```
+JDK
+ ├─ kernel loader: the server jar (Drishti, Spring, and the platform libraries: engine-api, engine-host, tools, Lake, Rachana)
+ │    ├─ lib/ext loader (the site's drivers and connector jars)            kernel first
+ │    └─ one loader per .dmod module                                       kernel first, then lib/ext, then its own
+ └─ one loader per engine JAR (its parent is the JDK only)
+        com.ash.engine..  com.ash.tools..  com.ash.lake..  com.ash.rachana..   ──▶ the kernel loader, always (parent-first)
+        everything else                                                        ──▶ the JAR itself, or not found (child-only)
+```
+
+1. **The platform packages are shared and parent-first.** There is one copy of the API's types in the JVM, so the `Answer` an
+   engine returns is the host's `Answer`. Only the public packages of each library are handed over, never an `internal` one.
+2. **Everything else is the JAR's own, and only the JAR's.** A class that is neither a platform package nor in the JAR is not
+   found. The engine cannot see Spring, Jackson, a Drishti class, `lib/ext`, a module or another engine, so it behaves the same
+   under every server release, and two engines may carry two versions of one library.
+3. This is stricter than the module loader on purpose. A module is built with Drishti and wants the kernel's libraries (kernel
+   first for everything). An engine is built without Drishti and must not notice which libraries a kernel happens to ship.
+4. A platform class found inside an engine JAR is never used; the kit refuses the JAR and the server notes it in Health.
+5. One loader **per JAR**, not per engine: the engines of one product share its classes (Risk's kernel is loaded once).
+6. The thread's context class loader is the engine's loader for the length of every call into it (libraries that look
+   services up by it find their own).
+7. The loader is one small class (`EngineJarLoader`, in `engine-host`) used by the kit, by `engine-cli` and by Drishti. A JAR
+   that loads in the kit loads in a server.
+
+It is isolation of names, **not a security boundary** (3.8): a JAR in the folder runs with the server's rights.
+
+| Alternative | Why not |
+|---|---|
+| All engine JARs in the shared `lib/ext` loader | no isolation: two engines' copies of one library collide, an engine sees Spring and starts to use it, and A1 is lost in practice |
+| Share only the API; each engine bundles tools, Lake and Rachana (child-first) | nothing but the API to check, but Lake's storage libraries would sit in every engine JAR, and a storage fix would need every engine rebuilt: against "fix bugs in one place" |
+| JDK module layers | the same isolation, but every private library must be a well-formed module; no gain here |
+
+### 0.6 Compatibility, checked at start and refused in words
+
+A descriptor states what its JAR was **built against**: `api: "1.4"` and, for each family library it uses,
+`platform: { tools: "1.2", rachana: "1.0", lake: "0.9" }`. One rule for all four: **the same major, and the server's minor is at
+least the engine's** (below 1.0 the minor counts as the major). It is enough because each of the four is additive-only within a
+major (the engine API by the specification's section 13; tools by TL-12; Lake and Rachana by their frozen API dumps).
+
+| The server provides | The JAR was built for | Result |
+|---|---|---|
+| engine API 1.4 | 1.0 to 1.4 | loads |
+| engine API 1.4 | 1.5 | `blocked`: "market-risk 1.2.0 (drishti-risk-1.2.0.jar) was built for engine API 1.5; this server provides 1.4. Install a Drishti release that provides 1.5 or later, or the engine build for 1.4. Nothing else is affected." |
+| engine API 1.4 | 2.0, or 0.x | `blocked`, the same sentence |
+| tools 1.2 | `platform.tools: "1.3"` | `blocked`: "…needs drishti-tools 1.3; this server provides 1.2. …" |
+
+| Pair | Rule | When it does not hold |
+|---|---|---|
+| engine ↔ engine API | above | `blocked` (`ENG-1002`) |
+| engine ↔ tools, Lake, Rachana | above, for those it declares | `blocked` (`ENG-1005`) |
+| engine ↔ the engine file's pin (0.7) | exact, when the file carries one | `blocked` (`ENG-1011`) |
+| two JARs ↔ one engine id | never | both `blocked`, naming both files (`ENG-1006`); an upgrade replaces the file |
+| pack ↔ engine | the pack's `uses.engines` range holds and every output it names exists | that pack's uses are off, in words (4.3); the engine runs for others |
+| engine ↔ contracts | by major, at binding (4.2) | `blocked`, naming the input |
+| engine ↔ stored answers | the stamp holds the engine version | an answer of another version is never served |
+| kit ↔ engine API | the same major | the kit refuses to run |
+
+Each Drishti release states one line, also shown in Admin → Engines and at `GET /api/v1/engines/platform`: "provides engine API
+1.4, tools 1.2, Lake 0.9, Rachana 1.0". A server provides one API major; whether a server of API 2 also runs 1.x engines is
+decided when 2.0 is designed, not now.
+
+### 0.7 Trust
+
+Facts: the JVM has no sandbox; a JAR in the lib folder runs with the server's rights, as every jar in `lib/ext` and the server
+jar itself do; `.dmod` modules are verified by a hash list today and are not signed (signing is planned with the security
+release).
+
+| Level (`drishti.engine-lib.trust`) | An engine starts when | For |
+|---|---|---|
+| `folder` (default) | its JAR is in the folder and passes 0.6. Writing to that folder is the act of trust, as it is for `lib/ext` | development, demos, a site that controls its install folder |
+| `pinned` | also: its engine file carries `engine.version` and `engine.sha384` equal to the JAR's, and the kit's certificate beside the JAR matches that hash | production (the deployment guide recommends it) |
+| `signed` | **not in i8.** When `.dmod` signing is built, the same verifier and key store accept engine JARs signed the JDK's standard way | one signing mechanism for modules and engines, built once |
+
+Under every level Admin and Health list each JAR: file, SHA-384, the engines and versions it registers, the publisher, and the
+certificate when one is beside it ("no kit certificate" otherwise). The pin lives in the engine file, so a production upgrade is
+two reviewable facts: a new file in the folder and a changed hash in configuration.
+
+### 0.8 Engines and `.dmod` modules: one way each
+
+| | A `.dmod` module | An engine JAR |
+|---|---|---|
+| Holds | a domain's host side: packs, contracts, screens, vocabulary, access rules, Spring adapters | arithmetic and its explanation |
+| Built | with Drishti, against the kernel API, for a kernel version (and, first-party, one kernel build) | without Drishti, against the engine API |
+| Installed | a file in the modules folder, verified against its hash list | a file in `lib/engines` |
+| Class loader | kernel first | the platform packages only (0.5) |
+| Names the other | its packs say `uses.engines: [ { engine: market-risk, version: ">=1.0 <2", … } ]` | names nothing |
+
+**An engine is a plain JAR in the lib folder that a module refers to by name. It is not a `.dmod` kind, and a `.dmod` never
+carries one.** Reasons: (1) the `.dmod` format, its verifier and its loader are tied to the kernel's version, which is the tie
+the acceptance test forbids; (2) an engine author would need Drishti's module tool to package, which fails A1 and A3;
+(3) two carriers would be two install paths, two loaders and two sets of checks for one job. A distribution lists both, and its
+installer copies each to its folder. `module.yaml` `compute.engines:` goes at R2: what a module needs of engines is the sum of
+its packs' `uses.engines` (section 4).
+
+### 0.9 At start only
+
+- The folder is read once, at start, as `lib/ext` and the modules folder are. Adding, upgrading or removing an engine is: stop
+  the node, change the file, start. On a cluster it is one node at a time, and requests route to the nodes that run the engine
+  (5.5), so there is no outage.
+- **Without a restart:** the switch (on, off); "restart engine" in Admin after an edit of its engine file (sessions and the
+  instance are closed and opened anew on the same JAR and loader); rebinding of inputs.
+- **Why not hot replacement in i8:** unloading needs every class, thread and native library of the old JAR released, a native
+  library cannot be unloaded while its loader lives, and a leak is silent; Windows locks an open JAR, so the copy itself fails
+  there; two versions of one engine inside one JVM in the middle of requests complicate the stamp rule; and nothing has asked
+  for it. The per-JAR loader keeps the door open: hot **add** of a new JAR is a small later step if a site needs it.
+
+### 0.10 The minimum an engine implements
+
+| Need | Where | Required |
+|---|---|---|
+| Identity and declaration | the descriptor file; `Engine.descriptor()` | yes |
+| Lifecycle | `Engine.open(context)`, `Engine.session(snapshot, inputs, control)`, `Session.close()`, `Engine.close()` | yes |
+| Inputs | pulled from the host's `Inputs` as column batches | the host's part |
+| Outputs | `Session.ask(request, control)` returns an `Answer` of tables | yes |
+| Cancel | `Control.check()` once a batch and once a declared latency | yes |
+| Determinism | no interface: an obligation the kit's laws prove; the stamp from `Stamps.of` | yes |
+| Explain and workbook | `Explaining` on the session | when an output column is a measure |
+| Resource limits | `MemoryBudget.reserve` before allocating; `Session.memoryBytes()`; the host's executor | yes |
+| Status words for the Admin card | `Engine.notes()` (default: none) | no |
+| Incremental updates, partition | `Incremental`; `Partitioned` and `Assembling` | no |
+
+The smallest engine is a descriptor, one registered class and a session: **two interfaces, eight methods**. Nothing else is
+needed to pass the acceptance test; the capabilities are added when an engine has the need.
+
+### 0.11 The proof
+
+| Check | Where it runs | Fails when |
+|---|---|---|
+| Names no host | every engine repository | a source or a build file names `com.ash.drishti`, Spring, or a Drishti setting |
+| Delivery group of the kit (6.1) | the engine's build, no server | the JAR does not load through `EngineJarLoader`, bundles a platform class, has a class reference that resolves nowhere, or its registrations and descriptors disagree |
+| No engine in the reactor (from R2) | Drishti | a main class in Drishti implements `com.ash.engine.Engine`, or a pom depends on an engine artifact, or a source imports `com.ash.risk` |
+| **The drop-in test** (from H2; in the drill) | Drishti, against the server jar as built | see below |
+
+The drop-in test records the server jar's hash, then with that one jar: starts with an empty `lib/engines` (the sample engine's
+uses are off, in words); copies `engine-sample-1.0.0.jar` in and restarts (running; an ask answers); replaces it by `1.1.0`
+(the new output is there, the stamp names 1.1.0); adds a JAR built for a newer API (blocked with the sentence, everything else
+up). The server jar's hash is the same at the end. At R2 the same test runs with Drishti Risk and the goldens.
+
+### 0.12 The answer in one page
 
 **An engine is a pure, explained function from contract tables to tables.** It declares, in one descriptor file, the contracts
 it reads, its parameters, the tables it answers with, which columns are measures, and what it can do (update incrementally,
-answer in parts, run in a separate process). It implements two Java interfaces, and one more per capability, from a JDK-only artifact. It never reads
-data itself, never schedules itself, never knows a user, a pack, a screen or a host. Everything else is the host's, and in
-Drishti the host's part is **one generic runtime driven by `config/engines/<name>.yaml`**: which jar and exact version, which
-lake tables feed which input, when it runs, where its outputs go, who may ask.
+answer in parts, run in a separate process). It implements two Java interfaces, and one more per capability, from a JDK-only
+artifact. It never schedules itself, never knows a user, a pack, a screen or a host. Everything else is the host's, and in
+Drishti the host's part is **one generic runtime driven by `config/engines/<id>.yaml`**: which lake tables feed which input,
+when it runs, where its outputs go, who may ask.
 
 **Five points where this design departs from the lead's starting notes.**
 
@@ -85,9 +312,10 @@ read like any other table. An engine absent or switched off turns those features
 engines of reactive connectors), put behind the same contract. Arrow Flight is the remote transport when a measured trigger asks
 for one (section 8).
 
-**Size.** About **58 bd** for the i8 scope (about 67 with 15% contingency), of which about 33 bd is in a new small repository
-and needs no Drishti change. Drishti Risk's own estimate stays about neutral (ports are designed once, not twice). Compiled
-expressions (about 12 bd) and the Flight transport (about 6 bd) are later, each on a measured trigger (section 14).
+**Size.** About **65 bd** for the i8 scope (about 75 with 15% contingency), of which about 35 bd is in a new small repository
+and needs no Drishti change. The acceptance test adds about 7 bd net to the first estimate (section 14): the JAR loader and the
+delivery proof are small; the larger part is that Drishti's banking adapters may no longer compile against Risk's types.
+Compiled expressions (about 12 bd) and the Flight transport (about 6 bd) are later, each on a measured trigger.
 
 ## 1. What exists today
 
@@ -98,8 +326,10 @@ expressions (about 12 bd) and the Flight transport (about 6 bd) are later, each 
 | Reactive host: `ReactiveSpec` (kinds, typed `ParamSpec`, `reads`, engine `type: java | python`, version, triggers `write-back`, `live`, `data-version`, `schedule`, coalescing, cache, limits), `Triggers`, `Coalescer`, `ResultCache`, `Watermark`, `JavaRunner`, `PythonRunner` | `compute.reactive` (3,977) and `compute.worker`, `compute.env`, `compute.approval` | a generic runtime for declared computations, with out-of-process Python workers and an approval of libraries | **promoted**: becomes the engine host runtime |
 | Engine catalogue | `META-INF/drishti/engines.yaml` in each module: per engine `opens`, `file`, `switch`, `env`, `aliases`, `needs`, `api`, `console`, `words`, `menus`, `help`, `tiles`, `bi`, `cli`, `playgrounds`, `connectors`, `kinds`, `inputs`, `ai-tools` | what disappears when the engine is off | **generated** from the descriptor plus the pack's use of it; the hand-written list goes |
 | `config/engines/*.yaml` (11 files) | site configuration | the switch plus the engine's own settings as `drishti.<prefix>.*` | **kept and extended** (section 5); old keys stay as aliases |
+| `<home>/lib/ext` and `SharedLib` | the install folder | the site's jars (drivers, connector plug-ins) in one shared loader under the kernel's, read at start, listed in Health with their hashes | **kept** as it is; `<home>/lib/engines` is its sibling for engine JARs, one loader each (0.4, 0.5) |
+| `ModuleClassLoader`, `ModuleVerifier`, `FirstParty` | `drishti-module-runtime` | a module's loader (kernel first, kernel internals hidden), its hash-list checks; no signing yet | **kept** for modules; the engine loader is a smaller, stricter sibling in `engine-host` |
 | Implementations of the reactive SPI | `VarResultEngine`, `ExposureResultEngine`, `CorrelationEngine`, `BetaEngine`, `VectorSumEngine` (sample), Python `path-sum` | adapters and small analytics | section 12 |
-| `module.yaml` `compute.engines:`, `provides.kinds:` | every `.dmod` | which engines and kinds a module brings | **kept**; gains the conformance and use declarations of section 4 |
+| `module.yaml` `compute.engines:`, `provides.kinds:` | every `.dmod` | which engines and kinds a module brings | `provides.kinds` **kept**, with the conformance and use declarations of section 4. `compute.engines` **goes** at R2: a module brings no engine (0.8) |
 
 Three of the eleven switch files are not engines in this document's sense (`dataload`, `flight`, `memory-lake`), one is a
 library (`openblas`) and one is the kernel's query engine (`pivot`). They keep their switches (section 2.2).
@@ -142,7 +372,7 @@ of code is an engine at all. Many engines will live inside a module's jar and ne
 | **Capital markets, US equities, market data** | candidates | returns, betas, correlations (today `CorrelationEngine`, `BetaEngine`) are a small analytics engine | they move with the risk product as RK-5 says, or become the first module-local engine (EN-24) |
 | **Genomics** | candidate | the `association` kind and the `GWAS` word are a stored result today; computed on demand it is an engine (10.2) | the non-risk proof of the abstraction |
 | **Packs** | no | data, contracts, screens. They **use** engines (section 4) | packs lose compute code and reactive-connector declarations |
-| **`.dmod` modules, the kernel** | carrier | a module may carry engine jars; the kernel runs them. An engine may also arrive with no module (a jar and a config file) | `module.yaml` `compute.engines` lists descriptors, nothing else |
+| **`.dmod` modules, the kernel** | user | a module's packs **use** engines by name; the kernel runs them. An engine always arrives as a JAR in `lib/engines` with a config file, never inside a module (0.8) | `module.yaml` `compute.engines` goes at R2 |
 | **Distributions, editions, licensing** | n/a | a distribution lists engines like modules; a descriptor names its licence feature | "Drishti Risk" edition = the distribution with those engines on |
 | **Drishti\*net cluster** | host | placement per engine, session affinity, shards from the partition capability | section 5.5 |
 | **Compute pools, admission, capacity** | host | the limits of a config file are enforced by what exists (`Pool`, admission, the capacity planner) | one accounting: an engine's sessions reserve from the node's budget |
@@ -153,7 +383,7 @@ of code is an engine at all. Many engines will live inside a module's jar and ne
 | **Homes, Studio, Help, playgrounds** | consumers | Help shows the generated page of each running engine; Studio's palette lists outputs as tables and the generated fragments; a playground page exists for every measure because the explain rule guarantees its parts | no hand-written playground page per measure |
 | **Elements** | none | generated screens are fragments only (no bespoke UI) | a guard, as today |
 | **Native maths (OpenBLAS)** | library | an engine's own dependency behind its own guard; the switch and health card stay the host's | not an engine |
-| **Windows and offline sites** | constraint | no native launcher: a process engine is started as `java` or `python`; artifacts come from a folder or `~/.m2`, never fetched at run time | in the specification |
+| **Windows and offline sites** | constraint | no native launcher: a process engine is started as `java` or `python`; engine JARs come from `lib/engines`; nothing is fetched at run time | in the specification |
 
 ### 2.3 Consequences that shape the specification
 
@@ -180,11 +410,12 @@ Signatures and rules are in the specification; this section gives the shape and 
 ### 3.1 Descriptor
 
 One YAML file in the jar at `META-INF/drishti-engine/<id>.engine.yaml`. It is the single source for the binder, the kit, the
-generators, the Admin card, Help and the AI tool list.
+generators, the Admin card, Help and the AI tool list. The engine's class is not named in it: the JAR's
+`META-INF/services/com.ash.engine.Engine` registers it (0.4).
 
 | Block | Says | Used by |
 |---|---|---|
-| identity | `id`, `version`, `title`, `about`, `publisher`, `api` range, `entry` class, error-code prefix, licence feature | pin, certificate, Admin |
+| identity | `id`, `version`, `title`, `about`, `publisher`, `api` (the engine API version it was built against), `platform` (the tools, Lake and Rachana versions it was built against, for those it uses), error-code prefix, licence feature | the start checks of 0.6, Admin |
 | `snapshot` | the dimensions that key a session (`date`; or `cohort`; or none) | session manager, cache keys |
 | `inputs` | per named input: contract and major, required or optional, the columns read, the scope columns, `mode` (`session` or `request`), whether changes can be applied | binding, masks, pruning, the kit's coverage gate |
 | `options` | deployment settings with types, defaults, bounds | config validation, `CONFIGURATION.md` |
@@ -262,24 +493,27 @@ folder's disk. This is today's `hot-dates`, `open-heap-mb`, `memory-budget-mb`, 
 
 | Thing | Rule |
 |---|---|
-| Engine API | semantic versioning on the public packages; a descriptor states the range it was built for; the host refuses outside it |
+| Engine API | semantic versioning on the public packages, additive-only within a major; a descriptor states the version it was built against; the host refuses another major or a newer minor than its own, in words (0.6) |
 | Descriptor format | `engine: 1`; unknown keys are errors |
 | Engine version | semantic. Within a major: outputs and parameters only grow, defaults do not change, no number changes for an existing case (the kit's additive-only gate replays the last release's cases) |
 | Contracts | by major (`position@1`); a pack's kind conforms to a major |
-| Pin | config names one exact version and the jar's SHA-384; never a range, a branch or a snapshot |
+| Pin | optional: the engine file may name the exact version and the JAR's SHA-384; required under trust `pinned` (0.7). Never a range, a branch or a snapshot |
+| Platform libraries | tools, Lake and Rachana follow the same rule as the API, for the versions the descriptor's `platform` states |
 | Stored answers | the stamp holds the engine version: a new version never serves an old answer |
 
 ### 3.8 Security and isolation
 
 - **There is no in-process sandbox on the JVM any more** (the security manager is deprecated for removal and switched off in
-  later JDKs). In process therefore means *trusted*: first-party, or a jar an administrator approved with four eyes (the
-  approval flow of `compute.approval` exists). Everything else runs in a separate process under the operating system's limits.
+  later JDKs). In process therefore means *trusted*: an administrator put the JAR in `lib/engines`, and under trust `pinned`
+  also wrote its hash into configuration (0.7). A JAR a site will not trust in its server's process runs in a separate
+  process under the operating system's limits (section 8).
 - The kit's static scan refuses a jar that uses the network, starts a process, exits the JVM, creates threads, holds mutable
   static state, reads the clock or reaches into the host by reflection. It is a lint, not a sandbox, and is described as such.
-- Each engine loads in its own class loader with the engine API as the only shared types (as `.dmod` modules do).
+- Each engine JAR loads in its own class loader; the engine API, tools, Lake's API and Rachana are the shared packages and
+  nothing else of the server is visible (0.5).
 - **Certificate.** A kit run writes a certificate (engine, version, jar hash, API and kit versions, laws passed, results hash).
-  Drishti enables an engine only when the pinned jar's certificate is present and matches; `allow-uncertified: true` needs four
-  eyes and shows on Health as "uncertified engine loaded".
+  It is evidence: Admin and Health show it, or "no kit certificate", for every JAR. Under trust `pinned` an engine starts
+  only when the certificate beside its JAR matches the pinned hash. DELETED: `allow-uncertified` and its four-eyes flow.
 - Configuration never holds code. The only expressions are Rachana-EL, which is hermetic.
 
 ### 3.9 Many tenants, many users
@@ -304,7 +538,7 @@ Nobody names anybody's code. Each side declares against **contracts**, and the h
 |---|---|---|
 | The engine | the contracts it **needs** (`position@1`, `pnl-vector@1`) and the outputs it **offers** (`var`, `contributions`) | its descriptor |
 | The pack | the contracts its kinds **conform to**, and the engine outputs its screens **use**, with a version range and whether the use is optional | `pack.yaml` (`kinds.<kind>.conforms`, `uses.engines`) and, summed, `module.yaml` |
-| The site | which engines are on, which exact version, and any binding the contracts leave open | `config/engines/<name>.yaml` |
+| The site | which engines are on, any binding the contracts leave open, options, schedules, where outputs go, who may ask (and, under trust `pinned`, the exact version and hash) | `config/engines/<name>.yaml` |
 
 ```yaml
 # pack.yaml (market-risk), the additions only
@@ -352,6 +586,7 @@ the reason.
 
 | Situation | What the pack's user sees | What starts |
 |---|---|---|
+| The engine's JAR is in `lib/engines` but there is no engine file | as below, "…is installed but not configured" | everything else |
 | The engine's jar is not installed | screens and words that use it are hidden; opened by link: "VaR needs the market-risk engine, which is not installed on this server" | everything else |
 | Installed, switched off | the same, "…is off (turned off by a.smith on 2026-11-20: maintenance)" | everything else |
 | On another node only | the request is routed there (as engine switches do today) | |
@@ -400,7 +635,8 @@ engine offers fails the build (today's "server computes risk" check, made genera
    `date`; outputs `var`, `contributions`, `path`, `history`, `backtest`, `parametric`, `stress-window`, `sensitivities`,
    `cube`; capabilities explain, workbook, incremental (the intraday overlay), partition (shards).
 2. The `market-risk` pack's kinds declare `conforms` (4.1). `trading` and `market-data` declare theirs.
-3. The site's `config/engines/market-risk.yaml` pins `com.ash.risk:risk-engine-market` at `1.0.0`. Binding rule 2 resolves
+3. `drishti-risk-1.0.0.jar` is copied into `lib/engines`; the site's `config/engines/market-risk.yaml` names no artifact (under
+   trust `pinned` it carries the version and the hash). Binding rule 2 resolves
    every input; nothing is written by hand. The site adds only what is its own: `hot` snapshots, memory, the nightly official
    capture, who opens it.
 4. The pack's Sutras use `finance/var-tiles@1` and `finance/var-histogram@1` over `engine.market-risk.var` and `…path`. `VRES`
@@ -433,7 +669,8 @@ Hypothetical engine `cohort-stats` (publisher: the genomics module's; see the pa
 
 ### 5.1 The file
 
-`config/engines/<name>.yaml`, one per engine, imported by `application.yaml` as today. The schema is in the specification
+`config/engines/<name>.yaml`, one per engine, imported by `application.yaml` as today; `<name>` is the engine's id. It never
+names a JAR or a class. DELETED: `engine.artifact` (Maven coordinates or a jar path) and `engine.allow-uncertified`. The schema is in the specification
 (section 9); the shape:
 
 ```yaml
@@ -442,10 +679,9 @@ drishti:
     market-risk:
       enabled: ${DRISHTI_MARKET_RISK_ENABLED:true}
       changed: { by: "", at: "", reason: "" }          # written by the server from Admin, as today
-      engine:
-        artifact: com.ash.risk:risk-engine-market      # or a jar under a named root: an explicit, anchored path
-        version: 1.0.0
-        sha384: "…"
+      engine:                                          # optional: the file's name is the engine id, the JAR is found in lib/engines
+        version: 1.0.0                                 # a pin: another installed version is refused in words
+        sha384: "…"                                    # a pin of the JAR; both required under trust `pinned`
         run: in-process                                # or process
       snapshot: { hot: 10, pinned: { month-end: { back: 13, keep: disk } } }
       inputs:                                          # only what binding by contract leaves open
@@ -467,6 +703,9 @@ drishti:
       limits: { memory-mb: 0, threads: 0, request-seconds: 30, concurrent: { interactive: 16, batch: 2 } }
       placement: { roles: [ risk ], shards: { count: 3 } }      # the shard unit is the descriptor's
 ```
+
+Two site-wide settings sit beside the engine files, in the generated `CONFIGURATION.md` like every other:
+`drishti.engine-lib.path` (default `<home>/lib/engines`) and `drishti.engine-lib.trust` (`folder` or `pinned`, 0.7).
 
 Rules: every path absolute or anchored to a named root (`explicit-paths`); the server writes only `enabled` and `changed`
 (`connectors-read-only`, the same discipline); every key appears in the generated `CONFIGURATION.md` with the descriptor's
@@ -513,12 +752,17 @@ host stores them. (Risk's `ResultSink` port goes; section 9.)
 ## 6. The engine kit (TCK)
 
 `engine-tck`: a test jar and a command. `engine tck run --engine <jar> --cases <dir>` writes a results file and a certificate.
-The same command runs inside Drishti against the engine as configured (the adapter only adapts).
+It needs a JDK 21 and nothing else: no server, no network, no Drishti artifact (A2). It opens the JAR through the same
+`EngineJarLoader` a server uses, so what passes here loads there. The same artifact holds a **JUnit harness** for the author's
+own unit tests (`EngineHarness.of(MyEngine.class).inputs(rows…).ask(…)`: in-memory inputs, a budget, a work folder under the
+test's temporary folder), so an engine's first test needs no JAR and no case file. The same command runs inside Drishti
+against the engine as configured (the host only adapts).
 
 ### 6.1 What it proves
 
 | Group | Proof |
 |---|---|
+| **Delivery** | the JAR as a server will meet it: it loads through `EngineJarLoader`; `META-INF/services` and the descriptors name the same engines; no platform class is bundled; every class reference resolves in the JAR, the platform packages or the JDK (a closed-world link check, so a missing private library is found here and not in production); `api` and `platform` equal the versions the JAR was compiled against; no host type is referenced |
 | Descriptor | valid against the schema; equal to what the engine object reports; every option, parameter and column has words; capabilities equal the interfaces implemented |
 | Static scan | no forbidden API, no mutable static, no thread creation, dependencies inside the declared list |
 | Contracts | the engine reads only declared inputs and columns (a recording input catches others); every declared column is read by some case; outputs match their schema, keys unique, order as declared |
@@ -550,8 +794,9 @@ cases gets about two hundred checks.
 
 ### 6.3 How an outside engine passes
 
-Write the descriptor; `engine gen stubs` writes the case skeletons and a build file; implement; write cases; run the command;
-attach the certificate to the jar. A bank's own engine and a vendor's are certified by the same command on their own machine,
+Write the descriptor; `engine gen stubs` writes the case skeletons and a build file (provided scopes, the merge of private
+libraries, the services file); implement, with unit tests on the harness; write cases; run the command; hand over the JAR, and
+the certificate beside it where the site asks for one. A bank's own engine and a vendor's are certified by the same command on their own machine,
 with no Drishti present. `risk-tck` (Risk section 7) becomes: this kit, plus Risk's cases and its recorder comparison.
 
 ## 7. The generation ladder
@@ -578,7 +823,7 @@ still generated, because people and tools read it.
 1. **Screens with no author.** From a descriptor alone: a page per output (header, parameter form, table, the measure tiles,
    a "why" drawer, the workbook button) as a Sutra that uses only `core` fragments, and one typed fragment per output that a
    pack can `use:`. They are defaults: a pack wraps them (a variant) or ejects. This is the plug-and-play promise made
-   visible: drop a certified jar and a config file, get a working, explained screen.
+   visible: copy a JAR into `lib/engines`, add a config file, get a working, explained screen.
 2. **Workbooks from explanations.** EL steps in the translatable subset become Excel formulas over the `Data` sheet
    (arithmetic, comparisons, `sum`, `avg`, `min`, `max`, `count`, `if`, sorted rank picks → `SMALL`/`LARGE`, weighted sums →
    `SUMPRODUCT`, the distribution functions Excel has). The kit already recalculates the workbook, so a wrong translation
@@ -631,7 +876,7 @@ RK-10 stands and is made general: **in process by default; a separate process on
 | (b) a snapshot at target size does not fit one JVM beside the host | RK-10 |
 | (c) the engine is not Java (Python, a native library behind its own runtime) | RK-10, and today's Python engines |
 | (d) the engine must restart or upgrade without the host | RK-10 |
-| (e) the engine is not trusted: no certificate, a third party's jar the site will not approve for in-process | new (3.8) |
+| (e) the site does not trust the JAR in its server's process (a third party's engine) | new (3.8, 0.7) |
 | (f) the engine holds native code that can take the process down (a pricer) | new |
 
 - `engine.run: process` in config; the descriptor must declare the `process` capability; the kit's binding law proves the two
@@ -652,40 +897,64 @@ RK-10 stands and is made general: **in process by default; a separate process on
 ### 9.1 The layering
 
 ```
-engine-api  (com.ash.engine, JDK-only)          the host-facing contract: any engine, any host
-   ▲
-risk-engine-market, risk-engine-ccr             thin: a descriptor each, and an Engine over the product's runtime
-   ▲
-risk-market, risk-ccr  ──▶  risk-kernel         the product: RiskModule, Measure, Explainer, Playground (its inner SPI)
+drishti-risk-<version>.jar            ONE file in lib/engines, built in the drishti-risk repository; registers two engines
+   risk-engine-market, risk-engine-ccr     thin: a descriptor each (market-risk, ccr), and an Engine over the product's runtime
+   risk-market, risk-ccr ──▶ risk-kernel   the product: RiskModule, Measure, Explainer, Playground (its inner SPI)
+   private libraries, merged in            Arrow, the OpenBLAS binding (Java fallback), a YAML reader
+compiles against, provided                 engine-api · tools-xlsx · lake-contracts · Rachana core (explanation formulas)
 ```
 
 The engine API is how a host runs any engine. Risk's module SPI (its section 4.2) is how a measure is added to the risk
-kernel. They are different questions and both stay. What must not happen is two sets of **ports**.
+kernel. They are different questions and both stay. What must not happen is two sets of **ports**. The product's Maven modules
+stay as they are for embedders and `risk-cli`; the engine JAR is one more build output of the same repository, and it is the
+only thing a Drishti install receives.
 
 ### 9.2 What changes in the Risk design
 
 | Risk design | Change |
 |---|---|
-| 4.1 facade `RiskRuntime`, `RiskDay`, `Answer` | kept for embedders and `risk-cli`. `RiskDay` is a `Session` whose snapshot is `{date}`; `Answer`, `Explanation`, tables are the engine API's types, not second ones |
-| 4.3 `RiskInputs` | **is** the engine API's `Inputs` (column batches, vector sink). `risk-files`, `risk-jdbc`, `risk-lake` become `engine-inputs-*` adapters usable by any engine, in the engine repository |
+| 4.1 facade `RiskRuntime`, `RiskDay`, `Answer` | kept for embedders and `risk-cli`, with its explicit module list. `RiskDay` is a `Session` whose snapshot is `{date}`; `Answer`, `Explanation`, tables are the engine API's types, not second ones. A host never calls the facade: it finds the two `Engine` classes by `ServiceLoader` |
+| 4.3 `RiskInputs` | **is** the engine API's `Inputs` (column batches, vector sink). `risk-files`, `risk-lake` become `engine-inputs-*` adapters usable by any engine, in the engine repository |
 | 4.3 `ResultSink` | **goes**: the engine returns tables; the host stores declared outputs |
-| 4.3 `WorkDir`, `DocumentStore`, `AuditSink`, `Clock` | the engine API's `EngineContext` |
+| 4.3 `WorkDir`, `AuditSink`, `Clock` | the engine API's `EngineContext` |
+| 4.3 `DocumentStore` | **goes**: documents the engine reads (system baskets, report definitions) are inputs under contracts; captures, sign-offs and the official record are stored outputs and the host's workflow over them. Settled file by file at K0 with the E0 review |
 | 4.3 `SuppliedVectors` | a named supplier port (`uses:`), answered "not supplied" when unbound (RK-12 unchanged) |
 | 4.3 `PartitionTransport` | goes: `Partial` is a value; carrying it is the host's |
 | 4.2 `Measure` additivity, determinism; `Explainer`; `Playground` | the kit's laws and the explain rule, generic. RK-15 is satisfied by the specification |
 | `Principal` out, visibility in (RK-9) | the engine API's `Visibility` |
 | `RSK-` codes (RK-2) | declared in the descriptors; mapped to `DRS-` by the generic host once |
 | 7 `risk-tck` | the engine kit plus Risk's cases; the reference recorder and the raw-bit rule are unchanged (RK-18) |
-| 5.3 `drishti-risk-host` (about 1,500 new lines in Drishti) | mostly replaced by configuration and the generic host; what is left is the visibility rules and the pivot adapter until that is generic |
-| 5.2 the 14 controllers and 12 properties classes that stay | candidates to shrink at R2: properties become `options`; controllers whose routes are a plain ask become the generic endpoints. Measured at R2, not promised here |
-| 8 repository layout | adds `risk-engine-market`, `risk-engine-ccr`; `risk-api` depends on `engine-api` |
+| 5.3 `drishti-risk-host` | **DELETED.** There is no Risk adapter module in Drishti: the generic host and `config/engines/market-risk.yaml`, `ccr.yaml` do its work; the visibility rules stay in the banking module as host rules |
+| 5.2 the 14 controllers and 12 properties classes that stay | properties become `options` (old keys as aliases). A route that is a plain ask becomes an alias of the generic endpoint; a controller with a host workflow (sign-off, saved views, basket edits) stays and asks through the generic host (9.3) |
+| 8 repository layout, RK-19 the pin | adds `risk-engine-market`, `risk-engine-ccr` and the merged engine JAR; `risk-api` depends on `engine-api`. Drishti has **no Maven dependency** on any Risk artifact: a distribution lists the JAR's version and hash, and packaging copies the file into `lib/engines` |
 | 9.1 guard "names no host" | unchanged: `com.ash.engine` is not a host |
+| 9.1 Drishti guard "public API only" | replaced by "no source imports `com.ash.risk`" (0.11) |
+| RK-7 the OpenBLAS switch | `config/engines/openblas.yaml` becomes the option `linear-algebra: native or java` of the two engines (old key as alias); the Health line comes from `Engine.notes()` |
 | K4, K5, K6, K7, K12 | built against `engine-api` 0.x from the start, so ports are cut once |
 | RK-10, K11 | section 8 |
 | K15 (liquidity, climate) | each design delivered as a descriptor with cases |
 
 **Order matters.** `engine-api` 0.1 must exist before Risk's K4. It is frozen as 1.0 only after three engines pass the kit
 (market risk, CCR, and the non-risk one), which is the rule-of-three check against shaping it to VaR.
+
+### 9.3 What Drishti keeps of risk, and what it compiles against
+
+After R2 no Drishti source names a Risk type. What stays in the banking module works through the engine API's values (tables,
+requests, visibilities) and output names:
+
+| Stays in the banking module | Works through |
+|---|---|
+| Access rules (`VarAccess`, `ExposureAccess`) | they produce a `Visibility`: data of the engine API |
+| Routes that are a plain ask | the generic endpoints; the old paths are aliases in the module's route table |
+| Sign-off, approvals, saved views, basket edits | host workflow over stored outputs and inputs; they ask through the generic host by output name |
+| Pivot (`VarPivotProvider`, `VarPivotLens`, `MrCubeExtras`) | `partial` and `ask` by output name; tables only. Still banking's own code in i8; the generic partition-to-pivot adapter is later (section 12) |
+| Flight form, the intraday stream | outputs served by the host; the `changes` trigger |
+| Explain and why panels | the generic `…/explain` and `…/workbook` |
+| The goldens (`VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `PackagedVarGoldenTest`) | **expected values unedited**; the calling code asks through the generic host with the Risk JAR copied into a temporary lib folder |
+
+A wrong output or column name in this code is no longer a compile error. It is caught at start instead: every output and column
+a pack or a module uses is checked against the installed descriptor, and a mismatch turns that use off with the names
+(`ENG-5033`). The kit's cases stay the proof of the numbers.
 
 ## 10. Two paper tests
 
@@ -728,7 +997,7 @@ API. Everything any one of them needed alone (scope grammar, time buckets, genot
 
 ## 11. What stays in Drishti
 
-The generic engine host (promoted from the reactive package) and its Spring wiring; the switch registry, files, history, Admin
+The generic engine host (promoted from the reactive package) and its Spring wiring; the reading of `lib/engines` at start; the switch registry, files, history, Admin
 page; binding by contract and its Admin view; triggers, coalescing, the result cache; access rules and the visibility rules of
 each module; storing outputs to lakes; live-table feeding; the generic endpoints, Flight and Data Protocol serving; cluster
 placement, shards, routing; capacity and admission; mnemonics, menus, Help, Homes, Studio; the official record and approvals;
@@ -738,16 +1007,22 @@ the pivot engine; packs, loaders, feeds, source-system modules. No engine arithm
 
 | Today | Becomes | When |
 |---|---|---|
-| `api.compute.ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs`, `EngineResult`, `EngineProgress`, `ComputeEvent`, `Viewer` | deleted; `com.ash.engine` types. One compatibility adapter runs an old Java engine as a `request`-mode engine until its owner moves, listed with the step that deletes it | H2 |
+| `api.compute.ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs`, `EngineResult`, `EngineProgress`, `ComputeEvent`, `Viewer` | deleted; `com.ash.engine` types. No compatibility adapter is needed once the two rows below are done: after them nothing in the reactor implements the old SPI | H2 (types), R2 (last implementer gone) |
 | `kernel.api.engines.ComputeEngine` | kept, renamed `EngineLifecycle` to end the two-names confusion; one generic implementation for descriptor engines; services implement it as today | H2 |
 | `compute.reactive` (`ReactiveSpec`, `ParamSpec`, `Triggers`, `Coalescer`, `ResultCache`, `Watermark`, runners) | the host runtime in `engine-host` (moved to the engine repository, host types cut at ports) | R1 beside H1, adopted H2 |
 | Reactive connector blocks in `pack.yaml` (`plugin: reactive`, kinds, params, result, engine, triggers) | the pack's `uses.engines` and the site's engine file; the connector plugin stays one release as a reader of the old form, then goes | H2, deleted at R2 |
 | `META-INF/drishti/engines.yaml` | generated from descriptors and `uses`; services keep a short hand-written entry | H2 |
-| `VarResultEngine`, `ExposureResultEngine` | deleted: the Risk engines answer directly | R2 |
-| `CorrelationEngine`, `BetaEngine` | outputs of the market-risk engine if they move with `banking-compute/analytics` (RK-5), else a module-local `market-analytics` engine (EN-24) | R2 |
-| `VectorSumEngine`, Python `path-sum` (the compute demo) | the specification's sample engine and its Python twin, used by the kit for the binding law | R1 |
-| `var.yaml`, `exposure.yaml`, `frtb-sa.yaml`, `simm.yaml`, `sensitivities.yaml`, `mr-cube.yaml` | `market-risk.yaml`, `ccr.yaml` with `options`; each old file's switch becomes an output switch inside its engine, so "FRTB off" still works; old keys are aliases | R2 |
+| `VarResultEngine`, `ExposureResultEngine` | deleted: `market-risk` and `ccr` answer directly from `drishti-risk-<version>.jar` in `lib/engines` | R2 |
+| `CorrelationEngine`, `BetaEngine` | outputs of the market-risk engine: they move with `banking-compute/analytics` (RK-5) into the Risk JAR. If K0's file review keeps them out of Risk, they become one small engine JAR of their own (`market-analytics`), built outside Drishti like any other (EN-24) | R2 |
+| `VectorSumEngine` (the compute demo) | `engine-sample-<version>.jar`, built in `drishti-engine`: the specification's sample, the kit's own subject and the drop-in test's JAR. A distribution with the demo on copies it into `lib/engines` | R1 (built), H2 (dropped in) |
+| Python `path-sum` and the reactive `python` runner | stay one release behind the old reactive form (the row above it), for the compute demo only; a non-Java engine as a JAR is the process binding's later step (section 8, EN-44) | deleted with that step |
+| `var.yaml`, `exposure.yaml`, `frtb-sa.yaml`, `simm.yaml`, `sensitivities.yaml`, `mr-cube.yaml`, `openblas.yaml` | `market-risk.yaml`, `ccr.yaml` with `options`; each old file's switch becomes an output switch inside its engine, so "FRTB off" still works; `openblas` becomes the engines' option `linear-algebra`; old keys are aliases | R2 |
+| `module.yaml` `compute.engines:` (banking lists six) and `java.jars: drishti-compute-banking.jar` | gone: the module carries no engine and no compute jar; its packs' `uses.engines` say what it needs | R2 |
 | `VarPivotProvider`, `VarPivotLens`, `MrCubeExtras` | a generic partition-to-pivot adapter | after i8 (not in scope) |
+
+**The rule after R2, kept by a guard (0.11):** no main class in Drishti's reactor implements `com.ash.engine.Engine`; no pom
+depends on an engine artifact; a test that needs an engine copies its JAR into a temporary lib folder. Services (`dataload`,
+`flight`, `memory-lake`, `pivot`) are not engines and stay in-tree (EN-23).
 
 The freeze of RK-20 covers the banking paths; the reactive package joins the freeze list from the day `engine-host` is cut
 from it.
@@ -758,7 +1033,7 @@ from it.
 |---|---|---|
 | Home | a new small private repository **`drishti-engine`**, pinned from `~/.m2` like Rachana, Lake, tools | in `drishti-risk` (wrong: non-risk engines would depend on risk); in Drishti's `kernel-api` (wrong: an outside author would compile against the host, and Risk's "names no host" guard would fail); in `drishti-tools` (wrong: tools are domain-free utilities with no contract to certify) |
 | groupId, package | `com.ash.engine` | |
-| Artifacts | `engine-api` (JDK only; the four interfaces, values, descriptor model, schemas) · `engine-host` (descriptor reader, binder, sessions, limits, triggers behind ports; depends on `lake-contracts`, a YAML reader, Rachana core for EL) · `engine-tck` · `engine-gen` · `engine-inputs-files`, `-jdbc`, `-lake` · `engine-arrow` · `engine-cli` (a day of files in, tables and workbooks out, for any engine; `risk-cli` becomes a thin name over it) · `engine-sample` · `engine-bom` | |
+| Artifacts | `engine-api` (JDK only; the interfaces, values, descriptor model, schemas) · `engine-host` (`EngineJarLoader`, discovery, the compatibility check, descriptor reader, binder, sessions, limits, triggers behind ports; depends on `lake-contracts`, a YAML reader, Rachana core for EL) · `engine-tck` (the kit and the JUnit harness) · `engine-gen` · `engine-inputs-files`, `-lake` · `engine-cli` (a day of files in, tables and workbooks out, for any engine; `risk-cli` becomes a thin name over it) · `engine-sample` (delivered as a JAR, like any engine) · `engine-bom`. Later, each on a need (EN-44): `engine-inputs-jdbc`, `engine-arrow` | |
 | Error codes | `ENG-` | engines declare their own prefix |
 | Java level | 21 | |
 | Versions | `0.1.0` when Risk's K4 needs it; `1.0.0` after three engines pass | |
@@ -783,11 +1058,16 @@ Grades: F Fable, O Opus, S Sonnet, H Haiku.
 | E10 | Workbook from explanations | EL-to-formula subset, used by the sample engine and offered to Risk's new measures only | O 2, S 1.5 | 3.5 | R2 (cut line) |
 | E11 | Non-risk engine built | `cohort-stats` in the genomics module, its cases, its generated screen | S | 3 | R2 |
 | E12 | Docs | the specification kept current, author's guide, Admin and configuration pages, deck | S 2, H 1 | 3 | R2 |
-| | **i8 scope** | | | **about 67** | |
+| E13 | **The lib folder** | `EngineJarLoader`, discovery, the compatibility check and its sentences in `engine-host`; in Drishti: `lib/engines` read at start, the states `not configured` and `blocked`, the JAR list in Admin and Health, `engine template`, the two settings | O 1.5, S 1.5 | 3 | R1 (loader), H2 (Drishti) |
+| E14 | **The delivery proof** | the kit's delivery group and JUnit harness; the drop-in test and the two reactor guards in Drishti | O 1, S 1 | 2 | R1 (kit), H2 (test) |
+| E15 | **Risk as one JAR, Drishti off Risk's types** | the merged JAR and its registrations; banking's controllers, pivot adapter, sign-off and explain panels on engine API values only; the goldens' calling code through the generic host, expected values unedited | O 4, S 2.5 | 6.5 | R2 |
+| | less: run-time artifact resolution and certificate gating (E8, about 1); `engine-inputs-jdbc` and `engine-arrow` moved later (E5, about 1.5); Risk's pin and scripted import rewrite, D1 and D3 (about 2) | | | about −4.5 | |
+| | **i8 scope** | | | **about 74** | |
 | | less Risk work this replaces (K10's adapters 2, ports designed once in K4 to K7 about 4, D4's adapter about 3) | | | **about −9** | |
-| | **Net addition to combined i8** | | | **about 58** (about 67 with 15%) | |
+| | **Net addition to combined i8** | | | **about 65** (about 75 with 15%) | |
 
-By model: Fable 2.5 · Opus 26 · Sonnet 37.5 · Haiku 1.
+By model: Fable 2.5 · Opus 32.5 · Sonnet 38 · Haiku 1. The figures for E13 to E15 are estimates made on paper on 2026-11-22;
+nothing was measured.
 
 | Later, each on its trigger | bd |
 |---|---|
@@ -800,11 +1080,11 @@ By model: Fable 2.5 · Opus 26 · Sonnet 37.5 · Haiku 1.
 
 | Milestone | Engine work | Gate |
 |---|---|---|
-| H1 ∥ R1 | E0 to E5 in `drishti-engine`, no Drishti change; Risk builds on `engine-api` 0.x; E9's adapters | the sample engine and both Risk engines pass the kit; three descriptors reviewed |
-| H2 | E6, E7, E8 on Drishti's integration branch with the sample engine and the old reactive form still read | a jar and a config file give a working screen; the browser files of the compute demo unchanged |
-| R2 | E9 (Drishti side), E10, E11, E12; `engine-api` 1.0 | Risk through configuration with goldens bit-identical; genomics engine certified; reactive connector blocks gone |
+| H1 ∥ R1 | E0 to E5 and the R1 parts of E13, E14 in `drishti-engine`, no Drishti change; Risk builds on `engine-api` 0.x; E9's adapters | the sample engine and both Risk engines pass the kit **from their JARs, with no Drishti artifact on the machine's class path** (A1, A2); three descriptors reviewed |
+| H2 | E6, E7, E8 and the Drishti parts of E13, E14 on the integration branch with the sample engine and the old reactive form still read | **the drop-in test** (A3 to A7 on the sample engine): a JAR copied into `lib/engines` and a config file give a working screen on a server jar built before it; the browser files of the compute demo unchanged |
+| R2 | E9 (Drishti side), E15, E10, E11, E12; `engine-api` 1.0 | **A8:** Risk from one dropped JAR, through configuration, with goldens bit-identical; Risk 1.0.0 replaced by a 1.0.1 build with the server jar's hash unchanged; no engine class in the reactor; genomics engine certified; reactive connector blocks gone |
 
-Never more than three builders; E2 → E3 → E8 is the serial chain (28 bd). **Cut lines**, in order, if the release is tight:
+Never more than three builders; E2 → E3 → E8 → E15 is the serial chain (about 34 bd). **Cut lines**, in order, if the release is tight:
 E10 (workbooks stay hand-written), E11 (the non-risk engine stays a paper test and `engine-api` stays 0.x), E7 (no generated
 screens; packs write theirs). The escape hatch of the combined plan applies unchanged: if Risk misses the R1 gate, E0 to E8 still
 ship with the sample engine and the analytics engines.
@@ -820,13 +1100,20 @@ ship with the sample engine and the analytics engines.
 | The speed of a generic binder on the 3 ms path | a visible share | method handles bound once; no map per row; the 5% benchmark gate (Risk section 7) applies to the engine path |
 | Generated screens look generic | adoption | they are defaults and are mocked up first; real screens use the `finance` and other domain libraries |
 | EL-to-Excel translation is wrong for a function | a wrong workbook | the kit recalculates every generated workbook; subset only; outside it, hand-written |
-| The static scan is taken for a sandbox | an untrusted jar in process | stated in the specification and on the Admin card; uncertified or unapproved engines run in a process |
+| The static scan is taken for a sandbox | an untrusted jar in process | stated in the specification and on the Admin card; a JAR a site will not trust in its process runs in a separate one |
 | Folding the reactive connector breaks the compute demo or VRES | a regression | the old form is read for one release; the equivalence run of old and new answers on the demo before the old form is deleted |
 | Binding by contract surprises an operator | the wrong table feeds an engine | never a guess: ambiguity blocks with the candidates; the bound tables and stamps are on the Admin card and in every answer's stamp |
-| Scope: about 58 bd on top of a large combined release | the release slides | cut lines of 14; E0 to E5 need no Drishti change and run beside H1 |
+| Scope: about 65 bd on top of a large combined release | the release slides | cut lines of 14; E0 to E5 need no Drishti change and run beside H1 |
+| A private library inside an engine JAR misbehaves when a second copy lives in the server (Arrow's allocator, a native library) | a start failure or a crash in one engine | child-only loading keeps the copies apart; native code is unpacked under each engine's own work folder, so two loaders never load one file; the drop-in test runs Risk beside Drishti's own Arrow |
+| Merging private libraries drops a `META-INF/services` file or a resource | a library inside the engine fails at its first use | the build file from `engine gen stubs` merges service files; the kit's link check and cases run from the merged JAR, not from the class folders |
+| Banking's adapters lose compile-time checking against Risk (names as text) | a wrong output or column name found late | uses are checked against the installed descriptor at start, in words; the banking browser files and the goldens run in the drill through the dropped JAR |
+| The shared platform libraries tie an engine to a server after all | an engine needs tools 1.3 and a site's server has 1.2 | additive-only libraries, the built-against rule, the refusal sentence; an engine that wants independence uses only the API and merges what else it needs under its own package names |
+| The folder is taken for a security boundary | an untrusted JAR runs with the server's rights | stated in 0.7, in the deployment guide and on the Admin page; `pinned` for production; the process binding for a JAR a site will not trust |
 | Token cost | the owner's budget | Fable for 2.5 bd; grade on every lane |
 
-## 16. Decisions EN-1 to EN-28
+## 16. Decisions EN-1 to EN-44
+
+### EN-1 to EN-28: accepted (owner, 2026-11-21)
 
 | # | Decision | Recommendation |
 |---|---|---|
@@ -844,11 +1131,11 @@ ship with the sample engine and the analytics engines.
 | EN-12 | Result storage | **The host stores declared outputs; the engine has no sink** |
 | EN-13 | Scheduling | **Only the host triggers** (`request`, `schedule`, `data-version`, `changes`, `after`); an engine starts no thread or timer |
 | EN-14 | Live results | **The host re-asks and feeds differences to live tables**; engines do not push |
-| EN-15 | Configuration | **`config/engines/<name>.yaml`**: pinned artifact and hash, bindings left open by contracts, options, triggers, outputs, access, limits, placement; old keys as aliases |
+| EN-15 | Configuration | **`config/engines/<name>.yaml`**: bindings left open by contracts, options, triggers, outputs, access, limits, placement; old keys as aliases. The pinned artifact and hash of the first text are an optional pin (EN-35) |
 | EN-16 | Pack to engine | **By contract**: kinds `conforms`, packs `uses.engines` with a range; binding rules 1 to 5; ambiguity blocks, never guesses |
 | EN-17 | Engine absent or off | **The feature is off in words**; never a start failure; one gate hides words, menus, Help, tiles, pivot measures and AI tools |
-| EN-18 | The kit | **`engine-tck`: cases as data plus twelve laws derived from every case**; a certificate; Drishti enables only certified engines unless four eyes allow otherwise |
-| EN-19 | Trust | **In process means trusted** (first-party or approved); otherwise a separate process; the static scan is a lint |
+| EN-18 | The kit | **`engine-tck`: cases as data plus twelve laws derived from every case**; a certificate, which is evidence and is required only under trust `pinned` (EN-39) |
+| EN-19 | Trust | **In process means trusted**: the site put the JAR in its lib folder (EN-35); otherwise a separate process; the static scan is a lint |
 | EN-20 | Process model | **In process first; the process binding is today's worker pool re-faced; Flight when remote is needed**; triggers (a) to (f) |
 | EN-21 | Generation | **G0 interpret and G2 bind now; G1 generate documents, screens, stubs, typed records, tools now; G3 compiled expressions later on a measured trigger; G4 with GenAI** |
 | EN-22 | What is never generated or compiled | **No Java in configuration, no run-time `javac`, no generated engine logic, no per-engine controllers** |
@@ -857,8 +1144,35 @@ ship with the sample engine and the analytics engines.
 | EN-25 | Today's two `ComputeEngine` interfaces and the reactive package | **Fold into one**: the reactive SPI is replaced by `com.ash.engine`; the lifecycle one is renamed `EngineLifecycle`; the reactive runtime becomes `engine-host` |
 | EN-26 | Risk design | **Amend as section 9.2 before K4**: ports are the engine API's; `ResultSink` and `PartitionTransport` go; `risk-tck` is the engine kit plus cases |
 | EN-27 | Freezing the API | **`0.x` through R1 and H2; `1.0.0` at R2 after market risk, CCR and one non-risk engine pass** |
-| EN-28 | Scope in combined i8 | **E0 to E12 (about 58 bd net)** with the cut lines E10, E11, E7 in that order; G3 and Flight later |
+| EN-28 | Scope in combined i8 | **E0 to E12** with the cut lines E10, E11, E7 in that order; G3 and Flight later. The size is restated by EN-44 |
+
+
+### EN-29 to EN-44: open, for the owner (2026-11-22, the acceptance test)
+
+| # | Decision | Recommendation | The alternative |
+|---|---|---|---|
+| EN-29 | The acceptance test as a gate | **A1 to A8 of section 0 are release gates**: the kit's delivery group at R1, the drop-in test from H2 and in the drill, Risk through the dropped JAR at R2 | a statement in the design only |
+| EN-30 | The deliverable and its folder | **One self-contained JAR per product** (private libraries merged in, no platform class inside) **in `<home>/lib/engines`** (`drishti.engine-lib.path`), kept on an upgrade | engine JARs in `lib/ext` beside drivers (one shared loader, no isolation) |
+| EN-31 | Class-loader isolation | **One loader per engine JAR.** Platform packages parent-first from the kernel; everything else from the JAR only, with no fall-through to the kernel. Engines see neither each other, nor modules, nor Spring | one shared loader; or JDK module layers |
+| EN-32 | What is shared | **The engine API, drishti-tools, Lake's API and Rachana core are the server's, shared**; the engine declares the versions it was built against | share only the API and let each engine bundle the other three (bigger JARs, a fix needs every engine rebuilt) |
+| EN-33 | Discovery | **`ServiceLoader` of `com.ash.engine.Engine` on each JAR's loader, at start.** The descriptor key `entry` goes: the registration is the one place that names the class | a class name in the descriptor or in configuration |
+| EN-34 | Compatibility | **`api:` and `platform:` state what the JAR was built against; same major and server minor at least the engine's; refusal is one sentence with both versions and what to do.** One API major per server; each release states the versions it provides | a version range written by the author (which an author can write too wide) |
+| EN-35 | Trust | **`folder` by default; `pinned` (version and SHA-384 in the engine file, certificate beside the JAR) for production; signed JARs not in i8**, arriving with `.dmod` signing as one verifier for both | sign engine JARs now, ahead of modules (a second mechanism, then a third when modules are signed) |
+| EN-36 | Engine or `.dmod` | **A plain JAR in the lib folder that a module refers to by name; never a `.dmod` kind, never carried in a `.dmod`.** `module.yaml` `compute.engines:` goes at R2 | an engine kind of `.dmod` (ties an engine to the kernel's version and to Drishti's module tool) |
+| EN-37 | Hot add | **At start only in i8** (rolling restart on a cluster). Live without a restart: the switch, "restart engine" after a config edit, rebinding. Hot add of a new JAR later, on a site's need; hot replacement not planned | hot replacement now (unloading, native libraries, Windows file locks) |
+| EN-38 | The minimum SPI | **`Engine` and `Session`: two interfaces, eight methods; `Explaining` when a column is a measure; `Engine.notes()` optional; the rest are capabilities** (0.10). Frozen as 1.0 after three engines, as EN-27 | a larger required surface |
+| EN-39 | The kit's contents | **Section 6 plus a delivery group** (loads the JAR as a server does: loader, registration, no bundled platform class, closed-world link check, built-against versions) **and a JUnit harness for the author's own tests, in the same artifact.** The certificate is evidence, required only under `pinned` | the certificate as a condition of loading everywhere (a second file to deploy) |
+| EN-40 | Data inside a host | **Only through `Inputs`**, bound by configuration with row rules and masks applied. Lake's read API and loader are for the standalone path, and are what Drishti implements `Inputs` over | an engine opens lake tables itself inside the server (passes by access rules and binding) |
+| EN-41 | How a pack learns of an engine | **By name and contract, as EN-16**: `pack.yaml` `uses.engines` (id, version range, outputs, `as:` kind and mnemonic); the registry answers at start; only `config/engines/<id>.yaml` names tables. Outputs and columns a pack uses are checked against the installed descriptor at start | a pack or module that carries or names a JAR |
+| EN-42 | Migration of the in-tree engines | **Section 12: after R2 no engine class is left in Drishti's reactor.** VaR and exposure arrive in the Risk JAR; `VectorSumEngine` becomes `engine-sample`; correlation and beta follow RK-5 into the Risk JAR; the old reactive form is read for one release | keep small engines in-tree behind the old SPI (two ways) |
+| EN-43 | Drishti Risk's delivery | **One JAR, `drishti-risk-<version>.jar`, registering `market-risk` and `ccr`; Drishti has no Maven dependency on Risk**; the banking module keeps only code over engine API values; goldens keep their expected values and ask through the generic host (section 9) | Risk as compile-time jars pinned from `~/.m2` (the first design; fails A7) |
+| EN-44 | Scope and cut lines | **About 65 bd net** (section 14). Moved later, each on a need: `engine-inputs-jdbc`, `engine-arrow`, non-Java engines as JARs. Cut lines unchanged: E10, E11, E7 | keep the first estimate's adapters in i8 |
+
+EN-29 to EN-44 change three accepted decisions in the parts shown: EN-15 (the pinned artifact and hash are now an optional pin,
+EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means the site put the JAR in its folder, EN-35).
 
 ## Decisions taken (owner, 2026-11-21)
 
 EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
+
+EN-29 to EN-44 (2026-11-22) are **not yet taken**: they wait for the owner.

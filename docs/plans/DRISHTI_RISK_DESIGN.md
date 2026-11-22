@@ -27,9 +27,15 @@ product: a shared risk kernel and engine modules (market risk first, then counte
 risk last, after its own design check). The engine never prices. Every risk number is computed in Java. In-process library
 first; a separate engine process only if measurements or a clear need justify it.
 
+**Amended 2026-11-22 (the owner's acceptance test for engines, [ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) section 0).** Drishti Risk reaches a Drishti
+server as **one engine JAR copied into the server's lib folder**, never as a compile-time dependency. Section 0a says what that
+changes here; text it supersedes is marked DELETED where it stood (git keeps it). By the owner's later decision the product is
+built in the combined i8 (milestones R1 and R2), not in a release of its own; the step lists of sections 9 to 11 stand.
+
 ## Contents
 
-0. [The answer in one page](#0-the-answer-in-one-page) · 1. [Positioning](#1-positioning) ·
+0. [The answer in one page](#0-the-answer-in-one-page) · 0a. [Delivery as one engine JAR](#0a-delivery-one-engine-jar-in-the-servers-lib-folder) ·
+1. [Positioning](#1-positioning) ·
 2. [Kernel and engine modules](#2-the-kernel-and-the-engine-modules) · 3. [Contracts](#3-input-and-output-contracts) ·
 4. [API and SPI](#4-public-api-and-module-spi) · 5. [What moves, what stays](#5-what-moves-what-stays) ·
 6. [Process model](#6-the-process-model) · 7. [Proof of accuracy](#7-proof-of-accuracy) ·
@@ -77,6 +83,26 @@ conformance kit (`risk-tck`); Drishti's gate is its goldens unchanged (`VarGolde
 `HierarchyGolden`, `PackagedVarGoldenTest`) and the stack's figures (VaR 167,372,692, ES 210,131,972).
 
 **Size: about 92 bd (about 105 with 15% contingency), one drill.** Section 11.
+
+## 0a. Delivery: one engine JAR in the server's lib folder
+
+The reasoning, the class loading, the compatibility rule and the open decisions (EN-29 to EN-44) are in
+[ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) sections 0 and 9; the normative text is ENGINE_SPEC section 17. For this product:
+
+| | What it is |
+|---|---|
+| The deliverable to a host | **`drishti-risk-<version>.jar`**: `risk-kernel`, `risk-market`, `risk-ccr`, the two thin engine modules (`risk-engine-market`, `risk-engine-ccr`) and the private libraries (Arrow, the OpenBLAS binding with its Java fallback, a YAML reader) merged into one file |
+| What it registers | two engines for `ServiceLoader`: `market-risk` and `ccr`, each with its descriptor; they share the JAR's one risk kernel |
+| What it compiles against | `engine-api` (JDK only), and as provided family libraries `tools-xlsx` (workbooks), `lake-contracts` (the contract files' model) and Rachana core (explanation formulas). No Drishti artifact, in any scope |
+| How it is built and proven | in the `drishti-risk` repository, with no Drishti application: unit tests on the kit's harness, `risk-tck` (the engine kit plus Risk's cases and the recorder comparison), the kit's delivery group on the merged JAR |
+| How Drishti gets it | a distribution lists the JAR's version and SHA-384; packaging copies the file into `<home>/lib/engines`; `config/engines/market-risk.yaml` and `ccr.yaml` bind it |
+| How it is upgraded | the file is replaced and the node restarted (a cluster, node by node). No Drishti build |
+| What Drishti compiles against | nothing of `com.ash.risk`. The banking module's remaining code uses the engine API's values and output names ([ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) 9.3) |
+| The other build outputs | the product's own Maven modules, `risk-cli` and the facade of 4.1, for a second customer who embeds the library. They are not what a Drishti server loads |
+
+What this changes below: 4.1 (how a host finds the engines), 4.3 (the ports), 5.2 to 5.4 (what stays in Drishti), 7 (how the
+goldens call), 8 (the pin), 9.1 (Drishti's guards), 10 (D1, D3, D4, D8) and RK-3, RK-7, RK-16, RK-19. The estimate's change is
+in [ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) section 14 (lane E15, and D1 and D3 mostly gone).
 
 ## 1. Positioning
 
@@ -183,6 +209,9 @@ Explanation e = a.explain("var");          Workbook w = a.workbook();   // every
 Partial p = day.partial("var", shardUnit); Answer whole = rt.assemble(partials);
 ```
 
+This facade, with its explicit module list, is for an embedder and for `risk-cli`. A host (Drishti) does not call it: it finds
+the two `com.ash.engine.Engine` classes of the engine JAR by `ServiceLoader` and drives them through the engine API (0a).
+
 Rules of the surface: packages `com.ash.risk`, `.spi`, `.contract`, `.table`, `.explain`, `.workbook` are public, the rest
 `internal` and closed by the module boundary from the first tag. Requests and answers are immutable values that serialise
 (Arrow for tables and vectors, JSON for the rest): this is the process seam of section 6. Errors are `RiskException` with
@@ -207,13 +236,12 @@ does not pass the kit and cannot be released.
 
 | Port | Purpose | Product adapters | Drishti implements |
 |---|---|---|---|
-| **`RiskInputs`** | rows of a contract for a date, as column batches; pruned by promoted columns | `risk-files` (JSONL, Parquet), `risk-lake` (Drishti Lake), `risk-jdbc` | over `SourceRouter` and its lakes, with masks applied |
-| **`SuppliedVectors`** | a vector for a hypothetical or amended trade, from whoever prices | none (answers "not supplied") | a pricing supplier when one exists (QLRisk through a worker) |
-| **`WorkDir`** | hot files and spill, an explicit absolute folder | local folder | its data folder |
-| **`DocumentStore`** | baskets, captures, sign-offs, report definitions | files | the content store (database later) |
-| **`ResultSink`** | official and computed result rows | files, `risk-lake` | its Delta and Iceberg sinks |
-| **`AuditSink`**, **`Clock`** | who asked for what; business today | log, system | `AuditLog`, its business calendar |
-| **`PartitionTransport`** (reserved) | carry a `Partial` between processes | none in 1.0 | Drishti*net between shard owners |
+| **`RiskInputs`** | rows of a contract for a date, as column batches; pruned by promoted columns. It **is** the engine API's `Inputs` | the engine repository's `engine-inputs-files` and `engine-inputs-lake` (JDBC later, on a need) | the generic engine host, over its lakes, with row rules and masks applied |
+| **`SuppliedVectors`** | a vector for a hypothetical or amended trade, from whoever prices; a named supplier port of the engine API | none (answers "not supplied") | a pricing supplier when one exists (QLRisk through a worker) |
+| **`WorkDir`**, **`AuditSink`**, **`Clock`** | hot files and spill in an explicit absolute folder; who asked for what; business today. They are the engine API's `EngineContext` | local folder, log, system | its data folder, `AuditLog`, its business calendar |
+| `DocumentStore` | **DELETED** (2026-11-22): documents the engine reads (system baskets, report definitions) are inputs under contracts; captures, sign-offs and the official record are stored outputs with the host's workflow over them. The list is settled file by file at K0 | | |
+| `ResultSink` | **DELETED** (2026-11-22): the engine returns tables; the host stores the outputs its configuration declares | | |
+| `PartitionTransport` | **DELETED** (2026-11-22): a `Partial` is a value; carrying it between shard owners is the host's | | |
 
 ## 5. What moves, what stays
 
@@ -247,18 +275,21 @@ does not pass the kit and cannot be released.
 | `tools/mrloader`, `tools/packgen/var`, the `var`, `exp`, `frtb`, `simm` commands of `tools/drishti.py` | | loading and operator commands |
 | Cluster (Drishti*net, shard ownership), engine switches, admission, capacity, the kernel and `.dmod` assembly, editions | | the host |
 
+Amended 2026-11-22: none of what stays may name a Risk type. Properties classes become the engines' `options` (old keys as
+aliases); a controller whose route is a plain ask becomes an alias of the generic endpoint; the rest ask through the generic
+engine host by output name ([ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) 9.3). How many of the 5,765 and 8,200 lines remain is measured at R2.
+
 ### 5.3 Adapters left, and new
 
-`drishti-risk-host` (new, about 1,500 lines, inside the banking module): `RiskInputs` over `SourceRouter`; `RiskOptions` from
-the properties classes; `RSK-` to `DRS-`; visibility from `Principal` and the access rules; `DocumentStore` over the content
-store; `ResultSink` over the official sinks; `AuditSink`; `PartitionTransport` over Drishti*net; the engine-switch hook (an
-engine off = its module not loaded).
+**DELETED** (2026-11-22): `drishti-risk-host`. No Risk adapter module is written in Drishti. Its jobs are done by the generic
+engine host and the two engine files; the visibility rules stay in the banking module as named host rules; an engine off is
+the engine switch, not a module left unloaded.
 
 ### 5.4 Drishti's reduction
 
 | | Before | After |
 |---|---|---|
-| Banking module, Java main | 61,353 | about 16,000 (14,500 kept + 1,500 new), falling as screens become `finance` fragments in i8 and later |
+| Banking module, Java main | 61,353 | at most about 14,500 kept, none of it naming a Risk type; falling as plain-ask controllers, properties classes and screens go (measured at R2) |
 | `drishti-compute` | `vector` and `linalg` leave: 4,024 | `reactive`, `worker`, `env`, `arrow`, `shard` remain |
 | `drishti-server` | `playground` and the OpenBLAS engine leave: about 1,200 | `NativeLibraries` keeps the Admin switch and status over the product's interface |
 | Tests | about 24,000 leave | the goldens stay and run against the pin |
@@ -319,7 +350,7 @@ or optimisation rides with the move; anything found is recorded and scheduled af
 | **Reference recorder** (K2) | a runner over Drishti's own jars at the freeze commit writes, for the golden data sets and the sample day, every answer of every measure: headlines, components, incremental and marginal, paths, histories, backtests, parametric figures, stress windows, limits, exposure profiles, pre-deal, SIMM, FRTB, each explanation, each workbook. Doubles as `Double.doubleToRawLongBits` hex | once; stable over two runs and over 1, 4 and 24 threads before it is trusted |
 | **Step equality** | `compare_results` after every step K3 to K10: equal file for file; `known-differences.txt` must be empty for any number | every step |
 | **Tiers and engines** | heap and mapped tiers give the same bits at node level (as today); pure-Java linear algebra exact; OpenBLAS within relative 1e-12 of Java (today's parity rule) and recorded as its own result set | K6, K9 |
-| **Drishti's goldens, untouched** | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` pass without an edit to an expected value; the stack shows VaR 167,372,692 and ES 210,131,972; the demo's FY2026 period figures (period end 112,041,646) unchanged | D8, before the drill |
+| **Drishti's goldens, untouched** | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` pass without an edit to an expected value. Their calling code asks through the generic engine host, with the Risk JAR copied into a temporary lib folder (no Risk class on Drishti's class path); the stack shows VaR 167,372,692 and ES 210,131,972; the demo's FY2026 period figures (period end 112,041,646) unchanged | D8, before the drill |
 | **Independent check** | the playground workbook is the outside oracle: its formulas recompute the figure from the data sheet in a spreadsheet engine the product did not write; plus a small reference script for the rank-based measures on kit cases (test code only; no product number comes from it) | K9; every release |
 | **Speed is part of "the same"** | `VarTierBenchmark`, `ExposureTierBenchmark` and the 200,000-position run within 5% of the pre-move figures | K14, D8 |
 
@@ -338,6 +369,7 @@ or optimisation rides with the move; anything found is recorded and scheduled af
 ```
 drishti-risk/                        private, proprietary; main + integration branches as drishti-rachana and drishti-lake
   java/  risk-api  risk-kernel  risk-contracts  risk-market  risk-ccr
+         risk-engine-market  risk-engine-ccr  risk-engine-jar      (the merged drishti-risk-<version>.jar a host receives)
          risk-files  risk-jdbc  risk-lake  risk-cli  risk-tck  risk-bom
   contracts/                         the engine contracts (YAML), generated pages
   tck/cases/  tck/results/           cases as data; reference results per release
@@ -353,7 +385,7 @@ drishti-risk/                        private, proprietary; main + integration br
 | Java level | 21 | Drishti's production level |
 | Version | `0.9.0` at the move, `0.10.x` while untangling, **`1.0.0`** when the kit and section 7 hold | semantic versioning on the public packages |
 | Dependency allow-list | `risk-api`: JDK. `risk-kernel`: Arrow, the OpenBLAS binding, a YAML reader. Engine modules: the kernel only. `risk-lake`: `com.ash.lake:lake-api`. No Spring, no host, no Jackson in a public signature | a guard |
-| The pin | released jars installed into `~/.m2` from the tag only (Rachana R-1, Lake LK-15); one property `drishti.risk.version`, `risk-bom` imported | never a branch or a snapshot |
+| The pin | **DELETED** (2026-11-22): the `drishti.risk.version` property and `risk-bom` import in Drishti. Drishti has no Maven dependency on Risk: a distribution lists the engine JAR's version and SHA-384, packaging copies the file into `lib/engines`, and under trust `pinned` the engine files carry the same hash. Released from the tag only, never a branch or a snapshot | 0a |
 
 ## 9. The move, step by step
 
@@ -394,10 +426,10 @@ step ends green on its check and can be paused after it. Grades: F Fable, O Opus
 
 | In Drishti (from the migration) | Fails when |
 |---|---|
-| Public API only | a source imports `com.ash.risk.internal..` |
+| No Risk type in Drishti | a source imports `com.ash.risk`, or a pom depends on a Risk artifact (replaces "public API only", 2026-11-22) |
 | No second copy | a class named like a moved one; a VaR, ES or exposure formula outside the product (extends today's "server computes risk" checks to "the product computes risk") |
-| Pin is one fact | `drishti.risk.version` and the recorded checksums disagree |
-| Adapter only adapts | the kit fails when run inside Drishti through `drishti-risk-host` |
+| The JAR is one fact | the distribution's listed version and SHA-384, the file packaging copied, and (under trust `pinned`) the engine files' hash disagree |
+| The host only adapts | the kit fails when run inside Drishti against the engines as configured |
 
 ## 10. Drishti's migration
 
@@ -405,16 +437,16 @@ One sitting on the i9 integration branch, other builders off the banking module;
 
 | # | Step | Check | Grade | bd |
 |---|---|---|---|---|
-| D1 | Pin: `drishti.risk.version`, `risk-bom`, jars from `~/.m2` | offline `mvn clean` build resolves | S | 0.5 |
+| D1 | The JAR: the distribution lists `drishti-risk-<version>.jar` with its SHA-384; packaging copies it into `lib/engines`; `config/engines/market-risk.yaml`, `ccr.yaml`. DELETED: the `drishti.risk.version` property and `risk-bom` | the drop-in test: the server jar as built runs the engines from the copied file | S | 0.5 |
 | D2 | Delete: `banking-compute`, the moved classes of `banking-service`, `compute.vector`, `compute.linalg`, `server.playground`, the moved tests, `tools/pvgen` | the build fails only where an import must change | S | 1 |
-| D3 | Imports: a scripted, re-runnable rewrite to `com.ash.risk..` over what stays | compiles | S | 1.5 |
-| D4 | **Adapters**: `drishti-risk-host` (section 5.3); controllers, pivot, Flight form, intraday stream, sign-off and explain panels on the public API; one `RiskRuntime` per server; engine switches load or omit modules | module tests; the banking browser files; start on few cores | **O** | 6 |
+| D3 | **DELETED** (2026-11-22): the scripted import rewrite to `com.ash.risk..`. Nothing in Drishti imports Risk; what stays is rewritten onto engine API values in D4 | | | 0 |
+| D4 | **What stays, on the engine API only** ([ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) 9.3, lane E15): access rules as visibility rules; plain-ask routes as aliases of the generic endpoints; pivot, Flight form, intraday stream, sign-off and explain panels through the generic host by output name; engine switches are the engine files. DELETED: `drishti-risk-host`, one `RiskRuntime` per server | module tests; the banking browser files; start on few cores | **O** | 6.5 (E15) |
 | D5 | Commands: `var`, `exp`, `frtb`, `simm` of `tools/drishti.py`; callers of `pvgen` | the affected Python tests | S | 1.5 |
-| D6 | Guards of 9.1 on, failing | the guards | S | 1 |
+| D6 | Guards of 9.1 on, failing; the two reactor guards of [ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) 0.11 | the guards | S | 1 |
 | D7 | Docs: the five guides cut to Drishti's part with links; contract profiles; `CONFIGURATION.md` regenerated; README counts; CHANGELOG; the deck | docs checks | S 2, H 1.5 | 3.5 |
-| D8 | **Proof**: section 7's Drishti rows; the kit inside Drishti; the cluster's sharded answers equal the single server's | all exact; any difference stops the migration | O | 2.5 |
+| D8 | **Proof**: section 7's Drishti rows through the dropped JAR; the kit inside Drishti; the cluster's sharded answers equal the single server's; Risk `1.0.0` replaced by a `1.0.1` build with the server jar's hash unchanged | all exact; any difference stops the migration | O | 2.5 |
 | D9 | **The one drill**, then the tag | green drill | lead | 1 |
-| | **In Drishti** | | | **18.5** |
+| | **In Drishti** | | | **about 17.5** |
 
 ## 11. Estimate
 
@@ -474,11 +506,11 @@ one large one.
 |---|---|---|
 | RK-1 | Timing | **i9, after i7b and i8 are tagged**; one drill at the end |
 | RK-2 | Name and coordinates | **Drishti Risk**; repository `drishti-risk`; groupId and package `com.ash.risk`; error codes `RSK-`. The 2.9.6 `risk` edition keeps its file and means "the Drishti distribution with the product's modules on" |
-| RK-3 | One product | **One repository, one version, one kit**: `risk-kernel` plus engine modules as jars; a deployment loads the modules it lists |
+| RK-3 | One product | **One repository, one version, one kit**: `risk-kernel` plus engine modules. To a host they are one engine JAR registering `market-risk` and `ccr` (0a); a site turns each on or off in its engine file |
 | RK-4 | Order of work | **Move first, untangle in the new repository** (`hostcompat`, exemptions that only shrink); Drishti read-only until D1 |
 | RK-5 | Where the line runs | **`banking-compute` whole and the Spring-free core of `banking-service` move; controllers, properties, access, pivot, Flight, streams, sign-off, sinks stay** as adapters on the public API |
 | RK-6 | Kernel scope in i9 | **Only what is shared today** (vectors, linear algebra, scopes, hierarchies, limits, method choices, explain, workbook, records, partitions, ports). The VaR and exposure books stay in their modules; folding them is i12/i13 work |
-| RK-7 | Vectors and BLAS | **Move into the kernel** (only the engine uses them); Drishti's Admin switch and health status stay, over the product's interface. Later native maths (LAPACK and the rest) joins the kernel when a measure needs it, not before |
+| RK-7 | Vectors and BLAS | **Move into the kernel** (only the engine uses them). Drishti's `openblas` switch becomes the engines' option `linear-algebra` (old key as alias) and the Health line comes from the engines' status words. Later native maths (LAPACK and the rest) joins the kernel when a measure needs it, not before |
 | RK-8 | Inputs | **`RiskInputs` port, column batches, contract rows**; adapters for files, JDBC and Drishti Lake in the product; Drishti implements it over `SourceRouter` so masks still apply |
 | RK-9 | Identity | **No `Principal` in the product**: the host passes a visibility and an actor name; a request without visibility is refused |
 | RK-10 | Process model | **In-process library in i9; no engine process, no protocol.** Seam = serialisable requests and answers plus public partials. K11 measures; build an engine process only on the triggers of 6.3; then Flight for remote and the mapped hot file for co-located; no shared-memory protocol of our own |
@@ -487,8 +519,8 @@ one large one.
 | RK-13 | Contracts | **The engine's roughly 30 input and output contracts move to the product** in the Lake contract schema; packs keep a profile; other banking contracts stay. Exact list at K0 |
 | RK-14 | Screens | **None in the product.** Answer tables carry the columns the Rachana `finance` library declares; fragments stay in that library; the two lists are compared as files |
 | RK-15 | Playground rule | **In the SPI**: no `Measure` without `Explainer` and `Playground`; the kit refuses it |
-| RK-16 | The workbook writer | The playground framework moves to the kernel. `XlsxWriter` (378 lines, also used by Drishti's other exports) **moves with it as a public kernel type and Drishti's exports use it from there** (one writer). Alternative if the owner prefers no Drishti export depending on the risk jar: a tiny shared `com.ash.common:xlsx` artifact; not a copy |
+| RK-16 | The workbook writer | The playground framework moves to the kernel and writes through drishti-tools `tools-xlsx` (TL-2), a provided family library of the engine JAR. DELETED: `XlsxWriter` as a public kernel type and the `com.ash.common:xlsx` alternative |
 | RK-17 | Liquidity, climate, non-financial risk | **Designs and mock-ups in i9 (K15); built in i14 and i15; non-financial risk only after the check** |
 | RK-18 | Accuracy gate | **Raw-bit equality to the recorder at every step; Drishti's goldens unedited; the kit is the release gate; nothing but the move in the move** |
-| RK-19 | The pin | **Jars in `~/.m2` from the tag, one property, `risk-bom`** (R-1, LK-15) |
+| RK-19 | Delivery | **One engine JAR copied into `<home>/lib/engines`, released from the tag only; no Maven dependency in Drishti** (0a). DELETED: jars in `~/.m2` pinned by one property and `risk-bom` |
 | RK-20 | Freeze | **Freeze `modules/banking/java`, `compute.vector`, `compute.linalg`, `server.playground` on Drishti from the freeze commit to D9**; owner-directed fixes in that window are made in the product and reach Drishti with the pin |

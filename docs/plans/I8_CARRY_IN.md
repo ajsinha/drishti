@@ -17,6 +17,10 @@ server finds it at start and binds it by configuration. No engine is compiled in
 build. This is the acceptance test of the engine design (ENGINE_INTEGRATION_DESIGN.md, refreshed at the start of combined i8), and Drishti
 Risk is the first engine delivered this way.
 
+Designed 2026-11-22: ENGINE_INTEGRATION_DESIGN.md section 0 (the test as A1 to A8, the JAR, the lib folder, class loading,
+compatibility, trust) and ENGINE_SPEC.md section 17; DRISHTI_RISK_DESIGN.md section 0a (Risk as one JAR). Open for the owner:
+EN-29 to EN-44, each with a recommendation.
+
 ## Also carried (G4 gate part 2b)
 
 | Item | From | What |
