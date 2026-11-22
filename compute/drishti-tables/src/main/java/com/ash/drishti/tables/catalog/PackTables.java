@@ -77,7 +77,7 @@ public final class PackTables {
             a.getValue().forEach((name, type) -> elements.put(name, column(name, "@." + name, type, k)));
             Map<String, Object> aboutList = new LinkedHashMap<>(about);
             aboutList.put("title", k.kind() + " " + a.getKey() + " (pack " + k.pack() + ")");
-            out.add(new TableDef(base + "_" + part(a.getKey()), null, version(k.version()), aboutList, new TableDef.Source(k.kind(), k.pack(), null, null,
+            out.add(new TableDef(base + "_" + part(a.getKey()), version(k.version()), aboutList, new TableDef.Source(k.kind(), k.pack(), null, null,
                     null, null, null, null, null, null, null), "$." + a.getKey() + "[*]", null, elements, List.of("PARENT_ID", "index"), null,
                     "one row per element of " + a.getKey(), TableDef.Materialize.ON_LOAD, null, null, Map.of("on-load", true), List.of(), List.of(), List.of()));
         }
