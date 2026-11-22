@@ -120,6 +120,27 @@ public final class DrishtiRachana {
         }
     }
 
+    /**
+     * The process-wide settings now (options, served kinds, language level) as an action that puts them back: a second context started in
+     * the same JVM (the {@code sutra} command run in-process, as a test does) configures this class for itself, and its settings name its
+     * own scratch folder, removed when it ends; the action leaves the first context's instance as it was.
+     */
+    public static Runnable keep() {
+        synchronized (LOCK) {
+            RachanaOptions o = options;
+            Supplier<? extends Collection<String>> k = kinds;
+            String l = level;
+            return () -> {
+                synchronized (LOCK) {
+                    options = o;
+                    kinds = k;
+                    level = l;
+                    current = null;
+                }
+            };
+        }
+    }
+
     /** The entity kinds this server serves (the schema's {@code match.kind} list); read each time a schema is built, so no new instance. */
     public static void servedKinds(Supplier<? extends Collection<String>> servedKinds) {
         kinds = servedKinds == null ? List::of : servedKinds;

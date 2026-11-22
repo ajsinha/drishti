@@ -66,6 +66,8 @@ public final class CliLauncher {
         // system properties, so they win over application.yaml and the environment (Spring's default properties rank below both)
         props.putAll(scratchProperties(scratch, props, System.getenv()));
         props.forEach((k, v) -> { was.put(k, System.getProperty(k)); System.setProperty(k, v); });
+        // run in-process (a test's JVM), the command's context configures the process-wide Rachana settings with its scratch folder: put back
+        Runnable rachana = com.ash.drishti.rachana.DrishtiRachana.keep();
         try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class)
                 .web(WebApplicationType.NONE).bannerMode(Banner.Mode.OFF).logStartupInfo(false)
                 .run()) {
@@ -83,6 +85,7 @@ public final class CliLauncher {
                     + (root instanceof OutOfMemoryError ? " (the input is too large)" : "; check DRISHTI_PACKS_DIR and DRISHTI_PACKS"));
             return SutraCli.PROBLEMS;
         } finally {
+            rachana.run();
             was.forEach((k, v) -> { if (v == null) { System.clearProperty(k); } else { System.setProperty(k, v); } });
             try (java.util.stream.Stream<java.nio.file.Path> walk = java.nio.file.Files.walk(scratch)) {
                 walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());

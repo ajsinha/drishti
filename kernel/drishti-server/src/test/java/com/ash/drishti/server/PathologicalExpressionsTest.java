@@ -143,8 +143,9 @@ class PathologicalExpressionsTest {
     }
 
     /**
-     * With the limits lifted, a chain too deep to evaluate loads; the view still renders, the panel shows a DRS-2102
-     * problem and the other panels their data. A file that overflows the parser is still only that file's problem.
+     * With the limits lifted, Rachana's stack guard ({@code com.ash.rachana.internal.Deep}) parses and evaluates on a thread with a deep
+     * stack when the host thread's runs out: a 200,000-deep file loads, a 200,000-term chain evaluates, and the view renders with every
+     * panel's data. (Past even that stack, the binder's refusal is the panel's RCH-2102 problem, never a 500.)
      */
     @Nested
     @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
@@ -165,12 +166,16 @@ class PathologicalExpressionsTest {
         @Autowired SutraRegistry sutras;
 
         @Test
-        void anOverflowIsAPanelProblemOrAFileProblemNeverA500() throws Exception {
-            assertThat(sutras.problems().get(DIR.resolve("qa-deep.v1.sutra.yaml").toString())).singleElement()
-                    .satisfies(p -> assertThat(p.code()).isEqualTo("DRS-2032"));
+        void deepAndLongExpressionsLoadAndEvaluateOnTheDeepStackNeverA500() throws Exception {
+            // Rachana's stack guard (com.ash.rachana.internal.Deep): a parse that runs out of the host thread's stack runs again on a
+            // thread with a deep stack, so with the limits lifted a 200,000-deep expression is a valid one and its file loads
+            assertThat(sutras.problems().get(DIR.resolve("qa-deep.v1.sutra.yaml").toString())).isNull();
+            assertThat(sutras.latest("qa-deep")).isPresent();
             assertThat(sutras.latest("qa-chain")).isPresent();
             mvc.perform(get("/api/v1/views/trade/IRS-48213")).andExpect(status().isOk())
-                    .andExpect(jsonPath("$.panels[?(@.id=='a')].error").value(hasItem(containsString("DRS-2102"))))
+                    // the 200,000-term chain evaluates too, on the deep stack the binder's guard retries on: panel a answers, no error
+                    .andExpect(jsonPath("$.panels[?(@.id=='a')]").value(org.hamcrest.Matchers.hasSize(1)))
+                    .andExpect(jsonPath("$.panels[?(@.id=='a')].error").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())))
                     .andExpect(jsonPath("$.panels[?(@.id=='b')].empty").value(hasItem(false)));
         }
     }

@@ -779,6 +779,27 @@ conditional, the same tree as `c ? a : b`), no longer refused; `ShippedInRachana
 (1.2's printer writes `where=`, `and` and `a if c else b`). `LanguageLevelGuardTest` no longer exists (deleted with the level setting in
 `g4/finish`). Not run here: the console's Python suites (their conftest refuses the stale `.dmod` packages of the worktree).
 
+### Pass 3 triage: after the merge with level 1.2, the live fixes and the lake-doc work (`36e82521a`), one full `clean verify`
+
+5,275 tests. The level-1.2 lane's three items: `SutraRegistryTest` and `PathologicalExpressionsTest$LiftedLimits` now expect Rachana's
+documented behaviour (its stack guard, `internal.Deep`, parses, checks and binds again on a 512 MB stack when the host thread's runs out, so
+with the limits lifted a 100,000- or 200,000-deep file is valid and loads, and a 200,000-term chain evaluates; past even that stack the
+binder's refusal is the panel's `RCH-2102`, never a 500): not a Rachana defect. `SutraCliTest` `design --each` failed in-process only:
+the `sutra` command's own context reconfigured the process-wide `DrishtiRachana` settings with its scratch folder's pack formats files,
+deleted when it ended, so the test JVM's server then read formats from a deleted folder (through the jar the command is a JVM of its own);
+`CliLauncher` now puts the settings back (`DrishtiRachana.keep()`). `ViewModelSchemaTest` and `DrishtiProfileConformanceTest` pass at
+level 1.2. `PackagedVarGoldenTest` needs the venv's `drishti_lake` from Lake `main` (the merged tools call `archives.plan(layout=...)`).
+
+Failures left (11):
+
+| Test | Class |
+|---|---|
+| `VarShardClusterTest.anOwnerDown...`, `BankingPacksTest`, `ConsoleAnswersRecordTest`, `DomainPacksTest`, `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly` | fail on `main` too |
+| `AbandonedReadsTest` | timing under load; passes alone |
+| `TypedCallParityTest` (2: the REST `live` search answers 404 where the typed call answers rows) | G4, from the merged live-table work (not in the pre-merge run); open for the live lane |
+| `LiveVisualsTest` (fixture `bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | G4 (shims part 2 fixtures); open |
+| `IcebergMovedConnectorFileTest` (a moved Iceberg table's health words) | G4 (Lake's read-problem words); open |
+
 ## Gate 4 fixes: F9 (T3–T11), on `g4/tools-adopt` from `wip/g4-rehearsal-rx` (2026-11-21)
 
 Owner decision on Fable's F9: Drishti keeps no copy of anything Drishti Tools provides. Tools 1.1.0 (the `v1.1.0` tag) is the pin (`drishti.tools.version`);
