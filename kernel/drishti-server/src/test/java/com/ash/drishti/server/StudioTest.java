@@ -100,7 +100,7 @@ class StudioTest {
         String inferred = mvc.perform(post("/api/v1/studio/inferred").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"kind\":\"widget\",\"id\":\"W-1\",\"name\":\"widget\",\"document\":" + doc + "}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(inferred).contains("rachana: 1.2\nsutra: widget").contains("$.parts");
+        assertThat(inferred).contains("rachana: 1\nsutra: widget").contains("$.parts");
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"document\":[1,2]}"))
                 .andExpect(status().isUnprocessableEntity());
