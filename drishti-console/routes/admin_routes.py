@@ -696,6 +696,19 @@ async def rollback_pack(request: Request, name: str):
     return out
 
 
+@router.post("/api/packs/{name}/lifecycle/{transition}")
+async def pack_lifecycle(request: Request, name: str, transition: str):
+    """Suspends or resumes a pack (docs/architecture/LIFECYCLE.md): suspended, its kinds and mnemonics answer 503 DRS-1037, its state kept."""
+    if transition not in ("suspend", "resume"):
+        return JSONResponse({"code": "DRS-5001", "detail": "a pack is suspended or resumed here"}, status_code=400)
+    try:
+        out = await request.app.state.backend.admin("POST", f"/packs/{quote(name)}/lifecycle/{transition}", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
 @router.post("/api/packs/{name}/{action}")
 async def load_pack(request: Request, name: str, action: str):
     """Loads or unloads a pack: the server checks it, records it, and applies it now (no restart)."""

@@ -33,6 +33,9 @@
     with no restart. <b>Unload</b> takes back a pack loaded here (not while another loaded pack builds on it). The server also watches the
     packs folder: a pack folder you add is loaded, one you edit is checked and swapped in (a bad edit keeps the last good version and
     shows its problem here and on <a href="{{ BASE }}/admin/health">Health</a>), and one you delete is unloaded.
+    <b>Suspend</b> stops a pack serving new requests (its kinds and mnemonics answer <i>suspended</i>, the connectors only it uses stop
+    pulling, requests already running finish) and keeps everything it holds; <b>Resume</b> brings it back at once, unchanged, with nothing
+    reloaded. Both are audited, apply to this server only, and are shown to the other members of the cluster.
     <b>Sample</b> packs are demonstrations; once real packs exist, hide them from business users (below). <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
     and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows the connectors a
     loaded pack reads through, with links to <a href="{{ BASE }}/admin/connectors">Admin &rarr; Connectors</a>, where they are created, tested and changed.</p>
@@ -65,6 +68,7 @@
         <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
         <td class="mono">{% for x in p.connectors or [] %}<a href="{{ BASE }}/admin/connectors/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}—{% endfor %}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
+            {% elif p.lifecycle == 'SUSPENDED' %}<span class="st st-warn" data-suspended title="Suspended{% if p.lifecycleBy %} by {{ p.lifecycleBy }}{% endif %}: its kinds and mnemonics answer &quot;suspended&quot;; everything is kept, Resume brings it back unchanged">suspended</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
             {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{{ retry_note(p.retry) }}{% endif %}
             {% if p.sutraProblems %}<div class="t-bad" data-sutra-problems title="{{ p.sutraProblems | join(' | ') }}"><a href="{{ BASE }}/admin/packs/{{ p.name }}#pdSummary">{{ p.sutraProblems | length }} Sutra problem{{ '' if p.sutraProblems | length == 1 else 's' }}</a>: {{ p.sutraProblems[0] }}</div>{% endif %}
@@ -74,6 +78,8 @@
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
           {% if p.enabled and p.requiredBy %}<div class="text-muted-d pk-needed" data-needed-note>Needed by {{ p.requiredBy | join(', ') }}: switch those off first.</div>{% endif %}
+          {% if p.lifecycle == 'SUSPENDED' %}<button type="button" class="fk" data-lifecycle="resume" title="Serve again from the kept state: nothing is reloaded">Resume</button>
+          {% elif p.lifecycle == 'RUNNING' %}<button type="button" class="fk" data-lifecycle="suspend" title="Stop serving new requests: its kinds and mnemonics answer &quot;suspended&quot;, the connectors only it uses stop pulling; state and caches are kept">Suspend</button>{% endif %}
           <button type="button" class="fk" data-datasource title="The connectors this pack reads through, and where to change them (Admin → Connectors)">Data source</button>
           <a class="fk" href="{{ BASE }}/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
           {% if p.added %}<button type="button" class="fk" data-load="unload"{% if p.requiredBy %} disabled title="Needed by {{ p.requiredBy | join(', ') }}: unload those first"{% else %} title="Loaded from this page: unload it now (no restart)"{% endif %}>Unload</button>

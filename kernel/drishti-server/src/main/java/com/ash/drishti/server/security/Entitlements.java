@@ -163,11 +163,12 @@ public final class Entitlements {
         }
     }
 
-    /** {@code 403 DRS-1016} when an administrator turned the kind's command off, whoever asks. */
+    /** {@code 403 DRS-1016} when an administrator turned the kind's command off, whoever asks; {@code 503 DRS-1037} while its pack is suspended. */
     public void requireActive(String kind) {
         if (packs.commandOff(kind)) {
             throw packs.commands().refusal(kind);
         }
+        packs.requireServing(kind);                 // 503 DRS-1037 while the kind's pack is suspended (docs/architecture/LIFECYCLE.md)
     }
 
     private boolean has(Principal p, java.util.function.Predicate<com.ash.drishti.identity.RoleDefinition> test) {

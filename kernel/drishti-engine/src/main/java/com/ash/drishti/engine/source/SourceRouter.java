@@ -747,6 +747,9 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             try {
                 d = dated ? p.fetch(ref, asOf) : p.fetch(ref);
             } catch (Exception e) {
+                if (e instanceof com.ash.drishti.api.lifecycle.ComponentSuspended suspended) {
+                    throw suspended;                               // a suspended connector says so in words (503 DRS-1037), never "failed"
+                }
                 stats.failed(name, System.nanoTime() - t0, e);
                 String detail = UnreadableData.in(e).map(u -> ": " + u.getMessage()).orElse("");
                 throw new SourceFailure(ErrorCode.SOURCE_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),

@@ -44,6 +44,16 @@ public final class PackRegistry {
         this.state = state(new PackLoader().load(PackPaths.resolve(env), names));      // its own settings: never another context's resolution
     }
 
+    private PackRegistry(List<Pack> packs) {
+        this.env = null;
+        this.state = state(packs);
+    }
+
+    /** A registry of these packs and no settings (a test, a harness without a server): {@link #resolution()} is not available on it. */
+    public static PackRegistry of(List<Pack> packs) {
+        return new PackRegistry(packs);
+    }
+
     /** This server's resolution (KERNEL_AND_MODULES.md section 18): where each pack came from. */
     public com.ash.drishti.api.resolution.ConfigResolution resolution() {
         return PackPaths.resolution(env);

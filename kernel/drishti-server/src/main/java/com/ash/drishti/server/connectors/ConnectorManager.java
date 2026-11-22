@@ -719,6 +719,12 @@ public final class ConnectorManager {
         if ("FAILED".equals(state)) {
             return new String[] {"down", retrying ? "failed, retrying" : "failed"};
         }
+        if ("SUSPENDED".equals(state)) {
+            return new String[] {"warn", "suspended (state kept)"};   // an administrator's suspend (docs/architecture/LIFECYCLE.md): Resume brings it back
+        }
+        if ("SHUTDOWN".equals(state)) {
+            return new String[] {"off", "shut down"};
+        }
         if ("IDLE".equals(state)) {
             return new String[] {"ok", "not configured"};         // an optional feature nobody set up: calm, never a fault
         }

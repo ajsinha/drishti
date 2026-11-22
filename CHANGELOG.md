@@ -44,6 +44,7 @@
   (pytest 9.2 prints the group inside the brackets); the API sweep reads a controller's base path from its constant
   (`LiveTablesController.BASE`) and counts the live tables protocol's input errors as input it cannot know; the public-sector browser
   stack's today is its recorded feeds' day; the embedded controls' test finds a panel by `data-panel`.
+- **One lifecycle for modules, packs and connectors** (docs/architecture/LIFECYCLE.md): init, start, suspend, resume, shutdown, with `health()` and `stats()` on each, one dependency graph built from existing declarations (`extends:`, `connectors:`/`routes:`, `uses.engines`, a module's packs), Admin → Packs and Admin → Connectors Suspend/Resume, `/api/v1/admin/{modules,packs,connectors}/{name}/{lifecycle,health,stats}`, `/api/v1/admin/lifecycle[/graph]`, the `lifecycle` health entry, `drishti_lifecycle_*` metrics, `409 DRS-1036` and `503 DRS-1037`; Kafka resumes from its kept offsets.
 
 - **Removed: the embed scopes `embed:report` and `embed:search`**, `GET /api/v1/embed/search`, `drishti.embed.search.*` and `drishti.embed.limits.searches-per-user-per-minute`: embed v1 was deleted and nothing calls them; the scope list is `embed:view` and `embed:about`.
 

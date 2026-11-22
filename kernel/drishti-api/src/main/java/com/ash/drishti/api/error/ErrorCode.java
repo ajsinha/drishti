@@ -82,6 +82,16 @@ public enum ErrorCode {
     PLACEMENT_STALE("DRS-1031", 409),
     /** A module part with no placed node up (or not placed at all): unavailable, never run on an unplaced node. */
     MODULE_PART_UNAVAILABLE("DRS-1032", 503),
+    /**
+     * A lifecycle transition that the component's state does not allow (docs/architecture/LIFECYCLE.md): resume of a component that is not
+     * suspended, suspend of one that is not running, anything but shutdown after a failure. Nothing was changed.
+     */
+    LIFECYCLE_REFUSED("DRS-1036", 409),
+    /**
+     * A suspended module, pack or connector (docs/architecture/LIFECYCLE.md): it answers no new request until it is resumed; its state and
+     * caches are kept. 503: the component is here and comes back unchanged.
+     */
+    COMPONENT_SUSPENDED("DRS-1037", 503),
     /** The Sutra text could not be parsed. */
     SUTRA_PARSE("DRS-2001", 422),
     /** The Sutra parsed but is not valid (a rule of its kind is broken). */

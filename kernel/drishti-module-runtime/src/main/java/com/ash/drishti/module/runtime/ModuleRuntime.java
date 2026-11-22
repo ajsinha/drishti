@@ -414,6 +414,16 @@ public final class ModuleRuntime implements AutoCloseable {
         return contributions;
     }
 
+    /** A module verified on this node (loaded now or earlier): what a lifecycle start loads again (docs/architecture/LIFECYCLE.md section 2). */
+    public Optional<ModuleCandidate> candidate(String id) {
+        return Optional.ofNullable(known.get(id));
+    }
+
+    /** The ids of the modules loaded now. */
+    public java.util.Set<String> loadedIds() {
+        return java.util.Set.copyOf(loaded.keySet());
+    }
+
     /** A loaded module. */
     public Optional<LoadedModule> loaded(String id) {
         return Optional.ofNullable(loaded.get(id));

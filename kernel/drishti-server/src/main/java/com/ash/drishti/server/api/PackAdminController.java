@@ -71,10 +71,14 @@ public class PackAdminController {
     private final com.ash.drishti.server.RetryService retry;
     private final com.ash.drishti.rachana.SutraRegistry sutras;
     private final com.ash.drishti.server.design.HistoryDefinitions history;
+    /** Each pack's lifecycle here (docs/architecture/LIFECYCLE.md): its state shown, Suspend and Resume offered. */
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.packs.PackLifecycles> lifecycles;
 
     public PackAdminController(PackRegistry registry, PackAccess access, PackStateStore states, Entitlements entitlements, Environment env,
             com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy,
-            com.ash.drishti.server.RetryService retry, com.ash.drishti.rachana.SutraRegistry sutras, com.ash.drishti.server.design.HistoryDefinitions history) {
+            com.ash.drishti.server.RetryService retry, com.ash.drishti.rachana.SutraRegistry sutras, com.ash.drishti.server.design.HistoryDefinitions history,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.packs.PackLifecycles> lifecycles) {
+        this.lifecycles = lifecycles;
         this.history = history;
         this.retry = retry;
         this.sutras = sutras;
@@ -192,6 +196,11 @@ public class PackAdminController {
             m.put("problem", bad == null ? historyProblem : historyProblem == null ? bad : bad + "; " + historyProblem);
             m.put("historyProblems", history.errors(pack));
             m.put("enabled", access.isEnabled(pack.name()));
+            com.ash.drishti.packs.PackLifecycles lc = lifecycles.getIfAvailable();
+            if (lc != null) {
+                m.put("lifecycle", lc.state(pack.name()).name());
+                lc.machine(pack.name()).ifPresent(x -> m.put("lifecycleBy", x.by()));
+            }
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));
             m.put("kinds", pack.kinds());

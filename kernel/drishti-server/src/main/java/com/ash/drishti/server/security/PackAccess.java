@@ -109,6 +109,22 @@ public final class PackAccess {
         return commands;
     }
 
+    /** Every pack's lifecycle on this node (docs/architecture/LIFECYCLE.md section 3); none until the server wires it. */
+    private volatile com.ash.drishti.packs.PackLifecycles lifecycles;
+
+    /** Wires the packs' lifecycle: a kind of a suspended pack answers {@code 503 DRS-1037} ({@link #requireServing}). */
+    public void lifecycles(com.ash.drishti.packs.PackLifecycles l) {
+        this.lifecycles = l;
+    }
+
+    /** The gate of the pack lifecycle: throws {@link com.ash.drishti.api.lifecycle.ComponentSuspended} when the kind's pack is suspended here. */
+    public void requireServing(String kind) {
+        com.ash.drishti.packs.PackLifecycles l = lifecycles;
+        if (l != null && kind != null) {
+            l.requireServing(kind);
+        }
+    }
+
     /** True when an administrator turned the kind's command off. */
     public boolean commandOff(String kind) {
         CommandSwitches c = commands;

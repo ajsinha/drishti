@@ -56,23 +56,24 @@
   }
   if (packs) {
     var lmsg = packs.querySelector('[data-msg]');
-    packs.querySelectorAll('[data-load], [data-registry]').forEach(function (b) {
+    packs.querySelectorAll('[data-load], [data-registry], [data-lifecycle]').forEach(function (b) {
       b.addEventListener('click', function () {
         var row = b.closest('[data-pack]'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
-        var action = b.getAttribute('data-load') || b.getAttribute('data-registry');
-        var url = b.hasAttribute('data-registry')
+        var action = b.getAttribute('data-load') || b.getAttribute('data-registry') || b.getAttribute('data-lifecycle');
+        var url = b.hasAttribute('data-lifecycle') ? drishti_url('/admin/api/packs/') + encodeURIComponent(name) + '/lifecycle/' + action
+          : b.hasAttribute('data-registry')
           ? drishti_url('/admin/api/registry/') + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
           : drishti_url('/admin/api/packs/') + encodeURIComponent(name) + '/' + action;
-        var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ' }[action];
+        var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ', suspend: 'Suspend ', resume: 'Resume ' }[action];
         ask(verb + name + '?', verb + name + (action === 'install' ? ' ' + version : '') + '? It takes effect now, with no restart.', verb.trim(), action === 'unload').then(function (yes) {
           if (!yes) { return; }
           lmsg.classList.remove('t-bad');
-          lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
+          lmsg.textContent = ({ unload: 'Unloading ', suspend: 'Suspending ', resume: 'Resuming ' }[action] || 'Checking ') + name + '…';
           fetch(drishti_url(url), { method: 'POST' })
             .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
             .then(function (res) {
               if (!res.ok) { lmsg.textContent = Drishti.drsMessage(res.body); lmsg.classList.add('t-bad'); staleRow(res.body, lmsg); return; }
-              lmsg.textContent = res.body.note;
+              lmsg.textContent = res.body.note || (name + (action === 'suspend' ? ' is suspended.' : action === 'resume' ? ' is running again.' : ''));
               if (!res.body.restarting) { reloadSoon(1200); return; }
               // wait for the server to go and come back, then show the new state
               var seenDown = false, started = Date.now();

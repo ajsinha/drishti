@@ -142,7 +142,23 @@
     if (b.hasAttribute('data-edit')) { openExisting(name, b); }
     else if (b.hasAttribute('data-toggle')) { toggle(name, b.getAttribute('data-toggle') === 'enable', b); }
     else if (b.hasAttribute('data-reset')) { reset(name); }
+    else if (b.hasAttribute('data-lifecycle')) { lifecycle(name, b.getAttribute('data-lifecycle'), b); }
   });
+  // suspend and resume (docs/architecture/LIFECYCLE.md): audited on the server, shown to the cluster; the page reloads to show the state
+  function lifecycle(name, transition, btn) {
+    var go = transition === 'suspend' ? ask('Suspend ' + name + '?', 'It stops pulling, and new reads answer "suspended" until it is resumed; reads already running finish. Its offsets, caches and pools are kept.', [], 'Suspend')
+                                      : Promise.resolve(true);
+    go.then(function (yes) {
+      if (!yes) { return; }
+      var done = busy(btn, transition === 'suspend' ? 'Suspending…' : 'Resuming…');
+      call('POST', '/' + q(name) + '/lifecycle/' + transition).then(function (r) {
+        if (!r.ok) { done(); say(msg, why(r), true); return; }
+        done();
+        say(msg, name + (transition === 'suspend' ? ' is suspended.' : ' is running again.'));
+        reloadSoon();
+      });
+    });
+  }
 
   // ---- the editor ---------------------------------------------------------------------------------------------------------
   // Every field is drishti-inputs' Form: the head (name, plugin, on, words) and a kind to add from the server's schemas

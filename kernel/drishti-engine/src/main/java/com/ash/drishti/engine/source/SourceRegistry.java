@@ -41,6 +41,14 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /** The platform threads the connectors start on, side by side (a start is mostly I/O and class loading). */
     static final int START_THREADS = 16;
 
+    /** Who a transition the server makes by itself is recorded as (a start, a file change, a retry). */
+    public static final String SYSTEM = "system";
+    /** Each named connector's lifecycle (docs/architecture/LIFECYCLE.md section 4): a new machine per instance, from init to shutdown. */
+    private final Map<String, com.ash.drishti.api.lifecycle.LifecycleMachine> machines = new java.util.concurrent.ConcurrentHashMap<>();
+    /** The real plugins of suspended connectors (a {@link SuspendedSource} stands in the routing for each), by name. */
+    private final Map<String, SourcePlugin> held = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Told of every connector transition: the audit, the event bus, the cluster digest. */
+    private final List<com.ash.drishti.api.lifecycle.LifecycleMachine.Listener> lifecycleListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
     /** Copy-on-write: readers take the current snapshot and never lock; changes swap in a new one under {@link #swap}. */
     private volatile Map<String, SourcePlugin> plugins = Map.of();
     private final Map<String, String> failures = new java.util.concurrent.ConcurrentHashMap<>();
@@ -581,7 +589,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     private void unregister(String name, SourcePlugin p) {
-        bySource.values().removeIf(x -> x == p);
+        bySource.values().removeIf(x -> x == p || SuspendedSource.unwrap(x) == p);
         unions.remove(name);
         staleAfter.keySet().removeIf(k -> !bySource.containsKey(k));
     }
@@ -624,10 +632,19 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     private ConnectorStatus applyLocked(String name, SourcesProperties.ConnectorSettings c) {
+        return applyLocked(name, c, SYSTEM);
+    }
+
+    /**
+     * The connector's whole start (docs/architecture/LIFECYCLE.md section 4): the running instance shut down, then {@code init} (a fresh
+     * instance of its plugin, its own settings with secrets resolved: no I/O) and {@code start} (the plugin started, registered, routed),
+     * each a transition of the connector's {@link com.ash.drishti.api.lifecycle.LifecycleMachine}, audited through its listeners.
+     */
+    private ConnectorStatus applyLocked(String name, SourcesProperties.ConnectorSettings c, String actor) {
         var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
         lock.lock();
         try {
-            stopLocked(name);
+            stopLocked(name, actor);
             applied.put(name, c);
             if (!c.enabled()) {
                 failures.remove(name);
@@ -639,60 +656,86 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 retry.forget(name);
                 return status(name, OfflineMode.STATE, offline.reason(c.plugin()));
             }
-            SourcePlugin instance;
-            try {
-                instance = instantiate(name, c);
-            } catch (IllegalStateException e) {
-                failures.put(name, e.getMessage());
-                if (waitsForModules(e)) {
-                    LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
-                    return status(name, WAITING, e.getMessage());
-                }
-                retry.failed(name, String.valueOf(e.getMessage()), true);
-                return status(name, "FAILED", e.getMessage());
-            }
-            Map<String, String> own;
-            try {
-                own = ownSettings(name, c);
-            } catch (IllegalStateException e) {
-                failures.put(name, e.getMessage());
-                retry.failed(name, String.valueOf(e.getMessage()), true);
-                return status(name, "FAILED", e.getMessage());
-            }
-            try {
-                instance.start(new EngineSourceContext(own, codec, scheduler, reader));
-            } catch (Exception e) {
-                closeQuietly(instance);
-                if (e instanceof com.ash.drishti.api.PluginNotConfigured) {
-                    failures.remove(name);
-                    retry.forget(name);
-                    return status(name, "IDLE", e.getMessage());
-                }
-                failures.put(name, String.valueOf(e.getMessage()));
-                if (waitsForModules(e)) {
-                    LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
-                    return status(name, WAITING, String.valueOf(e.getMessage()));
-                }
-                if (!retry.failing(name) && e instanceof IllegalArgumentException) {
-                    // a setting it refuses (QA4-05: a relocate it cannot read): the refusal names it, so one line, no stack trace
-                    LOG.error("connector {} failed to start: {}", name, e.getMessage());
-                } else if (!retry.failing(name)) {
-                    LOG.error("connector {} failed to start", name, e);
-                }
-                retry.failed(name, String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
-                return status(name, "FAILED", String.valueOf(e.getMessage()));
-            }
-            register(instance, own);
-            swap(name, instance);
-            failures.remove(name);
-            LOG.info("connector {} started ({})", name, c.plugin());
-            if (!lost.contains(name)) {
-                retry.succeeded(name);                          // a lost connection is cleared when the plugin says it is up, not by the restart
-            }
-            return status(name, "RUNNING", null);
+            ConnectorStatus refused = initLocked(name, c, actor);
+            return refused != null ? refused : startLocked(name, actor);
         } finally {
             lock.unlock();
         }
+    }
+
+    /** What {@code init} made, waiting for {@code start}: the instance and its own settings. */
+    private record Prepared(SourcePlugin instance, Map<String, String> own) {}
+
+    private final Map<String, Prepared> prepared = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** {@code init}: a new machine, a fresh instance and its settings; null when it is INITIALISED, else the status it failed with. */
+    private ConnectorStatus initLocked(String name, SourcesProperties.ConnectorSettings c, String actor) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = newMachine(name);
+        try {
+            m.transition(com.ash.drishti.api.lifecycle.Transition.INIT, actor, () -> {
+                SourcePlugin instance = instantiate(name, c);
+                prepared.put(name, new Prepared(instance, ownSettings(name, c)));
+            });
+            return null;
+        } catch (IllegalStateException e) {
+            prepared.remove(name);
+            failures.put(name, e.getMessage());
+            if (waitsForModules(e)) {
+                LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
+                return status(name, WAITING, e.getMessage());
+            }
+            retry.failed(name, String.valueOf(e.getMessage()), true);
+            return status(name, "FAILED", e.getMessage());
+        }
+    }
+
+    /** {@code start}: the prepared instance started, registered and routed; the status it ends in. */
+    private ConnectorStatus startLocked(String name, String actor) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+        Prepared p = prepared.remove(name);
+        if (m == null || p == null) {
+            throw new com.ash.drishti.api.lifecycle.LifecycleRefused(com.ash.drishti.api.lifecycle.Lifecycle.Type.CONNECTOR, name,
+                    m == null ? com.ash.drishti.api.lifecycle.LifecycleState.NEW : m.state(), com.ash.drishti.api.lifecycle.Transition.START);
+        }
+        SourcePlugin instance = p.instance();
+        Map<String, String> own = p.own();
+        try {
+            m.transition(com.ash.drishti.api.lifecycle.Transition.START, actor, () -> {
+                instance.start(new EngineSourceContext(own, codec, scheduler, reader));
+                register(instance, own);
+                swap(name, instance);
+            });
+        } catch (RuntimeException x) {
+            Exception e = com.ash.drishti.api.lifecycle.LifecycleMachine.cause(x);
+            closeQuietly(instance);
+            if (e instanceof com.ash.drishti.api.lifecycle.LifecycleRefused r) {
+                throw r;
+            }
+            if (e instanceof com.ash.drishti.api.PluginNotConfigured) {
+                failures.remove(name);
+                retry.forget(name);
+                return status(name, "IDLE", e.getMessage());
+            }
+            failures.put(name, String.valueOf(e.getMessage()));
+            if (waitsForModules(e)) {
+                LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
+                return status(name, WAITING, String.valueOf(e.getMessage()));
+            }
+            if (!retry.failing(name) && e instanceof IllegalArgumentException) {
+                // a setting it refuses (QA4-05: a relocate it cannot read): the refusal names it, so one line, no stack trace
+                LOG.error("connector {} failed to start: {}", name, e.getMessage());
+            } else if (!retry.failing(name)) {
+                LOG.error("connector {} failed to start", name, e);
+            }
+            retry.failed(name, String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
+            return status(name, "FAILED", String.valueOf(e.getMessage()));
+        }
+        failures.remove(name);
+        LOG.info("connector {} started ({})", name, applied.get(name) == null ? "" : applied.get(name).plugin());
+        if (!lost.contains(name)) {
+            retry.succeeded(name);                          // a lost connection is cleared when the plugin says it is up, not by the restart
+        }
+        return status(name, "RUNNING", null);
     }
 
     private final java.util.Set<String> attached = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -840,10 +883,15 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     /** Stops a named connector and forgets its settings (its file was deleted). */
     public void remove(String name) {
+        remove(name, SYSTEM);
+    }
+
+    /** As {@link #remove(String)}, recorded as {@code actor}'s shutdown. */
+    public void remove(String name, String actor) {
         var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
         lock.lock();
         try {
-            stopLocked(name);
+            stopLocked(name, actor);
             applied.remove(name);
             statuses.remove(name);
             failures.remove(name);
@@ -861,22 +909,52 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     private void stopLocked(String name) {
-        SourcePlugin old = plugins.get(name);
-        if (old == null) {
-            return;
+        stopLocked(name, SYSTEM);
+    }
+
+    /**
+     * {@code shutdown}: the instance out of routing at once, kept open for {@code connectors-drain} so reads in flight finish, then closed;
+     * a suspended connector's held plugin the same. Harmless when nothing runs.
+     */
+    private void stopLocked(String name, String actor) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.remove(name);
+        Prepared p = prepared.remove(name);
+        if (p != null) {
+            closeQuietly(p.instance());                         // initialized, never started
         }
-        swap(name, null);
-        unregister(name, old);
-        long drain = props.connectorsDrain().toMillis();
-        if (drain > 0) {
-            try {
-                Thread.sleep(drain);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        SourcePlugin real = held.remove(name);
+        SourcePlugin old = real != null ? real : plugins.get(name);
+        com.ash.drishti.api.lifecycle.LifecycleMachine.Step close = () -> {
+            if (old != null) {
+                swap(name, null);
+                unregister(name, old);
             }
+        };
+        com.ash.drishti.api.lifecycle.LifecycleMachine.Step step = () -> {
+            if (old == null) {
+                return;
+            }
+            long drain = props.connectorsDrain().toMillis();
+            if (drain > 0) {
+                try {
+                    Thread.sleep(drain);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            closeQuietly(old);
+            LOG.info("connector {} stopped", name);
+        };
+        if (m == null) {
+            try {
+                close.run();
+                step.run();
+            } catch (Exception e) {
+                LOG.warn("stopping {} failed", name, e);
+            }
+        } else {
+            m.transition(com.ash.drishti.api.lifecycle.Transition.SHUTDOWN, actor, close, step);
         }
-        closeQuietly(old);
-        LOG.info("connector {} stopped", name);
     }
 
     private static void closeQuietly(SourcePlugin p) {
@@ -1131,8 +1209,259 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         return Map.copyOf(failures);
     }
 
+    // -- the lifecycle of named connectors (docs/architecture/LIFECYCLE.md section 4) ---------------------------------------------------
+
+    private com.ash.drishti.api.lifecycle.LifecycleMachine newMachine(String name) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = new com.ash.drishti.api.lifecycle.LifecycleMachine(
+                com.ash.drishti.api.lifecycle.Lifecycle.Type.CONNECTOR, name, java.time.Clock.systemUTC(), props.connectorsDrain());
+        lifecycleListeners.forEach(m::listen);
+        machines.put(name, m);
+        return m;
+    }
+
+    /** Hears every connector transition (the server audits them and announces them to the cluster). */
+    public void onLifecycle(com.ash.drishti.api.lifecycle.LifecycleMachine.Listener l) {
+        lifecycleListeners.add(l);
+        machines.values().forEach(m -> m.listen(l));
+    }
+
+    /** The connector's lifecycle state: NEW when it has none here (never started, disabled, offline). */
+    public com.ash.drishti.api.lifecycle.LifecycleState lifecycleState(String name) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+        return m == null ? com.ash.drishti.api.lifecycle.LifecycleState.NEW : m.state();
+    }
+
+    /** The connector's machine, if it has one here (Admin's row: state, since, by). */
+    public Optional<com.ash.drishti.api.lifecycle.LifecycleMachine> machine(String name) {
+        return Optional.ofNullable(machines.get(name));
+    }
+
+    /** The named connector as the kernel's one {@link com.ash.drishti.api.lifecycle.Lifecycle} contract. */
+    public com.ash.drishti.api.lifecycle.Lifecycle lifecycle(String name) {
+        return new ConnectorLifecycle(this, name);
+    }
+
+    /** {@code init} from Admin: the connector's settings read and validated, secrets resolved, a fresh instance made; nothing started. */
+    public com.ash.drishti.api.lifecycle.LifecycleState init(String name, String actor) {
+        SourcesProperties.ConnectorSettings c = known(name);
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+            if (m != null && m.state() != com.ash.drishti.api.lifecycle.LifecycleState.SHUTDOWN
+                    && m.state() != com.ash.drishti.api.lifecycle.LifecycleState.FAILED) {
+                m.transition(com.ash.drishti.api.lifecycle.Transition.INIT, actor, null);          // refused: it has been initialized
+            }
+            stopLocked(name, actor);
+            ConnectorStatus st = initLocked(name, c, actor);
+            if (st != null) {
+                throw new IllegalStateException("connector " + name + " cannot be initialized: " + st.problem());
+            }
+            return lifecycleState(name);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** {@code start} from Admin: an initialized connector started; one that is shut down (or never ran) initialized and started. */
+    public ConnectorStatus start(String name, String actor) {
+        SourcesProperties.ConnectorSettings c = known(name);
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+            if (m != null && m.state() == com.ash.drishti.api.lifecycle.LifecycleState.INITIALISED) {
+                return startLocked(name, actor);
+            }
+            if (m != null && (m.state() == com.ash.drishti.api.lifecycle.LifecycleState.RUNNING
+                    || m.state() == com.ash.drishti.api.lifecycle.LifecycleState.SUSPENDED)) {
+                m.transition(com.ash.drishti.api.lifecycle.Transition.START, actor, null);         // refused, naming the state
+            }
+            retry.forget(name);
+            lost.remove(name);
+            return applyLocked(name, c, actor);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * {@code suspend}: a stand-in takes the connector's place at once (new reads answer {@code 503 DRS-1037}), reads in flight finish, then the
+     * plugin stops pulling ({@link SourcePlugin#suspend}); its instance, offsets, caches and pools are kept, idle.
+     */
+    public ConnectorStatus suspend(String name, String actor) {
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            com.ash.drishti.api.lifecycle.LifecycleMachine m = runningMachine(name, com.ash.drishti.api.lifecycle.Transition.SUSPEND);
+            SourcePlugin real = plugins.get(name);
+            SourcePlugin standIn = SuspendedSource.of(real, m);
+            m.transition(com.ash.drishti.api.lifecycle.Transition.SUSPEND, actor, () -> {
+                held.put(name, real);
+                swap(name, standIn);
+                bySource.replaceAll((k, v) -> v == real ? standIn : v);
+            }, () -> {
+                try {
+                    real.suspend();
+                } catch (RuntimeException e) {
+                    putBack(name, real);                       // it could not stop pulling: it serves on as it was
+                    throw e;
+                }
+            });
+            return status(name, "SUSPENDED", "suspended by " + (actor == null || actor.isBlank() ? SYSTEM : actor));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** {@code resume}: the plugin carries on pulling from its kept offsets and takes its place back; nothing is reloaded. */
+    public ConnectorStatus resume(String name, String actor) {
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+            if (m == null) {
+                throw new com.ash.drishti.api.lifecycle.LifecycleRefused(com.ash.drishti.api.lifecycle.Lifecycle.Type.CONNECTOR, name,
+                        com.ash.drishti.api.lifecycle.LifecycleState.NEW, com.ash.drishti.api.lifecycle.Transition.RESUME);
+            }
+            m.transition(com.ash.drishti.api.lifecycle.Transition.RESUME, actor, () -> {
+                SourcePlugin real = held.get(name);
+                real.resume();
+                putBack(name, real);
+            });
+            return status(name, "RUNNING", null);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** {@code shutdown}: as a removal, but the connector's settings are kept, so a later start brings it back as it was configured. */
+    public void shutdown(String name, String actor) {
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            stopLocked(name, actor);
+            failures.remove(name);
+            retry.forget(name);
+            lost.remove(name);
+            status(name, "SHUTDOWN", "shut down by " + (actor == null || actor.isBlank() ? SYSTEM : actor));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void putBack(String name, SourcePlugin real) {
+        held.remove(name);
+        swap(name, real);
+        bySource.replaceAll((k, v) -> SuspendedSource.unwrap(v) == real ? real : v);
+    }
+
+    private com.ash.drishti.api.lifecycle.LifecycleMachine runningMachine(String name, com.ash.drishti.api.lifecycle.Transition t) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+        if (m == null) {
+            ConnectorStatus st = statuses.get(name);
+            throw new com.ash.drishti.api.lifecycle.LifecycleRefused(com.ash.drishti.api.lifecycle.Lifecycle.Type.CONNECTOR, name,
+                    com.ash.drishti.api.lifecycle.LifecycleState.NEW, t, "it is not running here" + (st == null ? "" : " (" + st.state().toLowerCase(java.util.Locale.ROOT) + ")"));
+        }
+        if (m.state() != com.ash.drishti.api.lifecycle.LifecycleState.RUNNING) {
+            m.transition(t, SYSTEM, null);                         // refused by the table, naming the state
+        }
+        if (plugins.get(name) == null || SuspendedSource.is(plugins.get(name))) {
+            m.refuse(t, SYSTEM, "it is being restarted; try again in a moment");
+        }
+        return m;
+    }
+
+    private SourcesProperties.ConnectorSettings known(String name) {
+        SourcesProperties.ConnectorSettings c = applied.get(name);
+        if (c == null) {
+            throw new IllegalArgumentException("no connector named " + name + " is configured here");
+        }
+        return c;
+    }
+
+    /**
+     * The connector's health (docs/architecture/LIFECYCLE.md section 7), from what the registry already knows: its state, then the plugin's
+     * own health line read as {@link SourceHealth} does for the health page (one reading, never a second one); a lost connection or a
+     * failure in words. Cheap: no I/O beyond the plugin's own {@code health()}, which is a field read.
+     */
+    public com.ash.drishti.api.lifecycle.ComponentHealth health(String name) {
+        java.time.Instant now = java.time.Instant.now();
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+        ConnectorStatus st = statuses.get(name);
+        if (m == null || m.state() != com.ash.drishti.api.lifecycle.LifecycleState.RUNNING) {
+            if (m != null && m.state() == com.ash.drishti.api.lifecycle.LifecycleState.SUSPENDED) {
+                return com.ash.drishti.api.lifecycle.ComponentHealth.of(com.ash.drishti.api.lifecycle.ComponentHealth.Status.SUSPENDED,
+                        "suspended by " + m.by() + " at " + m.since(), now);
+            }
+            String why = st == null ? "not started here" : st.state().toLowerCase(java.util.Locale.ROOT) + (st.problem() == null ? "" : ": " + st.problem());
+            return com.ash.drishti.api.lifecycle.ComponentHealth.of(com.ash.drishti.api.lifecycle.ComponentHealth.Status.DOWN, why, now);
+        }
+        SourcePlugin p = plugins.get(name);
+        String line;
+        try {
+            line = p == null ? "DOWN: not routed" : p.health();
+        } catch (RuntimeException e) {
+            line = "DOWN: " + e.getMessage();
+        }
+        SourceHealth h = SourceHealth.of(line);
+        return switch (h) {
+            case UP -> com.ash.drishti.api.lifecycle.ComponentHealth.up(now);
+            case DEGRADED, WAITING -> com.ash.drishti.api.lifecycle.ComponentHealth.of(com.ash.drishti.api.lifecycle.ComponentHealth.Status.DEGRADED, line, now);
+            case DOWN -> com.ash.drishti.api.lifecycle.ComponentHealth.of(com.ash.drishti.api.lifecycle.ComponentHealth.Status.DOWN, line, now);
+        };
+    }
+
+    /**
+     * The connector's activity (docs/architecture/LIFECYCLE.md section 7): the router's own read counters ({@link SourceStats}: reads, errors,
+     * latency, the one place reads are counted) with the refusals of its machine, the plugin's cache counters and its backlog. A snapshot.
+     */
+    public com.ash.drishti.api.lifecycle.ComponentStats stats(String name) {
+        com.ash.drishti.api.lifecycle.LifecycleMachine m = machines.get(name);
+        com.ash.drishti.api.lifecycle.ComponentStats own = m == null ? com.ash.drishti.api.lifecycle.ComponentStats.empty(java.time.Instant.now()) : m.stats();
+        SourceRouter router = reader.router;
+        SourceStats.Snapshot r = router == null ? SourceStats.Snapshot.NONE : router.stats().of(name);
+        SourcePlugin p = held.getOrDefault(name, plugins.get(name));
+        long hits = 0;
+        long misses = 0;
+        long backlog = -1;
+        if (p != null) {
+            try {
+                Map<String, Object> c = p.cacheStats();
+                hits = c.get("hits") instanceof Number n ? n.longValue() : 0;
+                misses = c.get("misses") instanceof Number n ? n.longValue() : 0;
+                backlog = p.backlog();
+            } catch (RuntimeException e) {
+                // counters are best effort; the health says what is wrong
+            }
+        }
+        com.ash.drishti.api.lifecycle.ComponentStats.Counts total = new com.ash.drishti.api.lifecycle.ComponentStats.Counts(r.reads(), r.errors(),
+                own.total().refusals(), r.found() + own.total().rowsRead(), own.total().rowsWritten(), own.total().bytes(), hits, misses);
+        java.time.Instant last = r.lastAt();
+        if (own.lastActivity() != null && (last == null || own.lastActivity().isAfter(last))) {
+            last = own.lastActivity();
+        }
+        try {
+            java.time.Instant pulled = p == null ? null : p.lastUpdate();
+            if (pulled != null && (last == null || pulled.isAfter(last))) {
+                last = pulled;
+            }
+        } catch (RuntimeException e) {
+            // as above
+        }
+        return new com.ash.drishti.api.lifecycle.ComponentStats(own.since(), total, own.window().plus(r.window()), own.windowLength(),
+                r.latency(), Math.max(0, backlog), own.inFlight(), last);
+    }
+
     @Override
     public void close() {
+        held.values().forEach(p -> {
+            try {
+                p.close();
+            } catch (Exception e) {
+                LOG.warn("closing {} failed", p.manifest().name(), e);
+            }
+        });
         plugins.values().forEach(p -> {
             try {
                 p.close();

@@ -105,6 +105,13 @@ public final class PackReloader implements AutoCloseable {
     private final Set<String> goneConnectors = new LinkedHashSet<>();
     /** New folders that appeared while running and are not loaded (yet): tried again at every change. */
     private final Set<String> candidates = new LinkedHashSet<>();
+    /**
+     * Packs shut down through their lifecycle (docs/architecture/LIFECYCLE.md section 3) while the site's list or the overlay names them: left
+     * out of every reconcile on this node until they are started again. In memory: the next start of the server follows the site's list.
+     */
+    private final Set<String> stopped = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** Told after every reconcile that changed the running packs, with who changed them (the pack lifecycle follows). */
+    private final List<java.util.function.Consumer<String>> changeListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final List<DirectoryWatcher> watchers = new ArrayList<>();
     private volatile String lastRun = "";
     /** Packs that are refused or kept at their last version are looked at again on this schedule even when no file changed. */
@@ -352,6 +359,7 @@ public final class PackReloader implements AutoCloseable {
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
         names.addAll(candidates);
+        names.removeAll(stopped);                                    // shut down through the lifecycle: not loaded until started again
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         names.removeIf(n -> !edition.packAllowed(n));              // an allow-only edition: a new folder of another pack is not loaded
         names.removeIf(n -> dirs.packs().off().containsKey(n));      // a pack of a module that is off: not loaded, and unloaded when it goes off
@@ -436,6 +444,13 @@ public final class PackReloader implements AutoCloseable {
             persistLoaded(loaded, unloaded);
         }
         candidates.removeIf(n -> next.containsKey(n) || !problems.containsKey(n));
+        changeListeners.forEach(l -> {
+            try {
+                l.accept(actor);
+            } catch (RuntimeException e) {
+                LOG.warn("a listener of pack changes failed: {}", e.toString());
+            }
+        });
         loaded.forEach(n -> audit.record(actor, "pack-loaded", n, why));
         reloaded.forEach(n -> audit.record(actor, "pack-reloaded", n, why));
         unloaded.forEach(n -> audit.record(actor, "pack-unloaded", n, why));
@@ -730,6 +745,88 @@ public final class PackReloader implements AutoCloseable {
         if (change) {
             overlay.write(added);
         }
+    }
+
+    // -- the pack lifecycle's actions (docs/architecture/LIFECYCLE.md section 3) -------------------------------------------------------
+
+    /** Hears every change of the running packs, with who made it. */
+    public void onChange(java.util.function.Consumer<String> l) {
+        changeListeners.add(l);
+    }
+
+    /**
+     * {@code init}: reads {@code name} and checks it together with the running packs (what a load would check), changing nothing. Throws an
+     * {@link IllegalStateException} with the words of what is wrong.
+     */
+    public Pack check(String name) {
+        lock.lock();
+        try {
+            com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();
+            PackLoader loader = new PackLoader(connectors.files());
+            com.ash.drishti.packs.edition.Editions.of(env).requirePack(name);
+            Pack p = loader.readOne(dirs, name);
+            checkFiles(p);
+            Map<String, Pack> set = new LinkedHashMap<>();
+            registry.packs().forEach(x -> set.put(x.name(), x));
+            set.put(name, p);
+            String bad = problem(loader, order(set));
+            if (bad != null) {
+                throw new IllegalStateException(bad);
+            }
+            return p;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** {@code start}: the pack registered and served, whether the site's list, the overlay or neither names it. */
+    public Result startPack(String name, String actor) {
+        lock.lock();
+        try {
+            boolean wasStopped = stopped.remove(name);
+            boolean listed = java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(",")).map(String::trim).anyMatch(name::equals)
+                    || overlay.added().contains(name);
+            if (!listed) {
+                return load(name, actor);
+            }
+            Result r = reconcile(actor, "started from Admin -> Packs", Set.of(name), false);
+            if (!loadedNames().contains(name)) {
+                if (wasStopped) {
+                    stopped.add(name);
+                }
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "cannot start '" + name + "': " + r.problems().getOrDefault(name, String.valueOf(r.problems())));
+            }
+            return r;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** {@code shutdown}: the pack unregistered on this node, whoever listed it (the site's list wins again at the next server start). */
+    public Result stopPack(String name, String actor) {
+        lock.lock();
+        try {
+            if (!loadedNames().contains(name)) {
+                return new Result(List.of(), List.of(), List.of(), Map.of(), List.of());
+            }
+            if (overlay.added().contains(name)) {
+                return unload(name, actor);
+            }
+            stopped.add(name);
+            Result r = reconcile(actor, "shut down from Admin -> Packs", Set.of(name), false);
+            if (!r.unloaded().contains(name)) {
+                stopped.remove(name);
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "cannot shut down '" + name + "': " + r.problems());
+            }
+            return r;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** The packs shut down through the lifecycle on this node. */
+    public Set<String> stopped() {
+        return Set.copyOf(stopped);
     }
 
     // -- Admin: Load and Unload ------------------------------------------------------------------------------------

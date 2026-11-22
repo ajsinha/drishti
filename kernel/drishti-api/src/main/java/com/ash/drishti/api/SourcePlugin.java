@@ -414,6 +414,25 @@ public interface SourcePlugin extends AutoCloseable {
         return "UP";
     }
 
+    /**
+     * The connector is suspended (docs/architecture/LIFECYCLE.md section 4): stop pulling (a stream consumer pauses its partitions, a poller
+     * skips its rounds) and keep everything else as it is: offsets, positions, caches, pools (idle), threads. The registry has already taken
+     * the source out of reach of new reads and waited for those in flight. Nothing by default (a source that only answers reads has nothing
+     * to stop).
+     */
+    default void suspend() {}
+
+    /**
+     * The connector is resumed: carry on pulling from the kept offsets, so no row is lost and none is read twice. Cheap: nothing is reloaded
+     * or reconnected that was not lost meanwhile. Nothing by default.
+     */
+    default void resume() {}
+
+    /** Rows waiting to be pulled (a stream's lag), or -1 when the source cannot tell; the lifecycle's queue depth. */
+    default long backlog() {
+        return -1;
+    }
+
     /** Releases the source's connections and threads; nothing by default. */
     @Override
     default void close() {}
