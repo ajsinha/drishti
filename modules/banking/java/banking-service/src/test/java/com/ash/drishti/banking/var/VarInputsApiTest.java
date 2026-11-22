@@ -376,10 +376,12 @@ class VarInputsApiTest {
         List<Map<String, Object>> positions = asPositions(VarIntradayLake.morningVectors(MIXED_SYSTEMS), "PNL", MIXED_SYSTEMS);
         List<Map<String, Object>> trades = VarIntradayLake.morningPvs(MIXED_SYSTEMS);
         Map<String, Object> newPosition = new java.util.LinkedHashMap<>(positions.get(0));
+        newPosition.put("VECTOR_ID", "PV-POS-MATURED");                     // a record of its own: one id is one record (the newest copy wins)
         newPosition.put("POSITION_ID", "POS-MATURED");
         newPosition.put("MATURITY_DATE", "2026-01-15");
         positions.add(newPosition);
         Map<String, Object> newTrade = new java.util.LinkedHashMap<>(trades.get(0));
+        newTrade.put("SCENARIO_PV_ID", "SPV-T-MATURED");
         newTrade.put("TRADE_ID", "T-MATURED");
         newTrade.put("MATURITY_DATE", "2026-01-15");
         trades.add(newTrade);
