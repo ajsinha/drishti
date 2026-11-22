@@ -45,7 +45,7 @@ final class ExpressionCheck {
         out.put("expr", expr);
         out.put("scope", scope.word());
         String syntax = "rachana";
-        com.ash.rachana.el.check.Checker.Checked c = com.ash.drishti.rachana.DrishtiRachana.checkExpression(expr, scope, fields);
+        com.ash.rachana.el.check.Checker.Checked c = com.ash.rachana.el.CheckedMode.check(expr, scope, fields);
         problems.addAll(c.problems());
         out.put("type", c.type().word());
         out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));

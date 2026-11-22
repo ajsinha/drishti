@@ -36,7 +36,7 @@ public final class Trees {
 
     /** Rachana's tree of {@code text} ({@code DRS-2101} as an {@link ElException} when it does not parse). */
     public static Expr parse(String text) {
-        return com.ash.drishti.rachana.DrishtiRachana.parseExpression(text).expr();
+        return CheckedMode.parse(text).expr();
     }
 
     /** True when {@code text} parses. */
