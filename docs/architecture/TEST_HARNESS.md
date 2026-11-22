@@ -336,6 +336,19 @@ found under `drishti.module.root`, which this project points at `drishti-server`
 
 Run it by hand: `./mvnw package -pl testing/drishti-modules-it -am -Dtest=... -Dsurefire.failIfNoSpecifiedTests=false` (the build packs the modules first).
 
+### 3.31 Another browser engine: WebKit and Firefox
+
+`DRISHTI_BROWSER=webkit` (or `firefox`) makes every console browser test drive that engine: `tests/browser_engine.py` (installed by
+`conftest.py`) makes `Playwright.chromium`, sync and async, answer the chosen engine, so the eighty files that launch `p.chromium` and
+the per-worker harness change nothing; Chromium's `--host-resolver-rules` is passed to Chromium only. A test that is Chromium's by nature
+(DevTools protocol, the made-up `render.test` origin) fails on the other engines and is reported as such.
+
+WebKit on a Linux host without its system libraries and without root: `tools/browser/webkit_env.py` downloads the missing packages
+(`libavif16`, `libbacktrace0`, `libevent-2.1-7t64`, `libmanette-0.2-0` and what they need that the host lacks) with `apt-get download`,
+unpacks them under `DRISHTI_WEBKIT_LIBS` (default `~/.cache/drishti-lanes/webkit-libs`), and gives the browser `LD_PRELOAD` of those files and
+`PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`. `python tools/browser/webkit_env.py --check` says whether WebKit can start. The Playwright
+version must match the installed browser build (`playwright install webkit`).
+
 ### 3.18 The memory budget and the Java 25 lane
 
 The browser lane's workers are sized for 3 GB each; below the memory floor (`DRILL_MIN_FREE_GB`, default 6) a test waits to start, up to five minutes, so the workers
