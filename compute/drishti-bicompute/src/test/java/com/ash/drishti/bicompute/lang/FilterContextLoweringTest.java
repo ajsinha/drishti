@@ -72,7 +72,7 @@ class FilterContextLoweringTest {
 
     static Lowered lower(String text) {
         assertThat(CheckedMode.check(text, Scope.AGGREGATE, MODEL).problems().stream().filter(Problem::error)).as(text).isEmpty();
-        return C.measure(CheckedMode.parse(text).expr());
+        return C.measure(CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL).expr());
     }
 
     /** The answer: grouped by desk, book and the masked trades.DESK; filtered by a desk slicer, a status, and a measure. */
@@ -92,10 +92,12 @@ class FilterContextLoweringTest {
     }
 
     @Test
-    void calcWhereIsTheMeasuresOwnLayerAndEditsNothing() {
-        Lowered.Context c = (Lowered.Context) lower("calc(sum(trades.MTM), where = trades.STATUS != 'MATURED')");
-        assertThat(c.edit().edits()).isFalse();
-        assertThat(c.where().sql()).isEqualTo("(trades.STATUS IS DISTINCT FROM 'MATURED')");    // the null rule (Q1)
+    void calcWhereAloneIsTheAggregateOverFewerRowsAndEditsNothing() {
+        Lowered.Aggregate a = (Lowered.Aggregate) lower("calc(sum(trades.MTM), where = trades.STATUS != 'MATURED')");
+        assertThat(a.fn()).isEqualTo("sum");
+        assertThat(a.where().sql()).isEqualTo("(trades.STATUS IS DISTINCT FROM 'MATURED')");    // the null rule (Q1)
+        Lowered.Context c = (Lowered.Context) lower("calc(measure('MTM'), where = trades.STATUS != 'MATURED')");
+        assertThat(c.edit().edits()).isFalse();                                  // over a measure: its own layer, no filter edited
         Question q = FilterContext.plan(c.edit(), ANSWER, FILTERS);
         assertThat(q.groups()).containsExactly("desks.NAME", "books.NAME");
         assertThat(q.filters()).containsExactly(0, 1);
@@ -172,7 +174,7 @@ class FilterContextLoweringTest {
         assertThat(day.edit().date()).isEqualTo(LocalDate.of(2026, 10, 15));
         Question q = FilterContext.plan(day.edit(), ANSWER, FILTERS);
         assertThat(q.groups()).containsExactly("desks.NAME", "books.NAME");     // only the date changes
-        assertThatThrownBy(() -> C.measure(CheckedMode.parse("as_of(measure('MTM'), trades.TRADE_DATE)").expr()))
+        assertThatThrownBy(() -> C.measure(CheckedMode.parse("as_of(measure('MTM'), trades.TRADE_DATE)", com.ash.rachana.profile.Grammar.LEVEL).expr()))
                 .hasMessageContaining("DRS-9166");
         assertThat(((Lowered.Context) lower("as_of(sum(trades.MTM), date('2026-09-30'))")).edit().date()).isEqualTo(LocalDate.of(2026, 9, 30));
     }
@@ -180,7 +182,7 @@ class FilterContextLoweringTest {
     /** Rule 6: a calculation-group item is a template in the same syntax; its parameters bind as param.name. */
     @Test
     void templatesAndParametersAreTheSameSyntax() {
-        assertThat(CheckedMode.parse("ytd(SELECTED, trades.TRADE_DATE)").expr()).isNotNull();
+        assertThat(CheckedMode.parse("ytd(SELECTED, trades.TRADE_DATE)", com.ash.rachana.profile.Grammar.LEVEL).expr()).isNotNull();
         Lowered.Time t = (Lowered.Time) lower("ytd(sum(trades.MTM), trades.TRADE_DATE)");
         assertThat(t.date()).isEqualTo("trades.TRADE_DATE");
         assertThat(((Lowered.Time) lower("closing(sum(trades.MTM), trades.TRADE_DATE, period = 'quarter')")).period()).isEqualTo("quarter");

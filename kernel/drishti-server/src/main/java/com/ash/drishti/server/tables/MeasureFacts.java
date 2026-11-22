@@ -75,8 +75,12 @@ public final class MeasureFacts {
         if (e instanceof Expr.Lit) {
             return Sort.CONSTANT;
         }
-        if (e instanceof Expr.Neg n) {
+        if (e instanceof Expr.Minus n) {
             return sort(n.e(), measures, reasons, seen);
+        }
+        Expr.Call inner = restricted(e);
+        if (inner != null) {
+            return sort(inner, measures, reasons, seen);                 // calc(sum(x), where = c): the aggregate over fewer rows
         }
         if (e instanceof Expr.Call c) {
             if (c.name().equals("measure") && !c.args().isEmpty() && c.args().get(0) instanceof Expr.Lit l) {
@@ -98,7 +102,7 @@ public final class MeasureFacts {
             reasons.add(c.name() + " is worked out from each total's own figures");
             return Sort.PER_TOTAL;
         }
-        if (e instanceof Expr.Binary b) {
+        if (e instanceof Expr.Op b) {
             Sort l = sort(b.l(), measures, reasons, seen);
             Sort r = sort(b.r(), measures, reasons, seen);
             switch (b.op()) {
@@ -160,6 +164,15 @@ public final class MeasureFacts {
         return Sort.PER_TOTAL;
     }
 
+    /** The aggregate of {@code calc(agg, where = c)} when the condition is all {@code calc} edits; null otherwise. */
+    private static Expr.Call restricted(Expr e) {
+        if (e instanceof Expr.Call c && "calc".equals(c.name()) && c.args().size() == 1 && c.named() != null && c.named().size() == 1
+                && c.named().get("where") != null && c.args().get(0) instanceof Expr.Call agg) {
+            return agg;
+        }
+        return null;
+    }
+
     /** The formula in plain words, from the function catalogue's own descriptions. */
     public static String explain(String expr) {
         try {
@@ -172,6 +185,10 @@ public final class MeasureFacts {
     private static String words(Expr e, int depth) {
         if (depth > 6) {
             return Printer.print(e);
+        }
+        Expr.Call inner = restricted(e);
+        if (inner != null) {
+            return words(inner, depth) + ", counting only the rows where " + Printer.print(((Expr.Call) e).named().get("where"));
         }
         if (e instanceof Expr.Call c) {
             if (c.name().equals("measure") && !c.args().isEmpty() && c.args().get(0) instanceof Expr.Lit l) {
@@ -188,13 +205,9 @@ public final class MeasureFacts {
                 }
                 b.append(", x being ").append(String.join(", ", args));
             }
-            Expr where = c.named() == null ? null : c.named().get("where");
-            if (where != null) {
-                b.append(", counting only the rows where ").append(Printer.print(where));
-            }
             return b.toString();
         }
-        if (e instanceof Expr.Binary bin) {
+        if (e instanceof Expr.Op bin) {
             String op = switch (bin.op()) {
                 case "+" -> "plus";
                 case "-" -> "minus";
@@ -204,7 +217,7 @@ public final class MeasureFacts {
             };
             return "(" + words(bin.l(), depth + 1) + ") " + op + " (" + words(bin.r(), depth + 1) + ")";
         }
-        if (e instanceof Expr.Neg n) {
+        if (e instanceof Expr.Minus n) {
             return "minus " + words(n.e(), depth + 1);
         }
         return Printer.print(e);

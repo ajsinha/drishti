@@ -234,7 +234,7 @@ public final class LayerTables {
     static String rowExpression(String text, Map<String, String> byPath, String where) {
         Expr tree;
         try {
-            tree = CheckedMode.parse(text).expr();
+            tree = CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL).expr();
         } catch (ElException e) {
             throw new IllegalArgumentException(where + ": " + e.getMessage());
         }

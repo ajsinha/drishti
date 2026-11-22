@@ -25,8 +25,8 @@ tables:
 measures:
   "VaR 99%":           { expr: max(nodes.VAR), format: amount0, additive: false, description: "The node's official 1-day VaR at 99%, USD. Not additive: at one node and date it is that node's own figure (max over its one row); over several nodes it is the largest of them, never their sum. Group by node or filter to one." }
   "ES 97.5%":          { expr: max(nodes.ES), format: amount0, additive: false, description: "The node's official expected shortfall at 97.5%, USD. Not additive, read as VaR 99% is: the node's own figure, never a sum across nodes." }
-  Bank VaR:            { expr: "max(nodes.VAR, where = nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official VaR (the MGMT hierarchy's root), not a sum of its parts." }
-  Bank ES:             { expr: "max(nodes.ES, where = nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official expected shortfall (the MGMT hierarchy's root)." }
+  Bank VaR:            { expr: "calc(max(nodes.VAR), where = nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official VaR (the MGMT hierarchy's root), not a sum of its parts." }
+  Bank ES:             { expr: "calc(max(nodes.ES), where = nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official expected shortfall (the MGMT hierarchy's root)." }
   VaR limit:           { expr: max(nodes.LIMIT), format: amount0, additive: false, description: "The node's VaR limit from the hierarchy (the node's own value, never summed)." }
   Limit use:           { expr: max(nodes.LIMIT_USE), format: pct, additive: false, description: "The node's VaR over its limit (the node's own value; over several nodes, the highest)." }
   Hypothetical P&L:    { expr: max(nodes.HYPO_PNL), format: signed0, additive: false, description: "The node's hypothetical P&L for the date, the backtest's input (the node's own value, never summed)." }

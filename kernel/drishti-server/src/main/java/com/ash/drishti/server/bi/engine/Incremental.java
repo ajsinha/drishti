@@ -257,14 +257,16 @@ public final class Incremental {
         asked.add(ROWS);
         for (int i = 0; i < inc.leaves.size(); i++) {
             Leaf l = inc.leaves.get(i);
-            String where = l.cond() == null ? "" : ", where=" + NodeText.print(l.cond());
             String s = "__inc_s" + i;
             String c = "__inc_c" + i;
-            String arg = l.rowCount() ? table : NodeText.print(l.arg());
-            measures.put(c, new Dataset.Measure(c, "count(" + arg + where + ")", null, "incremental count", null));
+            List<Node> args = new ArrayList<>(List.of(l.rowCount() ? new Node.Ref(List.of(table)) : l.arg()));
+            if (l.cond() != null) {
+                args.add(l.cond());                                            // the leaf's condition: calc(count(x), where = c)
+            }
+            measures.put(c, new Dataset.Measure(c, NodeText.print(new Node.Call("count", List.copyOf(args))), null, "incremental count", null));
             asked.add(c);
             if (!l.rowCount() && !"count".equals(l.fn())) {
-                measures.put(s, new Dataset.Measure(s, "sum(" + arg + where + ")", null, "incremental sum", null));
+                measures.put(s, new Dataset.Measure(s, NodeText.print(new Node.Call("sum", List.copyOf(args))), null, "incremental sum", null));
                 asked.add(s);
             }
         }

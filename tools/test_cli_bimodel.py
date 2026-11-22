@@ -88,12 +88,12 @@ class BiModel(unittest.TestCase):
         FakeServer.routes[("POST", "/api/v1/bi/mq")] = (200, {"columns": [{"name": "desks.name"}, {"name": "Open MTM"}], "rows": [["Rates", 1234.5]],
                                                              "meta": {"plan": "p1", "asOf": "2026-10-09"}})
         code, out, _ = self.go("bi", "mq", "--model", "trading-risk@1", "--select", "desks.name", "--measures", "Open MTM",
-                               "--define", "Open MTM=sum(trades.mtm, where=trades.status == 'Live')", "--where", "trades.currency=USD", "--limit", "5")
+                               "--define", "Open MTM=calc(sum(trades.mtm), where=trades.status == 'Live')", "--where", "trades.currency=USD", "--limit", "5")
         self.assertEqual(0, code)
         self.assertIn("1,234.50", out)
         self.assertIn("1 row(s)  as of 2026-10-09  plan p1", out)
         self.assertEqual({"mq": 1, "model": "trading-risk@1", "select": {"fields": ["desks.name"], "measures": ["Open MTM"]},
-                          "define": {"Open MTM": "sum(trades.mtm, where=trades.status == 'Live')"},
+                          "define": {"Open MTM": "calc(sum(trades.mtm), where=trades.status == 'Live')"},
                           "where": [{"field": "trades.currency", "op": "eq", "value": "USD"}], "limit": 5}, json.loads(FakeServer.requests[0][5]))
 
     def test_mq_sorts_by_a_field_or_measure_descending_with_a_minus(self):

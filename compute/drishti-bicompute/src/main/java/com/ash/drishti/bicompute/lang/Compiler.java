@@ -71,7 +71,7 @@ public final class Compiler {
                 return new Lowered.Measure(text(c.args().get(0)), c.args().size() > 1 ? text(c.args().get(1)) : null);
             }
             if ("ratio".equals(fn)) {
-                return shape(new Expr.Binary("/", new Expr.Local(Lowered.Shape.local(0)), new Expr.Local(Lowered.Shape.local(1))),
+                return shape(new Expr.Op("/", new Expr.Local(Lowered.Shape.local(0)), new Expr.Local(Lowered.Shape.local(1))),
                         List.of(measure(c.args().get(0)), measure(c.args().get(1))));
             }
             if (CONTEXT.contains(fn)) {
@@ -106,8 +106,8 @@ public final class Compiler {
             return new Expr.Local(Lowered.Shape.local(parts.size() - 1));
         }
         return switch (e) {
-            case Expr.Binary b -> new Expr.Binary(b.op(), holes(b.l(), parts), holes(b.r(), parts));
-            case Expr.Neg n -> new Expr.Neg(holes(n.e(), parts));
+            case Expr.Op b -> new Expr.Op(b.op(), holes(b.l(), parts), holes(b.r(), parts));
+            case Expr.Minus n -> new Expr.Minus(holes(n.e(), parts));
             case Expr.Not n -> new Expr.Not(holes(n.e(), parts));
             case Expr.And a -> new Expr.And(holes(a.l(), parts), holes(a.r(), parts));
             case Expr.Or o -> new Expr.Or(holes(o.l(), parts), holes(o.r(), parts));
@@ -135,7 +135,7 @@ public final class Compiler {
             };
             for (int i = 0; i < args.size(); i++) {
                 if (i < n && args.get(i) instanceof Expr.Absent) {
-                    continue;                                                // count(where = ...): no row value, the rows
+                    continue;                                                // calc(count(), where = ...): no row value, the rows
                 } else if (i < n) {
                     inputs.add(rows.row(args.get(i)));
                 } else if (args.get(i) instanceof Expr.Lit l && l.value() instanceof Number num) {
@@ -162,6 +162,10 @@ public final class Compiler {
             case "calc" -> {
                 Expr ignore = c.arg("ignore");
                 Expr where = c.arg("where");
+                if (where != null && c.named().size() == 1 && inner instanceof Lowered.Aggregate a && a.where() == null) {
+                    // calc(sum(x), where = c) edits nothing but the rows: the aggregate over the rows where the condition holds
+                    yield new Lowered.Aggregate(a.fn(), a.inputs(), rows.row(where), a.numbers());
+                }
                 boolean all = isAll(ignore);
                 FilterContext.Edit edit = new FilterContext.Edit(FilterContext.Kind.EDIT, all, all ? Set.of() : fieldSet(ignore),
                         c.arg("keep") == null ? null : fieldSet(c.arg("keep")), c.arg("via") == null ? null : text(c.arg("via")), List.of(), null);
@@ -173,7 +177,7 @@ public final class Compiler {
                 boolean all = isAll(over);
                 FilterContext.Edit edit = new FilterContext.Edit(FilterContext.Kind.EDIT, all, all ? Set.of() : fieldSet(over), null, null, List.of(), null);
                 Lowered total = new Lowered.Context("calc", edit, inner, null, null, null);
-                yield shape(new Expr.Binary("/", new Expr.Local(Lowered.Shape.local(0)), new Expr.Local(Lowered.Shape.local(1))), List.of(inner, total));
+                yield shape(new Expr.Op("/", new Expr.Local(Lowered.Shape.local(0)), new Expr.Local(Lowered.Shape.local(1))), List.of(inner, total));
             }
             case "parent_of" -> new Lowered.Context(fn, new FilterContext.Edit(FilterContext.Kind.EDIT, false, Set.of(), null, null, List.of(), null),
                     inner, null, null, text(c.arg("hierarchy")));
@@ -233,7 +237,7 @@ public final class Compiler {
         e.paths(p -> seen.merge(p, 1, Integer::sum));
         return switch (e) {
             case Expr.Call c -> c.args().stream().anyMatch(a -> Checker.parts(a) != null || mentionsField(a));
-            case Expr.Binary b -> Checker.parts(b.l()) != null || Checker.parts(b.r()) != null || mentionsField(b.l()) || mentionsField(b.r());
+            case Expr.Op b -> Checker.parts(b.l()) != null || Checker.parts(b.r()) != null || mentionsField(b.l()) || mentionsField(b.r());
             default -> !seen.isEmpty();
         };
     }

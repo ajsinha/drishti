@@ -87,8 +87,16 @@ of Rachana it is written in. Values are plain YAML; strings may hold Rachana-EL 
 second dialect to learn, and any YAML tool (syntax highlighting, linters, JSON Schema completion, `yq`, code review diffs) works on a
 Sutra as it is.
 
+<<<<<<< HEAD
 **Language level.** Drishti runs Rachana's one language level, **1.2**, and every Sutra, fragment and block declares `rachana: 1.2` (`rachana: 1` is 1.2 too). At 1.2 arithmetic on exact numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double arithmetic. A Sutra or fragment that declares 1.0 or 1.1 is refused: move it first with `rachana upgrade` of Rachana 0.12.0. A Sutra uses fragments
 of its own level only (`DRS-2008` otherwise), so upgrade a Sutra and its own fragments together.
+=======
+**Language level.** Drishti runs Rachana language level **1.2**, the one level of Rachana 1.x, and every Sutra, fragment and block
+Drishti ships declares `rachana: 1.2`; tables, models, measures and pivot formulas are read at 1.2 too. At 1.2 arithmetic on exact
+numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double
+arithmetic. A Sutra written for a retired level (`rachana: 1.0` or `1.1`) is refused (`DRS-2009`), with words that name Rachana 0.12's
+`rachana upgrade`, the tool that moves it to 1.2 with the same meaning; move a Sutra and its own fragments together.
+>>>>>>> origin/g4/level-12
 
 ```yaml
 rachana: 1.2
@@ -2913,7 +2921,7 @@ shows the problem and the rest of the view renders.
 | Control | `ctl.<id>` | the value of a control ([Controls](#controls)); `ctl` is reserved and is never a field of the data |
 | Running value | `@acc` | inside `reduce(list, init, expr)`'s `expr` only: the value so far (elsewhere `@acc` is a panel's events) |
 | Named value | `name = expr` | inside `let(...)`: binds `name`, read afterwards as a bare word (it hides a field of that name) |
-| Named argument | `f(x, name = expr)` | an argument given by its name: `round(x, n = 2)`, `sum(trades.MTM, where = trades.DESK == 'DESK-FX')` ([Named arguments](#named-arguments)) |
+| Named argument | `f(x, name = expr)` | an argument given by its name: `round(x, n = 2)`, `calc(sum(trades.MTM), where = trades.DESK == 'DESK-FX')` ([Named arguments](#named-arguments)) |
 | List | `[a, b, c]`, `[]` | a list written in the expression, a trailing comma allowed; at most 1,000 values |
 | Membership | `x in list`, `x not in list` | strict: an empty list holds nothing ([Lists, membership and the parent](#lists-membership-and-the-parent)) |
 | Text | `'single'` or `"double"` quotes | `\` makes the next character literal (`'it\'s'`; so `'\d'` is the letter `d`); there are no `\n` escapes |
@@ -3037,7 +3045,7 @@ An argument may be given by its name, `name = value`, after the positional ones:
 unit = 'week')`, `business_days_between($.TRADE_DATE, asof(), calendar = 'GBLO')`. The names are the function's signature's (Help →
 Functions); a name it does not have, a name given twice, or a value by place after a named one is a compile error
 (`round has no argument named digits; its arguments: [x, n]`). The engine's functions keep their named arguments for the engine:
-`sum(trades.MTM, where = trades.STATUS == 'LIVE')`, `calc(measure('MTM'), ignore = [desks.NAME])`, `rank(sum(trades.PNL), desc =
+`calc(sum(trades.MTM), where = trades.STATUS == 'LIVE')`, `calc(measure('MTM'), ignore = [desks.NAME])`, `rank(sum(trades.PNL), desc =
 false, by = [trades.DESK])`; over a list they are refused in words (`sum: where = belongs to a measure of a model or a column of a
 table`).
 
@@ -3261,7 +3269,7 @@ the document); `reduce` also binds `@acc`, the value so far.
 | Function | Arguments | Gives |
 |---|---|---|
 | `sum(list, 'field'?)` | 1–2 | the total of `field` over the list's elements (or of the elements themselves), compensated; non-numbers are skipped; `0` when `list` is not a list or holds no number |
-| `count(list, 'field'?)` | 0–2 | the elements (or the values of `field`) that are not empty; `0` for nothing. In a measure or a pivot formula, `count()` with no argument counts the rows (of the pivot cell, or of the one table the measure reads), `count(trades)` the rows of a table alias, `count(x)` the rows where `x` is not null, and `count(where = PNL < 0)` the rows that meet the condition |
+| `count(list, 'field'?)` | 0–2 | the elements (or the values of `field`) that are not empty; `0` for nothing. In a measure or a pivot formula, `count()` with no argument counts the rows (of the pivot cell, or of the one table the measure reads), `count(trades)` the rows of a table alias, `count(x)` the rows where `x` is not null, and `calc(count(), where = PNL < 0)` the rows that meet the condition |
 | `avg`, `median`, `variance`, `stddev`, `variance_pop`, `stddev_pop` `(list, 'field'?)` | 1–2 | the mean (from the list's own sum and count), the exact middle, the sample or population variance and standard deviation; empty for nothing |
 | `min(list)`, `max(list)` | 1 | the smallest or largest number of one list (with several arguments: `least`, `greatest`) |
 | `percentile(list, 'field'?, p)` | 2–3 | the exact `p`-quantile, `p` from 0 to 1 (linear interpolation, Excel's `PERCENTILE.INC`) |

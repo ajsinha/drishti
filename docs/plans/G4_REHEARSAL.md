@@ -751,3 +751,30 @@ Products installed from their tags into a scratch Maven repository in the order 
 | Proof (one targeted `mvnw` run) | green | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `PackagedVarGoldenTest` (Lake tag's Python on `LAKE_PYTHON`), `HierarchyEquivalenceTest`, `ArchitectureRulesTest`, Drishti profile conformance, `PackSutrasTest` (parity), `ReferenceSutrasTest`, `ViewPipelineTest`, `RachanaAggregatesTest`, `WindowFunctionsTest`, `PackLoaderTest`, `PackSettingsTest`; tools/lake `test_javaload`, `test_build`, `test_demo`: 60 pass. The printed VaR/ES figures were not compared with 167,372,692 / 210,131,972, and the demo lake's tables and row counts were not compared with the base build |
 | Not done | open | the `PackStateStore` and `LoadStore` imports, the data-source override migration, `FileUserStore`/`FileAuditLog` and their settings, the WebKit test setup, the phone-width sideways scroll, the launcher move per LAUNCHER_STANDARD (the generator `tools/launch/launchers.py`, its tests and IDE_GUIDE change together), the browser smoke on Chromium and WebKit |
 | Python failures (tools and the docs tests, 4 workers) | open | `tools/lake/test_maintain*` (the Lake 0.9.0 jar rejects `--relayout`: `lake maintain` and the maintain admin tests fail); `test_sdk_builds_genomics` (2) and the genomics generator check; `test_pvf_sets`; `test_launchers` docs check; the docs tests for error codes, api endpoints and docs rot (the references to the retired upgrade paths were fixed afterwards and not run again) |
+
+## Pass 3: BI at 1.2 (2026-11-21, on `g4/level-12`, Rachana `develop` `76bf5b23`, pin `1.0.0`)
+
+Nothing in Drishti reads Rachana at level 1.0 any more: BI's expressions, the table layer, measures, pivot formulas, the pivot's document
+filters and connector `where` predicates parse at 1.2 (`Grammar.LEVEL`) and their lowerings know the 1.2 trees.
+
+| Item | What was done |
+|---|---|
+| Lowerings | `NodeLowering`/`NodeText` (BI), `Compiler`/`SqlLowering`/`FormulaLowering` (bicompute), `Trees` (table layer), `BiMeasures`, `MeasureFacts`, `DocPath`, `RowPredicate` read `Op` and `Minus` (and walk `Power`, `Coalesce`); a number written in an expression is exact at 1.2: SQL, pivot text, document filters and lake push-down take its 1.0 value (`Values.normalise`), so SQL text and push-down are unchanged (`RowPredicate`'s push-down was silently off since the 1.2 default: back on) |
+| `agg(x, where = c)` | refused from 1.1 (SPEC 4.10 rule 3: `where` is no parameter of Core's `sum`, `avg`, `count`, ...). The 1.2 spelling is `calc(agg(x), where = c)` (Rachana's own catalogue examples). Each lowering reads a `calc` that edits nothing but the rows over one aggregate as that aggregate with its condition (the SQL emitter wrote `calc(where=)` and `sum(x, where=)` as the same `FILTER (WHERE ...)`), so the compiled tree is the 1.0 one; `NodeText` writes it back as `calc(...)`; `Incremental` builds its counts through `NodeText` |
+| Expressions rewritten | shipped models (`config/tables/banking`), test fixtures, tests, guides, mock-ups, tools' examples: every Core aggregate with `where =` (about 150 places). The formula parity corpus keeps each formula as recorded and asks the 1.2 text (`rachana:`) |
+| Upgrade paths | `sutra upgrade` and `LanguageLevels` were already gone (`g4/finish`); now the designer's `POST /designs/{id}/upgrade` console route, the Problems tab's level item, the ops' `upgrade()`, the design's `language` field and their doc mentions. A Sutra of a retired level gets Rachana's `RCH-2009` (as `DRS-2009`) naming `rachana 0.12 upgrade` (CLI, BUILD, RACHANA and API references say so) |
+| Conformance | the runner already takes Drishti's instance as it is (1.2) |
+| Pin | `drishti.rachana.version` back to `1.0.0` (the `g4/finish` merge had restored `0.11.0-SNAPSHOT`) |
+
+Results (one build, offline, `clean verify` of the changed modules and their dependants): drishti-bicompute **301/301** (with
+`PivotFormulaParityTest`: every recorded answer cell for cell, SQL and Java; `DifferentialTest`; `SutraAggregateParityTest`; Drishti's
+conformance), drishti-tables **52/52**, drishti-server BI **649, 648 pass**: `LiveVisualsTest` only (its fixture is missing on the base, as
+before), BI API tests (`BiApiTest` 19 and the rest of `server.bi`) green; table, pivot, designer and builder tests green; `VarGoldenMatrixTest`,
+`SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` (2/2) **pass, bit-identical**.
+
+Exact decimals changed no figure. What changed in form only, in the table layer's Java rows (Rachana's own evaluation): a whole number
+computed from a double keeps its point (`125.0`, was `125`), and a division of exact numbers is a decimal (`500` as `BigDecimal`, was
+`Long`); the tests now hold the value. Tests changed with the language: `sum(PNL) if count() > 10 else 0` is Rachana 1.2 (Python's
+conditional, the same tree as `c ? a : b`), no longer refused; `ShippedInRachanaTest` holds that the printed text reads back as itself
+(1.2's printer writes `where=`, `and` and `a if c else b`). `LanguageLevelGuardTest` no longer exists (deleted with the level setting in
+`g4/finish`). Not run here: the console's Python suites (their conftest refuses the stale `.dmod` packages of the worktree).

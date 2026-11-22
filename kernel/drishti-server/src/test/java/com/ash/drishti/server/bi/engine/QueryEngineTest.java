@@ -605,7 +605,7 @@ class QueryEngineTest {
                   trades: { table: bi.direct_trades, role: fact }
                 measures:
                   Notional: { expr: sum(trades.notional) }
-                  MTM:      { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
+                  MTM:      { expr: "calc(sum(trades.mtm), where=trades.currency == 'EUR')" }
                 """;
         String table = """
                 rachana: 3
@@ -630,7 +630,7 @@ class QueryEngineTest {
         assertThat(r.meta().sql()).contains("FROM entities").contains("\"kind\"".replace("\"", "")).doesNotContain("USD");
         assertThat(lake.scans.get()).isZero();                                // the source was never scanned: the store ran the query
         // a connector that is not a SQL store cannot serve a direct table
-        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", Tables.flatten(model.replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, where=trades.currency == 'EUR')", "count(trades)"),
+        QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", Tables.flatten(model.replace("sum(trades.notional)", "count(trades)").replace("calc(sum(trades.mtm), where=trades.currency == 'EUR')", "count(trades)"),
                 List.of(table.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk").replace("  currency: { path: \"$.ccy\", type: string }\n  notional: { path: \"$.notional\", type: decimal }\n  mtm:      { path: \"$.mtm\", type: decimal }\n", ""))).dataset(), "h");
         assertThatThrownBy(() -> service.query(bad, q("{\"measures\":[\"Notional\"]}"), risk(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("not a SQL store");
         engine.close();

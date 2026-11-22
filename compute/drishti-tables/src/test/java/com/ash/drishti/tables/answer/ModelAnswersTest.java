@@ -78,7 +78,7 @@ class ModelAnswersTest {
               - { from: trades.DESK, to: desks.id }
             measures:
               MTM:         { expr: "sum(trades.MTM)" }
-              Open MTM:    { expr: "sum(trades.MTM, where = trades.STATUS != 'MATURED' && trades.STATUS != null)" }
+              Open MTM:    { expr: "calc(sum(trades.MTM), where = trades.STATUS != 'MATURED' && trades.STATUS != null)" }
               Trades:      { expr: "count(trades)" }
               Avg MTM:     { expr: "measure('MTM') / measure('Trades')" }
               Per 1m:      { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000" }

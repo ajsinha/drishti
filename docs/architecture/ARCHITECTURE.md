@@ -1392,7 +1392,7 @@ never means something else) and compiled by one compiler in the engine (`bicompu
 for a scan); an aggregate an `AggFunction` call (a formula of built-ins the engine's `FormulaFunction`, mergeable when its parts are); a
 filter-context function (`calc`, `share_of`, `parent_of`, `as_of`) the engine's sub-plan (`bicompute.context.FilterContext`, with
 `Periods` for balances); a window, a window over the answer. A differential test runs every operator, every scalar function, the
-aggregates with and without `where =` and every shipped expression through the Java and the SQL forms on a table of edge cases (nulls,
+aggregates with and without a condition (`calc(agg, where = c)`) and every shipped expression through the Java and the SQL forms on a table of edge cases (nulls,
 empty lists, masks, zero divisors, mixed currencies) and compares value for value. The pivot's custom formulas are read by the same parser
 (`bicompute.formula.FormulaLowering`). How BI uses it, the scopes and the filter-context algebra: [ARCHITECTURE.md §28 section
 18](#281-the-table-layer-and-models-in-rachana).
@@ -1408,7 +1408,7 @@ equivalent where one exists, so the pivot's Excel export writes a live formula. 
 
 | Family | Examples | Runs in |
 |---|---|---|
-| Conditional aggregates | any aggregate with `where =`; paths with filters `sum($.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL)` (`SUMIFS`, `COUNTIFS`) | engine |
+| Conditional aggregates | any aggregate restricted by `calc(agg, where = c)`; paths with filters `sum($.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL)` (`SUMIFS`, `COUNTIFS`) | engine |
 | Descriptive and two-variable statistics | `nmiss`, `range`, `mode`, `stderr`, `cv`, `skewness`, `kurtosis`, `iqr`, `geomean`, `trimmean`, `corr`, `covar`, `slope`, `rsq` | engine (moments and sums of products are mergeable) |
 | Shares, ranks, windows, time | `pct_of_total`, `pct_of_row`, `pct_of_parent` (of the visible totals, Excel's "Show values as"), `rank`, `ntile`, `top_n`, `lag`, `lead`, `moving_*`, `running`, `ytd`, `prior_period`, `diff`, `pct_change` | engine |
 | Filter context and balances | `calc`, `share_of`, `parent_of` (they drop filters, DAX's `ALL`), `as_of`, `opening`, `closing`, `latest`, `earliest` | engine |
