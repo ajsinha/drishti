@@ -165,6 +165,20 @@ class Server:
         except urllib.error.HTTPError as e:
             return e.code, e.read().decode()[:500]
 
+    def get_within(self, what: str, path: str, seconds: float = 600) -> tuple[int, object]:
+        """``path`` until it answers (any status that is not a timeout or a refused connection) within ``seconds``: a first answer that computes
+        something (the explanation of the bank's VaR) can take longer than one request's wait on a loaded machine, and the server is then
+        working, not hung; the message names what was waited for and the last error."""
+        deadline = time.monotonic() + seconds
+        last = ""
+        while time.monotonic() < deadline:
+            try:
+                return self.get(path, min(120, max(5, deadline - time.monotonic())))
+            except OSError as e:   # a read timeout (TimeoutError) or a refused connection: ask again until the deadline
+                last = f"{type(e).__name__}: {e}"
+                time.sleep(2)   # wait-ok: the answer is still being computed
+        raise AssertionError(f"{what} did not answer in {seconds:.0f} s ({last})")
+
     def wait_var(self, seconds: float = 300) -> object:
         """The bank's VaR once the engine answers."""
         deadline = time.monotonic() + seconds
@@ -209,21 +223,21 @@ def _checks(s: Server) -> float:
     var = s.wait_var()
     head = _headline(var)
     assert head > 0, f"the bank's VaR headline is zero: {str(var)[:400]}"
-    status, body = s.get(f"/api/v1/explain?kind=var&scope=BANK&asOf={s.as_of}&part=why")
+    status, body = s.get_within("VAR EXPLAIN BANK", f"/api/v1/explain?kind=var&scope=BANK&asOf={s.as_of}&part=why")
     assert status == 200, f"VAR EXPLAIN BANK: {status} {str(body)[:400]}"
     assert not re.search(r"DRS-\d{4}", json.dumps(body) if not isinstance(body, str) else body), f"VAR EXPLAIN BANK carries an error code: {str(body)[:400]}"
     for kind in ("position", "trade"):
-        status, body = s.get(f"/api/v1/data/{kind}/count")
+        status, body = s.get_within(f"{kind} count", f"/api/v1/data/{kind}/count")
         assert status == 200, f"{kind} count: {status} {str(body)[:300]}"
         n = (body.get("total") or body.get("rows") or body.get("count")) if isinstance(body, dict) else body
         assert n and n > 0, f"{kind}: no rows ({body})"
-    status, body = s.get("/api/v1/packs")
+    status, body = s.get_within("the pack list", "/api/v1/packs")
     rows = body if isinstance(body, list) else (body.get("packs", []) if isinstance(body, dict) else [])
     names = sorted({str(p.get("name") or p.get("pack")) for p in rows if isinstance(p, dict) and not p.get("sample")} & _packs_with_form(s.install))
     assert status == 200 and names, f"FORMS: the server lists no pack with a form: {status} {str(body)[:300]}"
     bad = []
     for n in names:   # FORMS lists the packs whose pack.yaml has a form: section
-        st, b = s.get("/api/v1/forms/" + urllib.parse.quote(n))
+        st, b = s.get_within(f"the form of {n}", "/api/v1/forms/" + urllib.parse.quote(n))
         if st != 200:
             bad.append(f"{n}: {st} {str(b)[:150]}")
     assert not bad, "FORMS does not answer for: " + "; ".join(bad)

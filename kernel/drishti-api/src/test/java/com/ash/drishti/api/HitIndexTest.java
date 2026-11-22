@@ -33,6 +33,7 @@ class HitIndexTest {
     }
 
     @Test
+    @org.junit.jupiter.api.Tag("timing")   // runs alone, in its own JVM, after the parallel forks (kernel/drishti-api/pom.xml)
     void aMillionEntitiesSearchInMilliseconds() {
         HitIndex index = new HitIndex();
         java.util.List<EntityHit> hits = new java.util.ArrayList<>();
@@ -52,7 +53,7 @@ class HitIndexTest {
         org.assertj.core.api.Assertions.assertThat(all.get(0).ref().id()).isEqualTo("CLY-30000001");            // id order, no sort of a million
         org.assertj.core.api.Assertions.assertThat(inner).isNotEmpty().allSatisfy(h -> org.assertj.core.api.Assertions.assertThat(h.ref().id()).contains("0000123"));
         org.assertj.core.api.Assertions.assertThat(index.search("trade", "MX-99999999", 5)).extracting(h -> h.ref().id()).containsExactly("MX-99999999");
-        org.assertj.core.api.Assertions.assertThat(ms).isLessThan(500);
+        org.assertj.core.api.Assertions.assertThat(ms).isLessThan(800);   // owner 2026-11-22: 616 ms observed under drill load
     }
 
     @Test

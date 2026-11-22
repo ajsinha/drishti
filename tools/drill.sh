@@ -359,7 +359,9 @@ tool_test_files() {   # lane (a or b): its test files and folders
 }
 run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed
   command -v uv >/dev/null || { echo "drill: the tools' tests need uv (it provides deltalake, pyarrow, PyYAML, pytest and moto)" >&2; return 1; }
-  timeout --kill-after=60 3600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with polars==2.1.0 --with numpy --with "moto[server]==5.2.3" bash -c '
+  # the lane's own bound: every file has its 900 s; the whole lane 7200 s (the files add up to ~3600 s beside the other lanes, and a
+  # run under load took all of it: the old 3600 s bound killed the lane, unfinished, with every file shown passed)
+  timeout --kill-after=60 7200 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with polars==2.1.0 --with numpy --with "moto[server]==5.2.3" bash -c '
     rc=0
     for f in "$@"; do
       t=$SECONDS
@@ -369,6 +371,9 @@ run_tool_tests() {   # files and folders: each in its own pytest process; return
       (( r == 0 )) || rc=1
     done
     exit $rc' _ "$@"
+  local rc=$?
+  (( rc == 124 || rc == 137 )) && echo "drill: the tools' tests hit the lane's 7200 s bound (exit $rc): the files after the last one named above did not run" >&2
+  return $rc
 }
 tools_lane_a() {
   set -e

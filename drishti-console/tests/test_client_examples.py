@@ -231,6 +231,9 @@ def test_direct_lake_notebook_runs(monkeypatch):
     root = Path(os.environ.get("DRISHTI_DELTA_ROOT") or REPO / "data" / "delta" / "demo")
     if not (root / "trading" / "trade_endur").is_dir():
         pytest.skip(f"the demo lake is not on disk at {root}")
+    # the notebook reads the lake where the lake file's root says; another test's server fixture sets DRISHTI_DATA_DIR to a folder of its own,
+    # so the root checked above is handed over: the test and the notebook read the same lake
+    monkeypatch.setenv("DRISHTI_DELTA_ROOT", str(root))
     ns = _run_notebook(PY / "09_direct_lake_read.ipynb", monkeypatch)
     assert ns["rows"].num_rows > 0
 
