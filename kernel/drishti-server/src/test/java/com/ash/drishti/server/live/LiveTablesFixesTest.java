@@ -21,9 +21,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.rachana.data.ProtocolError;
 import com.ash.rachana.live.LiveTables;
-import com.ash.rachana.live.spi.LiveStream;
-import com.ash.rachana.live.spi.SnapshotSource;
-import com.ash.rachana.table.LiveTableSpec;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -103,11 +100,7 @@ class LiveTablesFixesTest {
                 throw new IllegalStateException("POS needs VaR inputs: none are loaded for 2026-11-20");
             }
         };
-        LiveTables lt = new LiveTables(new LiveTables.Resolver() {
-            public SnapshotSource snapshot(String kind) { return new KindSnapshot(kind, b, List.of("TRADE_ID")); }
-            public LiveStream stream(String kind) { return new KindStream(kind, b, List.of("TRADE_ID")); }
-        }, LiveTables.Options.DEFAULTS.withUpkeepMs(0), Clock.systemUTC());
-        lt.declare(LiveTableSpec.read(LiveTablesAdapterTest.TRADE, "trade.live.yaml", DrishtiLiveTables.PROFILE_KEYS, f -> true));
+        LiveTables lt = LiveTablesAdapterTest.engine(b, LiveTablesAdapterTest.TRADE, null, Clock.systemUTC());
         ProtocolError e = org.junit.jupiter.api.Assertions.assertThrows(ProtocolError.class, () -> lt.rows("trade", Map.of(), null));
         assertThat(e.status()).isEqualTo(503);
         LiveTablesController c = new LiveTablesController(lt, null, null, null, b, new com.fasterxml.jackson.databind.ObjectMapper());
