@@ -893,6 +893,23 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /**
+     * The kinds a named connector serves: its own list (a reactive connector's computed kinds; a file's {@code kinds:} is not read), and
+     * those the resolution reads from it by name (a binding, a route, a pack template). Empty for a connector not known.
+     */
+    public java.util.Set<String> kindsOf(String name) {
+        SourcesProperties.ConnectorSettings c = applied.get(name);
+        java.util.Set<String> kinds = new java.util.LinkedHashSet<>();
+        if (c != null && c.kinds() != null) {
+            kinds.addAll(c.kinds());
+        }
+        SourceRouter router = reader.router;
+        if (router != null) {
+            kinds.addAll(router.kindsFor(name));
+        }
+        return kinds;
+    }
+
+    /**
      * The running connectors that serve the kinds of the named connector in its place: non-empty only when that connector is of an
      * internet plugin ({@link OfflineMode#reachesInternet}) and is off (switched off in its file, or offline mode), so its kinds are read
      * from these, such as the news-and-markets pack's {@code news-store} built from the captured snapshot. Sorted by name.
@@ -908,8 +925,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         if (router != null) {
             // its kinds (its own list, else those the resolution reads from it: a route, a pack template, a binding), each read from the
             // named connectors the resolution picks in its place (a plugin running as itself, such as demo, is not counted)
-            java.util.Set<String> kinds = new java.util.LinkedHashSet<>(c.kinds());
-            kinds.addAll(router.kindsFor(name));
+            java.util.Set<String> kinds = kindsOf(name);
             java.util.Set<String> out = new java.util.TreeSet<>();
             kinds.forEach(k -> router.picked(k).stream().map(p -> p.manifest().name())
                     .filter(other -> !other.equals(name) && applied.containsKey(other) && plugins.containsKey(other)).forEach(out::add));

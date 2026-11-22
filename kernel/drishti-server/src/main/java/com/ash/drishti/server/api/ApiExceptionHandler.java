@@ -80,6 +80,9 @@ public class ApiExceptionHandler {
         if (e instanceof DrishtiException x) {
             return drishti(x);
         }
+        if (e instanceof com.ash.lake.common.LakeException x && memoryOnly(x) != null) {
+            return lake(x);
+        }
         if (e instanceof java.time.format.DateTimeParseException x) {
             return badValue(x);
         }
@@ -205,6 +208,30 @@ public class ApiExceptionHandler {
             p.setProperty("traceback", f.traceback());          // only for a run an author asked for (PythonRuns)
         }
         return p;
+    }
+
+    /**
+     * Drishti Lake's memory-only refusal ({@code LK-1005}, thrown by the lake's {@code Retention} the server holds) is Drishti's
+     * {@code 403 DRS-5219} with the lake's words: a scheduled report, a share's picture or e-mail, a note's copied values or an Ask of
+     * memory-only data. Any other lake error is not mapped here.
+     */
+    @ExceptionHandler(com.ash.lake.common.LakeException.class)
+    ProblemDetail lake(com.ash.lake.common.LakeException e) {
+        DrishtiException d = memoryOnly(e);
+        if (d == null) {
+            throw e;
+        }
+        return drishti(d);
+    }
+
+    /** The memory-only refusal as Drishti's own exception (its words without the lake's code), null for any other lake error. */
+    static DrishtiException memoryOnly(com.ash.lake.common.LakeException e) {
+        if (e.error() != com.ash.lake.common.LakeError.MEMORY_ONLY) {
+            return null;
+        }
+        String m = e.getMessage();
+        String prefix = e.error().code() + " ";
+        return new DrishtiException(ErrorCode.MEMORY_ONLY, m.startsWith(prefix) ? m.substring(prefix.length()) : m);
     }
 
     /** A required query parameter that is missing: {@code 400 DRS-5001} naming it (SEC-10), not the 401 of a missing principal. */
