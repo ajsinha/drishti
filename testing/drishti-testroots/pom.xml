@@ -23,6 +23,8 @@
   <properties>
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
+    <!-- standalone: the same Lake pin as the root pom.xml's drishti.lake.version (hold them equal when the pin moves) -->
+    <drishti.lake.version>0.9.1</drishti.lake.version>
   </properties>
   <dependencies>
     <!-- G4 rehearsal: the pinned Drishti Lake jars -->
