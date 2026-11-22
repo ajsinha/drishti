@@ -1856,7 +1856,7 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
 
 ### 7.6 The lake writers: `--engine`
 
-`lake build` and `lake demo` take `--engine` with the choices `auto` (the default), `drishti`, `deltalake` and `java`; the first line of the
+`lake build` and `lake demo` take `--engine` with the choices `auto` (the default: the parallel Java loader first), `drishti`, `deltalake` and `java` (the loader required: it fails when the jar is missing); the first line of the
 output says which ran and why.
 
 | Value | What writes the table |
@@ -1864,7 +1864,7 @@ output says which ran and why.
 | `java` | the parallel lake loader, Drishti Lake's Java loader started from the server's exec jar: every stage multi-threaded, memory bounded, one commit per business date, Delta or Iceberg, from a folder or `s3://` (section 7.13) |
 | `drishti` | Drishti's Java writer in the exec jar (needs the jar) |
 | `deltalake` | the Python path (Drishti Lake's `drishti_lake` and the `deltalake` package), for a machine without the jar |
-| `auto` | `lake demo`: the parallel Java loader when the exec jar is found, else `drishti`, else `deltalake`. `lake build`: `drishti` when the jar is found, else `deltalake`; the parallel loader only with `--engine java` or `--java-above-mb N` (every JSON Lines input of at least N MB, mode `overwrite-dates`) |
+| `auto` (default) | the parallel Java loader when the exec jar (or `LAKE_CLASSPATH`) carries it, else `drishti`, else `deltalake`, in both `lake build` and `lake demo`. `lake build` goes straight to the Python-side engines for an input that is not JSON Lines or a `--mode` other than `overwrite-dates` or `append`. When the jar is missing the first line names the jar looked for (for example `<home>/lib/drishti-server-*-exec.jar (no jar matches)`) and the engine it fell back to |
 
 All of them write the same table and obey the same rules and guards (the business date of a file, replace and append, the future-date, zone and drop
 guards, one archive rule): they are written once, in Lake's [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md) and [PYTHON.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/PYTHON.md). The Delta protocol itself
@@ -2146,7 +2146,7 @@ verify, the Python one with uv).
 
 ### 7.13 The parallel lake loader
 
-The parallel loader (`--engine java`; the default writer of `lake demo`) is made for loads the Python path cannot carry (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
+The parallel loader (`--engine java`, and what `--engine auto`, the default of `lake build` and `lake demo`, tries first) is made for loads the Python path cannot carry (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
 **parallel lake loader** (module `lake-load`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
@@ -2163,11 +2163,7 @@ python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
 
-**The Python path is the default; the loader runs only when you ask for it** with `--engine java` (the same command line otherwise).
-`--engine auto` (the default) never picks the loader on its own; with `--java-above-mb N` it does, for at least N MB of JSON Lines in mode
-`overwrite-dates` (smaller loads, JSON arrays and the other modes go the Python way). `--loader-set KEY=VALUE` (repeatable)
-sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`); `--from s3://…` and a Delta `--lake s3://…` need
-`--engine java`.
+**The loader is the default** (`--engine auto` tries it first when the exec jar carries it; `--engine java` requires it and fails without it; the same command line otherwise).
 
 **Through a lake file**: `target.lake: <name>` and `target.kind` (and `target.table` where a kind has several tables) take the table's
 location, partitions, promoted columns, vectors, id, date, latest-by, file layout and load mode from `config/lakes/<name>.yaml` (the

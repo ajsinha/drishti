@@ -2135,7 +2135,7 @@ since (or `dataload undo` removed it), the same file loads again. `drishti.datal
 
 **4. The CLI alternative, tuned** (no inbox: a terminal, cron, or a machine that is not the owner node). **Always the Java loader** (`--engine java`):
 readers, parsers and writers on every core, memory bounded and spilled to disk, **one Delta commit per business date and table** however many files
-the folder holds. The Python writer (`auto` below `--java-above-mb`) is never used for a production batch. One folder a table and date, the
+the folder holds. The Python writer (`--engine deltalake`) is never used for a production batch. One folder a table and date, the
 date given by `--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` and `fx-scenario` first (tiny), then
 the positions as **one run over the date's folder**, not a run per part:
 

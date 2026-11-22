@@ -556,8 +556,8 @@ well they plug into those two formats.
 
 Data loading is Drishti Lake's one loader (Java and Python), with its guards (future days, zone, maximum drop share, force drop); the
 Python tools call the Lake wheel and stage each JSON line in Python (`tools/lake/stage.py`, `jsonstream.py`) before it commits the table.
-Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default for large inputs
-([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load); `--java-above-mb`). Where no JVM exists, a Polars
+Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default
+([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)). Where no JVM exists, a Polars
 staging path (`pl.scan_ndjson` into Arrow, the reject rules of `stage.py` as Polars expressions, the Arrow table handed to the Lake
 writer) must give exactly the same rows and rejects as `stage.py` (a parity test over the test data). The loader itself is documented
 by [Drishti Lake](https://github.com/drishti-platform/drishti-lake).
