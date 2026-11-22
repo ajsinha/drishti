@@ -792,3 +792,17 @@ Left for Rachana (not edited here): `LiveTables` has no `undeclare`, so an evict
 (nothing open behind it) until Rachana adds one; and Rachana's `WriteGuard` answers a repeated id written through the Data Protocol
 from `ChangeSink.prior(id)`, which is not given the change's content, so F5's comparison covers the write-back API only until the SPI
 passes the change (`prior(change)`).
+
+Also on this branch: `TypedCallParityTest` (2 failing, REST live search 404): its REST side asked `/api/v1/live/query`, left with the
+liveset engine; the typed call and its REST side now read `GET /api/v1/rdp/searches` one way (`KernelLiveQueries.page`). The F1 test found
+two more: a document's field reached a module's function as Rachana's node, not its value (`RachanaFunctions` passes plain values), and
+two servers in one JVM provided a module's function twice once the compiler followed the instance (module functions are now kept by
+module and names, the latest registration in use). Proved: `ModuleHostServerTest`, `FormApiTest`, `LiveIsolationTest`,
+`KafkaTradeEditTest`, `TypedCallParityTest` (both classes), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`,
+`PackagedVarGoldenTest`. Not this branch's: `StudioTest` (2: the inferred Sutra written as `rachana: 1`, the schema's level) and
+`SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem` fail the same way from the level-1.2 merge and Pass 3 triage; the merged
+`docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict markers from `g4/level-12`.
+
+F4 (a FORM table spanning Drishti\*net members read as its first opener): not done here, parked to the combined i8 by name. Option A
+needs a node identity on the on-behalf-of token carrying the audience's rights, the member trusting it, and a per-read audit call to each
+member for every reader of the shared table, proved on a cluster test: more than the two hours it was given.
