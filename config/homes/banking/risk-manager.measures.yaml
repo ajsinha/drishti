@@ -16,6 +16,10 @@
 # compares between the reference cut-off and now. Each names the engine that computes it (its Admin switch is the one in
 # config/engines/<engine>.yaml; an engine that is off drops its rows) and the driver groups that engine offers for "why".
 # Thresholds are the smallest move worth a row; a measure with none uses the change engine's defaults.
+# Measure codes and what answers them today (VarHomeMeasures, ExposureHomeMeasures in the banking module; the hosted engines replace the
+# calls at R2 with the same codes): VAR, ES = the VaR headline and the hierarchy's desk nodes; LIM_USE = the headline's and the nodes' limitUse;
+# PNL_DAY = the newest day of the VaR history; BREACHES = the history's exception days; PFE = the exposure scope's peakPfe; EXPOSURE = the
+# counterparty nodes' peakPfe against the credit limit.
 home: risk-manager
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }   # yesterday 17:00 in the site's time zone, as the plan's cut-off
 kpis:

@@ -37,6 +37,11 @@ import java.util.function.Supplier;
  */
 public final class HomeTables {
 
+    /** The tables the server itself serves (a module adds more with a {@link HomeTable} bean). */
+    public static final Set<String> BUILT_IN = Set.copyOf(List.of("home_meta", "home_kpis", "home_kpi_history", "home_exceptions", "home_changes", "home_desk_limits",
+                "home_exposure", "home_stress", "home_mnemonics", "home_calendar", "home_news", "home_loads", "home_held_changes", "home_model_runs",
+                "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions", "home_pnl_days", "home_market_tiles"));
+
     private final HomeStore store;
     private final HomeClock clock;
     private final Map<String, MeasureSource> sources = new LinkedHashMap<>();
@@ -58,9 +63,7 @@ public final class HomeTables {
 
     /** Every table a Home may read. */
     public Set<String> names() {
-        Set<String> out = new java.util.TreeSet<>(List.of("home_meta", "home_kpis", "home_kpi_history", "home_exceptions", "home_changes", "home_desk_limits",
-                "home_exposure", "home_stress", "home_mnemonics", "home_calendar", "home_news", "home_loads", "home_held_changes", "home_model_runs",
-                "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions", "home_pnl_days", "home_market_tiles"));
+        Set<String> out = new java.util.TreeSet<>(BUILT_IN);
         out.addAll(extra.keySet());
         return out;
     }

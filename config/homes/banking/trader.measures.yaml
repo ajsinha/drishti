@@ -14,6 +14,8 @@
 
 # What the trader's Home follows (ROLE_HOME_SUTRAS 4). The same layout as risk-manager.measures.yaml; the subjects are the person's own
 # books (row rules decide which), and only the person's own trades appear as events.
+# Measure codes and what answers them today (VarHomeMeasures, banking module): VAR, LIM_USE, PNL_DAY as in risk-manager.measures.yaml.
+# TODO(R2): PNL_MTD, DV01 and POSITION have no view in the VaR service yet; their figures are left out until the engines are hosted.
 home: trader
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }
 kpis:
