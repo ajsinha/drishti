@@ -68,7 +68,7 @@ public final class PackTables {
         Map<String, ColumnDef> columns = new LinkedHashMap<>();
         k.columns().forEach((name, type) -> columns.put(name, column(name, "$." + name, type, k)));
         TableDef.Materialize mat = k.live() ? new TableDef.Materialize(TableDef.Materialize.MODE_LIVE, null, null) : TableDef.Materialize.ON_LOAD;
-        out.add(new TableDef(base, "pack." + k.pack() + "." + k.kind(), version(k.version()), about, new TableDef.Source(k.kind(), k.pack(), null, null, null,
+        out.add(new TableDef(base, version(k.version()), about, new TableDef.Source(k.kind(), k.pack(), null, null, null,
                 null, null, null, null, null, null), null, null, columns, k.live() ? List.of("id") : List.of(), null, "one row per " + k.kind(), mat, null, null,
                 Map.of("on-load", true), List.of(), List.of(), List.of()));
         for (Map.Entry<String, Map<String, String>> a : k.arrays().entrySet()) {

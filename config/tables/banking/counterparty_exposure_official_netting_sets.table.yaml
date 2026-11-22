@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.counterparty_exposure_official_netting_sets
-was: counterparty-exposure-official-netting-sets
 version: 1.0.0
 title: "Exposure official results: netting sets (latest version)"
 description: "One row per netting set and business date: the latest result version of the official end-of-day exposure published to risk-results/exposure-official-cpty."

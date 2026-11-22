@@ -190,11 +190,8 @@ public final class TablesCli {
         Catalogue c = Catalogue.load(root(a), ItemStore.NONE);
         Optional<TableDef> t = c.table(a.positional.get(0));
         if (t.isEmpty()) {
-            err.println("tables preview: no table '" + a.positional.get(0) + "' under " + root(a));
+            err.println("tables preview: no table '" + a.positional.get(0) + "' under " + root(a) + c.retiredNote(a.positional.get(0)));
             return PROBLEMS;
-        }
-        if (c.renamed(a.positional.get(0)) != null) {
-            err.println("note: '" + a.positional.get(0) + "' is now " + t.get().name());
         }
         int limit = Integer.parseInt(a.value("--limit", "20"));
         Map<String, Map<String, DataNode>> related = new LinkedHashMap<>();
@@ -339,7 +336,7 @@ public final class TablesCli {
             return OK;
         }
         if (!c.free(name, stored(a))) {
-            err.println("tables offer: " + name + " is taken (a virtual table, a was: name or a stored table): choose another name");
+            err.println("tables offer: " + name + " is taken (a virtual table, a retired name or a stored table): choose another name");
             return PROBLEMS;
         }
         Path file = root(a).resolve(com.ash.drishti.tables.def.TableName.domain(name)).resolve(name.substring(name.indexOf('.') + 1) + ".table.yaml");

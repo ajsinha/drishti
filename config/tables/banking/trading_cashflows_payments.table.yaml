@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trading_cashflows_payments
-was: trading-cashflows-payments
 version: 1.0.0
 title: "Trade legs and cashflows: payments"
 description: "The payments (EVENTS) of the trades of the model trading-cashflows: paid − / received +, in the event's currency."

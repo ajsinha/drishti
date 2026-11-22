@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trading_risk_netting_sets
-was: trading-risk-netting-sets
 version: 1.0.0
 title: "Trading and counterparty risk: netting_sets"
 description: The netting_sets table of the model trading-risk.

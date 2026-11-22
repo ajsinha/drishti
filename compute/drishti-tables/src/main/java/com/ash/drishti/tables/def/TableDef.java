@@ -26,7 +26,6 @@ import java.util.Set;
  * parent); its rules and masks are on the table and apply to every reader (Q9).
  *
  * @param name {@code <domain>.<name>} (Q11)
- * @param was the name it had before, resolved with a warning for one release (Q18), or null
  * @param version semver, {@code 1.0.0} when not given
  * @param about the descriptive keys kept as written: {@code id}, {@code title}, {@code description}, {@code owner}, {@code sample},
  *     {@code endorsement}, {@code tags}, {@code ai}, {@code layout}
@@ -45,7 +44,7 @@ import java.util.Set;
  * @param hiddenFor roles that see none of the table's rows, never null
  * @param tests the data tests as written ({@code unique}, {@code not-null}, {@code references-exist}, {@code agg})
  */
-public record TableDef(String name, String was, String version, Map<String, Object> about, Source from, String grain, String filter,
+public record TableDef(String name, String version, Map<String, Object> about, Source from, String grain, String filter,
         Map<String, ColumnDef> columns, List<String> keys, String keepLatest, String says, Materialize materialize, String asOf, String retention,
         Map<String, Object> refresh, List<Rule> rules, List<String> hiddenFor, List<Map<String, Object>> tests) {
 

@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.live_exposure_netting
-was: live-exposure-netting
 version: 1.0.0
 title: "Live exposure: netting"
 description: The netting table of the model live-exposure.
