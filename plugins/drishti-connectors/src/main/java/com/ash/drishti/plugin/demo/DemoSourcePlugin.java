@@ -75,8 +75,8 @@ public final class DemoSourcePlugin implements SourcePlugin {
                 continue;
             }
             java.nio.file.Path root = java.nio.file.Path.of(dir.trim()).toAbsolutePath().normalize();
-            // the catalogue: catalog.jsonl, one entry a line (2.9.4), else the catalog.json array of earlier releases
-            if (!java.nio.file.Files.isRegularFile(root.resolve(PackSamples.CATALOG)) && !java.nio.file.Files.isRegularFile(root.resolve(PackSamples.OLD_CATALOG))) {
+            // the catalogue: catalog.jsonl, one entry a line
+            if (!java.nio.file.Files.isRegularFile(root.resolve(PackSamples.CATALOG))) {
                 throw new java.nio.file.NoSuchFileException(root.resolve(PackSamples.CATALOG).toString(), null, "a samples folder needs its catalogue");
             }
             Map<String, Map<String, DataNode>> byKind = new LinkedHashMap<>();       // kind -> id -> catalogue entry
