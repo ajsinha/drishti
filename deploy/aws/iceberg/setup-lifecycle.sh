@@ -22,7 +22,7 @@ to Standard-IA when the month's last day is TIER_IA_AFTER_DAYS old and to Glacie
 date, so a file rewritten later still goes to its business date's tier). Years wholly past the Glacier IR date get one rule per table-year.
 Objects under 128 KB stay in Standard.
 Never: a rule on metadata/ (metadata files, manifest lists and manifests stay in S3 Standard: every plan reads them), an expiry of any
-current object (only maintain.sh removes table files: expired snapshots' files, and orphans older than ICEBERG_ORPHAN_HOURS; the risk
+current object (only maintain.sh removes table files: expired snapshots' files, and unreferenced files older than the vacuum window; the risk
 domains keep 7 years), Glacier Flexible Retrieval or Deep Archive.
 The bucket's base rules (incomplete uploads, noncurrent versions, delete markers) are added when no Delta rule set put them.
 

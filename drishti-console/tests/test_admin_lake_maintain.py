@@ -30,14 +30,13 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from var_stack import PARKED_I6  # noqa: E402 - parked to i6
 import yaml
 
 from core.lake_maint import maintenance
 from core.lakes import Lakes, LakeSettings
 
 REPO = Path(__file__).resolve().parents[2]
-pytestmark = [PARKED_I6, pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="needs deltalake and pyarrow")]   # writes to a lake: parked to i6 (owner 2026-11-15)
+pytestmark = [pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="needs deltalake and pyarrow")]   # writes to a lake: parked to i6 (owner 2026-11-15)
 NY = ZoneInfo("America/New_York")
 
 

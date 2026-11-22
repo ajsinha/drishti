@@ -1505,7 +1505,7 @@ Delta Lake stays the default. A deployment that keeps some tables in Apache Iceb
 lists each file): `setup-iam.sh`, `check-conditional-writes.sh`, `load-day.sh --date D`, `backfill.sh --from D1 --to D2`, `maintain.sh`,
 `setup-lifecycle.sh`, `setup-alarms.sh`, `report.sh` and `check-glue.sh`. Settings in `deploy/aws/env`: `ICEBERG_PREFIX`, `ICEBERG_CATALOG`
 (`hadoop`: path-based tables in S3; `glue`: the AWS Glue Iceberg REST catalog, the domain being the Glue database), `GLUE_CATALOG_ID`,
-`ICEBERG_TABLES_FILE`, `ICEBERG_KEEP_BUSINESS_DAYS`, `ICEBERG_EXPIRE_HOURS`, `ICEBERG_ORPHAN_HOURS`. A path-based table commits by a
+`ICEBERG_TABLES_FILE`, `ICEBERG_KEEP_BUSINESS_DAYS`, `ICEBERG_EXPIRE_HOURS` (the vacuum window; `ICEBERG_ORPHAN_HOURS` is retired and refused). A path-based table commits by a
 conditional create of its next metadata file (two writers are safe when `check-conditional-writes.sh` passes; the scripts also lock per table
 on EFS); with Glue the catalog commits and Athena and Spark see the same tables. The connector side:
 [the Iceberg connector](../../plugins/drishti-plugin-iceberg/README.md#aws-glue) and [S3 Tables](../../plugins/drishti-plugin-iceberg/README.md#aws-s3-tables).

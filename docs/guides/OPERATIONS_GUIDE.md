@@ -2662,7 +2662,7 @@ is one (`<root>/<domain>/<table>/metadata/*.metadata.json`, as `lake build --for
 Each step is one Iceberg commit (run by `IcebergMaintenance` from the server's exec jar; `LAKE_CLASSPATH` in development): **retention** keeps
 the table's newest N business dates on or before today and drops older ones in one metadata-only delete (`max-drop-share` as for Delta); **compaction**
 re-lays out the days that drifted; no checkpoint; **vacuum** expires snapshots older than `vacuum-hours` and deletes the files only they used;
-**orphans** removes files no snapshot references older than `orphan-hours` (72, the least allowed). The 7-year floor holds (`--floor-days 2557`). A dry
+**orphans**: the vacuum window also removes the files no snapshot references (Lake never goes under 72 hours; the retired `orphan-hours` is refused at start, naming `vacuum-hours`). The 7-year floor holds (`--floor-days 2557`). A dry
 run lists the dates and the orphan files it would remove. Ownership, the lock, schedules and history are as for Delta. A lake on object storage
 (`root: s3://bucket/prefix` with `format: iceberg`) is listed by its `metadata/` folders; one behind a REST catalog (AWS Glue) names its tables and its
 catalog:
@@ -2673,7 +2673,6 @@ lakes:
     format: iceberg
     keep-business-days: 1800
     vacuum-hours: 168
-    orphan-hours: 72
     iceberg-settings: {catalog: rest, uri: "https://glue.eu-west-2.amazonaws.com/iceberg", warehouse: "123456789012",
                        catalog.rest.sigv4-enabled: "true", catalog.rest.signing-name: glue, catalog.rest.signing-region: eu-west-2}
     tables: {risk/pnl_vector: {}}

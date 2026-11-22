@@ -24,7 +24,6 @@ from pathlib import Path
 
 import pytest
 
-from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
 import yaml
 
 from core.lakes import Lakes, LakeSettings, connector_text
@@ -143,7 +142,6 @@ def test_connector_text_binds_the_lake_and_keeps_the_rest():
 
 
 @needs_deltalake
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_build_binds_the_connector_and_announces_each_date(client, backend, monkeypatch, lakes):
     calls = []
     fake(backend, monkeypatch, calls)
@@ -186,7 +184,6 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
     assert t["tables"] == [{"root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "partitionBy": ["PRODUCT_TYPE"], "promoted": ["NOTIONAL"]}]
 
 
-@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers(client, backend, monkeypatch, lakes, tmp_path):
     import json as _json
     import subprocess

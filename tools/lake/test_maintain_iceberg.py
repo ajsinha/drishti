@@ -105,7 +105,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(maintain_iceberg.current_metadata(c.parent), {"v": 3})
 
     def test_the_settings_become_the_maintenance_options(self):
-        cmd = self.command({"keep-business-days": 260, "compact": True, "vacuum-hours": 168, "orphan-hours": 12,
+        cmd = self.command({"keep-business-days": 260, "compact": True, "vacuum-hours": 168,
                             "storage-options": {"AWS_ENDPOINT_URL": "http://127.0.0.1:9000", "AWS_REGION": "us-east-1"}}, dry=True, floor=2557)
         self.assertEqual(cmd[:2], ["<launcher>", maintain.LAKE_MAINTAIN])
         text = " ".join(cmd)
@@ -131,10 +131,12 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(maintconfig.floor_days("trading/trade_endur"), 0)
         self.assertEqual(maintconfig.floor_days("risk/x", {"risk": 0}), 0)
 
-    def test_orphan_hours_under_72_are_refused(self):
-        with self.assertRaisesRegex(ValueError, "at least 72 hours"):
-            maintconfig.clean_settings({"orphan-hours": "24"})
-        self.assertEqual(maintconfig.clean_settings({"orphan-hours": "96"})[0], {"orphan-hours": 96})
+    def test_orphan_hours_is_retired_and_names_the_vacuum_window(self):
+        for call in (lambda: maintconfig.clean_settings({"orphan-hours": "96"}),
+                     lambda: maintconfig.from_lake_entry({"maintenance": {"orphan-hours": 96}}),
+                     lambda: maintconfig.from_lake_entry({"orphan-hours": 96})):
+            with self.assertRaisesRegex(ValueError, "orphan-hours is retired.*vacuum-hours"):
+                call()
 
 
 class RunTest(unittest.TestCase):

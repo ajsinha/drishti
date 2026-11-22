@@ -24,7 +24,7 @@
 #   3. metrics       Drishti/Lake: LoadSucceeded, LoadSeconds, PublishedBusinessDate (setup-alarms.sh watches them)
 #
 # Re-running a day replaces it whole (idempotent). A load that dies before its commit leaves unreferenced data files: maintain.sh
-# removes them once they are ICEBERG_ORPHAN_HOURS old (72 at least).
+# removes them once they are older than the vacuum window (ICEBERG_EXPIRE_HOURS; Lake never goes under 72 hours).
 USAGE="load-day.sh --date YYYY-MM-DD [--tables domain/table,...] [--from-dir DIR] [--dry-run] [--env FILE]
 
 --date      the business date to load (default: today in LOAD_SCHEDULE_ZONE)

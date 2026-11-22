@@ -46,10 +46,18 @@ from datetime import datetime
 
 import yaml
 
-SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "orphan-hours", "row-retention")
-#: orphan-hours is accepted for Iceberg tables; Lake's vacuum removes files no snapshot names once they are 72 hours old (the least this allows)
-TABLE_DEFAULTS = {"row-retention": None, "keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168, "orphan-hours": 72}
-ORPHAN_MIN_HOURS = 72
+SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "row-retention")
+TABLE_DEFAULTS = {"row-retention": None, "keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168}
+#: settings Drishti no longer applies: refused where a file or a form names them, with what replaces each
+RETIRED = {"orphan-hours": "orphan-hours is retired: Lake's vacuum removes the files no snapshot names once they are older than the table's "
+                           "vacuum-hours (Lake never goes under its own 72-hour floor); set vacuum-hours instead and delete orphan-hours"}
+
+
+def refuse_retired(mapping, where: str) -> None:
+    """A mapping that names a retired setting is refused, naming what replaces it (never silently accepted)."""
+    for k, why in RETIRED.items():
+        if isinstance(mapping, dict) and k in mapping:
+            raise ValueError(f"{where}: {why}")
 VACUUM_SAFE_HOURS = 168
 HISTORY_KEEP = 2000
 #: the domains whose dates and time travel are kept at least this many years, whatever a table's settings say (the risk lake's inputs
@@ -110,10 +118,12 @@ def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
     """The maintenance settings a lake file's table entry gives (docs/guides/DATA_LAKE_GUIDE.md section 2: ``retention``, ``maintenance``,
     ``time-travel``), in this module's keys, and notes for what it cannot act on. ``retention``: ``260`` or ``260d`` business dates,
     ``7y`` years; ``maintenance``: ``compaction`` (true/false), ``target-file-mb``, ``vacuum`` or ``expire-snapshots`` (an age: 168h, 7d),
-    ``vacuum-hours``, ``orphan-hours``, ``checkpoint`` (true/false), ``checkpoint-interval`` (the writers' table property; here a
+    ``vacuum-hours``, ``checkpoint`` (true/false), ``checkpoint-interval`` (the writers' table property; here a
     checkpoint each run); ``time-travel``: old versions kept readable at least this long (vacuum and expire-snapshots never go below)."""
     out: dict = {}
     notes: list[str] = []
+    refuse_retired(entry, "a lake file's table entry")
+    refuse_retired(entry.get("maintenance"), "a lake file's table entry, maintenance")
     r = entry.get("retention")
     if r not in (None, ""):
         t = str(r).strip().lower()
@@ -125,7 +135,7 @@ def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
     truthy = lambda v: str(v).strip().lower() in ("true", "yes", "on", "1")   # noqa: E731
     if "compaction" in m:
         out["compact"] = truthy(m["compaction"])
-    for k in ("target-file-mb", "vacuum-hours", "orphan-hours"):
+    for k in ("target-file-mb", "vacuum-hours"):
         if m.get(k) not in (None, ""):
             out[k] = int(float(m[k]))
     for k in ("vacuum", "expire-snapshots"):
@@ -137,7 +147,7 @@ def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
         out["checkpoint"] = True
         notes.append(f"checkpoint-interval {m['checkpoint-interval']}: the writers set it as the table's delta.checkpointInterval; maintenance "
                      "checkpoints each run")
-    unknown = sorted(set(m) - {"compaction", "target-file-mb", "vacuum-hours", "orphan-hours", "vacuum", "expire-snapshots", "checkpoint",
+    unknown = sorted(set(m) - {"compaction", "target-file-mb", "vacuum-hours", "vacuum", "expire-snapshots", "checkpoint",
                                "checkpoint-interval", "statistics"})
     if unknown:
         notes.append(f"maintenance keys not acted on: {unknown}")
@@ -205,6 +215,11 @@ def load(path: pathlib.Path) -> dict:
     doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(doc, dict):
         raise ValueError(f"{path} is not a lake-maintenance file (a mapping with lakes:)")
+    refuse_retired(doc, str(path))
+    for lake in doc.get("lakes") or []:
+        refuse_retired(lake, f"{path}, lake {lake.get('root') if isinstance(lake, dict) else lake}")
+        for t, v in ((lake.get("tables") or {}).items() if isinstance(lake, dict) else []):
+            refuse_retired(v, f"{path}, table {t}")
     return doc
 
 
@@ -248,6 +263,7 @@ def table_settings(config: dict, root: str, table: str) -> dict:
 
 def clean_settings(s: dict) -> tuple[dict, list[str]]:
     """Validated settings from a form ({setting: value}; blank retention keeps all) and the warnings to show beside them."""
+    refuse_retired(s, "settings")
     out, warn = {}, []
     if "keep-business-days" in s:
         v = s["keep-business-days"]
@@ -284,12 +300,6 @@ def clean_settings(s: dict) -> tuple[dict, list[str]]:
         if keep.get("max-rows") and (not keep["max-rows"].isdigit() or int(keep["max-rows"]) < 1):
             raise ValueError("a row retention's max-rows is a whole number, 1 or more")
         out["row-retention"] = keep or None
-    if "orphan-hours" in s:
-        n = int(s["orphan-hours"] or ORPHAN_MIN_HOURS)
-        if n < ORPHAN_MIN_HOURS:
-            raise ValueError(f"orphan files are removed when at least {ORPHAN_MIN_HOURS} hours old: a younger file may belong to a load "
-                             "still committing")
-        out["orphan-hours"] = n
     return out, warn
 
 

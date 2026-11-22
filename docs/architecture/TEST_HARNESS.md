@@ -243,15 +243,11 @@ gone. The parked tests:
 
 | File | Tests | Why it writes |
 |---|---|---|
-| `test_admin_lakes.py` | the build and the table page after a build (2 of 8) | Admin → Lakes builds a lake |
 | `test_admin_lakes_browser.py` | a file becomes a lake (1 of 2) | the same from the browser |
-| `test_admin_lake_maintain.py` | all (5) | its lake is built, then compacted and vacuumed |
 | `test_admin_lake_maintain_browser.py` | all (2) | the same from the browser |
 | `test_public_sector_browser.py` | all (6) | the recorded feeds are loaded into lakes of its own |
 | `test_bi_multi_dataset_browser.py` | all (6) | the BI sample lake (`bi_report_stack.make_lake`), a lake of its own |
 | `test_bi_reports_cross_browser.py` | all (8) | the same |
-| `test_python_runtime_answers.py` | all (2) | the same |
-| `test_expression_recipes.py` | every recipe on the demo lake (1 of 2) | the same |
 | `test_var_explorer_browser.py` | the six over the trade-grain date (`trade_stack`) | a trade-grain morning written into a lake |
 | `test_var_currency_browser.py` | a trade page's currency (1 of 4) | the same |
 
