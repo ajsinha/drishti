@@ -100,7 +100,7 @@ AREAS = [
     Area("engines", "Compute engines: `config/engines/*.yaml`",
          "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), "
          "`config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: "
-         "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
+         "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under its own prefix (`drishti.var.*`), except the few the banking module owns (`drishti.module.banking.*`: the manifest's `settings:`; their old `drishti.var.*` names are retired and a site that sets one stops the start, naming the new key). "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
          "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
@@ -163,8 +163,8 @@ AREAS = [
     Area("reports", "Report definitions: `config/reports/banking/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
-    Area("simm", "SIMM parameter files: `drishti.simm.parameters-dir`",
-         "One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `<config>/simm`), read and checked at start: the bank's "
+    Area("simm", "SIMM parameter files: `drishti.module.banking.simm.parameters-dir`",
+         "One YAML per ISDA SIMM version (`drishti.module.banking.simm.parameters-dir`, default `<config>/simm`), read and checked at start: the bank's "
          "licensed numbers, never shipped. The structure is `docs/architecture/capital-parameters/simm.yaml`, every number empty; a version "
          "with a number missing is refused with `DRS-5333` ([SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file))."),
     Area("dataload", "The data inbox's routing rules: `config/dataload.yaml`",

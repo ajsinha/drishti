@@ -49,7 +49,7 @@ import org.springframework.context.annotation.Import;
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false", "drishti.var.official.root=target/var-shard-nopv/official",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD",
         "drishti.var.sharding.enabled=true", "drishti.var.sharding.target-shard-mb=0.0003", "drishti.var.sharding.stable-seconds=0",
         "drishti.var.sharding.release-after-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})

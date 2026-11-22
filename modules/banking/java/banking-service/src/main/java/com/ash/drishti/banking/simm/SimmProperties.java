@@ -17,7 +17,6 @@ package com.ash.drishti.banking.simm;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * ISDA SIMM on the server (docs/guides/SIMM_GUIDE.md section 9), {@code drishti.simm}.
@@ -38,7 +37,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param cacheMinutes how long a date's netting sets and CSAs stay in memory after they are read
  * @param playgroundTemplate a bank's workbook template folder (blank: the built-in {@code playground/simm/template/})
  */
-@ConfigurationProperties("drishti.simm")
 public record SimmProperties(Boolean enabled, String parametersDir, String defaultVersion, String nettingSetKind, String csaKind, String addOnKind,
         String externalKind, String storedKind, Map<String, String> productClasses, String defaultProductClass, Integer maxFactors, String recipesDir,
         Integer cacheMinutes, String playgroundTemplate) {

@@ -79,13 +79,13 @@ fields:
   type: rate
   presence: required
   description: 'The VaR confidence level, as a fraction (0.99): the parameter confidence (one of drishti.var.confidences), else
-    drishti.var.confidence.'
+    drishti.module.banking.var.confidence.'
   example: 0.99
 - name: ES_CONFIDENCE
   type: rate
   presence: required
   description: 'The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (one of
-    drishti.var.es-confidences), else drishti.var.es-confidence.'
+    drishti.var.es-confidences), else drishti.module.banking.var.es-confidence.'
   example: 0.975
 - name: HORIZON
   type: text

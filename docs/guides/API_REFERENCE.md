@@ -2365,7 +2365,7 @@ or a `set` that is neither, answer `400`. `GET /api/v1/risk/var/scope?scope=BANK
 **Horizon and confidence.** The answers of a scope (`/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`,
 `/scope/contributions`, `/scope/currencies`), `/tree` and `POST /captures` (in the body) take a lens: `horizon` (`1d`, the default, or
 `10d`), `method` (`sqrt10`: the 1-day × √10; `sum`: each scenario the sum of 10 consecutive 1-day P&Ls, N − 9 overlapping windows;
-none: `drishti.var.ten-day-method`), `confidence` and `esConfidence` (from `drishti.var.confidences` and `es-confidences`, as `0.95` or
+none: `drishti.module.banking.var.ten-day-method`), `confidence` and `esConfidence` (from `drishti.var.confidences` and `es-confidences`, as `0.95` or
 `95`). The answer names it (`horizon` `10D`, `method` `SUM`, `confidence`, `esConfidence`, and `lens` with `label`, `scenarios`, `windows`,
 `describe`); `limitUse` is null and `limitComparable` false (with `limitNote`) unless the lens is the limit's own horizon and confidence;
 `backtest.applicable` is false at 10 days. A horizon or method that is not one of these, or a confidence not offered, answers `400` in
@@ -2508,7 +2508,7 @@ Initial margin per netting set and regime, collect and post, from the same posit
 endpoint takes `nettingSet` (a netting set id, `EXAMPLE` for the hand-built examples, or any VaR scope for an analytic; `scope` is the
 same), `version` (another installed version; default the CSA's), the switches `concentration` and `hvr` (`on`, `off`), `override=key=value`
 (repeatable; the answer is then *not the regulatory figure*) and `asOf`. No figure is computed until the bank installs its licensed
-parameter file (`drishti.simm.parameters-dir`).
+parameter file (`drishti.module.banking.simm.parameters-dir`).
 
 | Endpoint | What |
 |---|---|

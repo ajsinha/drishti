@@ -52,7 +52,7 @@ import java.util.stream.Stream;
  * ISDA SIMM per netting set and regime, collect and post (docs/guides/SIMM_GUIDE.md sections 3 to 7): the netting set's trades from the
  * netting-set master, their sensitivity records from the shared position sensitivities (mapped to the CRIF terms by the dictionary), the
  * CSA's version, regimes, calculation currency and add-ons, the licensed parameter file of the version (installed by the bank, one file a
- * version in {@code drishti.simm.parameters-dir}; none ships). Any other scope is an analytic, labelled so. Every answer carries its
+ * version in {@code drishti.module.banking.simm.parameters-dir}; none ships). Any other scope is an analytic, labelled so. Every answer carries its
  * provenance and can be kept as a recipe and replayed to the cent ({@link SimmRecipes}).
  */
 public final class SimmService {

@@ -1223,8 +1223,8 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CURRENCY` | text | required |  | The reporting currency of every amount of the answer: the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR); VAR_GUIDE.md section 15.10. | `USD` |  |
 | `VAR` | amount | required | CURRENCY | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |  |  |
 | `ES` | amount | required | CURRENCY | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |  |  |
-| `CONFIDENCE` | rate | required |  | The VaR confidence level, as a fraction (0.99): the parameter confidence (one of drishti.var.confidences), else drishti.var.confidence. | `0.99` |  |
-| `ES_CONFIDENCE` | rate | required |  | The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (one of drishti.var.es-confidences), else drishti.var.es-confidence. | `0.975` |  |
+| `CONFIDENCE` | rate | required |  | The VaR confidence level, as a fraction (0.99): the parameter confidence (one of drishti.var.confidences), else drishti.module.banking.var.confidence. | `0.99` |  |
+| `ES_CONFIDENCE` | rate | required |  | The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (one of drishti.var.es-confidences), else drishti.module.banking.var.es-confidence. | `0.975` |  |
 | `HORIZON` | text | optional |  | The horizon of every figure (VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input). | `1D`, `10D` |  |
 | `METHOD` | text | optional |  | How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, a window of N scenarios giving N-9 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. | `SQRT10`, `SUM` |  |
 | `SET` | text | optional |  | The scenario set of every figure (VAR_GUIDE.md section 18.8): NORMAL, or STRESSED with the parameter set=stressed (VRES BANK~set=stressed): the scope on the date's stress scenario set, in USD; a date without one is refused in words. | `NORMAL`, `STRESSED` |  |
@@ -1312,7 +1312,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `SES` | amount | optional | USD | Stressed ES at ES_CONFIDENCE on the same stress set; null when the date has none. |  |  |
 | `STRESS_SET_ID` | id | optional |  | The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none. | `HS-STRESS-2008` |  |
 | `SCENARIO_SET_ID` | id | required |  | The scenario set the date's vectors were valued over (HS-509). | `HS-509` |  |
-| `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on: the newest N of the scenario set (drishti.var.scenario-window; the set's length, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
+| `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on: the newest N of the scenario set (drishti.module.banking.var.window; the set's length, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
 | `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |
 | `DIVERSIFICATION` | amount | optional | USD | STANDALONE_SUM minus VAR. |  |  |
 | `HYPO_PNL` | amount | optional | USD | The node's hypothetical P&L for the date (the backtest's input). |  |  |

@@ -175,7 +175,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   9572 trades in 7993 positions
 ```
 
-(*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another.)
+(*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.module.banking.var.root-name` sets another.)
 
 **Any form, any grain.** A pricing system may send scenario PVs or P&L vectors, per trade or per position (a position sent
 whole, placed by its book, naming its trades): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`,
@@ -183,8 +183,8 @@ whole, placed by its book, naming its trades): every record says what it is (`VA
 trade or as their positions give the same VaR on every node; a trade inside a supplied position has no VaR of its own (its page says so
 and links the position). `drishti.var.inputs` can pin what each system sends, as a cross-check (VAR_GUIDE.md section 15.13).
 
-**One year or two; 99% or 95%.** `drishti.var.scenario-window` uses the newest N scenarios of each date's set (250 is one year;
-`all` is the whole set, 509 in the demo) and `drishti.var.confidence` sets VaR at 99% or 95%; every label follows the answer, and
+**One year or two; 99% or 95%.** `drishti.module.banking.var.window` uses the newest N scenarios of each date's set (250 is one year;
+`all` is the whole set, 509 in the demo) and `drishti.module.banking.var.confidence` sets VaR at 99% or 95%; every label follows the answer, and
 `window=` or `confidence=` on one request compares without changing anything official (VAR_GUIDE.md section 18.5).
 
 Read it as: on the 6th worst of the 509 days the bank would lose 112.0 million; the 13 worst days lose 160.1 million on average, so

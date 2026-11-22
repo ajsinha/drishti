@@ -30,14 +30,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 
 /**
- * A module's settings, described by its manifest ({@link ModuleSettingsSchema}) and read as {@code drishti.module.<id>.*}. A key a site sets
- * there is also given to the server key it replaces (the module's key wins), so the code that still reads the old key sees it; the old keys a
- * site still sets are listed for Health ({@link #INFO}{@code .deprecated}) and read for one release.
+ * A module's settings, described by its manifest ({@link ModuleSettingsSchema}) and read as {@code drishti.module.<id>.*}. The server key a
+ * setting had before is retired: a site that still sets it stops the start, naming the new key ({@link RetiredNames}); nothing reads it.
  */
 public final class ModuleSettingsEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
@@ -61,18 +59,13 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
                     "module settings: the manifests could not be read: {0}", e.getMessage());
             return;
         }
-        Map<String, Object> oldKeys = new LinkedHashMap<>();
-        List<String> notes = new ArrayList<>();
+        List<String> retired = new ArrayList<>();
         for (ModuleSettingsSchema s : schemas.values()) {
-            oldKeys.putAll(s.asOldKeys(env::getProperty));
-            notes.addAll(s.deprecated(k -> siteSets(env, k)));
+            retired.addAll(s.retiredLines(k -> siteSets(env, k)));
         }
-        if (!oldKeys.isEmpty()) {
-            env.getPropertySources().addFirst(new MapPropertySource(SOURCE, new LinkedHashMap<>(oldKeys)));
-        }
+        RetiredNames.refuse(retired);
         Map<String, Object> info = new LinkedHashMap<>();
         info.put(INFO + ".modules", String.join(",", schemas.keySet()));
-        info.put(INFO + ".deprecated", String.join("\n", notes));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE + "-info", info));
     }
 
@@ -100,25 +93,21 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
         }
     }
 
-    /** Whether the site (not the product's defaults, nor an engine's shipped file) sets {@code key}. */
-    static boolean siteSets(ConfigurableEnvironment env, String key) {
+    /** Where the site (not the product's defaults, nor an engine's shipped file) sets {@code key} (a property source's name), or null. The environment's own variables are never read here: {@code DRISHTI_VAR_THREADS} is a name the shipped engine file
+     * gives its placeholder, not the key. */
+    static String siteSets(ConfigurableEnvironment env, String key) {
         for (PropertySource<?> ps : env.getPropertySources()) {
             String n = ps.getName();
-            if (n.startsWith(SOURCE) || n.startsWith("drishti-edition") || n.startsWith("drishti-packs") || !(ps instanceof EnumerablePropertySource<?> e)
+            if (n.startsWith(SOURCE) || "systemEnvironment".equals(n) || n.startsWith("drishti-edition") || n.startsWith("drishti-packs")
                     || (n.startsWith("Config resource") && n.contains("class path resource"))
                     || (n.startsWith("Config resource") && n.replace('\\', '/').matches("(?s).*engines/[a-z0-9-]+\\.yaml\\].*"))) {
                 continue;
             }
-            Object v = ps.getProperty(key);
+            Object v = ps.containsProperty(key) ? ps.getProperty(key) : null;
             if (v != null && !v.toString().isBlank()) {
-                return true;
-            }
-            for (String name : e.getPropertyNames()) {                       // the environment's form: DRISHTI_VAR_CONFIDENCE is not a key of this kind
-                if (name.equals(key)) {
-                    return true;
-                }
+                return n;
             }
         }
-        return false;
+        return null;
     }
 }

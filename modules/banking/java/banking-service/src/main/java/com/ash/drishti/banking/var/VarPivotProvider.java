@@ -244,7 +244,7 @@ public final class VarPivotProvider implements PivotProvider {
             case "svar" -> Optional.of(new Cap(props.stressedMaxCells(), "stressed VaR is computed for the first " + props.stressedMaxCells()
                     + " cells of a view, row by row as the grid shows them (drishti.cube.mr.stressed-max-cells)"));
             case "sbm" -> Optional.of(new Cap(props.sbmMaxCells(), "SBM is computed for the first " + props.sbmMaxCells()
-                    + " cells of a view, row by row as the grid shows them (drishti.cube.mr.sbm-max-cells)"));
+                    + " cells of a view, row by row as the grid shows them (drishti.module.banking.mr-cube.sbm-max-cells)"));
             default -> Optional.empty();
         };
     }

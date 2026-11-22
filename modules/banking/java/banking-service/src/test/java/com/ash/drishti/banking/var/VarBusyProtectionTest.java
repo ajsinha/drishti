@@ -65,7 +65,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.admission.memory-warn=0.00001", "drishti.admission.memory-refuse-heavy=0.00002",   // under any heap: new heavy work waits
         "drishti.admission.memory-free-min-mb=1048576",                                                // and any free heap counts as short
         "drishti.admission.retry-after.load=20",

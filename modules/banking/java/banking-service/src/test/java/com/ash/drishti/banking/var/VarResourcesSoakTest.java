@@ -55,7 +55,7 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false", "drishti.var.official.enabled=false", "drishti.var.currencies[0]=USD",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.hot-dates=2", "drishti.var.tier.disk-dates=6",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.module.banking.var.hot-dates=2", "drishti.var.tier.disk-dates=6",
         "drishti.var.version-check=1s",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)

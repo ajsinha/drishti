@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * and lineage, signed by maker, checker and approver (one person one step), its files released after the last approval; a failed check
  * blocks sign-off; a restated record leaves a frozen run as it was.
  */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-regulatory-api", "drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-regulatory-api", "drishti.rachana.hot-reload=false", "drishti.module.banking.var.window=all", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
@@ -67,7 +67,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.regulatory.synthetic-history=true", "drishti.regulatory.backtesting.window=25",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

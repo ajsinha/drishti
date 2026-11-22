@@ -17,13 +17,16 @@
 # and the environment win over both (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only;
 # every other key is edited here.
 drishti:
+  module:
+    banking:       # the settings the banking module owns (module.yaml settings:), read as drishti.module.banking.<key>
+      mr-cube:
+        sbm-max-cells: 60              # the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope)
   engines:
     mr-cube:
       enabled: ${DRISHTI_MR_CUBE_ENABLED:true}   # run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
   cube:
     mr:                              # the market-risk cube's settings (bi/PIVOT.md section 29.9); the cell budget and cache are the pivot engine's (drishti.pivot.*)
-      sbm-max-cells: 60              # the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope)
       stressed-max-cells: 100        # the most cells whose stressed VaR one view computes, scope by scope
       sparkline-dates: 20            # the open business dates a sparkline reads (a date not open here is not opened for one)
       sparkline-max-cells: 600       # the most cells of a view that get a sparkline

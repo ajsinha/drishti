@@ -59,7 +59,7 @@ import org.springframework.context.annotation.Import;
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false", "drishti.var.official.enabled=false",
         "drishti.var.official.root=target/var-parallel-read/official",
-        "drishti.var.threads=2", "drishti.var.tier.mode=heap", "drishti.var.currencies[0]=USD",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.mode=heap", "drishti.var.currencies[0]=USD",
         "drishti.var.read.threads=4", "drishti.var.read.buffer-mb=1",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @Import(PinnedBusinessDate.class)

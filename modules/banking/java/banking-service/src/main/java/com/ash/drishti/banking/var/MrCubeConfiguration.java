@@ -17,7 +17,6 @@ package com.ash.drishti.banking.var;
 
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.server.engines.BasicEngine;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +28,13 @@ import org.springframework.context.annotation.Configuration;
  * {@code MCUBE} word, its menu entry and Help pages are gone, and its kept dimension codes are released.
  */
 @Configuration
-@EnableConfigurationProperties(MrCubeProperties.class)
 public class MrCubeConfiguration {
+
+    /** The settings: {@code drishti.cube.mr.*}, and the ones the banking module owns from {@code drishti.module.banking.*} (the manifest's settings). */
+    @Bean
+    public MrCubeProperties mrCubeProperties(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.cube.mr", MrCubeProperties.class, java.util.Map.ofEntries(java.util.Map.entry("sbm-max-cells", "mr-cube.sbm-max-cells")));
+    }
 
     /** The VaR provider the pivot engine was built with (PivotConfiguration), whose MR lens these beans serve. */
     static VarPivotProvider provider(PivotCore core) {

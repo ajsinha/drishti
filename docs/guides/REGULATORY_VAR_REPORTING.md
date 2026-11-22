@@ -356,14 +356,14 @@ are counterparty measures, not VaR. They are out of this document's scope.
 
 Every regulatory figure is read from the **official end-of-day records**, never recomputed for a report: one record per node of every
 hierarchy per business date, with its result version, inputs' versions and membership, append-only, kept 7 years
-([VAR_GUIDE section 19](VAR_GUIDE.md#19-official-end-of-day-results)). A record carries `var` (1-day at `drishti.var.confidence`), `es`,
+([VAR_GUIDE section 19](VAR_GUIDE.md#19-official-end-of-day-results)). A record carries `var` (1-day at `drishti.module.banking.var.confidence`), `es`,
 `varAt` (the VaR at each other backtesting confidence), `svar` and `ses` (on a date with a stress set), `hypoPnl` (the risk-theoretical
 P&L), the limit and its use, the standalone sum and diversification. A restated date gets a new result version; a report reads each
 date's latest version at the time it is run and freezes what it read ([6.3](#63-runs-freezing-and-lineage)).
 
 ### 4.2 VaR, ES and the 10-day horizon
 
-Historical simulation over the date's scenario set (N scenarios: 509 on the demo; `drishti.var.scenario-window` may cut it to the
+Historical simulation over the date's scenario set (N scenarios: 509 on the demo; `drishti.module.banking.var.window` may cut it to the
 newest N, 250 the regulatory minimum). For a scope S with P&L vector P_S(s) = Σ_{trades in S} P&L_trade(s):
 
 ```

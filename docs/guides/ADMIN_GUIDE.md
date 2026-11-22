@@ -1605,7 +1605,7 @@ site still sets.
 
 **A module's settings.** A module describes its own settings in its manifest (`settings:`), and a site sets them as `drishti.module.<id>.<key>`. Banking's
 are the VaR window and confidences, the hierarchies' labels, the system-basket seed and the settings of its risk engines (var, exposure, frtb-sa, simm,
-sensitivities, mr-cube). The server keys they replaced (`drishti.var.confidence`, `drishti.var.scenario-window`, ...) are read for one release, the module's
+sensitivities, mr-cube). The server keys they replaced (`drishti.module.banking.var.confidence`, `drishti.module.banking.var.window`, ...) are read for one release, the module's
 key winning; Health lists the old keys a site still sets. `GET /api/v1/admin/modules/banking/settings` gives each setting, its value and where the value
 comes from (the module's key, the old key, or the default). Banking also declares its parts (`api` light, `compute` heavy, `feeds`), so Placement can put
 the compute on its own nodes.

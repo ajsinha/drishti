@@ -18,7 +18,6 @@ package com.ash.drishti.banking.var;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The market-risk cube's settings, {@code drishti.cube.mr} (bi/README.md#29-the-mr-cube-preset section 9; engine {@code mr-cube}, ADMIN_GUIDE.md: needs
@@ -38,7 +37,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param sparklineMaxCells the most cells a view draws sparklines for
  * @param whatIfRows the most rows the what-if side by side computes (each a what-if on the row's scope), the total always added
  */
-@ConfigurationProperties("drishti.cube.mr")
 public record MrCubeProperties(Map<String, List<String>> riskClasses, Map<String, Map<String, String>> grids, Map<String, Double> ladderLimits,
         Integer sbmMaxCells, Integer stressedMaxCells, Integer sparklineDates, Integer sparklineMaxCells, Integer whatIfRows) {
 
