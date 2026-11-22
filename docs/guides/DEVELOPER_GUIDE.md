@@ -297,7 +297,7 @@ The module project's folder (the one with `module.yaml` at its top) sits under `
 Drishti folder.
 
 ```bash
-python3 tools/drishti.py build modules greet      # (or IntelliJ's Drishti build modules) the package, stamped for the jar in lib/
+python3 tools/drishti.py build modules greet      # (or IntelliJ's Drishti: build modules) the package, stamped for the jar in lib/
 python3 tools/drishti.py start server             # the log says "modules from the boot: ... greet"; Admin → Modules shows it ok
 ```
 

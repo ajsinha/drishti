@@ -353,7 +353,7 @@ def standalone_scripts() -> list[Path]:
 
 def test_scripts_loaded_without_drishti_core_guard_drishti_url():
     files = standalone_scripts()
-    assert len(files) >= 20 and STATIC / "js" / "drishti_bi-lib.js" in files
+    assert len(files) >= 20 and STATIC / "js" / "drishti_geomap.js" in files and STATIC / "js" / "drishti_bi-lib.js" in files
     offenders = []
     for f in files:
         src = f.read_text(encoding="utf-8")

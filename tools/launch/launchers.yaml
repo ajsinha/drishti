@@ -20,73 +20,78 @@
 # kind: maven (goals), server (profile), console (profile, args), tool (command, profile optional; template: a file the reader names).
 
 intellij:
-  - name: Drishti build all
+  - name: "Drishti: build all"
     kind: maven
     goals: clean package -DskipTests -pl :drishti-app,:drishti-modules -am
     what: the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar
     when: after a clone or a pull (the one to click)
-  - name: Drishti build modules
+  - name: "Drishti: test"
+    kind: maven
+    goals: clean verify
+    what: the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE)
+    when: before a release, or after a change that crosses modules
+  - name: "Drishti: build modules"
     kind: maven
     goals: clean package -DskipTests -pl :drishti-modules -am -Pmodules-only
     what: the module packages only, stamped for the jar already in `lib/`
     when: you changed only module code
-  - name: Drishti server (demo lakes)
+  - name: "Drishti: run server (demo)"
     kind: server
     profile: demo
     what: the demo lakes, offline, sign-in on, the data inbox on
-    when: the normal run, after **Build demo lakes**
-  - name: Drishti server (built-in samples)
+    when: "the normal run, after **Drishti: build demo lakes**"
+  - name: "Drishti: run server (built-in samples)"
     kind: server
     profile: samples
     what: the packs' small built-in samples (generated, ticking), sign-in on
     when: a first look before any lake is built
-  - name: Drishti server (QA, port 18580)
+  - name: "Drishti: run server (QA, port 18580)"
     kind: server
     profile: qa
     what: the samples on its own port and data folder (`data/qa/data`), sign-in on
     when: QA, or a second server beside the first
 
 pycharm:
-  - name: Drishti console
+  - name: "Drishti: run console"
     kind: console
     profile: demo
     what: the console on 17480 for the server on 18480, sign-in on
     when: with either 18480 server
-  - name: Drishti console (QA, port 17580)
+  - name: "Drishti: run console (QA, port 17580)"
     kind: console
     profile: qa
     what: the console on 17580 for the QA server on 18580
-    when: with **Drishti server (QA, port 18580)**
-  - name: Drishti console (Risk)
+    when: "with **Drishti: run server (QA, port 18580)**"
+  - name: "Drishti: run console (Risk)"
     kind: console
     profile: demo
     args: [--distribution=risk]
     what: the Risk distribution's console on 17480 (temp folder `<data>/tmp/console-risk`)
-    when: Drishti Risk, with **Drishti server (demo lakes)**
-  - name: Drishti console (Finance)
+    when: "Drishti Risk, with **Drishti: run server (demo)**"
+  - name: "Drishti: run console (Finance)"
     kind: console
     profile: demo
     args: [--distribution=finance, --server.port=17481]
     what: the Finance distribution's console on 17481 (temp folder `<data>/tmp/console-finance`)
     when: Drishti Finance, beside the Risk console
-  - name: Build demo lakes
+  - name: "Drishti: build demo lakes"
     kind: tool
     command: lake demo --engine java
     what: the demo lakes with the Java loader of the jar in `lib/`
     when: after a build, with the server stopped
-  - name: Load a file into the lake
+  - name: "Drishti: run loader (file into the lake)"
     kind: tool
     template: true
     command: lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo
     what: one file of yours into the demo lake, by its kind (a template; copy it and name your file)
     when: you hold a file of your own (never committed)
-  - name: Drishti doctor
+  - name: "Drishti: check environment"
     kind: tool
     profile: demo
     command: doctor
     what: this machine and the server on 18480 (without a token it says how to make one)
     when: something does not start or answer
-  - name: Drishti doctor (QA)
+  - name: "Drishti: check environment (QA)"
     kind: tool
     profile: qa
     command: doctor

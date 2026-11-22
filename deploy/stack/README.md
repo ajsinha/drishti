@@ -31,7 +31,7 @@ Windows: `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start
 file, then `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the `PATH`; the cluster file names none.
 
 **The settings of every node and the console**, in order, a later file winning: the files of `drishti.py --settings` (your `dev.ini`),
-the cluster file's `profile:` (`demo`: `config/profiles/demo.ini`, the same file the IDE's **Drishti server (demo lakes)** and
+the cluster file's `profile:` (`demo`: `config/profiles/demo.ini`, the same file the IDE's **Drishti: run server (demo)** and
 `start server --demo` read), its `settings-file:` (`stack.ini` beside it: what this lab cluster runs differently, live news) and a node's
 own `settings:` (`member.ini`: the members run no data inbox). A node's `packs:` beats the profile's packs (the members serve their own);
 `drishti-main` names none and serves the profile's. Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the files'

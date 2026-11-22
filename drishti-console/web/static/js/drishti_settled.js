@@ -22,7 +22,7 @@
  *
  * resolves once the page is ready to be read:
  *   - the document loaded and its fonts in;
- *   - every panel chart and map drawn (drishti-chart's PanelCharts.state of every .chart and .xchart that is not .pnl-empty, in the page
+ *   - every panel chart and map drawn (drishti-chart's PanelCharts.state of every .chart, .xchart and the painter's .dv-chart that is not .pnl-empty, in the page
  *     and in any open shadow root) and, unless options.animations is false, its animation finished;
  *   - every grid drawn (drishti-grid marks its scroller data-dg-drawing from a change until the frame that draws it);
  *   - nothing marked aria-busy in the view or a render host (a control's query, a panel being fetched or swapped in);
@@ -50,7 +50,7 @@
     counted.__drishtiCounted = true;
     window.fetch = counted;
   }
-  var CHARTS = '.chart:not(.pnl-empty), .xchart:not(.pnl-empty)';
+  var CHARTS = '.chart:not(.pnl-empty), .xchart:not(.pnl-empty), .dv-chart:not(.pnl-empty)';   // the console's panel charts and the painter's (a map draws after its shapes arrive: until then it is not drawn)
   var BUSY = '.view[aria-busy="true"], .view [aria-busy="true"], [data-render-host][aria-busy="true"]';
 
   function scopes() {   // the page and every open shadow root in it (a render host, an embedded element)

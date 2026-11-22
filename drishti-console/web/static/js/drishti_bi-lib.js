@@ -27,7 +27,8 @@
     const el = document.createElement(tag);
     Object.keys(attrs || {}).forEach((k) => {
       const v = attrs[k];
-      if (k === 'text') { el.textContent = v; } else if (k === 'class') { el.className = v; } else if (v === true) { el.setAttribute(k, ''); } else if (v !== false && v != null) { el.setAttribute(k, v); }
+      if (k === 'text') { el.textContent = v; } else if (/^on[a-z]+$/.test(k) && typeof v === 'function') { el.addEventListener(k.slice(2), v); }      // a handler is a listener, never an inline attribute (the strict policy refuses those)
+      else if (k === 'class') { el.className = v; } else if (v === true) { el.setAttribute(k, ''); } else if (v !== false && v != null) { el.setAttribute(k, v); }
     });
     (function add(list) {
       list.forEach((c) => {

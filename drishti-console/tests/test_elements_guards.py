@@ -73,6 +73,7 @@ ALLOWED = {
     "static/js/drishti_bi-runs-admin.js": {"numbers": BI},
     "static/js/drishti_bi-runs.js": {"numbers": BI},
     "static/js/drishti_bi-transform.js": {"numbers": BI},
+    "static/js/drishti_geomap.js": {"echarts": BI},                          # left for the Sutra panels' maps and the frozen embeds (render 1.2.0, embed v1); BI's maps draw with drishti-chart's geo part
     "plugins/banking/static/js/drishti_mr-lens.js": {"numbers": BI},
     "static/js/drishti_pivot-engine.js": {"numbers": BI},
     "static/js/drishti_pivot-functions.js": {"numbers": BI},

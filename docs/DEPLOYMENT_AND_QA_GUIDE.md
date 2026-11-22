@@ -46,7 +46,7 @@ and, where a file decides it, **in YAML**. The pictures show a server and consol
 4. [Get the release](#4-get-the-release) (and [upgrading an older install](#41-upgrading-an-older-install-start-from-clean-state))
 5. [Configure](#5-configure) (and [the settings file](#51-the-settings-file))
 6. [Build the demo lake](#6-build-the-demo-lake)
-7. [Start the server and the console](#7-start-the-server-and-the-console) (and [from IntelliJ IDEA or PyCharm](#78-from-intellij-idea-or-pycharm))
+7. [Start the server and the console](#7-start-the-server-and-the-console) (and [from IntelliJ IDEA or PyCharm](#78-from-intellij-idea-pycharm-or-vs-code))
 8. [Run them as services](#8-run-them-as-services)
 9. [Verify, step by step](#9-verify-step-by-step)
 10. [The QA checklist](#10-the-qa-checklist)
@@ -148,11 +148,11 @@ Every jar lives under the install folder, in two places that never mix:
 | | `<drishti>/lib` | `<drishti>/lib/ext` |
 |---|---|---|
 | Holds | **Drishti's own** jar: the one `drishti-server-<version>-exec.jar` (every Java library is inside it) | **your site's** jars: JDBC drivers, connector plugins |
-| Put there by | the release, or the build (`python tools/drishti.py build jar`, or IntelliJ's **Drishti build all**: Maven installs the jar there, removing an older one, and the modules beside it) | you |
+| Put there by | the release, or the build (`python tools/drishti.py build jar`, or IntelliJ's **Drishti: build all**: Maven installs the jar there, removing an older one, and the modules beside it) | you |
 | On an upgrade | replaced with the release | kept: copy it into the new install |
 | Found by | every tool: `start`, `lake demo --engine java`, `doctor` (exactly one server jar: `start` refuses two) | the server at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`) |
 
-**Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run; in IntelliJ **Drishti build modules** and **Drishti build all**) makes them: Maven builds the modules' jars, packs every module with the one packer (`module pack` of the server classes, Java; no Python), and installs each package through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core).
+**Drishti's modules are not in the jar.** Each module is a package, `<module>-<version>.dmod`, in `<drishti>/modules`, with `first-party.yaml` (which packages are the product's own) beside them. `python tools/drishti.py build modules` (or `build all`, the jar and the modules in one Maven run; in IntelliJ **Drishti: build modules** and **Drishti: build all**) makes them: Maven builds the modules' jars, packs every module with the one packer (`module pack` of the server classes, Java; no Python), and installs each package through a `.part` file and one replace, an older file of the same module removed. A package built for a module with Java is stamped for one kernel build: the jar in `lib/`. `start server` (and `start cluster`, and a test session) **refuses a package older than its module folder** or stamped for another jar, naming the module and the command (`modules/banking changed since banking-1.0.0.dmod was built (packs/market-risk/...): python tools/drishti.py build modules banking`); `build jar` alone says which modules are missing or stale instead of leaving banking refused at the next start. A release carries the packages and no module folders: it is never stale. An empty modules folder starts a server with no module (Admin → Modules shows only the core).
 
 A jar found in the data folder's old `lib/` is moved into `lib/ext` once, at the first start that finds it, listed in the moved list, and
 **Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)).
@@ -422,8 +422,8 @@ It always builds with `clean` (an older jar never stays beside the new one), wit
 `build all` is one Maven command, `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, and the Maven build itself installs
 the jar into `<drishti>/lib` (removing an older server jar there) and the packages into `<drishti>/modules`; Maven's own copies stay in
 `kernel/drishti-server/target/` and `packaging/dist/target/dmod/`. So the same build runs with no Python at all: `./mvnw clean package
--DskipTests -pl :drishti-app,:drishti-modules -am` (Windows `mvnw.cmd …`), or IntelliJ's **Drishti build all**.
-`--offline` runs Maven offline, `--no-copy` (`-Ddrishti.install.skip=true`) installs nothing, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-or-pycharm).
+-DskipTests -pl :drishti-app,:drishti-modules -am` (Windows `mvnw.cmd …`), or IntelliJ's **Drishti: build all**.
+`--offline` runs Maven offline, `--no-copy` (`-Ddrishti.install.skip=true`) installs nothing, `--dry-run` prints the Maven command. From the IDEs: [7.8](#78-from-intellij-idea-pycharm-or-vs-code).
 
 **B. Copy a release** built elsewhere (Java bytecode is the same on every operating system). The release folder holds:
 
@@ -672,8 +672,8 @@ drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-e
 (`--settings`; for a machine whose `JAVA_HOME` is an older Java), `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the
 `PATH`; older than 21 is refused in words. The jar: the newest `drishti-server-*-exec.jar` in `<drishti>/lib` (`--jar FILE` for another).
 
-In PyCharm: the run configuration **Build demo lakes** (it runs `lake demo --engine java` with the same settings file; build the jar first
-with IntelliJ's **Drishti build all**; [IDE_GUIDE.md › 2.4](guides/IDE_GUIDE.md#24-the-demo-lakes-and-your-own-data-with-the-java-loader-pycharm)). Your own files go
+In PyCharm: the run configuration **Drishti: build demo lakes** (it runs `lake demo --engine java` with the same settings file; build the jar first
+with IntelliJ's **Drishti: build all**; [IDE_GUIDE.md › 2.4](guides/IDE_GUIDE.md#24-the-demo-lakes-and-your-own-data-with-the-java-loader-pycharm)). Your own files go
 through the same Java loader with `lake build … --engine java` ([12.2](#122-put-the-data-in-place)). The
 lake goes to `<data>/delta/demo`, the data folder being the settings file's `drishti.data.dir`. **You should see** the writer named, one
 line per table as it is written, then:
@@ -711,7 +711,7 @@ Two ways to see data, chosen by `DRISHTI_DEMO_ENABLED`:
 | | Demo **off** (`DRISHTI_DEMO_ENABLED=false`): the QA setting | Demo **on** (the default when nothing sets it) |
 |---|---|---|
 | What answers | the demo lake (and any lake you load) | the packs' small built-in samples, ticking live, before any lake |
-| Set by | the demo profile, `config/profiles/demo.ini`: `drishti.py start server --demo`, `drishti.py start all --demo`, the run configuration **Drishti server (demo lakes)** | a plain `drishti.py start server`, or the samples profile: the run configuration **Drishti server (built-in samples)** |
+| Set by | the demo profile, `config/profiles/demo.ini`: `drishti.py start server --demo`, `drishti.py start all --demo`, the run configuration **Drishti: run server (demo)** | a plain `drishti.py start server`, or the samples profile: the run configuration **Drishti: run server (built-in samples)** |
 | Needs | the demo lake of this section | nothing |
 
 To prove a release from nothing, start on a **clean data folder**: a new empty folder named in the settings file
@@ -758,7 +758,7 @@ command) adds the install's `config/profiles/<NAME>.ini` after them ([1.6](#16-t
 | `--packs LIST` | `drishti.packs.enabled` of the settings files, else `DRISHTI_PACKS`, else the packs of the modules that are on | the packs to load (it beats a profile's list) |
 | `--data-dir DIR` | the settings files' `drishti.data.dir`, else `DRISHTI_DATA_DIR`, else `<drishti>/data` | the data folder; the pid, log and temporary files go under it, and the server is given it as `-Ddrishti.data.dir`, so the two always agree |
 | `--env-file FILE` | none | `KEY=VALUE` lines put into the server's environment: the secrets stay off the command line, and their values are never printed |
-| `--demo` | off | the demo profile, `config/profiles/demo.ini`, the same file **Drishti server (demo lakes)** names: the offline demo on the lake of [section 6](#6-build-the-demo-lake) (the packs of every module that is on plus us-equities, gleif and funds, samples off, offline, sign-in on, the data inbox on, a 4 GB heap), with **development secrets and the `drishti-dev-admin` account: not for production**; a secret you set yourself wins |
+| `--demo` | off | the demo profile, `config/profiles/demo.ini`, the same file **Drishti: run server (demo)** names: the offline demo on the lake of [section 6](#6-build-the-demo-lake) (the packs of every module that is on plus us-equities, gleif and funds, samples off, offline, sign-in on, the data inbox on, a 4 GB heap), with **development secrets and the `drishti-dev-admin` account: not for production**; a secret you set yourself wins |
 | `--lake-root DIR` | the lake files' own roots | the Delta lake root (`DRISHTI_DELTA_ROOT`) |
 | `--iceberg`, `--iceberg-root DIR` | off, `<data folder>/iceberg` | serve the stores from Iceberg tables, as settings only: the connectors folder (`DRISHTI_CONNECTORS_DIR`) is `config/connectors.examples/iceberg`, the bindings and placement files stay in `config/`, the warehouse is under the data folder; nothing is copied or written (connector files are read-only; a `DRISHTI_CONNECTORS_DIR` you set is kept) |
 | `--distribution NAME` | `DRISHTI_DISTRIBUTION`, else Drishti All | `risk`, `finance`, `genomics`, `all`, or a file path ([7.7](#77-starting-a-white-labelled-instance)) |
@@ -1038,7 +1038,7 @@ label: every distribution side by side, the running one first.
 
 ### 7.8 From IntelliJ IDEA, PyCharm or VS Code
 
-The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). VS Code has the same actions in a workspace file ([IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)). Everything about the IDE launchers, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)**, **Drishti console**, then `http://localhost:17480`. IntelliJ's server launchers run the jar the build put in `lib/` (as `start server` does), never IntelliJ's compiled classes, which the modules are not stamped for; a fresh start with a check after every step: [IDE_GUIDE.md › A fresh start](guides/IDE_GUIDE.md#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
+The repository carries run configurations for IntelliJ IDEA (the Maven builds and the servers, Java only) and PyCharm (the consoles, the distributions' consoles included, the data preparation and the tools). VS Code has the same actions in a workspace file ([IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)). Everything about the IDE launchers, from opening the projects to building, running and debugging, is in one place: [IDE_GUIDE.md: IntelliJ IDEA and PyCharm](guides/IDE_GUIDE.md). The order is the same as here: **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)**, **Drishti: run console**, then `http://localhost:17480`. IntelliJ's server launchers run the jar the build put in `lib/` (as `start server` does), never IntelliJ's compiled classes, which the modules are not stamped for; a fresh start with a check after every step: [IDE_GUIDE.md › A fresh start](guides/IDE_GUIDE.md#8-a-fresh-start-step-by-step-and-how-to-check-each-step).
 
 The same four steps from a terminal:
 
@@ -1836,8 +1836,8 @@ $py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\
    ([DATA_LAKE_GUIDE.md › Routing, business dates, modes](guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
    `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its
    date is refused, with the name to give it.
-3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-or-pycharm)
-   (IntelliJ: **Drishti build all**, **Drishti server (demo lakes)**; PyCharm: **Build demo lakes**, **Drishti console**, **Load ENDUR file
+3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-pycharm-or-vs-code)
+   (IntelliJ: **Drishti: build all**, **Drishti: run server (demo)**; PyCharm: **Drishti: build demo lakes**, **Drishti: run console**, **Load ENDUR file
    into the lake**). With PyCharm for the console, PyCharm opens `<drishti>\drishti-console` and IntelliJ `<drishti>`, never one folder in both
    (they overwrite each other's `.idea`; IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).
 
@@ -1883,7 +1883,7 @@ Java loader (every core, bounded memory) add `--engine java`
 ### 12.3 Start and check
 
 Start the server with `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start server --demo` (Linux and macOS `python3 tools/drishti.py --settings <your dev.ini> start server --demo`) and the console as in [section 7](#7-start-the-server-and-the-console) (or the run
-configurations **Drishti server (demo lakes)** and **Drishti console**; never the ▶ in the margin of `DrishtiApplication.java`,
+configurations **Drishti: run server (demo)** and **Drishti: run console**; never the ▶ in the margin of `DrishtiApplication.java`,
 which sets none of the demo settings). Then:
 
 - **Admin → Lakes**: `trading/trade_endur` has **your** rows and dates.

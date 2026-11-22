@@ -97,8 +97,8 @@ def test_the_elements_get_the_same_shapes_with_cors(backend):
     assert embed.get("/embed/v1/regions/ZZZ.json", headers={"Origin": HOST}).status_code == 404
     for bad in ("aus", "AU", "AUSS", "..%2Fregions%2FAUS", "A%2FS"):
         assert embed.get(f"/embed/v1/regions/{bad}.json", headers={"Origin": HOST}).status_code in (404, 405, 422), bad
+    assert embed.get("/embed/v1/js/geomap.js", headers={"Origin": HOST}).status_code == 200            # the frozen embed v1's map script (immutable with it; the console's pages use the geo part)
     assert embed.get("/embed/v1/js/elements-chart-geo.js", headers={"Origin": HOST}).status_code == 200
-    assert embed.get("/embed/v1/js/geomap.js", headers={"Origin": HOST}).status_code == 404            # the console's own map script is gone: the geo part is the one helper
 
 
 PANEL = {"id": "geography", "kind": "map", "title": "Where it is", "area": "main", "empty": False, "error": None,
@@ -177,4 +177,4 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert "drishti_geomap.js" not in text and text.index("drishti_chart-geohelper.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
-    assert "'elements-chart-geo', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'charts'" in embed and "geomap" not in embed and "'elements-chart-geo', 'elements-chart-report'].concat(" in embed          # the report's libraries: drishti-core and -grid, drishti-chart's parts, then BI's
+    assert "'geomap', 'charts'" in embed and "'elements-chart-geo', 'elements-chart-report'].concat(" in embed          # the report's libraries: drishti-core and -grid, drishti-chart's parts, then BI's

@@ -558,10 +558,10 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 - [Part A](REPORTS.md#part-a--your-first-bi-report) done (you know the report viewer). The shipped samples used here, the dataset **Live trading desk**, the reports **Live trading desk** and **Live exposure** and the boards **Desk wall** and **Python wall**, are in every server's `config/bi/`.
 - **Live and the model layer.** The two live samples are **version 1 datasets** (`rachana: 1`) that their reports read directly. The converter has made a **model** of each (`live-trading@1`, `live-exposure@1`) over the same live
   table, so a model query, the Notebook and an alert on a measure of a model read the live rows too (step 46).
-- **A source that ticks.** The demo lakes are daily snapshots: they do not move, so on the quick-start server (**Drishti server (demo lakes)**, which sets
+- **A source that ticks.** The demo lakes are daily snapshots: they do not move, so on the quick-start server (**Drishti: run server (demo)**, which sets
   `DRISHTI_DEMO_ENABLED=false`) a live visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Either way a live table
   follows at most 2,000 trade valuations (`drishti.bi.live.follow-max`; the lake holds 15,000) and says so in a warning. For this tutorial **turn the demo ticker on**: edit the run
-  configuration **Drishti server (demo lakes)** and set `DRISHTI_DEMO_ENABLED` to `true`, or start the server with it
+  configuration **Drishti: run server (demo)** and set `DRISHTI_DEMO_ENABLED` to `true`, or start the server with it
   ([data/testdata/README.md](../../../data/testdata/README.md), "The demo ticker"). The demo source then moves every live sample that someone is watching
   (a view, a live visual or a board tile open) every 400 ms; a sample answers before the lake for an id both hold, and the lakes still answer every other id. With a
   real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../../../docs/connectors/types/demo/README.md), [DATA_GUIDE.md](../../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).

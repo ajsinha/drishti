@@ -24,7 +24,7 @@ About 40 minutes.
 
 ## Before you start
 
-- The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
+- The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes, **Drishti: run server (demo)** with sign-in
   on), with the **demo ticker on** as in [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
   step 6 and the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
   (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
@@ -50,7 +50,7 @@ export DRISHTI_CONSOLE_URL=http://127.0.0.1:17480       # the console's address 
 ```
 
 (Sign-in must already be on: embedding needs `DRISHTI_SECURITY_ENABLED=true` on the server, which the run configuration sets. In the IDE, add the three
-variables to the run configurations **Drishti server (demo lakes)** and **Drishti console** under *Environment variables*. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused. You should see **Admin → Embedding** open once both are back (step 3).
+variables to the run configurations **Drishti: run server (demo)** and **Drishti: run console** under *Environment variables*. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused. You should see **Admin → Embedding** open once both are back (step 3).
 
 ## Step 2 · Two users the host will sign in
 

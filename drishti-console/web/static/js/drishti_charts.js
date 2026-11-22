@@ -82,8 +82,10 @@
         return gl;
       },
       geo: function () {      // drishti-chart's geo part, over the vendored shapes (an embed names where they are: drishtiBi.mapsBase)
-        var P = window.Drishti.elements.chart_geo, given = window.drishtiBi && window.drishtiBi.mapsBase;
-        return P ? Promise.resolve(P.geoHelper(given ? { base: given } : {})) : Promise.reject(new Error('the geo part of drishti-chart is not loaded'));
+        var E = window.Drishti.elements, P = E.chart_geo, given = window.drishtiBi && window.drishtiBi.mapsBase;
+        // one helper for the folder: every map of the page shares its shapes and its one fetch (a helper without a folder is a new one each time, and each fetched the world again)
+        if (P) { return Promise.resolve(P.geoHelper({ base: given || E.core.staticUrl('vendor/echarts/maps/') })); }
+        return window.drishtiGeo ? Promise.resolve(window.drishtiGeo) : Promise.reject(new Error('the geo part of drishti-chart is not loaded'));   // the frozen embed v1 loads drishti_geomap.js instead (it goes with that embed)
       },
       graph: function () { var G = window.Drishti.elements.graph; return G ? Promise.resolve(G) : window.Drishti.elements.core.load('drishti-graph'); },   // a graph panel: drishti-graph (the page's, or loaded when a view has one)
       onLink: function (link, el) { open(el, link, options); },

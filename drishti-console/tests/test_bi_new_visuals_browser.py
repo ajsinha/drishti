@@ -179,12 +179,16 @@ def test_the_map_shades_the_countries_and_marks_the_points(stack, browser):
     assert shade["data"]
     got = {d["name"]: d["value"] for d in shade["data"] if "value" in d}                          # (ECharts adds the other regions with no figure)
     assert got == {"USA": by_country["US"], "GBR": by_country["GB"], "JPN": by_country["JP"]}               # codes in, countries out
-    assert page.evaluate("echarts.getMap('drishti-world') !== undefined")
+    assert page.evaluate("echarts.getMap('drishti-geo-world') !== undefined")
     assert page.evaluate("[...document.querySelectorAll('[data-visual=world] canvas')].every(c => c.width > 0 && c.height > 0)")
     pts = option(page, "points")
-    assert pts["geo"] and pts["series"][0]["type"] == "scatter"
-    assert sorted(d["name"] for d in pts["series"][0]["data"]) == ["DESK-EQD", "DESK-FI", "DESK-FX"]
-    assert {tuple(d["value"][:2]) for d in pts["series"][0]["data"]} == {(-74.0, 40.7), (-0.1, 51.5), (139.7, 35.7)}
+    scatter = [s for s in pts["series"] if s["type"] == "scatter"]
+    assert pts["geo"] and len(scatter) == 1                                                        # the countries as shapes, the positions over them
+    assert sorted(d["name"] for d in scatter[0]["data"]) == ["DESK-EQD", "DESK-FI", "DESK-FX"]
+    want = page.evaluate("""async () => { const E = window.Drishti.elements, G = E.chart_geo.geoHelper({ base: E.core.staticUrl('vendor/echarts/maps/') }), w = await G.world();
+        return [[-74, 40.7], [-0.1, 51.5], [139.7, 35.7]].map((p) => G.project(w, p[0], p[1]).map((v) => Math.round(v * 1000) / 1000)); }""")
+    got = [[round(v, 3) for v in d["value"][:2]] for d in scatter[0]["data"]]
+    assert sorted(got) == sorted(want), (got, want)                                                # each desk where the geo part's projection puts its longitude and latitude
     clean(page)                                                                                    # the map data came from our own origin: no policy violation
     page.context.close()
 

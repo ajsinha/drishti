@@ -47,7 +47,7 @@ GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showc
 ## Contents
 
 [The platform](#the-platform) · [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
-[Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Risk](#risk) · [Analyse](#analyse) ·
+[Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Build and run in the IDE](#build-and-run-in-the-ide) · [Risk](#risk) · [Analyse](#analyse) ·
 [Build](#build) · [Data in](#data-in) · [Data out](#data-out) · [Operate](#operate) · [Run it](#run-it) ·
 [Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) ·
 [By the numbers](#by-the-numbers)
@@ -201,6 +201,14 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 - **Admin → White label** shows every distribution side by side; Health shows the running one and which of its modules loaded.
   Step by step for each, on Linux, macOS and Windows:
   [DEPLOYMENT_AND_QA_GUIDE.md section 7.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
+
+## Build and run in the IDE
+
+Open the repository root as the one project in IntelliJ IDEA or PyCharm: the launchers are in `run-configs/` (one folder, named
+`Drishti: <verb> <what>`: `build all`, `test`, `run server (demo)`, `run console`, `build demo lakes`, `check environment`) and VS Code opens
+`drishti.code-workspace`, whose tasks and launches carry the same names. All of them are generated from `tools/launch/launchers.yaml` by
+`python tools/drishti.py launchers`; every one is named, with what it is and when to use it, in
+[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
 
 ## Risk
 

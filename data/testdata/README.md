@@ -61,8 +61,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 1. **Clone** the repository (`git clone …`, then `cd drishti`; the product repositories sit side by side under `~/IdeaProjects/drishti-platform/`, each cloned from `github.com/drishti-platform/<repo>`).
 2. **Install** once: the console's Python with its requirements (PyYAML, the Drishti Lake wheel and pyarrow among them),
    `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`,
-   and the server jar in `lib/`: the run configuration **Drishti build all** (or `python tools/drishti.py build all`).
-3. **Build the demo lakes**: the run configuration **Build demo lakes**, or
+   and the server jar in `lib/`: the run configuration **Drishti: build all** (or `python tools/drishti.py build all`).
+3. **Build the demo lakes**: the run configuration **Drishti: build demo lakes**, or
 
    Run these from the Drishti folder (the repository root, or the install folder of a release).
 
@@ -82,9 +82,9 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    103 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
-4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
+4. **Start** the server and the console: the run configurations **Drishti: run server (demo)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
-   hold) and **Drishti console**. The server reads the demo lake, `data/delta/demo`, by default (`DRISHTI_DELTA_ROOT` moves it).
+   hold) and **Drishti: run console**. The server reads the demo lake, `data/delta/demo`, by default (`DRISHTI_DELTA_ROOT` moves it).
 
    The same run configuration sets **offline mode** (`DRISHTI_OFFLINE=true`): the server never reaches the internet, the news and
    yfinance connectors stay **off (offline mode)** in Admin → Connectors, and the news-and-markets pack's quotes and headlines come
@@ -94,7 +94,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    **The demo ticker (tutorial 8, Part F, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
    visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 8, Part F's live trades and exposure come
    from the **demo source**, which ticks by itself about twice a second: start the server with `DRISHTI_DEMO_ENABLED=true` (the run
-   configuration **Drishti server**, or edit **Drishti server (demo lakes)** and set that variable to `true`). With it on, a sample
+   configuration **Drishti: run server (demo)**, or edit **Drishti: run server (demo)** and set that variable to `true`). With it on, a sample
    answers before the lake for an id both hold; the lakes still answer every other id.
 5. **Open the demo pages** (the console on port 17480 by default):
 
@@ -304,7 +304,7 @@ those same connectors, which the pack serves from the demo lake when the live co
   unofficial and its terms restrict use. Before showing the demo outside the organisation, raise this again.
 - **In the lake.** `lake demo` writes both into `news/quote` and `news/news` (the same snapshot on each of the sixty days, never
   re-dated); the pack's `news-store` connector serves them beside the topics and companies.
-- **Offline mode.** `DRISHTI_OFFLINE=true` (set by the run configuration **Drishti server (demo lakes)**) keeps the `news`, `yfinance`
+- **Offline mode.** `DRISHTI_OFFLINE=true` (set by the run configuration **Drishti: run server (demo)**) keeps the `news`, `yfinance`
   and `feed` connectors from starting, whatever their files say: nothing tries the network, and Admin → Connectors shows them
   **off (offline mode)** with `news-store` RUNNING ([CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)).
   The company page (`/v/listed-company/CO-AAPL`: quote, closing-price chart, headlines), the topic pages (`/v/news-topic/TOPIC-FED`),
@@ -313,7 +313,7 @@ those same connectors, which the pack serves from the demo lake when the live co
 - **world-economy** needs no snapshot: its thirteen kinds are the pack's samples (real World Bank, IMF, Factbook and UNDP figures),
   already in the repository and built into `macro/` and `civic/`; it has no live connector.
 
-**Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti build all**):
+**Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti: build all**):
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py testdata capture-market            # about four minutes

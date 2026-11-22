@@ -58,7 +58,7 @@ class Stack(bi_report_stack.ReportStack):
         for run in ("server", "browser"):
             reports.joinpath(f"py-{run}.report.yaml").write_text(variant(run))
         # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
-        self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
+        self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={os.environ.get('DRISHTI_PYTHON') or sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 
 
 @pytest.fixture(scope="module")

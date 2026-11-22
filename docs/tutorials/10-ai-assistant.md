@@ -27,11 +27,11 @@ About 30 minutes.
 
 ## Before you start
 
-- The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
+- The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes and **Drishti: run server (demo)**, sign-in on),
   [the reports tutorial, Part A](../guides/bi/REPORTS.md#part-a--your-first-bi-report) done (the World economics report, which reads the model `world-economics@1`), [the reports tutorial, Part G](../guides/bi/GOVERNANCE_AND_AI.md#part-g--govern-bi) for
   the people `ann` (a writer) and `sue` (a steward).
 - The AI layer is a **restart** of the server and the console with two more variables (step 1): in the IDE, edit the run configurations **Drishti server
-  (demo lakes)** and **Drishti console** and add them under *Environment variables*.
+  (demo lakes)** and **Drishti: run console** and add them under *Environment variables*.
 - Nothing to buy and no key: the mock provider is part of Drishti. The files used are in [data/ai/](data/ai/) (`mock.yaml` and `local-model.yaml`).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
   `DRISHTI_SERVER` (and `DRISHTI_CONSOLE`, the console's address, `http://localhost:17480`, for the administrator's calls of step 2); the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
