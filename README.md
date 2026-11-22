@@ -253,7 +253,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
   graph, the designer kit) are [Drishti Elements](https://github.com/ajsinha/drishti-elements), a separate project by the same owner
   with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
-  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.2.0/`, see
+  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.3.0/`, see
   [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
   Drishti keeps three libraries of its own on top (insight, renderer, and the banking module's risk). Every screen and every designer is
   drawn with them, guard tests fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live,

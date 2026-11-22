@@ -16,7 +16,7 @@
 /* The workbook export: a number's live-formula workbook (the server's .xlsx with its formulas and a Provenance sheet, or the
    playground that exports one), found through the one Explain's Workbook part and downloaded. The browser builds no workbook: the
    server writes it, as the person asking (their entitlements, row rules and masks). */
-import { url as drishtiUrl } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/3.3.0/elements/drishti-core/src/drishti_index.js';
 
 /**
  * The workbook links of an Explain answer (its Workbook part): each {label, href, note}.

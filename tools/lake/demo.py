@@ -801,7 +801,7 @@ class DemoLake:
             if os.environ.get(lakeconfig.DEMO_ROOT_ENV):
                 return pathlib.Path(os.environ[lakeconfig.DEMO_ROOT_ENV]).resolve()
             root = m.group(1)
-        root = root.replace("${drishti.data.dir:./data}", str(self.data))
+        root = root.replace("${lake.data.dir:./data}", str(self.data)).replace("${drishti.data.dir:./data}", str(self.data))
         p = pathlib.Path(root)
         return (p if p.is_absolute() else ROOT / p).resolve()
 

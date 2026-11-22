@@ -193,7 +193,7 @@ def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict
                 layout[k.kind]["title"] = title          # type-ahead finds a document by these too (a counterparty, a portfolio, a type)
         return {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
                 "description": f"Set root (or DRISHTI_FILES_ROOT) to the folder that holds {pack}/<date>/<kind>.jsonl",
-                "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": pack, "id-field": "id",
+                "settings": {"root": "${DRISHTI_FILES_ROOT:${lake.data.dir:./data}/files}", "domain": pack, "id-field": "id",
                              "layout": layout}}
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
             "settings": {"root": _demo_root_ref(), "domain": pack,

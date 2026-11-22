@@ -16,7 +16,7 @@
 /* The one "Explain ›" control (VAR_GUIDE.md section 3.11): every figure of a measure with an explanation carries it, a guard test
    says where (drishti-console/tests/test_var_explain_everywhere.py). A link to the number's full page at Why it moved; a click (or E when
    it is focused) opens the drawer in place instead, through the Explain's own click handler (data-explain-trigger). */
-import { url as drishtiUrl } from '../../../vendor/drishti-elements/3.2.0/elements/drishti-core/src/drishti_index.js';
+import { url as drishtiUrl } from '../../../vendor/drishti-elements/3.3.0/elements/drishti-core/src/drishti_index.js';
 
 const TITLE = 'Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)';
 

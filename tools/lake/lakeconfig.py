@@ -120,9 +120,9 @@ def dump(folder: pathlib.Path | None = None) -> dict:
 #: the environment variable that names the demo lake's root (config/lakes/demo.yaml: ${DRISHTI_DELTA_ROOT:<data>/delta/demo})
 DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT"
 #: the demo lake's root as config/lakes/demo.yaml writes it (a connector or a lake file that names the demo lake's folder)
-DEMO_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta/demo}"
+DEMO_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${lake.data.dir:./data}/delta/demo}"
 #: the official results' root as config/lakes/banking/var-official.yaml and ccr-official.yaml write it (the publisher's default)
-OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta}"
+OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${lake.data.dir:./data}/delta}"
 
 
 def data_dir() -> pathlib.Path:

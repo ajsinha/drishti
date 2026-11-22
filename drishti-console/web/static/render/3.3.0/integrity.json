@@ -1,0 +1,70 @@
+{
+  "bytes": {
+    "css": 115906,
+    "js": 98493,
+    "js_gzip": 37284
+  },
+  "contracts": [
+    1
+  ],
+  "files": {
+    "drishti-elements.js": {
+      "bytes": 2281,
+      "integrity": "sha384-pOTatvyunmHjfwFn4q1cf/7PB0ZzoLd/cLyE8Uh3O1qWsCELlOwY2qAPi3YCKvDl"
+    },
+    "drishti-render.css": {
+      "bytes": 115906,
+      "integrity": "sha384-zt+Kxjp9XFdWJLjqkhwfRMEtsHGQWpnG/wlwiw/4TzG6EWwO5tPDaIKWtkux+nUP"
+    },
+    "drishti-render.d.ts": {
+      "bytes": 11541,
+      "integrity": "sha384-e13itbyes6Gt04q8qLt1twbQDzXsjcUwUIU6d+ulMrF+AqrtmZvCQXicytfp5rfK"
+    },
+    "drishti-render.js": {
+      "bytes": 2039,
+      "integrity": "sha384-BhcIlRpZZDemxTnWyvyZ/7lldJ85zQQT+tQ2QHv5irzls2cHLrGaOyLy6vgihcwb"
+    },
+    "m/drishti_about.js": {
+      "bytes": 14483,
+      "integrity": "sha384-3R/3Jd9CiBAZmveB7x/KB8mdUggBcAeo3NrYAb1831oELp8ovqntDlTQ9MZ8w27J"
+    },
+    "m/drishti_assets.js": {
+      "bytes": 5732,
+      "integrity": "sha384-8h9k3lIXBnpWnV3kD/uunIfqn0xev5vSM7Ds6ZE5jnhiyQzTSUm7gsQYkBmM+BoO"
+    },
+    "m/drishti_dom.js": {
+      "bytes": 3202,
+      "integrity": "sha384-TLXfcIqSWjbV5rPqdK7bdi4hPo4044bWyKMLuDXtcPxXdNxjGrl3OS3FWwaPmg1O"
+    },
+    "m/drishti_elements.js": {
+      "bytes": 11436,
+      "integrity": "sha384-aP1MnLOvzjPgh7c8hBkQ/pvC4f2Ic934vN2XLMOy6NHg0NGZLcmvM0w0UQ1iUkcC"
+    },
+    "m/drishti_embed.js": {
+      "bytes": 10599,
+      "integrity": "sha384-uLS3S0Nek25jyHDH63hA2NLT89oOW0/Cc8ALJHWy8u016qvdrxCxG5fLEEZu3jSx"
+    },
+    "m/drishti_index.js": {
+      "bytes": 1375,
+      "integrity": "sha384-EDLysVluoj5oWeWF2QtANjyPMZY5qiyD/zLEy8uTWGwZonmkcI8jYAjCjweSGpIJ"
+    },
+    "m/drishti_net.js": {
+      "bytes": 8600,
+      "integrity": "sha384-E8Sa6M36opc0zL/cF4pGirVB4ZRZn8IGKQppYBGTF80sTvTjwGY2bb5ycXUgUypq"
+    },
+    "m/drishti_render.js": {
+      "bytes": 7805,
+      "integrity": "sha384-Dy+lGInTFMx2oTuYOu/udyGtzVoizRYdUlgg6zfVKMrjUauRnt+TqEbS5w6xVBoG"
+    },
+    "m/drishti_screen.js": {
+      "bytes": 19782,
+      "integrity": "sha384-F5ZRYUQ2dK9jX27JaLdpV9N8cAYlF/FGu8U9e7EQhSqo5Pgw8BXEu1WQVOKc9cDw"
+    },
+    "m/drishti_signin.js": {
+      "bytes": 11159,
+      "integrity": "sha384-Fm1khxI+GA+76AkMLTuWGCosTsQDRm5gYSeoN8UX5tsnKJPINxjzRejCZmwGxtkC"
+    }
+  },
+  "name": "@drishti/render",
+  "version": "3.3.0"
+}

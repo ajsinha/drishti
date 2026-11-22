@@ -55,7 +55,7 @@ def test_the_licence_of_the_map_data_is_recorded():
 
 
 def test_the_map_is_served_from_the_console_and_to_the_element_with_cors(backend, client):
-    r = client.get("/static/vendor/drishti-elements/3.2.0/vendor/echarts/maps/world-countries.json")
+    r = client.get("/static/vendor/drishti-elements/3.3.0/vendor/echarts/maps/world-countries.json")
     assert r.status_code == 200 and r.json()["type"] == "FeatureCollection"
     embed = make_client(backend)
     e = embed.get("/embed/v1/world-countries.json", headers={"Origin": HOST})
