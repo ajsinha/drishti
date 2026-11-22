@@ -20,11 +20,14 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import resolved  # noqa: E402
 from mrloader.common import FX_SCENARIO_CONTRACT, ROOT, SCENARIO_PV_CONTRACT, SCENARIO_SET_CONTRACT, PvfError, lower_keys
 
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -190,10 +193,10 @@ def _type_error(t: str, v) -> str | None:
 
 
 def contract_path(kind: str, pack: str | None = None) -> Path:
-    """The contract file of ``kind``: ``<pack>/contracts/<kind>.contract.yaml`` under modules/*/packs/ or config/packs/*/; refused when
+    """The contract file of ``kind``: ``<pack>/contracts/<kind>.contract.yaml`` in the packs the resolver names; refused when
     no pack has the kind, or two do and ``pack`` does not say which."""
-    found = sorted(ROOT.glob(f"modules/*/packs/*/contracts/{kind}.contract.yaml")) + sorted(
-        ROOT.glob(f"config/packs/*/*/contracts/{kind}.contract.yaml"))
+    found = sorted(d / "contracts" / f"{kind}.contract.yaml" for d in resolved.pack_dirs().values()
+                   if (d / "contracts" / f"{kind}.contract.yaml").is_file())     # the resolver's packs, never a folder of ours
     if pack:
         found = [f for f in found if f.parent.parent.name == pack]
     if not found:

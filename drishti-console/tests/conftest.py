@@ -89,6 +89,9 @@ from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401
 import pageload_log  # noqa: E402
 import select_helpers  # noqa: E402
 
+import browser_engine  # noqa: E402
+
+browser_engine.install()                          # DRISHTI_BROWSER=webkit|firefox: the engine every test launches as "chromium" (browser_engine.py)
 select_helpers.install_playwright_shim()          # select_option and input_value on drishti-inputs' <drishti-select> (select_helpers.py)
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
