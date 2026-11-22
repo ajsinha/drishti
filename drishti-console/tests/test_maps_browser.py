@@ -169,7 +169,7 @@ def test_the_jurisdiction_page_highlights_australia_and_a_click_on_new_zealand_o
     assert page.locator(".xmap").get_attribute("aria-label").startswith("Where it is: world map, AUS highlighted")
     # a country with no entity says so on hover and does not open
     tip = page.evaluate("""() => { const t = echarts.getInstanceByDom(document.querySelector('.xmap')).getOption().tooltip[0].formatter({ seriesType: 'map', name: 'ATA' }); return t && t.textContent !== undefined ? t.textContent : String(t); }""")   # the tooltip is a DOM node (every value escaped by construction)
-    assert "Antarctica" in tip and "no page for this country" in tip
+    assert "ATA" in tip and "no page for this country" in tip
     x, y = pixel(page, ".xmap", 0, -80)
     page.mouse.click(x, y)
     page.wait_for_timeout(600)

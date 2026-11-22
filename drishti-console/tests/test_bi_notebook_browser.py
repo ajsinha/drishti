@@ -45,7 +45,7 @@ def stack(tmp_path_factory):
     try:
         s = bi_report_stack.ReportStack(tmp_path_factory.mktemp("analyse"), delta_root="")
         # Python cells run on the server's compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
-        s.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}",
+        s.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={os.environ.get('DRISHTI_PYTHON') or sys.executable}",
                           f"--drishti.compute.file={bi_report_stack.ROOT}/config/compute/compute.yaml"]
         s = s.start()
     except FileNotFoundError as e:
