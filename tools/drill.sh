@@ -26,7 +26,7 @@
 #   tools/drill.sh --fix        a fix drill: the gate, then only the lanes that have not passed at an ancestor of HEAD or that the commits
 #                               since their last pass can reach (tools/drillkit/drill_lanes.py); a console lane that failed in some files
 #                               runs those and the files the fix reaches. Never skips a lane the commits touch. The release drill is --full.
-#   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
+#   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere, dropin); verify only
 #   DRILL_CONTAINERS=full|smoke the containers lane: full runs every Testcontainers test after the browser lane as well as the smoke test;
 #                               smoke never; default: full only when the diff since origin/main needs it (container_smoke.py full-needed)
 #   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
@@ -509,6 +509,14 @@ release_anywhere() {
   timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
 }
 
+# The dropin lane (TEST_HARNESS.md, "The drop-in test"): plug-and-play proven every release against the server jar as built. The sample engine
+# JAR (built from drishti-engine at the pin in tools/drillkit/dropin.json) is copied into an unpacked install's lib/engines with its engine file;
+# lifecycle, health, stats, suspend and resume, a licence that does not grant its product (ENG-1014), an incompatible engine API (ENG-1002),
+# removal (nothing left) and a pack and a connector dropped in the same way. Its result table ends the job log, data/drill/dropin.log. About 10 minutes (six server starts).
+release_dropin() {
+  timeout --kill-after=60 2400 "$PY" tools/drillkit/dropin.py run   # its stdout is the job log, data/drill/dropin.log: the steps as they pass, then the result table
+}
+
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside
 # the browser lane (no network change for Chromium): health, the VaR golden through the API, four console pages. Every Testcontainers test
 # too (java21_docker) only when the diff since the last release needs it (the Dockerfiles, the JDK, native code, a module with container
@@ -686,7 +694,7 @@ else
   elif [[ -n $ONLY_LANES ]]; then
     for lane in ${ONLY_LANES//,/ }; do RUN_LANE[$lane]=1; done
   else
-    for lane in browser other tools-a tools-b java21 java25 containers anywhere; do RUN_LANE[$lane]=1; done
+    for lane in browser other tools-a tools-b java21 java25 containers anywhere dropin; do RUN_LANE[$lane]=1; done
   fi
   stage2=()
   # the test servers' class-data archive, built once from the gate's jar (about 20 s; each server start then about a quarter faster);
@@ -706,6 +714,7 @@ else
   [[ -n ${RUN_LANE[java21]:-} ]] && { start_job java21 niced 5 java21_verify; stage2+=(java21); }
   [[ -n ${RUN_LANE[containers]:-} ]] && { start_job containers niced 5 containers; stage2+=(containers); }
   [[ -n ${RUN_LANE[anywhere]:-} ]] && { start_job anywhere niced 5 release_anywhere; stage2+=(anywhere); }
+  [[ -n ${RUN_LANE[dropin]:-} ]] && { start_job dropin niced 5 release_dropin; stage2+=(dropin); }
   if [[ -n ${RUN_LANE[java25]:-} ]]; then
     if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
     else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi

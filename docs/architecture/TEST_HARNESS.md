@@ -639,6 +639,37 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_release
 tools/drill.sh --lanes anywhere --no-push                                                              # the same, through the drill
 ```
 
+### 3.30 The drop-in test (plug and play, proven every release)
+
+Every full drill proves that a compute engine, a pack and a connector are added and removed by copying files, with the server jar as built
+(acceptance tests A3 to A7 of the drishti-engine specification, `spec/1/SPEC.md` section 0). The drill's **`dropin`** lane
+(`tools/drill.sh`, `release_dropin`; `--lanes dropin` runs it alone) runs `tools/drillkit/dropin.py`; its stdout is the job log
+`data/drill/dropin.log`, which ends with the result table (step, check, pass or FAIL, detail). A failed check fails the drill.
+
+- **The install and the jar**: the same unpacked release as the anywhere lane (3.29), over the shared test lake; the server jar's hash is taken
+  first and compared last, so every step ran on one jar. The sample engine's JAR is built from `drishti-engine` at the ref pinned in
+  `tools/drillkit/dropin.json` (`DRISHTI_ENGINE_REPO` names a local clone, `--engine-jar` a built JAR). The pin moves with the engine version
+  the release provides.
+- **1 copy**: the JAR into `<home>/lib/engines`, its engine file into `config/engines`, restart. The engine is `running`, `health()` says UP,
+  the recorded request gets the recorded answer (the weighted means of the specification's sample), and `stats()` counted that one request.
+- **2 suspend**: a suspended engine's health is SUSPENDED and a request is refused with the word "suspended" (`ENG-5023`) without reaching the
+  engine (its counters do not move); after resume the answer is bit for bit the recorded one.
+- **3 licence**: a licence that does not grant the engine's product blocks it at start with `ENG-1014` naming the product; the server's own
+  engines and health are untouched.
+- **4 version**: a JAR built for an engine API this server does not provide is blocked (`ENG-1002`) in one sentence that names both versions
+  and what to do; the other engine of the JAR runs.
+- **5 removal**: with the JAR and the engine file deleted and a restart, the engine has no registration, no thread and no file under the work
+  folders, and the pack that used it says which dependency is missing.
+- **6 pack and connector**: a pack and a connector dropped in the same way follow the kernel Lifecycle contract
+  (`com.ash.drishti.api.lifecycle.Lifecycle`): health UP, a counted request, suspend answers `DRS-1037` in words, resume answers again, an
+  illegal transition is `DRS-1036`; removed, nothing is left.
+
+The routes the lane calls are one table, `api` in `tools/drillkit/dropin.json`; the lane has no other knowledge of the server.
+
+```bash
+tools/drill.sh --lanes dropin --no-push    # the lane alone, through the drill
+```
+
 ## 4. Numbers to hold
 
 | What | Number |

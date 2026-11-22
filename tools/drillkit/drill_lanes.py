@@ -42,9 +42,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 #: every lane of the full drill's second stage (tools/drill.sh), in its order
-LANES = ("browser", "other", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere")
+LANES = ("browser", "other", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere", "dropin")
 ALL = frozenset(LANES)
-_JAVA_RUNS = frozenset({"browser", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere"})   # what starts the server jar or the Java code
+_JAVA_RUNS = frozenset({"browser", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere", "dropin"})   # what starts the server jar or the Java code
 #: path (regular expression) -> the lanes a change there can reach; a path reaches the union of every rule it matches, and a path no
 #: rule matches reaches every lane (the safe default: a new folder is tested everywhere until a rule names it). Measured, not guessed:
 #: Java tests read the console's files and the documents (ConsoleFiguresTest, DocumentedSutrasTest, ...) and the tools' tests read
@@ -56,7 +56,7 @@ LANE_RULES: tuple[tuple[str, frozenset[str]], ...] = (
     (r"^drishti-console/tests/", frozenset({"browser", "other"})),
     (r"^drishti-console/(?!tests/)", ALL),
     (r"^deploy/docker/|(^|/)\.dockerignore$|^bin/drishti-node\.sh$", frozenset({"containers"})),
-    (r"^(bin|tools/launch)/", frozenset({"anywhere", "tools-a", "tools-b"})),                                   # the launch scripts and their tests
+    (r"^(bin|tools/launch)/", frozenset({"anywhere", "dropin", "tools-a", "tools-b"})),                                   # the launch scripts and their tests
     (r"^deploy/", frozenset({"tools-b"})),                                                         # deploy/aws's tool tests
     (r"^compute/drishti-compute/src/test/python/", frozenset({"tools-b"})),
     (r"^tools/", frozenset({"tools-a", "tools-b", "browser", "other", "anywhere"})),                          # the lake builders the browser files use

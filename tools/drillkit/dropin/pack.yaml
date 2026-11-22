@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The drop-in test's pack: a folder copied to <home>/config/packs/core/dropin-surveys. It owns the observations the sample engine reads, serves
+# them through the drop-in connector and uses the engine (so removing the engine shows its dependants in words).
+pack: dropin-surveys
+domain: core
+version: 1.0.0
+code: DRPS
+title: Drop-in surveys
+description: The drop-in test's pack. Synthetic observations only; copied in and removed again by the drill.
+kinds: [observation]
+conforms:
+  observation: [ stats/observation@1 ]
+uses:
+  engines:
+    - engine: wmean
+      version: ">=1.0 <2"
+      outputs: [ mean-by-group ]
+      optional: true
+columns:
+  observation: [ GROUP, VALUE, WEIGHT ]
+connectors:
+  dropin-files:
+    plugin: file
+    enabled: true
+    kinds: [observation]
