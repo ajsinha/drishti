@@ -80,7 +80,7 @@ public class ApiExceptionHandler {
         if (e instanceof DrishtiException x) {
             return drishti(x);
         }
-        if (e instanceof com.ash.lake.common.LakeException x && memoryOnly(x) != null) {
+        if (e instanceof com.ash.lake.common.LakeException x && drishti(x) != null) {
             return lake(x);
         }
         if (e instanceof java.time.format.DateTimeParseException x) {
@@ -211,27 +211,35 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * Drishti Lake's memory-only refusal ({@code LK-1005}, thrown by the lake's {@code Retention} the server holds) is Drishti's
-     * {@code 403 DRS-5219} with the lake's words: a scheduled report, a share's picture or e-mail, a note's copied values or an Ask of
-     * memory-only data. Any other lake error is not mapped here.
+     * Drishti Lake's refusals ({@code LK-}, thrown by the lake's inbox, loader and memory guard the server hosts) as Drishti's codes with
+     * the lake's words: a bad request {@code DRS-5001}, a file not there {@code DRS-1001}, too large {@code DRS-5005}, a refused
+     * {@code .ready} {@code DRS-5008}, memory-only data {@code 403 DRS-5219}. {@code LK-1006} (unreadable data) is not mapped here.
      */
     @ExceptionHandler(com.ash.lake.common.LakeException.class)
     ProblemDetail lake(com.ash.lake.common.LakeException e) {
-        DrishtiException d = memoryOnly(e);
+        DrishtiException d = drishti(e);
         if (d == null) {
             throw e;
         }
         return drishti(d);
     }
 
-    /** The memory-only refusal as Drishti's own exception (its words without the lake's code), null for any other lake error. */
-    static DrishtiException memoryOnly(com.ash.lake.common.LakeException e) {
-        if (e.error() != com.ash.lake.common.LakeError.MEMORY_ONLY) {
+    /** A lake refusal as Drishti's own exception (its words without the lake's code), null for one Drishti does not map. */
+    static DrishtiException drishti(com.ash.lake.common.LakeException e) {
+        ErrorCode code = switch (e.error()) {
+            case BAD_REQUEST -> ErrorCode.BAD_REQUEST;
+            case NOT_FOUND -> ErrorCode.ENTITY_NOT_FOUND;
+            case TOO_LARGE -> ErrorCode.PAYLOAD_TOO_LARGE;
+            case READY_REFUSED -> ErrorCode.READY_PUSH_REFUSED;
+            case MEMORY_ONLY -> ErrorCode.MEMORY_ONLY;
+            default -> null;
+        };
+        if (code == null) {
             return null;
         }
         String m = e.getMessage();
         String prefix = e.error().code() + " ";
-        return new DrishtiException(ErrorCode.MEMORY_ONLY, m.startsWith(prefix) ? m.substring(prefix.length()) : m);
+        return new DrishtiException(code, m.startsWith(prefix) ? m.substring(prefix.length()) : m, e);
     }
 
     /** A required query parameter that is missing: {@code 400 DRS-5001} naming it (SEC-10), not the 401 of a missing principal. */
