@@ -391,6 +391,8 @@ otherwise) and Drishti Tools 1.0.0-SNAPSHOT (the branch's pin), in `~/.cache/dri
 | LV5 | Rachana `develop` `cc577818` | `ProtocolHost.keys` public (case `ProtocolHostTest.keysAreReadAsTheProtocolSendsThem`); the mount's copy deleted |
 | Profile in the schema | `LiveTablesController` | `GET /tables/{name}` adds `profile` (kind, links), `tray`, `readOnly` (why not, from the authoriser) and `excludes` (switched-off trading systems) for the grid |
 
+**Lines**: 2,310 added, 5,213 removed against `d06a8d6e2`.
+
 **Deleted**: `server/liveset/*` (8 files, 3,302 lines), its 6 tests (`LiveSetTest`, `StorePagesTest`, `LiveQueryTest`, `LiveIsolationTest`,
 `LiveBlotterBrokerAbsentTest`, `ContractColumnsTest`) and `LiveSetValidationTest`, `/api/v1/live/*`, the console's `/api/live/*`,
 `drishti.live-sets.engine`; `trade.blotter.yaml` is `trade.live.yaml` (LV2: no key field in the form). `KernelLiveQueries` reads
@@ -403,11 +405,13 @@ blotter page, the trading landing) paint through the same LiveSetGrid over a Dat
 | Check | Result |
 |---|---|
 | `LiveTablesAdapterTest` (11 LiveSet/StorePages scenarios), `LiveIsolationTest` (3, ported: shared table, scope on reads and changes, whole and paged; masked column refused; audience), `ContractColumnsTest` (3) | pass |
-| `FormApiTest`, `FormResultsParityTest` (10 searches: rows, count, order and columns equal the search's; tree vs kept condition; as-of), `LiveTableValidationTest` (3), `KafkaTradeEditTest` (write through `/rdp/tables/trade/write`, four eyes held then applied once, stale refused) | RESULT_MODULES |
-| Console: `test_live_results`, `test_live_routes`, `test_form_routes`, `test_base_path*` | 78 pass |
+| `FormApiTest`, `FormResultsParityTest` (10 searches: rows, count, order and columns equal the search's; tree vs kept condition; as-of), `LiveTableValidationTest` (3), `KafkaTradeEditTest` (write through `/rdp/tables/trade/write`, four eyes held then applied once, stale refused) | pass (9, 3, 3, 1; `StructuredSearchTest` 11 unchanged) |
+| Console: `test_live_results`, `test_live_routes`, `test_form_routes`, `test_base_path*` with the browser tests | 93 pass |
 | Blotter browser tests `test_live_grid_browser` (pinned Playwright 1.64.1) | Chromium 15/15; WebKit 15/15 (LD_PRELOAD of `~/.cache/drishti-lanes/webkit-libs`; the clipboard read-back is Chromium-only) |
 | VaR/ES goldens | not affected (no engine, VaR or test-data file changed) |
-| `ArchitectureRulesTest` | RESULT_ARCH |
+| `ArchitectureRulesTest` | pass (30) |
+| `KafkaBlotterTest` (the plug-in as a blotter's source and write path) | pass (3) |
+| `LiveBlotterBrokerAbsentTest` (ported: snapshot served, `live: paused` with the binding's reason) | pass |
 
 **Behaviour that changed (findings)**
 
@@ -417,6 +421,7 @@ blotter page, the trading landing) paint through the same LiveSetGrid over a Dat
 | LS2 | The console's grid follows the table unwindowed on the shared live channel: a change of a row a paged grid does not hold moves its count and **N new** (no top insertion within a second); a windowed stream remains the protocol's (`POST /changes` with `window`) for a client that holds its own connection |
 | LS3 | A source failure answers `503 rdp.unavailable` without the source's words (POS/PORT on a server with no VaR inputs) |
 | LS4 | `asOfNotices` are carried by a search's answer (`/rdp/searches`); a bare mnemonic's table page does not carry them |
+| LS7 | The write-back gives a change its own id: Rachana's change id is not the approvals id (find it by `GET /api/v1/changes?mine=true&entity=`) |
 | LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
 | LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
 
