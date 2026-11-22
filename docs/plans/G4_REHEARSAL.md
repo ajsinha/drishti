@@ -463,3 +463,56 @@ the tables' filter box, pages and one-level trees, the Data table disclosure and
 sizing to its content, and Explain's metric panels. Closed here: the candlestick Data table (server texts). New with `behaviours: 'console'`:
 a small funnel after each column heading and a Clear filters and a Chart button in the table's bar. Pass 3's before/after shots are no longer
 on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels × 2 themes × 2 widths) are in the lane's scratch folder.
+
+## Pass 3: BI charts (2026-11-21), on `g4/bi-charts` from `wip/g4-rehearsal-rx` (`d06a8d6e2`)
+
+Duplicate audit row U9 (DD-8, cut DC3). Jinja stays (DD-7). The pivot engine stays on the server; only the drawing moved.
+
+**Entry check.** What BI draws, and with what, before the switch:
+
+| Where | Kinds and options | Drawn by (before) | Covered by drishti-chart? |
+|---|---|---|---|
+| Report visuals (viewer, designer canvas, theme designer, boards, the embedded `<drishti-report>`) | bar, column, line, area, combo (second axis), small multiples (`split`), pie, donut, waterfall, treemap, heatmap, scatter, bubble, gauge, funnel, histogram (server bins), box plot (server figures), map (countries, drill to first-level regions, latitude/longitude points), live-chart (rolling window), KPI sparkline; format: stacked, percent, labels, label density and position, pie label style, legend none/right/top, smooth, colour, series colours, value axis (min, max, log, gridlines, show), category axis (rotate, show), axis titles, conditional rules as point colours, gauge min/max, live window, multiples (columns, max, shared axis), map level/drill, number format; interaction: selection fade, cross-highlight overlay, click and keyboard marks, tooltip pages on hover, range brush, live redraw in place | Drishti's `drishti_bi-visuals.js`, `-visuals-format.js`, `-multiples.js`, `-elements.js` (brush) calling `echarts.init`; maps over `drishti_geomap.js` | the spec kinds cover most kinds but not the report vocabulary (wells, server-binned answers, highlight overlay, mark semantics): **added** to drishti-chart as its `report` part |
+| Python visual and notebook cells | an ECharts option from the item (sanitised, themed), a measure's rows as bars; drishti-chart spec and Vega-Lite already drishti-chart's | `drishti_bi-python.js` (`echarts.init`) | added (`pythonOption`, `measureBarsOption`, `drawOption`) |
+| Chart any table (BI table and matrix, Sutra tables, history) | line, bar, area, pie/donut, scatter, combo; stacks, 100%, labels, Top N with Others, dashes and decals past the palette, SVG renderer, PNG and SVG export, keyboard tip | `drishti_table-chart.js` (`echarts.init`) + the engine's `option()` | added (`tableChartOption`, `OptionChart`) |
+| Pivot chart, calendar, sunburst/icicle, decomposition | | already drishti-chart / drishti-tree | yes |
+| Exports (PDF, PNG, Excel, CSV) | | server side | n/a |
+
+Nothing was left uncovered, so the lane went on.
+
+**The switch.** Elements develop `cd527cf` (on the v3.3.0 tag): drishti-chart's new part `drishti_chart-report.js` (sources
+`drishti_chart-report.js`, `drishti_chart-report-kinds.js`, 830 lines; part budget 70,000 bytes, 65,890 built): `reportOption`/`drawReport`/
+`mountReport` (the options moved series for series, the keyboard's marks, hover, click, live redraw in place, the range brush), `reportMap`
+over the geo part's helper, `sparkline`, `pythonOption`, `measureBarsOption`, `drawOption`, `tableChartOption`, `OptionChart`; Node tests
+(`report.test.mjs`, 12; the Elements suite 411 Node tests and 75 static checks green). Vendored into the pin folder `3.2.0` (VENDOR.md names
+both commits; re-pinning to 3.3.x is its own step). Drishti: `drishti_bi-visuals.js` keeps the cards and the report's adapter (`V.env`: formats,
+conditional colours, class names), `drishti_bi-multiples.js` deleted, the chart parts of `-visuals-format.js` and the brush of `-elements.js`
+deleted, `drishti_bi-python.js` and `drishti_table-chart.js` draw through the part, the table chart engine keeps the numbers and words
+(`valueText`, `summary`). BI pages load the geo and report parts instead of `drishti_geomap.js`; the embedded report loads them by name
+(`/embed/v1/js/elements-chart-geo.js`, `elements-chart-report.js`); embed v2 serves a library's parts. The guard `test_elements_guards.py`
+lost the `echarts` exceptions of `drishti_bi-visuals.js`, `drishti_bi-python.js` and `drishti_table-chart.js`; `drishti_geomap.js` keeps
+its one for the Sutra panels' maps and the frozen embeds (render 1.2.0, embed v1: U3, U4). Strict CSP unchanged (no inline style or script
+added; colours through the CSS object model). **Drishti lines: +110, −997** (without the vendored tree); Elements +830 source lines.
+
+**Before/after screenshots** (`~/.cache/drishti-lanes/g4-bi/shots/{before,before2,after}`: 31 visuals of three reports, the pages and the
+Chart any table dialog, Chromium, Playwright 1.64.1). Two base runs differ from each other by up to 11% on the first report (a chart's
+height settles 6 to 8 px differently from run to run): the comparison is against the base run in the same state. Every chart is
+pixel-identical except the footer line (milliseconds, "from the cache", "Listening"/"Asked once") and the live chart's clock labels,
+**except the maps**:
+
+| Visual | Difference | Reason |
+|---|---|---|
+| Map by country (world) | Equal Earth projection instead of plate carrée; land a little lighter; the choropleth ramp from the surface to the link tone | drishti-chart's map helper (the view painter's maps use the same) replaces `drishti_geomap.js` for BI |
+| Map of points | the same projection and land; bubbles 4 + 30√ instead of 7 + 22√ of the share (the helper's sizing), still in the palette's first colour; countries silent, no small-country dots | the helper projects the points onto its own shapes (raw longitude/latitude over projected shapes would misplace them) |
+
+**Tests.** Console static checks 326 passed; the BI, table chart, maps, embed report, board designer, render library, vendored, licences
+and asset unit tests 149 passed (the one failure, `/help/table-chart` 404, fails on the base too). BI browser suites (14 files, pinned
+Playwright 1.64.1): 63 passed, 6 skipped (parked to i6), **32 failed, the same 32 on the base** (a separate base worktree, same jar and
+packages): the shims pass removed `config/bi/datasets|models` (the new-visuals suite's fixtures), the strict-policy check sees an inline
+`script-src-attr` on the base too, the Python and notebook suites' compute set-up, the phone and tablet layout checks. Their first failing
+line is the same before and after but for two tests that got further after (the highlight test, base timed out first; the desk-pack viewer,
+base failed in set-up): both then stop on the same pre-existing policy violation. BI API tests (`BiApiTest`, `BiReportApiTest`, `FieldParamsApiTest`, `PythonBiApiTest`), `PivotFormulaParityTest` and the VaR/ES goldens: no Java changed; their run is recorded below when it ends.
+
+**Open.** The BI browser suites need their fixtures moved to tables and models after the shims pass (`test_bi_new_visuals_browser`,
+`test_bi_wave_a_browser`) and the pre-existing `script-src-attr` violation found; Elements re-pin to 3.3.x; `drishti_geomap.js` goes with
+U3/U4 once the Sutra panels' maps use the geo part.
