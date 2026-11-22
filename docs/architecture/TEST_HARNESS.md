@@ -89,7 +89,8 @@ The browser lane runs with `--dist loadgroup` (`drishti-console/tests/harness_pl
 
 - a test marked **`spread`** is a work unit of its own: the workers take such tests one by one;
 - every other test is grouped with the rest of its file (`xdist_group` = the file), so a file that starts its own server or keeps state
-  between its tests runs on one worker, in order, as before;
+  between its tests runs on one worker, in order, as before; the plugin also writes the group into the test's node id (the `@group`
+  suffix xdist's scheduler reads), where pytest 9.2 reads it (`test_harness_plugin.py`);
 - the file groups are queued first (the drill's planner orders the files longest first), the spread tests after them: they are
   seconds each and fill the workers at the end.
 
@@ -168,6 +169,34 @@ Every real server a browser test starts through `wb_live._stack` passes through 
 A file that asks with `shared=True` leaves its server idle when it ends, and the next file on that worker asking for the same settings
 (environment, sign-in, heap) gets it without a start. The `*_stack` modules (BI, news, Drishti*net, artifacts) start their own fixed
 stacks on the worker's ports, one file at a time.
+
+### 3.32 Lane servers: one server per lane
+
+A lane's workers share ONE real server and ONE console per set-up (`tools/lane_servers.py`, `wb_live.lane_stack`), instead of a server,
+a console and a data folder per worker (4-6 GB each, which ran a 61 GB machine out of memory at 10 workers). Users share a server in
+production too, so the lane also tests that one person's session never leaks into another's.
+
+- **Who shares.** `wb_live._stack` with no `work` folder and the default set-up (`live_console`, every `_stack(tmp, {})`), and every
+  `shared=True` stack (the read-only VaR and pivot files: one per lake and settings). Each test keeps its own names on it (its designs,
+  drafts, rows, temp files). A file whose console reads this process's environment (the designer's switch) asks `own_console=True`: a
+  console of its own in front of the lane's server.
+- **How.** The first process that asks starts the server and the console (a process of its own, `lane_console.py`), each in a session of
+  its own, under a file lock in the lane's folder, and writes `state.json` (pids, URLs, folder); every other worker attaches (a file named
+  after its pid under `attached/`). Heap: `DRILL_TEST_SERVER_HEAP` (default 12g; 16g allowed).
+- **No orphans.** A watchdog per server (`lane_servers.py watch`) stops the server and the console once no attached process is alive and
+  the lane's holder (`DRISHTI_LANE_HOLDER_PID`, the drill's lane shell) is gone; a worker killed outright is pruned by its pid. The last
+  worker out stops them at once; the drill stops every lane server at the lane's end (`lane_servers.py stop <dir>`).
+- **The serial group.** A test that changes server-wide state on the lane's server (module or mnemonic switches, admin settings, users and
+  roles, lake data others read, the signed-out user's page customizations, edition, connectors) is marked `serial`. The drill runs the lane
+  with `-m "not serial"` on its workers, then `-n 0 -m serial` on the same server (`DRISHTI_LANE_DIR` is the lane's folder for both runs);
+  each restores what it changed. Today: `test_designer_browser.py`, `test_refresh_browser.py`.
+- **Own servers, on purpose.** A set-up no other file shares keeps its own server through the worker's pool (section 3.7): another
+  environment (packs, offline, a lake of its own, sign-in with the cast of users a file makes), a `work` folder of its own, the `*_stack`
+  modules (BI, news, Drishti*net cluster, embed, artifacts), the release from another folder (3.29), the upgrade counts. These are the
+  next to fold in: each one that can take the default set-up moves to the lane server.
+- **The read-only guard** (3.23) needs a server no one else writes to: it runs only with `DRISHTI_LANE_SERVERS=0` (every caller its own
+  server, as before).
+- `-vv` on the drill's browser lane: a run killed half way still names every test it started.
 
 ### 3.8 Ports
 

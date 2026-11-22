@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Browser tests: one server per lane.** The browser lane's workers share one Drishti server and one console per set-up
+  (`tools/lane_servers.py`: the first worker starts them under a file lock, the others attach; a watchdog stops them once the lane's
+  processes are gone, so a killed run leaves no server behind); its heap is `DRILL_TEST_SERVER_HEAP` (default 12g). Tests that change
+  server-wide state are marked `serial` and run after the parallel run, one at a time, on the same server. `--dist loadgroup` grouped
+  nothing under pytest 9.2 (pytest-xdist 3.8 writes the group where pytest no longer reads it): every module fixture, and its server,
+  started again on each worker that ran one of the file's tests; the group is now written where pytest reads it. The drill's browser
+  lane runs with `-vv`. docs/architecture/TEST_HARNESS.md, section 3.32.
+
 - **Removed: the embed scopes `embed:report` and `embed:search`**, `GET /api/v1/embed/search`, `drishti.embed.search.*` and `drishti.embed.limits.searches-per-user-per-minute`: embed v1 was deleted and nothing calls them; the scope list is `embed:view` and `embed:about`.
 
 - **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.

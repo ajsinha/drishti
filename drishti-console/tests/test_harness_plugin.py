@@ -26,6 +26,14 @@ from harness_plugin import group_and_order
 class Item:
     def __init__(self, path, name, marks=()):
         self.fspath, self.name, self.marks = path, name, list(marks)
+        self._nodeid = f"{path}::{name}"
+
+    @property
+    def nodeid(self):
+        return self._nodeid
+
+    def iter_markers(self, name):
+        return (m for m in self.marks if m.name == name)
 
     def get_closest_marker(self, name):
         return next((m for m in self.marks if m.name == name), None)
@@ -51,6 +59,21 @@ def test_an_explicit_group_is_kept():
     items = [Item("/t/test_c.py", "c1", [pytest.mark.xdist_group(name="mine").mark])]
     group_and_order(_config("loadgroup"), items)
     assert [m.kwargs.get("name") for m in items[0].marks if m.name == "xdist_group"] == ["mine"]
+
+
+def test_the_group_is_in_the_node_id_pytest_reads(request):
+    """xdist's scheduler reads the group from the node id's "@group" suffix; xdist 3.8 writes it where pytest 9.2 no longer reads it,
+    so the plugin writes it in the id pytest uses (a real pytest item, a copy of this test's own: under pytest 9.2 its structured ``_id``)."""
+    import copy
+    item = copy.copy(request.node)
+    group_and_order(_config("loadgroup"), [item])
+    assert item.nodeid.endswith("::test_the_group_is_in_the_node_id_pytest_reads@test_harness_plugin.py"), item.nodeid
+
+
+def test_a_fake_item_gets_its_suffix_too():
+    items = [Item("/t/test_b_browser.py", "b1")]
+    group_and_order(_config("loadgroup"), items)
+    assert items[0].nodeid == "/t/test_b_browser.py::b1@test_b_browser.py"
 
 
 def test_other_distributions_are_untouched():

@@ -40,12 +40,16 @@ LINE = "TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refres
 ENV = {"DRISHTI_UI_DESIGNER": "true", "DRISHTI_VIEWS_REFRESH_MIN_SECONDS": "2"}
 
 
+#: the page customizations are the (signed-out) user's, so server-wide on the lane's server: the serial group (TEST_HARNESS.md, "Lane servers")
+pytestmark = pytest.mark.serial
+
+
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     old = {k: os.environ.get(k) for k in ENV}
     os.environ.update(ENV)                                   # read when the console's settings load: this console only
     try:
-        yield from (str(s) for s in _stack(tmp_path_factory, {}))
+        yield from (str(s) for s in _stack(tmp_path_factory, {}, own_console=True))
     finally:
         for k, v in old.items():
             if v is None:

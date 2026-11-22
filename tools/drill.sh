@@ -294,12 +294,31 @@ gate_checks() {
 # the console tests of the gate, and in the light drill the docs ones; a test that fails runs once more (tools/drillkit/drill_plan.py)
 console_files() {   # name, workers, failed files re-run at a time, then the files: pytest-xdist workers, one file per worker at a time
   local name=$1 workers=$2 reruns=$3; shift 3
-  local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
+  local out="$LOGS/console-$name.txt" rc=0 dist=loadfile serial=() verbose=() parallel=()
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
-  [[ $name == browser ]] && dist=loadgroup
+  # Lane servers (TEST_HARNESS.md, "Lane servers"): every worker of the lane shares ONE server and console per set-up (tools/lane_servers.py),
+  # held by this shell until the lane's end; the tests marked serial (they change server-wide state) run after the parallel run, -n 0, on
+  # the same server. -vv: a run killed half way still names every test it started.
+  if [[ $name == browser ]]; then
+    dist=loadgroup; verbose=(-vv); parallel=(-m "not serial and not static"); serial=(-m "serial and not static")
+    local -x DRISHTI_LANE_DIR="$DRILL_TMP/lane-$name" DRISHTI_LANE_HOLDER_PID=$BASHPID
+  fi
+  console_run "$@" || rc=$?
+  [[ -n ${DRISHTI_LANE_DIR:-} && $name == browser ]] && python3 tools/lane_servers.py stop "$DRISHTI_LANE_DIR"   # the lane's servers, after the re-runs
+  return $rc
+}
+console_run() {   # console_files' run, its serial group and its re-runs (name, workers, reruns, dist, verbose, parallel, serial, out: the caller's)
+  local rc=0
   DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
-    timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
-    > "$out" 2>&1 || rc=$?
+    timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q "${verbose[@]}" -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
+      "${parallel[@]}" > "$out" 2>&1 || rc=$?
+  if (( ${#serial[@]} )) && (( rc == 0 || rc == 1 )); then   # the serial group: one test at a time, on the lane's server (5: none in these files)
+    local src=0
+    DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name-serial.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+      timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q "${verbose[@]}" -rfE -p drill_timings -n 0 "$@" "${serial[@]}" >> "$out" 2>&1 || src=$?
+    (( src == 5 )) && src=0
+    (( src > rc )) && rc=$src
+  fi
   tail -n 5 "$out"
   (( rc == 0 )) && return 0
   if (( rc != 1 )); then echo "drill: console $name stopped with exit $rc (124: the time limit; 2: interrupted; 3: internal error; 4: usage)" >&2; return 1; fi
