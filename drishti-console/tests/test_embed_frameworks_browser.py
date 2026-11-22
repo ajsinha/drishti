@@ -72,7 +72,7 @@ def register_host() -> str:
     enc = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h if len(h) % 2 == 0 else "0" + h)).rstrip(b"=").decode()  # noqa: E731
     jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})
     status, made = S.admin("POST", "/admin/embed/apps", {"id": APP, "name": "Elements frameworks demo", "origins": [HOST],
-                                                          "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"], "jwks": jwks, "subjectTypes": ["jwt"],
+                                                          "scopes": ["embed:view", "embed:about"], "jwks": jwks, "subjectTypes": ["jwt"],
                                                           "callsPerMinute": 100000, "userCallsPerMinute": 100000})
     assert status == 201, made
     return made["secret"]

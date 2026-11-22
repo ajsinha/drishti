@@ -44,7 +44,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent / "static"
 SAMPLES = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "embed"      # the React, Vue and Angular sample pages, served at /samples/
 USERS = ("viewer", "author")                              # the host's demo users: they must also exist in Drishti (the exchange refuses a stranger)
-SCOPES = ("embed:view", "embed:about", "embed:report", "embed:search")
+SCOPES = ("embed:view", "embed:about")
 REPORTS: list = []
 
 
