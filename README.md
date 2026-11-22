@@ -251,7 +251,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
   lists everything people build, what it uses and what uses it.
 - **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
-  graph, the designer kit) are [Drishti Elements](https://github.com/ajsinha/drishti-elements), a separate project by the same owner
+  graph, the designer kit) are [Drishti Elements](https://github.com/drishti-platform/drishti-elements), a separate project by the same owner
   with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
   at a pinned version (`drishti-console/web/static/vendor/drishti-elements/2.4.0/`, see
   [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
@@ -411,7 +411,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
 [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
-[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [Drishti Elements' API](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_GUIDE.md),
+[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [Drishti Elements' API](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_GUIDE.md),
 [VIEWMODEL](docs/architecture/VIEWMODEL.md), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
 [the Knowledge primers](docs/knowledge/README.md). The design is [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and
 [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md); what changed and when, [RELEASE_NOTES.md](RELEASE_NOTES.md) and

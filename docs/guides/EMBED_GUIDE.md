@@ -31,7 +31,7 @@ There are three ways in:
 
 What each screen contains is the **ViewModel**, the server's JSON of a screen already laid out and bound: its reference is
 [VIEWMODEL.md](../architecture/VIEWMODEL.md). How the renderer and the elements are built is
-[ARCHITECTURE.md](../architecture/ARCHITECTURE.md) (section 30). The API of every Elements library is [ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md).
+[ARCHITECTURE.md](../architecture/ARCHITECTURE.md) (section 30). The API of every Elements library is [ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/API.md).
 
 ## Contents
 
@@ -1072,13 +1072,13 @@ element thinks. **The sign-in button is greyed out**: your page's origin is not 
 The libraries the console draws with (grid and pivot, charts and maps, inputs, tree, graph, the data client, the designer kit) are Drishti
 Elements, a separate project by the same owner that Drishti vendors at a pinned version
 ([docs/architecture/ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md)). Using them in your own app, served by a host or from
-the release tree, is in its own docs: [USING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/USING.md), with the
-[API reference](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md) and the
-[contracts](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/CONTRACTS.md) a server answers (the live set, the errors, the
+the release tree, is in its own docs: [USING.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/USING.md), with the
+[API reference](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/API.md) and the
+[contracts](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/CONTRACTS.md) a server answers (the live set, the errors, the
 data capabilities). A Drishti console serves the pinned copy under `/static/vendor/drishti-elements/<version>/` and its gallery at `/elements`.
 
 ## 14. Moving an AG Grid Enterprise pivot app
 
 Drishti Elements' grid takes AG Grid Enterprise-shaped options through its adapter (`createGridFromAgOptions`); the mapping, what is
-covered and what is not, is in its [MOVING_FROM_AG_GRID.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/MOVING_FROM_AG_GRID.md).
+covered and what is not, is in its [MOVING_FROM_AG_GRID.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/MOVING_FROM_AG_GRID.md).
 

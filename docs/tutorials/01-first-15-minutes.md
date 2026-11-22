@@ -141,7 +141,7 @@ will also have a token that lets the command line talk to your server, which tut
 **From the command line:**
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git
+git clone https://github.com/drishti-platform/drishti.git
 cd drishti
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"

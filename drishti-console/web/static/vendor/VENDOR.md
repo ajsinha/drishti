@@ -22,13 +22,13 @@ vendored release tree, listed with their licences in its own `vendor/VENDOR.md`.
 | Library | Version | Licence | Where | In git | Loaded by |
 |---|---|---|---|---|---|
 | Bootstrap, Bootstrap Icons | 5.3.8 / see its folder | MIT | `bootstrap/`, `bootstrap-icons/` | yes | every page |
-| **Drishti Elements** (an external component with its own repository and docs: github.com/ajsinha/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit and the gallery; with its engines: Apache ECharts and ECharts GL, CodeMirror, Apache Arrow JS, the Natural Earth map shapes and the world-regions table) | 2.4.0 (github.com/ajsinha/drishti-elements, tag v2.4.0, commit 39ca755a0354; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` (Apache-2.0, BSD-3-Clause, MIT, public domain) | `drishti-elements/2.4.0/` | yes | every page |
+| **Drishti Elements** (an external component with its own repository and docs: github.com/drishti-platform/drishti-elements, ajsinha.github.io/drishti-elements; grid and pivot, charts and maps, inputs, tree, graph, data client, designer kit and the gallery; with its engines: Apache ECharts and ECharts GL, CodeMirror, Apache Arrow JS, the Natural Earth map shapes and the world-regions table) | 2.4.0 (github.com/drishti-platform/drishti-elements, tag v2.4.0, commit 39ca755a0354; the release tree built by `tools/elements/cli.py dist`) | Proprietary, the same owner and `LICENSE` as Drishti (`LICENSE` beside it); its engines' licences in its `vendor/VENDOR.md` (Apache-2.0, BSD-3-Clause, MIT, public domain) | `drishti-elements/2.4.0/` | yes | every page |
 | Cinzel 700 (wordmark), Playfair Display 500 (tagline) | Google Fonts, Latin subset (Cinzel v26) | SIL OFL 1.1 (`fonts/OFL-*.txt`) | `fonts/` | yes | every page (theme.css) |
 | Pyodide (CPython for Calc) | 314.0.7 | MPL-2.0 | `pyodide/` | **no**: `python tools/drishti.py calc install` | Calc, on demand |
 
 
 **Drishti Elements: updating the pin.** Drishti holds no source of Drishti Elements, only this release tree (docs/architecture/ELEMENTS_IN_DRISHTI.md).
-Clone github.com/ajsinha/drishti-elements at the new tag into an empty folder outside this repository, check the tag's commit id, run
+Clone github.com/drishti-platform/drishti-elements at the new tag into an empty folder outside this repository, check the tag's commit id, run
 `python3 tools/elements/cli.py dist --out dist`, copy `dist/drishti-elements-<new>/` to `drishti-elements/<new>/` and delete the old folder (the
 folder's name is the pin: `core/elements_pin.py`), set `drishti.elements.version` in the root `pom.xml` (drishti-rachana reads `data/world-regions.yaml`
 and `data/formats.yaml` from the copy), change the pinned paths of Drishti's own libraries and pages (`git grep -l "vendor/drishti-elements/<old>/"`),

@@ -485,7 +485,7 @@ with its rows inline, and the page draws it as it is: every kind drishti-chart h
 heatmap, pie, donut, waterfall, treemap, sankey, gauge, candlestick, map, layers), its annotations and conditional marks, nothing to
 translate and nothing refused. The answer is `{"kind": "drishti-chart", "spec": {...}}`; a spec without `kind` is a `TypeError`, and
 `data.source` (an address to load) is refused in the sandbox (`DRS-9073`): put the rows in `data.rows`. The spec's language is in
-[ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md) (drishti-chart).
+[ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/API.md) (drishti-chart).
 
 ```python
 def render(table, params):

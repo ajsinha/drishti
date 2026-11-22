@@ -38,7 +38,7 @@ This is the one home for the three blocks, the module package, loading, data bin
 built and does not repeat it: the access chain (licence → module → lens → function → permission) and the registry are
 [ACCESS_MODEL.md](ACCESS_MODEL.md); the boundary survey, the dependency rules and the split as built are
 [DOMAIN_MODULES.md](DOMAIN_MODULES.md) (section 16 says what moves from it into this document); the JavaScript libraries are
-[ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md); the lakes and connectors are [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md); the lenses are [LENSES.md](LENSES.md).
+[ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md); the lakes and connectors are [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md); the lenses are [LENSES.md](LENSES.md).
 
 Worked examples (files, not product code) are in `docs/architecture/kernel-and-modules/examples/` (the banking manifest:
 [module.yaml](kernel-and-modules/examples/banking/module.yaml); the genomics sample module as a Maven project with its own pages:
@@ -127,7 +127,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 6. **Secure by default.** Unsigned or untrusted modules are refused (a development key exists for the SDK harness only); licences decide
    what loads; Python runs in the kernel's sandbox; module assets live under a strict CSP; **secrets never enter a module**.
 7. **Elements, never bespoke UI.** A module's screens are Sutras first, then composed pages, then its own domain library (drishti-risk
-   for banking; section 9), all built from Drishti Elements on the kernel's theme tokens ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)).
+   for banking; section 9), all built from Drishti Elements on the kernel's theme tokens ([ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md)).
 8. **Declared, so removable.** Everything a module shows or offers (routes, words, menus, cards, Help, jobs, SPIs) is declared and
    registered by the kernel, never by module code at import; removing a module withdraws the declarations, so it is absent everywhere
    (section 12).
@@ -189,7 +189,7 @@ the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (
 | Python compute API | `drishti_kernel` package (the compute SDK's item, frame and result types; the sandbox's rules) | section 4.6 |
 | Rachana and Sutras | grammar version `rachana: 1` (already in every Sutra) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) |
 | Data contracts | contract format `contract-format: 1` (the `*.contract.yaml` shape the packs use today) | section 5.2 |
-| Elements core | `@drishti/elements-core` etc.: ES modules + `.d.ts`, the theme tokens | [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) |
+| Elements core | `@drishti/elements-core` etc.: ES modules + `.d.ts`, the theme tokens | [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md) |
 | Console API (the Drishti Console's half, versioned as `plugin-api`) | `plugin.yaml` format 2 (routes, words, menus, cards, slots, the API proxy list) and `drishti-console-api-<v>.jar` (the Java context-builder interface); replaces format 1 and the hooks of `core/plugins.py` | sections 4.7, 9, 10.4 |
 | REST | the namespace a module is given (`/api/v1/<module api>/…`) and the kernel's public endpoints | section 2.5 |
 | Events | the kernel event catalogue | section 2.6 |
@@ -2070,7 +2070,7 @@ on the Python console's OIDC code instead of Spring Security.
 ## 11. Drishti Elements: the controlled UI statics
 
 **Decided by the owner on 2026-11-08:** Drishti Elements is **the one set of UI statics**, and it is tightly controlled. The libraries
-themselves, their APIs and their packaging are [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md). This section says only who serves Elements, what a module may
+themselves, their APIs and their packaging are [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md). This section says only who serves Elements, what a module may
 and may not ship, and how that is enforced.
 
 ### 11.1 Who owns and serves Elements
@@ -2078,7 +2078,7 @@ and may not ship, and how that is enforced.
 - **The platform owns Elements**: the libraries (drishti-core, -inputs, -grid, -chart with maps, -data, -insight, -renderer and the
   generic additions) and **every vendored third-party library** (`static/vendor` with `VENDOR.md`).
 - **Only the Drishti Console serves them** (today's console from i2, the Spring Boot console from i5), from its own **signed, versioned bundle**: one Elements release train per console
-  (`elements.json`, [ELEMENTS.md section 8](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)), served under
+  (`elements.json`, [ELEMENTS.md section 8](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md)), served under
   `/static/elements/<library>/<version>/` with immutable caching, **SRI** on every tag and the console's **CSP** (`script-src 'self'`, no
   inline script, no remote origin). A console's About and Health show its Elements train version.
 - The kernel serves no UI statics. A module's own statics (its pages' scripts, its domain library) are served by the console under

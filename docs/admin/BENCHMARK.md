@@ -1754,7 +1754,7 @@ from a new measured run with the same headroom; they are never raised to make a 
 
 ## 20. Drishti Elements: the grid engine at 1,000,000 rows
 
-drishti-grid's engine ([ELEMENTS.md section 8.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)),
+drishti-grid's engine ([ELEMENTS.md section 8.1](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md)),
 without a browser: `node --max-old-space-size=6144 tools/bench/elements_grid.mjs 1000000 10000` (Node v22.22.1, the workstation of
 [section 3](#3-machine-and-data), 2026-11-07). One million synthetic trades of ten columns in the page. A scroll frame is the viewport's
 window at a random position and the text of every drawn cell (40 rows on screen with overscan, 530 cells): what a

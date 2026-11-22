@@ -127,7 +127,7 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 ### 2.2 Download and build the server
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git /home/you/drishti
+git clone https://github.com/drishti-platform/drishti.git /home/you/drishti
 cd /home/you/drishti
 python tools/drishti.py setup            # checks Python and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
 python tools/drishti.py build jar        # Maven clean package of the server; the exec jar is copied into lib/
@@ -404,7 +404,7 @@ $env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspo
 ### 4.2 Get the server: build it, or copy it
 
 ```powershell
-git clone https://github.com/ajsinha/drishti.git
+git clone https://github.com/drishti-platform/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 .\mvnw.cmd -q clean package -DskipTests -pl :drishti-app -am

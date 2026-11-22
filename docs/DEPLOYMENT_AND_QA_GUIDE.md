@@ -263,12 +263,12 @@ one have every option.
 repository carries Maven as `mvnw`):
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git /home/you/drishti && cd /home/you/drishti
+git clone https://github.com/drishti-platform/drishti.git /home/you/drishti && cd /home/you/drishti
 python3 tools/drishti.py build all
 ```
 
 ```powershell
-git clone https://github.com/ajsinha/drishti.git C:\Users\you\IdeaProjects\drishti; cd C:\Users\you\IdeaProjects\drishti
+git clone https://github.com/drishti-platform/drishti.git C:\Users\you\IdeaProjects\drishti; cd C:\Users\you\IdeaProjects\drishti
 py tools\drishti.py build jar
 ```
 
@@ -1262,7 +1262,7 @@ Details: [guides/bi/README.md](guides/bi/README.md), [guides/bi/README.md](guide
 
 **In the UI.** **Create → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
 (grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
-([ELEMENTS.md section 8.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
+([ELEMENTS.md section 8.4](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). A component that does not draw here will not draw on a screen
 either.
 
 ![The Elements gallery](img/deploy/12-elements-gallery.jpg)
