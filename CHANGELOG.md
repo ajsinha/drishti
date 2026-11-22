@@ -33,6 +33,18 @@
   every server Python run was refused; the lock pins 26.0.1, and the test requirements pin the lock's numpy, pandas and scipy
   (`test_bi_notebook.py` checks the three agree).
 
+- **Fixed: Home lost the Risk, Trading and Market lens links** wherever `config/lenses` (or a module's folder in it) is a link: banking's
+  lenses are known by their files only and the list of lens files did not follow a link. It does now (`LensOfferTest`).
+- **Fixed: the admin index's message said "Starting…" while its table already showed the day rebuilding**: the reload's answer sets
+  both, as a poll does.
+- **Tests: the timing tests run alone.** A test tagged `timing` (a budget: `HitIndexTest`, and now `AbandonedReadsTest`, which counts the
+  JVM's threads) runs in the parent pom's `timing-budget-tests` execution, one JVM after the module's other tests, in the modules that set
+  `drishti.timing.skip=false`; the drill's Java lanes leave them out and the Java 21 lane runs them once every other lane has finished.
+  The drill also stops at once when the console environment differs from the compute lock; its re-run finds a parametrized test again
+  (pytest 9.2 prints the group inside the brackets); the API sweep reads a controller's base path from its constant
+  (`LiveTablesController.BASE`) and counts the live tables protocol's input errors as input it cannot know; the public-sector browser
+  stack's today is its recorded feeds' day; the embedded controls' test finds a panel by `data-panel`.
+
 - **Removed: the embed scopes `embed:report` and `embed:search`**, `GET /api/v1/embed/search`, `drishti.embed.search.*` and `drishti.embed.limits.searches-per-user-per-minute`: embed v1 was deleted and nothing calls them; the scope list is `embed:view` and `embed:about`.
 
 - **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.

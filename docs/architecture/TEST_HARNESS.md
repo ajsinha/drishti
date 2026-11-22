@@ -200,6 +200,11 @@ production too, so the lane also tests that one person's session never leaks int
 - **The read-only guard** (3.23) needs a server no one else writes to: it runs only with `DRISHTI_LANE_SERVERS=0` (every caller its own
   server, as before).
 - `-vv` on the drill's browser lane: a run killed half way still names every test it started.
+- **The timing tests run alone.** A Java test that measures time or counts the JVM's threads is tagged `timing`: the parent pom leaves it
+  out of the parallel forks and runs it in `timing-budget-tests` (one JVM, after the module's other tests) in the modules that set
+  `drishti.timing.skip=false` (drishti-api, drishti-engine). The drill's Java lanes pass `-Ddrishti.timing.skip=true`, and the Java 21 lane
+  runs `test-compile surefire:test@timing-budget-tests` once every other lane of the drill has finished: a budget on a loaded machine
+  measures the load.
 
 ### 3.8 Ports
 
