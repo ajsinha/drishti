@@ -123,7 +123,7 @@ def _wait(url: str, seconds: float = 60) -> None:
             urllib.request.urlopen(url, timeout=2).read()
             return
         except Exception:  # noqa: BLE001 - not up yet
-            time.sleep(0.4)
+            time.sleep(0.4)  # wait-ok: the poll interval while a port starts listening
     raise RuntimeError(f"{url} did not come up")
 
 
