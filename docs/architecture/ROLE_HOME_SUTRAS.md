@@ -154,15 +154,18 @@ subject-keyed in `change_driver`), never per person.
 Snapshot job at the cut-off; events as they happen; attribution runs after each load or recompute completes (the load-complete event of the loader);
 the `changes` engine at request time. All on the server, in Java; the browser only draws the rows (server-computes-risk rule).
 
-## 5. What needs building and testing
+## 5. What is written and what is left
 
-| Item | State |
+Written, unbuilt and unrun (2026-11-22): the Home loader and catalogue (`kernel/drishti-server/.../server/home`: role to Home through `drishti.homes.roles`,
+modules, mnemonics, `arrange: allow|locked`), the home tables (`HomeTables`, a module adds `HomeTable` beans), the snapshot job, the event writer,
+the attribution runner, the Homes API (`/api/v1/homes`), the VaR and exposure measure sources (banking module), Homes for the seven roles, the
+console page `/home/role`, a test per role and a browser walk of both Homes, and the `open0..open7` click events of `core/kpi-strip`.
+
+| Left | Why |
 |---|---|
-| Library fragments (kpi-strip, tile-grid, exceptions-list, change-feed, use-bar-table, calendar-list, headline-rail, stress-tiles) | written in drishti-rachana `i8/role-home-fragments`; manifests, goldens and hashes to regenerate; level 1.2 compile and the test files to run |
-| The Home loader (config/homes, role to Home, picker) | I7B H1 to H4; not written here |
-| Rachana libraries in the Drishti console and server (a resolver for `use: core/...` in a served Sutra) | not found on this branch: to confirm |
-| Home tables and their contracts | design above; to write |
-| `changes` engine | code and kit cases written; to compile and run the kit |
-| Snapshot job, event writer, attribution runner, `home_*` views | design above; not written |
-| `arrange: locked` | one small change where the Home Sutra is served |
-| Tests | `ChangesEngine` kit; a Home test per role (fragments resolve, tables bound, empty states); a browser walk of both Homes |
+| Host the `changes` engine (`ChangeEngineHost`) | R2: no engine-api host exists in the server; "Since" says so in words until then |
+| Draw a Home: the server's view model of a Sutra over the home tables | the Rachana bind of `use:` fragments over the table host is not wired; the page carries the Sutra and tables as data |
+| Attribution by input group (`MeasureSource.drivers`), `PNL_MTD`, `DV01`, `POSITION`, stress, margin calls, indicators, calendar, news, model runs, held changes | R2 (hosted engines) or the owning module's `HomeTable` |
+| The role definition's `home` field | `RoleDefinition` has no such field; `drishti.homes.roles` carries the mapping until the role store changes |
+| Contracts `docs/contracts/HOME.md` for the `home/*` tables | to write with the first run |
+| Build, run the tests, regenerate the fragment goldens and hashes | owner: builds later |
