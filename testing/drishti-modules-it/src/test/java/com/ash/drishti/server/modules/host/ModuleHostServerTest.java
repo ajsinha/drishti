@@ -30,7 +30,6 @@ import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.kernel.api.health.HealthFigures;
 import com.ash.drishti.module.runtime.ModuleHealth;
 import com.ash.drishti.server.modules.ModuleNode;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.format.Formats;
 import com.ash.drishti.testkit.ModuleFixtures;
@@ -183,7 +182,8 @@ class ModuleHostServerTest {
     }
 
     private static Object eval(String expression) {
-        return new ElCompiler(16).compile(expression).eval(EvalContext.of(DataNode.of(Map.of()), Formats.defaults()));
+        // the instance's compiler, as the server compiles a Sutra's expressions: the engine's and the loaded modules' functions
+        return com.ash.drishti.rachana.DrishtiRachana.compiler().compile(expression).eval(EvalContext.of(DataNode.of(Map.of()), Formats.defaults()));
     }
 
     // ---- the modules ------------------------------------------------------------------------------------------------------------------
