@@ -17,7 +17,7 @@
 
 **Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
-EN-45 to EN-55 are open, each with a recommendation (section 16).**
+EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16).**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -1416,7 +1416,7 @@ ship with the sample engine and the analytics engines.
 EN-29 to EN-44 change three accepted decisions in the parts shown: EN-15 (the pinned artifact and hash are now an optional pin,
 EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means the site put the JAR in its folder, EN-35).
 
-### EN-45 to EN-55: open, for the owner (2026-11-22, everything that computes)
+### EN-45 to EN-55: ACCEPTED by the owner 2026-11-22 (everything that computes), as recommended
 
 | # | Decision | Recommendation | The alternative |
 |---|---|---|---|
