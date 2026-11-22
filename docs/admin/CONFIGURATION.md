@@ -1260,6 +1260,16 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 | `max-expression-length` | `10000` | The longest a Rachana-EL expression may be, in characters. Longer is `DRS-2101`. |
 | `studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | Let Sutra Studio save files (authors only). Turn on in authoring environments. With it off, a save returns 403 `saving from Studio is disabled (drishti.rachana.studio-save)`. |
 
+### `drishti.rachana.libraries` — Rachana fragment libraries
+
+Where Drishti's Rachana instance finds Rachana's fragment libraries ([RACHANA_REFERENCE.md, Rachana libraries](../guides/RACHANA_REFERENCE.md#rachana-libraries-libraries-use-corerecord-card1)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `bundled` | `true` | Offer the libraries carried by the Rachana jars (`core`, `finance`). |
+| `dirs` | none | More libraries: folders holding an unpacked library per name (`<dir>/<name>/`) or `<name>-<version>.rlib` archives. Each entry is absolute or anchored to a named root (`${home}/libs`, `${config}/libs`, `${data}/libs`); a bare relative value is under the install folder, never the working folder. A name found twice with different contents is refused (`DRS-2113`). Several: `drishti.rachana.libraries.dirs[0]=...`. |
+| `lock-file` | `<config>/rachana.lock` when that file exists | Rachana's lock file, which pins each library's version and content hash. With one in force a library not in it is `DRS-2111`; without one libraries are used unpinned. A named file that does not exist stops the start. |
+
 ### `drishti.ui-kit` — the Drishti UI kit
 
 Platform UI vocabulary the server always loads, whatever packs are enabled ([RACHANA_REFERENCE.md, The Drishti UI

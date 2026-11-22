@@ -580,6 +580,45 @@ with: {...} }`). It carries a complete `doc:` docstring, checked strictly (`DRS-
 fragments deep and without a cycle. A Sutra may carry a `doc:` too; without one `sutra lint --docs` warns. See
 [Fragments and docstrings](BUILD_GUIDE.md#171-fragments-and-docstrings) and [Sutra Next: fragments, events, children, sources, layout and forms](#sutra-next-fragments-events-children-sources-layout-and-forms).
 
+### Rachana libraries (`libraries:`, `use: core/record-card@1`)
+
+Rachana ships typed fragment libraries: **core** (figures, records, tables, basic charts, forms, states) and **finance** (trading, P&L, market
+risk, limits, counterparty, market data). They are in Drishti's Rachana instance with no setup. A Sutra declares the libraries it uses and uses
+their fragments qualified, with the major:
+
+```yaml
+rachana: 1.2
+sutra: trade-card
+version: 1
+libraries: [core@1]
+match: { kind: trade }
+panels:
+  - { use: core/record-card@1, with: { title: "Trade" } }
+```
+
+The long form needs no declaration: `{ use: core@1/record-card@1 }`. A library fragment is always used with its major (`DRS-2048` without
+it). One resolver chain answers every `use:`; a library fragment (`lib/fragment@N` of a declared library) and a pack's own (`pack/fragment@N`)
+cannot collide because a library use is qualified by a library the Sutra declared; the UI kit's plain names (`series-line@1`) are never
+library names. A pack namespace equal to a library name is answered by the library in a Sutra that declares it, and loading warns about it:
+name packs differently from `core`, `finance` and the other library names.
+
+More libraries: put an unpacked library folder (`<dir>/<name>/`) or `<name>-<version>.rlib` archives in a folder and name it in
+`drishti.rachana.libraries.dirs` ([CONFIGURATION](../admin/CONFIGURATION.md#drishtirachanalibraries--rachana-fragment-libraries)); nothing in
+Drishti is rebuilt. The same library name found twice with different contents is refused, never shadowed.
+
+Versions are pinned by Rachana's lock file (`<config>/rachana.lock`, written by `rachana lib add`): with one present, a library not in it,
+another major than it pins, or bytes other than the pinned hash are refused. Refusals are Drishti codes, in words:
+
+| Code | When |
+|---|---|
+| `DRS-2110` | no such library, or none of that major (the message lists what is installed) |
+| `DRS-2111` | the library is not in the lock file, or another major is pinned (one version of a library per project) |
+| `DRS-2112` | the library is not valid (a file type it may not carry, a bad manifest or fragment) |
+| `DRS-2113` | the library's bytes are not the pinned ones, or two folders hold the same library with different contents |
+
+The workbench palette lists each library fragment as `core/record-card@1` with the summary of its `doc:` (`GET /api/v1/ui-kit`,
+`libraryFragments`; `GET /api/v1/sutras/library` lists them beside the kit's).
+
 ### Folders mean nothing
 
 A Sutra directory is read recursively. Sub-folders (`sutras/common/`, `sutras/endur/`, `sutras/calypso/`, `sutras/murex/`,

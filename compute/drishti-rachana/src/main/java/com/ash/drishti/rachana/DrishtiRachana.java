@@ -44,6 +44,8 @@ public final class DrishtiRachana {
     private static volatile RachanaOptions options = RachanaOptions.DEFAULTS;
     private static volatile Supplier<? extends Collection<String>> kinds = List::of;
     private static volatile Rachana current;
+    /** The Rachana libraries ({@link DrishtiLibraries}): the bundled ones unless {@link #libraries} says otherwise. */
+    private static volatile com.ash.rachana.lib.LibrarySet libraries = DrishtiLibraries.of(null);
     private static final List<com.ash.rachana.format.Formats> SERVED = new ArrayList<>();
     /** What {@link LiveCompiler#follow} built, dropped at every change of instance (held weakly: a closed context's go with it). */
     private static final java.util.Set<LiveCompiler.Follower<?>> FOLLOWERS = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
@@ -141,14 +143,33 @@ public final class DrishtiRachana {
         synchronized (LOCK) {
             RachanaOptions o = options;
             Supplier<? extends Collection<String>> k = kinds;
+            com.ash.rachana.lib.LibrarySet libs = libraries;
             return () -> {
                 synchronized (LOCK) {
                     options = o;
                     kinds = k;
+                    libraries = libs;
                     changed();
                 }
             };
         }
+    }
+
+    /**
+     * The Rachana libraries Sutras may declare ({@code libraries: [core@1]}, {@code use: core/record-card@1}): one resolver chain, the lock
+     * that pins it ({@link DrishtiLibraries#of}); a new instance. Problems of a library (not found {@code DRS-2110}, not in the lock or
+     * another major {@code DRS-2111}, invalid {@code DRS-2112}, not the pinned bytes {@code DRS-2113}) are reported where a Sutra uses it.
+     */
+    public static void libraries(com.ash.rachana.lib.LibrarySet set) {
+        synchronized (LOCK) {
+            libraries = set == null ? DrishtiLibraries.of(null) : set;
+            changed();
+        }
+    }
+
+    /** The libraries now (for the palette and the checks). */
+    public static com.ash.rachana.lib.LibrarySet libraries() {
+        return libraries;
     }
 
     /** The entity kinds this server serves (the schema's {@code match.kind} list); read each time a schema is built, so no new instance. */
@@ -215,6 +236,7 @@ public final class DrishtiRachana {
             SERVED.clear();
             options = RachanaOptions.DEFAULTS;
             kinds = List::of;
+            libraries = DrishtiLibraries.of(null);
             changed();
         }
     }
@@ -281,6 +303,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> BusinessCalendar.of(spec))
                 .build();
-        return Rachana.with(options, Profile.core(), drishti);   // Rachana 1.x reads one language level
+        return Rachana.with(options, Profile.core(), drishti).libraries(libraries);   // Rachana 1.x reads one language level; library uses are qualified
     }
 }

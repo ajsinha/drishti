@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 /** Beans contributed by {@code drishti-rachana}. */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({RachanaProperties.class, com.ash.drishti.rachana.about.AboutProperties.class})
+@EnableConfigurationProperties({RachanaProperties.class, LibraryProperties.class, com.ash.drishti.rachana.about.AboutProperties.class})
 public class RachanaConfiguration {
 
     /**
@@ -31,7 +31,8 @@ public class RachanaConfiguration {
      * and a module stopped is gone at once ({@link LiveCompiler}).
      */
     @Bean
-    public LiveCompiler elCompiler(RachanaProperties props) {
+    public LiveCompiler elCompiler(RachanaProperties props, LibraryProperties libraryProps) {
+        DrishtiRachana.libraries(DrishtiLibraries.of(libraryProps));           // the Rachana libraries: bundled, folders, the lock file
         DrishtiRachana.configure(DrishtiRachana.optionsOf(props), null);       // the drishti profile's instance, from the settings (8.3b)
         return LiveCompiler.current();
     }

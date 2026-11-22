@@ -51,12 +51,15 @@ public class SutraLibraryController {
     public Map<String, Object> library(@RequestParam(name = "blocks", defaultValue = "false") boolean blocks) {
         List<Map<String, Object>> out = new ArrayList<>();
         com.ash.drishti.rachana.DrishtiRachana.blocks().blocks().stream().filter(b -> blocks || b.fragment()).forEach(b -> out.add(describe(b, false)));
+        out.addAll(com.ash.drishti.rachana.DrishtiLibraries.fragments(com.ash.drishti.rachana.DrishtiRachana.libraries()));   // Rachana libraries: core/..., finance/...
         return Map.of("fragments", out, "count", out.size());
     }
 
     @GetMapping("/{name}/{version}")
     public Map<String, Object> fragment(@PathVariable String name, @PathVariable int version) {
         return com.ash.drishti.rachana.DrishtiRachana.blocks().find(name + "@" + version).map(b -> describe(b, true))
+                .or(() -> com.ash.drishti.rachana.DrishtiLibraries.fragments(com.ash.drishti.rachana.DrishtiRachana.libraries()).stream()
+                        .filter(m -> (name + "@" + version).equals(m.get("ref"))).findFirst())
                 .orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no fragment " + name + "@" + version));
     }
 

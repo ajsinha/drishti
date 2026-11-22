@@ -264,6 +264,9 @@ public final class SutraRegistry implements AutoCloseable {
         }
         // a pack (or site) block named like a Drishti UI kit fragment: the kit's wins, the pack's answers only to pack/name
         DrishtiRachana.blocks().clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
+        DrishtiLibraries.clashes(DrishtiRachana.libraries(), DrishtiRachana.blocks().names()).forEach(n -> LOG.warn("DRS-2048 warning: the namespace '{}' of "
+                + "pack fragments is also the name of a Rachana library; a Sutra that declares libraries: [{}@N] reads '{}/...@N' from the library, "
+                + "not from the pack (rename the pack's namespace)", n, n, n));
         for (Path f : files) {
             Sutra s;
             String fname = f.getFileName().toString();
