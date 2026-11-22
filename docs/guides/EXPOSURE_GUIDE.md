@@ -1187,8 +1187,8 @@ Captured after the data-load signal and once at start for the newest date.
 ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)): Delta by default, Iceberg with
 `drishti.ccr.exposure.official.format: iceberg`, under a folder or an `s3://` root (`drishti.ccr.exposure.official.storage`). Either way
 append-only and 7 years: Delta `delta.appendOnly` and its log retention, Iceberg append commits with
-`history.expire.max-snapshot-age-ms` of 2,557 days and every metadata file kept; on S3 each Delta commit file is an exclusive create.
-The JSON Lines go beside the tables on the same storage; `<n>` is the Delta version or the Iceberg snapshot id. A failed publish
+`history.expire.max-snapshot-age-ms` of 2,557 days; on S3 each Delta commit file is an exclusive create.
+The JSON Lines go beside the tables on the same storage; `<n>` is the version of the commit (Delta's table version, Iceberg's sequence number). A failed publish
 names the format and the table in `publishError`. A table keeps the format it was created in (another format needs another root), and
 BI's `exposure-results` connector follows the format by itself (generated as `plugin: iceberg` over the official root; a file never
 edited follows a change, an edited one is kept and listed; `lake demo` leaves the file to the server).

@@ -32,8 +32,6 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.net.NetCaller;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;

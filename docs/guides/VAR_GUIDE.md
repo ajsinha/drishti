@@ -4185,7 +4185,7 @@ every version, and nothing deletes them. `VarOfficialStore` serves the node hist
 | The date's record | `var/official/<YYYY-MM-DD>.json` | `businessDate`, `resultVersion`, `computedAt`, `contractVersion`, `inputs` (versions, batch ids, rules digest), `positionRules`, `membership`, `published` or `publishError`, and `nodes`: per node `captureId`, `hierarchy`, `level`, `name`, `parent`, `var`, `es`, `hypoPnl`, `limit`, `limitUse`, `sumStandalone`, `diversification`, `trades`, `positions`, `exceptions250`, `light`, and `varAt` (the node's VaR at each
 other confidence of `drishti.regulatory.backtesting.confidences`, `{"0.975": …}`, for the regulatory backtest of [section 18.11](#1811-backtesting-for-regulation)). A restatement writes a new version of it (the store keeps the old) |
 | The date's membership | `var/official/<YYYY-MM-DD>-membership-v<n>.jsonl` | JSON Lines: a header line (the position rules' text and digest, trade and position counts), then every derived position with its trades and book, and each node's books, one a line. With a hierarchy built from columns also one `{"row": "cell", cell, book, values, positions}` a cell, and a column node lists its cells as its `books` (`CAPTURE:<id>` of such a node reads its cells' positions). Records written as `.json`, one document, are read as they are |
-| The published rows as JSON Lines | `<root>/risk-results/jsonl/var-official/<date>/var-official-v<n>.jsonl` (a file beside the official table, on the same storage: a folder or `s3://`; `<n>` the Delta version or the Iceberg snapshot id of the commit) | the rows of each publish commit, one a line (`drishti.var.official.jsonl`, on by default) |
+| The published rows as JSON Lines | `<root>/risk-results/jsonl/var-official/<date>/var-official-v<n>.jsonl` (a file beside the official table, on the same storage: a folder or `s3://`; `<n>` the version of the commit, Delta's table version or Iceberg's sequence number) | the rows of each publish commit, one a line (`drishti.var.official.jsonl`, on by default) |
 
 The rates desk's entry in the official record of 2026-09-30:
 
@@ -4222,7 +4222,7 @@ moved to `<data>/connectors/history/` by the next build, and the server writes t
 | Format | Append-only | 7 years |
 |---|---|---|
 | Delta | `delta.appendOnly=true`; each commit file on S3 an exclusive create (a conditional PUT through lake-io), so two servers publishing at once both land, the second on the next version | `delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days` |
-| Iceberg | append commits only; `drishti.append-only=true` on the table | `history.expire.max-snapshot-age-ms` of 2,557 days; `write.metadata.delete-after-commit.enabled=false` (every metadata file kept) |
+| Iceberg | append commits only; `lake.append-only=true` on the table (one setting for both formats; Drishti Lake writes each format's own property) | `history.expire.max-snapshot-age-ms` of 2,557 days (`lake.retention-hours` 61,368) |
 
 ```yaml
 drishti:

@@ -59,12 +59,6 @@ final class DeltaSink implements OfficialSink {
         return settings;
     }
 
-    /** The Delta properties a table is created with: the retention of log and removed files, append only. */
-    Map<String, String> properties() {
-        return Map.of("delta.logRetentionDuration", "interval " + retentionDays + " days",
-                "delta.deletedFileRetentionDuration", "interval " + retentionDays + " days", "delta.appendOnly", "true");
-    }
-
     @Override
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
@@ -79,6 +73,6 @@ final class DeltaSink implements OfficialSink {
         }
         String where = where(table);
         String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
-        return LakeRowsLoad.load("delta", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), properties(), settings);
+        return LakeRowsLoad.load("delta", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), OfficialSink.properties(retentionDays), settings);
     }
 }

@@ -963,3 +963,14 @@ Environment: the pinned Lake 0.9.1 wheel (sha-256 as in `lib/lake-wheel.pin`) in
 | Business-date rule in the console | the lake upload reads `drishti_lake.filedate` (the deleted `tools/lake/filedate.py` made the date silently absent) |
 | Docs and generated files | PDFs, README code volume and the sizing planner (workbook, template, vectors) regenerated; `test_docs_rot` reads the engines' own files and the modules' `settings:` for the settings that exist; links and paths of the embed v1 removal fixed; unused pictures of the host pages deleted |
 | Stale tests | retired help addresses answer 404 (no aliases), the 1.2.0 parity cases of the Node tests went with the frozen renderer, the Data Protocol refuses a table of a kind with no inputs in words at the table, scores' ids in capitals |
+
+### Gate 4 fixes: Lake 0.9.1 final candidate 336524b (`g4/lake-336` from `wip/g4-rehearsal-rx`)
+
+| Item | What was done |
+|---|---|
+| Re-pin | Lake `develop` `336524bf898c8cf3c66a2ee41c9dd8b5593ec7dc` (version 0.9.1: the Maven version is unchanged, so the root `pom.xml` and `testing/drishti-testroots/pom.xml` stay equal); `lib/lake-wheel.pin` ref and SHA-256 `81241d9c...f60a16` (wheel built from that commit, not byte-identical to the earlier one) |
+| One property map | `OfficialSink.properties(retentionDays)`: `lake.append-only=true` and `lake.retention-hours` (7 years = 61,368), shared by `DeltaSink` and `IcebergSink`; Lake writes each format's own property (Delta `delta.appendOnly` and the retention pair, Iceberg `lake.append-only` and `history.expire.max-snapshot-age-ms`). The old `drishti.append-only` prefix is gone; `write.metadata.delete-after-commit.enabled` is no longer set (Iceberg's default is already false) |
+| `OfficialSinkTest` | the full Iceberg properties assertion is back (retention in ms, `lake.append-only`), and `v2 > v1` is asserted for Iceberg as for Delta; `describe` says "Iceberg version N" (Iceberg's version is now its sequence number; the JSON Lines file is `-v<version>`); VAR and Exposure guides say so |
+| `ManifestLoad` | `overwrite-partitions` is passed through to the loader (each part of a date replaces its own partition); `overwrite-dates` stays `replace-date`. `lake build`/`lake demo` are unchanged (decision): `--mode overwrite-partitions` stays the Python deltalake path's, so `load-day.sh`, `backfill.sh` and the CLUSTER and OPERATIONS guides read as before |
+| Spotless | the unused imports of `ModuleHomes` (and 60 other files with the same fault) removed, so builds run with spotless |
+| `LakeFileWritesTest` | its lake file names `${lake.data.dir}` (Lake refuses a lake file's `${drishti.x}`) |

@@ -30,8 +30,8 @@ import java.util.function.Function;
  * Drishti Lake's loader (no Hadoop; a local folder or {@code s3://}, a commit being an exclusive create of the next metadata file), in the
  * connector's layout (rows {@code id, doc, business_date} and the published columns beside them, an identity partition on
  * {@code business_date}). Append-only by convention: this sink only ever appends (no overwrite operation is offered), a restated date
- * adds rows with the next {@code RESULT_VERSION}. Table properties: snapshots kept {@code retention} days
- * ({@code history.expire.max-snapshot-age-ms}), old metadata files never removed after a commit, and {@code drishti.append-only}.
+ * adds rows with the next {@code RESULT_VERSION}. Table properties: the same two as the Delta tables
+ * ({@link OfficialSink#properties}): append only and the retention, which Drishti Lake sets as Iceberg's own properties.
  * Text columns are strings and every number a double ({@code RESULT_VERSION} 2 reads 2.0): the layout's two column types.
  */
 final class IcebergSink implements OfficialSink {
@@ -62,12 +62,6 @@ final class IcebergSink implements OfficialSink {
         return settings;
     }
 
-    /** The table properties every append sets (kept as they are when already so). */
-    Map<String, String> properties() {
-        return Map.of("history.expire.max-snapshot-age-ms", String.valueOf(retentionDays * 86_400_000L),
-                "write.metadata.delete-after-commit.enabled", "false", "drishti.append-only", "true");
-    }
-
     @Override
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
@@ -82,6 +76,6 @@ final class IcebergSink implements OfficialSink {
         }
         String where = where(table);
         String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
-        return LakeRowsLoad.load("iceberg", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), properties(), settings);
+        return LakeRowsLoad.load("iceberg", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), OfficialSink.properties(retentionDays), settings);
     }
 }
