@@ -81,7 +81,8 @@ public class EditionConfiguration {
         if (dir == null || !java.nio.file.Files.isDirectory(dir)) {
             return out;
         }
-        try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.walk(dir, 2)) {
+        // a linked folder is followed (a site whose config/lenses, or one module's folder in it, is a link to the shipped files)
+        try (java.util.stream.Stream<java.nio.file.Path> s = java.nio.file.Files.walk(dir, 2, java.nio.file.FileVisitOption.FOLLOW_LINKS)) {
             s.filter(f -> f.getFileName().toString().endsWith(".yaml") && java.nio.file.Files.isRegularFile(f)).forEach(f -> {
                 String lens = f.getFileName().toString().replaceAll("\\.yaml$", "");
                 out.putIfAbsent(lens, f.getParent().equals(dir) ? "" : f.getParent().getFileName().toString());

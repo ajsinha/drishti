@@ -98,4 +98,22 @@ class LensOfferTest {
         assertThat(o.problems().get(0)).contains("lens 'research' is not offered", "module it needs is off", "Fix:");
         assertThat(o.problems().get(1)).contains("lens 'nosuch' is not offered", "no lens file", "Fix:");
     }
+
+    /**
+     * The lens files are found through a linked folder: a site (and the browser tests' servers) may link config/lenses, or one module's
+     * folder in it, to the shipped files; banking's lenses are known by their files only, so a link not followed dropped them from Home.
+     */
+    @Test
+    void lensFilesAreFoundThroughALinkedFolder(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        java.nio.file.Path shipped = java.nio.file.Files.createDirectories(tmp.resolve("shipped/banking"));
+        java.nio.file.Files.writeString(shipped.resolve("risk.yaml"), "edition: risk\n");
+        java.nio.file.Files.createDirectories(tmp.resolve("shipped/economy"));
+        java.nio.file.Files.writeString(tmp.resolve("shipped/economy/world.yaml"), "edition: world\n");
+        java.nio.file.Path site = java.nio.file.Files.createDirectories(tmp.resolve("site"));
+        java.nio.file.Files.createSymbolicLink(site.resolve("lenses"), tmp.resolve("shipped"));                  // the whole folder linked
+        assertThat(EditionConfiguration.lensFiles(site.resolve("lenses"))).containsEntry("risk", "banking").containsEntry("world", "economy");
+        java.nio.file.Path mixed = java.nio.file.Files.createDirectories(tmp.resolve("mixed"));
+        java.nio.file.Files.createSymbolicLink(mixed.resolve("banking"), shipped);                               // one module's folder linked
+        assertThat(EditionConfiguration.lensFiles(mixed)).containsEntry("risk", "banking");
+    }
 }
