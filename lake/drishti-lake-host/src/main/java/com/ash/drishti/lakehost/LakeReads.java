@@ -17,8 +17,8 @@ package com.ash.drishti.lakehost;
 
 import com.ash.drishti.api.UnreadableData;
 import com.ash.lake.LakeRuntime;
-import com.ash.lake.io.PageDecodeException;
-import com.ash.lake.io.UnsupportedCodec;
+import com.ash.lake.LakeError;
+import com.ash.lake.LakeException;
 import com.ash.lake.read.LakeAddress;
 import com.ash.lake.read.LakeReader;
 import com.ash.lake.read.ReadProblems;
@@ -50,18 +50,18 @@ public final class LakeReads {
     }
 
     /**
-     * What a read of {@code where} ({@code log} or a business date) of the kind's table throws: an {@link UnreadableData} saying what
-     * to do when the cause is one the reader can act on (a codec the engine does not decompress, a page that does not decode), else the
-     * failure itself.
+     * What a read of {@code where} ({@code log} or a business date) of the kind's table throws: an {@link UnreadableData} when Drishti Lake says the
+     * data cannot be read ({@code LK-1006}: a codec it does not decompress, a page that does not decode, a moved table), an expected condition shown as
+     * words without a stack trace, else the failure itself.
      */
     public static RuntimeException failure(String kind, String where, Throwable e) {
         if (e instanceof UnreadableData u) {
             return u;
         }
         for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
-            if (c instanceof UnsupportedCodec || c instanceof PageDecodeException) {
+            if (c instanceof LakeException l && l.error() == LakeError.UNREADABLE) {
                 String at = kind + ("log".equals(where) ? " (the table's log)" : " " + where);
-                return new UnreadableData(at + " cannot be read: " + c.getMessage(), e);
+                return new UnreadableData(at + " cannot be read: " + c.getMessage().replaceFirst("^LK-\\d+ ", ""), e);
             }
         }
         if (e instanceof RuntimeException r) {
@@ -71,6 +71,14 @@ public final class LakeReads {
             return new UncheckedIOException(io);
         }
         return new IllegalStateException(e);
+    }
+
+    /**
+     * A read that Drishti Lake failed: {@code LK-1006} (data that cannot be read) as an {@link UnreadableData} in Lake's own words (they already name the table and
+     * what to do; no folder, no stack trace for an expected condition), any other failure as it is.
+     */
+    public static RuntimeException unreadable(LakeException e) {
+        return e.error() == LakeError.UNREADABLE ? new UnreadableData(e.getMessage().replaceFirst("^LK-\\d+ ", ""), e) : e;
     }
 
     /** A connector's listings: the kinds whose ids its last reindex could not rebuild, and what it lists meanwhile. */

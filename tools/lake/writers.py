@@ -12,16 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The two engines that write a staged table into Delta Lake: the second half of ``lake build``.
+"""The Python engine that writes a staged table into Delta Lake: the second half of ``lake build`` (the parallel Java loader, ``javaload``, is the other
+engine; it is Drishti Lake's loader, the one way a host writes rows with Java).
 
-``drishti``    Drishti's own Java writer, in the server's exec jar (``java -jar drishti-server-<v>-exec.jar lake write --manifest M``):
-               Delta Kernel and Parquet, no Python dependency; a whole table (every business date of the run) is ONE commit, so a
-               reader sees all of it or none of it; old files of a replaced date are removed in the same commit.
 ``deltalake``  the Python deltalake package (delta-rs) with pyarrow: one commit per business date and batch of rows (every partition
                of the date together; one per partition with ``overwrite-partitions``), a checkpoint every ten commits; the first
                batch of a replaced date or partition replaces it (``predicate`` overwrite), the next ones append.
 
-Both write the same table: ``id`` STRING, ``doc`` STRING (the whole document, nested arrays intact), ``business_date`` DATE, the
+It writes the same table the loader does: ``id`` STRING, ``doc`` STRING (the whole document, nested arrays intact), ``business_date`` DATE, the
 partition columns (STRING, Hive folders ``business_date=2026-10-01/desk=RATES/``) and the promoted columns (DOUBLE when every value
 is a number, else STRING; a vector column, ``layout.<kind>.vectors``, as ``list<double>``), partitioned by business_date then the
 partition columns."""
@@ -31,17 +29,11 @@ import json
 import os
 import pathlib
 import shutil
-import subprocess
 import sys
-import zipfile
 
 from stage import Part, list_texts, read_rows, row_line
 
-LAKE_CLASS = "com/ash/lake/delta/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-if str(ROOT / "tools") not in sys.path:
-    sys.path.append(str(ROOT / "tools"))
-from javacmd import java_cmd  # noqa: E402
 
 
 class WriteError(RuntimeError):
@@ -57,23 +49,6 @@ def predicate_for(day: str, names: list[str], values: tuple | None) -> str:
 
 
 # ------------------------------------------------------------------------------------------------ choosing an engine
-
-def jar_has_writer(jar: str) -> bool:
-    try:
-        with zipfile.ZipFile(jar) as z:
-            names = set(z.namelist())
-            if LAKE_CLASS in names:
-                return True
-            # a Spring Boot exec jar keeps the modules as nested jars
-            nested = [n for n in names if n.startswith("BOOT-INF/lib/lake-delta-") and n.endswith(".jar")]
-            for n in nested:
-                with z.open(n) as inner, zipfile.ZipFile(inner) as zi:
-                    if LAKE_CLASS in zi.namelist():
-                        return True
-    except (OSError, zipfile.BadZipFile):
-        return False
-    return False
-
 
 def find_jar(explicit: str | None = None) -> str | None:
     """--jar (a one-off run), else the newest drishti-server-*-exec.jar in <home>/lib, the one place Drishti's own jars are kept
@@ -107,35 +82,11 @@ def deltalake_available() -> bool:
         return False
 
 
-def java_command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
-    """How to start Drishti's writer, as (java, arguments): the server's exec jar (``java -jar J lake ...``), or for development a class
-    path in LAKE_CLASSPATH (``java -cp CP com.ash.lake.delta.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
-    java_bin = find_java(java)
-    if not java_bin:
-        return None
-    heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_HEAP", "1g")
-    cp = os.environ.get("LAKE_CLASSPATH")
-    if cp and not jar:
-        return java_bin, [heap, "-cp", cp, "com.ash.lake.delta.write.LakeCli"]
-    j = find_jar(jar)
-    if j and jar_has_writer(j):
-        return java_bin, [heap, "-jar", j]
-    return None
-
-
 def choose(engine: str, jar: str | None = None, java: str | None = None) -> tuple[str, str]:
-    """(engine, why): auto is Drishti's writer when a jar with it is found, else deltalake when it is installed."""
-    if engine in ("auto", "drishti"):
-        cmd = java_command(jar, java)
-        if cmd:
-            args = cmd[1]
-            return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "LAKE_CLASSPATH")
-        if engine == "drishti":
-            raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, or <home>/lib: "
-                             "python tools/drishti.py build jar) and Java 21")
+    """(engine, why): the Python deltalake package, when it is installed (the parallel Java loader is chosen before this, by ``javaload``)."""
     if deltalake_available():
-        return "deltalake", "the Python deltalake package" + ("; no server jar with the lake writer was found" if engine == "auto" else "")
-    raise WriteError("no engine: build the server (its exec jar carries Drishti's writer) or install deltalake and pyarrow "
+        return "deltalake", "the Python deltalake package" + ("; the parallel lake loader was not found" if engine == "auto" else "")
+    raise WriteError("no engine: build the server (its exec jar carries Drishti Lake's loader) or install deltalake and pyarrow "
                      "(uv run --with deltalake --with pyarrow ...)")
 
 
@@ -317,57 +268,3 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
         flush()
     version = DeltaTable(t.uri).version() if exists else None
     return {"commits": commits, "version": version}
-
-
-# ------------------------------------------------------------------------------------------------ Drishti's Java writer
-
-def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None = None, java: str | None = None, progress=None) -> dict:
-    check_layout(t)
-    base = java_command(jar, java)
-    if not base:
-        raise WriteError("Drishti's writer needs the server's exec jar and Java 21")
-    if t.sort:                                          # the Java writer reads each part's file as it is: sort the small ones here
-        for parts in by_day.values():
-            for part in parts:
-                if part.rows <= t.batch_rows:
-                    rows = next(_chunks(t, part), [])
-                    with open(part.file, "w", encoding="utf-8") as fh:
-                        for r in rows:
-                            fh.write(row_line(*r))
-    manifest = {
-        "table": str(pathlib.Path(t.uri).resolve()),
-        "partitionColumns": t.partition_by,
-        "columns": [{"name": "id", "type": "string"}, {"name": "doc", "type": "string"}, {"name": "business_date", "type": "date"},
-                    *[{"name": n, "type": "string"} for n in t.partition_names],
-                    *[{"name": n, "type": k} for n, k in t.promoted.items()]],
-        "promoted": list(t.promoted),
-        "mode": t.mode,
-        "batchRows": t.batch_rows,
-        "statsColumns": t.stats_columns,
-        "properties": retention_properties(t.uri),
-        "parts": [{"file": str(p.file.resolve()), "rows": p.rows,
-                   "values": {"business_date": d.isoformat(), **{n: v for n, v in zip(t.partition_names, p.values)}}}
-                  for d, parts in by_day.items() for p in parts],
-    }
-    mf = workdir / "manifest.json"
-    mf.write_text(json.dumps(manifest), encoding="utf-8")
-    # the writer's temporary files go beside the staged rows, in the lake, never the system temp folder: drishti.tmp-dir for Drishti's own,
-    # -Djava.io.tmpdir= (javacmd) for the native libraries it unpacks, which only the command line moves
-    java_bin, args = base
-    cmd = java_cmd(java_bin, [f"-Ddrishti.tmp-dir={workdir / 'tmp'}", *args, "lake", "write", "--manifest", str(mf)], tmp=workdir / "tmp")
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    result: dict = {}
-    total = len(manifest["parts"])
-    for line in proc.stdout:
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        msg = json.loads(line)
-        if "partsDone" in msg and progress:
-            progress(msg["partsDone"], total)
-        if msg.get("done"):
-            result = msg
-    err = proc.stderr.read()
-    if proc.wait() != 0:
-        raise WriteError("Drishti's writer failed: " + (err.strip().splitlines()[-1] if err.strip() else f"exit {proc.returncode}"))
-    return {"commits": result.get("commits", 1), "version": result.get("version"), "files": result.get("files")}

@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.duckdb;
 import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import java.io.IOException;

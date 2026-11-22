@@ -104,7 +104,7 @@ class OneTablePerSystemTest {
             String table = com.ash.lake.config.PackEntry.read(com.ash.drishti.lakehost.DrishtiLake.runtime(), pack, "trade", connector).table();
             assertThat(table).as(s + ": the table its connector names").isEqualTo("trade_" + s);
             Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack
-                    + "'\n  connector: " + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n  table: " + table + "\n");
+                    + "'\n  connector: " + connector + "\ntarget:\n  format: delta\n  path: '" + lake + "/trading/" + table + "'\n  domain: trading\n  kind: trade\n  table: " + table + "\n");
             ByteArrayOutputStream said = new ByteArrayOutputStream();
             assertThat(LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
                     .as(s + ": " + said.toString(StandardCharsets.UTF_8)).isZero();

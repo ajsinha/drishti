@@ -15,15 +15,13 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
-import com.ash.lake.iceberg.table.IcebergAppender;
+import com.ash.drishti.lakehost.LakeRowsLoad;
 
 import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.lake.delta.write.LakeManifest;
-import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.lake.tck.s3.S3MockServer;
@@ -46,8 +44,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The official results' two writers on {@code s3://} (2.9.5; the server's OfficialSink is built on them: before, an S3 root ended in
- * {@code publishError}), on S3Mock in this JVM (no Docker, no binary): Drishti's Delta writer through drishti-lakeio
- * ({@link LakeWriter#forTable}, each commit file an exclusive create) and {@link IcebergAppender} (drishti-iceberg), each appending a
+ * {@code publishError}), on S3Mock in this JVM (no Docker, no binary): Drishti Lake's loader into a Delta
+ * table (each commit file an exclusive create) and into an Iceberg table, each appending a
  * date twice as two separate writers (two servers), the rows read back through the connector of the format and the same in both.
  */
 class OfficialS3Test {
@@ -102,34 +100,21 @@ class OfficialS3Test {
     }
 
     private long delta(String table, int version) throws Exception {
-        Path staged = Files.createTempFile(tmp, "official", ".rows");
-        List<String> lines = new ArrayList<>();
+        return LakeRowsLoad.load("delta", table, "risk-results", "var-official", DAY, "append", loadRows(version), List.of("NODE_ID", "RESULT_VERSION", "VAR"),
+                List.of(), Map.of("delta.appendOnly", "true"), storage());      // a new load each time: another server
+    }
+
+    private List<LakeRowsLoad.Row> loadRows(int version) throws Exception {
+        List<LakeRowsLoad.Row> out = new ArrayList<>();
         for (Map<String, Object> r : rows(version)) {
-            lines.add(JSON.writeValueAsString(Map.of("id", id(r), "doc", doc(r), "columns", r)));
+            out.add(new LakeRowsLoad.Row(id(r), doc(r), r));
         }
-        Files.write(staged, lines, StandardCharsets.UTF_8);
-        List<LakeManifest.Column> cols = List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"),
-                new LakeManifest.Column("business_date", "date"), new LakeManifest.Column("NODE_ID", "string"),
-                new LakeManifest.Column("RESULT_VERSION", "double"), new LakeManifest.Column("VAR", "double"));
-        LakeManifest m = new LakeManifest(table, List.of("business_date"), cols, List.of("NODE_ID", "RESULT_VERSION", "VAR"), "append", 10_000,
-                List.of("id", "business_date"), List.of(new LakeManifest.Part(staged, 2, Map.of("business_date", DAY.toString()))),
-                Map.of("delta.appendOnly", "true"));
-        return LakeWriter.forTable(com.ash.drishti.lakehost.DrishtiLake.runtime(), table, storage()).write(m, x -> { }).version();      // a new writer each time: another server
+        return out;
     }
 
     private long iceberg(String root, int version) throws Exception {
-        List<IcebergAppender.Row> out = new ArrayList<>();
-        for (Map<String, Object> r : rows(version)) {
-            out.add(new IcebergAppender.Row(id(r), doc(r), r));
-        }
-        Map<String, String> s = new HashMap<>(storage());
-        s.put("root", root);
-        Map<String, Boolean> promoted = new LinkedHashMap<>();
-        promoted.put("NODE_ID", false);
-        promoted.put("RESULT_VERSION", true);
-        promoted.put("VAR", true);
-        return IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), s, "risk-results", "var-official", DAY, out, promoted, Set.of(),
-                Map.of("write.metadata.delete-after-commit.enabled", "false"));
+        return LakeRowsLoad.load("iceberg", root + "/risk-results/var-official", "risk-results", "var-official", DAY, "append", loadRows(version),
+                List.of("NODE_ID", "RESULT_VERSION", "VAR"), List.of(), Map.of("write.metadata.delete-after-commit.enabled", "false"), storage());
     }
 
     private Map<String, Object> read(SourcePlugin p, String root) throws Exception {
@@ -153,7 +138,7 @@ class OfficialS3Test {
         assertThat(d2).as("the second writer committed the next version").isEqualTo(d1 + 1);
         long i1 = iceberg("s3://lake/iceberg-results", 1);
         long i2 = iceberg("s3://lake/iceberg-results", 2);
-        assertThat(i2).isGreaterThan(i1);
+        assertThat(i2).as("a new snapshot").isNotEqualTo(i1);
         Map<String, Object> fromDelta = read(new DeltaSourcePlugin(), "s3://lake/delta-results");
         Map<String, Object> fromIceberg = read(new IcebergSourcePlugin(), "s3://lake/iceberg-results");
         assertThat(fromDelta).hasSize(4).containsKeys("MGMT~BANK@2026-09-30#v1", "LL~LL-A@2026-09-30#v2");
@@ -162,12 +147,9 @@ class OfficialS3Test {
                 .contents().stream().map(o -> o.key()).toList();
         assertThat(log).anyMatch(k -> k.endsWith("00000000000000000001.json"));
         // a commit file is an exclusive create: a second create of a version that exists is refused (the loser retries on the next)
-        var storage = new com.ash.lake.io.S3Storage(com.ash.lake.io.S3Settings.from(storage()));
-        try {
-            assertThat(storage.createIfAbsent("s3://lake/delta-results/risk-results/var-official/_delta_log/00000000000000000001.json",
+        try (var files = com.ash.lake.load.LakeStorage.open(com.ash.drishti.lakehost.DrishtiLake.runtime(), storage())) {
+            assertThat(files.storage("s3://lake/delta-results").createIfAbsent("s3://lake/delta-results/risk-results/var-official/_delta_log/00000000000000000001.json",
                     "{}".getBytes(StandardCharsets.UTF_8))).isFalse();
-        } finally {
-            storage.close();
         }
     }
 }

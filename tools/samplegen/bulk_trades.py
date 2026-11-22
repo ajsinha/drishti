@@ -211,7 +211,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--out", default=(os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")) + "/build/bulk",
                     help="where the JSONL files go: <out>/<system>/trade_<system>.<date>.jsonl.gz (default <data>/build/bulk)")
     ap.add_argument("--no-lake", action="store_true", help="write the JSONL files only; load them later with drishti.py lake build")
-    ap.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer lake build uses (default auto)")
+    ap.add_argument("--engine", default="auto", choices=("auto", "deltalake"), help="the lake writer lake build uses (default auto)")
     a = ap.parse_args(argv)
     if not a.root:
         sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lake"))

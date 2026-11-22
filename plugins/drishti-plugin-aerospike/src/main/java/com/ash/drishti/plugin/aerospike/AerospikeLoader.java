@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.aerospike;
 import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;

@@ -39,7 +39,7 @@ import org.postgresql.PGConnection;
 import com.ash.drishti.api.pool.PoolSettings;
 import com.ash.drishti.api.pool.ResourcePool;
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 
 /**
  * Loads rows into PostgreSQL in {@link PostgresLayout}: {@code java -cp <plugin classpath>

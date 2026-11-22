@@ -419,24 +419,6 @@ class BuildTest(unittest.TestCase):
         self.assertFalse(stamp.exists())
 
 
-@unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set LAKE_CLASSPATH")
-class DrishtiEngineTest(BuildTest):
-    """The same runs through Drishti's Java writer; deltalake reads what it wrote (the two engines agree on the table)."""
-
-    def base(self, **kw):
-        return super().base(**{"engine": "drishti", **kw})
-
-    def test_write_partitions_promoted_columns_and_hive_folders(self):
-        super().test_write_partitions_promoted_columns_and_hive_folders()
-        self.assertEqual(self.table().version(), 0)                    # one commit for the whole table
-
-    def test_as_of_and_batches(self):
-        code, s = build.run(self.base(date=None, as_of="2026-09-30", partition_by=None, batch_rows=40), quiet)
-        self.assertEqual(code, 0, s.get("error"))
-        self.assertEqual(s["commit"]["commits"], 1)
-        self.assertEqual(len(self.table().to_pyarrow_table()), 300)
-
-
 class CommandLineTest(unittest.TestCase):
 
     def test_drishti_py_lake_build_scan_and_status(self):

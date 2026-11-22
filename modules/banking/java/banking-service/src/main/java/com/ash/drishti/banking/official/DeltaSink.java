@@ -15,15 +15,9 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.drishti.common.TempFiles;
-import com.ash.lake.delta.write.LakeManifest;
-import com.ash.lake.delta.write.LakeWriter;
+import com.ash.drishti.lakehost.LakeRowsLoad;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -32,10 +26,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The official results as Delta tables (the default): one Delta commit per append by Drishti's own lake writer, the table created
+ * The official results as Delta tables (the default): one Delta commit per append by Drishti Lake's loader, the table created
  * {@code delta.appendOnly} with {@code retention} days of log and of removed files (time travel reaches back that far), partitioned by
- * {@code business_date}. A local root is written as before 2.9.5; an {@code s3://} root through drishti-lakeio, each commit file an
- * exclusive create, so of two writers committing at once one retries on the newer version ({@link LakeWriter#forTable}).
+ * {@code business_date}. A local root or an {@code s3://} root alike: each commit file is an exclusive create, so of two writers committing at once
+ * one retries on the newer version (Drishti Lake's loader).
  */
 final class DeltaSink implements OfficialSink {
 
@@ -75,38 +69,16 @@ final class DeltaSink implements OfficialSink {
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
         sameFormat(table);
-        Path staged = TempFiles.createFile(table + "-", ".rows");
-        try {
-            try (BufferedWriter w = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
-                for (Map<String, Object> r : rows) {
-                    Map<String, Object> promoted = new LinkedHashMap<>();
-                    columns.keySet().forEach(c -> promoted.put(c, r.get(c)));
-                    Map<String, Object> doc = new LinkedHashMap<>(promoted);
-                    doc.put("BUSINESS_DATE", date.toString());
-                    Map<String, Object> line = new LinkedHashMap<>();      // one {id, doc, columns} a line (LakeWriter)
-                    line.put("id", id.apply(r));
-                    line.put("doc", JSON.writeValueAsString(doc));
-                    line.put("columns", promoted);
-                    w.write(JSON.writeValueAsString(line));
-                    w.newLine();
-                }
-            }
-            List<LakeManifest.Column> cols = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"),
-                    new LakeManifest.Column("doc", "string"), new LakeManifest.Column("business_date", "date")));
-            columns.forEach((c, t) -> cols.add(new LakeManifest.Column(c, t)));
-            List<String> stats = new ArrayList<>(List.of("id", "business_date"));
-            for (String c : List.of("NODE_ID", "COUNTERPARTY", "RESULT_VERSION")) {
-                if (columns.containsKey(c)) {
-                    stats.add(c);
-                }
-            }
-            String where = where(table);
-            String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
-            LakeManifest m = new LakeManifest(path, List.of("business_date"), cols, List.copyOf(columns.keySet()), "append", 10_000, stats,
-                    List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", date.toString()))), properties());
-            return LakeWriter.forTable(com.ash.drishti.lakehost.DrishtiLake.runtime(), path, settings).write(m, x -> { }).version();
-        } finally {
-            Files.deleteIfExists(staged);
+        List<LakeRowsLoad.Row> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            Map<String, Object> promoted = new LinkedHashMap<>();
+            columns.keySet().forEach(c -> promoted.put(c, r.get(c)));
+            Map<String, Object> doc = new LinkedHashMap<>(promoted);
+            doc.put("BUSINESS_DATE", date.toString());
+            out.add(new LakeRowsLoad.Row(id.apply(r), JSON.writeValueAsString(doc), promoted));
         }
+        String where = where(table);
+        String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
+        return LakeRowsLoad.load("delta", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), properties(), settings);
     }
 }

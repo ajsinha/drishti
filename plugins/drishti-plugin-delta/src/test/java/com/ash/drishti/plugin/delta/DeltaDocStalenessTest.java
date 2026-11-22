@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.IdMapFolder;
-import com.ash.lake.delta.write.LakeCli;
+import com.ash.drishti.testkit.ManifestLoad;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -75,7 +75,7 @@ class DeltaDocStalenessTest {
         Path mf = Files.createTempFile(tmp, "manifest", ".json");
         Files.writeString(mf, m.toString());
         ByteArrayOutputStream err = new ByteArrayOutputStream();
-        int code = LakeCli.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
+        int code = ManifestLoad.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
                 new PrintStream(err, true, StandardCharsets.UTF_8));
         assertThat(code).as(err.toString(StandardCharsets.UTF_8)).isZero();
     }

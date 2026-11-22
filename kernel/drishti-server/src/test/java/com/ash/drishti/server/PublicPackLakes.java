@@ -16,8 +16,6 @@
 package com.ash.drishti.server;
 
 import com.ash.lake.tck.TestRoots;
-import com.ash.lake.delta.write.LakeManifest;
-import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -170,20 +168,18 @@ final class PublicPackLakes {
             lines.add(JSON.writeValueAsString(List.of(e.getKey(), JSON.writeValueAsString(e.getValue()), cols)));
         }
         Files.write(rows, lines, StandardCharsets.UTF_8);
-        List<LakeManifest.Column> columns = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"),
-                new LakeManifest.Column("business_date", "date")));
         List<String> names = new ArrayList<>();
         for (String p : promoted) {
-            columns.add(new LakeManifest.Column(p.replace(".", "__"), numeric.get(p) ? "double" : "string"));
             names.add(p.replace(".", "__"));
         }
-        List<String> stats = new ArrayList<>(List.of("id", "business_date"));
-        stats.addAll(names);
-        List<LakeManifest.Part> parts = new ArrayList<>();
+        ObjectNode m = JSON.createObjectNode().put("table", table.toString()).put("mode", "overwrite-dates");
+        m.set("promoted", JSON.valueToTree(names));
+        var parts = m.putArray("parts");
         for (LocalDate day : days()) {
-            parts.add(new LakeManifest.Part(rows, docs.size(), Map.of("business_date", day.toString())));
+            parts.addObject().put("file", rows.toString()).putObject("values").put("business_date", day.toString());
         }
-        new LakeWriter(com.ash.drishti.lakehost.DrishtiLake.runtime()).write(new LakeManifest(table.toString(), List.of("business_date"), columns, names, "overwrite-dates", 5_000, stats, parts),
-                done -> { });
+        Path manifest = rows.resolveSibling(rows.getFileName() + ".manifest.json");
+        Files.writeString(manifest, m.toString());
+        com.ash.drishti.testkit.ManifestLoad.run(manifest);               // each day replaced, by Drishti Lake's loader
     }
 }

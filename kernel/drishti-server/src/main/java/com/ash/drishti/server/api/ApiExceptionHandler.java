@@ -80,7 +80,7 @@ public class ApiExceptionHandler {
         if (e instanceof DrishtiException x) {
             return drishti(x);
         }
-        if (e instanceof com.ash.lake.common.LakeException x && drishti(x) != null) {
+        if (e instanceof com.ash.lake.LakeException x && drishti(x) != null) {
             return lake(x);
         }
         if (e instanceof com.ash.rachana.RachanaException x && drishti(x) != null) {
@@ -218,8 +218,8 @@ public class ApiExceptionHandler {
      * the lake's words: a bad request {@code DRS-5001}, a file not there {@code DRS-1001}, too large {@code DRS-5005}, a refused
      * {@code .ready} {@code DRS-5008}, memory-only data {@code 403 DRS-5219}. {@code LK-1006} (unreadable data) is not mapped here.
      */
-    @ExceptionHandler(com.ash.lake.common.LakeException.class)
-    ProblemDetail lake(com.ash.lake.common.LakeException e) {
+    @ExceptionHandler(com.ash.lake.LakeException.class)
+    ProblemDetail lake(com.ash.lake.LakeException e) {
         DrishtiException d = drishti(e);
         if (d == null) {
             throw e;
@@ -228,7 +228,7 @@ public class ApiExceptionHandler {
     }
 
     /** A lake refusal as Drishti's own exception (its words without the lake's code), null for one Drishti does not map. */
-    static DrishtiException drishti(com.ash.lake.common.LakeException e) {
+    static DrishtiException drishti(com.ash.lake.LakeException e) {
         ErrorCode code = switch (e.error()) {
             case BAD_REQUEST -> ErrorCode.BAD_REQUEST;
             case NOT_FOUND -> ErrorCode.ENTITY_NOT_FOUND;

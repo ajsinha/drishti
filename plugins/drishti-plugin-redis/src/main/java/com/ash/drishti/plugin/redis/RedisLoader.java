@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.redis;
 import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.common.LoadLine;
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.tools.time.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;

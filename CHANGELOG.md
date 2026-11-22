@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+- **Removed: the embed scopes `embed:report` and `embed:search`**, `GET /api/v1/embed/search`, `drishti.embed.search.*` and `drishti.embed.limits.searches-per-user-per-minute`: embed v1 was deleted and nothing calls them; the scope list is `embed:view` and `embed:about`.
+
 - **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.
 
 - **i7b documents.** The developer quickstart, the deployment and QA guide (with the QA figures VaR 167,372,692 and ES 210,131,972 for the bank on

@@ -16,17 +16,11 @@
 package com.ash.drishti.banking.var;
 
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.common.TempFiles;
 import com.ash.drishti.banking.compute.var.VarBook;
-import com.ash.lake.delta.write.LakeManifest;
-import com.ash.lake.delta.write.LakeWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -292,54 +286,28 @@ final class VarPvStream {
         return null;
     }
 
-    /** Appends one kind's rows to its table as one commit (the same writer and layout as {@code lake build}). */
+    /** Appends one kind's rows to its table as one commit (the lake's own loader, the same layout as {@code lake build}). */
     private void write(String kind, LocalDate day, List<ObjectNode> rows) throws IOException {
         String vector = kind.equals("scenario-pv") ? "SCENARIO_PV" : "PNL";
         String key = kind.equals("scenario-pv") ? "SCENARIO_PV_ID" : "VECTOR_ID";
         List<String> promoted = columns.apply(kind, "columns");
-        Path staged = TempFiles.createFile("var-pv-", ".rows");
         boolean iceberg = com.ash.drishti.banking.official.LakeAppends.iceberg(lake, "risk", kind);   // 2.9.5: an Iceberg risk lake
-        List<com.ash.lake.iceberg.table.IcebergAppender.Row> appends = new ArrayList<>();
-        try {
-            Map<String, String> types = new LinkedHashMap<>();
-            try (BufferedWriter out = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
-                for (ObjectNode r : rows) {
-                    Map<String, Object> cols = new LinkedHashMap<>();
-                    for (String c : promoted) {
-                        JsonNode x = r.get(c);
-                        cols.put(c, x == null || x.isNull() ? null : x.isNumber() ? x.asDouble() : x.isContainerNode() ? JSON.writeValueAsString(x)
-                                : x.asText());                         // an array (TRADE_IDS) as JSON text, as lake build keeps it
-                        if (x != null && !x.isNull()) {
-                            types.merge(c, x.isNumber() ? "double" : "string", (a, b) -> a.equals(b) ? a : "string");
-                        }
-                    }
-                    cols.put(vector, r.get(vector) == null || r.get(vector).isNull() ? null : JSON.convertValue(r.get(vector), double[].class));
-                    ObjectNode doc = r.deepCopy();
-                    doc.set(vector, JSON.createObjectNode().put("$vector", vector));
-                    out.write(JSON.writeValueAsString(List.of(r.get(key).asText(), JSON.writeValueAsString(doc), cols)));
-                    out.newLine();
-                    if (iceberg) {
-                        Map<String, Object> ic = new LinkedHashMap<>(cols);
-                        ic.put(vector, cols.get(vector) == null ? null : java.util.Arrays.stream((double[]) cols.get(vector)).boxed().toList());
-                        appends.add(new com.ash.lake.iceberg.table.IcebergAppender.Row(r.get(key).asText(), JSON.writeValueAsString(doc), ic));
-                    }
-                }
-            }
-            if (iceberg) {                                             // the window as one Iceberg append (nothing replaced)
-                com.ash.drishti.banking.official.LakeAppends.appendIceberg(lake, "risk", kind, day, appends, types, vector);
-                return;
-            }
-            List<LakeManifest.Column> cs = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"),
-                    new LakeManifest.Column("business_date", "date")));
+        List<com.ash.drishti.lakehost.LakeRowsLoad.Row> appends = new ArrayList<>();
+        for (ObjectNode r : rows) {
+            Map<String, Object> cols = new LinkedHashMap<>();
             for (String c : promoted) {
-                cs.add(new LakeManifest.Column(c, types.getOrDefault(c, "string")));
+                JsonNode x = r.get(c);
+                cols.put(c, x == null || x.isNull() ? null : x.isNumber() ? x.asDouble() : x.isContainerNode() ? JSON.writeValueAsString(x)
+                        : x.asText());                                 // an array (TRADE_IDS) as JSON text, as lake build keeps it
             }
-            cs.add(new LakeManifest.Column(vector, "vector"));
-            LakeManifest m = new LakeManifest(lake.resolve("risk").resolve(kind).toString(), List.of("business_date"), cs, promoted, "append", 10_000,
-                    List.of("id", "business_date"), List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", day.toString()))), Map.of());
-            new LakeWriter(com.ash.drishti.lakehost.DrishtiLake.runtime()).write(m, x -> { });
-        } finally {
-            Files.deleteIfExists(staged);
+            cols.put(vector, r.get(vector) == null || r.get(vector).isNull() ? null
+                    : java.util.Arrays.stream(JSON.convertValue(r.get(vector), double[].class)).boxed().toList());
+            ObjectNode doc = r.deepCopy();
+            doc.set(vector, JSON.createObjectNode().put("$vector", vector));
+            appends.add(new com.ash.drishti.lakehost.LakeRowsLoad.Row(r.get(key).asText(), JSON.writeValueAsString(doc), cols));
         }
+        // the window as one append (nothing replaced: a window beside the morning's run), by the table's own format
+        com.ash.drishti.lakehost.LakeRowsLoad.load(iceberg ? "iceberg" : "delta", lake.resolve("risk").resolve(kind).toString(), "risk", kind, day,
+                "append", appends, promoted, List.of(vector), Map.of(), Map.of());
     }
 }

@@ -15,10 +15,9 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.lake.io.LocalPaths;
-import com.ash.lake.io.S3Settings;
-import com.ash.lake.io.S3Storage;
+import com.ash.drishti.lakehost.DrishtiLake;
 import com.ash.drishti.server.dist.JsonlWriter;
+import com.ash.lake.load.LakeStorage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -50,14 +49,14 @@ public interface OfficialSink {
         return root() + "/" + FOLDER + "/" + table;
     }
 
-    /** How the version an append returned is said: "Delta version 4", "Iceberg sequence number 4". */
+    /** How the version an append returned is said: "Delta version 4", "Iceberg snapshot 4". */
     default String describe(long version) {
-        return ("iceberg".equals(format()) ? "Iceberg sequence number " : "Delta version ") + version;
+        return ("iceberg".equals(format()) ? "Iceberg snapshot " : "Delta version ") + version;
     }
 
     /**
      * Appends one date's rows to the table in one commit, creating the table on the first write; returns the version written (Delta's
-     * table version, Iceberg's sequence number: both grow with every commit).
+     * table version, Iceberg's snapshot id: the commit's number).
      *
      * @param columns the published columns and their types ({@code string}, {@code long}, {@code double}), in order
      * @param rows the rows, each a map of {@code columns}
@@ -69,19 +68,16 @@ public interface OfficialSink {
     /** The JSON Lines of one commit beside the table: written whole, on the sink's storage. */
     default void writeJsonl(String table, LocalDate date, long version, List<? extends Map<String, ?>> docs) throws IOException {
         String path = root() + "/" + FOLDER + "/jsonl/" + table + "/" + date + "/" + table + "-v" + version + ".jsonl";
-        if (LocalPaths.isLocal(path)) {
-            JsonlWriter.writeFile(java.nio.file.Path.of(LocalPaths.toLocal(path, LocalPaths.WINDOWS)), docs);
+        if (LakeStorage.isLocal(path)) {
+            JsonlWriter.writeFile(LakeStorage.localPath(path), docs);
             return;
         }
         StringBuilder b = new StringBuilder();
         for (Map<String, ?> d : docs) {
             b.append(JsonlWriter.line(d)).append('\n');
         }
-        S3Storage s3 = new S3Storage(S3Settings.from(settings()));
-        try {
-            s3.put(path, b.toString().getBytes(StandardCharsets.UTF_8));
-        } finally {
-            s3.close();
+        try (LakeStorage files = LakeStorage.open(DrishtiLake.runtime(), settings())) {
+            files.storage(path).put(path, b.toString().getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -110,7 +106,7 @@ public interface OfficialSink {
 
     /** Whether the root is a local or shared folder (a {@code file:} path or a plain one). */
     static boolean local(String root) {
-        return LocalPaths.isLocal(root);
+        return LakeStorage.isLocal(root);
     }
 
     /**
@@ -127,12 +123,10 @@ public interface OfficialSink {
             delta = java.nio.file.Files.isDirectory(f.resolve("_delta_log"));
             iceberg = !delta && java.nio.file.Files.isDirectory(f.resolve("metadata"));
         } else {                                                       // an object store: a prefix with objects under it
-            S3Storage s3 = new S3Storage(S3Settings.from(settings()));
-            try {
+            try (LakeStorage files = LakeStorage.open(DrishtiLake.runtime(), settings())) {
+                com.ash.lake.spi.Storage s3 = files.storage(t);
                 delta = s3.isDirectory(t + "/_delta_log");
                 iceberg = !delta && s3.isDirectory(t + "/metadata");
-            } finally {
-                s3.close();
             }
         }
         if ("iceberg".equals(format()) ? delta : iceberg) {
@@ -143,6 +137,6 @@ public interface OfficialSink {
 
     /** A local root as a folder path. */
     static java.nio.file.Path folder(String root) {
-        return java.nio.file.Path.of(LocalPaths.toLocal(root, LocalPaths.WINDOWS));
+        return LakeStorage.localPath(root);
     }
 }

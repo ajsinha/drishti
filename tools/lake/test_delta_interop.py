@@ -19,7 +19,7 @@ string, a null) and a date partition (``business_date``).
 1. delta-rs writes, Drishti's Java reader reads (Delta Kernel on Drishti Lake's ``NativeEngine``, the server's lake reader): every row and
    every partition value equal.
 2. Drishti writes, delta-rs (``DeltaTable``) and ``pyarrow.dataset`` over the files read: every row equal. Drishti's writers are the
-   Java lake writer (``lake build --engine drishti``), the parallel Java loader (``--engine java``) and the Python path
+   the parallel Java loader (``--engine java``) and the Python path
    (``--engine deltalake``); each table is also read back by the Java reader.
 3. On disk: a Drishti Java writer names a partition folder with Hive escaping exactly as Spark does (a space and non-ASCII literal,
    ``"#%'*/:=?\\{[]^`` and control characters as %XX); every writer's ``add.path`` is a URI that decodes to the file's relative
@@ -319,10 +319,8 @@ def docs_folder(root: pathlib.Path) -> pathlib.Path:
     return src
 
 
-@pytest.mark.parametrize("engine", ["drishti", "java", "deltalake"])
+@pytest.mark.parametrize("engine", ["java", "deltalake"])
 def test_drishti_writes_and_delta_rs_and_the_java_reader_read(tmp_path, engine, java_reader, monkeypatch):
-    if engine == "drishti" and not writers.jar_has_writer(writers.find_jar() or ""):
-        pytest.skip("the exec jar has no lake writer")
     monkeypatch.setenv("DRISHTI_BI_STORE", str(tmp_path / "bi"))
     src = docs_folder(tmp_path)
     lake = tmp_path / "lake"

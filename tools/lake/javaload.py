@@ -22,7 +22,7 @@ its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, `
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
 
 The loader is the default: ``--engine auto`` tries it first (inputs JSON Lines, mode overwrite-dates or append, and an exec jar or
-LAKE_CLASSPATH that has it), then Drishti's Java writer, then deltalake; the message says which jar was looked for when it falls back. Java is started
+LAKE_CLASSPATH that has it), then deltalake; the message says which jar was looked for when it falls back. Java is started
 only through ``tools/javacmd.py``'s ``java_cmd``."""
 from __future__ import annotations
 

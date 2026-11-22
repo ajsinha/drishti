@@ -101,7 +101,7 @@ final class VarPublisher {
         return sink;
     }
 
-    /** "Delta version 4" or "Iceberg sequence number 4": the version a publish returned, as the record says it. */
+    /** "Delta version 4" or "Iceberg snapshot 4": the version a publish returned, as the record says it. */
     String describe(long version) {
         return sink.describe(version);
     }

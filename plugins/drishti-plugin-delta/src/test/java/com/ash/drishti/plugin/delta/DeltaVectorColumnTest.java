@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
-import com.ash.lake.delta.write.LakeCli;
+import com.ash.drishti.testkit.ManifestLoad;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -81,7 +81,7 @@ class DeltaVectorColumnTest {
         Path mf = tmp.resolve("manifest.json");
         Files.writeString(mf, m);
         ByteArrayOutputStream err = new ByteArrayOutputStream();
-        int code = LakeCli.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
+        int code = ManifestLoad.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
                 new PrintStream(err, true, StandardCharsets.UTF_8));
         assertThat(code).as(err.toString(StandardCharsets.UTF_8)).isZero();
         return want;

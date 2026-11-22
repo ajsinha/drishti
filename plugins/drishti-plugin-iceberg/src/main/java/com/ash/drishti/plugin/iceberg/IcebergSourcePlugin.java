@@ -364,6 +364,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             return t.snapshot(asOf);
         } catch (IOException e) {
             throw new java.io.UncheckedIOException(e);
+        } catch (com.ash.lake.LakeException e) {
+            throw com.ash.drishti.lakehost.LakeReads.unreadable(e);     // LK-1006: the words, no stack trace
         }
     }
 

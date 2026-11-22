@@ -23,8 +23,6 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.common.JsonCodec;
-import com.ash.lake.delta.write.LakeManifest;
-import com.ash.lake.delta.write.LakeWriter;
 import com.ash.drishti.engine.history.HistoryAnswer;
 import com.ash.drishti.engine.history.HistoryProperties;
 import com.ash.drishti.engine.history.HistoryService;
@@ -40,9 +38,7 @@ import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -61,7 +57,7 @@ import java.util.concurrent.Executors;
 
 /**
  * History queries' benchmark (DATA_ARCHITECTURE.md › History queries: an entity over time, section 19.4): {@code trades} synthetic trades (at most 10,000: the local limit) over
- * {@code days} business days in a Delta table written with Drishti's own writer under {@code target/} (never {@code data/}), deleted at the
+ * {@code days} business days in a Delta table written by Drishti Lake's loader under {@code target/} (never {@code data/}), deleted at the
  * end. For {@code sample} random trades it measures, at the history service: the 30-day history cold (first read of each trade's
  * documents), warm (documents cached), the cached answer, and the default per-day loop (the connector's {@code days()} hidden) against the
  * Delta fast path. It exits 1 when the warm median passes 150 ms or the cold p95 passes 400 ms.
@@ -233,7 +229,6 @@ public final class HistoryBench {
     }
 
     private static void write(Path root, int trades, List<LocalDate> dates) throws IOException {
-        Path staged = Files.createDirectories(root.resolve("staged"));
         ObjectMapper json = new ObjectMapper();
         Random rnd = new Random(11);
         double[] qty = new double[trades];
@@ -246,32 +241,23 @@ public final class HistoryBench {
             version[i] = 1;
             status[i] = "NEW";
         }
-        List<LakeManifest.Part> parts = new ArrayList<>();
-        for (LocalDate d : dates) {
-            Path file = staged.resolve(d + ".jsonl");
-            try (BufferedWriter w = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-                for (int i = 0; i < trades; i++) {
-                    if (rnd.nextDouble() < 0.06) {                       // about 6% of the book amended each day
-                        qty[i] = Math.max(1_000, qty[i] + 1_000 * (rnd.nextInt(21) - 10));
-                        version[i]++;
-                        status[i] = STATUS[rnd.nextInt(STATUS.length)];
-                    }
-                    price[i] = Math.round(price[i] * (1 + rnd.nextGaussian() * 0.004) * 10_000) / 10_000.0;
-                    Map<String, Object> doc = trade(i, d, qty[i], price[i], version[i], status[i]);
-                    w.write(json.writeValueAsString(Map.of("id", id(i), "doc", doc,                 // one {id, doc, columns} a line
-                            "columns", Map.of("QUANTITY", qty[i], "TRADE_STATUS", status[i]))));
-                    w.write('\n');
-                }
-            }
-            parts.add(new LakeManifest.Part(file, trades, Map.of("business_date", d.toString())));
-        }
         Path table = root.resolve("lake").resolve("bench").resolve("trade");
-        LakeManifest m = new LakeManifest(table.toString(), List.of("business_date"),
-                List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"), new LakeManifest.Column("business_date", "date"),
-                        new LakeManifest.Column("QUANTITY", "double"), new LakeManifest.Column("TRADE_STATUS", "string")),
-                List.of("QUANTITY", "TRADE_STATUS"), "overwrite-dates", 50_000, List.of("id", "business_date", "QUANTITY", "TRADE_STATUS"), parts);
-        new LakeWriter(com.ash.drishti.lakehost.DrishtiLake.runtime()).write(m, n -> { });
-        delete(staged);
+        for (LocalDate d : dates) {
+            List<com.ash.drishti.lakehost.LakeRowsLoad.Row> rows = new ArrayList<>(trades);
+            for (int i = 0; i < trades; i++) {
+                if (rnd.nextDouble() < 0.06) {                           // about 6% of the book amended each day
+                    qty[i] = Math.max(1_000, qty[i] + 1_000 * (rnd.nextInt(21) - 10));
+                    version[i]++;
+                    status[i] = STATUS[rnd.nextInt(STATUS.length)];
+                }
+                price[i] = Math.round(price[i] * (1 + rnd.nextGaussian() * 0.004) * 10_000) / 10_000.0;
+                Map<String, Object> doc = trade(i, d, qty[i], price[i], version[i], status[i]);
+                rows.add(new com.ash.drishti.lakehost.LakeRowsLoad.Row(id(i), json.writeValueAsString(doc),
+                        Map.of("QUANTITY", qty[i], "TRADE_STATUS", status[i])));
+            }
+            com.ash.drishti.lakehost.LakeRowsLoad.load("delta", table.toString(), "bench", "trade", d, "replace-date", rows,
+                    List.of("QUANTITY", "TRADE_STATUS"), List.of(), Map.of(), Map.of());      // one commit a date, by the lake's own loader
+        }
     }
 
     /** A synthetic Endur-style trade: UPPER_SNAKE fields, two legs, a few events. Never real data. */

@@ -477,21 +477,21 @@ class DemoLake:
 
     def run_group_inner(self, i: int) -> tuple[int, tuple]:
         """One group's datasets in a process of its own (or here, with one job). With the Java loader a table that failed there (a
-        table too large for its share of the memory, say) is loaded again, in full, by Drishti's own writer: that table only."""
+        table too large for its share of the memory, say) is loaded again, in full, by the Python deltalake package: that table only."""
         os.environ.setdefault("DRISHTI_LAKE_LOADER_HEAP", f"{self.heap_mb}m")
         eng = self.engine
         if eng == "java" and len(self.groups[i]) > 1 and self.group_key(self.groups[i][0]) != "exposure":
-            eng = "drishti"        # several systems writing partitions of one table (trades_shared): the Java loader's overwrite-partitions replaces the other systems' too
-        for attempt in (eng, "drishti") if eng == "java" else (eng,):
+            eng = "deltalake"      # several systems writing partitions of one table (trades_shared): the loader's replace takes the whole date, overwrite-partitions is deltalake's
+        for attempt in (eng, "deltalake") if eng == "java" else (eng,):
             self.engine = attempt
             self.tables, self.written, self.left_out, self.cleared = [], [], [], set()
             for ds in self.groups[i]:
                 code = self.dataset(ds)
                 if code:
                     break
-            if not code or eng != "java" or attempt == "drishti":
+            if not code or eng != "java" or attempt == "deltalake":
                 break
-            print(f"  {self.group_key(self.groups[i][0])}: the Java loader failed: loading it again with Drishti's writer", file=sys.stderr, flush=True)
+            print(f"  {self.group_key(self.groups[i][0])}: the Java loader failed: loading it again with the deltalake package", file=sys.stderr, flush=True)
         self.engine = self.run_engine
         for t in list(self.staged):                          # a folder kept for a retry
             shutil.rmtree(t[0], ignore_errors=True)
@@ -916,8 +916,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "
                    "the server's current business date, so the demo opens on data), data (the test data's own dates) or a date")
-    p.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="auto", help="the lake writer (default auto: the parallel lake loader "
-                   "when the server's exec jar is found, else Drishti's Java writer, else the Python deltalake package; a table the Java loader fails on is loaded again by Drishti's writer)")
+    p.add_argument("--engine", choices=("auto", "deltalake", "java"), default="auto", help="the lake writer (default auto: the parallel lake loader "
+                   "when the server's exec jar is found, else the Python deltalake package; a table the Java loader fails on is loaded again by the deltalake package)")
     p.add_argument("--jobs", type=int, metavar="N", help="datasets loaded at the same time (default: a quarter of the cores, at most 6)")
     p.add_argument("--memory-mb", type=int, metavar="MB", help="the loaders' heaps together, shared by the jobs (default: 4 GB a job)")
     p.add_argument("--jar", help="the drishti-server exec jar for the Java loader (default: the newest in <home>/lib, made by drishti.py build jar)")
