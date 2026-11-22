@@ -179,7 +179,7 @@ resume_java() {   # lane, then the Maven arguments the lane uses: the -Dtest lis
     n=$(( $(tr ',' '\n' <<< "$list" | grep -c .) - $(tr ',' '\n' <<< "$left" | grep -c .) ))
     JAVA_LIST_LEFT=$left
   else
-    python3 "$JOURNAL_PY" java-done --root "$REPO" --lane "$lane" --out "$f" 2> "$f.n"; n=$(cat "$f.n"); rm -f "$f.n"
+    python3 "$JOURNAL_PY" java-done --root "$REPO" --lane "$lane" --out "$f" 2> "$LOGS/resume-$lane.n"; n=$(cat "$LOGS/resume-$lane.n"); rm -f "$LOGS/resume-$lane.n"
     (( n )) && JAVA_RESUME_ARGS=(-Dsurefire.excludesFile="$f")
   fi
   echo "drill: resume $lane: $n finished classes not run again"
