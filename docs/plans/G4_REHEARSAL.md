@@ -974,3 +974,20 @@ Environment: the pinned Lake 0.9.1 wheel (sha-256 as in `lib/lake-wheel.pin`) in
 | `ManifestLoad` | `overwrite-partitions` is passed through to the loader (each part of a date replaces its own partition); `overwrite-dates` stays `replace-date`. `lake build`/`lake demo` are unchanged (decision): `--mode overwrite-partitions` stays the Python deltalake path's, so `load-day.sh`, `backfill.sh` and the CLUSTER and OPERATIONS guides read as before |
 | Spotless | the unused imports of `ModuleHomes` (and 60 other files with the same fault) removed, so builds run with spotless |
 | `LakeFileWritesTest` | its lake file names `${lake.data.dir}` (Lake refuses a lake file's `${drishti.x}`) |
+
+## Gate 4 fixes: hygiene (F23, F24, F28, F31, F34, browser flakiness; `g4/gate4p2-hyg` from `wip/g4-rehearsal-rx` `10753f4db`)
+
+| Item | What was done |
+|---|---|
+| F23 | the `was:` lines are out of the test fixtures (ten `bi/folders` table files, `MqEngineTest`, `DerivationTest`; no `was:` back); `VarExplainApiTest` asks that the old explain paths are gone (404); `test_delta_interop` lists its engines so the java-launch guard no longer reads a parametrize list as a command; the generated settings page was regenerated with `tools/settings_catalogue.py` |
+| F24 | `DeltaAfterMaintenanceTest` moved to `drishti-modules-it` (integration-test step); it runs the maintenance tool on the test's own class path (`LAKE_CLASSPATH` from `surefire.test.class.path`), in a `@TempDir` |
+| F28 | removed: m (console plugin format 1 is refused naming `format: 2`), n (`POST /api/v1/pivot/explain`), p (memory stores in the old place), q (the `./packs` fallback), r (`drishti.edition` and `drishti.branding.*` stop the start, as the console does; Health no longer lists them), s (the pivot switch is read from the engine's key only; `DRS-1024` and both `PivotProperties.enabled` fields gone; `kernel.yaml` presets the engine key), t (`catalog.json`, Java and Python), u (the `REPORTING_CCY` alias of a P&L vector's currency) |
+| F28 kept or parked | `SourcesProperties.connectors` is the carrier of the connectors in force (the files' result), not a compatibility read: javadoc corrected. **o** (a `.json` file per case in a Sutra's test folder, read with a warning) and **l** (`PackStateStore` ledger import, `LoadStore` first-read import, `FileUserStore`/`FileAuditLog` in tests, Lake `PersistedNames`) are compatibility and stay, parked to the combined i8 by name: o needs seven `SutraCliTest` cases and the CLI reference rewritten onto `cases.jsonl`; l needs the owner's word on which installs still hold old state. Lake itself still reads `lake.memory.stores` (Lake repository) |
+| F31 | `LakeFileWritesTest` anchors its root on `${drishti.data.dir}` |
+| F34 | `tools/tmpguard.py`: every Python and browser session works in one private temp folder (`TMPDIR` for it, its workers and the browsers and servers it starts), removed at the end; `DRISHTI_TMP_STRICT=1` fails a session that leaves a path of its own in the machine's temp folder; `tools/test_tmpguard.py` proves it on a deliberately careless session |
+| Browser (4 workers) | Chromium: `test_live_grid_browser` waits for the tray's own text before reading it; WebKit: the approvals count in `drishti_app.js` is aborted on `pagehide` (a navigation's cancel was logged as a failed fetch and counted as a fault by the page walk) |
+
+### Parked to the combined i8
+
+- **F4** a FORM table spanning Drishti\*net members reads the members as its first opener: option A (a node identity on the on-behalf-of token, the member trusting it, per-read audit per member) or option B (a table per person). Not built in G4; see I7B_GATE_4_REVIEW F4.
+- **o, l** as in the row above.
