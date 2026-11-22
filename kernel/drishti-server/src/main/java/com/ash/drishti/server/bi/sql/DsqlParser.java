@@ -815,7 +815,7 @@ public final class DsqlParser {
             within = o.get(0).expr();
         }
         if (word("FILTER")) {
-            throw new DsqlException(DsqlException.SHAPE, "FILTER (WHERE ...) on an aggregate is not " + Branding.sqlName() + " (yet)", "a local measure with where=: SUM(x) as a DEL measure sum(x, where=...)", at);
+            throw new DsqlException(DsqlException.SHAPE, "FILTER (WHERE ...) on an aggregate is not " + Branding.sqlName() + " (yet)", "a local measure with where=: SUM(x) as a DEL measure calc(sum(x), where=...)", at);
         }
         SqlAst.Over over = null;
         if (word("OVER")) {

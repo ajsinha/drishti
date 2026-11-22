@@ -199,7 +199,7 @@ final class Differential implements AutoCloseable {
     List<String> rowDifferences(String text) throws SQLException {
         Checker.Checked c = CheckedMode.check(text, Scope.ROW, FIELDS);
         assertThat(c.problems().stream().filter(p -> p.error())).as(text).isEmpty();
-        Lowered.Row row = compiler.row(CheckedMode.parse(text).expr());
+        Lowered.Row row = compiler.row(CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL).expr());
         List<Object> sql = scan.rows(db, row, "ID");
         List<String> out = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
@@ -221,7 +221,7 @@ final class Differential implements AutoCloseable {
     Object[] measure(String text) throws SQLException {
         Checker.Checked c = CheckedMode.check(text, Scope.AGGREGATE, FIELDS);
         assertThat(c.problems().stream().filter(p -> p.error())).as(text).isEmpty();
-        Lowered l = compiler.measure(CheckedMode.parse(text).expr());
+        Lowered l = compiler.measure(CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL).expr());
         return new Object[] {memory.measure(l, rows, Map.of()), scan.measure(db, l, Map.of())};
     }
 

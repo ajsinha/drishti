@@ -18,33 +18,33 @@
 recipes:
   - { id: R1, title: "MTM by desk", expr: "sum(trades.MTM)", by: [desks.NAME], scope: aggregate }
   - { id: R2, title: "P&L over the last day by desk", expr: "sum(trades.PNL_1D)", by: [desks.NAME], scope: aggregate }
-  - { id: R3, title: "Open MTM (live trades only)", expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
-  - { id: R4, title: "Matured or closed MTM", expr: "sum(trades.MTM, where = trades.TRADE_STATUS == 'MATURED')", by: [desks.NAME], scope: aggregate }
-  - { id: R5, title: "Share of MTM that is still open", expr: "ratio(sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))", by: [desks.NAME], scope: aggregate }
+  - { id: R3, title: "Open MTM (live trades only)", expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R4, title: "Matured or closed MTM", expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS == 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R5, title: "Share of MTM that is still open", expr: "ratio(calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))", by: [desks.NAME], scope: aggregate }
   - { id: R6, title: "Gross MTM", expr: "sum(abs(trades.MTM))", by: [desks.NAME], scope: aggregate }
   - { id: R7, title: "Net to gross", expr: "ratio(sum(trades.MTM), sum(abs(trades.MTM)))", by: [desks.NAME], scope: aggregate }
-  - { id: R8, title: "Receivable MTM (positive trades)", expr: "sum(trades.MTM, where = trades.MTM > 0)", by: [counterparties.NAME], scope: aggregate }
-  - { id: R9, title: "Payable MTM (negative trades)", expr: "sum(trades.MTM, where = trades.MTM < 0)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R8, title: "Receivable MTM (positive trades)", expr: "calc(sum(trades.MTM), where = trades.MTM > 0)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R9, title: "Payable MTM (negative trades)", expr: "calc(sum(trades.MTM), where = trades.MTM < 0)", by: [counterparties.NAME], scope: aggregate }
   - { id: R10, title: "P&L in bps of notional", expr: "ratio(sum(trades.PNL_1D), sum(trades.NOTIONAL)) * 10000", by: [desks.NAME], scope: aggregate }
   - { id: R11, title: "A measure from measures", expr: "measure('MTM') / measure('Notional') * 1000000", by: [desks.NAME], scope: aggregate }
   - { id: R12, title: "Trades", expr: "count(trades)", by: [desks.NAME], scope: aggregate }
-  - { id: R13, title: "Live trades", expr: "count(trades, where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
+  - { id: R13, title: "Live trades", expr: "calc(count(trades), where = trades.TRADE_STATUS != 'MATURED')", by: [desks.NAME], scope: aggregate }
   - { id: R14, title: "Counterparties traded with", expr: "distinct(trades.COUNTERPARTY)", by: [desks.NAME], scope: aggregate }
   - { id: R15, title: "Average ticket", expr: "avg(trades.NOTIONAL)", by: [trades.PRODUCT_TYPE], scope: aggregate }
   - { id: R16, title: "Notional in millions, one decimal", expr: "round(sum(trades.NOTIONAL) / 1000000, 1)", by: [trades.CURRENCY], scope: aggregate }
   - { id: R17, title: "Largest trade", expr: "max(trades.NOTIONAL)", by: [desks.NAME], scope: aggregate }
   - { id: R18, title: "Worst trade", expr: "min(trades.MTM)", by: [desks.NAME], scope: aggregate }
-  - { id: R19, title: "Swaps only", expr: "count(trades, where = contains(trades.PRODUCT_TYPE, 'SWAP'))", by: [desks.NAME], scope: aggregate }
-  - { id: R20, title: "One book family", expr: "sum(trades.NOTIONAL, where = starts_with(trades.PORTFOLIO, 'BOOK-FX'))", by: [desks.NAME], scope: aggregate }
+  - { id: R19, title: "Swaps only", expr: "calc(count(trades), where = contains(trades.PRODUCT_TYPE, 'SWAP'))", by: [desks.NAME], scope: aggregate }
+  - { id: R20, title: "One book family", expr: "calc(sum(trades.NOTIONAL), where = starts_with(trades.PORTFOLIO, 'BOOK-FX'))", by: [desks.NAME], scope: aggregate }
   - { id: R21, title: "DV01 by currency", expr: "sum(trades.DV01)", by: [trades.CURRENCY], scope: aggregate }
   - { id: R22, title: "Absolute DV01", expr: "sum(abs(trades.DV01))", by: [desks.NAME], scope: aggregate }
   - { id: R23, title: "DV01 per million notional", expr: "ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1000000", by: [trades.CURRENCY], scope: aggregate }
   - { id: R24, title: "Notional-weighted tenor in years (a duration proxy)", expr: "ratio(sum(trades.NOTIONAL * days_between(trades.TRADE_DATE, trades.MATURITY_DATE)), sum(trades.NOTIONAL)) / 365", by: [desks.NAME], scope: aggregate }
   - { id: R25, title: "Average business days to maturity", expr: "avg(business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE))", by: [trades.PRODUCT_TYPE], scope: aggregate }
-  - { id: R26, title: "Trades maturing within a year of their trade date", expr: "count(trades, where = days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)", by: [desks.NAME], scope: aggregate }
+  - { id: R26, title: "Trades maturing within a year of their trade date", expr: "calc(count(trades), where = days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)", by: [desks.NAME], scope: aggregate }
   - { id: R27, title: "Median trade MTM", expr: "percentile(trades.MTM, 0.5)", by: [desks.NAME], scope: aggregate }
   - { id: R28, title: "5th percentile of one-day P&L (a VaR-style number)", expr: "percentile(trades.PNL_1D, 0.05)", by: [desks.NAME], scope: aggregate }
-  - { id: R29, title: "Expected shortfall, approximately", expr: "avg(trades.PNL_1D, where = trades.PNL_1D <= -8000)", by: [desks.NAME], scope: aggregate }
+  - { id: R29, title: "Expected shortfall, approximately", expr: "calc(avg(trades.PNL_1D), where = trades.PNL_1D <= -8000)", by: [desks.NAME], scope: aggregate }
   - { id: R30, title: "99th percentile notional", expr: "percentile(trades.NOTIONAL, 0.99)", by: [trades.PRODUCT_TYPE], scope: aggregate }
   - { id: R31, title: "Exposure (EE peak) by counterparty", expr: "sum(set_exposure.PEAK_EE)", by: [counterparties.NAME], scope: aggregate }
   - { id: R32, title: "Counterparty rank by PFE", expr: "rank(sum(cpty_exposure.PEAK_PFE_95))", by: [counterparties.NAME], scope: aggregate }
@@ -52,11 +52,11 @@ recipes:
   - { id: R34, title: "Percent rank of counterparties by MTM", expr: "percent_rank(sum(trades.MTM))", by: [counterparties.NAME], scope: aggregate }
   - { id: R35, title: "Net MTM against the limit", expr: "max(netting_sets.NET_MTM / netting_sets.LIMIT)", by: [counterparties.NAME], scope: aggregate }
   - { id: R36, title: "Headroom under the limit", expr: "sum(netting_sets.LIMIT) - sum(netting_sets.NET_MTM)", by: [counterparties.NAME], scope: aggregate }
-  - { id: R37, title: "Net MTM above the limit", expr: "count(netting_sets, where = netting_sets.NET_MTM > netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
-  - { id: R38, title: "Netting sets with a net MTM above 80 % of the limit", expr: "count(netting_sets, where = netting_sets.NET_MTM >= 0.8 * netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
+  - { id: R37, title: "Net MTM above the limit", expr: "calc(count(netting_sets), where = netting_sets.NET_MTM > netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
+  - { id: R38, title: "Netting sets with a net MTM above 80 % of the limit", expr: "calc(count(netting_sets), where = netting_sets.NET_MTM >= 0.8 * netting_sets.LIMIT)", by: [counterparties.SECTOR], scope: aggregate }
   - { id: R39, title: "Average net MTM against the limit", expr: "avg(netting_sets.NET_MTM / netting_sets.LIMIT)", by: [counterparties.RATING], scope: aggregate }
-  - { id: R40, title: "Collateral cover", expr: "ratio(sum(netting_sets.COLLATERAL), sum(netting_sets.NET_MTM, where = netting_sets.NET_MTM > 0))", by: [counterparties.NAME], scope: aggregate }
-  - { id: R41, title: "Uncollateralised exposure", expr: "sum(netting_sets.NET_MTM, where = netting_sets.NET_MTM > 0) - sum(netting_sets.COLLATERAL)", by: [counterparties.NAME], scope: aggregate }
+  - { id: R40, title: "Collateral cover", expr: "ratio(sum(netting_sets.COLLATERAL), calc(sum(netting_sets.NET_MTM), where = netting_sets.NET_MTM > 0))", by: [counterparties.NAME], scope: aggregate }
+  - { id: R41, title: "Uncollateralised exposure", expr: "calc(sum(netting_sets.NET_MTM), where = netting_sets.NET_MTM > 0) - sum(netting_sets.COLLATERAL)", by: [counterparties.NAME], scope: aggregate }
   - { id: R42, title: "MTM year to date", expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)", by: [trades.TRADE_DATE.month], scope: aggregate }
   - { id: R43, title: "Notional month to date", expr: "mtd(sum(trades.NOTIONAL), trades.TRADE_DATE)", by: [trades.TRADE_DATE], scope: aggregate }
   - { id: R44, title: "P&L quarter to date", expr: "qtd(sum(trades.PNL_1D), trades.TRADE_DATE)", by: [desks.NAME], scope: aggregate }

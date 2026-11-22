@@ -174,7 +174,7 @@ class TableReadsTest {
     void aTableOverATableReadsItsBasesSourceGrainAndFilter() {
         TableReads.Read r = reads.read("trading.big_legs", null, null, RISK, null);
         assertThat(r.columns()).contains("LEG_ID", "HALF");
-        assertThat(r.rows()).extracting(x -> x.get(r.columns().indexOf("HALF"))).containsExactly(500L, 1500L);
+        assertThat(r.rows()).extracting(x -> ((Number) x.get(r.columns().indexOf("HALF"))).doubleValue()).containsExactly(500.0, 1500.0);   // exact at level 1.2: a decimal
         assertThat(source.reads).isEqualTo(1);
     }
 

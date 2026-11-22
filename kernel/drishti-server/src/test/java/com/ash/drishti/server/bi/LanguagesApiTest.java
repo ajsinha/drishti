@@ -380,7 +380,7 @@ class LanguagesApiTest {
         var measure = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Open MTM"))))
                 .andReturn().getResponse();
         assertThat(measure.getContentAsString()).contains("DRS-9163").contains("the measure 'Open MTM' is not available to your role").doesNotContain("trades.mtm");
-        assertThat(codes(validate("ann", "sum(trades.notional, where=trades.currency == 'USD')", "aggregate"))).contains("DRS-9152");
+        assertThat(codes(validate("ann", "calc(sum(trades.notional), where=trades.currency == 'USD')", "aggregate"))).contains("DRS-9152");
         // a define over a hidden column is refused for the role; a report's visual on a hidden measure says so (not a raw 'no measure')
         var define = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "define", Map.of("Books", "distinct(trades.book)"),
                 "select", Map.of("measures", List.of("Books")))).andReturn().getResponse();
@@ -472,11 +472,11 @@ class LanguagesApiTest {
 
     @Test @Order(2)
     void anExpressionIsCheckedAgainstTheModelAsTheCallerSeesIt() throws Exception {
-        JsonNode v = validate("rita", "sum(trades.notional, where=trades.desk == 'DESK-A') / measure('m_trades')", "aggregate");
+        JsonNode v = validate("rita", "calc(sum(trades.notional), where=trades.desk == 'DESK-A') / measure('m_trades')", "aggregate");
         if (System.getProperty("capture") != null) {
             System.out.println("CAPTURE1 " + v);
             System.out.println("CAPTURE2 " + validate("rita", "trades.notional * 2", "aggregate"));
-            System.out.println("CAPTURE3 " + validate("ann", "count(trades, where=trades.mtm < 0)", "aggregate"));
+            System.out.println("CAPTURE3 " + validate("ann", "calc(count(trades), where=trades.mtm < 0)", "aggregate"));
             System.out.println("CAPTURE4 " + validate("rita", "[Notional] / [Trades]", "aggregate"));
             System.out.println("CAPTURE5 " + ok(call("POST", "/api/v1/bi/expr/convert", reader("rita"), Map.of("expr", "sum(trades.mtm, trades.status == 'Live')"))));
         }
@@ -491,8 +491,8 @@ class LanguagesApiTest {
         assertThat(bare.path("problems").get(0).path("at").path("start").asInt()).isZero();
 
         // ann: mtm is masked (a filter on it is refused); book is hidden from her role (it does not exist)
-        assertThat(codes(validate("ann", "count(trades, where=trades.mtm < 0)", "aggregate"))).contains("DRS-9161");
-        assertThat(codes(validate("rita", "count(trades, where=trades.mtm < 0)", "aggregate"))).isEmpty();
+        assertThat(codes(validate("ann", "calc(count(trades), where=trades.mtm < 0)", "aggregate"))).contains("DRS-9161");
+        assertThat(codes(validate("rita", "calc(count(trades), where=trades.mtm < 0)", "aggregate"))).isEmpty();
         assertThat(codes(validate("ann", "distinct(trades.book)", "aggregate"))).contains("DRS-9152");
         assertThat(codes(validate("rita", "distinct(trades.book)", "aggregate"))).isEmpty();
 
@@ -548,7 +548,7 @@ class LanguagesApiTest {
         JsonNode fine = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "sum(trades.notional) / measure('Notional')", "yaml", draft)));
         assertThat(fine.path("valid").asBoolean()).as(fine.toString()).isTrue();
         assertThat(fine.path("draft").asBoolean()).isTrue();
-        JsonNode across = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "sum(trades.notional, where=others.desk == 'DESK-A')",
+        JsonNode across = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "calc(sum(trades.notional), where=others.desk == 'DESK-A')",
                 "yaml", draft)));
         assertThat(codes(across)).as(across.toString()).contains("DRS-9156");
         JsonNode dataset = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "notional * 2", "scope", "row", "yaml", """

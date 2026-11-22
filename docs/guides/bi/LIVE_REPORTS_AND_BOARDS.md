@@ -739,7 +739,7 @@ measures
   Notional                          sum(trade.NOTIONAL)
   MTM                               sum(trade.MTM)
   PnL 1d                            sum(trade.PNL_1D)
-  Losses                            sum(trade.MTM, where=trade.MTM < 0)
+  Losses                            calc(sum(trade.MTM), where=trade.MTM < 0)
   Worst trade                       min(trade.MTM)
   Best trade                        max(trade.MTM)
   MTM history                       sum(history.MTM)

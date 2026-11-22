@@ -2767,7 +2767,7 @@ keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 
 | Part | What it does |
 |---|---|
-| `rachana` | The Rachana language level: `1.2`. Without it, or with one this server does not read, the file is refused (`DRS-2009`); an older level (`1`) is read at that level and offered `drishti.py sutra upgrade` |
+| `rachana` | The Rachana language level: `1.2`. Without it, or with one this server does not read, the file is refused (`DRS-2009`); a retired level (`1.0`, `1.1`) is refused too, naming Rachana 0.12's `rachana upgrade`, which moves it to 1.2 |
 | `sutra`, `version` | The identity, `name@version`, unique. Keep old versions: saved views and history reproduce with the version they used |
 | `description`, `notes` | Plain text for people (not Markdown): one paragraph, and longer notes for the next author and the reviewer. Never change the view |
 | `match` | Which documents this Sutra lays out: a `kind`, an optional `where` over the document, and a `priority` ([section 15](#15-matching-several-sutras)) |

@@ -165,7 +165,7 @@ relationships:
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
 measures:
   MTM:      { expr: "sum(trades.MTM)", format: signed0 }
-  Open MTM: { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)", format: signed0 }
+  Open MTM: { expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)", format: signed0 }
   MTM rank: { expr: "rank(sum(trades.MTM))" }
 hierarchies:
   Desk and book: [desks.NAME, books.NAME]
@@ -504,7 +504,7 @@ A measure is evaluated per group of the answer in four layers: the reader's **se
 ```yaml
 measures:
   MTM:             { expr: "sum(trades.MTM)" }
-  Open MTM:        { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
+  Open MTM:        { expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
   MTM all desks:   { expr: "calc(measure('MTM'), ignore = [desks.NAME])" }        # the desk filter dropped
   MTM % of total:  { expr: "share_of(measure('MTM'), over = ALL)", format: share } # of everything you may see
   MTM % of parent: { expr: "parent_of(measure('MTM'), hierarchy = 'Desk and book')" }
@@ -716,7 +716,7 @@ measures:
   Notional USD:   { expr: "sum(legs.NOTIONAL_USD)", format: amount0 }
   Legs:           { expr: "count(legs)" }
   Average leg:    { expr: "measure('Notional USD') / measure('Legs')", format: amount0 }
-  Non-USD legs:   { expr: "count(legs, where = legs.CURRENCY != 'USD' && legs.CURRENCY != null)" }
+  Non-USD legs:   { expr: "calc(count(legs), where = legs.CURRENCY != 'USD' && legs.CURRENCY != null)" }
 hierarchies:
   Desk and book: [books.DESK_NAME, books.NAME]
 ```

@@ -1841,7 +1841,7 @@ read-only token).
 The validate answer (captured; `rita` on the test model `lang-model`):
 
 ```json
-{"expr": "sum(trades.notional, where=trades.desk == 'DESK-A') / measure('m_trades')", "scope": "aggregate", "type": "decimal",
+{"expr": "calc(sum(trades.notional), where=trades.desk == 'DESK-A') / measure('m_trades')", "scope": "aggregate", "type": "decimal",
  "uses": {"functions": ["sum", "measure"], "fields": ["trades.notional", "trades.desk"], "measures": ["Trades"]},
  "syntax": "del2", "valid": true, "problems": [],
  "model": {"id": "file:model:lang-model", "name": "lang-model", "version": "1.0.0", "implicit": false, "compat": false}}
@@ -1851,7 +1851,7 @@ A problem has `code`, `level` (`error` or `warning`), `message`, `fix` (or null)
 underlines it and offers the fix as a button (captured):
 
 ```json
-{"expr": "count(trades, where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
+{"expr": "calc(count(trades), where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
  "problems": [{"code": "DRS-9161", "level": "error", "message": "'trades.mtm' is masked for you: a filter on it (<) is refused",
                "fix": "filter on a field that is not masked", "at": {"start": 20, "end": 30}}], ...}
 ```

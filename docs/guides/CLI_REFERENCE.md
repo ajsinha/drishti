@@ -586,6 +586,13 @@ skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pa
 
 It needs the built server jar (`./mvnw package -DskipTests`) and a JDK 21: all groups are designed in one Java run.
 
+### A Sutra of a retired language level
+
+Drishti runs Rachana language level 1.2, the one level of Rachana 1.x, and every Sutra it ships declares `rachana: 1.2`. A Sutra that
+declares a retired level (`rachana: 1.0` or `rachana: 1.1`) is refused with `DRS-2009`, whose words name the tool that moves it:
+Rachana 0.12's `rachana upgrade` (the same meaning at 1.2; every place to review is listed). Move a Sutra and the fragments it uses
+together, then `sutra lint` reads it here.
+
 ### Testing Sutras: `expect.yaml`, the tests convention and CI
 
 The workbench checks a screen against your sample files as you type. The `sutra` command runs **exactly the same engine** (the Sutra checker, the sample checker behind the Tests tab, the shape
@@ -3414,7 +3421,7 @@ drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL
 ```
 
 `REF` is `name@major` (`trading-risk@1`), a model item id or `dataset:<name>` (a dataset's implicit model). `bi mq --define` adds a measure of this query
-only, in DEL (`--define "Live MTM=sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')" --measures "Live MTM"`), as a report's own measure travels. `--sort BY`
+only, in DEL (`--define "Live MTM=calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')" --measures "Live MTM"`), as a report's own measure travels. `--sort BY`
 sorts by a field or measure, `--sort=-BY` descending (the `=` keeps the minus from reading as an option), repeatable: `--sort=-MTM --limit 3` is the top three. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
