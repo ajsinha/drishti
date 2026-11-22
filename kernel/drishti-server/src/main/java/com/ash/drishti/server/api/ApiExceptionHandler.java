@@ -83,6 +83,9 @@ public class ApiExceptionHandler {
         if (e instanceof com.ash.lake.common.LakeException x && drishti(x) != null) {
             return lake(x);
         }
+        if (e instanceof com.ash.rachana.RachanaException x && drishti(x) != null) {
+            return rachana(x);
+        }
         if (e instanceof java.time.format.DateTimeParseException x) {
             return badValue(x);
         }
@@ -240,6 +243,31 @@ public class ApiExceptionHandler {
         String m = e.getMessage();
         String prefix = e.error().code() + " ";
         return new DrishtiException(code, m.startsWith(prefix) ? m.substring(prefix.length()) : m, e);
+    }
+
+    /**
+     * Rachana's refusals ({@code RCH-}, thrown while a screen answers: a panel or row a click names that is not there) as Drishti's code
+     * of the same number ({@code DrishtiRachana.drs}, the edge's one mapping) with its status and Rachana's words; a code Drishti does
+     * not have is not mapped here.
+     */
+    @ExceptionHandler(com.ash.rachana.RachanaException.class)
+    ProblemDetail rachana(com.ash.rachana.RachanaException e) {
+        DrishtiException d = drishti(e);
+        if (d == null) {
+            throw e;
+        }
+        return drishti(d);
+    }
+
+    /** A Rachana refusal as Drishti's own exception, null for a code Drishti does not have. */
+    static DrishtiException drishti(com.ash.rachana.RachanaException e) {
+        String drs = com.ash.drishti.rachana.DrishtiRachana.drs(e.code().code());
+        for (ErrorCode c : ErrorCode.values()) {
+            if (c.code().equals(drs)) {
+                return new DrishtiException(c, e.words(), e);
+            }
+        }
+        return null;
     }
 
     /** A required query parameter that is missing: {@code 400 DRS-5001} naming it (SEC-10), not the 401 of a missing principal. */
