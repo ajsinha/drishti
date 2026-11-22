@@ -83,14 +83,11 @@ public final class SutraCli {
               lint    <pack-dir | sutra-file>      parse and check every Sutra
               test    <pack-dir | sutra-file>      render each Sutra against its samples and check expect.yaml
               preview <pack-dir | sutra-file>      render samples; --out writes HTML snapshots
-              upgrade <dir | sutra/fragment file>  rewrite Sutras and fragments of an older language level for this server's level,
-                                                   the same meaning; a dry run that lists each change and flag unless --write
               design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
               design --each <dir>                  one Sutra per subfolder of .json or .jsonl samples, in one run: <out>/<subfolder>.sutra.yaml;
                                                    the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
               shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
             options: --junit file   JUnit XML report     --out dir   write results here
-                     --write        upgrade: write the upgraded files
                      --strict       lint: help warnings (DRS-2045 to 2047) fail the run
                      --docs         lint: the docstring warnings (DRS-2055): Sutras and blocks without a complete doc:
                      --samples path JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json
@@ -122,7 +119,6 @@ public final class SutraCli {
                 case "test" -> test(a, cases);
                 case "preview" -> preview(a, cases);
                 case "shape" -> shape(a);
-                case "upgrade" -> upgrade(a, cases);
                 default -> design(a);
             };
         } catch (CliArgs.UsageException e) {
@@ -197,10 +193,6 @@ public final class SutraCli {
             String why = problems(u);
             cases.add(why == null ? Case.pass(u.stem(), "lint") : Case.fail(u.stem(), "lint", why));
             out.println((why == null ? "ok      " : "PROBLEM ") + u.file());
-            String older = com.ash.drishti.rachana.LanguageLevels.advice(u.text(), u.file().toString());
-            if (older != null) {
-                err.println("warning " + u.file() + ": " + older);        // read at its own level: offered the upgrade, never silently
-            }
             if (why != null) {
                 err.println(why);
                 bad = true;
@@ -218,57 +210,6 @@ public final class SutraCli {
         }
         bad |= historyBlocks(a.paths(), cases);
         return bad ? PROBLEMS : OK;
-    }
-
-    /**
-     * {@code sutra upgrade}: each Sutra, fragment and block named (or found in a folder named) rewritten for this server's language level
-     * with the same meaning (Rachana's {@code rachana upgrade} over the server's functions): every change and every flag to review printed;
-     * written only with {@code --write}. A refused or blocked file fails the run and is not written.
-     */
-    private int upgrade(CliArgs a, List<Case> cases) throws IOException {
-        List<Path> files = new ArrayList<>();
-        for (Path p : a.paths()) {
-            if (Files.isRegularFile(p)) {
-                files.add(p);
-            } else if (Files.isDirectory(p)) {
-                try (Stream<Path> walk = Files.walk(p)) {
-                    walk.filter(f -> {
-                        String n = f.getFileName().toString();
-                        return n.endsWith(".sutra.yaml") || n.endsWith(".fragment.yaml") || n.endsWith(".block.yaml");
-                    }).filter(f -> p.relativize(f).toString().replace('\\', '/').matches("(?!(.*/)?(\\.[^/]*|node_modules|target)/).*"))
-                            .sorted().forEach(files::add);
-                }
-            } else {
-                throw new CliArgs.UsageException(p + " does not exist");
-            }
-        }
-        int upgraded = 0;
-        int bad = 0;
-        for (Path f : files) {
-            com.ash.rachana.tools.Upgrade.Result r = com.ash.drishti.rachana.LanguageLevels.upgrade(f.toString(), stripBom(Files.readString(f, StandardCharsets.UTF_8)));
-            String stem = f.getFileName().toString();
-            if (!r.writable()) {
-                bad++;
-                String why = r.refused() != null ? r.refused() : "a blocking flag: rename what it names first";
-                out.println(f + ": refused: " + why);
-                cases.add(Case.fail(stem, "upgrade", why));
-            } else {
-                out.println(f + ": " + r.kind() + " " + r.from() + " -> " + r.to() + ", " + r.changes().size() + " change(s), " + r.flags().size() + " flag(s)");
-                cases.add(Case.pass(stem, "upgrade"));
-            }
-            r.changes().forEach(c -> out.println("  change " + c.rule() + " " + c.path() + " (line " + c.line() + "): " + c.before() + "  ->  " + c.after()));
-            r.flags().forEach(x -> out.println("  " + x.severity() + " " + x.rule() + " " + x.path() + " (line " + x.line() + "): " + x.message()
-                    + "  [" + x.expression() + "]"));
-            if (r.writable() && r.changed()) {
-                upgraded++;
-                if (a.write()) {
-                    Files.writeString(f, r.text(), StandardCharsets.UTF_8);
-                }
-            }
-        }
-        out.println(files.size() + " file(s): " + upgraded + (a.write() ? " upgraded" : " to upgrade (dry run: --write writes them)") + ", " + bad
-                + " refused or blocked");
-        return bad > 0 ? PROBLEMS : OK;
     }
 
     /** The {@code history:} block of each pack folder linted (DRS-2061): an error fails the run, a warning is printed. */
