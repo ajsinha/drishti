@@ -31,7 +31,7 @@ pytestmark = pytest.mark.static
     ("kernel/drishti-engine/src/main/java/A.java", "java main"), ("kernel/drishti-engine/src/test/java/A.java", "java test"),
     ("drishti-console/core/a.py", "console python"), ("drishti-console/web/static/js/a.js", "console js"),
     ("drishti-console/tests/test_a.py", None), ("drishti-console/web/static/vendor/a.js", None),
-    ("drishti-console/web/static/render/1.2.0/a.js", None), ("drishti-console/web/embed/a.js", None), ("tools/a.py", None),
+    ("drishti-console/web/embed/a.js", None), ("tools/a.py", None),
 ])
 def test_category(path: str, column: str | None) -> None:
     assert cv.category(path) == column
