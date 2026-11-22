@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.env;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -116,7 +117,7 @@ public final class Manifest {
 
     private static String hash(Path p) throws IOException {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             try (InputStream in = new DigestInputStream(Files.newInputStream(p), md)) {
                 in.transferTo(java.io.OutputStream.nullOutputStream());
             }

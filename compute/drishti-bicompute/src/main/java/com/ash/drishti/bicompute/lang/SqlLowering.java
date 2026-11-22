@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.bicompute.lang;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.rachana.el.DatePartFunctions;
 import com.ash.rachana.el.Expr;
 import com.ash.rachana.el.Functions;
@@ -339,7 +339,7 @@ public final class SqlLowering {
         String unit = args.size() > 2 && args.get(2) instanceof Expr.Lit l && l.value() instanceof String u ? DatePartFunctions.unit(u) : "business-day";
         LocalDate fixed = constant(args.get(0));
         if (fixed != null) {
-            return "DATE '" + DatePartFunctions.shift(fixed, n, unit, com.ash.drishti.rachana.HostCalendars.core(calendar(args, 3))) + "'";
+            return "DATE '" + DatePartFunctions.shift(fixed, n, unit, calendar(args, 3)) + "'";
         }
         if ("business-day".equals(unit)) {
             throw new IllegalArgumentException("shift_date() of a column moves it by day, week, month, quarter or year; business days need a fixed "
@@ -374,7 +374,7 @@ public final class SqlLowering {
                     return null;
                 }
                 String unit = c.args().size() > 2 && c.args().get(2) instanceof Expr.Lit u && u.value() instanceof String s ? DatePartFunctions.unit(s) : "business-day";
-                return DatePartFunctions.shift(base, whole(c.args(), 1, 0), unit, com.ash.drishti.rachana.HostCalendars.core(calendar(c.args(), 3)));
+                return DatePartFunctions.shift(base, whole(c.args(), 1, 0), unit, calendar(c.args(), 3));
             }
         }
         return null;

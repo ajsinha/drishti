@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.collab;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -165,7 +166,7 @@ public final class FileThreadStore implements ThreadStore {
 
     private static String sha1(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

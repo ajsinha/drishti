@@ -30,6 +30,7 @@
     in-memory lake as Arrow record batches over gRPC. Tickets are Rachana requests; the server side (tokens, entitlements, masks,
     admission, audit, the query layer) is reached only through the FlightBackend contract the server implements, never re-implemented</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>

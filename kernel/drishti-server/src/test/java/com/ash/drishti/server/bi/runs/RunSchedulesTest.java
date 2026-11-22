@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.runs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;

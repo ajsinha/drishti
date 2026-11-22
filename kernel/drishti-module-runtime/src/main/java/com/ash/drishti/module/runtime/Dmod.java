@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.module.runtime;
 
+import com.ash.tools.codec.Hashes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -226,7 +227,7 @@ public final class Dmod {
     /** The SHA-256 of a stream, in lower-case hex (the stream is read to its end, not closed). */
     public static String sha256(InputStream in) throws IOException {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             byte[] buf = new byte[65536];
             for (int n; (n = in.read(buf)) > 0; ) {
                 md.update(buf, 0, n);

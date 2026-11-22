@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.runs;
 
+import com.ash.tools.codec.CanonicalJson;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.DatasetController;
@@ -91,7 +92,7 @@ public final class RunSources {
 
     static String canonical(Object o) {
         try {
-            return CANON.writeValueAsString(CANON.convertValue(o, Object.class));
+            return CanonicalJson.write(CANON.convertValue(o, Object.class));
         } catch (Exception e) {
             return String.valueOf(o);
         }

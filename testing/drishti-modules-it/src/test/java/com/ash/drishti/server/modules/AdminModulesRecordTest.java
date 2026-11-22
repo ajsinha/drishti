@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.net.digest.Digest;
@@ -138,7 +139,7 @@ class AdminModulesRecordTest {
     /** A stable example hash: the SHA-256 of the words. */
     static String sha(String words) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(words.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(words);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

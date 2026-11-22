@@ -3,7 +3,7 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.rachana.Rachana;
 import com.ash.rachana.RachanaOptions;
 import com.ash.rachana.el.ElCompiler;
@@ -199,7 +199,7 @@ public final class DrishtiRachana {
         providers.addAll(MODULES.values());
         Profile drishti = Entities.addTo(Profile.named("drishti"), () -> kinds.get(), BLOCKS)
                 .functions(providers.toArray(FunctionProvider[]::new))
-                .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
+                .calendars(spec -> BusinessCalendar.of(spec))
                 .build();
         return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call (the server's setting), never a library default
     }

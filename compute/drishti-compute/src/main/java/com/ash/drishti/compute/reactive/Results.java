@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.compute.reactive;
 
+import com.ash.tools.codec.CanonicalJson;
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.compute.EngineRequest;
 import com.ash.drishti.api.compute.EngineResult;
 import com.ash.drishti.compute.ComputeException;
@@ -142,15 +144,15 @@ public final class Results {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("rows", r.rows());
             m.put("tables", r.tables());
-            return "sha256:" + sha(JSON.writeValueAsString(m)).substring(0, 32);
-        } catch (JsonProcessingException e) {
+            return "sha256:" + sha(CanonicalJson.write(JSON.convertValue(m, Object.class))).substring(0, 32);
+        } catch (IllegalArgumentException e) {
             return "sha256:?";
         }
     }
 
     static String sha(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(s);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

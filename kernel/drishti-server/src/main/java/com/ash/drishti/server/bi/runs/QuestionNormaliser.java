@@ -15,7 +15,8 @@
  */
 package com.ash.drishti.server.bi.runs;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.tools.codec.CanonicalJson;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.server.bi.plan.SecuritySignature;
 import com.ash.drishti.server.bi.report.RelativeDates;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -135,8 +136,8 @@ public final class QuestionNormaliser {
     /** The normalised question as text: sorted keys, no spaces. */
     public static String text(Map<String, ?> mq, Context ctx) {
         try {
-            return JSON.writeValueAsString(normalise(mq, ctx));
-        } catch (JsonProcessingException e) {
+            return CanonicalJson.write(JSON.convertValue(normalise(mq, ctx), Object.class));
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("the question cannot be written as JSON", e);
         }
     }
@@ -258,8 +259,8 @@ public final class QuestionNormaliser {
 
     private static String canonical(Object o) {
         try {
-            return JSON.writeValueAsString(o);
-        } catch (JsonProcessingException e) {
+            return CanonicalJson.write(JSON.convertValue(o, Object.class));
+        } catch (IllegalArgumentException e) {
             return String.valueOf(o);
         }
     }

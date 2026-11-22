@@ -73,7 +73,7 @@ public record FormSpec(String kind, String calendar, List<FormField> fields, boo
         }
         if (!calendar.isEmpty()) {
             try {
-                com.ash.drishti.common.BusinessCalendar.of(calendar);
+                com.ash.rachana.el.BusinessCalendar.of(calendar);
             } catch (RuntimeException e) {
                 problems.add(where + ": calendar '" + calendar + "' is not known");
             }

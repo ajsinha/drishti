@@ -38,7 +38,7 @@ class RunExportTest {
     @Test
     void csvCarriesTheRowsAndTheMaskNeverAValue() {
         ExportDoc doc = exporter(1000).ofAnswer("MTM by desk", "Run r-1", ANSWER);
-        String csv = new String(CsvWriter.write(doc), StandardCharsets.UTF_8);
+        String csv = new String(ExportCsv.write(doc), StandardCharsets.UTF_8);
         assertThat(csv).contains("desk").contains("cpty").contains("DESK-A").contains("DESK-B").contains("•••");
         assertThat(doc.sections().get(0).masked()).containsExactly("cpty");
         assertThat(doc.sections().get(0).note()).contains("Masked for you: cpty");

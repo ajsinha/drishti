@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.pivot;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.ElException;
@@ -191,7 +192,7 @@ record DocPath(String text, String id, List<Level> levels, List<Step> leaf, bool
             }
         }
         try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(text.strip().getBytes(StandardCharsets.UTF_8));
+            byte[] h = Hashes.of(Hashes.SHA_256, text.strip());
             return "path_" + HexFormat.of().formatHex(h).substring(0, 10);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.tools.codec.Hashes;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
@@ -93,7 +94,7 @@ public final class AerospikeLayout {
             return name;
         }
         try {
-            byte[] h = MessageDigest.getInstance("SHA-1").digest(path.getBytes(StandardCharsets.UTF_8));
+            byte[] h = Hashes.digest("SHA-1").digest(path.getBytes(StandardCharsets.UTF_8));
             return name.substring(0, Math.min(10, name.length())) + "_" + HexFormat.of().formatHex(h).substring(0, 4);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

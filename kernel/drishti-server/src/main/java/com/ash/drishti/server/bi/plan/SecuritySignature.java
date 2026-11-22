@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.plan;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.engine.SqlCompiler;
@@ -224,7 +225,7 @@ public final class SecuritySignature {
 
     public static String sha(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(s);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

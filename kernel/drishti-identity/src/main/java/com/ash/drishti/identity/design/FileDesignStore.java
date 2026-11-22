@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.design;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -187,7 +188,7 @@ public final class FileDesignStore implements DesignStore {
     /** A sample's file name: a hash of its name, so a name never becomes part of a path. */
     static String fileOf(String name) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(name.getBytes(StandardCharsets.UTF_8)), 0, 16) + ".json";
+            return HexFormat.of().formatHex(Hashes.of(Hashes.SHA_256, name), 0, 16) + ".json";
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -281,7 +282,7 @@ public final class EngineFiles {
 
     static String sha(byte[] b) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b), 0, 12);
+            return HexFormat.of().formatHex(Hashes.digest("SHA-256").digest(b), 0, 12);
         } catch (NoSuchAlgorithmException x) {
             throw new IllegalStateException(x);
         }

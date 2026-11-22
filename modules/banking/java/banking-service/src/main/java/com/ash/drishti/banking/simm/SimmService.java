@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
@@ -497,7 +498,7 @@ public final class SimmService {
     /** The SHA-256 of the engine's input (every element, in order): equal digests, equal figures. */
     static String digest(SimmInput in) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             StringBuilder b = new StringBuilder(in.calculationCurrency()).append('|').append(Double.doubleToLongBits(in.thresholdFx())).append('\n');
             for (SimmInput.Trade t : in.trades()) {
                 b.append(t.id()).append('|').append(t.productClass()).append('\n');

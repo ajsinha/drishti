@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.shard;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
@@ -246,7 +247,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
             b.append('|').append(s.index()).append(':').append(s.first()).append("..").append(s.last());
         }
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(b.toString());
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

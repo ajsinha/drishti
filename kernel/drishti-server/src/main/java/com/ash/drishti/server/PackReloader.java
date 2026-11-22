@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
@@ -847,7 +848,7 @@ public final class PackReloader implements AutoCloseable {
 
     private static String fingerprint(Path pack) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            MessageDigest md = Hashes.digest("SHA-1");
             int[] count = {0};
             try (Stream<Path> s = Files.walk(pack, 8)) {
                 s.filter(p -> !p.toString().contains("/.git/") && !p.toString().contains("/__pycache__/")).sorted().forEach(p -> {

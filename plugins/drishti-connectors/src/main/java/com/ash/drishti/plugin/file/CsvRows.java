@@ -24,23 +24,21 @@ import java.util.List;
 import java.util.Map;
 
 /** Reads a CSV file with a header row into {@code {"rows": [ {...}, ... ]}}. Numbers and booleans are typed. */
-final class CsvReader {
+final class CsvRows {
 
-    private CsvReader() {}
+    private CsvRows() {}
 
     static DataNode read(BufferedReader in) throws IOException {
-        String headerLine = in.readLine();
-        if (headerLine == null) {
+        com.ash.tools.csv.CsvReader csv = new com.ash.tools.csv.CsvReader(in);
+        List<String> header = csv.next();
+        if (header == null) {
             return new DataNode.Obj(Map.of("rows", new DataNode.Arr(List.of())));
         }
-        List<String> header = split(headerLine);
         List<DataNode> rows = new ArrayList<>();
-        String line;
-        while ((line = in.readLine()) != null) {
-            if (line.isBlank()) {
+        for (List<String> cells = csv.next(); cells != null; cells = csv.next()) {
+            if (cells.size() == 1 && cells.get(0).isBlank()) {
                 continue;
             }
-            List<String> cells = split(line);
             Map<String, DataNode> row = new LinkedHashMap<>();
             for (int i = 0; i < header.size(); i++) {
                 row.put(header.get(i), typed(i < cells.size() ? cells.get(i) : ""));
@@ -70,34 +68,5 @@ final class CsvReader {
             }
         }
         return new DataNode.Val(s);
-    }
-
-    /** Splits one CSV line; supports double-quoted cells with doubled quotes inside. */
-    static List<String> split(String line) {
-        List<String> out = new ArrayList<>();
-        StringBuilder cur = new StringBuilder();
-        boolean quoted = false;
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (quoted) {
-                if (c == '"' && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    cur.append('"');
-                    i++;
-                } else if (c == '"') {
-                    quoted = false;
-                } else {
-                    cur.append(c);
-                }
-            } else if (c == '"') {
-                quoted = true;
-            } else if (c == ',') {
-                out.add(cur.toString());
-                cur.setLength(0);
-            } else {
-                cur.append(c);
-            }
-        }
-        out.add(cur.toString());
-        return out;
     }
 }

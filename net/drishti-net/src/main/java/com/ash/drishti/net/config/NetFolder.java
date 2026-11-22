@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net.config;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.common.Branding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -249,7 +250,7 @@ public final class NetFolder {
     /** The version of a text: stable for equal text. */
     public static String etag(String text) {
         try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8));
+            byte[] h = Hashes.of(Hashes.SHA_256, text);
             return HexFormat.of().formatHex(h, 0, 8);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

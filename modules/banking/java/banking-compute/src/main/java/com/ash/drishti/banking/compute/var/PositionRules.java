@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.var;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -201,7 +202,7 @@ public final class PositionRules {
 
     private static String sha(String text) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8))).substring(0, 16);
+            return Hashes.sha256Hex(text).substring(0, 16);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

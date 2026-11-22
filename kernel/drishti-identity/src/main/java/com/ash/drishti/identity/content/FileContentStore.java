@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.content;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import java.io.ByteArrayOutputStream;
@@ -390,7 +391,7 @@ public final class FileContentStore implements ContentStore {
     /** The SHA-256 of a file's bytes, read in 64 KB pieces (the same as {@link #hash(byte[])} of the whole file). */
     static String hash(Path f) throws IOException {
         try (java.nio.channels.FileChannel ch = java.nio.channels.FileChannel.open(f, java.nio.file.StandardOpenOption.READ)) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             java.nio.ByteBuffer b = java.nio.ByteBuffer.allocate(64 << 10);
             long at = 0;
             int n;
@@ -406,7 +407,7 @@ public final class FileContentStore implements ContentStore {
 
     static String hash(byte[] b) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b));
+            return Hashes.sha256Hex(b);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

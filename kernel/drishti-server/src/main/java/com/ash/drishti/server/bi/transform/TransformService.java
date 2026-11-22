@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.transform;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -303,7 +304,7 @@ public final class TransformService implements AutoCloseable {
 
     private static String hash(String text) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8))).substring(0, 24);
+            return Hashes.sha256Hex(text).substring(0, 24);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

@@ -354,7 +354,7 @@ class HistoryServiceTest {
 
     @Test
     void windows() {
-        var cal = com.ash.drishti.common.BusinessCalendar.of("USNY");
+        var cal = com.ash.rachana.el.BusinessCalendar.of("USNY");
         LocalDate earliest = LocalDate.of(2021, 1, 4);
         HistoryWindow ytd = HistoryWindow.resolve(null, "ytd", null, null, 30, TODAY, TODAY, earliest, 366, cal);
         assertThat(ytd.from()).isEqualTo(LocalDate.of(2026, 1, 1));

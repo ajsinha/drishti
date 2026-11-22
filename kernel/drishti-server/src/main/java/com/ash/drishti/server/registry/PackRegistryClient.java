@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.registry;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,7 +78,7 @@ public final class PackRegistryClient {
     private final RegistryProperties props;
     private final Path installed;
     private final ObjectMapper json = new ObjectMapper();
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
+    private final HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
 
     public PackRegistryClient(RegistryProperties props, Path installedDir) {
         this.props = props;
@@ -214,7 +215,7 @@ public final class PackRegistryClient {
 
     static String sha256(byte[] data) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(data));
+            return Hashes.sha256Hex(data);
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }

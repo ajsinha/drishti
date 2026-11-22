@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.console;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.resolution.ConfigResolution;
 import com.ash.drishti.api.resolution.PackResolver;
 import com.ash.drishti.api.resolution.ResolutionSettings;
@@ -643,7 +644,7 @@ public class ConsoleAnswers {
 
     static String sha(byte[] bytes) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+            return Hashes.sha256Hex(bytes);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

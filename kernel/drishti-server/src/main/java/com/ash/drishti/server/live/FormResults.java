@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.live;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -269,7 +270,7 @@ public class FormResults {
         String basis = f.kind() + "\u001f" + String.join(",", f.columns()) + "\u001f" + (at.isLatest() ? "live" : at.businessDate() + "@" + at.knownAt())
                 + "\u001f" + (condition == null ? "" : condition) + "\u001f" + audience;
         try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(basis.getBytes(StandardCharsets.UTF_8));
+            byte[] h = Hashes.of(Hashes.SHA_256, basis);
             return "q-" + HexFormat.of().formatHex(h, 0, 12);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

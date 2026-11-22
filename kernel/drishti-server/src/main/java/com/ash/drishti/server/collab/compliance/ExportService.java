@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.compliance;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.common.Branding;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -651,7 +652,7 @@ public final class ExportService implements AutoCloseable {
 
     private static MessageDigest digest() {
         try {
-            return MessageDigest.getInstance("SHA-256");
+            return Hashes.digest("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

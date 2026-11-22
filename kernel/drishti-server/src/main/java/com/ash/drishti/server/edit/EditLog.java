@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.edit;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -318,7 +319,7 @@ public final class EditLog {
     /** The entry's signature: SHA-256 over its place, id, epoch and body, so an edited row no longer matches. */
     static String signature(int lane, long seq, String changeId, long epoch, String body) {
         try {
-            MessageDigest d = MessageDigest.getInstance("SHA-256");
+            MessageDigest d = Hashes.digest("SHA-256");
             d.update((lane + "|" + seq + "|" + changeId + "|" + epoch + "|").getBytes(StandardCharsets.UTF_8));
             d.update(body.getBytes(StandardCharsets.UTF_8));
             return "sha256:" + HexFormat.of().formatHex(d.digest());

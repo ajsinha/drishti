@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -85,7 +86,7 @@ class EnvironmentTest {
                 .getBytes(StandardCharsets.UTF_8));
         StringBuilder record = new StringBuilder();
         for (Map.Entry<String, byte[]> e : files.entrySet()) {
-            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(e.getValue());
+            byte[] h = Hashes.digest("SHA-256").digest(e.getValue());
             record.append(e.getKey()).append(",sha256=").append(Base64.getUrlEncoder().withoutPadding().encodeToString(h)).append(',')
                     .append(e.getValue().length).append('\n');
         }

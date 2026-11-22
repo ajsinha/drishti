@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.env;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -122,7 +123,7 @@ public record LockFile(List<Pin> pins, String text, String sha256) {
 
     public static String sha256(byte[] b) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b));
+            return Hashes.sha256Hex(b);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

@@ -72,7 +72,7 @@ public final class ReportService implements AutoCloseable {
     private final ReportProperties props;
     private final boolean security;
     private final ObjectMapper json = new ObjectMapper();
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
+    private final HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
     private final Set<String> running = ConcurrentHashMap.newKeySet();
     private final ScheduledExecutorService ticker = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-reports").factory());
 

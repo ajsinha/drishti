@@ -28,6 +28,7 @@
   <name>drishti-plugin-aerospike</name>
   <description>Aerospike source: a record per entity per business date, an index record per entity, promoted bins for searches</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>

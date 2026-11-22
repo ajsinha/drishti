@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
@@ -468,7 +469,7 @@ public final class FrtbService {
     /** The SHA-256 of the engine's input (every element, in order): equal digests, equal figures. */
     static String digest(FrtbInput in) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             StringBuilder b = new StringBuilder(in.reporting()).append('\n');
             for (FrtbInput.Position p : in.positions()) {
                 b.append(p.id()).append('|').append(p.productType()).append('\n');

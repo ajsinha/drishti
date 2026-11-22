@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.collab;
 
+import com.ash.tools.codec.Hashes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +34,7 @@ public final class Seals {
 
     public static String sha(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(s);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

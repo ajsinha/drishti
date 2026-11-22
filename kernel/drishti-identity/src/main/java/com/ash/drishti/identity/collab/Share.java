@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.collab;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -84,7 +85,7 @@ public record Share(String id, String sender, Instant createdAt, String kind, St
             b.append("view=").append(view).append('\u001f');
         }
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(b.toString());
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

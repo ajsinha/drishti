@@ -64,8 +64,8 @@ public final class JsonHttp implements AutoCloseable {
             throw new LlmException(LlmException.Kind.CONFIG, "base-url is not a valid URL");
         }
         this.proxy = ProxySettings.resolve(c.settings(), probe);
-        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
-                .version(HttpClient.Version.HTTP_1_1));
+        HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
+                .version(HttpClient.Version.HTTP_1_1);
         this.tls = DrishtiTools.tlsMaterial(c.settings(), probe, "base-url");
         this.client = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }

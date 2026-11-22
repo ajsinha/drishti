@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureHotFile;
 import java.io.IOException;
@@ -251,7 +252,7 @@ final class ExposureTier implements AutoCloseable {
         String key = "format=" + ExposureHotFile.VERSION + "|date=" + date + "|run=" + runId + "|collateral=" + collateral + "|im=" + im + "|"
                 + new java.util.TreeMap<>(versions);
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(key);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

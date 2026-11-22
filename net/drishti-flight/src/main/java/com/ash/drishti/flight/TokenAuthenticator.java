@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.flight;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.ErrorCode;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -131,7 +132,7 @@ public final class TokenAuthenticator implements CallHeaderAuthenticator {
 
     private static String hash(String token) {
         try {
-            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+            byte[] d = Hashes.of(Hashes.SHA_256, token);
             return Base64.getUrlEncoder().withoutPadding().encodeToString(d);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

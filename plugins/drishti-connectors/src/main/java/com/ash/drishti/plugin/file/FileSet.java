@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.file;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -99,7 +100,7 @@ final class FileSet {
     private static String fingerprint(TreeMap<String, String> files) {
         MessageDigest sha;
         try {
-            sha = MessageDigest.getInstance("SHA-256");
+            sha = Hashes.digest("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

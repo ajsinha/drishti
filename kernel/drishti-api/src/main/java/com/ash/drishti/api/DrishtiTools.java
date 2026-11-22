@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.api;
 
+import com.ash.tools.net.ProxySettings;
 import com.ash.tools.net.SiteProxy;
 import com.ash.tools.net.TlsContexts;
 import com.ash.tools.net.TlsHttp;
@@ -24,6 +25,7 @@ import com.ash.tools.settings.Placeholders;
 import com.ash.tools.settings.SettingSpec;
 import com.ash.tools.settings.SettingsFile;
 import com.ash.tools.time.LoadGuard;
+import java.net.http.HttpClient;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -81,5 +83,33 @@ public final class DrishtiTools {
     /** The settings a TLS block ({@code tls.*}, or a prefix of the caller's) takes, for the settings catalogue. */
     public static List<SettingSpec> tlsSettingSpecs(String prefix) {
         return TlsSettings.settingSpecs(prefix, ALLOW_INSECURE_TLS);
+    }
+
+    /**
+     * The one place a Drishti HTTP client is started: a builder with the proxy {@code proxy} resolved (null: none, as for the cluster's own peers) and the
+     * TLS material {@code tls} (null: the JVM's trust) applied. The caller adds its timeouts, redirects and version and builds. A guard
+     * ({@code ArchitectureRulesTest}) allows {@code HttpClient.newBuilder} nowhere else.
+     */
+    public static HttpClient.Builder httpBuilder(ProxySettings proxy, TlsMaterial tls) {
+        HttpClient.Builder b = HttpClient.newBuilder();
+        if (proxy != null) {
+            b = proxy.apply(b);
+        }
+        return tls == null ? b : TlsHttp.apply(b, tls);
+    }
+
+    /** {@link #httpBuilder(ProxySettings, TlsMaterial)} with the proxy and no client TLS identity (the JVM's trust). */
+    public static HttpClient.Builder httpBuilder(ProxySettings proxy) {
+        return httpBuilder(proxy, null);
+    }
+
+    /** A builder for an outbound call whose target is not known yet: the site proxy (or the environment's) for https targets, the JVM's trust. */
+    public static HttpClient.Builder httpBuilder() {
+        return httpBuilder(ProxySettings.resolve(Map.of(), "https://"), null);
+    }
+
+    /** A builder for the URL {@code url} (named {@code urlSetting} in messages) with the {@code settings}' {@code proxy.*} and {@code tls.*} (or the site's). */
+    public static HttpClient.Builder httpBuilder(Map<String, String> settings, String url, String urlSetting) {
+        return httpBuilder(ProxySettings.resolve(settings, url), tlsMaterial(settings, url, urlSetting));
     }
 }

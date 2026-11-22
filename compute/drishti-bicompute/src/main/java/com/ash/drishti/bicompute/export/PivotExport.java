@@ -344,7 +344,6 @@ public final class PivotExport {
         if (s == null) {
             return "";
         }
-        boolean quote = s.indexOf(delimiter) >= 0 || s.contains("\"") || s.contains("\n") || s.contains("\r");
-        return quote ? "\"" + s.replace("\"", "\"\"") + "\"" : s;
+        return com.ash.tools.csv.CsvWriter.quote(s, delimiter);
     }
 }

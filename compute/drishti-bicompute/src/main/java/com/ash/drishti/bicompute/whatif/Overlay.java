@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.whatif;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import java.nio.charset.StandardCharsets;
@@ -133,7 +134,7 @@ public record Overlay(Map<String, List<String>> exclude, List<Change> changes, L
     public String signature() {
         String text = new java.util.TreeMap<>(exclude) + "|" + changes + "|" + add;
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8))).substring(0, 16);
+            return Hashes.sha256Hex(text).substring(0, 16);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

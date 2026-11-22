@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.custom;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.kernel.api.vocabulary.DomainVocabulary;
 import com.ash.drishti.bicompute.custom.FunctionDef.Input;
 import com.ash.drishti.bicompute.custom.FunctionDef.Language;
@@ -232,7 +233,7 @@ public final class CustomFunctions {
 
     static String sha(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(s);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

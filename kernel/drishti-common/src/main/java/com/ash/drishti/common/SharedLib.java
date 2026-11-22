@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.common;
 
+import com.ash.tools.codec.Hashes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -199,7 +200,7 @@ public final class SharedLib {
 
     private static String sha256(Path f) throws IOException {
         try (InputStream in = Files.newInputStream(f)) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             byte[] buf = new byte[1 << 16];
             for (int n; (n = in.read(buf)) > 0; ) {
                 md.update(buf, 0, n);

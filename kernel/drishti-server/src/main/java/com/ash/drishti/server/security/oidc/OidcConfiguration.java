@@ -28,7 +28,7 @@ public class OidcConfiguration {
 
     @Bean
     public IdTokenVerifier idTokenVerifier(OidcProperties props) {
-        HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
+        HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
         return new IdTokenVerifier(props, new JwksCache(props, http, Clock.systemUTC()), Clock.systemUTC());
     }
 }

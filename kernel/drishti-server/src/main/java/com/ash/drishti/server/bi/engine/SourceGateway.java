@@ -123,7 +123,7 @@ public interface SourceGateway {
     LocalDate currentDate();
 
     /** The business-day calendar of the pack (weekends only when a gateway has none): time-intelligence windows count business days by it. */
-    default com.ash.drishti.common.BusinessCalendar calendar() {
-        return com.ash.drishti.common.BusinessCalendar.of("WEEKENDS");
+    default com.ash.rachana.el.BusinessCalendar calendar() {
+        return com.ash.rachana.el.BusinessCalendar.of("WEEKENDS");
     }
 }

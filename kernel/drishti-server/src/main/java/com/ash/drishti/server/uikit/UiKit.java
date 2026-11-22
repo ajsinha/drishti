@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.uikit;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -195,7 +196,7 @@ public class UiKit {
 
     private static String sha256(Path f) throws IOException {
         try (InputStream in = Files.newInputStream(f)) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             byte[] buf = new byte[8192];
             for (int n; (n = in.read(buf)) > 0; ) {
                 md.update(buf, 0, n);

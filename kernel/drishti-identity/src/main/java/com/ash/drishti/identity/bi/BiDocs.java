@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.bi;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.content.ContentStore;
@@ -89,7 +90,7 @@ public final class BiDocs {
         }
         if (b.length() > 100) {
             try {
-                byte[] h = MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8));
+                byte[] h = Hashes.of(Hashes.SHA_256, raw);
                 return b.substring(0, 60) + "~" + HexFormat.of().formatHex(h, 0, 16);
             } catch (NoSuchAlgorithmException e) {
                 throw new IllegalStateException(e);

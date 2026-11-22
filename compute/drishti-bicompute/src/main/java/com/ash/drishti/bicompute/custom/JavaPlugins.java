@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.custom;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.kernel.api.pivot.AggFunction;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -52,7 +53,7 @@ public final class JavaPlugins {
     public String digest(String jar) {
         Path p = jarPath(jar);
         try (InputStream in = Files.newInputStream(p)) {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             byte[] buf = new byte[1 << 16];
             int n;
             while ((n = in.read(buf)) > 0) {

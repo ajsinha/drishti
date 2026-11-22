@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.identity.db.IdentityRepositories;
 import com.ash.drishti.identity.db.SwitchEntity;
 import com.ash.drishti.identity.db.SwitchLogEntity;
@@ -333,7 +334,7 @@ public final class SwitchLedger {
             return "";
         }
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             entries.stream().sorted(Comparator.comparing(Entry::key)).forEach(e -> md.update(
                     (e.key() + "|" + e.on() + "|" + e.stamp() + "|" + e.node() + "\n").getBytes(StandardCharsets.UTF_8)));
             return HexFormat.of().formatHex(md.digest(), 0, 8);

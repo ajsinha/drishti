@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.frtb;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -274,7 +275,7 @@ public final class FrtbParams {
                 set(root, path, o.getValue());
                 applied.put(path, o.getValue());
             }
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             md.update(sbm);
             md.update((byte) 0);
             md.update(drcRrao);

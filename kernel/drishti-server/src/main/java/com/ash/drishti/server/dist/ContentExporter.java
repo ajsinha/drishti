@@ -193,7 +193,7 @@ public final class ContentExporter implements AutoCloseable {
         }
         bytes = switch (f) {
             case XLSX -> ExportWorkbook.write(doc);
-            case CSV -> CsvWriter.write(doc);
+            case CSV -> ExportCsv.write(doc);
             case JSONL -> JsonlWriter.write(doc);           // one row a line, the CSV's column names as keys
             case HTML -> new byte[0];                       // the table form (Output.doc) is the result; the caller writes the HTML it wants
             case PDF -> pdf(doc, view, who, footer, stamp, t);

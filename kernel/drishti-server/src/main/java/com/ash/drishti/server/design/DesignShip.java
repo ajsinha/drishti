@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.design;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.design.DesignService;
@@ -270,7 +271,7 @@ public class DesignShip {
 
     static String hash(String text) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(text);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

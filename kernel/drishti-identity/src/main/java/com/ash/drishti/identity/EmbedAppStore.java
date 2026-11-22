@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.db.EmbedAppEntity;
@@ -512,7 +513,7 @@ public final class EmbedAppStore {
 
     private static String sha256(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return Hashes.sha256Hex(s);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

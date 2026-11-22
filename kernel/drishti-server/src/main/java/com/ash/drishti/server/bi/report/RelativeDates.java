@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;

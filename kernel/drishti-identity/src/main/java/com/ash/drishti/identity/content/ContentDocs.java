@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.content;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -155,7 +156,7 @@ public final class ContentDocs {
     /** A free-text value (a user name, an entity id) as one short key segment: its SHA-1, hex. */
     public static String hash(String s) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
+            return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

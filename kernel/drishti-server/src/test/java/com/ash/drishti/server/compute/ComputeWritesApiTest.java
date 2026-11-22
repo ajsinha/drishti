@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.compute;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -98,7 +99,7 @@ class ComputeWritesApiTest {
                 .getBytes(StandardCharsets.UTF_8));
         StringBuilder record = new StringBuilder();
         for (Map.Entry<String, byte[]> e : files.entrySet()) {
-            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(e.getValue());
+            byte[] h = Hashes.digest("SHA-256").digest(e.getValue());
             record.append(e.getKey()).append(",sha256=").append(Base64.getUrlEncoder().withoutPadding().encodeToString(h)).append(',').append(e.getValue().length).append('\n');
         }
         record.append("demo_pkg-1.0.0.dist-info/RECORD,,\n");
@@ -125,7 +126,7 @@ class ComputeWritesApiTest {
         Files.createDirectories(shipped);
         byte[] w = wheel();
         Files.write(shipped.resolve("demo_pkg-1.0.0-py3-none-any.whl"), w);
-        Files.writeString(work.resolve("risk.lock"), "demo-pkg==1.0.0 --hash=sha256:" + java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(w)) + "\n");
+        Files.writeString(work.resolve("risk.lock"), "demo-pkg==1.0.0 --hash=sha256:" + Hashes.sha256Hex(w) + "\n");
         String testEngines = Path.of(TestRoots.repo(), "compute", "drishti-compute", "src", "test", "python").toAbsolutePath().normalize().toString().replace("\\", "/");
         Files.writeString(work.resolve("compute.yaml"), """
                 compute:

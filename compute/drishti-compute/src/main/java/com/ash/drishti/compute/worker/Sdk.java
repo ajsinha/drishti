@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.worker;
 
+import com.ash.tools.codec.Hashes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -57,7 +58,7 @@ public final class Sdk {
         Map<String, byte[]> files = new LinkedHashMap<>();
         MessageDigest md;
         try {
-            md = MessageDigest.getInstance("SHA-256");
+            md = Hashes.digest("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

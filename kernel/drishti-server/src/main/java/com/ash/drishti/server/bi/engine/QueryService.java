@@ -800,7 +800,7 @@ public final class QueryService implements AutoCloseable {
     private TimeWindows.Context timeContext(Dataset d, QueryRequest q, List<String> readDates) {
         LocalDate asOf = q.to() != null ? q.to() : q.from() != null ? q.from() : !readDates.isEmpty() ? LocalDate.parse(readDates.get(readDates.size() - 1)) : sources.currentDate();
         Dataset.Model m = d.model();
-        return new TimeWindows.Context(asOf, q.from(), m.holidays() == null ? sources.calendar() : com.ash.drishti.common.BusinessCalendar.of(m.holidays()), m.fiscalYearStart());
+        return new TimeWindows.Context(asOf, q.from(), m.holidays() == null ? sources.calendar() : com.ash.rachana.el.BusinessCalendar.of(m.holidays()), m.fiscalYearStart());
     }
 
     private Result finish(Loaded ds, QueryRequest q, SqlCompiler.Compiled c, AnalyticEngine.Answer a, String layer, String rollup, List<String> dates,

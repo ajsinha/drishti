@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.dist;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.server.reports.ReportSchedule;
 import java.time.DayOfWeek;
 import java.time.LocalDate;

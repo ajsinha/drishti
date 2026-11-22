@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.deploy;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedInputStream;
@@ -72,7 +73,7 @@ public final class PackArchive {
 
     public static String sha256(byte[] data) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(data));
+            return Hashes.sha256Hex(data);
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }
