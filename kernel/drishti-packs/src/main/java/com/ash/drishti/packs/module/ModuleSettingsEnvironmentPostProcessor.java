@@ -37,12 +37,12 @@ import org.springframework.core.env.PropertySource;
 /**
  * A module's settings, described by its manifest ({@link ModuleSettingsSchema}) and read as {@code drishti.module.<id>.*}. A key a site sets
  * there is also given to the server key it replaces (the module's key wins), so the code that still reads the old key sees it; the old keys a
- * site still sets are listed for Health ({@link #INFO}{@code .deprecated}) and read for one release.
+ * site sets itself stop the start ({@link RetiredNames}).
  */
 public final class ModuleSettingsEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     public static final String SOURCE = "drishti-module-settings";
-    /** Where the notes and the module list are put for Health and Admin. */
+    /** Where the module list is put for Health and Admin. */
     public static final String INFO = "drishti.module-settings-info";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
@@ -62,17 +62,17 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
             return;
         }
         Map<String, Object> oldKeys = new LinkedHashMap<>();
-        List<String> notes = new ArrayList<>();
+        List<String> retired = new ArrayList<>();
         for (ModuleSettingsSchema s : schemas.values()) {
             oldKeys.putAll(s.asOldKeys(env::getProperty));
-            notes.addAll(s.deprecated(k -> siteSets(env, k)));
+            retired.addAll(s.retired(k -> siteSets(env, k)));
         }
+        RetiredNames.refuse(retired);
         if (!oldKeys.isEmpty()) {
             env.getPropertySources().addFirst(new MapPropertySource(SOURCE, new LinkedHashMap<>(oldKeys)));
         }
         Map<String, Object> info = new LinkedHashMap<>();
         info.put(INFO + ".modules", String.join(",", schemas.keySet()));
-        info.put(INFO + ".deprecated", String.join("\n", notes));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE + "-info", info));
     }
 

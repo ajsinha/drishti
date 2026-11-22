@@ -40,7 +40,6 @@ public final class Claims {
         List<String> out = new ArrayList<>();
         if (m.api() != null) {
             out.add("API prefix /api/v1/" + m.api().prefix());
-            m.api().aliases().forEach(a -> out.add("alias " + a));
         }
         routes.stream().filter(r -> r.alias() != null).forEach(r -> out.add("alias " + r.alias()));
         c.words().forEach(w -> out.add("function " + w));

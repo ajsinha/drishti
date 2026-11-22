@@ -1602,8 +1602,7 @@ routes, read the raw request, set cookies or keep state (no mutable fields: an a
 - The server applies its gates in order (module → function → permission → audit, section 4.5); the proxy adds nothing it could bypass.
 - The proxy keeps **no per-person state**: no cache unless keyed by person and module; it is the same code for every module
   (session-isolation rule).
-- This replaces today's hand-written pass-throughs (banking's ~35 `/api/var/**`, `/api/exposure/**` … handlers); their console paths stay
-  as `api.aliases` for one release.
+- This replaces today's hand-written pass-throughs (banking's ~35 `/api/var/**`, `/api/exposure/**` … handlers); their old console paths are gone.
 - Elements data sources (`source=api("/variants")`) and the module's own JS (`fetch(api.url("/variants"))` from the Elements data
   library) both use it; the JS never builds URLs to other paths (lint C5, CSP `connect-src 'self'`).
 

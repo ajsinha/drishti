@@ -25,8 +25,8 @@ import java.util.function.Function;
 /**
  * A module's settings as its manifest describes them (the manifest's {@code settings:}, docs/architecture/KERNEL_AND_MODULES.md section 2.3): each
  * is read as {@code drishti.module.<id>.<key>} (what {@code ModuleSettings} returns to the module). A setting that was the server's own key before
- * the module owned it names it ({@code was:}): the old key is still read for one release, the module's key wins over it, and Health says
- * which old keys a site still sets.
+ * the module owned it names it ({@code was:}): the module's key is handed to the code that still reads that server key, and a site that sets the old
+ * key itself is refused at start ({@link RetiredNames}).
  *
  * @param module the module id
  * @param items  the settings, in the manifest's order
@@ -43,7 +43,7 @@ public record ModuleSettingsSchema(String module, List<Item> items) {
      *
      * @param key     the dotted key below the module's prefix
      * @param type    {@code string}, {@code int}, {@code number}, {@code boolean} or {@code list}
-     * @param was     the server key it was before (read for one release), or empty
+     * @param was     the server key it was before (the code still reads it; a site setting it is refused at start), or empty
      * @param meaning one line for Admin
      * @param group   the heading it sits under in Admin
      */
@@ -107,12 +107,12 @@ public record ModuleSettingsSchema(String module, List<Item> items) {
         return out;
     }
 
-    /** The deprecation notes: the old keys a site still sets (the site's own sources only, never the product's defaults). */
-    public List<String> deprecated(Function<String, Boolean> siteSets) {
+    /** The refusal lines: the old keys a site sets itself (the site's own sources only, never the product's defaults), each with the module's key to use. */
+    public List<String> retired(Function<String, Boolean> siteSets) {
         List<String> out = new ArrayList<>();
         for (Item i : items) {
             if (!i.was().isEmpty() && siteSets.apply(i.was())) {
-                out.add(i.was() + " is read for one release: set " + prefix(module) + i.key() + " (Admin -> Modules -> " + module + " -> Settings)");
+                out.add(RetiredNames.line(i.was(), null, prefix(module) + i.key() + " (Admin -> Modules -> " + module + " -> Settings)"));
             }
         }
         return out;

@@ -342,6 +342,9 @@ def _plugins_connector_actions(plugin: str) -> list:
 
 def create_app(settings: Settings) -> FastAPI:
     from core import tmpdir
+    from core.edition import refuse_retired
+
+    refuse_retired(settings)                                   # a retired settings name stops the start, naming the new key
 
     tmpdir.start(str(settings.get("tmp_dir", "") or ""))      # the console's own temp folder, before anything makes a temporary file
     from core import external_lib

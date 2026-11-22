@@ -439,15 +439,22 @@ def selected(settings) -> tuple[str, bool]:
     return (v or "all"), bool(v)
 
 
-def deprecated(settings) -> list[str]:
-    """The old keys the site still sets on this console (Health names each one): the product's name and notices are not read from them."""
+def retired(settings) -> list[str]:
+    """The retired keys the site sets on this console, each with what replaces it (the console stops at start on any: one refusal, ``refuse_retired``)."""
     out = []
     for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice"):
         if settings.site(key) not in (None, "", {}):
-            out.append(f"{key} is no longer read: set brand: in the distribution file")
+            out.append(f"{key} is retired: set brand: in the distribution file")
     if settings.site("edition") not in (None, "", {}):
-        out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
+        out.append("edition is retired: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
     return out
+
+
+def refuse_retired(settings) -> None:
+    """Stops the console's start when a retired key is set, naming the new key of each."""
+    lines = retired(settings)
+    if lines:
+        raise SystemExit("the console cannot start: settings names that were retired are still set; rename each one:\n  " + "\n  ".join(lines))
 
 
 class Editions:

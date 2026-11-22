@@ -40,7 +40,6 @@
   <span class="mono {{ 't-warn' if mods.values() | reject('equalto', 'loaded') | list }}" data-health-modules title="The modules the distribution lists and whether each loaded; Admin → Modules has the detail">{{ mods.values() | select('equalto', 'loaded') | list | length }} of {{ mods | length }} modules loaded · <a href="{{ BASE }}/admin/modules">Modules</a></span>
   <span class="mono {{ 't-warn' if (bd.get('unboundRequired') or []) | length }}" data-health-bindings title="Which connector or lake table serves each kind the modules need; Admin → Data bindings has the detail">bindings: {{ bd.get('bound') or 0 }} bound{% if bd.get('unboundRequired') %}, {{ bd.unboundRequired | length }} required unbound{% endif %} · <a href="{{ BASE }}/admin/bindings">Data bindings</a></span>
   <span class="mono {{ 't-warn' if pl.get('problems') }}" data-health-placement title="Where each part of each module runs; Admin → Modules has the plan">placement v{{ pl.get('version') or 0 }}{% if pl.get('problems') %}, {{ pl.problems | length }} problem{{ 's' if pl.problems | length != 1 }}{% endif %} · <a href="{{ BASE }}/admin/modules">Modules</a></span>
-  {% for note in (sd.deprecated or []) + (cd.deprecated or []) %}<span class="t-warn" data-distribution-deprecated>{{ note }}</span>{% endfor %}
   {% for p in (sd.lensProblems or []) %}<span class="t-neg" data-distribution-lens-problem role="alert">{{ p }}</span>{% endfor %}
 </div>
 {% with blas = (h.native or {}).get('blas') %}{% include "admin/_native_banner.html" %}{% endwith %}

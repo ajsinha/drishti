@@ -45,7 +45,7 @@ import java.util.Set;
  * @param conflicts   modules it cannot run beside
  * @param kinds       {@code provides.kinds}: the kinds it owns, by pack
  * @param java        its Java part, or null for a module without code
- * @param api         its REST namespace and aliases
+ * @param api         its REST namespace
  * @param console     its console part ({@code plugin}, {@code handlers}, {@code elements})
  * @param memoryMb    {@code resources.memory-mb}, 0 when not declared
  * @param sections    every other field, as read
@@ -100,8 +100,8 @@ public record DmodManifest(int format, String id, String version, String title, 
         }
     }
 
-    /** The REST part: the namespace ({@code /api/v1/<prefix>/}), old paths kept for one release, and token scopes. */
-    public record ApiPart(String prefix, List<String> aliases, Object tokens) {
+    /** The REST part: the namespace ({@code /api/v1/<prefix>/}) and token scopes. */
+    public record ApiPart(String prefix, Object tokens) {
     }
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
@@ -207,7 +207,10 @@ public record DmodManifest(int format, String id, String version, String title, 
             if (prefix == null || !prefix.matches("[a-z][a-z0-9-]*(/[a-z0-9-]+)*")) {
                 throw new ModuleRefusedException("V1", label + ": `api.prefix` must be a plain path such as `" + id + "` (found " + prefix + ")");
             }
-            api = new ApiPart(prefix, strings(a.get("aliases")), a.get("tokens"));
+            if (a.get("aliases") != null) {
+                throw new ModuleRefusedException("V1", label + ": `api.aliases` is retired (nothing serves an alias): remove it and use `api.prefix` " + prefix);
+            }
+            api = new ApiPart(prefix, a.get("tokens"));
         }
         long memory = 0;
         Object mem = map(m.get("resources")).get("memory-mb");

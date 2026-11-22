@@ -175,7 +175,6 @@ public class EditionConfiguration {
                 m.put("all", all);
                 m.put("asked", all ? java.util.List.of("all") : asked);
                 m.put("modules", modules);
-                m.put("deprecated", java.util.Arrays.stream(env.getProperty(info + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList());
                 EditionContext ec = editionContext.getIfAvailable();   // a lens named that is not offered: red on Health (LensOffer)
                 m.put("lensProblems", ec == null ? java.util.List.of() : ec.lensProblems());
                 return m;

@@ -809,9 +809,8 @@ async def health(request: Request, partial: int = 0):
 
 def _console_distribution(app) -> dict:
     """This console's distribution for Health (docs/architecture/DISTRIBUTIONS.md) and the old keys it still reads."""
-    from core.edition import deprecated
     d = app.state.editions.distribution
-    return {**d.about(), "own": app.state.editions.own_distribution, "deprecated": deprecated(app.state.settings)}
+    return {**d.about(), "own": app.state.editions.own_distribution}
 
 
 @router.get("/caches")
@@ -959,7 +958,7 @@ async def white_label_page(request: Request):
     if not me.is_admin:
         return _forbidden(request)
     from core import modules as _mods
-    from core.edition import Distribution, deprecated
+    from core.edition import Distribution
     eds = request.app.state.editions
     try:                                             # compiled by the server, never read here (THIN_CONSOLE_DESIGN.md, step S2)
         answer = await request.app.state.backend.admin("GET", "/distributions", me)
@@ -975,7 +974,7 @@ async def white_label_page(request: Request):
                      "commands": len((spec.get("commands") or {}).get("allow") or [])})
     rows.sort(key=lambda r: (not r["running"], r["d"].id != "drishti.all", r["d"].id))
     return render(request, "admin/white_label.html", rows=rows, problems=problems, directory="the server's distribution folder", me=me,
-                  own=eds.own_distribution, deprecated=deprecated(request.app.state.settings), status=await _status(request))
+                  own=eds.own_distribution, status=await _status(request))
 
 
 # -- Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5, mock-up A) ------------------------
