@@ -388,6 +388,10 @@ Measured on one developer workstation; the method, the commands to run each agai
 | 35.7 million trades over 30 dates, 50 users | 179 requests/s, 0 failures; a day of 400,000 trades restated in 2 min 54 s while 30 users read | [§8.3](docs/admin/BENCHMARK.md#83-thirty-days-and-a-day-restated-while-serving) |
 | The parallel Java loader, 10,000 positions × 510 scenarios | 0.19 to 0.29 s warm, 34,000 to 52,000 rows/s | [§7.2](docs/admin/BENCHMARK.md#72-the-java-parallel-loader-per-stage) |
 
+## Role Home (Hybrid)
+
+The role Home (design) is the hybrid: a mnemonic bar and KPI strip always present, "Exceptions first" beside "Since yesterday 17:00", a role-specific working area and a rail (quick mnemonics, calendar, news). Panels come from planned Sutra fragments in the Home library (`mnemonic-bar`, `kpi-strip`, `exceptions-list`, `change-feed`, `table-with-use-bars`, `tile-grid`, `precheck-box`, `calendar-list`, `news-list`); a person may arrange and save their own layout (option, not default). "What changed since yesterday" is a server feature: after each load or recompute, Java compares the day with the previous cut-off by key, flags moves over a per-measure threshold, and explains each by attribution to its drivers (new trades, amended trades, market data, rolled window); the Home only reads the stored change records. Mock-ups: `docs/lenses/mockups/role-homes/H-*.html`.
+
 ## Documentation
 
 Each major feature has **one guide and one tutorial**; every tutorial step shows the screen, the command line and the YAML, on the

@@ -41,3 +41,13 @@ Three directions, each shown for two roles (risk manager, trader). Static HTML, 
 ## Owner decision (2026-11-22)
 
 The hybrid: direction B (exceptions first, what changed since yesterday) on top of direction A (KPI strip and mnemonic bar always present); direction C's pinned panels are an option, not the default (the role supplies the default layout; a person may arrange and save their own). "What changed since yesterday" is a real server feature (change detection), designed in H1.
+
+## Hybrid (chosen) mock-ups
+
+`H-risk-manager.html` and `H-trader.html` at 1600x1000: mnemonic bar and KPI strip always on top; "Exceptions first" beside "Since yesterday 17:00 (what changed and why)"; the working area (risk manager: desk VaR and limits with use bars, exposure by counterparty, stress tiles; trader: positions and P&L blotter, pre-deal check, market tiles); a right rail of quick mnemonics, calendar and news. "arrange my Home" (top right) shows C's drag and pin handles as an option; it is off by default.
+
+- Panels and the planned Sutra fragments they come from: `mnemonic-bar`, `kpi-strip`, `exceptions-list`, `change-feed`, `table-with-use-bars` (desk VaR, positions), `exposure-table`, `tile-grid` (stress, market), `precheck-box`, `quick-mnemonics`, `calendar-list`, `news-list`, all from the Home library; `workspace` (C) only wraps them in arrange mode.
+- Server feature "what changed since yesterday" (change detection): it compares the current business day's results with the previous cut-off (D-1 17:00) by key (desk, book, trade, counterparty, risk factor) and flags moves above a per-measure threshold, new or amended trades, loads and limit state changes.
+- It runs on the server, after each load or recompute, in Java, and stores the change records per day so the Home only reads them (no browser computation).
+- It explains a change by attribution: the same computation is run with one input group swapped at a time (new trades, amended trades, market data, rolled window), and the top drivers are named with their share of the move (for example "rates risk factor RF-USD-10Y, 71%").
+- Each record carries the mnemonic that opens the detail (`WHY <key> <GO>`), is filtered by the person's role and lens, and needs no new data: it reads what the engines already hold.
