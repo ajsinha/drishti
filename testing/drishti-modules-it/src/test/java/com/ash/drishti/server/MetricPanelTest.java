@@ -16,7 +16,6 @@
 package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
@@ -46,6 +45,21 @@ class MetricPanelTest {
 
     @Autowired ViewPipeline pipeline;
     @Autowired JsonCodec codec;
+
+    /** Problems as Drishti's API answers them ({@code DrishtiRachana.drs}: the edge's one mapping of Rachana's codes). */
+    private static java.util.List<com.ash.rachana.SutraProblem> answered(java.util.List<com.ash.rachana.SutraProblem> problems) {
+        return com.ash.drishti.rachana.DrishtiRachana.drs(problems);
+    }
+
+    /** The codes a panel that does not parse is refused with, as Drishti answers them. */
+    private static java.util.List<String> refusal(String panel) {
+        try {
+            sutra(panel);
+        } catch (SutraException e) {
+            return answered(e.problems()).stream().map(com.ash.rachana.SutraProblem::code).toList();
+        }
+        throw new AssertionError("accepted: " + panel);
+    }
 
     private static Sutra sutra(String panel) {
         return com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
@@ -135,16 +149,13 @@ class MetricPanelTest {
     @Test
     void theGrammarAcceptsTheOptionsAndRejectsTheRest() {
         assertThat(sutra(FULL).panels().get(0).kind().id()).isEqualTo("metric");
-        assertThatThrownBy(() -> sutra("{ id: m, kind: metric, title: M }")).isInstanceOf(SutraException.class)
-                .hasMessageContaining("DRS-2022");
-        assertThatThrownBy(() -> sutra("{ id: m, kind: metric, value: $.a, rows: $.b }")).isInstanceOf(SutraException.class)
-                .hasMessageContaining("DRS-2023");
-        assertThatThrownBy(() -> sutra("{ id: m, kind: metric, value: $.a, caption: [x, y] }")).isInstanceOf(SutraException.class)
-                .hasMessageContaining("DRS-2029");
+        assertThat(refusal("{ id: m, kind: metric, title: M }")).contains("DRS-2022");
+        assertThat(refusal("{ id: m, kind: metric, value: $.a, rows: $.b }")).contains("DRS-2023");
+        assertThat(refusal("{ id: m, kind: metric, value: $.a, caption: [x, y] }")).contains("DRS-2029");
         // value and delta are expressions, compiled and checked when the Sutra loads
         var el = new com.ash.rachana.SutraExpressions(new com.ash.rachana.el.ElCompiler());
-        assertThat(el.check(sutra("{ id: m, kind: metric, value: '$.a +* 2' }"))).extracting("code").contains("DRS-2101");
-        assertThat(el.check(sutra("{ id: m, kind: metric, value: $.a, delta: '$.b +* 2' }"))).extracting("code").contains("DRS-2101");
-        assertThat(el.check(sutra(FULL))).isEmpty();
+        assertThat(answered(el.check(sutra("{ id: m, kind: metric, value: '$.a +* 2' }")))).extracting("code").contains("DRS-2101");
+        assertThat(answered(el.check(sutra("{ id: m, kind: metric, value: $.a, delta: '$.b +* 2' }")))).extracting("code").contains("DRS-2101");
+        assertThat(answered(el.check(sutra(FULL)))).isEmpty();
     }
 }

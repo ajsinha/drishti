@@ -236,8 +236,8 @@ class ModulePackTest {
     @Test
     @SuppressWarnings("unchecked")
     void noShippedModuleLeavesOutWhatAPackServes() throws IOException {
-        String root = System.getProperty("drishti.repo.root");
-        assumeTrue(root != null && Files.isDirectory(Path.of(root, "modules")), "the repository's modules/ (drishti.repo.root)");
+        String root = System.getProperty("lake.repo.root");
+        assumeTrue(root != null && Files.isDirectory(Path.of(root, "modules")), "the repository's modules/ (lake.repo.root)");
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
         try (Stream<Path> s = Files.list(Path.of(root, "modules"))) {
             for (Path f : s.map(d -> d.resolve("content.yaml")).filter(Files::isRegularFile).sorted().toList()) {

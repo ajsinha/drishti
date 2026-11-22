@@ -207,7 +207,7 @@ tls.ca-file=/etc/drishti/tls/bank-ca.pem
 - **`secrets.env`** (`deploy/stack/secrets.env.example`, read by `drishti.py start` and the stack's commands) is an environment file: what it
   sets are environment variables, so every placeholder still reads them, at step 3 of the resolver's order. It keeps working; the settings
   files are the way forward (a `secrets.ini` given last holds the same secrets, masked and with their origin known).
-- Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
+- Tests find the repository and their module through it too (`lake.repo.root`, `lake.module.root`, the names Drishti Lake's `TestRoots` reads); see
   [the test harness](../architecture/TEST_HARNESS.md#running-tests-from-an-ide).
 
 ## Named lakes, databases and brokers

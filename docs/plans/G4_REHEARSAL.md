@@ -696,3 +696,46 @@ flagged Sutra that binds gives a ViewModel identical to the 1.0 one (below), and
 | Designer, end to end on a server | a design made from a `rachana: 1` Sutra answers `language {level 1.0, server 1.2, older}`; `POST /builder/designs/{id}/upgrade` writes `rachana: 1.2` and `range` → `span` (changes listed, no flags), the answer `older: false`; `/studio/settings` gives `level: 1.2`. A Sutra the 1.2 reader refuses while it is read is now a located preview problem, not a 422 (the workbench's "a mistyped expression costs its panel" tests failed until this) |
 | Browser | `test_render_parity_browser` with the workbench, designer grid, About and ship browser suites: **292 passed, 1 failed**: a map panel's chart missing on the console's page for one Sutra on one run (`jurisdiction` here, `examples/map` on the run before; both ViewModels identical to 1.0): a painter timing, not the level |
 | Console and tools Python | designer, ship, schema kit, governance, Studio, pack deploy, packdiff, GLEIF, US equities, pack layout and guides: pass. Failing on the base as well: `test_studio_folded::test_the_studio_help_guide_moved_to_the_designer_guide` (Help's old addresses removed by the shims pass) and the genomics showcase `--check` (`help.yaml` `category`) |
+
+## Pass 3: triage (2026-11-21, `g4/triage` from `wip/g4-rehearsal-rx` `8346079c8`)
+
+Each failing test was run on Drishti `main` `9ce7c3170` (a scratch worktree) and on the branch, in a scratch Maven repository (Drishti Lake
+`0.9.0-SNAPSHOT` built from Lake `94dd281` with the two Lake fixes below; Lake `main` carries both).
+
+| Test | On `main` | Cause | Fix |
+|---|---|---|---|
+| `VarShardClusterTest`, `VarFormatEqualityTest`, `ExposureFormatEqualityTest` ("the vector field 'PNL' is not a list of numbers") | pass (the shard test's `anOwnerDown...` case fails there too, see below) | **introduced by G4** (`7b0fff1d3`, Iceberg fixtures written by Lake's one loader, `source.format: loader-rows`): a loader row is `{domain, kind, id, date, doc, columns}` with the document holding the vector in its stored form `{"$vector": "PNL"}` and the numbers in `columns.PNL`; Drishti's old loader took them from `columns`, Lake's read only the document, so every P&L and scenario-PV row was rejected and the Iceberg side never loaded | Lake `bcff31d`: a stored-form vector takes the wrapper's `columns` list (null: no vector; missing or not a list: rejected), Java loader and Python path alike, kit case `load/loader-rows-stored-vectors`; `check.py` all green, reference equal |
+| `VarApiTest.aDateThatIsNotOneRun...` (422 expected, 502) | pass | **introduced by G4**: Lake's read wrapper (`Problems.read`) turned any exception inside a read, the caller's own sink included, into `LK-1006` "cannot be read" and a read problem of the date, so the VaR engine's duplicate-trade refusal (`DRS-5202`, 422) answered `DRS-1003` 502 | Lake `d94023b`: a sink's exception is marked as the caller's (`Problems.caller`) and thrown unchanged, no read problem recorded, on Delta, Iceberg and files; `ProblemsCallerTest`; `check.py` all green |
+| `VarApiTest.theOperationsAnswerWhatTheRestPathsAnswer` (seen once) | pass (timing) | pre-existing flake: the comparison removed `computedAt` but not `computeMs`, a wall-clock duration (0 then 9 ms under load) | the test's clock filter drops both |
+| `MapPanelTest` | pass | **introduced by G4** (binder pass): the test calls Rachana's parser and compiler, which say `RCH-`; Drishti maps to `DRS-` at its edge (`DrishtiRachana.drs`) | the test checks the codes as Drishti answers them (same numbers) |
+| `EconomicsSutraNextEquivalenceTest` (missing resource) | pass | **introduced by G4**: the tests use Lake's `TestRoots`, which reads `lake.module.root`/`lake.repo.root`; surefire still set `drishti.*`, so `drishti-modules-it` no longer pointed its module root at `drishti-server` | surefire sets `lake.repo.root`/`lake.module.root`; `ModulePackTest`, test.ini, TEST_HARNESS, CONFIGURATION |
+| `NewsInMemorySentinelTest` (DRS-5219) | pass | **exposed by G4 shims 4**, a defect of `main` too: the memory-only guard took a connector's kinds from its definition, and a connector *file*'s `kinds:` is not read (bindings and routes say which kinds it serves), so a memory connector defined as a file guarded nothing (a scheduled report of memory-only news was accepted); `main`'s test passed only because it defined the connector as properties. And Lake's refusal (`LK-1005`) had no Drishti mapping | `SourceRegistry.kindsOf` (own list plus what the resolution reads from it); `ConnectorRows` uses it; `LK-1005` answers `403 DRS-5219` |
+| `PackagedVarGoldenTest` | pass | environment: needs a Python with `drishti_lake` | passes with the scratch venv (wheel installed), `-Ddrishti.python` |
+
+VaR/ES goldens on the branch with the fixes: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest`
+pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenTheShardMovesAndAnswersAgain` fails identically on `main`
+(503 expected, 200 with `answeredHere: 2`): pre-existing, not G4.
+
+### Pass 3 triage: the full Java suite (`clean verify`, once, after the PNL fix), every failure classified against `main`
+
+`main` was run on the same failing classes (one build). With the fixes below re-run, these are the results:
+
+| Failure on the branch | `main` | Class | Now |
+|---|---|---|---|
+| `ReportApiTest`, `RegistryApiTest`, `DerivedKindTest`, `SimmApiTest`, `FrtbApiTest` (initializer: connector set `exposure-format-equality` not there) | pass | G4 (shims 4 named a set that does not exist) | **fixed**: set `finance-lake-off` (the finance lake connector off, what they had as a property) |
+| `LicenseHeaderTest` (the `bi/folders` fixtures) | pass | G4 (shims part 2's fixtures) | **fixed** (`tools/license_headers.py --fix`) |
+| `CachesWeighedInBytesTest` (caches of moved or removed classes still listed) | pass | G4 | **fixed** (`count-only-caches.txt`) |
+| `OneTablePerSystemTest`, `SourceModuleEndToEndTest` (`lake.home` not set) | pass | G4 | **fixed**: Lake's loader run on `DrishtiLake.runtime()` (also `SourceShapeParityTest`) |
+| `ReadyApiTest` (5, `LK-1002` as a 500) | pass | G4 | **fixed**: Lake's `LK-1001..1005` answer as Drishti's codes at the API edge |
+| `SutraNextEventsTest.badClicksAreRefused` (`RCH-5001` as a 500) | pass | G4 (P9) | **fixed**: a `RachanaException` answers as the `DRS-` code of the same number |
+| `MetricPanelTest` (`RCH-` codes) | pass | G4 | **fixed**, as `MapPanelTest` |
+| `ModuleHostServerTest` (3, unknown function `greeter_greet`) | pass | G4 | **fixed**: the test evaluates with the instance's compiler (`DrishtiRachana.compiler()`) |
+| `BankingModuleOnTest.theOldPathIsTheNewOneForThisRelease`, `VarExplainApiTest.theOldExplainPaths...` (404) | pass | G4 (shims S5 removed the API aliases) | **fixed**: the old-prefix case removed with its shim; the explain test asks the module's own deprecated paths |
+| `ConnectorLayersFixtureTest` (the "older lake form" case) | pass | G4 (shims part 3 removed that form) | **fixed**: the case removed with the form |
+| `AbandonedReadsTest` (28 reads, at most 20) | pass | timing under load (load 30-45) | passes on the re-run; not changed |
+| `SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem`, `PathologicalExpressionsTest$LiftedLimits.anOverflow...` | pass | G4 (Rachana): a 100,000-deep expression with the limits lifted no longer overflows on Rachana's compiler, so the tests' "overflow" never happens | **open**: the tests need an input that does fail on Rachana, or Rachana's stack guard (P15) to refuse it; Rachana's call |
+| `ViewModelSchemaTest` (every `PanelData` record belongs to a kind) | pass | G4 (Rachana's `PanelData` has records the schema does not name: Pivot, Candles, DataChart, Graph, Tree, FormPanel, Timeline, Grid, Scatter, Bullet, Treemap) | **open**: the schema of Rachana's ViewModel, the renderer lane |
+| `DrishtiProfileConformanceTest` (`rank(x, 'sideways')`) | pass | G4, known (Part 3: kept at language level 1.0 on purpose) | **open**, by decision |
+| `LiveVisualsTest` (`bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | pass | G4 (shims part 2's fixtures) | **open** |
+| `IcebergMovedConnectorFileTest` (health text: `cannot read sa-ccr log: File does not exist` instead of the moved-lake words) | pass | G4 (Lake's read problems word a moved Iceberg table differently) | **open** (Lake's reason words for a moved table) |
+| `BankingPacksTest` (183 vs 186), `ConsoleAnswersRecordTest` (recorded answers older than the code), `DomainPacksTest` (no source holds `dms-score/...`), `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly`, `VarShardClusterTest.anOwnerDown...` | **fail on `main` too** | pre-existing | not changed |

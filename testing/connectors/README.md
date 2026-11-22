@@ -1,3 +1,18 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
 # Connector files of the tests
 
 A connector is defined by its file and nothing else; the server refuses a `drishti.sources.connectors.<name>.*` property or variable. Each folder here is one set: the connector files a test (or the tests listed) copies into its run folder with `ConnectorFixtures.copy("<set>")` and names as `drishti.sources.connectors-dir=${drishti.test.dir}/connectors/<set>`. A file with only `enabled: false` switches a template's connector off; a value only the running test knows is a placeholder `${test-connectors.<connector>.<setting>}` that the test's `@DynamicPropertySource` gives.
@@ -15,6 +30,7 @@ A connector is defined by its file and nothing else; the server refuses a `drish
 | `exposure-official-hierarchies` | ExposureOfficialHierarchiesTest |
 | `exposure-pre-deal-api` | ExposurePreDealApiTest |
 | `field-params-api` | FieldParamsApiTest |
+| `finance-lake-off` | ReportApiTest, RegistryApiTest, DerivedKindTest, SimmApiTest, FrtbApiTest (the finance pack's lake connector off) |
 | `hierarchy-column-missing` | HierarchyColumnMissingTest |
 | `index-reload-admin` | IndexReloadAdminTest |
 | `internal-imf-fixture` | a test of its own name |

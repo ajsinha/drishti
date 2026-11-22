@@ -106,7 +106,7 @@ class OneTablePerSystemTest {
             Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack
                     + "'\n  connector: " + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n  table: " + table + "\n");
             ByteArrayOutputStream said = new ByteArrayOutputStream();
-            assertThat(LakeLoad.run(new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
+            assertThat(LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
                     .as(s + ": " + said.toString(StandardCharsets.UTF_8)).isZero();
             assertThat(lake.resolve("trading/trade_" + s + "/_delta_log")).as(s + " lands in its own table").isDirectory();
 

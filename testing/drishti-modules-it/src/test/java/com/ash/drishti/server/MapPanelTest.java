@@ -16,7 +16,6 @@
 package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
@@ -75,6 +74,21 @@ class MapPanelTest {
                 """.formatted(panel), "map-demo.sutra.yaml", "test");
     }
 
+    /** Problems as Drishti's API answers them ({@code DrishtiRachana.drs}: the edge's one mapping of Rachana's codes). */
+    private static java.util.List<com.ash.rachana.SutraProblem> answered(java.util.List<com.ash.rachana.SutraProblem> problems) {
+        return com.ash.drishti.rachana.DrishtiRachana.drs(problems);
+    }
+
+    /** The codes a panel that does not parse is refused with, as Drishti answers them. */
+    private static java.util.List<String> refusal(String panel) {
+        try {
+            sutra(panel);
+        } catch (SutraException e) {
+            return answered(e.problems()).stream().map(com.ash.rachana.SutraProblem::code).toList();
+        }
+        throw new AssertionError("accepted: " + panel);
+    }
+
     private static final String WORLD = "{ id: m, kind: map, title: Where, highlight: $.iso3, link: { kind: jurisdiction, id: 'JUR-{iso3}' } }";
     private static final String SHADED = "{ id: m, kind: map, title: Where, highlight: $.iso3, link: { kind: economy, id: 'ECON-{iso3}' },"
             + " shade: { kind: economy, field: $.GDP_PER_CAPITA, by: $.ISO3, fmt: amount0, label: GDP per capita } }";
@@ -95,11 +109,12 @@ class MapPanelTest {
         var el = new SutraExpressions(com.ash.drishti.rachana.DrishtiRachana.compiler());
         assertThat(el.check(sutra(WORLD))).isEmpty();
         assertThat(el.check(sutra(SHADED))).isEmpty();
-        assertThat(el.check(sutra("{ id: m, kind: map, highlight: '$.a +* 2' }"))).extracting("code").contains("DRS-2101");
-        assertThat(el.check(sutra("{ id: m, kind: map, region: $.iso3, shade: { kind: economy, field: '$.a +* 2' } }"))).extracting("code").contains("DRS-2101");
+        // the codes as Drishti answers them (Rachana's RCH- code mapped at the edge to the DRS- code of the same number)
+        assertThat(answered(el.check(sutra("{ id: m, kind: map, highlight: '$.a +* 2' }")))).extracting("code").contains("DRS-2101");
+        assertThat(answered(el.check(sutra("{ id: m, kind: map, region: $.iso3, shade: { kind: economy, field: '$.a +* 2' } }")))).extracting("code").contains("DRS-2101");
         // a map needs nothing; the options it takes are fixed
         assertThat(sutra("{ id: m, kind: map, title: World }").panels().get(0).options()).isEmpty();
-        assertThatThrownBy(() -> sutra("{ id: m, kind: map, rows: $.b }")).isInstanceOf(SutraException.class).hasMessageContaining("DRS-2023");
+        assertThat(refusal("{ id: m, kind: map, rows: $.b }")).contains("DRS-2023");
     }
 
     @Test
@@ -108,7 +123,7 @@ class MapPanelTest {
                 "{ id: m, kind: map, link: { kind: jurisdiction, id: JUR-AUS } }", "{ id: m, kind: map, link: { kind: jurisdiction, id: 'JUR-{iso3}', x: 1 } }",
                 "{ id: m, kind: map, shade: economy }", "{ id: m, kind: map, shade: { kind: economy } }", "{ id: m, kind: map, shade: { field: $.a } }",
                 "{ id: m, kind: map, highlight: [a, b] }", "{ id: m, kind: map, region: 7 }"}) {
-            assertThatThrownBy(() -> sutra(bad)).as(bad).isInstanceOf(SutraException.class).hasMessageContaining("DRS-2029");
+            assertThat(refusal(bad)).as(bad).contains("DRS-2029");
         }
     }
 

@@ -112,7 +112,8 @@ final class ConnectorRows implements RowSource {
             }
             var applied = registry.applied(name);
             String root = applied.map(c -> c.settings().getOrDefault("root", "")).orElse("");
-            out.add(new Served(name, root, applied.map(c -> List.copyOf(c.kinds())).orElse(List.of())));
+            // the kinds it serves as the resolution reads them (a binding or route names them; a connector file's kinds: is not read)
+            out.add(new Served(name, root, List.copyOf(registry.kindsOf(name))));
         }
         return out;
     }

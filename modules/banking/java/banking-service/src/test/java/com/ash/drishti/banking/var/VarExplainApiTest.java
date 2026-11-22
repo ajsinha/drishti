@@ -577,8 +577,8 @@ class VarExplainApiTest {
                 .at("/why/answer/matrix");
         String link = "</api/v1/explain?kind=var&part=why>; rel=\"successor-version\"";
         String linkMatrix = "</api/v1/explain?kind=var&part=why&view=matrix>; rel=\"successor-version\"";
-        for (String path : List.of("/api/v1/var/explain", "/api/v1/risk/var/explain", "/api/v1/var/explain/matrix",
-                "/api/v1/risk/var/explain/matrix", "/api/v1/pivot/mr/explain", "/api/v1/risk/mr/explain")) {
+        // the module's own deprecated paths; the old prefixes (/api/v1/var, /api/v1/pivot/mr) left with the API aliases (G4 shims S5)
+        for (String path : List.of("/api/v1/risk/var/explain", "/api/v1/risk/var/explain/matrix", "/api/v1/risk/mr/explain")) {
             MvcResult r = mvc.perform(req(path, "scope", "BANK")).andExpect(status().isOk()).andReturn();
             assertThat(r.getResponse().getHeader("Deprecation")).as(path).isEqualTo("true");
             assertThat(r.getResponse().getHeaders("Link")).as(path).containsExactly(path.endsWith("matrix") ? linkMatrix : link);
@@ -600,10 +600,10 @@ class VarExplainApiTest {
                 assertThat(timeless(a)).as(path).isEqualTo(timeless(why));
             }
         }
-        JsonNode d1 = ask("/api/v1/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
+        JsonNode d1 = ask("/api/v1/risk/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
         assertThat(timeless(d1)).isEqualTo(timeless(explain("NODE:MGMT~DESK-X")));
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
+        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
                 .contains("planned");
-        assertThat(ask("/api/v1/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
+        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
     }
 }
