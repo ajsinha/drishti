@@ -18,16 +18,16 @@
 
 Drishti Elements is a separate project by the same owner: eight plain-JavaScript libraries (drishti-core, drishti-inputs, drishti-grid
 with its pivot, drishti-chart with its maps, drishti-data, drishti-tree, drishti-graph, drishti-designer), their gallery and their docs,
-in its own repository, [github.com/ajsinha/drishti-elements](https://github.com/ajsinha/drishti-elements), with its docs site at
-[ajsinha.github.io/drishti-elements](https://ajsinha.github.io/drishti-elements/). Drishti uses it as an external, vendored component at a
+in its own repository, [github.com/drishti-platform/drishti-elements](https://github.com/drishti-platform/drishti-elements), with its docs site at
+[drishti-platform.github.io/drishti-elements](https://drishti-platform.github.io/drishti-elements/). Drishti uses it as an external, vendored component at a
 pinned version. Everything about the libraries themselves (the design, the API, the contracts, theming, using them in an app, moving from
 AG Grid) is in its docs, one home for each fact:
-[DESIGN.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md),
-[API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md),
-[CONTRACTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/CONTRACTS.md),
-[THEMING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/THEMING.md),
-[USING.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/USING.md) and
-[MOVING_FROM_AG_GRID.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/MOVING_FROM_AG_GRID.md).
+[DESIGN.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md),
+[API.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/API.md),
+[CONTRACTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/CONTRACTS.md),
+[THEMING.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/THEMING.md),
+[USING.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/USING.md) and
+[MOVING_FROM_AG_GRID.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/MOVING_FROM_AG_GRID.md).
 This page says how Drishti holds and uses it.
 
 ## Contents
@@ -147,8 +147,7 @@ the screen's tests and screenshots are unchanged or deliberately updated.
    then the maps (`drishti_geomap.js`); Vega-Lite visuals translated to the spec and Vega deleted (O1).
 6. **drishti-inputs**: controls, forms, pickers, the code and formula editors (Build, Studio, the editors, BI).
 7. **drishti-insight**: About and Explain, search, approvals, workbook export.
-8. **The client renderer**: every panel drawn by Elements' painter (`drishti-views`) behind the same entry; the old drishti-renderer
-   library deleted (G4).
+8. **The client renderer**: every panel drawn by Elements' painter (`drishti-views`) behind the same entry.
 9. **drishti-risk**: the VaR explorer's and exposure explorer's charts, backtesting, the stress window, the scenario matrix, FRTB-SA,
    SIMM and the MR lens; moved into the banking plugin.
 10. **The allow list empty**; the guard strict; the inventory regenerated into section 2.

@@ -77,7 +77,7 @@ deploy/aws/delta-s3/delta-s3.sh remove --bucket acme-drishti-lake --prefix delta
 ## Status
 
 The tests run with no AWS account: `python -m pytest -q -p no:cacheprovider deploy/aws/delta-s3` (the S3, IAM and STS calls on
-botocore's Stubber; `check` on an in-memory S3 holding Delta tables written by the deltalake package, with commits only and with a
+botocore's Stubber; `check` on an in-memory S3 holding Delta tables written by the Drishti Lake writer, with commits only and with a
 checkpoint). The connector itself is tested on S3Mock (`DeltaOnAwsS3Test`: the shipped template, credentials from the default chain).
 **Not run against AWS**: no AWS account is available to the build, so `create`, `check` and `remove` have not been run live; that run
 waits for an AWS sandbox account. With one, `DRISHTI_DELTA_S3_LIVE=1 python -m pytest deploy/aws/delta-s3` runs `check` against it.
