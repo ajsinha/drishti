@@ -17,9 +17,7 @@
 
 Each release lists what changed, by library. One version for every library: the `elements` key of `elements/drishti_elements.json`.
 
-## 3.3.0 (2026-11-21)
-
-- **IDE launchers follow the platform standard**: one `run-configs/`, every launcher named `Elements: <verb> <what>` (IntelliJ folder `Elements`), the same names as the VS Code tasks and launches; `Elements: test` (all pytest suites) added; the check `tools/launchers/check_launchers.py` (static test `tests/test_launchers.py`).
+## Unreleased
 
 - **Report charts** (drishti-chart, a new part `report`: `drishti_chart-report.js`, loaded beside the bundle or by `loadPart('drishti-chart', 'report')`):
   a report page's chart visuals drawn from the server's answers, moved in from Drishti's BI so that a host draws no chart of its own.
@@ -30,6 +28,11 @@ Each release lists what changed, by library. One version for every library: the 
   (`reportBrush`); `reportMap` draws countries and a country's regions over the geo part's helper; `sparkline`, `pythonOption` (a program's
   option made safe and themed), `measureBarsOption`, `drawOption`, `tableChartOption` (Chart any table's option, every colour a token) and
   `OptionChart` (one engine instance: draw, resize, tip, SVG, PNG). The part's budget is 70,000 bytes (66,198 when written).
+
+## 3.3.0 (2026-11-21)
+
+- **IDE launchers follow the platform standard**: one `run-configs/`, every launcher named `Elements: <verb> <what>` (IntelliJ folder `Elements`), the same names as the VS Code tasks and launches; `Elements: test` (all pytest suites) added; the check `tools/launchers/check_launchers.py` (static test `tests/test_launchers.py`).
+
 - **A link whose target is missing is still a link** (drishti-views, links): its `missing` chip says so; only a `denied` target is drawn as words.
 - **Table tools for embeds** (drishti-views, drishti-chart): the paint option `tableTools: {filters, chart}` gives a table a funnel on each column
   heading (values with counts, search, Select all, a number condition such as `> 1m`; filters combine across columns and survive a patch) and Chart any

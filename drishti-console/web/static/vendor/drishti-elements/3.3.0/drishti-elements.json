@@ -150,13 +150,8 @@
   ],
   "files": {
     "CHANGELOG.md": {
-<<<<<<< HEAD:drishti-console/web/static/vendor/drishti-elements/3.3.0/drishti-elements.json
-      "bytes": 43779,
-      "integrity": "sha384-nBxtcsmo+ZWXKOyvHP0juucuKKbZU23eJ6oEdqERmwnsjtRpv1McjZEecqbXsfMH"
-=======
-      "bytes": 44700,
-      "integrity": "sha384-rmHJNjc0M61oZXZFUPcums/GQ7GqEFYidcWFfefN1rKAhn3tjkhufJg5H8ffptpW"
->>>>>>> origin/wip/g4-rehearsal-rx:drishti-console/web/static/vendor/drishti-elements/3.2.0/drishti-elements.json
+      "bytes": 45054,
+      "integrity": "sha384-rDwtIyQv7S+ZX7hMv9C0HAHcxkBZLfPvD8dfytAKZxt1ZeKDI6Uk58f6+MDfxxyf"
     },
     "LICENSE": {
       "bytes": 3869,
@@ -223,25 +218,16 @@
       "integrity": "sha384-kpZwpA7EaAwT79FkrPeAXmakxie1lecbdFtAoqBOEGKmp8hIqNMiaPfQJj3mPts5"
     },
     "elements/drishti-chart/drishti-chart-geo.d.ts": {
-<<<<<<< HEAD:drishti-console/web/static/vendor/drishti-elements/3.3.0/drishti-elements.json
-      "bytes": 6584,
-      "integrity": "sha384-Bn+5xQmUq/TgujpoFPnI+ul2RwiO4Gz5r887M5Ckad1ncODh+pOC+WWcj5+gsPtg"
-    },
-    "elements/drishti-chart/drishti-chart.d.ts": {
-      "bytes": 52282,
-      "integrity": "sha384-rSaZKz6ae+uurDZH+xMu//mQpw8lADu7dJzlAFA81TJEQuQ1lqODHZlJcgeHpTKP"
-=======
       "bytes": 7207,
-      "integrity": "sha384-FgnwtlIEVAo2V39UlrxmVgiau0K2qaqwryDpXYXchGW+Y3hkUbRNuFRO8Voot2fU"
+      "integrity": "sha384-iD5utcxdOFK/oV2KBx44JrQr7JRVB2m9xCfETWTRd4kqKRTKxhs8P8gzPkapM128"
     },
     "elements/drishti-chart/drishti-chart-report.d.ts": {
       "bytes": 14924,
-      "integrity": "sha384-W7Q35iFLyZ1lUd8suON5J+zYQlGDlcFmqBNnTCMACfz7HGZrh1Ofg6g8Cgv2X0hO"
+      "integrity": "sha384-hQifVzje1grRQY4BKwbfObU3L09k5vR9N1nYJ/qd+nHX8v/YK3NRkhkTD8q8I7K7"
     },
     "elements/drishti-chart/drishti-chart.d.ts": {
       "bytes": 52905,
-      "integrity": "sha384-o0zccIk47ft3jwNjmPaG4R5eowEYA5wAheQzdayUe8uru7GiQMfZg9ZF0X/zeFKU"
->>>>>>> origin/wip/g4-rehearsal-rx:drishti-console/web/static/vendor/drishti-elements/3.2.0/drishti-elements.json
+      "integrity": "sha384-ahBq2oZUq70Z5fLhjBP4dBovxH0Y0rgTMsBvFD1hTTRRYroWLw/MVmsJ3Q6JqWv8"
     },
     "elements/drishti-chart/drishti_chart-geohelper.js": {
       "bytes": 13589,
@@ -249,7 +235,7 @@
     },
     "elements/drishti-chart/drishti_chart-report.js": {
       "bytes": 66064,
-      "integrity": "sha384-quTDRNv4fM3HYKa1BaBH7/VLO7MJR8igOiXOG/xwFXKzAL0+DrqsXn7u6j7rDgGc"
+      "integrity": "sha384-jBZta8taBXFvCeOWoT4ocbQLRqMm6ihifo6HP4u91kO0isw3BIfX3hw0WfzdjZ3N"
     },
     "elements/drishti-chart/drishti_chart.css": {
       "bytes": 18970,
@@ -392,13 +378,8 @@
       "integrity": "sha384-xvYaOIQZSzMDcLR1hf1jTaoTf+A80EQXZzu/GA8f862NL7QhVoVOBZR7B0B13s3X"
     },
     "elements/drishti-core/drishti_core.js": {
-<<<<<<< HEAD:drishti-console/web/static/vendor/drishti-elements/3.3.0/drishti-elements.json
-      "bytes": 185096,
-      "integrity": "sha384-IhGW/BCgJ/AUH3urrVyNkcCn2FeCHCI7ZCChjVzmHgLmpX5O8Yh5vhp3QbEL/cn+"
-=======
       "bytes": 185222,
-      "integrity": "sha384-mvSUaoTWcpMPdxqJfXQturAnZ/+eb0r9mwyxQKHIfMuDAbj4XYZE17uTL41ku3xO"
->>>>>>> origin/wip/g4-rehearsal-rx:drishti-console/web/static/vendor/drishti-elements/3.2.0/drishti-elements.json
+      "integrity": "sha384-qWYDUeX6qPv+yJRy+J2qj71E4n93MwdkEVJ4mlkU0hhOwvPaUwkjONcWXdX01rge"
     },
     "elements/drishti-core/src/drishti_a11y.js": {
       "bytes": 6884,
@@ -477,13 +458,8 @@
       "integrity": "sha384-lHSTxqUUddotPYa1DCNrFVzXDstNreD675E693B6E9pAS8xEFjJRmYx7aWEYUr2W"
     },
     "elements/drishti-core/src/drishti_manifest.js": {
-<<<<<<< HEAD:drishti-console/web/static/vendor/drishti-elements/3.3.0/drishti-elements.json
-      "bytes": 10487,
-      "integrity": "sha384-Fh9flCvsiTBVDbNctc/1u1sO2di9oHas2sf+OFZFAQaP49TEBcgFjJ+3UmSTfCM6"
-=======
       "bytes": 10597,
-      "integrity": "sha384-7NNX7h/JIyhq7MEuiaeUu9q99ttsSt2pjDZ3nzqN7p2o6DDm8D8ttUusWzU8TAIR"
->>>>>>> origin/wip/g4-rehearsal-rx:drishti-console/web/static/vendor/drishti-elements/3.2.0/drishti-elements.json
+      "integrity": "sha384-1kHpMX9aNqbiCrH/pe26Ntq7yRbVCdUyXJKFhd/SfgcJcqegChIrlOSrDU7IazJK"
     },
     "elements/drishti-core/src/drishti_overlay.js": {
       "bytes": 7912,
@@ -1366,21 +1342,12 @@
       "integrity": "sha384-8sF2K2+7bGkkCdmNtdWpSGljCBdywOtIf1lNBYapAAQg1CYeAbIzVmAt5QGgxVQt"
     },
     "elements/drishti_elements.json": {
-<<<<<<< HEAD:drishti-console/web/static/vendor/drishti-elements/3.3.0/drishti-elements.json
-      "bytes": 9748,
-      "integrity": "sha384-bB0B/CitgNQ2DEymfuJtOuAETuWmzXlJFiuHFr0gaczQRoI+GT3ISekGGAqCADYj"
-    },
-    "gallery/drishti_catalogue.js": {
-      "bytes": 1146972,
-      "integrity": "sha384-rUQvTWsHTQmVxWf1stsTDONGHPskgHx4uZNSirzkxn5hnm4pXNUyemjHqiyc+iqh"
-=======
       "bytes": 9873,
-      "integrity": "sha384-/oafg6b6c41l2GfhoKV7FpIf1q9ANaf2+zGC5Ueh7VHfK5al5a8jVSMhO7tJWnAl"
+      "integrity": "sha384-l5buHMxNt3WrI4mBlQKFjmv/cGNdjbhNRj3kcGSMR8Bc8o/yJaVk/Emo40WjCHzG"
     },
     "gallery/drishti_catalogue.js": {
-      "bytes": 1165832,
-      "integrity": "sha384-/dV45noTL/ONiPbq+TcKKYO6T8L0fS8Fvoag2fngBwT8B1rkvcOsXnkroCTJ1n/R"
->>>>>>> origin/wip/g4-rehearsal-rx:drishti-console/web/static/vendor/drishti-elements/3.2.0/drishti-elements.json
+      "bytes": 1165827,
+      "integrity": "sha384-qpWOfTY4rKs3D2YXBeUveYhfchKfOW1lzkCOp0dTiS5yc9prls7uq88ujWBVDki1"
     },
     "gallery/drishti_gallery-boot.js": {
       "bytes": 3662,

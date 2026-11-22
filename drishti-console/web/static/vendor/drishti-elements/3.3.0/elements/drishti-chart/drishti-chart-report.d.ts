@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository.
  */
-/* drishti-chart 3.2.0, its part 'report' (drishti_chart-report.js): TypeScript declarations, generated from the typed JSDoc by tools/elements/dts.py. */
+/* drishti-chart 3.3.0, its part 'report' (drishti_chart-report.js): TypeScript declarations, generated from the typed JSDoc by tools/elements/dts.py. */
 export interface BulletOptions {
   value: number;
   limit?: number;
