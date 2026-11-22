@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.lake_trade
-was: lake-trade
 version: 1.0.0
 from: { kind: trade, connector: rep-lake }
 keys: [TRADE_ID]

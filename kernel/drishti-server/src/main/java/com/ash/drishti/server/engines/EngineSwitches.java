@@ -25,7 +25,7 @@ import org.springframework.core.env.PropertySource;
  * Each engine's switch as the server starts with it (docs/guides/ADMIN_GUIDE.md sections 3.3 and 4): its value, and where it
  * comes from, read from Spring's own sources in their order (the command line, the environment, the packs overlay, application.local.yaml,
  * the edition, the site's engine file, the jar's copy). An old switch name ({@code drishti.var.enabled}) set anywhere above the shipped files
- * stops the start, naming the new key ({@link com.ash.drishti.packs.module.RetiredNames}). The in-memory lake is on when its stores are configured in the old place and nothing sets its switch.
+ * stops the start, naming the new key ({@link com.ash.drishti.packs.module.RetiredNames}).
  */
 public final class EngineSwitches {
 
@@ -102,28 +102,10 @@ public final class EngineSwitches {
             return new Switch(on, "environment " + e.env(), true);
         }
         if (from == null) {
-            return memoryLake(e, env, new Switch(on, "shipped default", false));
+            return new Switch(on, "shipped default", false);
         }
         boolean fileOrShipped = shipped(from) || EngineFiles.isEngineFile(from.getName());
-        return memoryLake(e, env, new Switch(on, describe(from), !fileOrShipped));
-    }
-
-    /** The in-memory lake on, when the switch is only the shipped one and stores are configured in the old place (application.local.yaml). */
-    private static Switch memoryLake(EngineCatalogue.Entry e, ConfigurableEnvironment env, Switch s) {
-        if (!"memory-lake".equals(e.id()) || s.on() || s.overridden()) {
-            return s;
-        }
-        for (PropertySource<?> ps : env.getPropertySources()) {
-            if (shipped(ps) || attached(ps) || EngineFiles.isEngineFile(ps.getName()) || !(ps instanceof EnumerablePropertySource<?> en)) {
-                continue;
-            }
-            for (String n : en.getPropertyNames()) {
-                if (n.startsWith("drishti.lake.memory.stores.")) {
-                    return new Switch(true, "stores configured in " + describe(ps) + " (the old place)", true);
-                }
-            }
-        }
-        return s;
+        return new Switch(on, describe(from), !fileOrShipped);
     }
 
     /** Spring's own view over every source ({@code configurationProperties}), not a source of its own. */

@@ -13,7 +13,9 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.plugin.delta;
+package com.ash.drishti.it;
+
+import com.ash.drishti.plugin.delta.DeltaSourcePlugin;
 
 import com.ash.lake.tck.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 /**
- * A lake maintained by tools/lake/maintain.py (compacted, checkpointed, vacuumed) still reads the same through the product's Delta reader.
+ * Runs in the integration-test step (this module's tests), never in the plugin's own: the tool needs the loader's classes. A lake maintained by tools/lake/maintain.py (compacted, checkpointed, vacuumed) still reads the same through the product's Delta reader.
  * Skipped where uv (to run the tool) is not installed, or the drishti-lake wheel (lib/wheels, or LAKE_PYTHON: tools/lake/lakewheel.py) is not at hand.
  */
 class DeltaAfterMaintenanceTest {
 
     @Test
-    void theJavaReaderReadsALakeTheMaintenanceJobCompactedAndVacuumed() throws Exception {
+    void theJavaReaderReadsALakeTheMaintenanceJobCompactedAndVacuumed(@org.junit.jupiter.api.io.TempDir Path root) throws Exception {
         assumeTrue(new ProcessBuilder("uv", "--version").start().waitFor(30, TimeUnit.SECONDS), "uv is not installed");
         Path repo = Path.of(TestRoots.repo());
         boolean wheel = System.getenv("LAKE_PYTHON") != null;
@@ -44,8 +46,7 @@ class DeltaAfterMaintenanceTest {
             wheel |= wheels.anyMatch(f -> f.getFileName().toString().startsWith("drishti_lake-"));
         }
         assumeTrue(wheel, "the drishti-lake wheel is not in lib/wheels (and LAKE_PYTHON is not set)");
-        Path root = Files.createTempDirectory("drishti-maintained");
-        Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake");
+        Path src = Path.of(TestRoots.repo(), "plugins", "drishti-plugin-delta", "src", "test", "resources", "lake");
         try (var files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());
@@ -62,6 +63,8 @@ class DeltaAfterMaintenanceTest {
         ProcessBuilder pb = new ProcessBuilder("uv", "run", "-q", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python",
                 "tools/lake/maintain.py", "--config", config.toString(), "--once", "--force-foreign").directory(Path.of(TestRoots.repo()).toFile()).inheritIO();
         pb.environment().put("DRISHTI_DATA_DIR", root.resolve("data").toString());   // its history in the test's folder, not the site's
+        // the tool runs the loader's main from this build's own class path (the exec jar is built after this phase's modules; here every module is a dependency)
+        pb.environment().put("LAKE_CLASSPATH", System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")));
         Process p = pb.start();
         assertThat(p.waitFor(5, TimeUnit.MINUTES) && p.exitValue() == 0).as("maintenance ran").isTrue();
         assertThat(Files.list(root.resolve("desk/trade/_delta_log")).anyMatch(f -> f.toString().endsWith(".checkpoint.parquet"))).isTrue();

@@ -50,7 +50,7 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
         if path == "/export":
             return b"ROW,COLUMN\r\n", {"content-type": "text/csv", "content-disposition": 'attachment; filename="pivot-trade.csv"'}
         if path == "/estimate":
-            raise BackendError(404, "DRS-5703", "the pivot engine is switched off on this server (drishti.pivot.enabled)")
+            raise BackendError(404, "DRS-5703", "the pivot engine is switched off on this server (drishti.engines.pivot.enabled)")
         if path == "/views/desk-risk":
             return None
         return ANSWER

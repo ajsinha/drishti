@@ -12,15 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A pack's samples: `samples/catalog.jsonl` (the catalogue, one {kind, id, title, subtitle} a line; the `catalog.json` array of
-releases before 2.9.4 is still read) and ONE JSON Lines file per kind, `samples/<kind>.jsonl` (one document a line,
+"""A pack's samples: `samples/catalog.jsonl` (the catalogue, one {kind, id, title, subtitle} a line) and ONE JSON Lines file per kind, `samples/<kind>.jsonl` (one document a line,
 in catalog order), split into `samples/<kind>.part-001.jsonl`, `part-002` ... only when a kind's file would pass the part size
 (--sample-part-mb, default 50 MB). The older layout, one `samples/<kind>/<id>.json` per document, is still read everywhere
 (the retired example packs and packs users wrote keep it); shipped and new packs are written as JSONL.
 
     files(docs, catalog, part_mb)   {relative path: text} of a samples folder (catalog.jsonl and the kinds' .jsonl files)
     write(samples_dir, docs, catalog) writes them and removes what the folder no longer holds
-    catalog(samples_dir)            the catalogue's entries, from catalog.jsonl or the older catalog.json
+    catalog(samples_dir)            the catalogue's entries, from catalog.jsonl
     read(samples_dir)               {kind: {id: document}} from either layout
     kind_files(samples_dir, kind)   the .jsonl file(s) of a kind, in order (empty for the older layout)
 
@@ -36,7 +35,6 @@ from pathlib import Path
 PART_MB = 50          # a kind's samples are split into parts only above this (writers' --sample-part-mb)
 PART = re.compile(r"^(?P<kind>.+?)(?:\.part-(?P<n>\d{3}))?\.jsonl$")
 CATALOG = "catalog.jsonl"             # one entry a line (2.9.4); never a kind's samples
-OLD_CATALOG = "catalog.json"          # the one array of earlier releases, still read
 
 
 def part_mb(argv: list[str]) -> float:
@@ -65,13 +63,12 @@ def catalog_text(catalog: list[dict]) -> str:
 
 
 def catalog(samples_dir: Path) -> list[dict]:
-    """The catalogue's entries in order: catalog.jsonl, else the catalog.json array of earlier releases; [] with neither."""
+    """The catalogue's entries in order: catalog.jsonl; [] without it."""
     samples_dir = Path(samples_dir)
     f = samples_dir / CATALOG
     if f.is_file():
         return [json.loads(t) for t in f.read_text(encoding="utf-8").splitlines() if t.strip()]
-    old = samples_dir / OLD_CATALOG
-    return json.loads(old.read_text(encoding="utf-8")) if old.is_file() else []
+    return []
 
 
 def files(docs: dict[str, dict[str, dict]], catalog: list[dict], part_mb: float = PART_MB, catalog_indent: int | None = 1) -> dict[str, str]:

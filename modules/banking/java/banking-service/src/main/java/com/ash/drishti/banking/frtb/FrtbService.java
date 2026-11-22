@@ -147,7 +147,7 @@ public final class FrtbService {
         this.sensitivitiesRunning = sensitivities;
     }
 
-    /** The old switch, drishti.frtb.enabled (an alias of drishti.engines.frtb-sa.enabled). */
+    /** The engine switch as the service holds it: the fallback when the registry does not know the engine. */
     boolean switchedOn() {
         return props.enabled();
     }

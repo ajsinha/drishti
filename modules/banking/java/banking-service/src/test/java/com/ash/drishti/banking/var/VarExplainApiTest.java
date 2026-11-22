@@ -554,56 +554,10 @@ class VarExplainApiTest {
         return o;
     }
 
-    /** The answer has exactly the recorded 2.9.11.d fields, each of its recorded JSON type (or null). */
-    private static void shaped(JsonNode a, JsonNode shape, String what) {
-        List<String> fields = new ArrayList<>();
-        a.fieldNames().forEachRemaining(fields::add);
-        List<String> recorded = new ArrayList<>();
-        shape.fieldNames().forEachRemaining(recorded::add);
-        assertThat(fields).as(what).containsExactlyInAnyOrderElementsOf(recorded);
-        shape.fields().forEachRemaining(e -> {
-            JsonNode v = a.get(e.getKey());
-            String type = v.isObject() ? "object" : v.isArray() ? "array" : v.isNumber() ? "number" : v.isTextual() ? "string"
-                    : v.isBoolean() ? "boolean" : "null";
-            assertThat(type.equals(e.getValue().asText()) || v.isNull()).as(what + " " + e.getKey() + ": " + type).isTrue();
-        });
-    }
-
     @Test
-    void theOldExplainPathsAnswerForOneReleaseWithTheirOldBody() throws Exception {
-        JsonNode shape = json.readTree(VarExplainApiTest.class.getResourceAsStream("/var-explain-d-shape.json"));
-        JsonNode why = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "scope", "BANK").at("/why/answer");
-        JsonNode matrix = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "view", "matrix", "scope", "BANK")
-                .at("/why/answer/matrix");
-        String link = "</api/v1/explain?kind=var&part=why>; rel=\"successor-version\"";
-        String linkMatrix = "</api/v1/explain?kind=var&part=why&view=matrix>; rel=\"successor-version\"";
-        // the module's own deprecated paths; the old prefixes (/api/v1/var, /api/v1/pivot/mr) left with the API aliases (G4 shims S5)
+    void theOldExplainPathsAreGone() throws Exception {
         for (String path : List.of("/api/v1/risk/var/explain", "/api/v1/risk/var/explain/matrix", "/api/v1/risk/mr/explain")) {
-            MvcResult r = mvc.perform(req(path, "scope", "BANK")).andExpect(status().isOk()).andReturn();
-            assertThat(r.getResponse().getHeader("Deprecation")).as(path).isEqualTo("true");
-            assertThat(r.getResponse().getHeaders("Link")).as(path).containsExactly(path.endsWith("matrix") ? linkMatrix : link);
-            JsonNode a = json.readTree(r.getResponse().getContentAsString());
-            if (path.endsWith("matrix")) {
-                shaped(a, shape.get("matrix"), path);
-                for (JsonNode row : a.get("rows")) {
-                    shaped(row, shape.get("matrixRow"), path + " row");
-                }
-                assertThat(a).as(path).isEqualTo(matrix);
-            } else if (path.contains("/mr/")) {
-                shaped(a, shape.get("mr"), path);
-                assertThat(a.at("/factorOverlay/available").asBoolean(true)).isFalse();
-                com.fasterxml.jackson.databind.node.ObjectNode rest = (com.fasterxml.jackson.databind.node.ObjectNode) timeless(a);
-                rest.remove("factorOverlay");
-                assertThat((JsonNode) rest).as(path).isEqualTo(timeless(why));
-            } else {
-                shaped(a, shape.get("var"), path);
-                assertThat(timeless(a)).as(path).isEqualTo(timeless(why));
-            }
+            mvc.perform(req(path, "scope", "BANK")).andExpect(status().isNotFound());
         }
-        JsonNode d1 = ask("/api/v1/risk/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
-        assertThat(timeless(d1)).isEqualTo(timeless(explain("NODE:MGMT~DESK-X")));
-        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
-                .contains("planned");
-        assertThat(ask("/api/v1/risk/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
     }
 }

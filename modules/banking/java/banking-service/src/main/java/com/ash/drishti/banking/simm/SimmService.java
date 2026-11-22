@@ -188,14 +188,14 @@ public final class SimmService {
         return defaultVersion;
     }
 
-    /** The engine registry's word on whether SIMM runs on this node (ADMIN_GUIDE.md); unset (a test of the service alone): the old switch. */
+    /** The engine registry's word on whether SIMM runs on this node (ADMIN_GUIDE.md); unset (a test of the service alone): its own switch value. */
     private volatile java.util.function.BooleanSupplier running;
 
     public void running(java.util.function.BooleanSupplier on) {
         this.running = on;
     }
 
-    /** The old switch, drishti.simm.enabled (an alias of drishti.engines.simm.enabled). */
+    /** The engine switch as the service holds it: the fallback when the registry does not know the engine. */
     boolean switchedOn() {
         return props.enabled();
     }

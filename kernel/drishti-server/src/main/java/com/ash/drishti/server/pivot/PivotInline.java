@@ -40,7 +40,7 @@ public class PivotInline {
     private final boolean enabled;
     private final ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines;
 
-    public PivotInline(AuditLog audit, EditionCommands edition, @Value("${drishti.engines.pivot.enabled:${drishti.pivot.enabled:true}}") boolean enabled,
+    public PivotInline(AuditLog audit, EditionCommands edition, @Value("${drishti.engines.pivot.enabled:true}") boolean enabled,
             ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         this.audit = audit;
         this.edition = edition;

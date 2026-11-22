@@ -319,7 +319,7 @@ def docs_folder(root: pathlib.Path) -> pathlib.Path:
     return src
 
 
-@pytest.mark.parametrize("engine", ["java", "deltalake"])
+@pytest.mark.parametrize("engine", ["deltalake", "java"])
 def test_drishti_writes_and_delta_rs_and_the_java_reader_read(tmp_path, engine, java_reader, monkeypatch):
     monkeypatch.setenv("DRISHTI_BI_STORE", str(tmp_path / "bi"))
     src = docs_folder(tmp_path)

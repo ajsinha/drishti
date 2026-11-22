@@ -366,13 +366,10 @@ final class VarIntake {
         String vectorCcy = null;                                        // a P&L vector's CURRENCY when it is not USD (converted)
         if (live || kept) {
             if (fx == null) {
-                // a P&L vector's values are in its CURRENCY (2.9.4); REPORTING_CCY is a deprecated alias that must say the same
+                // a P&L vector's values are in its CURRENCY
                 String ccy = currency(row);
-                String rep = text(row, "REPORTING_CCY");
-                String w = rep != null && !rep.strip().equalsIgnoreCase(ccy) ? "REPORTING_CCY " + rep + " is not the CURRENCY " + ccy
-                        + " the values are in (REPORTING_CCY is a deprecated alias of CURRENCY)" : check(values, length, text(row, "STATUS"), null);
-                why = w == null ? null : new String[] {rep != null && !rep.strip().equalsIgnoreCase(ccy) ? ErrorCode.VAR_RECORD_INVALID.code()
-                        : ErrorCode.VAR_ROW_REJECTED.code(), w};
+                String w = check(values, length, text(row, "STATUS"), null);
+                why = w == null ? null : new String[] {ErrorCode.VAR_ROW_REJECTED.code(), w};
                 if (why == null && length >= 0 && !ccy.equals(ScenarioFx.USD)) {
                     java.util.Optional<ScenarioFx.Rates> r = pnlFx == null ? java.util.Optional.empty() : pnlFx.get().rates(ccy);
                     if (r.isEmpty()) {

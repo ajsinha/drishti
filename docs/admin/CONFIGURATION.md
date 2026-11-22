@@ -3392,12 +3392,10 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.embed.assertion-max-age` | duration | `60s` |  | server | longest life of a client or user assertion a host signs | restart |  | admin |
 | `drishti.embed.sign-in-window` | boolean | `true` | `DRISHTI_EMBED_SIGN_IN_WINDOW` | server | the renderer's auth: 'popup' (EMBED\_GUIDE.md 10.1): a registered host's page signs its user in | restart |  | admin |
 | `drishti.embed.scopes` | map | `{…}` |  | server | what each embed scope opens; a token calls nothing else, and never writes | restart |  | admin |
-| `drishti.embed.search.max-results` | integer | `10` |  | server | most results one search returns | restart |  | admin |
 | `drishti.embed.search.min-chars` | integer | `2` |  | server | shortest query searched | restart |  | admin |
 | `drishti.embed.limits.tokens-per-minute` | integer | `120` |  | server | exchanges per host application | restart |  | admin |
 | `drishti.embed.limits.views-per-minute` | integer | `600` |  | server | calls per host application (the default for a new registration) | restart |  | admin |
 | `drishti.embed.limits.views-per-user-per-minute` | integer | `60` |  | server | calls per user (the default for a new registration) | restart |  | admin |
-| `drishti.embed.limits.searches-per-user-per-minute` | integer | `30` |  | server | searches per user and application through &lt;drishti-search&gt;, on top of the call rates | restart |  | admin |
 | `drishti.embed.apps` | list | `[]` |  | server | host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md | restart |  | admin |
 
 #### `drishti.retry`

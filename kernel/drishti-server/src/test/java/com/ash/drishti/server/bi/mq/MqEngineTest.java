@@ -43,7 +43,6 @@ class MqEngineTest {
     static final String TRADES = """
             rachana: 3
             table: bi.trades
-            was: trades
             version: 1.0.0
             from: { kind: trade, connector: trading-lake }
             keys: [id]
@@ -59,7 +58,6 @@ class MqEngineTest {
     static final String DESKS = """
             rachana: 3
             table: bi.desks
-            was: desks
             version: 1.0.0
             from: { kind: desk, connector: desk-lake }
             keys: [desk]
@@ -71,7 +69,6 @@ class MqEngineTest {
     static final String LIMITS = """
             rachana: 3
             table: bi.limits
-            was: limits
             version: 1.0.0
             from: { kind: limit, connector: limit-lake }
             columns:

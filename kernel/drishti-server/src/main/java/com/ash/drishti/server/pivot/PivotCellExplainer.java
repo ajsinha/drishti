@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
  * split by a dimension's members in steps that add up, by the pivot engine's own explanation ({@link Explain}), as the person (the view is
  * resolved and checked as for every pivot query: row rules and masks apply). Asked with a POST, the body the pivot's own: {@code view},
  * {@code value} (the value's label or id), {@code from}, {@code fromDate}, {@code to}, {@code toDate}, {@code by}, {@code order}. Each
- * explanation is audited ({@code pivot.explain}). {@code POST /api/v1/pivot/explain} is a deprecated alias of this for one release.
+ * explanation is audited ({@code pivot.explain}).
  */
 @Component
 final class PivotCellExplainer implements Explainer {

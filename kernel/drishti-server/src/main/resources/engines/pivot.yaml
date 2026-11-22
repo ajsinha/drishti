@@ -18,7 +18,7 @@
 drishti:
   engines:
     pivot:
-      enabled: ${DRISHTI_PIVOT_ENGINE_ENABLED:true}   # run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -> Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works
+      enabled: ${DRISHTI_PIVOT_ENGINE_ENABLED:true}   # run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -> Pivot, drishti.py pivot (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
   pivot:                             # the pivot engine (docs/guides/bi/README.md); the Pivot tab's keys stay in application.yaml
     max-cells: 20000                 # visible cells a view may have, totals included; over it: refused with the count (DRS-5702), never cut short

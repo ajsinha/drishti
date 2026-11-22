@@ -133,7 +133,7 @@ public class EditionConfiguration {
 
     /**
      * Health's distribution card (docs/architecture/DISTRIBUTIONS.md): the running distribution, the modules it asked for and which of them
-     * loaded (each module's domain module, today), and the old product keys the site still sets (read for one release).
+     * loaded (each module's domain module, today).
      */
     @Bean
     public com.ash.drishti.kernel.api.health.HealthFigures distributionHealth(Environment env,
@@ -175,7 +175,6 @@ public class EditionConfiguration {
                 m.put("all", all);
                 m.put("asked", all ? java.util.List.of("all") : asked);
                 m.put("modules", modules);
-                m.put("deprecated", java.util.Arrays.stream(env.getProperty(info + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList());
                 EditionContext ec = editionContext.getIfAvailable();   // a lens named that is not offered: red on Health (LensOffer)
                 m.put("lensProblems", ec == null ? java.util.List.of() : ec.lensProblems());
                 return m;

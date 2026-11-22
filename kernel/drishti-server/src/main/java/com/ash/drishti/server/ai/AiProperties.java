@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * {@code drishti.ai.*}: the LLM provider layer (docs/guides/AI_GUIDE.md). Off by default: while {@code enabled} is
- * false no file in {@code dir} is read and no model is called (Ask's deprecated {@code endpoint} setting still works on its own).
+ * false no file in {@code dir} is read and no model is called.
  *
  * @param dir folder of provider files, one YAML per provider
  * @param watch {@code auto} (file events, then polling), {@code poll} or {@code off}: how edits to {@code dir} are noticed

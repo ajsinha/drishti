@@ -973,7 +973,7 @@ def read_json_files(paths) -> list[dict]:
             raise CliError(f"{p}: no such file or folder")
     out = []
     for f in files:
-        if f.name in ("catalog.json", "catalog.jsonl"):           # a pack's catalogue, never a sample
+        if f.name in ("catalog.jsonl",):           # a pack's catalogue, never a sample
             continue
         try:
             if f.suffix == ".jsonl":

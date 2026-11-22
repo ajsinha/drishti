@@ -242,12 +242,11 @@ def _empty(v) -> bool:
 
 
 def _catalog(samples: Path) -> list:
-    """A samples folder's catalogue: catalog.jsonl (one entry a line, 2.9.4), else the catalog.json array of earlier releases."""
+    """A samples folder's catalogue: catalog.jsonl (one entry a line)."""
     lines = samples / "catalog.jsonl"
     if lines.is_file():
         return [json.loads(t) for t in lines.read_text(encoding="utf-8").splitlines() if t.strip()]
-    old = samples / "catalog.json"
-    return json.loads(old.read_text(encoding="utf-8")) if old.is_file() else []
+    return []
 
 class Stat:
     """What one field held over the documents read: how often it was non-empty, its JSON types, a few values."""

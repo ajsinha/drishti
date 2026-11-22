@@ -30,7 +30,7 @@ features:
   bi:            { server: [drishti.bi.enabled], console: [bi.enabled] }
   calc:          { server: [drishti.calc.enabled], console: [labs.calc] }       # Labs: Calc, Python in the browser, a scratch pad; off as shipped
   layouts:       { server: [drishti.layouts.enabled], console: [layouts.enabled] }
-  pivot:         { server: [drishti.pivot.enabled] }
+  pivot:         { server: [drishti.engines.pivot.enabled] }
   reports:       { server: [drishti.reports.enabled], console: [features.reports] }
   collaboration: { server: [drishti.collab.enabled], console: [features.collaboration] }
   var:           { server: [drishti.engines.var.enabled] }        # an engine: off only (it does not exist here); where it runs is its engine switch (config/engines/<id>.yaml)

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs.edition;
 
+import com.ash.drishti.packs.module.RetiredNames;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +62,8 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
         Distribution dist = Distributions.of(env);                         // the distribution file: the one way (DISTRIBUTIONS.md)
-        Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist, deprecatedKeys(env, dist)));
+        RetiredNames.refuse(retiredKeys(env));                             // the old product keys stop the start, as the console refuses them
+        Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist));
         // the product's name and notices: the distribution file is their one home, above every setting a site made (the old keys are not read)
         Map<String, Object> brand = new LinkedHashMap<>();
         for (String k : List.of("product", "tagline", "owner", "copyright", "notice")) {
@@ -126,7 +128,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     public static final String INFO = "drishti.distribution-info";
 
     /** The settings the old product keys used to hold, as the distribution file says them (under the site's configuration). */
-    static Map<String, Object> distributionProps(ConfigurableEnvironment env, Distribution d, List<String> deprecated) {
+    static Map<String, Object> distributionProps(ConfigurableEnvironment env, Distribution d) {
         Map<String, Object> props = new LinkedHashMap<>();
         if (!d.all()) {
             props.put(Editions.LENSES, String.join(",", d.lenses()));
@@ -137,15 +139,14 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
         props.put(INFO + ".all", String.valueOf(d.all()));
         props.put(INFO + ".modules", String.join(",", d.modules()));
         props.put(INFO + ".domains", String.join(",", d.modules().stream().map(m -> m + "=" + d.domains().get(m)).toList()));
-        props.put(INFO + ".deprecated", String.join("\n", deprecated));
         return props;
     }
 
     /**
-     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}, {@code DRISHTI_PRODUCT}), each named on
-     * Health ({@code drishti.branding.*} is no longer read: the distribution file is the one way, KERNEL_AND_MODULES.md section 6).
+     * The old product keys a site still sets ({@code drishti.edition}, {@code drishti.branding.*}, {@code DRISHTI_PRODUCT}): each is a retired
+     * name (the distribution file is the one way, KERNEL_AND_MODULES.md section 6), refused at start with the key to use instead.
      */
-    static List<String> deprecatedKeys(ConfigurableEnvironment env, Distribution d) {
+    static List<String> retiredKeys(ConfigurableEnvironment env) {
         List<String> out = new ArrayList<>();
         for (PropertySource<?> ps : env.getPropertySources()) {
             if (isProductDefaults(ps) || isEngineFile(ps) || ps.getName().startsWith(SOURCE)
@@ -156,12 +157,12 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
                 String key = k.equals("DRISHTI_EDITION") ? Editions.NAME : k.equals("DRISHTI_PRODUCT") ? "drishti.branding.product" : k;
                 boolean old = key.equals(Editions.NAME) || key.startsWith("drishti.branding.");
                 Object v = ps.getProperty(k);
-                if (!old || v == null || v.toString().isBlank() || out.stream().anyMatch(o -> o.startsWith(key + " "))) {
+                if (!old || v == null || v.toString().isBlank() || out.stream().anyMatch(o -> o.contains(" " + key + " ") || o.startsWith("  " + key + " "))) {
                     continue;
                 }
-                out.add(key + (key.equals(Editions.NAME)
-                        ? " is no longer read: a distribution says what exists (--distribution, DRISHTI_DISTRIBUTION); a lens only arranges"
-                        : " is no longer read: set brand: in the distribution file"));
+                out.add(RetiredNames.line(key, ps.getName(), key.equals(Editions.NAME)
+                        ? "a distribution file (--distribution, DRISHTI_DISTRIBUTION): it says what exists; a lens only arranges (drishti.lenses)"
+                        : "brand: in the distribution file"));
             }
         }
         return out;

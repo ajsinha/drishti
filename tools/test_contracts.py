@@ -70,7 +70,7 @@ class MiniPack:
         (d / "config" / "about.yaml").write_text(yaml.safe_dump(ABOUT, sort_keys=False), encoding="utf-8")
         self.write("widget", widgets())
         self.write("gadget", [{"GADGET_ID": f"G-{i}", "NAME": f"Gadget {i}"} for i in range(3)])
-        (d / "samples" / "catalog.json").write_text(json.dumps([{"kind": "gadget", "id": "G-0"}]), encoding="utf-8")
+        (d / "samples" / "catalog.jsonl").write_text(json.dumps({"kind": "gadget", "id": "G-0"}) + "\n", encoding="utf-8")
         return self
 
     def write(self, kind: str, docs: list[dict]) -> None:

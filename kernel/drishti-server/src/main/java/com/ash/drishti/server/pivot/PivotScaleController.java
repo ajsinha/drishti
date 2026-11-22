@@ -73,7 +73,7 @@ public class PivotScaleController {
     private final boolean enabled;
 
     public PivotScaleController(PivotCore core, PivotScaleConfiguration.Scale scale, PivotViews views, Entitlements entitlements, AuditLog audit,
-            ObjectMapper json, @Value("${drishti.pivot.enabled:true}") boolean enabled) {
+            ObjectMapper json, @Value("${drishti.engines.pivot.enabled:true}") boolean enabled) {
         this.core = core;
         this.scale = scale;
         this.views = views;
@@ -86,7 +86,7 @@ public class PivotScaleController {
 
     private Viewer on(Principal p) {
         if (!enabled) {
-            throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (drishti.pivot.enabled)");
+            throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (drishti.engines.pivot.enabled)");
         }
         return new Viewer(p.user(), p);
     }
