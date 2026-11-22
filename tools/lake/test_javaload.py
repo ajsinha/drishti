@@ -71,8 +71,9 @@ def test_auto_picks_the_loader_by_default(tmp_path, monkeypatch):
     assert javaload.wanted(args(), [small], None, None)[0]                 # the default, however small
     use, why = javaload.wanted(args(), [small, arr], None, None)
     assert not use and "not JSON Lines" in why
-    use, why = javaload.wanted(args(mode="overwrite-partitions"), [small], None, None)
-    assert not use and "overwrite-partitions" in why
+    assert javaload.wanted(args(mode="overwrite-partitions"), [small], None, None)[0]     # the loader writes it too
+    use, why = javaload.wanted(args(mode="replace"), [small], None, None)
+    assert not use and "replace" in why
     assert javaload.wanted(args(mode="append"), [small], None, None)[0]
     assert javaload.is_jsonl(small) and not javaload.is_jsonl(arr)
 

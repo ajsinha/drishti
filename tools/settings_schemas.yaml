@@ -535,6 +535,7 @@ env:
   - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile of your own (application-<profile>.yaml); the stores are chosen by connector files, not by a profile" }
   # read by the code
   - { name: DRISHTI_TMP_DIR, by: "server, console, tools", default: "<data dir>/tmp", sets: "java.io.tmpdir, the console's tmp_dir", meaning: "The base of every temporary folder Drishti makes" }
+  - { name: DRISHTI_TMP_STRICT, by: tools, default: "(off)", sets: "the tools' temp guard", meaning: "1: a Python or browser session that leaves a path of its own in the machine's temp folder fails (tools/tmpguard.py)" }
   - { name: DRISHTI_WEBKIT_LIBS, by: tools, default: "~/.cache/drishti-lanes/webkit-libs", sets: "the browser tests' WebKit libraries", meaning: "The folder under which tools/browser/webkit_env.py unpacks the few system libraries Playwright's WebKit needs on a machine that lacks them (a download, no root)" }
   - { name: LAKE_PARQUET_ROW_GROUP_MB, by: tools, default: ~, sets: "lake writer", meaning: "Row-group size of the Java lake writer, in MB" }
   - { name: DRISHTI_REDIS_USER, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's user" }

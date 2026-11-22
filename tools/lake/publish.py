@@ -222,9 +222,17 @@ def run(a, say=print) -> tuple[int, dict]:
                 dst.create_write_transaction(actions, mode="append", schema=schema, partition_by=parts, commit_properties=props,
                                              post_commithook_properties=hooks)
             elif a.mode == "overwrite-dates":
-                dst.create_write_transaction(actions, mode="overwrite", schema=schema, partition_by=parts,
-                                             partition_filters=[("business_date", "in", dates)], commit_properties=props,
-                                             post_commithook_properties=hooks)
+                # the dates' old files out and the new in, one commit; a file the table already holds (the same path: a date published again
+                # unchanged) stays as it is, never added and removed in one commit
+                from deltalake.transaction import RemoveAction
+                held = {o["path"]: o for o in source_files(dst, dates)}
+                carried = {f["path"] for f in files}
+                now_ms = int(time.time() * 1000)
+                removes = [RemoveAction(o["path"], True, now_ms, o["size"], o["partition"]) for path, o in held.items() if path not in carried]
+                fresh = [x for x, f in zip(actions, files) if f["path"] not in held]
+                dst.create_write_transaction(fresh + removes, mode="append", schema=schema, partition_by=parts,
+                                             commit_properties=props, post_commithook_properties=hooks)
+                summary["removed"] = len(removes)
             else:
                 # the exact partitions carried: their old files removed in the same commit as the new ones are added
                 from deltalake.transaction import RemoveAction

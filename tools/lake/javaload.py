@@ -21,7 +21,7 @@ its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, `
 ``parallel.writers=16``, ``target.layout.sort-by=[LEGAL_ENTITY,DESK,id]``). This build holds the lake's lock and writes the run log and
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
 
-The loader is the default: ``--engine auto`` tries it first (inputs JSON Lines, mode overwrite-dates or append, and an exec jar or
+The loader is the default: ``--engine auto`` tries it first (inputs JSON Lines, mode overwrite-dates, overwrite-partitions or append, and an exec jar or
 LAKE_CLASSPATH that has it), then deltalake; the message says which jar was looked for when it falls back. Java is started
 only through ``tools/javacmd.py``'s ``java_cmd``."""
 from __future__ import annotations
@@ -107,7 +107,7 @@ def looked_for(jar: str | None) -> str:
 def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> tuple[bool, str]:
     """(use the loader, why) for ``--engine auto``, the default: the parallel loader first; when its exec jar (or Java) is missing the
     message names the jar looked for and the engine used instead."""
-    if a.mode not in (None, "overwrite-dates", "append"):
+    if a.mode not in (None, "overwrite-dates", "overwrite-partitions", "append"):
         return False, f"--mode {a.mode} is the Python path's"
     if not all(is_jsonl(f) for f in files):
         return False, "an input is not JSON Lines"
@@ -151,7 +151,7 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         src["dataset"] = a._tar_table                   # the one table of the tar this run loads
     mode = getattr(a, "mode", None)
     if mode:
-        target_mode = "append" if mode == "append" else "replace-date"
+        target_mode = {"append": "append", "overwrite-partitions": "overwrite-partitions"}.get(mode, "replace-date")
     else:
         target_mode = None
     path = lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"])
