@@ -43,6 +43,8 @@ public final class SourceStats {
         volatile String lastError;
         volatile Instant lastErrorAt;
         volatile Instant lastOkAt;
+        /** The same reads for the lifecycle's stats: the recent window and p50/p95/p99 (docs/architecture/LIFECYCLE.md section 7). */
+        final com.ash.drishti.api.lifecycle.StatsRecorder recent = new com.ash.drishti.api.lifecycle.StatsRecorder();
 
         void latency(long nanos) {
             latencyMicros.set(Math.floorMod(next.getAndIncrement(), RING), Math.max(1, nanos / 1_000));
@@ -59,6 +61,7 @@ public final class SourceStats {
         Stats s = of(source);
         s.hits.increment();
         s.latency(nanos);
+        s.recent.request(nanos, false, 1, 0);
         s.lastOkAt = Instant.now();
     }
 
@@ -66,6 +69,7 @@ public final class SourceStats {
         Stats s = of(source);
         s.misses.increment();
         s.latency(nanos);
+        s.recent.request(nanos, false, 0, 0);
         s.lastOkAt = Instant.now();
     }
 
@@ -73,8 +77,39 @@ public final class SourceStats {
         Stats s = of(source);
         s.errors.increment();
         s.latency(nanos);
+        s.recent.request(nanos, true, 0, 0);
         s.lastError = e.getClass().getSimpleName() + ": " + e.getMessage();
         s.lastErrorAt = Instant.now();
+    }
+
+    /**
+     * One connector's reads as the lifecycle's stats take them.
+     *
+     * @param reads every read (found, not held, failed)
+     * @param errors failed reads
+     * @param found reads that found a document
+     * @param lastAt the last read's end (success or error), or null
+     * @param window the counters over the recent window
+     * @param latency p50, p95, p99 over the recent window
+     */
+    public record Snapshot(long reads, long errors, long found, Instant lastAt, com.ash.drishti.api.lifecycle.ComponentStats.Counts window,
+            com.ash.drishti.api.lifecycle.ComponentStats.Latency latency) {
+        public static final Snapshot NONE = new Snapshot(0, 0, 0, null, com.ash.drishti.api.lifecycle.ComponentStats.Counts.ZERO,
+                com.ash.drishti.api.lifecycle.ComponentStats.Latency.NONE);
+    }
+
+    /** The lifecycle's view of one connector's reads. */
+    public Snapshot of(String source) {
+        Stats s = bySource.get(source);
+        if (s == null) {
+            return Snapshot.NONE;
+        }
+        com.ash.drishti.api.lifecycle.ComponentStats r = s.recent.snapshot();
+        Instant last = s.lastOkAt;
+        if (s.lastErrorAt != null && (last == null || s.lastErrorAt.isAfter(last))) {
+            last = s.lastErrorAt;
+        }
+        return new Snapshot(s.hits.sum() + s.misses.sum() + s.errors.sum(), s.errors.sum(), s.hits.sum(), last, r.window(), r.latency());
     }
 
     /** A snapshot for one connector: counts, last error and success, p50 and p99 in milliseconds. */
