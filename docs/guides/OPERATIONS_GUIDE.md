@@ -2521,13 +2521,10 @@ The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/1
 ### 16.1 Lake maintenance: what it does and who owns a table
 
 A lake that is only ever written grows without bound. **Maintenance** does what Drishti's readers cannot do themselves (the server only reads):
-
-| Step | What it does | Setting |
-|---|---|---|
-| **Retention** | on a Delta table deletes the business dates older than `keep-business-days` business days (Monday to Friday) before today in `schedule.zone` (or `--as-of`): today and that many business days before it are kept, counted on the calendar (Drishti Lake's `lake maintain --keep-days`); on an Iceberg table keeps the newest `keep-business-days` dates on or before today (its own maintenance); never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
-| **Compaction** | merges each date's small files (the newest copy of each id stays the one read; an append's older copies are kept apart, so an undo still finds them); a table whose pack declares a layout is first laid out again by id, only for dates that drifted (`lake maintain --relayout`, the pack's `file-rows`) | `compact`, `target-file-mb` (128) |
-| **Checkpoint** | writes a Delta checkpoint, so readers replay a short log | `checkpoint` (on) |
-| **Vacuum** | removes files no version uses, older than the window; *known at* reaches back that far, no further | `vacuum-hours` (168) |
+retention by business dates, compaction and relayout, checkpoints, vacuum or snapshot expiry, one set of options for Delta, Iceberg and plain
+files. It is done by **Drishti Lake's** `lake maintain`; what each step does, its options, and the drop guard that refuses a run that would delete
+too much (`max-drop-share`, `force-drop`) are described once, in Lake's [LOADER.md, Maintenance](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#maintenance-lake-maintain). The settings of a
+table are in its lake file ([DATA_LAKE_GUIDE.md section 2.6](DATA_LAKE_GUIDE.md#26-retention-maintenance-time-travel-properties)).
 
 **The risk lake keeps 7 years.** The domains `risk` (the VaR engine's inputs) and `risk-results` (the official results) keep 7 years of dates and of time
 travel whatever the settings say ([VAR_GUIDE.md](VAR_GUIDE.md#231-open-questions-of-the-contract)): a lower value is raised (61,368 hours; 1,827
@@ -2541,12 +2538,10 @@ files the publisher still expects or rewrite files under a reader mid-scan. `lak
 every table; `--force-foreign` overrides with a warning (only with the publisher's agreement; the page never offers it). `lake demo` writes a checkpoint
 per table, so the demo lakes need nothing more.
 
-There is one engine, `tools/lake/maintain.py`: **Admin → Data loads → Lakes → Maintain** runs it in the console and `drishti.py lake maintain` from a
-terminal, cron or a container; both read and write `<data>/lakes/lake-maintenance.yaml` and keep the same history. An Iceberg table is maintained the
-same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published (`risk/var_published`).
-Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py`
-(the one scheduler, used by `--daemon` and by the console), `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones
-it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3), and `tools/lake/maintain_rows.py` (a table's row retention, `retention: {ttl, on, max-rows}`, for Delta, Iceberg and files stores: DATA_LAKE_GUIDE.md section 2.7).
+Drishti starts Lake's `lake maintain` from **Admin → Data loads → Lakes → Maintain** in the console and from `drishti.py lake maintain` in a
+terminal, cron or a container; both read and write `<data>/lakes/lake-maintenance.yaml` and keep the same history. An Iceberg table is maintained
+the same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published
+(`risk/var_published`).
 
 ### 16.2 Maintain from the page or the command line
 
