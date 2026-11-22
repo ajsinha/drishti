@@ -63,11 +63,11 @@ tree). Pass: the same files green as on Chromium.
 
 ## 3. Readiness check (read-only)
 
-`~/drishti-bench-scratch/i7b-readiness.sh [--product rachana=v0.12.0 ...]` runs `tools/drillkit/drill_readiness.py`. It checks disk,
+`~/drishti-bench-scratch/i7b-readiness.sh [--product rachana=v1.0.0 ...]` runs `tools/drillkit/drill_readiness.py`. It checks disk,
 memory and load, the owner's and the drill's ports, JDK 21 (and 25 when `tools/drill-java25.txt` exists), python3/uv/git/ss/curl, `mvnw`,
 the console venv, Playwright 1.64.x and its browsers (chromium, headless shell, webkit, firefox, ffmpeg), the WebKit helper, running
 drill processes, stray test forks, stale drill worktrees and copies, and that the four product tags exist on GitHub (tools v1.1.0,
-Rachana v0.12.0, Lake v0.9.0, Elements at the version `pom.xml` pins). It exits 1 on any FAIL and prints a PASS/WARN/FAIL list. It is run
+Rachana v1.0.0, Lake v0.9.1, Elements at the version `pom.xml` pins). It exits 1 on any FAIL and prints a PASS/WARN/FAIL list. It is run
 at the start of `prepare`, after the fresh venv exists, and once more just before the lanes.
 
 **Result of the run on 2026-11-21 (this machine, G4 lanes busy):** 20 PASS, 4 WARN, 3 FAIL -> NOT READY. Expected at this stage.
@@ -81,11 +81,11 @@ WARN  stray test forks ......... 5 (G4 lanes at work)        WARN  drill copies 
 FAIL  console venv ............. missing in this worktree (a fresh clone builds its own)
 FAIL  Playwright 1.64.x ........ found 1.63.0 in the main checkout's venv (browsers on disk: chromium 1243/1248, webkit 2359/2370)
 WARN  WebKit helper ............ not in this tree yet (G4 follow-ups lane)
-PASS  tag tools v1.1.0          PASS  tag elements v2.4.0 (the pinned version)
-FAIL  tag rachana v0.12.0 ...... GitHub has v0.9.0 v0.10.0 v0.11.0        FAIL  tag lake v0.9.0 ...... GitHub has no tags
+PASS  tag tools v1.1.0          PASS  tag elements v3.3.1 (the pinned version)
+FAIL  tag rachana v1.0.0 ...... GitHub has v0.9.0 v0.10.0 v0.11.0        FAIL  tag lake v0.9.1 ...... GitHub has no tags
 ```
 
-To clear before the drill: tag Rachana v0.12.0 and Lake v0.9.0 (after their Fable gates; the owner's rule of 11-21 allows the lead to
+To clear before the drill: tag Rachana v1.0.0 and Lake v0.9.1 (after their Fable gates; the owner's rule of 11-21 allows the lead to
 tag once the cross-stack version check passes); raise Playwright to 1.64.x in `drishti-console/requirements-test.txt` (or confirm the
 owner's meaning, since the pinned file says `>=1.45`); merge the WebKit helper; let the G4 lanes finish (load, stray forks); delete the
 three stale copy folders.
@@ -101,8 +101,8 @@ three stale copy folders.
    exports `MAVEN_ARGS=-Dmaven.repo.local=...` so every `./mvnw` it starts, including those inside `drill.sh` and its java21/java25
    copies, uses it. (`com/ash/messaging`, pravaha, is third party to this release and is copied.) Removed after the drill.
 3. **Product install order, each from a fresh `--depth 1` clone of its TAG, `cd java && ./mvnw clean install`:**
-   `drishti-tools v1.1.0` -> `drishti-rachana v0.12.0` (v1.0.0 once the level retirement lands) -> `drishti-lake v0.9.0` -> Drishti.
-   A tag that does not exist stops the script at step 0. Elements is vendored (`drishti-console/web/static/vendor/drishti-elements/2.4.0`,
+   `drishti-tools v1.1.0` -> `drishti-rachana v1.0.0` -> `drishti-lake v0.9.1` -> Drishti.
+   A tag that does not exist stops the script at step 0. Elements is vendored (`drishti-console/web/static/vendor/drishti-elements/3.3.1`,
    pinned in `pom.xml`) and checked by tag only. Rachana's JS and Python packages and the conformance results (G4 checklist C1 to C9) are
    inputs of the gate review, not of the drill.
 4. If, at the frozen commit, Drishti's `pom.xml` still builds the in-tree Rachana and Lake modules, the installed products are then
@@ -125,7 +125,7 @@ three stale copy folders.
 |---|---|---|---|
 | 0 | all milestone gates passed; version bumped; products tagged; docs + README + release notes written; freeze starts | lead | |
 | 1 | **Fable pre-drill review** (`I7B_PREDRILL_REVIEW.md`: findings by likelihood x cost); fixes; each fix verified by its whole files plus the gate | Fable, builders | hours |
-| 2 | `i7b-drill.sh <commit> prepare`: readiness, fresh clone, drill Maven repo, products from tags, venv, build all, modules-it, gate, tools lanes (one heavy job at a time) | script | about 60 min |
+| 2 | `i7b-drill.sh <commit> prepare`: readiness, fresh clone, drill Maven repo, products from tags (Lake's own check once, the Lake wheel built from its tag and checked against the pin), the Lake wheel then the venv, build all; the gate, the modules' tests and the tools lanes are run once, by the drill (no duplicate runs) | script | about 60 min |
 | 3 | **Smoke on the build-all install** (I7B_PLAN 8.8): three-node stack (`drishti-stack` pattern), LAN addresses never loopback; events across nodes, two tabs one connection, embedded view with a renewed token, `drishti.py server smoke`; **VaR 167,372,692 and ES 210,131,972 by API and on the VaR page**; stop the stack and remove its temp files; `touch logs/i7b/smoke.ok` | lead | 30 min |
 | 4 | `i7b-drill.sh <commit> drill` with `run_in_background`; watch `drill.log` modification time and the `^drill` lines; anchored `pgrep -f "^bash tools/drill.sh"` only (never an unanchored pattern) | script | about 75 to 90 min |
 | 5 | WebKit pass (1.1) | lead | about 20 min |

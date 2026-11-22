@@ -34,8 +34,9 @@ OWNER_PORTS = (17480, 18480, 18791, 18792)          # the owner's running stack:
 DRILL_FIXED_PORTS = (20783, 20784, 20785, 21783, 21784, 21785)   # the java21 and java21-docker copies (tools/drill.sh)
 SCRATCH_LOW, SCRATCH_HIGH = 17750, 32767            # the console workers' windows (tests/scratch_ports.py)
 MIN_DISK_GB, MIN_MEM_GB, WARN_LOAD = 150, 30, 8.0
-PRODUCTS = {"tools": ("drishti-tools", "v1.1.0"), "rachana": ("drishti-rachana", "v0.12.0"),
-            "lake": ("drishti-lake", "v0.9.0"), "elements": ("drishti-elements", None)}   # elements: the version the pom pins
+ORG = "https://github.com/drishti-platform"
+PRODUCTS = {"tools": ("drishti-tools", "v1.1.0"), "rachana": ("drishti-rachana", "v1.0.0"),
+            "lake": ("drishti-lake", "v0.9.1"), "elements": ("drishti-elements", None)}   # elements: the version the pom pins
 
 results: list[tuple[str, str, str]] = []
 
@@ -120,6 +121,16 @@ def check_browsers(repo: Path) -> None:
         note("WARN", "WebKit libraries helper (tools/browser/webkit_env.py)", "not in this tree yet (G4 follow-ups lane): needed on a machine without WebKit's system libraries")
 
 
+def check_wheel(repo: Path) -> None:
+    """The pinned Lake wheel in the repository's lib/wheels (prepare builds it from the Lake tag; a Java lane's copy gets it from there)."""
+    tool = repo / "tools/lake/lakewheel.py"
+    if not tool.exists():
+        return
+    rc = subprocess.run([sys.executable, str(tool)], capture_output=True, text=True, cwd=repo)
+    note("PASS" if rc.returncode == 0 else "WARN", "pinned Lake wheel in lib/wheels (tools/lake/lakewheel.py)",
+         (rc.stdout.strip().splitlines() or [""])[-1][-160:] if rc.returncode == 0 else "not there yet: prepare builds it from the Lake tag")
+
+
 def check_stale(repo: Path) -> None:
     ps = run(["ps", "-eo", "pid=,args="]).splitlines()
     drills = [l.strip()[:90] for l in ps if re.search(r"^\s*\d+\s+(/bin/)?bash (\S*/)?tools/drill\.sh", l)]
@@ -141,7 +152,7 @@ def pinned_elements(repo: Path) -> str | None:
 def check_tags(repo: Path, wanted: dict[str, str | None]) -> None:
     for key, (repo_name, default) in PRODUCTS.items():
         tag = wanted.get(key) or default or pinned_elements(repo)
-        url = f"https://github.com/ajsinha/{repo_name}.git"
+        url = f"{ORG}/{repo_name}.git"
         out = run(["git", "ls-remote", "--tags", url, tag], 40)
         tags = run(["git", "ls-remote", "--tags", "--refs", url], 40)
         have = sorted(re.findall(r"refs/tags/(\S+)", tags))
@@ -151,7 +162,7 @@ def check_tags(repo: Path, wanted: dict[str, str | None]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=str(Path(__file__).resolve().parents[2]))
-    ap.add_argument("--product", action="append", default=[], help="key=tag, e.g. rachana=v0.12.0")
+    ap.add_argument("--product", action="append", default=[], help="key=tag, e.g. rachana=v1.0.0")
     ap.add_argument("--no-network", action="store_true")
     a = ap.parse_args()
     repo = Path(a.repo)
@@ -162,6 +173,7 @@ def main() -> int:
     check_ports(listening)
     check_tools(repo)
     check_browsers(repo)
+    check_wheel(repo)
     check_stale(repo)
     if not a.no_network:
         check_tags(repo, wanted)
