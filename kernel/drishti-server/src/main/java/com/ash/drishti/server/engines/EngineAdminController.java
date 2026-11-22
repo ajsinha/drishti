@@ -189,6 +189,36 @@ public class EngineAdminController {
         return m;
     }
 
+    /** The engine host (engine JARs of lib/engines; docs/architecture/ENGINES_IN_DRISHTI.md); absent in a test that makes the controller itself. */
+    private com.ash.drishti.enginehost.EngineHost engineHost;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void engineHost(com.ash.drishti.enginehost.EngineHost h) {
+        this.engineHost = h;
+    }
+
+    /**
+     * The engine lib folder as the switch page shows it beside the switches: what this server provides, the folder and trust, the licence,
+     * every JAR, and the engines that have no switch yet (installed but not configured, with a template; named by a file but not installed).
+     */
+    private Map<String, Object> engineLib() {
+        com.ash.drishti.enginehost.EngineHost h = engineHost;
+        Map<String, Object> m = new LinkedHashMap<>();
+        if (h == null) {
+            return m;
+        }
+        m.put("platform", h.platform());
+        m.put("folder", h.settings().libPath().toString());
+        m.put("trust", h.settings().trust().name().toLowerCase(java.util.Locale.ROOT));
+        com.ash.drishti.enginehost.FileLicence l = h.licence();
+        m.put("licence", l == null ? "" : l.source() + (l.problem() == null ? "" : ": " + l.problem()));
+        m.put("jars", h.jars().stream().map(j -> Map.of("file", j.file(), "engines", j.engines(), "certificate", j.certificate(), "notes", j.notes())).toList());
+        m.put("unlisted", h.engines().stream().filter(e -> !registry.known(e.id())).map(e -> Map.of("id", e.id(), "state", e.state(),
+                "words", e.words() == null ? "" : e.words(), "template", e.descriptor() != null)).toList());
+        m.put("packs", h.packNotes());
+        return m;
+    }
+
     /** Every engine of this node, and the cluster's matrix. */
     Map<String, Object> view() {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -209,6 +239,7 @@ public class EngineAdminController {
             rows.add(r);
         }
         m.put("engines", rows);
+        m.put("engineLib", engineLib());
         m.put("running", registry.running().size());
         m.put("installed", rows.stream().filter(r -> Boolean.TRUE.equals(r.get("installed"))).count());
         m.put("memoryBytes", total);
@@ -282,6 +313,11 @@ public class EngineAdminController {
         r.put("fileExists", Files.isRegularFile(registry.files().file(e)));
         r.put("checksum", registry.files().checksum(e));
         r.put("hides", e.hides());
+        com.ash.drishti.enginehost.EngineHost h = engineHost;
+        if (h != null) {
+            h.engine(id).filter(x -> x.descriptor() != null).ifPresent(x -> r.put("hosted",
+                    com.ash.drishti.server.enginehost.EngineHostController.card(x)));
+        }
         return r;
     }
 }

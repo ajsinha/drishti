@@ -26,8 +26,10 @@ holds the server's JVM options (`deploy/jvm/*.args`, generated from the function
   (their pattern `drishti-server-*-exec.jar` does not match it).
 - `<home>/lib/ext` holds YOUR jars (JDBC drivers, connector plugins, a company's own libraries): kept on an upgrade, read by the server
   at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`; see [ext/README.md](ext/README.md)). A Drishti server jar put there is skipped.
+- `<home>/lib/engines` holds engine JARs (`drishti.engine-lib.path`; see [engines/README.md](engines/README.md)): each read at start in its
+  own class loader, kept on an upgrade. An engine JAR put in `lib/ext` is skipped.
 
-An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `lib/ext`. Jars found in `<data>/lib` (the previous default) are moved
+An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `lib/ext` and `lib/engines`. Jars found in `<data>/lib` (the previous default) are moved
 once into `lib/ext` at the next start; Admin → Health says so.
 
 - `<home>/lib/wheels` holds the `drishti_lake-<version>-py3-none-any.whl` wheel (Drishti Lake's Python path: the load rules, the Python

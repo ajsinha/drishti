@@ -65,6 +65,13 @@ class ArchitectureRulesTest {
             .that().resideInAPackage("com.ash.drishti.engine..")
             .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.server..");
 
+    /** The engine host is plain Java behind ports (docs/architecture/ENGINES_IN_DRISHTI.md): no server class, no Spring, no connector. */
+    @ArchTest
+    static final ArchRule engineHostDependsOnPortsOnly = noClasses()
+            .that().resideInAPackage("com.ash.drishti.enginehost..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..", "com.ash.drishti.engine..",
+                    "com.ash.drishti.connectors..");
+
     /** The AI layer depends one way: on the SPI and common only, never on the engine, the identity layer or the server. */
     @ArchTest
     static final ArchRule aiLayerDependsOneWay = noClasses()
