@@ -12,7 +12,7 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
-**Version 2.9.11.i7a: a module is a file.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar.
+**Version 2.9.11.i7b: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
 
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
@@ -46,11 +46,29 @@ GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showc
 
 ## Contents
 
-[The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
+[The platform](#the-platform) · [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
 [Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Risk](#risk) · [Analyse](#analyse) ·
 [Build](#build) · [Data in](#data-in) · [Data out](#data-out) · [Operate](#operate) · [Run it](#run-it) ·
 [Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) ·
 [By the numbers](#by-the-numbers)
+
+## The platform
+
+Drishti is built on four products, each in its own repository under [github.com/drishti-platform](https://github.com/drishti-platform) with its own
+version, gate and documentation:
+
+| Repository | What it owns |
+|---|---|
+| [drishti-rachana](https://github.com/drishti-platform/drishti-rachana) | the Rachana language: Sutras, the expression language, the compiler, the live tables and the data protocol, with Java, JavaScript and Python SDKs |
+| [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements: the JavaScript libraries every screen is drawn with (grid and pivot, charts and maps, inputs, tree, graph, designer kit) |
+| [drishti-lake](https://github.com/drishti-platform/drishti-lake) | Drishti Lake: Delta, Iceberg and plain-file lakes as one lake; the loader (Java and Python), the inbox, upkeep, the read API, the in-memory lake |
+| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | shared Java utilities: settings, TLS and the outbound proxy, single flight, the load guard, the one `.xlsx` writer |
+| [drishti](https://github.com/drishti-platform/drishti) | this repository: the kernel, the console, the modules and their data |
+
+The versions that go together are stated once, in the index repository's
+[COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md); the index repository also holds `clone_all.py`,
+`build_all.py` and `make_bundle.py`, and a source bundle on its release. The products install in the order tools, Rachana, Lake, then Drishti, from
+release tags only ([QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine)).
 
 ## The three building blocks
 
@@ -253,7 +271,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 - **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
   graph, the designer kit) are [Drishti Elements](https://github.com/drishti-platform/drishti-elements), a separate project by the same owner
   with its own repository and [docs](https://drishti-platform.github.io/drishti-elements/), which Drishti uses as an external, vendored component
-  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.2.0/`, see
+  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/<version>/`, see
   [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
   Drishti keeps three libraries of its own on top (insight, renderer, and the banking module's risk). Every screen and every designer is
   drawn with them, guard tests fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live,
@@ -266,7 +284,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
 ## Data in
 
-- **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, local disk or S3, no Hadoop), JDBC databases, DuckDB, MongoDB,
+- **Connectors**: Delta Lake and Apache Iceberg (through Drishti Lake, local disk or S3, no Hadoop), JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds: the light ones built in (`plugins/drishti-connectors`: `demo`, `file`, `rest`, `feed`, `news`, `yfinance`),
   each with a driver or native library a plugin in `plugins/drishti-plugin-*/`: `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`;
   each with its README ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)).
@@ -284,9 +302,10 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
   The banking module adds the official VaR and exposure records; which table serves each kind a module needs is a
   [data binding](#install-and-place-modules). In-memory lakes (`mem://`) hold data that never touches disk.
-- **Loading**: JSON Lines is the standard. A plain file is one table and one business date; a `.ready` file says it is complete and names
-  its lake; a tar archive loads all or nothing; every row carries its load id, so `drishti.py lake undo <load-id>` removes exactly one
-  load. The data inbox loads what your ETL drops, and the parallel Java loader handles large loads
+- **Loading** is [Drishti Lake's](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md): one loader in Java and one in
+  Python, JSON Lines as the standard (plain, gzip, zstd, zip, tar), a business date for every file, guards against future dates, the wrong zone and
+  an accidental mass drop, all-or-nothing archives, undo by load id (`drishti.py lake undo <load-id>`), and a data inbox that loads what your ETL
+  drops with a `.ready` file. Drishti routes a file to its table through the packs and signals the server after a commit
   ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [tutorial 16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md)).
 - **A day of bank data**: what a bank sends each day and the daily cycle ([tutorial 12](docs/tutorials/12-a-day-of-bank-data.md),
   [the data contracts](docs/contracts/README.md), one per command word).
@@ -333,7 +352,10 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 With a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository), from the
 repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
+Get the code first: unpack the platform's source bundle, or clone `drishti-platform/drishti-platform` and run its `clone_all.py`, then `build_all.py`
+(tools, Rachana, Lake from their tags, then Drishti; [QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md#2-build)). The checkout is
+`~/IdeaProjects/drishti-platform/drishti` (Windows `C:\Users\<you>\IdeaProjects\drishti-platform\drishti`). Run the commands below from the Drishti
+folder (that checkout, or the install folder of a release).
 
 ```bash
 # 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options) and drishti-console/.venv
@@ -354,8 +376,8 @@ python tools/drishti.py stop all                                              # 
 ```
 
 On Windows the same commands run as `py tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
-launchers **Drishti build all**, **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console**
-([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)); they read the same profile, so the IDE and the terminal start the same server.
+launchers **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**
+([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [VSCODE_GUIDE.md](docs/guides/VSCODE_GUIDE.md)); they read the same profile, so the IDE and the terminal start the same server.
 
 Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
@@ -376,7 +398,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
-  [IDEs](docs/guides/IDE_GUIDE.md).
+  [IDEs](docs/guides/IDE_GUIDE.md) and [VS Code](docs/guides/VSCODE_GUIDE.md).
 
 ## Measured performance
 
