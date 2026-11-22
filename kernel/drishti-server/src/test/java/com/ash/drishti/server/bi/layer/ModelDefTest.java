@@ -299,7 +299,7 @@ class ModelDefTest {
         Map<String, ResolvedDataset> data = resolved();
         ModelDef sameMeaning = ModelDefParser.parse(MODEL.replace("expr: \"sum(trades.mtm)\"", "expr: \"sum( trades.mtm )\"")).model();
         assertThat(Contracts.models(was, sameMeaning, data, data).breaking()).as("a reformatted expression is the same tree").isEmpty();
-        ModelDef otherMeaning = ModelDefParser.parse(MODEL.replace("expr: \"sum(trades.mtm)\"", "expr: \"sum(trades.mtm, where=trades.mtm > 0)\"")).model();
+        ModelDef otherMeaning = ModelDefParser.parse(MODEL.replace("expr: \"sum(trades.mtm)\"", "expr: \"calc(sum(trades.mtm), where=trades.mtm > 0)\"")).model();
         assertThat(Contracts.models(was, otherMeaning, data, data).refusal()).contains("changes meaning").contains("new major version");
         Map<String, ResolvedDataset> fewer = new java.util.LinkedHashMap<>(data);
         fewer.put("trades", ResolvedDataset.of(DatasetDefParser.parse(TRADES.replace("  mtm:", "  mtmX:")).dataset()));

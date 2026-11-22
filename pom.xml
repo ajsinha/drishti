@@ -102,7 +102,7 @@
          docs/architecture/ELEMENTS_IN_DRISHTI.md); drishti-rachana reads its two tables from there; a guard holds it to the folder's name -->
     <drishti.elements.version>3.3.1</drishti.elements.version>
     <!-- G4 rehearsal: the pinned Rachana release (SPLIT_PLAN step 11). A SNAPSHOT from a scratch repository only; the real pin is a tag. -->
-    <drishti.rachana.version>0.11.0-SNAPSHOT</drishti.rachana.version>
+    <drishti.rachana.version>1.0.0</drishti.rachana.version>
     <!-- Drishti Tools (github.com/ajsinha/drishti-tools): the shared, domain-free utilities (settings and placeholders, TLS and proxy, single-flight,
          the load guard, the xlsx writer, test fixtures); one version for every module, through tools-bom. -->
     <drishti.tools.version>1.1.0</drishti.tools.version>

@@ -112,14 +112,14 @@ class DifferentialTest {
     @ValueSource(strings = {
         "sum(MTM)", "sum(trades.MTM)", "avg(MTM)", "min(MTM)", "max(NOTIONAL)", "count(MTM)", "count(trades)", "distinct(CCY)", "distinct(N)",
         "percentile(MTM, 0.9)", "percentile(NOTIONAL, 0.5)", "percentile(N, 0.25)",
-        "sum(MTM, where = STATUS == 'LIVE')", "sum(MTM, where = STATUS != 'MATURED')", "count(trades, where = MTM < 0)",
-        "avg(NOTIONAL, where = CCY in ['USD', 'EUR'])", "max(MTM, where = TRADE_DATE >= '2026-01-01')", "distinct(DESK, where = LIVE)",
-        "count(trades, where = STATUS in [])", "sum(SECRET)", "count(SECRET)",
-        "ratio(sum(MTM), sum(NOTIONAL)) * 1000000", "sum(MTM) / count(trades)", "round(sum(MTM), 2)", "sum(MTM) - sum(MTM, where = MTM < 0)",
-        "ratio(sum(MTM), sum(MTM, where = MTM == 12345))", "abs(min(MTM))", "sum(MTM) > 0 ? sum(MTM) : 0",
+        "calc(sum(MTM), where = STATUS == 'LIVE')", "calc(sum(MTM), where = STATUS != 'MATURED')", "calc(count(trades), where = MTM < 0)",
+        "calc(avg(NOTIONAL), where = CCY in ['USD', 'EUR'])", "calc(max(MTM), where = TRADE_DATE >= '2026-01-01')", "calc(distinct(DESK), where = LIVE)",
+        "calc(count(trades), where = STATUS in [])", "sum(SECRET)", "count(SECRET)",
+        "ratio(sum(MTM), sum(NOTIONAL)) * 1000000", "sum(MTM) / count(trades)", "round(sum(MTM), 2)", "sum(MTM) - calc(sum(MTM), where = MTM < 0)",
+        "ratio(sum(MTM), calc(sum(MTM), where = MTM == 12345))", "abs(min(MTM))", "sum(MTM) > 0 ? sum(MTM) : 0",
         // the shipped models' measures (config/bi/models), in Rachana
-        "sum(trades.NOTIONAL)", "count(trades)", "sum(trades.MTM, where = trades.MTM < 0)", "min(trades.MTM)", "max(trades.MTM)",
-        "distinct(trades.DESK)", "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000", "max(trades.MTM, where = trades.DESK == 'DESK-FX')",
+        "sum(trades.NOTIONAL)", "count(trades)", "calc(sum(trades.MTM), where = trades.MTM < 0)", "min(trades.MTM)", "max(trades.MTM)",
+        "distinct(trades.DESK)", "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000", "calc(max(trades.MTM), where = trades.DESK == 'DESK-FX')",
         "avg(trades.NOTIONAL * (trades.CCY == 'JPY' ? 1 / 148.2 : trades.CCY == 'EUR' ? 1.174 : trades.CCY == 'GBP' ? 1.348 : 1))",
         "max(abs(trades.NOTIONAL * (trades.CCY == 'JPY' ? 1 / 148.2 : trades.CCY == 'EUR' ? 1.174 : 1)))",
     })
@@ -131,19 +131,19 @@ class DifferentialTest {
     /** A function with no SQL form is refused, never computed a second way (2.8). */
     @Test
     void whatHasNoSqlFormIsRefused() {
-        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("shift_date(TRADE_DATE, 1)").expr()))
+        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("shift_date(TRADE_DATE, 1)", com.ash.rachana.profile.Grammar.LEVEL).expr()))
                 .hasMessageContaining("business days need a fixed date");
-        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("fx(CCY, 'USD')").expr())).hasMessageContaining("FX source");
-        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("sum(MTM)").expr())).hasMessageContaining("belongs in a measure");
-        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("STATUS in user.desks").expr())).hasMessageContaining("bound when the query runs");
+        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("fx(CCY, 'USD')", com.ash.rachana.profile.Grammar.LEVEL).expr())).hasMessageContaining("FX source");
+        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("sum(MTM)", com.ash.rachana.profile.Grammar.LEVEL).expr())).hasMessageContaining("belongs in a measure");
+        assertThatThrownBy(() -> d.compiler.row(CheckedMode.parse("STATUS in user.desks", com.ash.rachana.profile.Grammar.LEVEL).expr())).hasMessageContaining("bound when the query runs");
         assertThatThrownBy(() -> new Compiler(d.compiler == null ? null : (p) -> "x", SqlLowering.Options.of(null))
-                .row(CheckedMode.parse("asof()").expr())).hasMessageContaining("as-of date");
+                .row(CheckedMode.parse("asof()", com.ash.rachana.profile.Grammar.LEVEL).expr())).hasMessageContaining("as-of date");
     }
 
     /** What needs an answer has no Java form over rows in memory (a live table), in words. */
     @Test
     void answerFunctionsAreRefusedOverRowsInMemory() {
-        Lowered l = d.compiler.measure(CheckedMode.parse("ytd(sum(MTM), TRADE_DATE)").expr());
+        Lowered l = d.compiler.measure(CheckedMode.parse("ytd(sum(MTM), TRADE_DATE)", com.ash.rachana.profile.Grammar.LEVEL).expr());
         assertThatThrownBy(() -> d.memory.measure(l, d.rows, java.util.Map.of())).hasMessageContaining("ytd() is computed by the query over an answer");
     }
 }

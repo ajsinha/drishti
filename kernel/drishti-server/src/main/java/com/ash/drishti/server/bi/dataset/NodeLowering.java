@@ -29,7 +29,8 @@ import java.util.Set;
 /**
  * Rachana's tree as BI's compiler tree ({@link Node}), the one the SQL emitter writes with bound parameters and the live tables evaluate
  * (docs/architecture/ARCHITECTURE.md §28 section 2.6: one parser, Rachana's; BI's compiler keeps its plan). Named arguments become the compiler's
- * arguments ({@code sum(x, where = c)} is {@code sum(x, c)}; {@code rank(agg, desc = false, by = [f])} is {@code rank(agg, 'asc', f)}); the
+ * arguments ({@code rank(agg, desc = false, by = [f])} is {@code rank(agg, 'asc', f)}); an aggregate restricted by a condition and nothing else
+ * ({@code calc(sum(x), where = c)}) is the aggregate with its condition ({@code sum(x, c)}, the SQL emitter's {@code FILTER (WHERE c)}); the
  * filter-context, balance and time-travel functions keep theirs as pseudo-calls ({@link Node#keyword}); Rachana's names take the
  * compiler's ({@code len} is {@code length}, {@code starts_with} {@code startsWith}, {@code latest} {@code last}, {@code earliest}
  * {@code first}); {@code c ? a : b} is a conditional, {@code x == null} an {@code IS NULL} test, {@code measure('name')} a measure reference.
@@ -44,6 +45,8 @@ public final class NodeLowering {
     static final Map<String, String> COMPILER = Map.of("len", "length", "starts_with", "startsWith", "ends_with", "endswith", "latest", "last",
             "earliest", "first");
     private static final Set<String> RANKS = Set.of("rank", "dense_rank", "percent_rank");
+    /** The aggregates that take a row condition as their last argument ({@code sum(x, c)}, {@code percentile(x, p, c)}), with their arguments before it. */
+    static final Map<String, Integer> CONDITIONAL = Map.of("sum", 1, "avg", 1, "min", 1, "max", 1, "count", 1, "distinct", 1, "percentile", 2);
 
     private final CheckedMode.Parsed parsed;
 
@@ -78,11 +81,11 @@ public final class NodeLowering {
             case Expr.Lit l -> literal(l);
             case Expr.Field f -> field(f);
             case Expr.Not n -> new Node.Un("!", node(n.e()));
-            case Expr.Neg n -> new Node.Un("-", node(n.e()));
+            case Expr.Minus n -> new Node.Un("-", node(n.e()));
             case Expr.And a -> new Node.Bin("&&", node(a.l()), node(a.r()));
             case Expr.Or o -> new Node.Bin("||", node(o.l()), node(o.r()));
             case Expr.Ternary t -> new Node.Cond(node(t.cond()), node(t.then()), node(t.otherwise()));
-            case Expr.Binary b -> new Node.Bin(b.op(), node(b.l()), node(b.r()));
+            case Expr.Op b -> new Node.Bin(b.op(), node(b.l()), node(b.r()));
             case Expr.In i -> new Node.In(node(i.value()), items(i.list()), i.negated());
             case Expr.Call c -> call(c);
             case Expr.Absent a -> new Node.Null();
@@ -150,7 +153,8 @@ public final class NodeLowering {
         String compiled = COMPILER.getOrDefault(name, name);
         List<Signatures.Param> params = f.params();
         if (Node.CONTEXT.contains(compiled) || Node.SCALARS_B.contains(compiled)) {
-            return keywords(c, compiled, params);
+            Node n = keywords(c, compiled, params);
+            return "calc".equals(compiled) ? restricted((Node.Call) n) : n;
         }
         List<Node> args = new ArrayList<>();
         if ("windows".equals(f.family())) {
@@ -200,6 +204,23 @@ public final class NodeLowering {
             args.add(node(v));
         }
         return new Node.Call(compiled, args);
+    }
+
+    /**
+     * {@code calc(agg, where = c)} with nothing else edited, over one aggregate that has no condition yet: the aggregate with the condition
+     * ({@code sum(x, c)}), which the SQL emitter writes as the restricted aggregate either way; any other {@code calc} as it is.
+     */
+    private static Node restricted(Node.Call calc) {
+        List<Node> pos = Node.positional(calc);
+        Node.Call where = Node.keyword(calc, "where");
+        if (pos.size() != 1 || where == null || where.args().size() != 1 || calc.args().size() != 2
+                || !(pos.get(0) instanceof Node.Call agg) || !CONDITIONAL.containsKey(agg.function())
+                || agg.args().size() != CONDITIONAL.get(agg.function())) {
+            return calc;
+        }
+        List<Node> args = new ArrayList<>(agg.args());
+        args.add(where.args().get(0));
+        return new Node.Call(agg.function(), List.copyOf(args));
     }
 
     /** The argument given for parameter {@code i}: by place (Rachana binds its own functions' names to places), else by name; null when absent. */

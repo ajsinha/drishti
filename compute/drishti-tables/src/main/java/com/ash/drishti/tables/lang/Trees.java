@@ -19,6 +19,7 @@ import com.ash.rachana.el.CheckedMode;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.Expr;
 import com.ash.rachana.el.Printer;
+import com.ash.rachana.profile.Grammar;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ public final class Trees {
 
     /** Rachana's tree of {@code text} ({@code DRS-2101} as an {@link ElException} when it does not parse). */
     public static Expr parse(String text) {
-        return CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL).expr();
+        return CheckedMode.parse(text, Grammar.LEVEL).expr();
     }
 
     /** True when {@code text} parses. */
@@ -64,12 +65,14 @@ public final class Trees {
             case Expr.Filter f -> List.of(f.target(), f.predicate());
             case Expr.ListLit l -> l.items();
             case Expr.Not n -> List.of(n.e());
-            case Expr.Neg n -> List.of(n.e());
+            case Expr.Minus n -> List.of(n.e());
             case Expr.And a -> List.of(a.l(), a.r());
             case Expr.Or o -> List.of(o.l(), o.r());
             case Expr.Ternary t -> List.of(t.cond(), t.then(), t.otherwise());
             case Expr.In i -> List.of(i.value(), i.list());
-            case Expr.Binary b -> List.of(b.l(), b.r());
+            case Expr.Op b -> List.of(b.l(), b.r());
+            case Expr.Power p -> List.of(p.l(), p.r());
+            case Expr.Coalesce c -> List.of(c.l(), c.r());
             case Expr.Call c -> {
                 List<Expr> out = new ArrayList<>(c.args());
                 out.addAll(c.named().values());
@@ -103,12 +106,14 @@ public final class Trees {
             case Expr.Filter x -> new Expr.Filter(map(x.target(), f), map(x.predicate(), f));
             case Expr.ListLit l -> new Expr.ListLit(l.items().stream().map(i -> map(i, f)).toList());
             case Expr.Not n -> new Expr.Not(map(n.e(), f));
-            case Expr.Neg n -> new Expr.Neg(map(n.e(), f));
+            case Expr.Minus n -> new Expr.Minus(map(n.e(), f));
             case Expr.And a -> new Expr.And(map(a.l(), f), map(a.r(), f));
             case Expr.Or o -> new Expr.Or(map(o.l(), f), map(o.r(), f));
             case Expr.Ternary t -> new Expr.Ternary(map(t.cond(), f), map(t.then(), f), map(t.otherwise(), f));
             case Expr.In i -> new Expr.In(map(i.value(), f), map(i.list(), f), i.negated());
-            case Expr.Binary b -> new Expr.Binary(b.op(), map(b.l(), f), map(b.r(), f));
+            case Expr.Op b -> new Expr.Op(b.op(), map(b.l(), f), map(b.r(), f));
+            case Expr.Power p -> new Expr.Power(map(p.l(), f), map(p.r(), f));
+            case Expr.Coalesce c -> new Expr.Coalesce(map(c.l(), f), map(c.r(), f));
             case Expr.Call c -> {
                 Map<String, Expr> named = new LinkedHashMap<>();
                 c.named().forEach((k, v) -> named.put(k, map(v, f)));

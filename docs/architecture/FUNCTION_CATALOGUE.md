@@ -164,7 +164,7 @@ the cell's rows. `mode` of names and `string_agg` answer text.
 
 | Function | Means | Example | Excel / SAS | Form | Status |
 |---|---|---|---|---|---|
-| `sum(x, [where])` | total | `sum($.LEGS[*].NOTIONAL)`, `sum(trades.NOTIONAL, where = trades.DESK == 'DESK-COMM')` | `SUM`, `SUMIFS` / PROC MEANS `SUM` | mergeable | built (all three) |
+| `sum(x, [where])` | total | `sum($.LEGS[*].NOTIONAL)`, `calc(sum(trades.NOTIONAL), where = trades.DESK == 'DESK-COMM')` | `SUM`, `SUMIFS` / PROC MEANS `SUM` | mergeable | built (all three) |
 | `count(x \| alias, [where])` | values not null, or rows | `count($.EVENTS[?@.EVENT_TYPE == 'BOOKED'])` | `COUNT`, `COUNTIFS` / `N` | mergeable | built |
 | `nmiss(x)` | nulls | `nmiss($.LEGS[*].DISCOUNT_INDEX)` | `COUNTBLANK` / `NMISS` | mergeable | built (engine) |
 | `avg(x, [where])` | mean | `avg(trades.PRICE)` | `AVERAGE`, `AVERAGEIFS` / `MEAN` | mergeable (sum, count) | built |
