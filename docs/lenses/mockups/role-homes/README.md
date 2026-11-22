@@ -37,3 +37,7 @@ Three directions, each shown for two roles (risk manager, trader). Static HTML, 
 3. Is "what changed since yesterday" a server feature (needs a change-detection service) or only a feed of the existing events?
 4. One Home per role, or several (the picker per plan decision 11)?
 5. Should the KPI figures be configured per role in YAML only, or editable by the user from the Home?
+
+## Owner decision (2026-11-22)
+
+The hybrid: direction B (exceptions first, what changed since yesterday) on top of direction A (KPI strip and mnemonic bar always present); direction C's pinned panels are an option, not the default (the role supplies the default layout; a person may arrange and save their own). "What changed since yesterday" is a real server feature (change detection), designed in H1.
