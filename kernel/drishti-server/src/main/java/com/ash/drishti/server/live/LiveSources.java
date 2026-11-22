@@ -49,17 +49,15 @@ public final class LiveSources {
         }
     }
 
-    private final Map<String, Source> sources = new LinkedHashMap<>(16, 0.75f, false) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Source> eldest) {
-            return size() > MAX;
-        }
-    };
+    private final Map<String, Source> sources = new LinkedHashMap<>();
 
-    /** Keeps a source under a name (replacing one of that name). */
+    /** Keeps a source under a name (replacing one of that name); the oldest leaves beyond {@link #MAX}. */
     public synchronized void put(String name, Source s) {
         sources.remove(name);
         sources.put(name, s);
+        while (sources.size() > MAX) {
+            sources.remove(sources.keySet().iterator().next());
+        }
     }
 
     /** The source of a name, when one is kept. */
