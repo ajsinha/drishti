@@ -84,6 +84,19 @@ public interface KindBindings {
     /** Every change of the kind through its {@code live:} binding; closing the handle stops them. */
     AutoCloseable subscribe(String kind, Consumer<EntityDocument> listener);
 
+    /** Where a read's failure is kept in the source's words, made safe (the protocol mount tells them with a 503); null keeps none. */
+    default ReadFailures failures() {
+        return null;
+    }
+
+    /**
+     * The search titles of the kind's records (its sources' listing: a title that says more than the id), for a FORM result's Title
+     * column; empty when the sources give none or cannot list the day.
+     */
+    default Map<String, String> titles(String kind, com.ash.drishti.api.AsOf at) throws Exception {
+        return Map.of();
+    }
+
     /** Why the kind's live binding is paused (its broker absent), one line per source; empty when it is up or has none. */
     default List<String> paused(String kind) {
         return List.of();

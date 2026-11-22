@@ -22,6 +22,7 @@ A search on two business dates side by side (``vs=``) is a comparison, not a set
 from __future__ import annotations
 
 KEY = "id"                     # the key column of a search's table (SearchFilter.KEY)
+TITLE = "_title"               # where a search's table keeps each row's search title (KindSnapshot.TITLE)
 
 
 async def run(backend, q: str, ident) -> dict:
@@ -50,7 +51,7 @@ def as_search(answer: dict) -> dict:
     rows = []
     for r in page_rows(page):
         rid = r.get(KEY)
-        rows.append({"ref": {"kind": kind, "id": rid}, "title": rid, "values": {c: value_at(r, c) for c in cols}})
+        rows.append({"ref": {"kind": kind, "id": rid}, "title": r.get(TITLE) or rid, "values": {c: value_at(r, c) for c in cols}})
     data["rows"] = rows
     total = page.get("total")
     data["live"] = {"table": answer.get("table"), "query": answer.get("query") or {}, "key": [KEY], "live": bool(answer.get("live")),
@@ -216,6 +217,7 @@ def kind_page(answer: dict) -> dict:
             "matched": total, "scanned": total, "partial": bool(schema.get("capped")), "failed": [], "elapsedMs": 0, "rows": rows,
             "live": {"table": table, "query": {}, "key": spec["key"], "live": bool(schema.get("live")), "total": total}}
     data["paged"] = {"offset": int(answer.get("offset") or 0), "shown": len(rows), "total": total}
+    data["asOfNotices"] = answer.get("asOfNotices") or []
     return data
 
 

@@ -52,6 +52,8 @@ public final class EditService {
     private static final Pattern NAME = Pattern.compile("^[a-z0-9][a-z0-9-]{0,63}$");
     private static final Pattern ENTITY = Pattern.compile("^[^\\s/\\\\]{1,256}$");
     private static final Pattern DRAFT = Pattern.compile("^d-[0-9a-f]{12}$");
+    /** A change id a client gives its change (the Data Protocol's: 1 to 64 letters, digits, '-' or '_'; ours is {@code chg-} and a ULID). */
+    static final Pattern CHANGE_ID = Pattern.compile("^[A-Za-z0-9_-]{1,64}$");
     private static final int MAX_ITEMS = 200;
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -143,6 +145,22 @@ public final class EditService {
      * ({@code queued} with the lane and seq once committed, or {@code awaiting} approval with the approvals it needs).
      */
     public List<Map<String, Object>> submit(Principal p, JsonNode body) {
+        String given = body == null || body.hasNonNull("draft") ? null : text(body, "id");
+        if (given != null && CHANGE_ID.matcher(given).matches()) {
+            Optional<Map<String, Object>> was = known(given);
+            if (was.isPresent()) {                                     // a repeat of a change id: its answer again, only to its maker
+                Map<String, Object> a = new LinkedHashMap<>(was.get());
+                String by = String.valueOf(a.remove("by"));
+                if (!by.equals(p.user())) {
+                    throw refused(p, Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity"))),
+                            "the change id '" + given + "' is another's");
+                }
+                audit.record(p.user(), "edit-repeated", Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity"))),
+                        given + ": answered " + a.get("state") + " again");
+                a.remove("message");
+                return List.of(a);
+            }
+        }
         List<Change> changes = changes(p, body);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Change c : changes) {
@@ -309,7 +327,7 @@ public final class EditService {
         }
         LocalDate date = body.hasNonNull("businessDate") ? LocalDate.parse(body.path("businessDate").asText()) : today.get();
         String id = text(body, "id");
-        if (id == null || !Ulid.valid(id, "chg-") || body.hasNonNull("draft")) {
+        if (id == null || !CHANGE_ID.matcher(id).matches() || body.hasNonNull("draft")) {   // the client's id kept end to end
             id = Ulid.next("chg-");
         }
         Map<String, Object> params = new LinkedHashMap<>();
@@ -576,6 +594,40 @@ public final class EditService {
     }
 
     // ------------------------------------------------------------------------------------------------------------ reads
+
+    /**
+     * What the write-back knows of a change id, whoever asks (a repeat is answered from it; the live tables' sink reads it):
+     * {@code {id, kind, entity, target, state, by, needed?, message?}}, the state the edit log's once the change is in its lane, else the
+     * approval queue's ({@code awaiting}, {@code rejected}, {@code withdrawn}). Empty for an id never submitted.
+     */
+    public Optional<Map<String, Object>> known(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        Optional<EditLog.Row> row = log.get(id);
+        Optional<ChangeRequests.Request> req = row.isPresent() ? Optional.empty() : requests.get(id);
+        if (row.isEmpty() && req.isEmpty()) {
+            return Optional.empty();
+        }
+        Change c = row.map(EditLog.Row::change).orElseGet(() -> req.get().change());
+        Map<String, Object> out = answer(c, row.map(EditLog.Row::state).orElseGet(() -> req.get().state()));
+        out.put("by", c.by());
+        if (row.isPresent()) {
+            out.put("lane", row.get().lane());
+            out.put("seq", row.get().seq());
+            if (row.get().stateReason() != null) {
+                out.put("message", row.get().stateReason());
+            }
+        } else {
+            if (ChangeRequests.AWAITING.equals(req.get().state())) {
+                out.put("needed", Math.max(0, req.get().needed() - req.get().approvals().size()));
+            }
+            if (req.get().reason() != null) {
+                out.put("message", req.get().reason());
+            }
+        }
+        return Optional.of(out);
+    }
 
     /** A change as this person may see it (values of fields masked for them shown masked), from the log or the approval queue. */
     public Map<String, Object> get(Principal p, String id) {

@@ -97,7 +97,7 @@ public class DrishtiLiveTables {
             public SnapshotSource snapshot(String name) {
                 // a table declared in code (a FORM's result) reads its kind as its source says: the day, whole or by columns, the members
                 return sources.get(name).<SnapshotSource>map(x -> new KindSnapshot(x.kind(), bindings, List.of(com.ash.drishti.engine.search.SearchFilter.KEY),
-                        x.at(), x.whole(), x.peers(), null)).orElseGet(() -> new KindSnapshot(name, bindings, keyOf(specs, name)));
+                        x.at(), x.whole(), x.peers(), null, true)).orElseGet(() -> new KindSnapshot(name, bindings, keyOf(specs, name)));
             }
 
             @Override
@@ -118,11 +118,10 @@ public class DrishtiLiveTables {
         AUTHORISERS.put(lt, authoriser);
         com.ash.drishti.identity.AuditLog a = auditLog.getIfAvailable();
         if (a != null) {
-            lt.audit(e -> a.record(String.valueOf(e.get("caller") instanceof com.ash.drishti.kernel.api.security.Principal p ? p.user() : e.get("caller")),
-                    "live-" + e.get("event"), e.get("table") + ":" + e.get("key"), e.get("reason") == null ? "" : String.valueOf(e.get("reason"))));
+            lt.audit(e -> audit(a, e));
         }
         if (rt != null) {
-            lt.sink(new DrishtiChangeSink(specs::get, (p, body) -> rt.service().submit(p, body)));
+            lt.sink(new DrishtiChangeSink(specs::get, (p, body) -> rt.service().submit(p, body), id -> rt.service().known(id)));
         }
         // the declarations: each module's blotters folder, then the site's (a site file of the same name replaces the module's)
         Predicate<String> on = com.ash.drishti.server.modules.DomainFolders.on(env);
@@ -150,6 +149,26 @@ public class DrishtiLiveTables {
         DEFAULTS.put(lt, defaults);
         SPECS.put(lt, specs);
         return lt;
+    }
+
+    /**
+     * One live table event as an audit record: the caller (the person, never null: a write without one is refused before it is made), the
+     * event, the subject {@code <table>:<key>} (a write's: {@code <table>:<change id>}) and the reason, with the change id and the columns
+     * it changed, so a write's record and the write-back's {@code edit-submitted} record of the same change share its id.
+     */
+    static void audit(com.ash.drishti.identity.AuditLog a, Map<String, Object> e) {
+        Object caller = e.get("caller");
+        String who = caller instanceof com.ash.drishti.kernel.api.security.Principal p ? p.user() : caller == null ? "-" : String.valueOf(caller);
+        Object change = e.get("change");
+        Object key = e.get("key") != null ? e.get("key") : change;
+        StringBuilder detail = new StringBuilder(e.get("reason") == null ? "" : String.valueOf(e.get("reason")));
+        if (change != null) {
+            detail.append(detail.isEmpty() ? "" : "; ").append("change ").append(change);
+            if (e.get("columns") instanceof java.util.Collection<?> cols && !cols.isEmpty()) {
+                detail.append(" (").append(String.join(", ", cols.stream().map(String::valueOf).toList())).append(")");
+            }
+        }
+        a.record(who, "live-" + e.get("event"), e.get("table") + (key == null ? "" : ":" + key), detail.toString());
     }
 
     /** The sources of the tables declared in code (a FORM's result), by name. */
@@ -347,7 +366,25 @@ public class DrishtiLiveTables {
 
     /** The bindings of every kind through the source router. */
     static KindBindings routerBindings(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search, Duration budget) {
+        ReadFailures failures = new ReadFailures();
         return new KindBindings() {
+            @Override
+            public ReadFailures failures() {
+                return failures;
+            }
+
+            @Override
+            public Map<String, String> titles(String kind, AsOf at) {
+                Map<String, String> out = new HashMap<>();
+                for (var h : router.list(kind, "", LIST_MAX, budget, at == null ? AsOf.LATEST : at,
+                        new com.ash.drishti.engine.source.SourceFailures()).hits()) {
+                    if (h.title() != null && !h.title().isBlank() && !h.title().equals(h.ref().id())) {
+                        out.put(h.ref().id(), h.title());
+                    }
+                }
+                return out;
+            }
+
             @Override
             public Optional<Store> store(String kind) {
                 return router.columnar(kind).isEmpty() ? Optional.empty() : Optional.of(routerStore(router, kind, budget));
