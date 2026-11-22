@@ -22,7 +22,7 @@
 
    The screen keeps its own command line and keys, so the grid's chrome (its command line, wells, toolbar and function keys) is off
    unless asked (chrome: true); the status bar and Explain stay. A row click calls onRow(row, event) (drill to a scope, open a trade). */
-import { defineGridElement } from '../../../vendor/drishti-elements/3.3.1/elements/drishti-grid/src/drishti_index.js';
+import { defineGridElement } from '../../../vendor/drishti-elements/3.3.2/elements/drishti-grid/src/drishti_index.js';
 
 /** What every risk table starts from. */
 export const RISK_GRID_DEFAULTS = Object.freeze({ layout: 'terminal', density: 'terminal', chrome: false, checkboxes: false,

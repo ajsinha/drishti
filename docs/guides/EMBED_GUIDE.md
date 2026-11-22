@@ -225,7 +225,7 @@ embedded webview), the page goes to the sign-in and comes back.
 <!-- the renderer: one call (the library from the console's embed path; your page needs no server) -->
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/embed/v2/render/3.3.1/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/embed/v2/render/3.3.2/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: '1000008' },
                       { auth: 'popup', server: 'https://drishti.bank.example' });
   const el = view.container;
@@ -398,7 +398,7 @@ Shadow DOM, follows live updates, and navigates **in place** with its own back s
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/static/render/3.3.1/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/static/render/3.3.2/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
@@ -406,7 +406,7 @@ Shadow DOM, follows live updates, and navigates **in place** with its own back s
 
 or the tag `<drishti-screen kind="trade" entity="IRS-48213" theme="crimson-dark"></drishti-screen>` after the same import. On the
 console's own origin (or a same-origin proxy) this runs as the person signed in to the console. **Another origin** imports
-`/embed/v2/render/3.3.1/drishti-render.js` and gives a `token` provider ([4.1](#41-the-token-exchange)) or `auth: 'popup'`
+`/embed/v2/render/3.3.2/drishti-render.js` and gives a `token` provider ([4.1](#41-the-token-exchange)) or `auth: 'popup'`
 ([4.2](#42-a-page-without-a-backend-the-sign-in-window)).
 
 **Defaults for everything.** A call with no options draws in a Shadow DOM with the library's own sheet, in the theme your custom
@@ -566,7 +566,7 @@ The library is a function and custom elements, so every framework uses it as it 
 
 ```jsx
 // React
-import { render } from 'https://drishti.bank.example/static/render/3.3.1/drishti-render.js';
+import { render } from 'https://drishti.bank.example/static/render/3.3.2/drishti-render.js';
 export function Trade({ id }) {
   const ref = useRef(null);
   useEffect(() => { const h = render(ref.current, { kind: 'trade', id }); return () => h.dispose(); }, [id]);
@@ -578,13 +578,13 @@ export function Trade({ id }) {
 // Angular (CUSTOM_ELEMENTS_SCHEMA in the component)
 @Component({ selector: 'app-trade', template: '<drishti-screen kind="trade" [attr.entity]="id"></drishti-screen>', schemas: [CUSTOM_ELEMENTS_SCHEMA] })
 export class TradeComponent { @Input() id = 'IRS-48213'; }
-// main.ts: import 'https://drishti.bank.example/static/render/3.3.1/drishti-render.js';
+// main.ts: import 'https://drishti.bank.example/static/render/3.3.2/drishti-render.js';
 ```
 
 ```vue
 <!-- Vue (compilerOptions.isCustomElement: (t) => t.startsWith('drishti-')) -->
 <template><drishti-screen kind="trade" :entity="id" /></template>
-<script setup>import 'https://drishti.bank.example/static/render/3.3.1/drishti-render.js'; defineProps(['id']);</script>
+<script setup>import 'https://drishti.bank.example/static/render/3.3.2/drishti-render.js'; defineProps(['id']);</script>
 ```
 
 A bundler that refuses URL imports copies the version's folder as it is ([10.4](#104-the-npm-package-layout)).
@@ -709,7 +709,7 @@ A released version is **immutable**: a version always names **the same bytes**, 
 holds `integrity.json`, the SHA-384 (subresource integrity) of every distributed file, served at `/embed/v2/render/<version>/integrity.json`. Put the entry's `integrity` on the script line (SRI needs the exact version, not an alias):
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v2/render/3.3.1/drishti-render.js" integrity="sha384-…" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v2/render/3.3.2/drishti-render.js" integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
 Because a module's own imports are not covered by the script's `integrity`, pin the rest with an import map's `integrity` (Chrome 127 and
@@ -733,11 +733,11 @@ pinned to an old version tells you to move the pin.
 
 **Retired renderer paths.** Any renderer version but the one this console serves, and any Elements 2.x version but the one it serves, answers `410` (`DRS-8006`) naming the version it serves; pin the one renderer.
 
-**Renderer 3.3.1.** Every panel is drawn by Drishti Elements' painter (`drishti-views`); the API, the options, the events, the element
+**Renderer 3.3.2.** Every panel is drawn by Drishti Elements' painter (`drishti-views`); the API, the options, the events, the element
 attributes and the contract are the same. What you may see: the painter's look (its title line, freshness line and function keys, a
 filter box and pages on long tables, a Data table under each chart), a dash in an empty cell, a pivot's corner in its fields' own case;
 `behaviours: 'console'` gives the painter's tables their tools (column funnels, Chart any table, in the container); the console's nested-pivot grid, drills in place and zoom are the painter's own pivots, trees and tabs; a GenUI stream's messages are not drawn (release i9).
-The `3.1.0` paths are gone (`410` with `DRS-8006` under `/embed/v2/`): pin `3.3.1`.
+The `3.1.0` paths are gone (`410` with `DRS-8006` under `/embed/v2/`): pin `3.3.2`.
 
 ### 10.4 The npm package layout
 

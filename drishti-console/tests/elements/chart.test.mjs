@@ -19,9 +19,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import * as C from '../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-chart/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/3.3.2/elements/drishti-chart/src/drishti_index.js';
 import * as R from '../../web/static/elements/drishti-risk/src/drishti_index.js';
-import { EventBus } from '../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-core/src/drishti_index.js';
+import { EventBus } from '../../web/static/vendor/drishti-elements/3.3.2/elements/drishti-core/src/drishti_index.js';
 import * as fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
@@ -73,7 +73,7 @@ test('risk: the server\'s bins drawn as given, its VaR and ES and fitted normal;
 });
 
 test('the bundles: the chart and the risk library load under Node with the same API', () => {
-  const chart = require('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-chart/drishti_chart.js');
+  const chart = require('../../web/static/vendor/drishti-elements/3.3.2/elements/drishti-chart/drishti_chart.js');
   const risk = require('../../web/static/elements/drishti-risk/drishti_risk.js');
   assert.equal(chart.library, 'drishti-chart');
   assert.equal(typeof chart.Chart, 'function');

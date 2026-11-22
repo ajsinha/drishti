@@ -33,7 +33,7 @@ features:
   - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 2300, tutorial: none }
   - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 800, tutorial: none }
   - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 800, tutorial: none }
-  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: after 2.9.11.i, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
+  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/PVF_LOADING.md, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
   # World and public data
   - { id: W1, name: "World and public data", domain: capitalmarkets, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
   # Data in and out, build (core)

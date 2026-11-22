@@ -22,7 +22,7 @@
    their figures; a client-side pivot (two row levels, a column level, two values); the server-side row model paging through the rows.
    One JSON line at the end for the record. */
 import { performance } from 'node:perf_hooks';
-import * as G from '../../drishti-console/web/static/vendor/drishti-elements/3.3.1/elements/drishti-grid/src/drishti_index.js';
+import * as G from '../../drishti-console/web/static/vendor/drishti-elements/3.3.2/elements/drishti-grid/src/drishti_index.js';
 
 const N = +(process.argv[2] || 1000000), FRAMES = +(process.argv[3] || 10000);
 const out = { rows: N, node: process.version };

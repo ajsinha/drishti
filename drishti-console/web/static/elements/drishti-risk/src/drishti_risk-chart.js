@@ -20,7 +20,7 @@
 
    onPick(row, context) hears a click on a mark that was made of one row (a scenario date's bar: drill into that date). A test reads
    the drawing through host.querySelector('drishti-chart').chart.built (the option, the legend, the figures, the badge). */
-import { defineChartElement } from '../../../vendor/drishti-elements/3.3.1/elements/drishti-chart/src/drishti_index.js';
+import { defineChartElement } from '../../../vendor/drishti-elements/3.3.2/elements/drishti-chart/src/drishti_index.js';
 
 /**
  * Draws a risk chart in host.
