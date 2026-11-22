@@ -114,6 +114,13 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private String sourceName;
     private volatile boolean caughtUp;
     private volatile boolean running = true;
+    /** Suspended (docs/architecture/LIFECYCLE.md section 4): the partitions are paused, the positions kept; resumed, polling carries on from them. */
+    private volatile boolean suspended;
+    /** Records applied since start (each offset once): the lifecycle's rows read, and the proof that a resume loses and repeats nothing. */
+    private final java.util.concurrent.atomic.AtomicLong appliedRecords = new java.util.concurrent.atomic.AtomicLong();
+    /** The partitions' end offsets minus the positions, as of the last poll: the backlog. */
+    private volatile long lag = -1;
+    private long lagAt;
     private volatile boolean closed;
     private com.ash.tools.net.TlsMaterial tls;
     private org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer = new StringDeserializer();
@@ -292,6 +299,43 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
     }
 
+    private static long lagOf(KafkaConsumer<String, String> c, List<TopicPartition> parts) {
+        long total = 0;
+        for (TopicPartition tp : parts) {
+            org.apache.kafka.common.Metric m = c.metrics().entrySet().stream()
+                    .filter(e -> "records-lag".equals(e.getKey().name()) && tp.topic().equals(e.getKey().tags().get("topic"))
+                            && String.valueOf(tp.partition()).equals(e.getKey().tags().get("partition")))
+                    .map(Map.Entry::getValue).findFirst().orElse(null);
+            Object v = m == null ? null : m.metricValue();          // the client's own records-lag, per partition
+            if (v instanceof Number n && !Double.isNaN(n.doubleValue())) {
+                total += n.longValue();
+            }
+        }
+        return total;
+    }
+
+    /** Stops pulling: the consumer pauses its partitions at its next poll; positions, caches and the index are kept. */
+    @Override
+    public void suspend() {
+        suspended = true;
+    }
+
+    /** Carries on from the kept positions. */
+    @Override
+    public void resume() {
+        suspended = false;
+    }
+
+    @Override
+    public long backlog() {
+        return lag;
+    }
+
+    /** Records applied since start. */
+    long appliedRecords() {
+        return appliedRecords.get();
+    }
+
     private boolean pause(long millis) {
         try {
             Thread.sleep(millis);
@@ -328,9 +372,21 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 .map(Map.Entry::getValue).findFirst().orElse(null);
         long lostSince = 0;
         while (running) {
+            // suspend and resume act here, on the consumer's own thread (a KafkaConsumer is single-threaded): paused partitions return nothing
+            // from poll and keep their position, so a resume carries on at the next offset: nothing lost, nothing read twice
+            if (suspended && c.paused().size() < c.assignment().size()) {
+                c.pause(c.assignment());
+            } else if (!suspended && !c.paused().isEmpty()) {
+                c.resume(c.paused());
+            }
             for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
                 apply(r);
+                appliedRecords.incrementAndGet();
                 resumeAt.put(new TopicPartition(r.topic(), r.partition()), r.offset() + 1);
+            }
+            if (System.nanoTime() - lagAt > 5_000_000_000L) {
+                lag = lagOf(c, parts);                             // the backlog, every five seconds: the metrics map is not free
+                lagAt = System.nanoTime();
             }
             // the client rides out a broker outage inside poll() without failing, so health watches its connections:
             // none for BROKER_LOST_MS means the broker is gone (the client keeps reconnecting by itself)
