@@ -17,7 +17,7 @@
 
 **Rachana** (रचना, *composition*) is Drishti's declarative screen grammar. Because of it, no product ever gets its own coded screen.
 A **Sutra** (सूत्र, *thread*) is one layout written in Rachana: a versioned YAML file (`<name>.v<N>.sutra.yaml`, starting
-`rachana: 1`) that describes how to lay out one family of entities. The *How this view was built* panel reads, for example,
+`rachana: 1.2`) that describes how to lay out one family of entities. The *How this view was built* panel reads, for example,
 `Sutra irs-fixfloat v1 + inference`, meaning the Sutra `irs-fixfloat`, version 1, completed by inference.
 
 A Sutra holds no code and no pixels. It is loaded by `SutraRegistry` from `drishti.rachana.dirs` and the enabled packs, and reloads as
@@ -82,13 +82,16 @@ You should see `ref`, `mnemonic`, `title`, `strip`, `controls`, `panels`, `keys`
 
 ## File format: one YAML file
 
-A Sutra is **one YAML file**, `<name>.v<N>.sutra.yaml` in a Sutra folder, whose first key is `rachana: 1`, the version of the Rachana
-language it is written in. Values are plain YAML; strings may hold Rachana-EL expressions. That is the only format: there is no
+A Sutra is **one YAML file**, `<name>.v<N>.sutra.yaml` in a Sutra folder, whose first key is `rachana: 1.2`, the language level
+of Rachana it is written in. Values are plain YAML; strings may hold Rachana-EL expressions. That is the only format: there is no
 second dialect to learn, and any YAML tool (syntax highlighting, linters, JSON Schema completion, `yq`, code review diffs) works on a
 Sutra as it is.
 
+**Language level.** Drishti runs Rachana's one language level, **1.2**, and every Sutra, fragment and block declares `rachana: 1.2` (`rachana: 1` is 1.2 too). At 1.2 arithmetic on exact numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double arithmetic. A Sutra or fragment that declares 1.0 or 1.1 is refused: move it first with `rachana upgrade` of Rachana 0.12.0. A Sutra uses fragments
+of its own level only (`DRS-2008` otherwise), so upgrade a Sutra and its own fragments together.
+
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: irs-vanilla
 version: 3
 description: Murex fixed/float interest rate swaps, with the legs one key away.
@@ -156,7 +159,7 @@ Rules that follow from this:
   written) but mean nothing to the engine. Use `notes` for anything a reviewer should read.
 - Keep other YAML files out of Sutra directories; they are reported as `DRS-2004`.
 - A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one fenced `sutra` block) converts in one step; the
-  block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
+  block becomes the file, `rachana: 1.2` is added, and the prose becomes `notes`:
 
   Run these from the Drishti folder (the repository root, or the install folder of a release).
 
@@ -247,7 +250,7 @@ The trade is in the common schema every source system writes (47 upper-snake att
 ```
 
 ```yaml
-rachana: 1
+rachana: 1.2
 # ---- Identity -----------------------------------------------------------------------------------------
 sutra: swap-annotated            # the name: lower-case kebab, 2-64 characters
 version: 1                       # name@version is unique; old versions stay loadable, so saved views reproduce
@@ -525,7 +528,7 @@ those panels once as a **block** and `use:` it from each Sutra. A block is a fil
 directory (the trading pack keeps its six in `sutras/common/`). This is the start of the shipped `legs` block:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 block: legs                     # the name, as in the file name
 version: 1                      # the version, as in the file name
 description: "The legs side by side: each leg's terms, notional profile (a step line), fixings and cash flows opening to their resets."
@@ -3456,7 +3459,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 |---|---|---|---|
 | `DRS-2001` | `YAML syntax: <parser message>` | the file is not valid YAML (bad indentation, a `:` or `#` in an unquoted value, a tab) | fix the YAML; quote values with `: `, ` #`, or a leading `#`, `@`, `*`, `&` |
 | `DRS-2004` | `Markdown Sutras are no longer read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py <file> --delete`, or `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>` | a `.sutra.md` file, or a plain `.yaml`/`.yml` file, in a Sutra directory | convert it with `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`, or rename it to `<name>.v<N>.sutra.yaml` (or move a YAML file that is not a Sutra out of the directory) |
-| `DRS-2009` | `missing 'rachana: 1' (the Rachana language version) at the top`, `'rachana: 2' is not a language version this server reads (it reads 1)` | no `rachana:` key, or a version this server does not know | put `rachana: 1` first in the file |
+| `DRS-2009` | `missing 'rachana: 1' (the Rachana language version) at the top`, `'rachana: 2' is not a language version this server reads (it reads 1)` | no `rachana:` key, or a version this server does not know | put `rachana: 1.2` first in the file |
 | `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'`, `missing 'id' in title: the expression for the large identifier, such as $.TRADE_ID`, `a panel inside a tab needs an 'id'` | a required key is absent | add it |
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
 | `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text`, `'kind' in match is an entity kind written as text (such as trade), not '42'`, `'priority' in match must be a whole number (higher is tried first), not 'high'` | a value of the wrong shape | write the shape shown in the message |
@@ -3690,7 +3693,7 @@ exists; its addresses redirect into the workbench ([where things went](#19-studi
 facts that remain, for scripts:
 
 - `GET /api/v1/studio/inferred/{kind}/{id}?name=...` (or `POST /api/v1/studio/inferred` with sample JSON) returns a new YAML Sutra
-  (`rachana: 1`, a `description`, `priority: 1`) holding what inference made of that entity.
+  (`rachana: 1.2`, a `description`, `priority: 1`) holding what inference made of that entity.
 - `POST /api/v1/studio/preview` with `{yaml, kind, id}` (or `document` instead of an id) parses and checks the text
   (`SutraRegistry.check`, problems located in `studio.sutra.yaml`) and builds the view with the unsaved Sutra, bypassing the layout cache
   and the matcher: **a preview always uses your Sutra, whatever its `match` says**. Nothing is written. A personal token needs the
@@ -4576,7 +4579,7 @@ placeholder), `landing.html` (the statistic and the tooltip that lists the kinds
 
 Use a pack that exists in this repository in a server test (`drishti.packs.enabled=trading,counterparty-risk`, and
 `drishti.sources.plugins.demo.settings.ticking=false` so the data does not move under you): there is no `finance` pack.
-Always write the Sutra with `rachana: 1` first (`DRS-2009` otherwise) and a lower-case kebab name.
+Always write the Sutra with `rachana: 1.2` first (`DRS-2009` otherwise) and a lower-case kebab name.
 
 ##### 15.2 The guard tests that fail when a kind is half-added
 
@@ -4697,7 +4700,7 @@ unqualified (`series-line@1`). Later the content store (DATA_ARCHITECTURE.md) ho
 
 ```yaml
 # config/ui-kit/fragments/series-line.v1.fragment.yaml
-rachana: 1
+rachana: 1.2
 fragment: series-line
 version: 1
 description: "A line chart of one series read from a list of rows: x along the bottom, y up the side."
@@ -5265,7 +5268,7 @@ from a pack: the same YAML, checked by the same parser and lint, rendered as the
 content store (DATA_ARCHITECTURE.md) when they keep it.
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-usd-rates
 version: 1
 match: { kind: screen }                     # a screen of its own, not bound to one record
@@ -6196,7 +6199,7 @@ What it writes, step by step (**Show the Sutra**, at the foot of the side panel,
 
 ```yaml
 # My page, saved by the Sutra designer (Customize). Only I see it until I share it; Reset goes back to the pack's page.
-rachana: 1
+rachana: 1.2
 sutra: my-irs-fixfloat            # your page has its own name, so it never stands for the pack's Sutra
 version: 1
 match: { kind: trade }
@@ -6386,7 +6389,7 @@ counterparty's limits on the right. **Show the Sutra** shows the YAML read-only;
 
 ```yaml
 # My screen, written by the Sutra designer (Describe). Edit it in Build, or describe it again.
-rachana: 1
+rachana: 1.2
 sutra: my-portfolio-trades-book-rates-2
 version: 1
 description: TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
@@ -7066,7 +7069,7 @@ panel, such as `rows`, `label` and `value` here, may come in a different order f
 
 ```yaml
 # Started from what inference makes of climate-scenario NGFS-DELAYED. Edit freely.
-rachana: 1
+rachana: 1.2
 sutra: my-scenario
 version: 1
 description: Started from inference for climate-scenario. Edit freely.
@@ -7198,7 +7201,7 @@ You should see this Sutra (option lines inside a panel may come in a different o
 
 ```yaml
 # Started from what inference makes of key-risk-indicator KRI-COMM-1. Edit freely.
-rachana: 1
+rachana: 1.2
 sutra: kri-draft
 version: 1
 description: Started from inference for key-risk-indicator. Edit freely.
@@ -7310,7 +7313,7 @@ The usual way to write a Sutra for a new kind is to start from inference and cor
    curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.yaml
    ```
 
-   The draft is a complete YAML Sutra (it starts with `rachana: 1`) with `priority: 1`, so it loses to any pack
+   The draft is a complete YAML Sutra (it starts with `rachana: 1.2`) with `priority: 1`, so it loses to any pack
    Sutra at the normal 10 until you raise it. Replace its `description:` with one sentence about the layout, and
    put anything longer (why a panel is there, what to check) in `notes: |`.
 2. **Fix the identity.** Title the view by its real identifier and say what it is:

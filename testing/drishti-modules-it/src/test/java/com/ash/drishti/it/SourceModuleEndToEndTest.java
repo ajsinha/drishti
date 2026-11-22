@@ -108,7 +108,7 @@ class SourceModuleEndToEndTest {
                 k -> booted.containsKey(k) ? booted.get(k) : k.equals("drishti.packs.site-dir")
                         ? tmp.resolve("config/packs").toString() : k.equals("drishti.data.dir") ? tmp.resolve("data").toString() : null));
         ByteArrayOutputStream said = new ByteArrayOutputStream();
-        assertThat(LakeLoad.run(new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
+        assertThat(LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
                 .as(said.toString(StandardCharsets.UTF_8)).isZero();
         assertThat(lake.resolve("trading/trade_swapone/_delta_log")).as("the rows land in its own table").isDirectory();
         assertThat(lake.resolve("trading/trades_shared")).as("no shared table").doesNotExist();

@@ -14,7 +14,7 @@
 
 # The cmd-spread-opt Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: cmd-spread-opt
 version: 2
 description: "Option on the spread between two commodities."

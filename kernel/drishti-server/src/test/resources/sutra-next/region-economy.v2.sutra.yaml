@@ -14,7 +14,7 @@
 
 # The region-economy Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
 # version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: region-economy
 version: 2
 description: "A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting."

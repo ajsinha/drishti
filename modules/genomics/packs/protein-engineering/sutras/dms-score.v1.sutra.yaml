@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: dms-score
 version: 1
 description: 'Deep mutational scan score: One measurement of the scan: what changing one position of a protein to one amino acid did to one assay.'

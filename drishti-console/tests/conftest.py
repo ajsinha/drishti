@@ -266,7 +266,7 @@ class FakeBackend:
     async def layout_promotion(self, sutra, kind, drop_hidden, ident=None):
         if not self.layout_promote:
             raise BackendError(403, "DRS-5002", f"{ident.user} is not a Sutra author: promoting a layout needs a role with author")
-        base = "rachana: 1\nsutra: irs-vanilla\nversion: 3\npanels:\n  - { id: legs, kind: kv }\n  - { id: refs, kind: links, area: right }\n"
+        base = "rachana: 1.2\nsutra: irs-vanilla\nversion: 3\npanels:\n  - { id: legs, kind: kv }\n  - { id: refs, kind: links, area: right }\n"
         text = base.replace("version: 3", "version: 4").replace("area: right", "span: 6")
         return {"sutra": sutra, "kind": kind, "fromVersion": 3, "version": 4, "base": base, "text": text, "review": True,
                 "changes": ["'refs' moves to the main column"] + (["'built' is removed (hidden in the layout)"] if drop_hidden else [])}
@@ -286,7 +286,7 @@ class FakeBackend:
         return [{"name": "irs-vanilla", "latest": 3, "versions": [3], "domain": "rates", "kind": "trade", "where": None, "priority": 10}]
 
     async def sutra_source(self, name, version, ident=None):
-        return "rachana: 1\nsutra: irs-vanilla\nversion: 3\n"
+        return "rachana: 1.2\nsutra: irs-vanilla\nversion: 3\n"
 
     async def rachana_schema(self, ident=None):
         return {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "required": ["rachana", "sutra", "version", "match"],
@@ -315,7 +315,7 @@ class FakeBackend:
         if not self.builder_allowed:
             raise BackendError(403, "DRS-5002", f"{ident.user} is not a Sutra author")
         self.designed.append((samples, kind))
-        return {"yaml": f"rachana: 1\nsutra: {kind}-auto\nversion: 1\nmatch: {{ kind: {kind}, priority: 1 }}\npanels: []\n",
+        return {"yaml": f"rachana: 1.2\nsutra: {kind}-auto\nversion: 1\nmatch: {{ kind: {kind}, priority: 1 }}\npanels: []\n",
                 "reasons": {"title": "tradeId is the id", "pnl": "a series of 20 points"},
                 "alternatives": {"pnl": [{"kind": "area", "score": 0.6, "reason": "the same series as an area", "area": "main", "options": {}, "columns": []}]},
                 "pruned": [{"panel": "rare", "kind": "line", "action": "dropped", "to": None, "bad": 4, "of": 5, "reason": "empty in 4 of 5 samples"}],

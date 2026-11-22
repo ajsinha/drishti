@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
-rachana: 1
+rachana: 1.2
 sutra: statistics-series
 version: 1
 description: "One Statistics Canada series by vector: the latest value, the change on the period and the year, the history."

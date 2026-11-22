@@ -117,7 +117,7 @@ def test_the_alias_table_comes_from_the_packs_overviews():
 
 # ---- Customize: the steps ----------------------------------------------------------------------------------------------------------
 
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: irs-fixfloat
 version: 3
 match: { kind: trade, where: "$.X == 1", priority: 10 }
@@ -160,7 +160,7 @@ def test_move_hide_show_keep_the_hidden_panel_as_it_was():
 
 
 def test_a_page_keeps_one_panel():
-    doc = designer.load("rachana: 1\nsutra: x\nversion: 1\nmatch: {kind: trade}\npanels:\n  - {id: a, kind: links}\n")
+    doc = designer.load("rachana: 1.2\nsutra: x\nversion: 1\nmatch: {kind: trade}\npanels:\n  - {id: a, kind: links}\n")
     with pytest.raises(designer.DesignerError, match="at least one"):
         designer.hide(doc, {}, 0)
 

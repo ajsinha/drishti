@@ -28,9 +28,7 @@ import org.springframework.context.annotation.Configuration;
 public class RachanaConfiguration {
 
     @Bean
-    public ElCompiler elCompiler(RachanaProperties props,
-            @org.springframework.beans.factory.annotation.Value("${drishti.rachana.language-level:1.0}") String languageLevel) {
-        DrishtiRachana.level(languageLevel);
+    public ElCompiler elCompiler(RachanaProperties props) {
         DrishtiRachana.configure(DrishtiRachana.optionsOf(props), null);       // the drishti profile's instance, from the settings (8.3b)
         return DrishtiRachana.compiler();
     }

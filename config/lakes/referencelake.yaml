@@ -19,6 +19,6 @@
 # with lake: referencelake.
 lake: referencelake
 format: delta
-root: ${drishti.data.dir:./data}/delta/referencelake
+root: ${lake.data.dir:./data}/delta/referencelake
 defaults: {load-mode: replace}
 tables: {}

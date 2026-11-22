@@ -140,7 +140,7 @@ public class StudioController {
     @GetMapping("/studio/settings")
     public Map<String, Object> settings(@RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         return Map.of("save", props.studioSave() && entitlements.mayAuthor(principal), "review", governance.enabled(),
-                "approve", entitlements.mayApprove(principal), "author", entitlements.mayAuthor(principal));
+                "approve", entitlements.mayApprove(principal), "author", entitlements.mayAuthor(principal), "level", com.ash.drishti.rachana.DrishtiRachana.level());
     }
 
     /**

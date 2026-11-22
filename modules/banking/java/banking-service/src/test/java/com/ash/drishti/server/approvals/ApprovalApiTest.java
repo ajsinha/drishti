@@ -60,7 +60,7 @@ class ApprovalApiTest {
     }
 
     private String propose(String name, String by) throws Exception {
-        String text = "# Before\nrachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n";
+        String text = "# Before\nrachana: 1.2\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n";
         String body = mvc.perform(post("/api/v1/sutras").param("note", "clearer title").contentType("text/yaml").content(text)
                 .header("Authorization", as(by, "author"))).andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
         return json.readTree(body).path("proposal").path("id").asText();

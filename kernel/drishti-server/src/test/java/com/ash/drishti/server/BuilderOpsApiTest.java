@@ -47,7 +47,7 @@ class BuilderOpsApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String SUTRA = """
-            rachana: 1
+            rachana: 1.2
             sutra: ops-check
             version: 1
             match: { kind: trade, priority: 100 }
@@ -137,7 +137,7 @@ class BuilderOpsApiTest {
         assertThat(panel(denied, "legs").path("cells").get(0).path("status").asText()).isEqualTo("ok");
         assertThat(denied.path("ok").asBoolean()).isFalse();
         send("/api/v1/builder/check", dee, json("yaml", SUTRA, "samples", tree("[]"))).andExpect(status().isBadRequest());
-        send("/api/v1/builder/check", dee, json("yaml", "rachana: 1\nsutra: [", "samples", tree("[{\"name\":\"a\",\"document\":{}}]")))
+        send("/api/v1/builder/check", dee, json("yaml", "rachana: 1.2\nsutra: [", "samples", tree("[{\"name\":\"a\",\"document\":{}}]")))
                 .andExpect(status().is4xxClientError());
     }
 

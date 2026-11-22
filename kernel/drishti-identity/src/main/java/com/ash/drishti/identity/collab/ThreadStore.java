@@ -18,7 +18,6 @@ package com.ash.drishti.identity.collab;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Where comment threads are kept: the thread, its comments (current state), the immutable revisions, mentions, followers, and the

@@ -174,7 +174,7 @@ def sutra(k: S.Kind, example_id: str) -> str:
             e["emphasis"] = True
         strip.append(e)
     pack_label = "Genomics" if k.pack == S.GENOMICS else "Protein engineering"
-    s = {"rachana": 1, "sutra": k.kind, "version": 1,
+    s = {"rachana": 1.2, "sutra": k.kind, "version": 1,
          "description": f"{k.title}: {k.description.split('. ')[0].rstrip('.')}.",
          "doc": {"summary": f"One {k.title.lower()}, as a record.",
                  "description": (f"{k.description} The page is the plain record view: the strip gives the headline fields and the table every "

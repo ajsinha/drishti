@@ -535,11 +535,15 @@ public class DesignController {
         out.put("rev", d.rev).put("yaml", d.sutra).put("about", d.about).put("form", d.form).put("status", d.status).put("opsAt", d.opsAt).put("opsCount", d.ops.size());
         out.set("problems", mapper.valueToTree(r == null ? List.of() : r.problems()));
         out.put("applied", r == null ? 0 : r.applied());
+        out.putObject("language").put("level", com.ash.drishti.rachana.DrishtiRachana.level()).put("server", com.ash.drishti.rachana.DrishtiRachana.level())
+                .put("older", false);
         if (!d.samples.isEmpty() && !d.sutra.isBlank()) {
             try {
                 out.set("preview", mapper.valueToTree(preview(d.id, sample, who)));
             } catch (DrishtiException | IOException e) {
                 out.put("previewError", e.getMessage());
+            } catch (com.ash.rachana.SutraException e) {     // refused while it was read (level 1.2 reads more at parse): located, as the others
+                out.put("previewError", e.getMessage() == null ? "the Sutra could not be read" : e.getMessage().replace("RCH-", "DRS-"));
             }
         }
         return out;
@@ -645,6 +649,8 @@ public class DesignController {
                 o.set("baseMoved", moved);
             }
             o.put("sutra", d.sutra).put("notes", d.notes).put("about", d.about).put("form", d.form);
+            o.putObject("language").put("level", com.ash.drishti.rachana.DrishtiRachana.level()).put("server", com.ash.drishti.rachana.DrishtiRachana.level())
+                    .put("older", false);
             o.set("tests", mapper.valueToTree(d.tests));
             o.put("opsAt", d.opsAt);
             ArrayNode log = o.putArray("ops");                // the steps, without the Sutra texts they hold

@@ -128,10 +128,15 @@ class VarApiTest {
         return getJson("/api/v1/risk/var/scope", scope, as("rita", "risk")).get("var").asDouble();
     }
 
-    /** An answer without the time it was worked out (it differs between two asks of one figure). */
+    /**
+     * An answer without the clock readings of its working out: when ({@code computedAt}) and how long ({@code computeMs}, a wall-clock
+     * duration, 0 on one ask and 9 on the next under load); both differ between two asks of one figure.
+     */
     private JsonNode withoutClock(JsonNode n) throws Exception {
         JsonNode c = json.readTree(json.writeValueAsString(n));      // as it is read off the wire (number types)
-        c.findParents("computedAt").forEach(o -> ((com.fasterxml.jackson.databind.node.ObjectNode) o).remove("computedAt"));
+        for (String clock : List.of("computedAt", "computeMs")) {
+            c.findParents(clock).forEach(o -> ((com.fasterxml.jackson.databind.node.ObjectNode) o).remove(clock));
+        }
         return c;
     }
 

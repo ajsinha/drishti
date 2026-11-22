@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: residue
 version: 1
 description: 'Residue: One amino acid position of a protein: what it is, where it sits in the fold, how buried it is, whether it is in the active

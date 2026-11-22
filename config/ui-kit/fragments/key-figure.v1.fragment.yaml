@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: key-figure@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: key-figure
 version: 1
 description: "One headline number, large, with its label and a caption: the figure a reader looks for first."

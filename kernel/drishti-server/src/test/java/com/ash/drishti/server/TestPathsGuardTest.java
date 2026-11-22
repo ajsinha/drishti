@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
  * The guard: a Java test never reaches a repository or module file through a path that depends on the folder the JVM was started in.
  * A literal such as {@code Path.of("../../config")}, {@code Path.of("src", "test", "resources")} or {@code Path.of("target")} works only when
  * the working folder is the module's; from an IDE at the repository root, or any other folder, it fails or writes in the wrong place. Use
- * {@code TestRoots.repo()} (the repository) or {@code drishti.module.root} (the module), both absolute and set in the
+ * {@code TestRoots.repo()} (the repository) or {@code lake.module.root} (the module), both absolute and set in the
  * parent pom's surefire configuration. The scan flags a path whose first segment is {@code ""}, {@code .}, {@code ..}, {@code src},
  * {@code target} or the name of a top-level folder of the repository. A relative name that is only a name (a file name handed to a parser, a
  * sub-folder of a temp folder) is not a path to a repository file and is not flagged.
@@ -79,7 +79,7 @@ class TestPathsGuardTest {
                 }
             }
         }
-        assertThat(offenders).as("tests that build a path from the working folder; anchor them on drishti.repo.root or drishti.module.root").isEmpty();
+        assertThat(offenders).as("tests that build a path from the working folder; anchor them on lake.repo.root or lake.module.root").isEmpty();
     }
 
     private static List<Path> testSources() throws IOException {

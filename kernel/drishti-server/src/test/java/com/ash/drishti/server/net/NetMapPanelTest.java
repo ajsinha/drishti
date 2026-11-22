@@ -39,7 +39,7 @@ class NetMapPanelTest {
     static NetNodes cluster;
     static final ObjectMapper JSON = new ObjectMapper();
     static final String MAP = """
-            rachana: 1
+            rachana: 1.2
             sutra: qa-map
             version: 1
             match: { kind: trade }

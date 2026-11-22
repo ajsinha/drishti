@@ -19,8 +19,8 @@
 def _proposal(**over):
     p = {"id": "P-000007", "name": "irs-vanilla", "version": 3, "note": "clearer title", "author": "ana", "createdAt": "2026-09-30T14:02:11Z",
          "status": "pending", "reviewer": None, "reviewedAt": None, "comment": None, "newVersion": False, "stale": False,
-         "mayApprove": True, "mayWithdraw": False, "text": "rachana: 1\nsutra: irs-vanilla\nversion: 3\ndescription: new\n",
-         "baseText": "", "liveText": "rachana: 1\nsutra: irs-vanilla\nversion: 3\ndescription: old\n"}
+         "mayApprove": True, "mayWithdraw": False, "text": "rachana: 1.2\nsutra: irs-vanilla\nversion: 3\ndescription: new\n",
+         "baseText": "", "liveText": "rachana: 1.2\nsutra: irs-vanilla\nversion: 3\ndescription: old\n"}
     p.update(over)
     return p
 

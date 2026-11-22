@@ -1,0 +1,10 @@
+{"DESK_ID": "DESK-DEMO-12", "DELTA": -720000, "DELTA_LIMIT": 1000000,
+ "TRADES": [{"TRADE_ID": "T-1001", "BOOK": "RATES-EU", "NOTIONAL": 25000000, "PV": 18250.5},
+            {"TRADE_ID": "T-1002", "BOOK": "RATES-EU", "NOTIONAL": 10000000, "PV": -4120.25},
+            {"TRADE_ID": "T-1003", "BOOK": "RATES-US", "NOTIONAL": 40000000, "PV": 30500}],
+ "NODES": [{"ID": "GRP", "PARENT": "", "NAME": "Group", "VAR": 1500000},
+           {"ID": "RATES", "PARENT": "GRP", "NAME": "Rates", "VAR": 1200000},
+           {"ID": "FX", "PARENT": "GRP", "NAME": "FX", "VAR": 300000}],
+ "POSITIONS": [{"SECTOR": "Banks", "ISSUER": "Alpha Bank", "EXPOSURE": 4200000, "PNL": 12000},
+               {"SECTOR": "Banks", "ISSUER": "Beta Bank", "EXPOSURE": 2100000, "PNL": -8000},
+               {"SECTOR": "Energy", "ISSUER": "Gamma Oil", "EXPOSURE": 3300000, "PNL": 0}]}

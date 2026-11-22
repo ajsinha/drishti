@@ -135,25 +135,6 @@ cases:
     map: mappings/endur-trade.yaml
 
 - name: trade-endur
-  why: a file in the older lake form does not get the template's lake keys
-  template: endur
-  file: |
-    settings:
-      root: /data/delta
-      domain: trading
-  layer: override
-  superseded: false
-  plugin: delta
-  enabled: ${DRISHTI_LAKE_ENABLED:true}
-  settings:
-    union: "true"
-    source-name: trade-endur
-    set.SOURCE_SYSTEM: ENDUR
-    map: mappings/endur-trade.yaml
-    root: /data/delta
-    domain: trading
-
-- name: trade-endur
   why: a file that gives only root moves the template's lake to another folder (drishti.py lake demo --lake); it keeps the lake
   template: endur
   file: |

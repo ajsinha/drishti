@@ -237,7 +237,7 @@ holds every trade set, and at 768 MB a server ran out of heap at start and its p
 quick file check) fails on any test that does otherwise and is not parked.
 
 **Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
-trade-grain variant) is parked until i6 (IMPLEMENTATION_PLAN.md): it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
+trade-grain variant) is parked until i6: it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
 with the reason "parked to i6: writes to a lake (owner 2026-11-15)", so every run and drill report shows it as skipped, never silently
 gone. The parked tests:
 
@@ -332,7 +332,7 @@ packages and their `first-party.yaml`) into `target/modules-home`; its tests' se
 (`ModuleArchitectureRulesTest`) read the jars `packaging/dist` leaves in `target/module-jars` as files. The project depends, for build order only, on `drishti-modules` and `drishti-app`
 (the exec jar G14 starts), so it is built after them; the Java lanes (`clean verify` of the whole reactor) run it, and `tools/drill.sh --affected` selects it for any change under
 `modules/` (a module's Java and its packs, console part or Python alike: the packages are packed again). Its tests helpers come from `drishti-server`'s test jar; the helpers' resources are
-found under `drishti.module.root`, which this project points at `drishti-server`.
+found under `lake.module.root`, which this project points at `drishti-server`.
 
 Run it by hand: `./mvnw package -pl testing/drishti-modules-it -am -Dtest=... -Dsurefire.failIfNoSpecifiedTests=false` (the build packs the modules first).
 
@@ -732,12 +732,12 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
 ### Running tests from an IDE
 
 A Java test never reads the folder the JVM started in. It asks `TestRoots.repo()` (the repository) and `TestRoots.module()` (its own module),
-both absolute (`testing/drishti-testroots`, a test dependency every module inherits). Maven's surefire sets `drishti.repo.root` and
-`drishti.module.root`. Anywhere else (IntelliJ's own runner) they come, in this order, from an explicit `-D`, then the settings file named by
-`-Ddrishti.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
+both absolute (`com.ash.lake.tck.TestRoots`, Drishti Lake's test kit, a test dependency every module inherits). Maven's surefire sets
+`lake.repo.root` and `lake.module.root`. Anywhere else (IntelliJ's own runner) they come, in this order, from an explicit `-D`, then the settings file named by
+`-Dlake.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
 (its `target/test-classes` up to the nearest `pom.xml`, and from there to the folder holding `.mvn/`); never the working folder. Nothing needs
 setting for a test built by Maven's importer. To pin or override roots once for all tests in IntelliJ: Run > Edit Configurations > Edit
-configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. One file per setup works well; `config/settings.examples/test.ini` is a commented starting point. `TestPathsGuardTest` (Java) and
+configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini -Dlake.settings.file=/home/me/drishti.ini` (the server's settings and the test roots). One file per setup works well; `config/settings.examples/test.ini` is a commented starting point. `TestPathsGuardTest` (Java) and
 `tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
 
 **The path guards are release-blocking and run in every gate.** The product's main code and shipped YAML: `tests/test_no_relative_paths.py`

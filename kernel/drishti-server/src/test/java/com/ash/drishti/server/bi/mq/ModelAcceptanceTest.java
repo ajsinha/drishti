@@ -321,7 +321,7 @@ class ModelAcceptanceTest {
 
     @Test @Order(4)
     void aDatasetReadFromAModelAsksThatModelAsTheReaderAndACycleIsRefused() throws Exception {
-        for (String file : List.of("tables/bi/desk_book.table.yaml", "tables/bi/desk-view.model.yaml")) {        
+        for (String file : List.of("tables/bi/desk_book.table.yaml", "tables/bi/desk-view.model.yaml")) {
             JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder").resolve(file)))));
             assertThat(checked.path("valid").asBoolean()).as(file + ": " + checked.path("problems")).isTrue();
         }

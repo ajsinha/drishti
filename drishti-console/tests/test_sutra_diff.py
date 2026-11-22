@@ -18,7 +18,7 @@ from core import sutra_diff
 
 IRS = (Path(__file__).resolve().parents[2] / "examples" / "packs" / "finance" / "sutras" / "rates" / "irs-vanilla.v3.sutra.yaml").read_text()
 
-OLD = """rachana: 1
+OLD = """rachana: 1.2
 sutra: s-test
 version: 3
 match: { kind: trade }
@@ -102,7 +102,7 @@ def test_a_removed_panel_stays_a_deletion_beside_a_move():
 
 
 def test_what_cannot_be_read_as_a_panel_list_gets_the_full_diff():
-    flow = "rachana: 1\nsutra: f\nversion: 1\npanels: [ { id: a, kind: kv }, { id: b, kind: kv } ]\n"
+    flow = "rachana: 1.2\nsutra: f\nversion: 1\npanels: [ { id: a, kind: kv }, { id: b, kind: kv } ]\n"
     d = sutra_diff.review(flow, flow.replace("version: 1", "version: 2").replace("id: a, kind: kv }, { id: b", "id: b, kind: kv }, { id: a"))
     assert d["moves"] == [] and d["edits"] == d["full"] and d["full"]
     twice = OLD.replace("  - id: cash", "  - id: legs")                       # duplicate ids: not matched by id

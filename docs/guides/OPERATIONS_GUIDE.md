@@ -127,7 +127,7 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 ### 2.2 Download and build the server
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git /home/you/drishti
+git clone https://github.com/drishti-platform/drishti.git /home/you/drishti
 cd /home/you/drishti
 python tools/drishti.py setup            # checks Python and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
 python tools/drishti.py build jar        # Maven clean package of the server; the exec jar is copied into lib/
@@ -150,10 +150,10 @@ One private environment serves the console, the command-line tools (`tools/drish
 ```bash
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-drishti-console/.venv/bin/python -c "import deltalake, pyarrow, yaml, fastapi; print('ok', deltalake.__version__)"
+drishti-console/.venv/bin/python -c "import drishti_lake, pyarrow, yaml, fastapi; print('ok')"
 ```
 
-You should see `ok 1.6.6` (or a newer deltalake). uv fetches Python 3.13 when the machine lacks it. **Without uv**:
+You should see `ok`. uv fetches Python 3.13 when the machine lacks it. **Without uv**:
 `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`. On Debian and
 Ubuntu that stops with *ensurepip is not available … apt install python3.X-venv* until you install the package matching
 `python3 --version` (`sudo apt install python3.14-venv`), or use uv, which needs neither. Developers add
@@ -403,7 +403,7 @@ $env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspo
 ### 4.2 Get the server: build it, or copy it
 
 ```powershell
-git clone https://github.com/ajsinha/drishti.git
+git clone https://github.com/drishti-platform/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 .\mvnw.cmd -q clean package -DskipTests -pl :drishti-app -am
@@ -2521,13 +2521,10 @@ The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/1
 ### 16.1 Lake maintenance: what it does and who owns a table
 
 A lake that is only ever written grows without bound. **Maintenance** does what Drishti's readers cannot do themselves (the server only reads):
-
-| Step | What it does | Setting |
-|---|---|---|
-| **Retention** | on a Delta table deletes the business dates older than `keep-business-days` business days (Monday to Friday) before today in `schedule.zone` (or `--as-of`): today and that many business days before it are kept, counted on the calendar (Drishti Lake's `lake maintain --keep-days`); on an Iceberg table keeps the newest `keep-business-days` dates on or before today (its own maintenance); never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
-| **Compaction** | merges each date's small files (the newest copy of each id stays the one read; an append's older copies are kept apart, so an undo still finds them); a table whose pack declares a layout is first laid out again by id, only for dates that drifted (`lake maintain --relayout`, the pack's `file-rows`) | `compact`, `target-file-mb` (128) |
-| **Checkpoint** | writes a Delta checkpoint, so readers replay a short log | `checkpoint` (on) |
-| **Vacuum** | removes files no version uses, older than the window; *known at* reaches back that far, no further | `vacuum-hours` (168) |
+retention by business dates, compaction and relayout, checkpoints, vacuum or snapshot expiry, one set of options for Delta, Iceberg and plain
+files. It is done by **Drishti Lake's** `lake maintain`; what each step does, its options, and the drop guard that refuses a run that would delete
+too much (`max-drop-share`, `force-drop`) are described once, in Lake's [LOADER.md, Maintenance](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#maintenance-lake-maintain). The settings of a
+table are in its lake file ([DATA_LAKE_GUIDE.md section 2.6](DATA_LAKE_GUIDE.md#26-retention-maintenance-time-travel-properties)).
 
 **The risk lake keeps 7 years.** The domains `risk` (the VaR engine's inputs) and `risk-results` (the official results) keep 7 years of dates and of time
 travel whatever the settings say ([VAR_GUIDE.md](VAR_GUIDE.md#231-open-questions-of-the-contract)): a lower value is raised (61,368 hours; 1,827
@@ -2541,12 +2538,10 @@ files the publisher still expects or rewrite files under a reader mid-scan. `lak
 every table; `--force-foreign` overrides with a warning (only with the publisher's agreement; the page never offers it). `lake demo` writes a checkpoint
 per table, so the demo lakes need nothing more.
 
-There is one engine, `tools/lake/maintain.py`: **Admin → Data loads → Lakes → Maintain** runs it in the console and `drishti.py lake maintain` from a
-terminal, cron or a container; both read and write `<data>/lakes/lake-maintenance.yaml` and keep the same history. An Iceberg table is maintained the
-same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published (`risk/var_published`).
-Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py`
-(the one scheduler, used by `--daemon` and by the console), `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones
-it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3), and `tools/lake/maintain_rows.py` (a table's row retention, `retention: {ttl, on, max-rows}`, for Delta, Iceberg and files stores: DATA_LAKE_GUIDE.md section 2.7).
+Drishti starts Lake's `lake maintain` from **Admin → Data loads → Lakes → Maintain** in the console and from `drishti.py lake maintain` in a
+terminal, cron or a container; both read and write `<data>/lakes/lake-maintenance.yaml` and keep the same history. An Iceberg table is maintained
+the same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published
+(`risk/var_published`).
 
 ### 16.2 Maintain from the page or the command line
 
@@ -2574,7 +2569,7 @@ lock: free
 
 ```bash
 drishti.py lake maintain --once --dry-run --tables trading/trade_endur --as-of 2026-10-16
-uv run --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once --dry-run   # the tool itself, any config
+drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run   # any maintenance file
 ```
 
 One JSON line per table (`{"event": "maintained", "dry_run": true, "table": …, "before": {"files": 6, "mb": 0.06, …}, "retention": {"cutoff":
@@ -2688,19 +2683,16 @@ lakes:
 
 ### 16.4 Sizing a large load
 
-Measured with `lake build` on a synthetic book (14 KB a deal as pretty-printed JSON), one laptop, local SSD: 10,000 deals (140 MB) load in 1.3 s with
-deltalake (626 MB peak) and 2.9 s with Drishti's writer (591 MB; the builder itself 114 MB), 13 MB of lake a day.
+Measured on a synthetic book (14 KB a deal as pretty-printed JSON), one laptop, local SSD: 10,000 deals (140 MB) load in a few seconds, 13 MB of lake a day.
+Throughput, memory and the 2.3M-position sizing of the loader are measured in [BENCHMARK.md](../admin/BENCHMARK.md) and described in Lake's
+[LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md).
 
-- **Memory does not grow with the file**: reading holds one document at a time; writing holds one batch (`--batch-mb` 128 or `--batch-rows` 50,000,
-  whichever is smaller) plus its Parquet encoding, about 600 MB, for any number of documents; `--batch-mb 32` brings it to about 250 MB.
-- **Disk**: the staged rows take the compact size of the documents (about 60% of a pretty-printed export) during the run; the lake about 10% of the
-  pretty-printed input. 300,000 such deals: a 4.2 GB export, 2.6 GB staged, about 400 MB of lake per date.
-- **Time** grows linearly (about 180 MB a second read, 5,000 deals a second written): about 40 s with deltalake and a minute with Drishti's writer for
-  300,000 deals, a few minutes for a million; the run summary's `timings` shows where it went.
+- **Memory does not grow with the file**: reading holds one document at a time; writing holds one batch plus its Parquet encoding for any number of documents.
+- **Disk**: the lake takes about 10% of the pretty-printed input. 300,000 such deals: a 4.2 GB export, about 400 MB of lake per date.
 - **Partitions**: each date times each classifier value is a folder; keep classifiers to a few dozen values (`lake scan` shows the counts) and compact.
 - **The console's Lakes page** streams an upload to its temporary folder (room for the file) and runs the same builder; `lakes.jobs` (2) bounds the
   builds at once, so plan memory for two batches.
-- **Millions of documents**: the parallel lake loader (`--engine java`, picked by `auto` from 1 GB of JSON Lines) parses and writes on every core with
+- **Millions of documents**: the parallel lake loader (`--engine java`) parses and writes on every core with
   memory set by `memory.budget-mb` ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 **Loading a file from the browser**: Admin → Data loads (`/admin/loads`, what each pack expects and what landed) → **Load a file into a lake** opens the
@@ -2710,7 +2702,7 @@ documents and lists every field with how often it is present and its values; the
 business today, never a row's field ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); tick **Classifier** for
 partition columns and **Promote** for real columns. 3. **Where it goes**: a new lake (a root, a domain, a kind) or an existing table; what to do when a
 date is there; the pack whose connector should read it; **Bind** writes the connector's file (validated, atomic, audited, history kept); **Tell the
-server** announces each date. 4. **Build**: a separate process running `tools/lake/build.py` with the same lock and summary; the page shows progress,
+server** announces each date. 4. **Build**: a separate process running Drishti Lake's loader with the same lock and summary; the page shows progress,
 the rows per date and classifier, the rejects by reason and a link to one record. The process never holds a token: binding and announcing are done by
 the console as the administrator. The build, lake maintenance and a table's own page run beside the lakes, with the lake engine of the install's
 `tools/` (`builder.tools_dir`): a console on another machine (one that holds only its own folder and the documents shipped with it) shows the Lakes page
@@ -2985,7 +2977,7 @@ http://localhost:18480/api/v1/views/trade/MX-20000001` prints `200` with `timing
 
 ### 20.2 A Sutra is broken, or an edit does not show
 
-A *Sutra* lays out the view of a family of entities: one YAML file, `<name>.v<N>.sutra.yaml`, first key `rachana: 1`, read from the enabled packs'
+A *Sutra* lays out the view of a family of entities: one YAML file, `<name>.v<N>.sutra.yaml`, first key `rachana: 1.2`, read from the enabled packs'
 `sutras/` folders and the site folder (`drishti.rachana.dirs`, `./sutras`, `DRISHTI_SUTRAS`; the grammar: [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md)).
 **An invalid edit never takes a view down**: a changed file is reloaded within about 250 ms (`drishti.rachana.reload-debounce`); if it is invalid the last
 good version stays live and the problems are reported with file, line and column. A Sutra that was never valid is not used (inference lays its entities
@@ -3002,7 +2994,7 @@ for example `{"code": "DRS-2021", "message": "unknown panel kind 'tabel'", "loca
 |---|---|---|
 | `DRS-2001` | the file cannot be read or parsed (YAML syntax; a tab at the start of a line) | fix indentation (spaces only), quotes or colons at the line |
 | `DRS-2004` | a file in a Sutra folder is not a Sutra file: a `.sutra.md` or a plain `.yaml`/`.yml` | convert a `.sutra.md` (below); rename to `<name>.v<N>.sutra.yaml`; move other YAML out |
-| `DRS-2009` | `rachana:` is missing, or names a version this server does not read | put `rachana: 1` as the first key |
+| `DRS-2009` | `rachana:` is missing, or names a version this server does not read | put `rachana: 1.2` as the first key |
 | `DRS-2010`, `DRS-2011`, `DRS-2012` | a required key missing; an unknown key (often a typo); a value of the wrong type | add, correct or quote it |
 | `DRS-2020` | a bad name or version, or no site folder to save into | lower-case kebab names, a positive `version`; set `drishti.rachana.dirs` |
 | `DRS-2021`, `DRS-2022`, `DRS-2023` | an unknown panel kind; a missing required option; an option the kind does not take | use a kind of RACHANA_REFERENCE.md; add or remove the option |
@@ -3020,10 +3012,10 @@ python3 tools/rachana/md_to_yaml.py sutras --delete
 ```
 
 It prints one line per file (`sutras/rates/my-swap.v1.sutra.md -> sutras/rates/my-swap.v1.sutra.yaml`), keeps the `sutra` block with its comments,
-adds `rachana: 1` and turns the prose into `notes:`; without `--delete` the `.md` files stay (and stay reported) while you compare. A file then starts:
+adds `rachana: 1.2` and turns the prose into `notes:`; without `--delete` the `.md` files stay (and stay reported) while you compare. A file then starts:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-swap
 version: 1
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'" }

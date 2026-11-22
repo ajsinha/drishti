@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): a composite fragment, made of other fragments at pinned versions.
-rachana: 1
+rachana: 1.2
 fragment: source-footer
 version: 1
 description: "The foot of a screen over published data: its source and licence, how the view was built, and its links."

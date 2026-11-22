@@ -34,6 +34,8 @@ import layout
 import phone_display
 import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped deal screens and the derived trade pages)
 import booking as BK  # noqa: E402
+
+LEVEL = "1.2"   # the Rachana language level every shipped Sutra and fragment declares (LanguageLevelGuardTest)
 from data_deep import DEEP
 import taxonomy as T
 import trade_shape as S
@@ -398,8 +400,8 @@ def product_yaml(p: Product) -> str:
 
 
 def sutra_file(yaml: str) -> str:
-    """A Sutra file: the licence header, the generated note, the language version, then the layout."""
-    return HEADER + "\n" + GENERATED + "\nrachana: 1\n" + yaml.rstrip() + "\n"
+    """A Sutra file: the licence header, the generated note, the language level (LEVEL), then the layout."""
+    return HEADER + "\n" + GENERATED + "\nrachana: " + LEVEL + "\n" + yaml.rstrip() + "\n"
 
 
 def product_doc(p: Product) -> str:

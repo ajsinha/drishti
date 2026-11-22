@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
-rachana: 1
+rachana: 1.2
 sutra: lei-relationship
 version: 1
 description: "One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods."

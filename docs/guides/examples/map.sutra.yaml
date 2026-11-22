@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-rachana: 1
+rachana: 1.2
 sutra: map
 version: 1
 description: "A country on the map: the world with the country highlighted, and the country's own regions. A click on another country would open its page."

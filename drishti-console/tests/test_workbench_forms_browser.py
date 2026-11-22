@@ -80,7 +80,7 @@ def test_typing_in_the_yaml_tab_is_an_operation_and_a_refused_edit_is_a_problem_
     assert page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getCursor().line") >= 40
 
 
-RARE_SUTRA = """rachana: 1
+RARE_SUTRA = """rachana: 1.2
 sutra: rare-test
 version: 1
 match: { kind: trade }

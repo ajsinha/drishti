@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: listed-company
 version: 1
 description: "A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand."

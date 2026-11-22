@@ -141,7 +141,7 @@ def section(n: dict, m: dict) -> dict:
            [{"label": "Fields", "bind": "'every native field has a canonical one'"}]
     frag = f"{n['kind']}-{n['low']}"
     when = f"$.SOURCE_SYSTEM == '{n['system']}'"
-    return {"rachana": 1, "fragment": frag, "version": 1, "description": f"{n['system']}'s own fields on the {n['kind']} page",
+    return {"rachana": 1.2, "fragment": frag, "version": 1, "description": f"{n['system']}'s own fields on the {n['kind']} page",
             "doc": {"summary": f"{n['system']}'s own fields on the {n['kind']} page", "description":
                     f"The native fields of {n['system']} with no canonical {n['kind']} field, shown as they are when SOURCE_SYSTEM is {n['system']}. "
                     f"Contributed by the module {n['name']} (module.yaml sections:), not written into the {n['pack']} pack.",

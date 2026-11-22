@@ -31,7 +31,7 @@ def _fresh(backend):
 
 
 def _design(c):
-    d = _new(c, "About", kind="trade", sutra="rachana: 1\nsutra: about\nversion: 1\n")
+    d = _new(c, "About", kind="trade", sutra="rachana: 1.2\nsutra: about\nversion: 1\n")
     c.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1))))
     return d["id"]
 

@@ -38,7 +38,7 @@ mnemonics:
   TRD: {kind: trade, label: Trade}
 columns: {trade: [id, type]}
 """
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: %s
 version: 1
 description: "Sutra for %s."

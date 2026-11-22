@@ -84,7 +84,7 @@ class RachanaStatisticsTest {
         assertThat(d("harmean($.G)")).isCloseTo(5.028375962, within(1e-9));
         assertThat(d("kth_largest($.S, 3)")).isEqualTo(5.0);
         assertThat(d("kth_smallest($.S, 4)")).isEqualTo(4.0);
-        assertThat(d("range($.LEGS, 'PRICE')")).isEqualTo(8.0);
+        assertThat(d("span($.LEGS, 'PRICE')")).isEqualTo(8.0);                                    // 1.0's range(list, field)
         assertThat(d("iqr($.LEGS[*].PRICE)")).isEqualTo(5.0);
         assertThat(d("stderr($.S)")).isCloseTo(0.472581563, within(1e-9));
         assertThat(d("cv($.S)")).isCloseTo(0.347542818, within(1e-9));
@@ -114,7 +114,7 @@ class RachanaStatisticsTest {
 
     @Test
     void aMaskedValueMasksTheResult() {
-        assertThat(eval("range($.MASKED, 'P')")).isEqualTo(DataNode.MASK);
+        assertThat(eval("span($.MASKED, 'P')")).isEqualTo(DataNode.MASK);
         assertThat(eval("string_agg($.MASKED, 'P', ', ')")).isEqualTo(DataNode.MASK);
     }
 

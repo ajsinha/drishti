@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: region-map@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: region-map
 version: 1
 description: "A world map with this record's country highlighted and every country shaded by one figure, each a click away."

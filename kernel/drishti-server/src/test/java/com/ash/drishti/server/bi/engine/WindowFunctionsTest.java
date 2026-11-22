@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -246,7 +245,7 @@ class WindowFunctionsTest {
         String base = TestLake.model();
         for (String bad : List.of("lag(sum(trades.mtm))", "lag(trades.mtm, 1, trades.tradeDate)", "lag(sum(trades.mtm), 0, trades.tradeDate)", "lag(sum(trades.mtm), 1.5, trades.tradeDate)",
                 "lag(sum(trades.mtm), 1, trades)", "lead(sum(trades.mtm), 1, trades.nope)", "moving_avg(sum(trades.mtm), 2000, trades.tradeDate)", "rank(trades.mtm)",
-                "rank(sum(trades.mtm), desc = false, by = [3])", "rank(lag(sum(trades.mtm), 1, trades.tradeDate))", "rank()")) {
+                "rank(sum(trades.mtm), 'sideways')", "rank(sum(trades.mtm), desc = false, by = [3])", "rank(lag(sum(trades.mtm), 1, trades.tradeDate))", "rank()")) {
             DatasetParser.Result r = TestLake.dataset(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
             assertThat(r.problems()).as(bad).anyMatch(DatasetParser.Problem::error);
         }

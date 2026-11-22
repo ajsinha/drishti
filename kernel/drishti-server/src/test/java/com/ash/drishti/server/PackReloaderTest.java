@@ -59,7 +59,7 @@ class PackReloaderTest {
 
     static Path root;
     private static final String SUTRA = """
-            rachana: 1
+            rachana: 1.2
             sutra: widget-view
             version: 1
             description: A widget.

@@ -12,6 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+rachana: 1.2
 sutra: trade-main
 match: {kind: trade, where: "side == 'S'", priority: 20}
 panels:

@@ -279,7 +279,8 @@ public final class SutraRegistry implements AutoCloseable {
             }
             try {
                 String domain = f.getParent() == null ? "" : f.getParent().getFileName().toString();
-                s = parser.parse(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), domain);
+                String text = Files.readString(f, StandardCharsets.UTF_8);
+                s = parser.parse(text, f.getFileName().toString(), domain);
                 List<SutraProblem> exprProblems = expressions.check(s);
                 if (!exprProblems.isEmpty()) {
                     throw new SutraException(DrishtiRachana.drs(exprProblems));

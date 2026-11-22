@@ -39,7 +39,7 @@ def _fresh(backend):
 
 
 def _design(c, **kw):
-    d = _new(c, "Ship", kind="trade", sutra="rachana: 1\nsutra: ship\nversion: 1\n", **kw)
+    d = _new(c, "Ship", kind="trade", sutra="rachana: 1.2\nsutra: ship\nversion: 1\n", **kw)
     c.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
     return d["id"]
 
@@ -90,7 +90,7 @@ def test_a_reviewer_sees_the_check_matrix_sample_names_and_notes(client, backend
     matrix = {"ok": False, "counts": {"ok": 2, "empty": 1, "error": 1, "noAccess": 0}, "samples": [{"name": "a.json", "status": "ok"}, {"name": "b.json", "status": "ok"}],
               "panels": [{"id": "terms", "cells": [{"status": "ok"}, {"status": "ok"}]}, {"id": "legs", "cells": [{"status": "empty"}, {"status": "error", "message": "boom"}]}]}
 
-    page = _sutra_view(client, backend, monkeypatch, "", "rachana: 1\nsutra: ship\nversion: 1\n",
+    page = _sutra_view(client, backend, monkeypatch, "", "rachana: 1.2\nsutra: ship\nversion: 1\n",
                        evidence={"designId": "d1", "designName": "Ship", "rev": 7, "sampleNames": ["a.json", "b.json", "synthetic-1"],
                                  "syntheticSamples": ["synthetic-1"], "notes": "reviewer: look at legs", "matrix": matrix})
     assert "data-evidence" in page and "some samples fail" in page and 'class="wb-cell-error"' in page and 'title="boom"' in page
@@ -202,9 +202,9 @@ def test_with_binding_on_save_writes_the_file_and_a_disk_edit_is_synced(app_clie
     assert '"fileBinding": true' in page and '"boundFile": "x/y.v1.sutra.yaml"' in page
     assert app_client.post(f"/build/designs/{id_}/save-file").status_code == 200 and backend.file_writes[-1][0] == "x/y.v1.sutra.yaml"
     assert app_client.post(f"/build/designs/{id_}/sync").json()["changed"] is False
-    backend.file_edit = "rachana: 1\nsutra: edited\nversion: 1\n"
+    backend.file_edit = "rachana: 1.2\nsutra: edited\nversion: 1\n"
     synced = app_client.post(f"/build/designs/{id_}/sync").json()
-    assert synced["changed"] is True and app_client.get(f"/build/designs/{id_}").json()["sutra"] == "rachana: 1\nsutra: edited\nversion: 1\n"
+    assert synced["changed"] is True and app_client.get(f"/build/designs/{id_}").json()["sutra"] == "rachana: 1.2\nsutra: edited\nversion: 1\n"
     assert "boundFile" not in app_client.delete(f"/build/designs/{id_}/bind").json()
 
 

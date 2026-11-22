@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: event-timeline@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: event-timeline
 version: 1
 description: "Dated events along a timeline: what happened, when, with a detail line and a status."

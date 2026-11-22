@@ -69,7 +69,7 @@ class DesignBlocksApiTest {
             Files.createDirectories(p.resolve("sutras/blk"));
             Files.createDirectories(p.resolve("samples"));
             Files.writeString(p.resolve("sutras/common/blk-legs.v1.block.yaml"), """
-                    rachana: 1
+                    rachana: 1.2
                     block: blk-legs
                     version: 1
                     description: The legs side by side.
@@ -79,7 +79,7 @@ class DesignBlocksApiTest {
                       - { id: blk-flows, kind: kv, title: Cash flows, columns: [ { label: Id, bind: $.TRADE_ID } ] }
                     """);
             Files.writeString(p.resolve("sutras/blk/blk-deal.v1.sutra.yaml"), """
-                    rachana: 1
+                    rachana: 1.2
                     sutra: blk-deal
                     version: 1
                     match: { kind: trade, where: "$.SOURCE_SYSTEM == 'BLKSYS' && $.PRODUCT_TYPE == 'SWAP'", priority: 900 }

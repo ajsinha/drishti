@@ -84,7 +84,7 @@ def test_studio_with_a_stored_entity_and_build_flag(app_client):
 
 
 def test_studio_design_and_sample_open_that_design_and_the_page_selects_the_sample(app_client):
-    d = _new(app_client, "Mine", kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
+    d = _new(app_client, "Mine", kind="trade", sutra="rachana: 1.2\nsutra: my-own\nversion: 1\n")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
     loc = _target(app_client, f"/studio?design={d['id']}&sample=b.json")
     assert loc == f"/build/d/{d['id']}?tab=split&sample=b.json"
@@ -149,7 +149,7 @@ def test_the_workbench_page_has_studios_toolbar_and_the_new_panes(app_client):
 
 
 def test_saving_rights_open_design_gated_save_and_review(app_client, backend, monkeypatch):
-    d = _new(app_client, "Rights", kind="trade", sutra="rachana: 1\nsutra: mine\nversion: 1\n")
+    d = _new(app_client, "Rights", kind="trade", sutra="rachana: 1.2\nsutra: mine\nversion: 1\n")
     page_for = lambda: app_client.get(f"/build/d/{d['id']}").text                    # noqa: E731
 
     async def nothing(ident=None):
@@ -230,7 +230,7 @@ def test_diff_against_the_base_and_any_earlier_version_and_restore_as_an_operati
 
 
 def test_a_design_without_a_base_has_nothing_to_compare_with_but_its_versions(app_client):
-    d = _new(app_client, "Plain", kind="trade", sutra="rachana: 1\nsutra: p\nversion: 1\n")
+    d = _new(app_client, "Plain", kind="trade", sutra="rachana: 1.2\nsutra: p\nversion: 1\n")
     r = app_client.get(f"/build/designs/{d['id']}/diff?against=base")
     assert r.status_code == 400 and "no base" in r.json()["detail"]
     versions = app_client.get(f"/build/designs/{d['id']}/versions").json()

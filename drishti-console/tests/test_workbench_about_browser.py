@@ -26,7 +26,7 @@ from test_workbench_browser import browser, open_design, page, wait  # noqa: F40
 from wb_live import live_console  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"shipmentId": "S-1", "carrier": "Maersk"})
-SUTRA = ("rachana: 1\nsutra: about-e2e\nversion: 1\ndescription: Where a shipment is.\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\n"
+SUTRA = ("rachana: 1.2\nsutra: about-e2e\nversion: 1\ndescription: Where a shipment is.\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\n"
          "panels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: Carrier, bind: $.carrier } ] }\n")
 TEXT = "about: 1\nkinds:\n  shipment:\n    about: \"Shipment ${$.shipmentId} sails with ${$.carrier}.\"\n"
 GLOSS = TEXT + "    glossary:\n      carrier: { term: Carrier, means: The line that moves the box. }\n"

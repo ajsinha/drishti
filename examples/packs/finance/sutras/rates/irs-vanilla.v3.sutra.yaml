@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: irs-vanilla
 version: 3
 description: Vanilla fixed/float interest rate swap (mockup drishti-irs.png).

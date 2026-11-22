@@ -194,7 +194,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 
 | Document | Action | Why |
 |---|---|---|
-| ARCHITECTURE, DATA_ARCHITECTURE, IMPLEMENTATION_PLAN, TEST_HARNESS | keep | the internal core |
+| ARCHITECTURE, DATA_ARCHITECTURE, TEST_HARNESS | keep | the internal core |
 | adr/* (22 + README) | keep; delete any ADR superseded (check 011 vs 017) | decisions record |
 | mockups/capacity/README | keep | beside its mock-ups |
 | COUNTERPARTY_ENGINES, IFRS9_ECL, FINANCIAL_CRIME | keep | designs not built (j–l, later) |
@@ -211,7 +211,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 | CLIENT_RENDERER | → EMBED_GUIDE + VIEWMODEL, delete | 3.7k lines, built |
 | CLUSTER_DEPLOYMENT, RESOURCES_AND_SCALE | → CLUSTER_GUIDE + BENCHMARK, delete | |
 | COLLABORATION | → USER_GUIDE, APPROVALS_GUIDE, ARCHITECTURE, delete | |
-| COMPUTED_ATTRIBUTES | applied parts → contracts; open proposals → IMPLEMENTATION_PLAN; delete | half applied, half proposal |
+| COMPUTED_ATTRIBUTES | applied parts → contracts; open proposals dropped; delete | half applied, half proposal |
 | MOBILE_DISPLAY | → BUILD_GUIDE (phone tiers), delete | built in 2.9.10 |
 | FUNCTION_CATALOGUE | → reference/FUNCTIONS (generated), delete | |
 | VIEWMODEL | move to reference | the embed developer's contract |

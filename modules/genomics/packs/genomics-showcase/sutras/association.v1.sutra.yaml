@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: association
 version: 1
 description: 'Association of a variant with a trait: One variant tested against one trait: the p-value, its negative log, the effect and its error

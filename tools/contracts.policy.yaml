@@ -148,7 +148,7 @@ engine-columns:
 
 notes:
   trade-valuation:
-    - "The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived."
+    - "The boundary: a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived."
   margin-call:
     - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
   position:

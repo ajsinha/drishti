@@ -40,7 +40,7 @@ class MatchTraceTest {
     Path dir;
 
     private static String sutra(String name, String match, String description) {
-        return "rachana: 1\nsutra: " + name + "\nversion: 1\n" + (description == null ? "" : "description: " + description + "\n")
+        return "rachana: 1.2\nsutra: " + name + "\nversion: 1\n" + (description == null ? "" : "description: " + description + "\n")
                 + "match: " + match + "\npanels:\n  - { id: p, kind: links }\n";
     }
 

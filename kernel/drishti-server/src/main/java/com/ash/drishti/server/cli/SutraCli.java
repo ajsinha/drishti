@@ -82,10 +82,10 @@ public final class SutraCli {
               lint    <pack-dir | sutra-file>      parse and check every Sutra
               test    <pack-dir | sutra-file>      render each Sutra against its samples and check expect.yaml
               preview <pack-dir | sutra-file>      render samples; --out writes HTML snapshots
-              shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
               design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
               design --each <dir>                  one Sutra per subfolder of .json or .jsonl samples, in one run: <out>/<subfolder>.sutra.yaml;
                                                    the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
+              shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
             options: --junit file   JUnit XML report     --out dir   write results here
                      --strict       lint: help warnings (DRS-2045 to 2047) fail the run
                      --docs         lint: the docstring warnings (DRS-2055): Sutras and blocks without a complete doc:

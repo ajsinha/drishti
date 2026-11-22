@@ -59,7 +59,7 @@ def full_view() -> dict:
 
 
 def empty_view(kind: str) -> dict:
-    y = "rachana: 1\nsutra: state-demo\nversion: 1\nmatch: { kind: trade }\ntitle: { pill: Demo, id: $.TRADE_ID }\npanels:\n  - " + EMPTY_PANEL[kind] + "\n"
+    y = "rachana: 1.2\nsutra: state-demo\nversion: 1\nmatch: { kind: trade }\ntitle: { pill: Demo, id: $.TRADE_ID }\npanels:\n  - " + EMPTY_PANEL[kind] + "\n"
     return backend_preview(y, {"TRADE_ID": "DEMO-1", "CURRENCY": "USD"})["panels"][0]
 
 

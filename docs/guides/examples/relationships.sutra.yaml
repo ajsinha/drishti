@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: relationships
 version: 1
 description: "How entities relate: a graph of the group and its agreements, one tab per netting set, and a links panel."

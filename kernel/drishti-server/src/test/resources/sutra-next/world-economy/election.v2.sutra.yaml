@@ -14,7 +14,7 @@
 
 # The election Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
 # wins while the world-economy equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: election
 version: 2
 description: "The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one."

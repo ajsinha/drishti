@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: pnl-explain
 version: 1
 description: "Where a trade's P&L came from: a waterfall of the explain, bars of sensitivity and the figures in a key-value panel."

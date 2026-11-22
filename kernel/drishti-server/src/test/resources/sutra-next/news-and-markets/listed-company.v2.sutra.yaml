@@ -14,7 +14,7 @@
 
 # The listed-company Sutra as it was written by hand before Sutra Next (inline, no fragments), as version 2 so it
 # wins while the news-and-markets equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: listed-company
 version: 2
 description: "A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand."

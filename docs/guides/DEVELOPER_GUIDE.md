@@ -88,7 +88,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 |---|---|---|---|
 | `drishti-api` | `api` | The plugin SPI and data model. **No Spring**, no internal dependencies. | `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `SourceContext`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `DataNode`, `HitIndex`, `PluginNotConfigured` |
 | `drishti-common` | `common`, `diskcache`, `messaging` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding, a pack's samples (`PackSamples`), retries and live settings; a disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state; the latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar`, `PackSamples`, `RetryPolicy`, `RetryBoard`, `LiveSettings`, `diskcache.DiskCache`, `messaging.MessageStateSource` |
-| `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the YAML parser (`*.sutra.yaml`, `rachana: 1`), the registry with hot reload, the JSON Schema of the language, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `RachanaSchema`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
+| `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the YAML parser (`*.sutra.yaml`, `rachana: 1.2`), the registry with hot reload, the JSON Schema of the language, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `RachanaSchema`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
 | `drishti-inference` | `inference` | Layout inference: semantic hints, rules, the merge of a Sutra with inferred panels. | `InferenceEngine`, `Rules`, `Semantics`, `LayoutMerger`, `EffectiveLayout` |
 | `drishti-engine` | `engine`, `graph` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics; entity references (which fields link to which kinds) and link badges. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
 | `drishti-identity` | `identity` | Users, passwords, roles, lockout, preferences, pack switches and the audit trail, in SQLite or PostgreSQL through JPA. | `UserService`, `JpaUserStore`, `RoleStore`, `PackStateStore`, `JpaAuditLog`, `IdentityDatabase`, `db.IdentityRepositories` |
@@ -171,7 +171,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `run-configs/` | The IntelliJ IDEA run configurations, and `drishti-console/run-configs/` the PyCharm ones: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
-| `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
+| `tools/lake/` | the lake commands (`lake build|publish|scan|status|demo|maintain|undo|delete`): thin front ends that configure and start Drishti Lake's loader and upkeep (the writer is chosen by `--engine`, [CLI_REFERENCE.md section 7.6](CLI_REFERENCE.md#76-the-lake-writers---engine)) and add Drishti's parts (the data-load signal, the BI-store stamp, the lake files); the loading rules, guards, archives and maintenance are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) |
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
@@ -532,7 +532,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 [data/testdata/README.md](../../data/testdata/README.md) walk through; measured on a 24-core laptop):
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git && cd drishti
+git clone https://github.com/drishti-platform/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
@@ -600,7 +600,7 @@ Docker is not reachable:
 | `drishti-plugin-rabbitmq` `RabbitMqSourcePluginTest`, `RabbitMqOutageTest` | RabbitMQ |
 | `drishti-plugin-delta` `DeltaOnS3Test` | an S3-compatible store |
 
-`DeltaAfterMaintenanceTest` instead assumes `uv` is installed (it runs `tools/lake/maintain.py`) and is skipped otherwise. The Kafka
+`DeltaAfterMaintenanceTest` instead assumes `uv` is installed (it runs `drishti.py lake maintain`, Drishti Lake's upkeep) and is skipped otherwise. The Kafka
 tests use an embedded broker from `spring-kafka-test` and need no Docker. The tests never use a fixed port: Testcontainers and the
 in-test servers take free ones, so they run beside a Drishti, a PostgreSQL or a Kafka you already run.
 
@@ -617,7 +617,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 You should see `Uvicorn running on http://0.0.0.0:17480` (`server.host` is every interface by default; `DRISHTI_CONSOLE_HOST=127.0.0.1`
 for this machine only). `drishti-console/requirements.txt` holds FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest,
-`cryptography`, numpy, pandas, pyarrow and deltalake (the last two for `lake build` and `lake demo`, so the console's Python is also the
+`cryptography`, numpy, pandas, pyarrow and Drishti Lake's Python package (the last two for `lake build` and `lake demo`, so the console's Python is also the
 tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Without uv, `python3 -m venv drishti-console/.venv` and
 `drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
 
@@ -1708,7 +1708,7 @@ live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` f
 
 ### 5.9 The multi-select and the date fields
 
-The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 8.2),
+The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md) section 8.2),
 loaded on every page by `base.html`. A form stays a plain server form: `drishti_app.js` calls `upgradeFields(document)`, which turns
 every `<input type="date">` into the business-date picker (the field becomes a hidden input with the same name and value, so the form
 sends `2026-11-06` as before) and every group marked `data-multiselect` with more than six checkboxes into the multi-select (chips, a
@@ -1823,7 +1823,7 @@ With sign-in on (the run configurations), every `/api/v1` call needs `-H "Author
 | What does the server return for a view? | `curl -s localhost:18480/api/v1/views/trade/MX-20000001 \| python3 -m json.tool`. Add `-H 'X-Drishti-As-Of: 2026-10-15'` for a past date; `drishti.py view get trade/MX-20000001` prints it as text |
 | What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (provenance `"source":"trade-murex"`; masked fields read `•••` for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
-| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting with a comment, then `rachana: 1`, `sutra: trade-custom`) |
+| What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting with a comment, then `rachana: 1.2`, `sutra: trade-custom`) |
 | Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [OPERATIONS_GUIDE.md › A Sutra is broken](OPERATIONS_GUIDE.md#202-a-sutra-is-broken-or-an-edit-does-not-show) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`); `drishti.py connector list` for the connector files |
 | What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/MX-20000001/diff` |
@@ -2131,7 +2131,7 @@ reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and
 | the pack's template (the `connectors:` mapping in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
 
 A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
-`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` are placeholders: the environment variable if set, else the default
+`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}` are placeholders: the environment variable if set, else the default
 after the colon. A **credential** setting (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) may only be an `${ENV_VAR}` or a
 `file:/path` reference ([DATA_GUIDE.md section 9, Credentials and TLS](DATA_GUIDE.md#95-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
 `routes`, `plugins.<plugin>`) stay in `application.yaml` and `application.local.yaml`.
@@ -4037,7 +4037,7 @@ forwards its requests once to a placed node (`X-Drishti-Placement` names who ran
 ### 12.6 How to create a custom visual
 
 A chart Drishti does not have is a **kind of drishti-chart's registry** in the module's own Elements library, never a drawing of its own
-([ELEMENTS.md section 7.4](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
+([ELEMENTS.md section 7.4](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md)):
 
 ```bash
 python3 tools/drishti.py module visual . --id freight --name lane-flow --title "Lane flow"     # in the module project

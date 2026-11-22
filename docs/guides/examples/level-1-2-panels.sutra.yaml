@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+rachana: 1.2
+sutra: level-1-2-panels
+version: 1
+description: >
+  The panel kinds of language levels 1.1 and 1.2 (grid, tree, chart, treemap, bullet, form, live) on one screen, each reading the
+  desk document in level-1-2-panels.json; all-panels-showcase has the other twenty-two.
+match: { kind: desk, where: "$.DESK_ID == 'DESK-DEMO-12'", priority: 1 }
+title: { pill: "Desk", id: $.DESK_ID }
+state:
+  qty: { type: number, default: 0 }
+data:
+  blotter: { table: live-orders, key: ORDER_ID, live: true }
+panels:
+  - { id: trades, kind: grid, title: "23 · grid: the desk's trades", rows: $.TRADES, rowKey: TRADE_ID, group: BOOK, sort: NOTIONAL desc,
+      columns: [ { label: Trade, bind: "@.TRADE_ID" }, { label: Book, bind: "@.BOOK" }, { label: Notional, bind: "@.NOTIONAL", fmt: amount0 },
+                 { label: PV, bind: "@.PV", fmt: amount2, tone: sign } ] }
+  - { id: org, kind: tree, title: "24 · tree: VaR by node", rows: $.NODES, node: ID, parent: PARENT, label: NAME, fmt: amount0 }
+  - { id: by-book, kind: chart, title: "25 · chart: notional by book", rows: $.TRADES, x: BOOK, y: NOTIONAL, agg: sum }
+  - { id: issuers, kind: treemap, title: "26 · treemap: exposure by issuer", rows: $.POSITIONS, group: SECTOR, label: ISSUER, value: EXPOSURE,
+      color: PNL, fmt: amount0 }
+  - { id: delta, kind: bullet, title: "27 · bullet: net delta against its limit", label: Net delta, value: "$.DELTA", lower: "-$.DELTA_LIMIT",
+      upper: "$.DELTA_LIMIT", fmt: signed0 }
+  - id: ticket
+    kind: form
+    title: "28 · form: an order ticket"
+    submitLabel: Set
+    form:
+      fields:
+        - { id: qty, label: Quantity, type: number, required: true, min: 1 }
+    on:
+      submit:
+        - { set: { state: qty, to: event.qty } }
+  - { id: orders, kind: live, title: "29 · live: the desk's orders", rows: $.blotter, window: 50 }

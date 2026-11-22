@@ -302,7 +302,7 @@ Counterparty, index and trader keys are not nodes and are not published; no trad
 
 ### 9.4 The page
 
-The page (mock-ups first, [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25))
+The page (mock-ups first, [the release notes](../../RELEASE_NOTES.md))
 shows the header of the scope's master (counterparty, book, legal entity, index), the figures, the profile charts and the trade grid
 (server paging, column sort, status chips with counts, CSV).
 

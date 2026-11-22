@@ -14,7 +14,7 @@
 
 
 # The news-and-markets pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: news-and-markets/headlines@1 }.
-rachana: 1
+rachana: 1.2
 fragment: headlines
 version: 1
 description: "Headlines newest first as a table: when published, the publisher, the headline and its link."

@@ -13,6 +13,29 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7b: release notes
+
+**Drishti is one of five.** The language, the lake, the screens' libraries and the shared utilities are products of their own, in their own
+repositories under github.com/drishti-platform; Drishti uses them as jars and bundles. The versions that go together are in the index
+repository's COMPATIBILITY.md.
+
+## What changes for administrators
+
+- **Loading, reading and upkeep go through Drishti Lake**: one loader (Java and Python) with the guards `future-days`, `zone`,
+  `max-drop-share` and `force-drop`, one archive rule, `lake maintain` for retention, compaction, checkpoints and vacuum (no delta-rs), the read
+  API; vectors are stored as numbers in columns with a `{"$vector": NAME}` reference; the lake files' roots are under `${lake.data.dir}`.
+- **Get and build the code**: the platform's source bundle, or `clone_all.py` and `build_all.py` of the index repository; the products install
+  into `~/.m2` from their tags in the order tools, Rachana, Lake, Drishti.
+- **Operator commands are Python only** (`tools/drishti.py`); no shell script and no `.exe` on Windows.
+- **IDE launchers** follow one standard across the platform (`Drishti: build all`, `Drishti: run server (demo)`, one `run-configs/` folder); VS Code has
+  a guide and a workspace file.
+
+## What changes for developers
+
+- Rachana (one language level, `rachana: 1`), Drishti Elements, Drishti Lake and Drishti Tools are consumed from tags; Drishti no longer carries its own
+  copies of the Sutra compiler, the live-table engine, the renderer, the Delta and Iceberg protocol code, the aggregate kernel or the `.xlsx` writers.
+- The developer quickstart, the deployment and QA guide, and the IDE guide (now with VS Code) are rewritten for this layout.
+
 # Drishti 2.9.11.i7a — release notes
 
 *Released 2026-11-17.* **Modules end to end: a module is a file.** Each module ships as a verified `.dmod` package in

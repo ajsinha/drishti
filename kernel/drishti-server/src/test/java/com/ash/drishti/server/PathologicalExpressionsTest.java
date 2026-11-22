@@ -58,7 +58,7 @@ class PathologicalExpressionsTest {
     }
 
     static String sutra(String name, String bind) {
-        return "rachana: 1\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade, where: \"$.tradeId == 'IRS-48213'\", priority: 1000 }\n"
+        return "rachana: 1.2\nsutra: " + name + "\nversion: 1\nmatch: { kind: trade, where: \"$.tradeId == 'IRS-48213'\", priority: 1000 }\n"
                 + "panels:\n  - { id: a, kind: kv, columns: [{label: x, bind: '" + bind + "'}] }\n  - { id: b, kind: kv, columns: [{label: id, bind: $.tradeId}] }\n";
     }
 

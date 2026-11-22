@@ -20,8 +20,8 @@ from test_workbench_browser import browser, drag, open_design, page, settle, sta
 from wb_live import live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"tradeId": "T-1", "mtm": 5, "pnlHistory": [{"date": "2026-01-01", "pnl": 1}, {"date": "2026-01-02", "pnl": 3}]})
-SUTRA = "rachana: 1\nsutra: add\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n# first, the facts\npanels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: MTM, bind: $.mtm } ] }\n  - { id: note, kind: markdown, title: Note, text: hello }\n"
-EMPTY = "rachana: 1\nsutra: empty\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\npanels: []\n"
+SUTRA = "rachana: 1.2\nsutra: add\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n# first, the facts\npanels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: MTM, bind: $.mtm } ] }\n  - { id: note, kind: markdown, title: Note, text: hello }\n"
+EMPTY = "rachana: 1.2\nsutra: empty\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\npanels: []\n"
 
 
 def settled_selection(page, kind):

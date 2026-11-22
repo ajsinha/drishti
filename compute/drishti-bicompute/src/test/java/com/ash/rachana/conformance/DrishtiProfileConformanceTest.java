@@ -117,6 +117,7 @@ class DrishtiProfileConformanceTest {
         // Drishti's: its holder's instance (the real drishti profile) over DataNodes
         DrishtiRachana.reset();
         DrishtiRachana.configure(RachanaOptions.DEFAULTS.withFormats(null, List.of(formats)), null);
+        // Rachana 1.x has one level: the runner is handed Drishti's holder instance as it is
         Cases.rachana = DrishtiRachana.current();
         Cases.formats = Cases.rachana.formats();
         Cases.EL = Cases.rachana.compiler();

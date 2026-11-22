@@ -20,7 +20,7 @@ from test_workbench_browser import browser, open_design, page, put_option, settl
 from wb_live import live_console  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"tradeId": "T-1", "mtm": 1250, "pnl1d": -40})
-SUTRA = ("rachana: 1\nsutra: metric-test\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n"
+SUTRA = ("rachana: 1.2\nsutra: metric-test\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\n"
          "panels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: MTM, bind: $.mtm } ] }\n")
 
 

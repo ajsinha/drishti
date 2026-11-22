@@ -57,16 +57,14 @@ class TablesCli(unittest.TestCase):
     def test_the_options_become_the_java_command_line(self):
         self.assertEqual(self.run_cli("check", "--sample", "bi.t=a.jsonl", "--json"), ["check", "--sample", "bi.t=a.jsonl", "--json"])
         self.assertEqual(self.run_cli("preview", "bi.t", "--sample", "a.jsonl", "--limit", "5"), ["preview", "bi.t", "--limit", "5", "--sample", "a.jsonl"])
-        self.assertEqual(self.run_cli("migrate", "--dry-run", "--bi", "x/bi", "--moved-to", "m"), ["migrate", "--bi", "x/bi", "--moved-to", "m", "--dry-run"])
         self.assertEqual(self.run_cli("lineage", "trading-risk"), ["lineage", "trading-risk"])
 
     def test_the_group_is_in_drishti_py(self):
         d = drishti()
-        a = d.build_parser().parse_args(["tables", "migrate", "--check"])
-        self.assertEqual(a.cmd, "migrate")
-        self.assertTrue(a.check)
+        a = d.build_parser().parse_args(["tables", "check"])
+        self.assertEqual(a.cmd, "check")
         with self.assertRaises(SystemExit):
-            d.build_parser().parse_args(["tables", "migrate", "--check", "--dry-run"])
+            d.build_parser().parse_args(["tables", "migrate"])
 
 
 if __name__ == "__main__":

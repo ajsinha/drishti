@@ -37,7 +37,7 @@ Seven pages that used to be **stored copies** of figures are **computed from the
 | `PXH` analytics (`price-history`) | returns, volatility, drawdown, beta | the price history just read | the price connector (`yfinance`) |
 | `EQB` (`equity-beta`; the `EQ` page's beta) | an equity's beta against its index | the equity's and the index's daily closes | the reactive `equity-analytics` (Java) |
 
-The rule is the one the [implementation plan](../../architecture/IMPLEMENTATION_PLAN.md#groupings-and-analytics-track-b-shipped-in-290-or-2100-as-each-is-ready)
+The rule is the one the implementation plan
 sets for every computed measure: **fundamental data is kept as it is; whatever can be derived from it is computed when asked and never
 stored**, and the stored version is retired in the same release. A stored copy of a computed figure drifts: the stored ownership groups
 were capped at 50 members, the stored countries listed 400 entities, the stored correlations were synthetic and did not match the prices in

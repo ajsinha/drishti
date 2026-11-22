@@ -14,7 +14,7 @@
 
 # Hand-written since 2.9.2 (tools/packgen/banking/make_sutras.py HAND_WRITTEN): the beta is the computed kind equity-beta (EQB), worked out
 # from the equity's and its index's price histories when the page opens (corr_kinds.py), not the security master's stored BETA.
-rachana: 1
+rachana: 1.2
 sutra: equity
 version: 1
 description: "A listed stock: price, dividends, sector and identifiers."

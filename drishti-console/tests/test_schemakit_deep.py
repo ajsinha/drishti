@@ -33,7 +33,7 @@ sys.path.insert(0, str(TOOLS))
 import comswap_synth  # noqa: E402
 import note_synth  # noqa: E402
 
-DRAFT = 'rachana: 1\nsutra: x\nversion: 1\ndescription: x\nmatch: { kind: x }\ntitle: { pill: x, id: "$.x" }\npanels: []\n'
+DRAFT = 'rachana: 1.2\nsutra: x\nversion: 1\ndescription: x\nmatch: { kind: x }\ntitle: { pill: x, id: "$.x" }\npanels: []\n'
 
 
 def deals(n=40, mix=False, seed=7):

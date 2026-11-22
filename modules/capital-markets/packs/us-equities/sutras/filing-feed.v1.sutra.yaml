@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
-rachana: 1
+rachana: 1.2
 sutra: filing-feed
 version: 1
 description: "The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside."

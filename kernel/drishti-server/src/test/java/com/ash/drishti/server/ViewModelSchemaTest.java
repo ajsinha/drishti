@@ -104,9 +104,8 @@ class ViewModelSchemaTest {
     }
 
     /**
-     * The panel kinds of the language level this server compiles at (1.0): Rachana's schema also names the later levels' kinds
-     * ({@code grid}, {@code tree}, {@code chart} of 1.1; {@code live}, {@code treemap}, {@code bullet}, {@code form} of 1.2), which no
-     * Sutra of this server can hold until the level is raised.
+     * The panel kinds of the language level this server compiles at (1.2): with {@code grid}, {@code tree}, {@code chart} of 1.1 and
+     * {@code live}, {@code treemap}, {@code bullet}, {@code form} of 1.2 (shown by the example level-1-2-panels).
      */
     private static Set<String> levelKinds() {
         String level = com.ash.drishti.rachana.DrishtiRachana.current().language();
@@ -117,10 +116,8 @@ class ViewModelSchemaTest {
     void theSchemaNamesEveryPanelKindAndEveryDataRecord() {
         Set<String> all = levelKinds();
         assertThat(ViewModelSchema.DATA_BY_KIND.keySet()).as("a data record for every PanelKind of this server's level").containsAll(all);
-        // Rachana's schema has no data record for the level-1.2 form panel yet (PanelData.FormPanel): every other record belongs to a kind
         assertThat(new HashSet<Class<?>>(ViewModelSchema.DATA_BY_KIND.values())).as("every PanelData record belongs to a kind")
-                .containsExactlyInAnyOrderElementsOf(Arrays.stream(PanelData.class.getPermittedSubclasses())
-                        .filter(c -> !c.getSimpleName().equals("FormPanel")).toList());
+                .containsExactlyInAnyOrderElementsOf(Arrays.asList(PanelData.class.getPermittedSubclasses()));
         JsonNode s = schema();
         assertThat(s.at("/$ref").asText()).isEqualTo("#/$defs/ViewModel");
         List<String> enumKinds = new ArrayList<>();
@@ -132,8 +129,15 @@ class ViewModelSchemaTest {
     @Test
     void theShowcaseHoldsEveryKindAndMatchesTheSchema() throws Exception {
         ViewModel v = pipeline.preview(Optional.of(showcase()), showcaseDoc(1, x -> x));
-        assertThat(kinds(v.panels())).as("the showcase covers every kind of this server's level").containsAll(levelKinds());
+        Sutra later = com.ash.drishti.rachana.DrishtiRachana.parser().parse(Files.readString(EXAMPLES.resolve("level-1-2-panels.sutra.yaml")),
+                "level-1-2-panels.sutra.yaml", "test");
+        ViewModel w = pipeline.preview(Optional.of(later), new EntityDocument(EntityRef.of("desk", "DESK-DEMO-12"),
+                codec.read(Files.readString(EXAMPLES.resolve("level-1-2-panels.json"))), new Provenance("test", 1, Instant.now(), true)));
+        Set<String> shown = new TreeSet<>(kinds(v.panels()));
+        shown.addAll(kinds(w.panels()));
+        assertThat(shown).as("the two showcases cover every kind of this server's level").containsAll(levelKinds());
         assertThat(errors(v, null)).isEmpty();
+        assertThat(errors(w, null)).isEmpty();
     }
 
     @Test

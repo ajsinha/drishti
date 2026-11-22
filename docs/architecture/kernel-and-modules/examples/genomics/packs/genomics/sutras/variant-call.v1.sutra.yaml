@@ -17,7 +17,7 @@
 # section 9.1). Rachana grammar 1, the same format banking's Sutras use. The data is read through the kernel's bindings (data/needs.yaml);
 # the carrier counts come from the module's computed kind variant-summary (a KindProvider). Removing the module removes the Sutra, its
 # match, its search entries and its links (section 12.3).
-rachana: 1
+rachana: 1.2
 sutra: variant-call
 version: 1
 description: "One variant in one cohort: where it is, what it does, how frequent it is and who carries it."

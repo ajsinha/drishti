@@ -31,9 +31,8 @@ import java.util.function.Supplier;
  */
 public final class DrishtiRachana {
 
-    /** Drishti's Sutras are compiled at the frozen language level 1.0 (proven byte-identical by the corpus); 1.1 and 1.2 change meanings. */
-    public static final String LEVEL = "1.0";
-    private static volatile String level = LEVEL;
+    /** The one language level of this server: Rachana 1.x reads one level, 1.2. */
+    public static final String LEVEL = com.ash.rachana.profile.Grammar.LEVEL;
 
     private static final Object LOCK = new Object();
     private static final BlockLibrary BLOCKS = new BlockLibrary();
@@ -132,12 +131,9 @@ public final class DrishtiRachana {
                 .withFormats(props.formatsFile(), props.packFormatsFiles());
     }
 
-    /** The one language level every Sutra of this server compiles at ({@code drishti.rachana.language-level}, default 1.0); G4 switches it to the latest. */
-    public static void level(String l) {
-        synchronized (LOCK) {
-            level = l == null || l.isBlank() ? LEVEL : l.strip();
-            current = null;
-        }
+    /** The server's language level: the one level. */
+    public static String level() {
+        return LEVEL;
     }
 
     /** A started module's functions join Core's table; the returned action takes them out (a stop). */
@@ -162,7 +158,6 @@ public final class DrishtiRachana {
             SERVED.clear();
             options = RachanaOptions.DEFAULTS;
             kinds = List::of;
-            level = LEVEL;
             current = null;
         }
     }
@@ -193,6 +188,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
                 .build();
-        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call, never the tools' default (1.2)
+        return Rachana.with(options, Profile.core(), drishti);   // Rachana 1.x reads one language level
     }
 }

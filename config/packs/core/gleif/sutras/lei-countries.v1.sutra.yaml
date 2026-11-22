@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments). Matches the one lei-country record ALL, before the country page.
-rachana: 1
+rachana: 1.2
 sutra: lei-countries
 version: 1
 description: "Every country of the pack's legal entities, by the number of entities."

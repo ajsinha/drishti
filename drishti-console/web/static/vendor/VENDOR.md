@@ -28,7 +28,7 @@ vendored release tree, listed with their licences in its own `vendor/VENDOR.md`.
 
 
 **Drishti Elements: updating the pin.** Drishti holds no source of Drishti Elements, only this release tree (docs/architecture/ELEMENTS_IN_DRISHTI.md).
-Clone github.com/ajsinha/drishti-elements at the new tag into an empty folder outside this repository, check the tag's commit id, run
+Clone github.com/drishti-platform/drishti-elements at the new tag into an empty folder outside this repository (the repositories sit side by side under `~/IdeaProjects/drishti-platform/`), check the tag's commit id, run
 `python3 tools/elements/cli.py dist --out dist`, copy `dist/drishti-elements-<new>/` to `drishti-elements/<new>/` and delete the old folder (the
 folder's name is the pin: `core/elements_pin.py`), set `drishti.elements.version` in the root `pom.xml` (drishti-rachana reads `data/world-regions.yaml`
 and `data/formats.yaml` from the copy), change the pinned paths of Drishti's own libraries and pages (`git grep -l "vendor/drishti-elements/<old>/"`),

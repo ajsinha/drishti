@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: design-round
 version: 1
 description: 'Design round: One round of the campaign: how the designs were made, how many, and how well the round did.'

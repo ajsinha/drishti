@@ -312,7 +312,7 @@ def _wrap(text: str, width: int = 124) -> list[str]:
 
 
 def blocks() -> dict[str, str]:
-    """{fragment name: its YAML (after rachana: 1)}: the trading pack's shared panels every deal Sutra uses, rate format (and the
+    """{fragment name: its YAML (after the rachana: key)}: the trading pack's shared panels every deal Sutra uses, rate format (and the
     ticket's product in words) a parameter, each with its complete doc:."""
     cut = _cut(_panels(RF))
     out = {}
@@ -460,7 +460,7 @@ def _metric(days: int) -> list[str]:
 
 
 def page_fragments() -> dict[str, str]:
-    """{fragment name: its YAML (after rachana: 1)}: the trading pack's fragments of the derived trade pages (RACHANA_REFERENCE.md 3a): the
+    """{fragment name: its YAML (after the rachana: key)}: the trading pack's fragments of the derived trade pages (RACHANA_REFERENCE.md 3a): the
     payments metrics strip and the trades table whose columns are a parameter, each with its complete doc:."""
     metrics = [
         "fragment: payments-metrics",

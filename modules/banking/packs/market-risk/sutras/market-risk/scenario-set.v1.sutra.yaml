@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written (docs/guides/VAR_GUIDE.md): the scenario days of a business date, in vector order. Data: tools/packgen/var/make_var_data.py.
-rachana: 1
+rachana: 1.2
 sutra: scenario-set
 version: 1
 description: "A scenario set: the historical days of a business date, oldest first; position i of every vector of the date is day i."

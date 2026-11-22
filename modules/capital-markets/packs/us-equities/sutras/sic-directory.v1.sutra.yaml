@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments). Matches the one sic-sector record ALL, before the sector page.
-rachana: 1
+rachana: 1.2
 sutra: sic-directory
 version: 1
 description: "Every SIC code of the covered companies, by revenue, and revenue by SIC division."

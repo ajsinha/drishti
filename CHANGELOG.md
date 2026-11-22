@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.
+
+- **i7b documents.** The developer quickstart, the deployment and QA guide (with the QA figures VaR 167,372,692 and ES 210,131,972 for the bank on
+  2026-11-06), the IDE guide (VS Code, and the whole platform in one IDE) are written for the five-repository platform; the root README names
+  the platform; the guides' repository links point at github.com/drishti-platform; loading, upkeep, archives and protocol compliance in the data
+  lake guide and the operations guide point to Drishti Lake's guides instead of repeating them; lake roots are written under `${lake.data.dir}`.
+
 - **BI charts draw with drishti-chart.** Every chart of a report (bar, column, line, area, combo, small multiples, pie, donut, waterfall, treemap,
   heatmap, scatter, bubble, gauge, funnel, histogram, box plot, the map, the rolling line and a KPI's sparkline), the Python visual's chart and
   Chart any table's chart are drawn by Drishti Elements' drishti-chart (its new report part, `drishti_chart-report.js`); the console's own chart
@@ -52,7 +59,7 @@
 
 
 - **The client renderer draws every panel with Drishti Elements' painter.** Drishti Elements is pinned at **3.2.0**. Embeds (`<drishti-view>`,
-  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.2.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
+  `<drishti-panel>`, `<drishti-screen>`, `render()` from `static/render/3.3.0/drishti-render.js`) and Explain's "Why it moved" are drawn by
   `drishti-views`; Drishti keeps only the host part (where the view comes from, sign-in, the token, navigation with its Back step, About this
   page). The same entry, options, events and element attributes; the look is the painter's (its title line, freshness line and keys, a
   filter box and pages on long tables, a Data table under each chart). `behaviours: 'console'` gives the painter's tables their tools

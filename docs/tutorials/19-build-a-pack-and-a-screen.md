@@ -31,7 +31,7 @@ About 2 h 10 min in all; each part can be done on its own day.
 
 - [Tutorial 15](15-connect-your-data.md) done: the connector `desk-quotes` exists and runs (check with `drishti-console/.venv/bin/python tools/drishti.py connector list --origin file`).
 - Signed in as the development administrator. The server needs `DRISHTI_STUDIO_SAVE=true` (tutorial 1, step 2), and deploying a pack needs the administrator.
-- The console's Python (tutorial 1, Part A) for the command-line part: it has `deltalake` and `pyarrow`, which `pack make` uses to write its Delta store.
+- The console's Python (tutorial 1, Part A) for the command-line part: it has the Drishti Lake wheel and `pyarrow`, which `pack make` uses to write its Delta store.
 - The data: `docs/tutorials/data/schemas/desk-quote.schema.json` (a JSON Schema titled *Desk quote*, with a description for every field) and `docs/tutorials/data/desk-quotes/`
   (the ten day folders, one `desk-quote.jsonl` each).
 
@@ -637,7 +637,7 @@ it never stands for the pack's Sutra:
 
 ```yaml
 # My page, saved by the Sutra designer (Customize). Only I see it until I share it; Reset goes back to the pack's page.
-rachana: 1
+rachana: 1.2
 sutra: my-portfolio-trades
 version: 1
 match: { kind: portfolio-trades }
@@ -816,7 +816,7 @@ under a trade you click.
 **What it writes** (shortened; the whole text is under **Show the Sutra**):
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-portfolio-trades-book-rates-2
 version: 1
 description: TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s · ...

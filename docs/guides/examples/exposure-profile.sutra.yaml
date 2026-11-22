@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: exposure-profile
 version: 1
 description: An area chart of expected and potential future exposure over tenor, with a limit line.

@@ -52,7 +52,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class SutraCliHelpTest {
 
     private static final String SUTRA = """
-            rachana: 1
+            rachana: 1.2
             sutra: widget
             version: 1
             match: { kind: widget }

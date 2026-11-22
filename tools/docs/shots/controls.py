@@ -108,7 +108,7 @@ def workbench(c: Ctx):
     d = c.design("controls-demo", files={"irs.json": json.dumps(doc)}, kind="trade")
     c.open(d)
     c.page.evaluate("""() => window.Drishti.workbench.store.send([{ op: 'text', yaml:
-      'rachana: 1\\nsutra: controls-demo\\nversion: 1\\nmatch: { kind: trade }\\ntitle: { id: $.tradeId }\\npanels:\\n  - id: schedule\\n    kind: table\\n    title: Cashflows\\n    rows: $.schedule\\n    where: "oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)"\\n    columns:\\n      - { label: Pay date, bind: "@.payDate" }\\n      - { label: Leg, bind: "@.leg" }\\n      - { label: Amount, bind: "@.amount", fmt: signed0 }\\n' }], 'Sutra')""")
+      'rachana: 1.2\\nsutra: controls-demo\\nversion: 1\\nmatch: { kind: trade }\\ntitle: { id: $.tradeId }\\npanels:\\n  - id: schedule\\n    kind: table\\n    title: Cashflows\\n    rows: $.schedule\\n    where: "oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)"\\n    columns:\\n      - { label: Pay date, bind: "@.payDate" }\\n      - { label: Leg, bind: "@.leg" }\\n      - { label: Amount, bind: "@.amount", fmt: signed0 }\\n' }], 'Sutra')""")
     c.page.wait_for_timeout(1500)
     c.page.evaluate("""() => window.Drishti.workbench.store.send([{ op: 'setControls', items: [
       { id: 'legs', kind: 'multi-select', label: 'Legs', options: '$.schedule[*].leg', default: 'all', placement: 'header', panel: 'schedule', remember: 'user' },
