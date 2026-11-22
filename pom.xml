@@ -319,9 +319,10 @@
             <drishti.home>${project.basedir}</drishti.home>
             <drishti.modules.home>none</drishti.modules.home>
             <!-- where a test finds the repository's shared files (config/, modules/, docs/, examples/) and its own module's: absolute, so a
-                 test never depends on the folder the JVM was started in (guarded by TestPathsGuardTest) -->
-            <drishti.repo.root>${maven.multiModuleProjectDirectory}</drishti.repo.root>
-            <drishti.module.root>${project.basedir}</drishti.module.root>
+                 test never depends on the folder the JVM was started in (guarded by TestPathsGuardTest); the names TestRoots reads
+                 (com.ash.lake.tck.TestRoots, Drishti Lake's test kit) -->
+            <lake.repo.root>${maven.multiModuleProjectDirectory}</lake.repo.root>
+            <lake.module.root>${project.basedir}</lake.module.root>
           </systemPropertyVariables>
         </configuration>
       </plugin>
