@@ -27,7 +27,7 @@ from routes.api_routes import _view_event
 from test_embed import HOST, make_client
 
 CONSOLE = Path(__file__).resolve().parents[1]
-MAPS = elementselements_pin.ROOT / "vendor" / "echarts" / "maps"   # the shapes come with Drishti Elements (vendored)
+MAPS = elements_pin.ROOT / "vendor" / "echarts" / "maps"   # the shapes come with Drishti Elements (vendored)
 REGIONS = MAPS / "regions"
 CSS = (CONSOLE / "web" / "static" / "css" / "drishti_terminal.css").read_text(encoding="utf-8")
 ISO_3166_2 = re.compile(r"^[A-Z]{2}-[A-Z0-9]{1,4}$")
