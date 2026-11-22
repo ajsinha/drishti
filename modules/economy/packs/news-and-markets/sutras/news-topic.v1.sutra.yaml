@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: news-topic
 version: 1
 description: "A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. The headlines are computed on demand by the news connector."

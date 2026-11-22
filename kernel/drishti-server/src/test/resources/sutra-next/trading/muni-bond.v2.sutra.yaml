@@ -14,7 +14,7 @@
 
 # The muni-bond Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: muni-bond
 version: 2
 description: "US state or local government bond, often tax-exempt."

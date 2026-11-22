@@ -14,7 +14,7 @@
 
 # Hand-written (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, phases 2 and 3: events, sources over several packs, nested children). Not generated: the generator
 # writes portfolio-trades only. Opened as /v/portfolio-trades/<book>?sutra=book-desk (portfolio-trades stays the book's page).
-rachana: 1
+rachana: 1.2
 sutra: book-desk
 version: 1
 description: "A book's desk: its trades; a click opens the trade's cash flows under its row, with the counterparty and its credit limit beside."

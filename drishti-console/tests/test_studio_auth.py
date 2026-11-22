@@ -157,7 +157,7 @@ def test_the_workbench_yaml_tab_is_a_yaml_editor(client):
         assert marker in page
     for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio ", "drishti_studio-yaml.js", "drishti_studio-assist.js"):
         assert gone not in page
-    assert "rachana: 1\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
+    assert "rachana: 1.2\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
     assert client.get("/static/js/cm-sutra-md.js").status_code == 404 and client.get("/static/js/md-editor.js").status_code == 404
     assert client.post("/studio/render", json={"yaml": "x"}).status_code in (404, 405)
 
@@ -169,7 +169,7 @@ def test_studio_proxies_the_rachana_schema(client):
 
 
 def test_studio_summary_reads_the_yaml_back_safely(client):
-    y = ("rachana: 1\nsutra: demo\nversion: 2\ndescription: Shows <script>alert(1)</script> trades\nnotes: |\n  line one\n  line two\n"
+    y = ("rachana: 1.2\nsutra: demo\nversion: 2\ndescription: Shows <script>alert(1)</script> trades\nnotes: |\n  line one\n  line two\n"
          "match: { kind: trade, where: \"$.x == 1\" }\nstrip:\n  - { label: MTM, bind: $.mtm, fmt: signed0 }\n"
          "panels:\n  - id: legs\n    kind: tabs\n    title: Legs\n    description: Each leg\n    each: $.legs\n    body:\n      kind: kv\n"
          "      columns:\n        - { label: Currency, bind: \"@.currency\" }\nkeys: { F5: \"link($.book, 'book')\" }\n")

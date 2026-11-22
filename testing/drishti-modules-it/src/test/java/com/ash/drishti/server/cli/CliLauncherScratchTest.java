@@ -63,7 +63,7 @@ class CliLauncherScratchTest {
         Files.createDirectories(work.resolve("config/connectors"));
         Path sutra = Files.createDirectories(work.resolve("mine/sutras")).resolve("widget.v1.sutra.yaml");
         Files.writeString(sutra, """
-                rachana: 1
+                rachana: 1.2
                 sutra: widget
                 version: 1
                 match: { kind: widget }

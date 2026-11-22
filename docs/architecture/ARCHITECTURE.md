@@ -311,7 +311,7 @@ Each row names what to change for a common need and the document that explains i
 ## 6. Rachana — the screen grammar — and Sutras written in it
 
 Rachana is the grammar; each Sutra is one YAML document written in it (ADR-017, which supersedes ADR-011's
-Markdown Sutras). The first key, `rachana: 1`, is the language version, so the grammar can evolve without
+Markdown Sutras). The first key, `rachana: 1.2`, is the language version, so the grammar can evolve without
 misreading old files; `description`, `notes` and a per-panel `description` carry the prose. Files are named
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
 pack's `sutras/` folder (`modules/<module>/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
@@ -326,7 +326,7 @@ compiled, side-effect-free expression language (**Rachana-EL**) — not scriptin
 A real Sutra, abbreviated (`examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: irs-vanilla
 version: 3
 description: Vanilla fixed/float interest rate swap (mockup drishti-irs.png).
@@ -579,7 +579,7 @@ curl -s 'http://localhost:18480/api/v1/studio/inferred/var-limit/VL-LL~BANK?name
 
 ```yaml
 # Started from what inference makes of var-limit VL-LL~BANK. Edit freely.
-rachana: 1
+rachana: 1.2
 sutra: var-limit-row
 version: 1
 match: { kind: var-limit, priority: 1 }
@@ -1304,7 +1304,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 |---|---|---|
 | D1 | Backend is one Spring Boot application (never an embedded library); Python console | Single deployable, Spring wiring/config/observability everywhere; domain objects still testable without a context |
 | D2 | Layout = Sutra ⊕ inference, cached by shape fingerprint | Unknown data renders immediately; cost paid once per shape |
-| D3 | Sutras are YAML files (`*.sutra.yaml`, `rachana: 1`) with a compiled, side-effect-free EL (ADR-003, ADR-017) | Reviewable, diffable, safe; ordinary YAML tooling and a served JSON Schema; no scripting in layouts |
+| D3 | Sutras are YAML files (`*.sutra.yaml`, `rachana: 1.2`) with a compiled, side-effect-free EL (ADR-003, ADR-017) | Reviewable, diffable, safe; ordinary YAML tooling and a served JSON Schema; no scripting in layouts |
 | D4 | Server returns ViewModel, not HTML | Same model feeds console, API clients and golden tests |
 | D5 | SSE (not WebSocket) for live, one channel per browser (shared by its tabs through a SharedWorker or an elected tab) | One-way and proxy-friendly; a reconnect simply receives a fresh `view` event, so nothing is replayed; one channel per browser leaves five of the browser's six connections to pages, however many tabs are open |
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |

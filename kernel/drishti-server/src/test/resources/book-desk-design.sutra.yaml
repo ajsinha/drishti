@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # A user's own page for a book, as the Sutra designer saves it (SutraNextEventsTest: ?design=<id>).
-rachana: 1
+rachana: 1.2
 sutra: my-book-page
 version: 1
 description: "My book page: the trades, a click shows the cash flows beside and the counterparty."

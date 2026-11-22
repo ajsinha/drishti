@@ -78,6 +78,7 @@
       st.opsAt = b.opsAt || 0; st.opsCount = b.opsCount || 0; st.problems = b.problems || []; st.checkProblems = b.checkProblems || [];
       if (typeof b.about === 'string') { st.about = b.about; }
       if (typeof b.form === 'string') { st.form = b.form; }
+      if (b.language) { st.language = b.language; }
       bus.emit('doc', { about: st.about, form: st.form, yaml: st.yaml, rev: st.rev, problems: st.problems, checkProblems: st.checkProblems, applied: b.applied, changed: changed, source: source });
       if (b.previewHtml !== undefined && !st.file) { bus.emit('preview', { html: b.previewHtml, name: st.sample, dropped: b.dropped, failed: st.checkProblems.length > 0 }); }
       else if (st.file) { previewFile(st.file); }
@@ -116,6 +117,25 @@
           if (!r.ok) { bus.emit('say', WB.why(r), true); return false; }
           adopt(r.body, which);
           bus.emit('say', which === 'undo' ? 'Undone.' : 'Done again.');
+          return true;
+        });
+      };
+      var p = queue.then(run, run);
+      queue = p.then(function () {}, function () {});
+      return p;
+    }
+
+    /** Upgrades a Sutra written for an older Rachana language level to the server's (one step of the log: undo takes it back). */
+    function upgrade() {
+      var run = function () {
+        return WB.call('POST', base + '/upgrade', { baseRev: st.rev, sample: st.sample || undefined }).then(function (r) {
+          if (r.status === 409) { return conflict().then(function () { return false; }); }
+          if (!r.ok) { bus.emit('say', WB.why(r), true); return false; }
+          adopt(r.body, 'upgrade');
+          var u = r.body.upgrade || { changes: [], flags: [] }, review = (u.flags || []).filter(function (f) { return f.severity === 'review'; });
+          bus.emit('say', 'Upgraded from Rachana ' + u.from + ' to ' + u.to + ': ' + (u.changes || []).length + ' change(s)'
+            + (review.length ? '; ' + review.length + ' place(s) to review, ' + review.map(function (f) { return 'line ' + f.line + ' (' + f.rule + ')'; }).join(', ') : '')
+            + '. Ctrl+Z undoes it.', review.length > 0);
           return true;
         });
       };
@@ -167,7 +187,7 @@
       bus.emit('samples', list);
     }
 
-    return { state: st, on: bus.on.bind(bus), emit: bus.emit.bind(bus), send: send, undo: function () { return step('undo'); }, redo: function () { return step('redo'); },
+    return { state: st, on: bus.on.bind(bus), emit: bus.emit.bind(bus), send: send, undo: function () { return step('undo'); }, redo: function () { return step('redo'); }, upgrade: upgrade,
              refresh: refresh, exclusive: exclusive, adoptAbout: adoptAbout, adoptForm: adoptForm, reload: conflict, setSample: setSample, previewFile: previewFile, clearFile: clearFile, setSamples: setSamples, base: base, adopt: adopt };
   };
 })();

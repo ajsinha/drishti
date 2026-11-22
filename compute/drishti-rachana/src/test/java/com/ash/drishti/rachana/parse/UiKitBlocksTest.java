@@ -46,7 +46,7 @@ class UiKitBlocksTest {
     }
 
     static String sutra(String panels) {
-        return "rachana: 1\nsutra: probe\nversion: 1\nmatch: { kind: ir-curve }\ntitle: { id: $.CURVE_ID }\npanels:\n" + panels;
+        return "rachana: 1.2\nsutra: probe\nversion: 1\nmatch: { kind: ir-curve }\ntitle: { id: $.CURVE_ID }\npanels:\n" + panels;
     }
 
     /** A pack folder (pack.yaml naming it) whose sutras/ holds a copy of the kit's key-figure renamed, and one under the kit's own name. */

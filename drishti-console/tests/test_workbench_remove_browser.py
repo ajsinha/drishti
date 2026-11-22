@@ -20,7 +20,7 @@ from test_workbench_browser import browser, open_design, page, settle, state, wa
 from wb_live import live_console  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"tradeId": "T-1", "mtm": 5})
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: rm
 version: 1
 match: { kind: trade }

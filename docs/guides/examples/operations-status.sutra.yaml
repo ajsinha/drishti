@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: operations-status
 version: 1
 description: "The back office on one screen: status lights, a lifecycle timeline, a coupon ladder, a note and how the view was built."

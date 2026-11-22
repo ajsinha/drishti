@@ -332,7 +332,7 @@ def test_preview_switches_samples(app_client):
 
 
 def test_the_old_studio_design_address_lands_on_the_design_with_its_sample(app_client):
-    d = _new(app_client, "For Studio", kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
+    d = _new(app_client, "For Studio", kind="trade", sutra="rachana: 1.2\nsutra: my-own\nversion: 1\n")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("first.json", _doc(7)), ("second.json", _doc(8))))
     r = app_client.get(f"/studio?design={d['id']}&sample=second.json", follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == f"/build/d/{d['id']}?tab=split&sample=second.json"
@@ -346,7 +346,7 @@ def test_studio_with_a_stored_entity_makes_a_design_with_it_as_a_sample_and_igno
     assert r.status_code == 303
     d = app_client.get(r.headers["location"].split("?")[0].replace("/build/d/", "/build/designs/")).json()
     assert d["samples"][0]["ref"] == {"kind": "curve", "id": "USD-SOFR"} and d["kind"] == "curve" and "match: { kind: curve }" in d["sutra"]
-    backend.design_rows[("somebody-else", "dforeign0002")] = {"design": {"id": "dforeign0002", "sutra": "rachana: 1\nsutra: theirs\n", "samples": []}, "docs": {}}
+    backend.design_rows[("somebody-else", "dforeign0002")] = {"design": {"id": "dforeign0002", "sutra": "rachana: 1.2\nsutra: theirs\n", "samples": []}, "docs": {}}
     loc = open_studio(app_client, "/studio?design=dforeign0002").headers["location"]
     assert "dforeign0002" not in loc and "sutra: theirs" not in app_client.get(loc).text      # not theirs to open: a new Design, as Studio opened as usual
 

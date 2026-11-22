@@ -14,7 +14,7 @@
 
 # The fx-tarf Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: fx-tarf
 version: 2
 description: "Series of leveraged forwards ending when a profit target is hit."

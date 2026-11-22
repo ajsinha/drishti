@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The us-equities pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: us-equities/annual-financials@1 }.
-rachana: 1
+rachana: 1.2
 fragment: annual-financials
 version: 1
 description: "A company's annual financials: revenue and net income as a chart over the years, and every figure in a table."

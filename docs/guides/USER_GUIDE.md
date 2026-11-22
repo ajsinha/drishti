@@ -2472,7 +2472,7 @@ are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-o
 
 ## The workbench: changing how a screen looks
 
-A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1`, the version of
+A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1.2`, the version of
 the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
 reviewers in `notes:`; neither changes the screen. The **workbench** (*Create → New screen*, then the design's page) is
 where you change one; it replaces the old Sutra Studio page, whose addresses (`/studio`, `/studio?sutra=…`) still work and
@@ -2506,7 +2506,7 @@ Worked example: add a one-day P&L figure to the swap's strip.
 1. Choose *irs-fixfloat@1* under **Create → New screen → an existing Sutra** (or open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`) and add
    `MX-20000001` as a stored entity). The YAML tab shows the Sutra; the preview shows `MX-20000001`. The entities you had kept as that Sutra's test entities in
    Studio are already among the samples.
-2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
+2. Near the top, under `rachana: 1.2` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
 3. Under `strip:`, after the `MTM (USD)` line, add the line shown below this list
    (same indentation as the other strip lines).
 4. Press `Ctrl+Enter`. The preview's strip now has **P&L 1D (USD)**.

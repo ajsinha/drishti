@@ -14,7 +14,7 @@
 
 
 # The news-and-markets pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: news-and-markets/headline-pipeline@1 }.
-rachana: 1
+rachana: 1.2
 fragment: headline-pipeline
 version: 1
 description: "How the headlines were chosen: each relevance step with what it kept and dropped."

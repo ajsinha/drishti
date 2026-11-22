@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: data-provenance@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: data-provenance
 version: 1
 description: "How this view was built: the source, its freshness, the layout used and the rules that applied."

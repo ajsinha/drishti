@@ -14,7 +14,7 @@
 
 # Hand-written from the mock-ups the product owner approved (2026-10-26): the fact sheet (A) is the page; the look-through (B) and the
 # fund against its index (C) are its tabs, as on the exposure explorer. The pack's fragments (sutras/common) draw B and C.
-rachana: 1
+rachana: 1.2
 sutra: fund
 version: 1
 description: "A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index."

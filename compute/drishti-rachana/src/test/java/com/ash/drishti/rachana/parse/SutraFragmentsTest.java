@@ -49,7 +49,7 @@ class SutraFragmentsTest {
     }
 
     static String sutra(String panels) {
-        return "rachana: 1\nsutra: probe\nversion: 1\nmatch: { kind: ir-curve }\ntitle: { id: $.CURVE_ID }\npanels:\n" + panels;
+        return "rachana: 1.2\nsutra: probe\nversion: 1\nmatch: { kind: ir-curve }\ntitle: { id: $.CURVE_ID }\npanels:\n" + panels;
     }
 
     @Test
@@ -114,7 +114,7 @@ class SutraFragmentsTest {
     }
 
     static final String FRAGMENT = """
-            rachana: 1
+            rachana: 1.2
             fragment: probe-line
             version: 1
             params: { rows: $.POINTS, fmt: price2 }
@@ -206,7 +206,7 @@ class SutraFragmentsTest {
     }
 
     static final String TABLE = """
-            rachana: 1
+            rachana: 1.2
             fragment: probe-table
             version: 1
             params: { rows: $.ROWS, columns: [] }
@@ -266,7 +266,7 @@ class SutraFragmentsTest {
 
     /** carried from the moved SutraBlocksTest (G4 rehearsal) */
     static final String TICKET = """
-            rachana: 1
+            rachana: 1.2
             block: ticket
             version: 1
             description: A ticket.

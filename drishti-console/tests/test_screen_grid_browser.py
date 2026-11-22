@@ -38,7 +38,7 @@ TABLE = """  - id: trades
       - { label: Product, bind: "@.PRODUCT_TYPE" }
       - { label: Notional, bind: "@.NOTIONAL", fmt: amount0 }
 """
-AREAS = """rachana: 1
+AREAS = """rachana: 1.2
 sutra: qa-book-grid
 version: 1
 match: { kind: portfolio-trades }
@@ -58,7 +58,7 @@ panels:
 """ + TABLE.replace("    rows:", "    area: trades\n    rows:") + """  - { id: book, kind: kv, title: The book, area: detail, columns: [ { label: Trades, bind: $.TRADE_COUNT }, { label: Notional, bind: $.NOTIONAL, fmt: compact } ] }
   - { id: spread, kind: kv, title: Its spread, area: detail, collapsible: true, columns: [ { label: Currencies, bind: "size($.CURRENCIES)" }, { label: Products, bind: "size($.PRODUCT_TYPES)" } ] }
 """
-SECTIONS = """rachana: 1
+SECTIONS = """rachana: 1.2
 sutra: qa-book-sections
 version: 1
 match: { kind: portfolio-trades }
@@ -75,7 +75,7 @@ panels:
 
 # The book page as the Outline test edits it: three metrics and a table written out (the pack's book page is now made of fragments,
 # trading/payments-metrics@1 and trading/trade-table@1, which Outline lists as one item each and does not nest under)
-OUTLINE = """rachana: 1
+OUTLINE = """rachana: 1.2
 sutra: qa-book-outline
 version: 1
 match: { kind: portfolio-trades }

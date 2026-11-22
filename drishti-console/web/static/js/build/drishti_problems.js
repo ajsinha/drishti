@@ -19,6 +19,7 @@
  *   operations  what the server refused of the last operations (DRS-502x), with the operation and the panel
  *   bindings    a field the Sutra reads that the samples rarely have, or that has two types (from the shape report)
  *   check       a panel that fails on a sample (from the tests matrix)
+ *   level       the Sutra is written for an older Rachana language level: click upgrades it (rachana upgrade, the same meaning)
  *   help        the About tab's lint, DRS-2045 to DRS-2047 (a field shown without a glossary entry...) and DRS-2040 to DRS-2044 (the text), click opens the About tab
  * A YAML or operation problem with a line opens the YAML tab at that line; a panel one selects the panel on the canvas.
  *
@@ -73,6 +74,11 @@
       if (store.state.baseMoved) {
         out.push({ kind: 'base', code: 'rebase', text: 'The base ' + store.state.baseMoved.base + ' has a newer live version, ' + store.state.baseMoved.latest + '. Ship, Rebase replays your steps on it.' });
       }
+      var lang = store.state.language;
+      if (lang && lang.older) {
+        out.push({ kind: 'level', code: 'upgrade', upgrade: true, text: 'Written for Rachana language level ' + lang.level + '; this server runs ' + lang.server
+          + ' and reads it at ' + lang.level + '. Click to upgrade it to ' + lang.server + ' (the same meaning; any place to review is listed).' });
+      }
       yamlLive.forEach(function (p) { out.push({ kind: 'yaml', code: 'check', text: p.message, line: p.location.line, col: p.location.column }); });
       bindings().forEach(function (b) { out.push(b); });
       helpLint.forEach(function (p) { out.push({ kind: 'help', code: p.code, text: p.message, aboutLine: p.line || 0 }); });
@@ -95,6 +101,7 @@
         b.appendChild(WB.el('span', 'bs-role', p.kind === 'operation' || p.kind === 'help' ? (p.code || p.kind) : p.kind));
         b.appendChild(document.createTextNode(' ' + (p.line ? 'line ' + p.line + ': ' : '') + p.text));
         b.addEventListener('click', function () {
+          if (p.upgrade) { store.upgrade(); return; }
           if (p.kind === 'help' && hooks.gotoAbout) { hooks.gotoAbout(p.aboutLine); } else if (p.line && hooks.gotoLine) { hooks.gotoLine(p.line, p.col); } else if (p.panel && hooks.gotoPanel) { if (p.sample) { store.setSample(p.sample); } hooks.gotoPanel(p.panel); }
         });
         li.appendChild(b); list.appendChild(li);

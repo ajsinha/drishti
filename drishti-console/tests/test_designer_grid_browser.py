@@ -30,7 +30,7 @@ from wb_live import post
 from docshots import docs_img
 
 IMG = docs_img("guides/img/designer")                 # docs/guides/img/designer only when DRISHTI_SHOTS is set (docshots.py)
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: qa-book-sheet
 version: 1
 match: { kind: portfolio-trades }
@@ -277,7 +277,7 @@ def test_the_sheet_in_two_themes_and_the_default_mode(browser, stack, theme):
     pg.close()
 
 
-DEEP = """rachana: 1
+DEEP = """rachana: 1.2
 sutra: qa-book-deep
 version: 1
 match: { kind: portfolio-trades }

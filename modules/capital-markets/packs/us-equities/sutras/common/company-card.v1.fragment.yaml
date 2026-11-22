@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The us-equities pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: us-equities/company-card@1 }.
-rachana: 1
+rachana: 1.2
 fragment: company-card
 version: 1
 description: "A listed US company's key facts: identity, listing, sector, latest fiscal year and identifiers."

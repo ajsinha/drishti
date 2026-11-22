@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: explainer-note@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: explainer-note
 version: 1
 description: "A short note in Markdown that tells the reader what the screen shows and how to read it."

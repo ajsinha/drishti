@@ -89,7 +89,7 @@ class StudioTest {
 
     @Test
     void previewAndInferAgainstPastedJson() throws Exception {
-        String yaml = "rachana: 1\nsutra: pasted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
+        String yaml = "rachana: 1.2\nsutra: pasted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
                 + "strip:\n  - { label: Price, bind: $.price, fmt: amount2 }\npanels:\n  - { id: refs, kind: links, title: Links }\n";
         String doc = "{\"code\":\"W-1\",\"price\":1234.5,\"parts\":[{\"name\":\"a\",\"qty\":2},{\"name\":\"b\",\"qty\":3}]}";
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +100,7 @@ class StudioTest {
         String inferred = mvc.perform(post("/api/v1/studio/inferred").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"kind\":\"widget\",\"id\":\"W-1\",\"name\":\"widget\",\"document\":" + doc + "}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(inferred).contains("rachana: 1\nsutra: widget").contains("$.parts");
+        assertThat(inferred).contains("rachana: 1.2\nsutra: widget").contains("$.parts");
         mvc.perform(post("/api/v1/studio/preview").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"yaml\":" + json.writeValueAsString(yaml) + ",\"kind\":\"widget\",\"document\":[1,2]}"))
                 .andExpect(status().isUnprocessableEntity());
@@ -109,7 +109,7 @@ class StudioTest {
     @Test
     void savingIsOffUnlessEnabled() throws Exception {
         mvc.perform(get("/api/v1/studio/settings")).andExpect(jsonPath("$.save").value(false));
-        mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("rachana: 1\nsutra: x\nversion: 1\nmatch: { kind: trade }\n"))
+        mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("rachana: 1.2\nsutra: x\nversion: 1\nmatch: { kind: trade }\n"))
                 .andExpect(status().isForbidden());
         assertThat(Files.exists(Path.of(TestRoots.module(), "..", "sutras", "studio"))).isFalse();
     }

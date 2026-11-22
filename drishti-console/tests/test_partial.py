@@ -15,7 +15,7 @@
 """UX-02: the server's refusal of a Sutra becomes located problems, and the panels that are wrong can be cut out so the others draw."""
 from core import partial
 
-SUTRA = """rachana: 1
+SUTRA = """rachana: 1.2
 sutra: s
 version: 1
 match: { kind: shipment }

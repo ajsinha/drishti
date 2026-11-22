@@ -49,7 +49,7 @@ def check(text: str) -> list:
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run drishti-designer")
 def test_a_tab_indented_line_is_said_to_be_indented_with_a_tab():
-    text = ("rachana: 1\nsutra: qa-tab\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\npanels:\n"
+    text = ("rachana: 1.2\nsutra: qa-tab\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.tradeId }\npanels:\n"
             "\t- id: terms\n    kind: kv\n")
     problems = check(text)
     assert [7, "line 7 is indented with a tab: YAML allows only spaces"] in problems

@@ -31,7 +31,7 @@ public final class DesignStoreChecks {
         d.id = id;
         d.name = name;
         d.scratch = name.isEmpty();
-        d.sutra = "rachana: 1\nsutra: t\nversion: 1\n";
+        d.sutra = "rachana: 1.2\nsutra: t\nversion: 1\n";
         d.rev = 1;
         d.notes = "# notes";
         d.created = d.updated = 1_000L;

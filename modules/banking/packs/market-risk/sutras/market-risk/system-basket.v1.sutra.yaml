@@ -14,7 +14,7 @@
 
 # Hand-written (docs/guides/VAR_GUIDE.md section 5.7): a system basket is a definition kept in the basket store (the var-system-baskets
 # connector serves it); its positions and figures are the VaR engine's, added under VAR_ENGINE as the page opens (VarFigures), never stored.
-rachana: 1
+rachana: 1.2
 sutra: system-basket
 version: 1
 description: "A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution."

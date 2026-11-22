@@ -14,7 +14,7 @@
 
 # The fx-spot-trade Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: fx-spot-trade
 version: 2
 description: "Exchange of two currencies at T+2."

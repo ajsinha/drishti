@@ -127,20 +127,20 @@ public class StudioController {
         entitlements.requireOpen(principal, kind);
         String n = name.isBlank() ? kind + "-custom" : name;
         return "# Started from what inference makes of " + kind + " " + id + ". Edit freely.\n"
-                + writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1);
+                + com.ash.drishti.rachana.LanguageLevels.written(writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1));
     }
 
     @PostMapping(path = "/studio/inferred", produces = "text/yaml")
     public String inferredFromSample(@RequestBody InferRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         String n = req.name() == null || req.name().isBlank() ? req.kind() + "-custom" : req.name();
         return "# Started from what inference makes of a pasted " + req.kind() + " document. Edit freely.\n"
-                + writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1);
+                + com.ash.drishti.rachana.LanguageLevels.written(writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1));
     }
 
     @GetMapping("/studio/settings")
     public Map<String, Object> settings(@RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         return Map.of("save", props.studioSave() && entitlements.mayAuthor(principal), "review", governance.enabled(),
-                "approve", entitlements.mayApprove(principal), "author", entitlements.mayAuthor(principal));
+                "approve", entitlements.mayApprove(principal), "author", entitlements.mayAuthor(principal), "level", com.ash.drishti.rachana.DrishtiRachana.level());
     }
 
     /**

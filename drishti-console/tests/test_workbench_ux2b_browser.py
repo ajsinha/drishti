@@ -7,7 +7,7 @@ from wb_live import live_console, post, showcase_json, showcase_sutra  # noqa: F
 
 LICENCE = "<!--\n  Project Drishti · Any data. Any domain. One grammar.\n  Copyright (c) 2026 Ashutosh Sinha.\n  PROPRIETARY AND CONFIDENTIAL.\n-->\n"
 SAMPLE = json.dumps({"shipmentId": "S-1", "carrier": "Maersk"})
-SUTRA = "rachana: 1\nsutra: ux\nversion: 1\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\npanels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: Carrier, bind: $.carrier } ] }\n"
+SUTRA = "rachana: 1.2\nsutra: ux\nversion: 1\nmatch: { kind: shipment }\ntitle: { id: $.shipmentId }\npanels:\n  - { id: facts, kind: kv, title: Facts, columns: [ { label: Carrier, bind: $.carrier } ] }\n"
 
 
 def test_the_notes_are_visible_editable_and_the_licence_comment_is_not_shown(live_console, page):

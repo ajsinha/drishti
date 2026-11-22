@@ -14,7 +14,7 @@
 
 # The first-to-default Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
 # wins while the trading equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: first-to-default
 version: 2
 description: "Pays on the first default among a small basket of names."

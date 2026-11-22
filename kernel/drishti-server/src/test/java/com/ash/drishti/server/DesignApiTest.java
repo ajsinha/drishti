@@ -61,7 +61,7 @@ class DesignApiTest {
     private static final Path EXAMPLES = Path.of(TestRoots.repo(), "docs", "guides", "examples");
     private static final Path DIR = sutraDir();
     private static final String SOURCED = """
-            rachana: 1
+            rachana: 1.2
             sutra: ns-sourced
             version: 1
             match: { kind: netting-set, priority: 100 }

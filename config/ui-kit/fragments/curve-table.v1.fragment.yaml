@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The Drishti UI kit (RACHANA_REFERENCE.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: curve-table@1, with: {...} }.
-rachana: 1
+rachana: 1.2
 fragment: curve-table
 version: 1
 description: "A curve's pillars as a table: tenor, instrument, market quote, zero rate and discount factor."

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments).
-rachana: 1
+rachana: 1.2
 sutra: financial-fact
 version: 1
 description: "One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings."

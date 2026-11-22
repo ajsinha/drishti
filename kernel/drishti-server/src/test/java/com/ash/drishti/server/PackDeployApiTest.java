@@ -67,7 +67,7 @@ class PackDeployApiTest {
     static KeyPair acme;
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String SUTRA = """
-            rachana: 1
+            rachana: 1.2
             sutra: item-view
             version: 1
             description: An item.

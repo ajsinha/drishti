@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
-rachana: 1
+rachana: 1.2
 sutra: filing
 version: 1
 description: "One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov)."

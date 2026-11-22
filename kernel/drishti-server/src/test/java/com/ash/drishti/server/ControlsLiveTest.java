@@ -46,7 +46,7 @@ class ControlsLiveTest {
     static void sutras(DynamicPropertyRegistry r) throws Exception {
         dir = TestRun.temp("ctl-sutras");
         Files.writeString(dir.resolve("ctl-live.v1.sutra.yaml"), """
-                rachana: 1
+                rachana: 1.2
                 sutra: ctl-live
                 version: 1
                 match: { kind: trade, priority: 1000 }

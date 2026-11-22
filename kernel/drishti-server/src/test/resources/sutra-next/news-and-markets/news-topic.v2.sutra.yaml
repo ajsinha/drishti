@@ -14,7 +14,7 @@
 
 # The news-topic Sutra as it was written by hand before Sutra Next (inline, no fragments), as version 2 so it
 # wins while the news-and-markets equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: news-topic
 version: 2
 description: "A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. The headlines are computed on demand by the news connector."

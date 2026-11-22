@@ -2985,7 +2985,7 @@ http://localhost:18480/api/v1/views/trade/MX-20000001` prints `200` with `timing
 
 ### 20.2 A Sutra is broken, or an edit does not show
 
-A *Sutra* lays out the view of a family of entities: one YAML file, `<name>.v<N>.sutra.yaml`, first key `rachana: 1`, read from the enabled packs'
+A *Sutra* lays out the view of a family of entities: one YAML file, `<name>.v<N>.sutra.yaml`, first key `rachana: 1.2`, read from the enabled packs'
 `sutras/` folders and the site folder (`drishti.rachana.dirs`, `./sutras`, `DRISHTI_SUTRAS`; the grammar: [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md)).
 **An invalid edit never takes a view down**: a changed file is reloaded within about 250 ms (`drishti.rachana.reload-debounce`); if it is invalid the last
 good version stays live and the problems are reported with file, line and column. A Sutra that was never valid is not used (inference lays its entities
@@ -3002,7 +3002,7 @@ for example `{"code": "DRS-2021", "message": "unknown panel kind 'tabel'", "loca
 |---|---|---|
 | `DRS-2001` | the file cannot be read or parsed (YAML syntax; a tab at the start of a line) | fix indentation (spaces only), quotes or colons at the line |
 | `DRS-2004` | a file in a Sutra folder is not a Sutra file: a `.sutra.md` or a plain `.yaml`/`.yml` | convert a `.sutra.md` (below); rename to `<name>.v<N>.sutra.yaml`; move other YAML out |
-| `DRS-2009` | `rachana:` is missing, or names a version this server does not read | put `rachana: 1` as the first key |
+| `DRS-2009` | `rachana:` is missing, or names a version this server does not read | put `rachana: 1.2` as the first key |
 | `DRS-2010`, `DRS-2011`, `DRS-2012` | a required key missing; an unknown key (often a typo); a value of the wrong type | add, correct or quote it |
 | `DRS-2020` | a bad name or version, or no site folder to save into | lower-case kebab names, a positive `version`; set `drishti.rachana.dirs` |
 | `DRS-2021`, `DRS-2022`, `DRS-2023` | an unknown panel kind; a missing required option; an option the kind does not take | use a kind of RACHANA_REFERENCE.md; add or remove the option |
@@ -3020,10 +3020,10 @@ python3 tools/rachana/md_to_yaml.py sutras --delete
 ```
 
 It prints one line per file (`sutras/rates/my-swap.v1.sutra.md -> sutras/rates/my-swap.v1.sutra.yaml`), keeps the `sutra` block with its comments,
-adds `rachana: 1` and turns the prose into `notes:`; without `--delete` the `.md` files stay (and stay reported) while you compare. A file then starts:
+adds `rachana: 1.2` and turns the prose into `notes:`; without `--delete` the `.md` files stay (and stay reported) while you compare. A file then starts:
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-swap
 version: 1
 match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'" }

@@ -51,7 +51,7 @@ class SutraCliTest {
 
     private static final Path ROOT = Path.of(TestRoots.repo());
     private static final String SUTRA = """
-            rachana: 1
+            rachana: 1.2
             sutra: widget
             version: 1
             match: { kind: widget }
@@ -356,7 +356,7 @@ class SutraCliTest {
             Files.writeString(root.resolve(name).resolve("pack.yaml"), "pack: " + name + "\nversion: 1.0.0\n");
         }
         Files.writeString(root.resolve("alpha/sutras/facts.v1.fragment.yaml"), """
-                rachana: 1
+                rachana: 1.2
                 fragment: facts
                 version: 1
                 description: "A widget's size"

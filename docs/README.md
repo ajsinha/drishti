@@ -512,7 +512,7 @@ scripts are in the repository's history. The Windows QA script is a live procedu
 | **View** | The screen for one entity: title, strip, panels, links |
 | **Strip** | The row of key figures under a view's title |
 | **Panel** | One box in a view: a table, a chart, label/value pairs |
-| **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` |
+| **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1.2` |
 | **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.QUANTITY > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
 | **Pack** | An industry's commands, layouts, links, roles and sample data, in `modules/<module>/packs/<name>/` |

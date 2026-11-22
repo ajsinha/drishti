@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
-rachana: 1
+rachana: 1.2
 sutra: press-release
 version: 1
 description: "One official press release: its title, publisher, date, summary and the link to the original."

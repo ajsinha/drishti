@@ -98,7 +98,7 @@ class SutraTableSourceTest {
     }
 
     static final Sutra SUTRA = com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
-            rachana: 1
+            rachana: 1.2
             sutra: book-page
             version: 1
             match: { kind: trade }

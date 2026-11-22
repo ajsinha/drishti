@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: study-gene
 version: 1
 description: 'Study gene: One gene of the synthetic genome: where it sits, what it does, how long its protein is and how many samples of the cohort

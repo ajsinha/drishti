@@ -14,7 +14,7 @@
 
 # The office-holder Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
 # wins while the world-economy equivalence test draws the "before" view. Test data only.
-rachana: 1
+rachana: 1.2
 sutra: office-holder
 version: 2
 description: "The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled."

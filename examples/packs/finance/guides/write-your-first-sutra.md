@@ -20,14 +20,14 @@ swaps with a header strip, a cashflow table and a curve: about a dozen lines, an
 
 ## 0. The file
 
-A Sutra is one YAML file, `sutras/rates/my-swap.v1.sutra.yaml`. Its first line is always `rachana: 1`, the
+A Sutra is one YAML file, `sutras/rates/my-swap.v1.sutra.yaml`. Its first line is always `rachana: 1.2`, the
 version of the Rachana language it is written in (without it the file is refused with `DRS-2009`). What the
 layout is for, and why, goes in the file too, as plain text in `description` (one paragraph) and `notes`
 (longer, a YAML block):
 
 ```yaml
 # The top of the file
-rachana: 1
+rachana: 1.2
 sutra: my-swap
 version: 1
 description: Interest rate swaps for the rates desk.
@@ -82,7 +82,7 @@ panels:
 ## The whole file
 
 ```yaml
-rachana: 1
+rachana: 1.2
 sutra: my-swap
 version: 1
 description: Interest rate swaps for the rates desk.

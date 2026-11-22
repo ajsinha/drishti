@@ -187,7 +187,7 @@ the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (
 |---|---|---|
 | Java SPIs and services | `drishti-kernel-api-<v>.jar` (interfaces, records, annotations only; no implementation) | section 2.3 |
 | Python compute API | `drishti_kernel` package (the compute SDK's item, frame and result types; the sandbox's rules) | section 4.6 |
-| Rachana and Sutras | grammar version `rachana: 1` (already in every Sutra) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) |
+| Rachana and Sutras | grammar version `rachana: 1.2` (already in every Sutra) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) |
 | Data contracts | contract format `contract-format: 1` (the `*.contract.yaml` shape the packs use today) | section 5.2 |
 | Elements core | `@drishti/elements-core` etc.: ES modules + `.d.ts`, the theme tokens | [ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) |
 | Console API (the Drishti Console's half, versioned as `plugin-api`) | `plugin.yaml` format 2 (routes, words, menus, cards, slots, the API proxy list) and `drishti-console-api-<v>.jar` (the Java context-builder interface); replaces format 1 and the hooks of `core/plugins.py` | sections 4.7, 9, 10.4 |

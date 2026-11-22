@@ -15,7 +15,7 @@
 # Hand-written (docs/guides/EXPOSURE_GUIDE.md section 19.1): the computed kind exposure-result, a scope's exposure answered by the server's
 # exposure engine (the reactive connector exposure-engine) when the page opens, never stored. A plain page in 2.9.0; the exposure
 # explorer replaces it as the main screen in a later part.
-rachana: 1
+rachana: 1.2
 sutra: exposure-result
 version: 1
 description: "The exposure profile of any counterparty scope (a netting set, a counterparty, a group, a legal entity, a trade alone), computed from the simulated paths."

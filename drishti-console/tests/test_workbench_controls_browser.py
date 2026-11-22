@@ -24,7 +24,7 @@ from test_workbench_browser import browser, open_design, page, wait  # noqa: F40
 from wb_live import live_console  # noqa: F401 - the fixture
 
 SAMPLE = json.dumps({"tradeId": "T-1", "cashflows": [{"leg": 1, "amount": 100}, {"leg": 2, "amount": 200}, {"leg": 1, "amount": 300}]})
-SUTRA = ("rachana: 1\nsutra: ctl-e2e\nversion: 1\ndescription: Cashflows by leg.\nmatch: { kind: ctl-trade }\ntitle: { id: $.tradeId }\n"
+SUTRA = ("rachana: 1.2\nsutra: ctl-e2e\nversion: 1\ndescription: Cashflows by leg.\nmatch: { kind: ctl-trade }\ntitle: { id: $.tradeId }\n"
          "panels:\n  - id: cf\n    kind: table\n    title: Cashflows\n    rows: $.cashflows\n    columns:\n      - { label: Leg, bind: \"@.leg\" }\n      - { label: Amount, bind: \"@.amount\" }\n")
 
 

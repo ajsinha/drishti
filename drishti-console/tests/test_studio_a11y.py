@@ -19,7 +19,7 @@ from core import elements_pin  # noqa: E402  (the vendored Drishti Elements)
 
 JS = (elements_pin.ROOT / "elements" / "drishti-inputs" / "src" / "drishti_code-editor.js").read_text()   # the YAML tab is drishti-inputs' CodeEditor
 
-OLD = "rachana: 1\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
+OLD = "rachana: 1.2\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
 
 
 def test_the_workbench_has_one_h1(client):

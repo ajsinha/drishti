@@ -61,7 +61,7 @@ class MapPanelTest {
 
     private static Sutra sutra(String panel) {
         return com.ash.drishti.rachana.DrishtiRachana.parser().parse("""
-                rachana: 1
+                rachana: 1.2
                 sutra: map-demo
                 version: 1
                 match: { kind: jurisdiction }

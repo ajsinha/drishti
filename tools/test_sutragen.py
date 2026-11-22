@@ -72,7 +72,7 @@ class SutragenTest(unittest.TestCase):
     def test_edit_yaml(self):
         g = SG.Group("trade", ["a"], ("x",), [])
         g.name, g.priority, g.key = "trade-x", 10, "tradeId"
-        text = 'rachana: 1\nsutra: trade-auto\ndescription: d\nmatch: { kind: trade, priority: 1 }\ntitle: { pill: "T", id: "$.id" }\n'
+        text = 'rachana: 1.2\nsutra: trade-auto\ndescription: d\nmatch: { kind: trade, priority: 1 }\ntitle: { pill: "T", id: "$.id" }\n'
         out = SG.edit_yaml(text, g)
         self.assertIn("sutra: trade-x", out)
         self.assertIn('match: { kind: trade, where: "$.a == \'x\'", priority: 10 }', out)

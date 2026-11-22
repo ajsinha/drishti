@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict] [--docs]}. */
-record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each, boolean docs) {
+/** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict] [--docs] [--write]}. */
+record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each, boolean docs, boolean write) {
 
-    static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview");
+    static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview", "upgrade");
 
     /** @throws UsageException when the line is not understood */
     static CliArgs parse(List<String> args) {
@@ -42,6 +42,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         boolean strict = false;
         boolean each = false;
         boolean docs = false;
+        boolean write = false;
         for (int i = 1; i < args.size(); i++) {
             String a = args.get(i);
             switch (a) {
@@ -50,6 +51,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
                 case "--strict" -> strict = true;
                 case "--each" -> each = true;
                 case "--docs" -> docs = true;
+                case "--write" -> write = true;
                 case "--kind" -> kind = value(args, ++i, a);
                 case "--samples" -> samples.add(Path.of(value(args, ++i, a)));
                 default -> {
@@ -63,7 +65,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         if (paths.isEmpty()) {
             throw new UsageException(command + " needs a path");
         }
-        return new CliArgs(command, paths, junit, out, kind, samples, strict, each, docs);
+        return new CliArgs(command, paths, junit, out, kind, samples, strict, each, docs, write);
     }
 
     private static String value(List<String> args, int i, String option) {

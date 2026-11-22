@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's fragment (sutras/common/holder-list).
-rachana: 1
+rachana: 1.2
 sutra: fund-holder
 version: 1
 description: "The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own."

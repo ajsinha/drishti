@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Written by tools/packgen/genomics_showcase/make.py from the kinds table: the plain record view of the kind.
-rachana: 1
+rachana: 1.2
 sutra: residue-contact
 version: 1
 description: 'Residue contact: Two positions of a protein that sit close in space though they are not neighbours in the chain: the contact map''s

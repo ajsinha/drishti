@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
-rachana: 1
+rachana: 1.2
 sutra: release-source
 version: 1
 description: "One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms."

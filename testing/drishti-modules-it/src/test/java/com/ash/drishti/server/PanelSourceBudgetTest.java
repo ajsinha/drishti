@@ -49,7 +49,7 @@ class PanelSourceBudgetTest {
     static void site(DynamicPropertyRegistry r) throws Exception {
         Path site = PackSutraNextEquivalence.site(r, "panel-source-budget");
         Files.writeString(site.resolve("budget-sources.v1.sutra.yaml"), """
-                rachana: 1
+                rachana: 1.2
                 sutra: budget-sources
                 version: 1
                 match: { kind: news-topic, priority: 50 }

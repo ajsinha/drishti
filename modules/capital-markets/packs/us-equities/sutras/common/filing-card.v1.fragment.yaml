@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The us-equities pack's own fragment (RACHANA_REFERENCE.md 3a), hand-written, used as { use: us-equities/filing-card@1 }.
-rachana: 1
+rachana: 1.2
 fragment: filing-card
 version: 1
 description: "One SEC filing's details: company, form, dates, 8-K items and its links on EDGAR."

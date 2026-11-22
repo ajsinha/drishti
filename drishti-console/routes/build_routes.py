@@ -158,7 +158,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
     except BackendError:
         binding = {}
     init = {"fileBinding": bool(binding.get("enabled")), "boundFile": design.get("boundFile") or "", "shared": bool(design.get("shared")),
-            "bindDir": binding.get("dir") or "", "baseMoved": design.get("baseMoved") or None, "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
+            "bindDir": binding.get("dir") or "", "baseMoved": design.get("baseMoved") or None, "language": design.get("language") or None, "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or "", "form": design.get("form") or ""}
@@ -420,6 +420,17 @@ async def apply_ops(request: Request, id_: str):
     send = {k: body[k] for k in ("baseRev", "ops", "sample") if k in body}
     try:
         return await _drawn(request, id_, await request.app.state.backend.designs("POST", f"/{id_}/ops", ident(request), send), send.get("sample") or "")
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/upgrade")
+async def upgrade(request: Request, id_: str):
+    """Body ``{baseRev, sample?}``: the Sutra, written for an older Rachana language level, upgraded to the server's (one step of the log)."""
+    body = await _body(request)
+    send = {k: body[k] for k in ("baseRev", "sample") if k in body}
+    try:
+        return await _drawn(request, id_, await request.app.state.backend.designs("POST", f"/{id_}/upgrade", ident(request), send), send.get("sample") or "")
     except BackendError as e:
         return _error(e)
 

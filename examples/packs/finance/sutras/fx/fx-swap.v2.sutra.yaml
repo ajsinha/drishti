@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 1.2
 sutra: fx-swap
 version: 2
 description: FX swap, near and far legs (mockup drishti-fx-swap.png).

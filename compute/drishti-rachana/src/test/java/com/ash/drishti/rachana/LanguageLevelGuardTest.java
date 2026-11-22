@@ -14,16 +14,20 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Guard: Drishti compiles every Sutra at Rachana language level 1.0 (the corpus-proven level); the tools' default is 1.2, whose
- * meanings differ. The one holder pins 1.0, and no other main source builds a Rachana instance, changes its level or takes a bare
- * compiler/parser outside the holder.
+ * Guard: Drishti runs the newest Rachana language level. The one holder pins it (the newest the runtime implements), no other main
+ * source builds a Rachana instance, changes its level or takes a bare compiler/parser outside the holder, and every shipped Sutra,
+ * fragment and block declares that level ({@code rachana: 1.2}): an older file is upgraded with {@code rachana upgrade}
+ * ({@code drishti.py sutra upgrade --write}), never left to be read at an older level. A user's Sutra of an older level still compiles
+ * at its own level and is offered the upgrade ({@link LanguageLevels}).
  */
 class LanguageLevelGuardTest {
 
     @Test
-    void theHolderCompilesAtLevel10() {
-        assertThat(DrishtiRachana.current().language()).isEqualTo("1.0");
-        assertThat(DrishtiRachana.compiler().level()).isEqualTo("1.0");
+    void theHolderCompilesAtTheNewestLevel() {
+        String newest = com.ash.rachana.profile.Grammar.LEVELS.get(com.ash.rachana.profile.Grammar.LEVELS.size() - 1);
+        assertThat(DrishtiRachana.LEVEL).isEqualTo(newest);
+        assertThat(DrishtiRachana.current().language()).isEqualTo(newest);
+        assertThat(DrishtiRachana.compiler().level()).isEqualTo(newest);
         assertThat(DrishtiRachana.parser()).isNotNull();
     }
 
@@ -44,5 +48,40 @@ class LanguageLevelGuardTest {
                     }).map(f -> root.relativize(f).toString()).toList();
         }
         assertThat(offenders).as("main sources that build a Rachana instance or pick a level outside DrishtiRachana").isEmpty();
+    }
+
+    @Test
+    void everyShippedSutraFragmentAndBlockDeclaresTheServersLevel() throws IOException {
+        Path root = Path.of(com.ash.lake.tck.TestRoots.repo()).toAbsolutePath().normalize();
+        List<String> files;
+        try (Stream<Path> all = Files.walk(root)) {
+            files = all.filter(f -> {
+                String n = f.getFileName().toString();
+                return n.endsWith(".sutra.yaml") || n.endsWith(".fragment.yaml") || n.endsWith(".block.yaml");
+            }).filter(f -> !root.relativize(f).toString().replace('\\', '/').matches("(.*/)?(target|node_modules|\\.[^/]+)/.*|(data|lib)/.*")).map(f -> root.relativize(f).toString()).sorted().toList();
+        }
+        List<String> older = files.stream().filter(f -> {
+            try {
+                return !DrishtiRachana.LEVEL.equals(LanguageLevels.declared(Files.readString(root.resolve(f))));
+            } catch (IOException e) {
+                return true;
+            }
+        }).toList();
+        assertThat(files).as("Sutra, fragment and block files found").hasSizeGreaterThan(500);
+        assertThat(older).as("files that do not declare rachana: " + DrishtiRachana.LEVEL + " (run drishti.py sutra upgrade <path> --write)").isEmpty();
+    }
+
+    @Test
+    void anOlderSutraIsReadAtItsOwnLevelAndOfferedTheUpgrade() {
+        String old = "rachana: 1\nsutra: probe\nversion: 1\nmatch: { kind: trade }\npanels:\n  - { id: p, kind: kv, columns: [{ label: R, bind: \"range($.L, 'X')\" }] }\n";
+        assertThat(LanguageLevels.declared(old)).isEqualTo("1.0");
+        assertThat(LanguageLevels.older(old)).isTrue();
+        assertThat(LanguageLevels.advice(old, "probe.v1.sutra.yaml")).contains("1.0", DrishtiRachana.LEVEL, "drishti.py sutra upgrade probe.v1.sutra.yaml --write");
+        assertThat(DrishtiRachana.parser().parse(old, "probe.v1.sutra.yaml", "").level()).isEqualTo("1.0");
+        var up = LanguageLevels.upgrade("probe.v1.sutra.yaml", old);
+        assertThat(up.writable()).isTrue();
+        assertThat(up.text()).startsWith("rachana: " + DrishtiRachana.LEVEL + "\n").contains("span($.L, 'X')");
+        assertThat(LanguageLevels.older(up.text())).isFalse();
+        assertThat(LanguageLevels.advice(up.text(), "probe.v1.sutra.yaml")).isNull();
     }
 }
