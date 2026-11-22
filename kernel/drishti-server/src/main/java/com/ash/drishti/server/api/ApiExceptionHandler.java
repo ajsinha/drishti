@@ -77,6 +77,9 @@ public class ApiExceptionHandler {
         if (e instanceof com.ash.drishti.server.engines.EngineOffException x) {
             return engineOff(x);
         }
+        if (e instanceof com.ash.drishti.api.lifecycle.ComponentSuspended x) {
+            return suspended(x);
+        }
         if (e instanceof DrishtiException x) {
             return drishti(x);
         }
@@ -192,11 +195,21 @@ public class ApiExceptionHandler {
         return p;
     }
 
+    /** A suspended module, pack or connector (docs/architecture/LIFECYCLE.md): {@code 503 DRS-1037} naming it, who suspended it and since when. */
+    @ExceptionHandler(com.ash.drishti.api.lifecycle.ComponentSuspended.class)
+    ProblemDetail suspended(com.ash.drishti.api.lifecycle.ComponentSuspended e) {
+        ProblemDetail p = drishti(e);
+        e.properties().forEach(p::setProperty);
+        return p;
+    }
+
     @ExceptionHandler(DrishtiException.class)
     ProblemDetail drishti(DrishtiException e) {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());
         if (RefusalLog.expected(e)) {
             refusals.refused(e);                     // another node is down or slow: one short line per change, counted (SOAK-06)
+        } else if (e instanceof com.ash.drishti.api.lifecycle.ComponentSuspended) {
+            LOG.debug("refused: {}", e.getMessage());   // an administrator suspended it: expected, never a fault (the audit has the suspend)
         } else if (status.is5xxServerError() && com.ash.drishti.api.UnreadableData.in(e).isPresent()) {
             // the source said what cannot be read and what to do (an Iceberg table moved, a codec not read): one line, no stack trace (QA3B-03)
             LOG.warn("request failed: {}", e.getMessage());

@@ -121,6 +121,12 @@ public final class StatsRecorder {
         lastActivity = now;
     }
 
+    /** A request admitted where its end is not seen (a mnemonic or a kind opened through the gate): counted, no latency sample. */
+    public void admitted() {
+        add(0, 1);
+        lastActivity = clock.millis();
+    }
+
     /** A request refused (suspended, not running). */
     public void refused() {
         add(2, 1);
