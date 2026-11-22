@@ -783,7 +783,7 @@ def build(seed: int = SEED) -> tuple:
                "design": design_docs, "design-mutation": mutation_docs, "design-round": round_docs}
     lead_variant = next(s["VARIANT_ID"] for s in sites if s["gene"] == LEAD_GENE and s["role"] == "hot1")
     story = {"lead_gene": LEAD_GENE, "lead_variant": lead_variant, "lead_design": lead["id"], "lead_sample": "S0001",
-             "lead_residue": f"{LEAD_GENE}:{lead_prot.centre + 1}", "lead_score": f"{LEAD_GENE}:{lead_prot.centre + 1}:{AA20[lead_prot.worst(lead_prot.centre)]}:activity",
+             "lead_residue": f"{LEAD_GENE}:{lead_prot.centre + 1}", "lead_score": f"{LEAD_GENE}:{lead_prot.centre + 1}:{AA20[lead_prot.worst(lead_prot.centre)]}:ACTIVITY",
              "lead_contact": next(iter(contact_docs)), "lead_round": f"{LEAD_GENE}-R{lead['round']}", "lead_segment": next(iter(genomics["cnv-segment"])),
              "lead_call": next(iter(genomics["variant-call"])), "lead_pathway": next(iter(genomics["pathway-gene"])),
              "lead_mutation": next(iter(mutation_docs))}

@@ -141,21 +141,21 @@ Links: `PROTEIN` → `protein`.
 
 About: Deep mutational scan score.
 
-**Id:** field `SCORE_ID`; for example `HLXK7:1:A:ACTIVITY`.
+**Id:** field `SCORE_ID`; for example `HLXK7:177:A:ACTIVITY`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SCORE_ID` | string | `HLXK7:1:A:ACTIVITY` | The protein, position, amino acid and assay, joined by colons (the assay in capitals). |
+| `SCORE_ID` | string | `HLXK7:177:A:ACTIVITY` | The protein, position, amino acid and assay, joined by colons (the assay in capitals). |
 | `PROTEIN` | string | `HLXK7` | The protein; opens PROT.; link to `protein` |
-| `POS` | integer | `1` | The position changed. |
-| `AA_REF` | string | `M` | The amino acid the protein has there (one letter). |
+| `POS` | integer | `177` | The position changed. |
+| `AA_REF` | string | `H` | The amino acid the protein has there (one letter). |
 | `AA` | string | `A` | The amino acid it was changed to; the same as AA_REF measures the unchanged protein. |
-| `MUTATION` | string | `M1A` | The change written as AA_REF, POS and AA. |
+| `MUTATION` | string | `H177A` | The change written as AA_REF, POS and AA. |
 | `ASSAY` | string | `activity` | What was measured. |
-| `SCORE` | number | `0.114` | The effect against the natural protein: negative hurts, positive helps, 0 no effect. |
-| `SE` | number | `0.135` | The standard error over the replicates. |
+| `SCORE` | number | `-3.2` | The effect against the natural protein: negative hurts, positive helps, 0 no effect. |
+| `SE` | number | `0.16` | The standard error over the replicates. |
 | `REPLICATES` | integer | `3` | How many replicate measurements went into it. (replicates) |
 
 Links: `PROTEIN` → `protein`.

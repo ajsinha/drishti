@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(properties = {"drishti.lenses=risk,world,market,trading", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
-        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../../config/bi", "drishti.tables.root=../../config/tables",
+        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../../config/bi", "drishti.tables.root=../../config/tables", "drishti.lenses-dir=../../config/lenses",
         "drishti.bi.query.store-dir=${drishti.test.dir}/lenses-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lenses-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc

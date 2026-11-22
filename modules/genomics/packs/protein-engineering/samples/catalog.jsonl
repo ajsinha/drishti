@@ -4,8 +4,8 @@
 {"kind":"residue","id":"HLXK7:1","title":"RESIDUE HLXK7:1","subtitle":"Residue"}
 {"kind":"residue-contact","id":"HLXK7:68-71","title":"CONTACT HLXK7:68-71","subtitle":"Residue contact"}
 {"kind":"residue-contact","id":"HLXK7:118-121","title":"CONTACT HLXK7:118-121","subtitle":"Residue contact"}
+{"kind":"dms-score","id":"HLXK7:177:A:ACTIVITY","title":"DMS HLXK7:177:A:ACTIVITY","subtitle":"Deep mutational scan score"}
 {"kind":"dms-score","id":"HLXK7:1:A:ACTIVITY","title":"DMS HLXK7:1:A:ACTIVITY","subtitle":"Deep mutational scan score"}
-{"kind":"dms-score","id":"HLXK7:1:V:ACTIVITY","title":"DMS HLXK7:1:V:ACTIVITY","subtitle":"Deep mutational scan score"}
 {"kind":"design","id":"DSG-HLXK7-R8-0901","title":"DESIGN DSG-HLXK7-R8-0901","subtitle":"Protein design"}
 {"kind":"design","id":"DSG-HLXK7-R1-0001","title":"DESIGN DSG-HLXK7-R1-0001","subtitle":"Protein design"}
 {"kind":"design-mutation","id":"DSG-HLXK7-R1-0001:164","title":"DMUT DSG-HLXK7-R1-0001:164","subtitle":"Design change"}
