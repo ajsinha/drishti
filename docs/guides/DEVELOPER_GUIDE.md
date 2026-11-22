@@ -171,7 +171,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `run-configs/` | The IntelliJ IDEA run configurations, and `drishti-console/run-configs/` the PyCharm ones: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
-| `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
+| `tools/lake/` | the lake commands (`lake build|publish|scan|status|demo|maintain|undo|delete`): thin front ends that configure and start Drishti Lake's loader and upkeep (Java by default, one Python path) and add Drishti's parts (the data-load signal, the BI-store stamp, the lake files); the loading rules, guards, archives and maintenance are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) |
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
@@ -600,7 +600,7 @@ Docker is not reachable:
 | `drishti-plugin-rabbitmq` `RabbitMqSourcePluginTest`, `RabbitMqOutageTest` | RabbitMQ |
 | `drishti-plugin-delta` `DeltaOnS3Test` | an S3-compatible store |
 
-`DeltaAfterMaintenanceTest` instead assumes `uv` is installed (it runs `tools/lake/maintain.py`) and is skipped otherwise. The Kafka
+`DeltaAfterMaintenanceTest` instead assumes `uv` is installed (it runs `drishti.py lake maintain`, Drishti Lake's upkeep) and is skipped otherwise. The Kafka
 tests use an embedded broker from `spring-kafka-test` and need no Docker. The tests never use a fixed port: Testcontainers and the
 in-test servers take free ones, so they run beside a Drishti, a PostgreSQL or a Kafka you already run.
 
@@ -617,7 +617,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 You should see `Uvicorn running on http://0.0.0.0:17480` (`server.host` is every interface by default; `DRISHTI_CONSOLE_HOST=127.0.0.1`
 for this machine only). `drishti-console/requirements.txt` holds FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest,
-`cryptography`, numpy, pandas, pyarrow and deltalake (the last two for `lake build` and `lake demo`, so the console's Python is also the
+`cryptography`, numpy, pandas, pyarrow and Drishti Lake's Python package (the last two for `lake build` and `lake demo`, so the console's Python is also the
 tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Without uv, `python3 -m venv drishti-console/.venv` and
 `drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
 

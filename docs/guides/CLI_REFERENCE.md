@@ -1704,7 +1704,7 @@ files, go in a folder beside the lake (never the system temp folder), removed wh
 **Archives.** An archive is read in place, its JSON Lines members in name order, by the rule every loader shares
 ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
 table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
-refused and named; unsafe names, links, nested archives and zip bombs are refused before a row is read. A reject names its member:
+refused and named; an archive that breaks Lake's archive rule is refused whole before a row is read ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)). A reject names its member:
 `trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes the same feeds (`trade_endur.2026-10-28.jsonl.zip`, or a tar
 of `trade_endur/<date>/` folders), and `tools/samplegen/load_rows.py --rows` a tar of lake rows, a `<table>/<YYYY-MM-DD>/` folder per table and date.
 
@@ -1854,58 +1854,15 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
     --kind pnl-vector --lake data/iceberg --format iceberg
 ```
 
-### 7.6 The two engines
+### 7.6 The two ways: Java (the default) and Python
 
-`--engine auto` (the default) uses **Drishti's own Java writer** when it finds the server's exec jar with the writer in it, and the
-Python `deltalake` package otherwise; the first line of the output says which ran and why. `--engine drishti` or
-`--engine deltalake` insists on one. A third, `--engine java`, runs the whole build, reading included, in the parallel lake
-loader, for Delta and Iceberg alike, only when you ask for it: the Python path stays the default (section 7.13).
-
-| | Drishti's writer (`drishti`) | `deltalake` (delta-rs) |
-|---|---|---|
-| Runs as | `java -jar drishti-server-<v>-exec.jar lake write --manifest M` (started by the builder) | the builder's own Python |
-| Needs | Java 21 and the server jar | `deltalake` and `pyarrow` (in the console's environment) |
-| Commits | **one** per table per run: the replaced files are removed and the new ones added in the same version, so a reader sees all of the load or none of it | one per batch; the first batch of a replaced date replaces it |
-| Where | local disk (Windows paths too, no `winutils.exe`) | local disk and object storage |
-| Heap / memory | `DRISHTI_LAKE_HEAP` (default `1g`) | the batch (`--batch-mb`) plus Arrow's copy |
-| Row groups and pages | `LAKE_PARQUET_ROW_GROUP_KB` (default `256`; `LAKE_PARQUET_ROW_GROUP_MB` also read) and `LAKE_PARQUET_PAGE_KB` (default `64`): a single entity's read decodes its row group, so small groups make first reads cheap (256 KB: 13 % more reads a second than 1 MB on 362,804 trades, 2026-10-18) | delta-rs defaults |
-| Flattened fields | the pack's `ingest.<kind>.flatten` (`NAME: LEGS[0].FIELD`): each a plain field of the document (an existing field is kept) and a promoted column. An existing table keeps its columns: delete it and load again to add them | the same (staged before either engine writes) |
-
-The same day through `deltalake`, into a second lake; then the table Drishti's writer made (one commit per run: versions 0 to 2 for
-the three runs above), read back with deltalake: the two engines write the same table.
-
-```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --key TRADE_ID \
-    --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain trading --engine deltalake
-engine: deltalake (the Python deltalake package)
-business date  PRODUCT_TYPE           rows
-2026-09-22     CallNot                  50
-2026-09-22     Cash                    723
-2026-09-22     ComFut                  883
-2026-09-22     ComSwap                1994
-2026-09-22     Commodity               757
-documents read: 4407, rows written: 4407, rejected: 0
-summary: lake2/_drishti-lake/runs/20261017T174401-1340285.json
-2026-10-17T17:44:02-04:00 lake-build ok exit=0 run=20261017T174401-1340285 domain=trading kind=trade engine=deltalake mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=0.828
-$ ls lake/trading/trade/_delta_log lake2/trading/trade/_delta_log
-lake/trading/trade/_delta_log:
-00000000000000000000.crc  00000000000000000000.json  00000000000000000001.crc  00000000000000000001.json  00000000000000000002.crc  00000000000000000002.json
-
-lake2/trading/trade/_delta_log:
-00000000000000000000.json  00000000000000000001.json  00000000000000000002.json  00000000000000000003.json  00000000000000000004.json
-$ drishti-console/.venv/bin/python -c "from deltalake import DeltaTable; t = DeltaTable('lake/trading/trade'); d = t.to_pyarrow_dataset(); \
-    print('version', t.version(), 'partitions', t.metadata().partition_columns, 'rows', d.count_rows()); print(d.schema)"
-version 2 partitions ['business_date', 'PRODUCT_TYPE'] rows 5169
-id: string
-doc: string
-business_date: date32[day]
-PRODUCT_TYPE: string
-COUNTERPARTY: string
-PORTFOLIO: string
-QUANTITY: double
-```
-
-(Read a table with `to_pyarrow_dataset()` as above.)
+A Delta table is created and filled by **Drishti Lake's loader**, which has two forms on one configuration: the parallel **Java** loader
+(the default: readers, parsers and writers on every core, one commit per business date, memory bounded; section 7.13) and Lake's **Python**
+loader (`drishti_lake`), the one Python path, for a small input on a machine without Java. `--engine auto` (the default) uses Java when the server's exec jar
+is found and says which ran and why in the first line of the output; `--engine java` insists on Java. Both write the same
+table, and both obey the same rules and guards (the business date of a file, replace and append, the future-date, zone and drop guards, one
+archive rule): they are written once, in Lake's [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md) and [PYTHON.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/PYTHON.md). The Delta protocol itself is
+Lake's ([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 ### 7.7 Exit codes, the lock, the log and the summary
 
@@ -2001,7 +1958,7 @@ last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 With `--pack DIR` the builder takes from the pack's `pack.yaml` what it declares: the domain and the promoted columns of its Delta
 connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, date and flattened fields of its `ingest:` block
 (written by `pack make` and `pack new`; the trading pack has `ingest.trade.key: TRADE_ID`, so `--key` may be left out, and
-`ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-two-engines)). Options on the command line win.
+`ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-two-ways-java-the-default-and-python)). Options on the command line win.
 
 ```yaml
 # modules/banking/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
@@ -2183,15 +2140,14 @@ verify, the Python one with uv).
 
 ### 7.13 The parallel lake loader
 
-For a load too large for the Python path (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
+The Java loader is the default; it is made for loads the Python path cannot carry (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
 **parallel lake loader** (module `lake-load`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
 documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
 the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load). `tools/lake/javaload.py` is `lake build`'s side of it.
 
-`tools/lake/deltaread.py` is how the Python tools read a Delta table's rows: by delta-rs, or by the server's own Delta Kernel reader for
-a table delta-rs would read only in part (column mapping, deletion vectors, v2 checkpoints), never a half-read
+The Python tools read a Delta table's rows through Drishti Lake's read API ([READ.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/READ.md)), whatever the table's features.
 ([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 **Through lake build** (the lock, the run log, the summary, the signal as always):
@@ -2240,7 +2196,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 |---|---|---|
 | `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
 | `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
-| `source.archive.max-mb`, `max-ratio`, `max-members` | `LAKE_ARCHIVE_MAX_MB` (102,400), `_MAX_RATIO` (200), `_MAX_MEMBERS` (100,000) | the zip-bomb caps: an archive's declared and expanded sizes at most this many MB and this many times its own size (1 MB always allowed), at most this many entries |
+| `source.archive.max-mb`, `max-ratio`, `max-members` | `lake.archive.*` | the archive caps; the rule and the defaults are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)) |
 | `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
 | `datasets` | none | the datasets an archive's folders may hold, each loaded into its own table `<lake>/<domain>/<name>` (its `target.kind` the name): a list (`[trade, position]`) or a mapping of name to its own `source:`, `target:` and `rejects:` keys over the file's. A folder (or a folderless archive's name) not listed is refused, every one named; without `datasets:` an archive's folders must all be the one table's. Each dataset's summary, manifest, progress and rejects files get its name (`summary-trade.json`); `report.summary` is the run's, every dataset in it; the run prints each dataset's rows, files and version |
 | `source.recursive` | `false` | a folder's subfolders too |
@@ -3981,8 +3937,7 @@ python tools/drishti.py data load --store files /tmp/demo-files --trades 1000 --
 its name, the business today), never the row's own `date`, which it only counts when it differs: the load rules of
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), the same as `lake build`'s.
 
-**Scheduling.** The loaders guard dates (a tar folder dated in the future refuses the archive; a business date after tomorrow is not loaded and the run fails naming it), replace each day
-they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
+**Scheduling.** The loaders apply Lake's guards ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load): future dates, the zone, the drop share) and replace each day they reach in one step, so a nightly cron entry
 that re-runs is safe; the details are in `tools/storeload.py` and [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data). The connectors.
 guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors).
 
