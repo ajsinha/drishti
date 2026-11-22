@@ -222,7 +222,7 @@ class EngineRegistryTest {
         assertThat(r.restartNeeded("memory-lake")).contains("by a.sinha");
         assertThat(r.state("memory-lake")).isEqualTo(EngineRegistry.State.OFF);
         assertThat(Files.readString(dir.resolve("engines/memory-lake.yaml"))).contains("enabled: ${DRISHTI_MEMORY_LAKE_ENABLED:true}")
-                .contains("reason: \"news feed must not touch disk\"").contains("stores: {}");
+                .contains("reason: \"news feed must not touch disk\"").doesNotContain("stores:");
     }
 
     @Test
