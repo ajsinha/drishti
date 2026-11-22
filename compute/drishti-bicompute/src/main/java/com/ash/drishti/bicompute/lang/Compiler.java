@@ -197,10 +197,6 @@ public final class Compiler {
         Lowered inner = measure(c.args().get(0));
         List<String> by = c.arg("by") == null ? List.of() : new ArrayList<>(fieldSet(c.arg("by")));
         boolean ranks = fn.endsWith("rank");
-        if (ranks && c.args().size() > 1) {   // the direction is named: a word by place was ignored, never read (rank(x, 'sideways'))
-            throw new IllegalArgumentException(fn + " takes the measure by place and its direction by name: " + fn + "(measure, desc = true | false, "
-                    + "by = [alias.COLUMN])");
-        }
         Integer n = ranks ? null : c.args().get(1) instanceof Expr.Lit l && l.value() instanceof Number x ? x.intValue() : null;
         String order = ranks ? null : field(c.args().get(2));
         boolean desc = !(c.arg("desc") instanceof Expr.Lit l && Boolean.FALSE.equals(l.value()));
