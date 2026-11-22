@@ -50,19 +50,19 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
  * table longer than that says so above itself, in the preview's {@code cut} and in the Excel file. QA2-02: the tokens work in a text band and a visual's title
  * as in the header, and an unknown token is refused (DRS-9038).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/statement-rows", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/stmt-rows-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/stmt-rows-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/stmt-rows-folder", "drishti.tables.root=${drishti.test.dir}/stmt-rows-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-rows-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/stmt-rows-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.rows-lake.plugin=file", "drishti.sources.connectors.rows-lake.kinds[0]=trade",
-        "drishti.sources.connectors.rows-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.rows-lake.settings.layout.trade.columns=TRADE_ID,DESK,NOTIONAL,TRADE_DATE",
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false",
         "drishti.distribution.statements.max-rows=6000", "drishti.distribution.statements.max-pages=2000", "drishti.distribution.export.timeout=120s"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StatementRowsTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("statement-rows");
+    }
 
     static final String DAY = "2026-09-30";
     static final int TRADES = 6_500;
@@ -92,7 +92,7 @@ class StatementRowsTest {
         Path f = root.resolve("lake").resolve(DAY).resolve("trade.jsonl");
         Files.createDirectories(f.getParent());
         Files.write(f, lines, StandardCharsets.UTF_8);
-        r.add("drishti.sources.connectors.rows-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.rows-lake.root", () -> root.resolve("lake").toString());
     }
 
     static final String STATEMENT = """

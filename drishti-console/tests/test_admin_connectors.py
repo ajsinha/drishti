@@ -18,7 +18,7 @@ a version travels as If-Match and confirm=true only when the caller sent it."""
 from core.backend import BackendError
 
 LIST = {
-    "directory": "/srv/drishti/config/connectors", "watch": "WATCHING", "misnamed": ["Upper.yaml"], "fileProblems": {}, "deprecated": ["legacy"],
+    "directory": "/srv/drishti/config/connectors", "watch": "WATCHING", "misnamed": ["Upper.yaml"], "fileProblems": {},
     "knownKinds": ["trade", "item"],
     "connectors": [
         {"name": "trading-lake", "origin": "file", "plugin": "delta", "kinds": ["trade"], "description": "Trading lake", "enabled": True, "state": "RUNNING",
@@ -50,7 +50,7 @@ def test_the_page_lists_connectors_with_origin_status_and_users(client, backend,
     page = client.get("/admin/connectors").text
     for text in ("Connectors", "trading-lake", "Trading lake", "running", "failed", "disabled", "data-new", "data-edit", "Reset to pack default",
                  "application", "legacy", "Upper.yaml", "WATCHING", "drishti_admin-connectors.js", "drishti_admin-connectors.css", "/help/connector-files",
-                 'data-kinds="trade,item"', "/srv/drishti/config/connectors", "deprecated", 'role="tablist"', 'role="tab"', 'aria-selected="true"', 'aria-labelledby="connTitle"',
+                 'data-kinds="trade,item"', "/srv/drishti/config/connectors", 'role="tablist"', 'role="tab"', 'aria-selected="true"', 'aria-labelledby="connTitle"',
                  "Filter by name", "Any status", "Disable trading-lake", "Enable off-one", "Uninstall off-one"):
         assert text in page, text
     assert 'aria-current="page"' in page.split('href="/admin/connectors"')[1][:60]

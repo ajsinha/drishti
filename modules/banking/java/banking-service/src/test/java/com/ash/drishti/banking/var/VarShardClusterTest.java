@@ -107,12 +107,13 @@ class VarShardClusterTest {
     static void connectors(Path node, String plugin, Path lake) throws Exception {
         Path c = Files.createDirectories(node.resolve("connectors"));
         Files.writeString(c.resolve("risk-lake.yaml"), riskLake(plugin, lake, node));
+        Files.writeString(c.resolve("finance-lake.yaml"), "enabled: false\n");
+        Files.writeString(c.resolve("var-positions.yaml"), "plugin: var-positions\nkinds:\n  - position\n");
     }
 
     static List<String> common(Path node) {
         List<String> a = new ArrayList<>(List.of("--drishti.packs.enabled=finance", "--drishti.sources.plugins.demo.enabled=false",
-                "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.var-positions.plugin=var-positions",
-                "--drishti.sources.connectors.var-positions.kinds[0]=position", "--drishti.sources.routes.pnl-vector=risk-lake",
+                "--drishti.sources.routes.pnl-vector=risk-lake",
                 "--drishti.sources.routes.position=var-positions", "--drishti.sources.routes.scenario-set=risk-lake",
                 "--drishti.sources.routes.var-limit=risk-lake", "--drishti.sources.routes.scenario-pv=risk-lake",
                 "--drishti.sources.routes.fx-scenario=risk-lake", "--drishti.sources.routes.fx-spot=risk-lake",

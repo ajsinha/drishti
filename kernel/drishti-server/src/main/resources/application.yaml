@@ -1019,9 +1019,9 @@ drishti:
     database-password: ${db.identity.password:${DRISHTI_IDENTITY_DB_PASSWORD:}}  # its password, from the environment
     # database-pool-size:           # unset: drishti.db.pool.size (20) on PostgreSQL; SQLite (embedded, one writer) keeps 8
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
-    # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
+    # The files of the file user store and the file audit log (FileUserStore, FileAuditLog); the server keeps users in the identity database and the audit trail in the content store.
     users-file: ${DRISHTI_USERS_FILE:${drishti.data.dir}/identity/users.json}
-    audit-file: ${DRISHTI_AUDIT_FILE:${drishti.data.dir}/identity/audit.jsonl}  # the pre-1.10 audit file, imported into the database once
+    audit-file: ${DRISHTI_AUDIT_FILE:${drishti.data.dir}/identity/audit.jsonl}  # the file audit log's file
     iterations: 240000              # PBKDF2-HMAC-SHA256
     min-password-length: 10  # the shortest password accepted
     max-failed-attempts: 5  # failed sign-ins before an account locks
@@ -1063,7 +1063,7 @@ drishti:
     # With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live.
     enabled: ${DRISHTI_SUTRA_REVIEW:true}
     four-eyes: ${DRISHTI_SUTRA_FOUR_EYES:true}   # nobody approves their own proposal (when security is on)
-    # where proposals are kept with store: file; with content (the default) the folder is imported once and left in place
+    # where proposals are kept with store: file; with content (the default) they are in the content store
     dir: ${DRISHTI_GOVERNANCE_DIR:${drishti.data.dir}/governance}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
@@ -1127,7 +1127,7 @@ drishti:
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
       store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/DATA_ARCHITECTURE.md), or, one node only: file (dir below) or jpa (the identity database)
-      dir: ${drishti.data.dir}/designs   # the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-<time>
+      dir: ${drishti.data.dir}/designs   # the file store's folder (store: file)
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
       max-mb: 25                    # megabytes of samples, Sutra, notes and tests in one design

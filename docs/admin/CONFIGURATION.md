@@ -649,14 +649,14 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
 | `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `<data>/collab` | Where the file store keeps shares and inbox rows (`drishti.collab.store: file`), and exports. |
-| (no variable) | `drishti.collab.store` | `content` | Where threads, notes, shares, the inbox, the outbox, holds and seals are kept: `content` (the content store, every node of a cluster; the database tables and `drishti.collab.dir` files are imported once), or one node only `jpa` (the identity database) or `file`. [DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches). |
-| (no variable) | `drishti.audit.store` | `content` | The audit trail: `content` (per-node day segments in the content store, merged when read; `drishti_audit` imported once) or `jpa` (the identity database, one node). |
-| (no variable) | `drishti.embed.store` | `content` | Embed applications: `content` (`admin/embed-apps/`, `drishti_embed_app` imported once) or `jpa`. |
+| (no variable) | `drishti.collab.store` | `content` | Where threads, notes, shares, the inbox, the outbox, holds and seals are kept: `content` (the content store, every node of a cluster), or one node only `jpa` (the identity database) or `file`. [DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches). |
+| (no variable) | `drishti.audit.store` | `content` | The audit trail: `content` (per-node day segments in the content store, merged when read) or `jpa` (the identity database, one node). |
+| (no variable) | `drishti.embed.store` | `content` | Embed applications: `content` (`admin/embed-apps/`) or `jpa`. |
 | (no variable) | `drishti.packs.state-store` | `content` | Packs switched off in Admin: `content` (`admin/pack-state.json`, `drishti_pack_state` imported once) or `jpa`. |
 | (no variable) | `drishti.loads.store` | `content` | Load history: `content` (`loads/<pack>.json`, each pack's `drishti.loads.dir` file imported on first read) or `file` (one node). |
-| (no variable) | `drishti.loads.config-store` | `content` | Per-pack data loads overrides saved through Admin: `content` (`loads/config/<pack>.yaml` in the content store, every node; the `drishti.loads.dir/config` files imported once and kept) or `file` (one node). |
+| (no variable) | `drishti.loads.config-store` | `content` | Per-pack data loads overrides saved through Admin: `content` (`loads/config/<pack>.yaml` in the content store, every node) or `file` (one node). |
 | (no variable) | `drishti.store.watch-ms` | `2000` | How often each node asks the content store what changed, to apply another node's shared edits (connectors, load overrides, pack state). |
-| (no variable) | `drishti.governance.store` | `content` | Sutra proposals: `content` (`governance/proposals/`, the `drishti.governance.dir` folder imported once) or `file` (one node). |
+| (no variable) | `drishti.governance.store` | `content` | Sutra proposals: `content` (`governance/proposals/`) or `file` (one node). |
 | `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email. |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | Also scrub exact copies of a masked value inside other text of the same document. |
@@ -711,8 +711,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
 | `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | Its password. |
-| `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `<data>/identity/users.json` | The pre-1.10 users file, imported once into an empty database. |
-| `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `<data>/identity/audit.jsonl` | The pre-1.10 audit file, imported once. |
+| `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `<data>/identity/users.json` | The file user store's file (the server keeps users in the identity database). |
+| `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `<data>/identity/audit.jsonl` | The file audit log's file (the server keeps the audit trail in the content store). |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | Force a password change for newly created users. |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | Force a password change after an administrator reset. |
 | `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `true` | Create the development admin on first start with no users; `false` for production. |
@@ -726,13 +726,13 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | (property only) | `drishti.views.selection-ttl` | `PT30M` | How long a Sutra Next selection's token lives unused (renewed on each use); held in the issuing node's memory (RACHANA_REFERENCE.md 7). |
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
-| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
+| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) they are in the content store. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `<data>` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `<config>/store/store.yaml` | The content store's settings file ([The content store](#the-content-store-configstorestoreyaml)); a missing file means the filesystem store under the data folder. |
 | `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `<config>/edit/edit.yaml` | Write-back's settings file ([Write-back](#write-back-configedit)); its siblings `lanes.yaml`, `policy.yaml`, `retention.yaml` are read from the same folder; a missing file means write-back off. |
 | `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | The filesystem content store's root, over the file's `filesystem.root` (empty: the file's, else `<data folder>/fstore`). |
-| `DRISHTI_BI_STORE` | `drishti.bi.store` | `content` | Where BI workspaces, items, versions, revisions, events, marks, views and settings live: `content` (the content store, every node of a cluster; the identity database's `drishti_bi_*` rows are imported once) or `jpa` (this node's identity database only). See DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9. |
-| `DRISHTI_BI_RUNS_STORE` | `drishti.bi.runs.store` | `content` | Where BI runs, their shares, schedules, results and snapshots live: `content` (every node reads them; leases are compare-and-sets in the store; the `drishti_bi_run*` rows and `<data>/bi-runs` are imported once) or `local` (this node's identity database and `store.dir`). |
+| `DRISHTI_BI_STORE` | `drishti.bi.store` | `content` | Where BI workspaces, items, versions, revisions, events, marks, views and settings live: `content` (the content store, every node of a cluster) or `jpa` (this node's identity database only). See DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9. |
+| `DRISHTI_BI_RUNS_STORE` | `drishti.bi.runs.store` | `content` | Where BI runs, their shares, schedules, results and snapshots live: `content` (every node reads them; leases are compare-and-sets in the store) or `local` (this node's identity database and `store.dir`). |
 | `DRISHTI_BI_STORE_LIST_TTL` | `drishti.bi.store-list-ttl` | `1s` | How old the per-node snapshot behind BI and run listings may be (a single item or run is always read fresh; this node's writes drop it at once). |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | The multi-day type-ahead index's segment files, one folder per connector; empty means `<data dir>/index` (`<data>/index`). See [`drishti.index`](#drishtiindex--the-multi-day-type-ahead-index). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `<config>/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
@@ -1353,7 +1353,7 @@ servers). The environment variables of this section are in the [environment vari
 | `seed-admin` | `true` (`DRISHTI_SEED_ADMIN`) | On first start with no users, create the development administrator. `false` in production. |
 | `seed-username` / `seed-password` | `drishti-dev-admin` / the built-in development password (`DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD`) | Its sign-in. Change the password at once; the console warns until you do. |
 | `seed-roles` / `seed-display-name` | `[admin]` / `Drishti dev admin` | Its roles and the name shown for it. |
-| `users-file` / `audit-file` / `preferences-dir` | `<data>/identity/users.json` / `<data>/identity/audit.jsonl` / `<data>/identity/preferences` | Files of an older identity store, imported once into an empty database and renamed `*.imported`. |
+| `users-file` / `audit-file` / `preferences-dir` | `<data>/identity/users.json` / `<data>/identity/audit.jsonl` / `<data>/identity/preferences` | The file stores' files (the file user store and file audit log); the server keeps users in the identity database. |
 
 ### `drishti.security` — tokens, roles, field masks
 
@@ -1654,7 +1654,7 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | Key | Default | Meaning |
 |---|---|---|
 | `store` | `content` | `content` (default): the content store ([below](#the-content-store-configstorestoreyaml)), `designs/<user>/<id>/design.json` and `samples/`, reached by every node of a cluster; a save changed by another node meanwhile answers `409 DRS-5057`. One node only: `file` (`data/designs/<user>/<id>/design.json` and `samples/`, readable by the server's account only) or `jpa` (the identity database, `drishti_design`, `drishti_design_sample`). |
-| `dir` | `<data>/designs` | The old file store's directory. With `content`, what it holds is imported once at start and the folder renamed `designs-imported-<time>` (kept; delete it when you are happy). |
+| `dir` | `<data>/designs` | The file store's directory (`store: file`). |
 | `max-per-user` | `50` | Named Designs one user keeps. Scratch (unnamed) Designs do not count toward it. |
 | `max-samples` | `50` | Samples in one Design. |
 | `max-mb` | `25` | Megabytes in one Design: its sample documents, Sutra, notes and tests (a reference to a stored entity counts nothing). |
@@ -2602,11 +2602,9 @@ drishti:
 
 A connector's settings go in its **connector file**, `config/connectors/<name>.yaml`, under `settings:`
 ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); each plugin's generated README lists every setting it reads. A plugin running
-under its own name (the demo plugin) takes them under `drishti.sources.plugins.<plugin>.settings`. Named connectors under
-`drishti.sources.connectors.<name>.settings` in `application.yaml` still start but are **deprecated**: the server logs a warning naming the
-file to write, and they override a file setting by setting until moved
-([../guides/DATA_GUIDE.md section 9.11](../guides/DATA_GUIDE.md#911-where-connectors-are-defined)). The
-tables below use the same keys either way. Every plugin takes `source-name`, the name shown
+under its own name (the demo plugin) takes them under `drishti.sources.plugins.<plugin>.settings`. A named connector is never set by a property (a `drishti.sources.connectors.<name>.*` property refuses the start; see
+[../guides/DATA_GUIDE.md section 9.11](../guides/DATA_GUIDE.md#911-where-connectors-are-defined)). The
+tables below use the same keys under `settings:`. Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
 described in [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
 
@@ -2661,7 +2659,7 @@ document explains how it reads, its layout, scale and limits.
 | <a id="kafka--a-live-stream"></a>`kafka` | a live stream; a null value or `"doc": null` deletes | [README, Settings](../../plugins/drishti-plugin-kafka/README.md#settings) | [KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md) (security: [section 11](../../plugins/drishti-plugin-kafka/README.md#security-tls-sasl-and-confluent)) |
 | <a id="activemq-and-rabbitmq--message-queues"></a>`activemq`, `rabbitmq` | message queues; the latest document of every entity in a local RocksDB state store | [README, Settings](../../plugins/drishti-plugin-activemq/README.md#settings), [README, Settings](../../plugins/drishti-plugin-rabbitmq/README.md#settings) | [ACTIVEMQ_CONNECTOR.md](../../plugins/drishti-plugin-activemq/README.md), [RABBITMQ_CONNECTOR.md](../../plugins/drishti-plugin-rabbitmq/README.md) |
 | <a id="s3--documents-in-s3-or-an-s3-compatible-store"></a>`s3` | a JSON object per entity in S3 or an S3-compatible store | [README, Settings](../../plugins/drishti-plugin-s3/README.md#settings) | [S3_CONNECTOR.md](../../plugins/drishti-plugin-s3/README.md) |
-| <a id="iceberg--apache-iceberg"></a>`iceberg` | Iceberg tables in Drishti's layout, path-based or a REST catalog | [README, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) | [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (engines: [section 17](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches)) |
+| <a id="iceberg--apache-iceberg"></a>`iceberg` | Iceberg tables in Drishti's layout, path-based or a REST catalog | [README, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) | [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (engines: [section 17](../../plugins/drishti-plugin-iceberg/README.md#the-reader-and-caches)) |
 | <a id="iceberg-external--iceberg-tables-drishti-does-not-write"></a>`iceberg-external` | Iceberg tables other engines write, read-only | [README, Settings](../../plugins/drishti-plugin-iceberg-external/README.md#settings) | [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md) |
 | <a id="duckdb--one-embedded-duckdb-file"></a>`duckdb` | every data domain in one DuckDB file; retention is the loader's `--keep-days` | [README, Settings](../../plugins/drishti-plugin-duckdb/README.md#settings) | [DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md) |
 | <a id="mongodb"></a>`mongodb` | a document per entity per business day, a collection per domain | [README, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) | [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md) |
@@ -3807,8 +3805,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.identity.database-user` | string | empty | `DRISHTI_IDENTITY_DB_USER` | server | the identity database's user (PostgreSQL) | restart |  | admin |
 | `drishti.identity.database-password` | string | empty | `DRISHTI_IDENTITY_DB_PASSWORD` | server | its password, from the environment (secret) | restart |  | admin |
 | `drishti.identity.refresh-seconds` | integer | `15` |  | server | servers sharing one database see each other's role and pack changes this soon | restart |  | admin |
-| `drishti.identity.users-file` | string | `<data>/identity/users.json` | `DRISHTI_USERS_FILE` | server | The files of releases before 1.10, imported once into an empty database and renamed \*.imported. | restart |  | admin |
-| `drishti.identity.audit-file` | string | `<data>/identity/audit.jsonl` | `DRISHTI_AUDIT_FILE` | server | the pre-1.10 audit file, imported into the database once | restart |  | admin |
+| `drishti.identity.users-file` | string | `<data>/identity/users.json` | `DRISHTI_USERS_FILE` | server | The files of the file user store and the file audit log (FileUserStore, FileAuditLog); the server keeps users in the identity database and the audit trail in the content store. | restart |  | admin |
+| `drishti.identity.audit-file` | string | `<data>/identity/audit.jsonl` | `DRISHTI_AUDIT_FILE` | server | the file audit log's file | restart |  | admin |
 | `drishti.identity.iterations` | integer | `240000` |  | server | PBKDF2-HMAC-SHA256 | restart |  | admin |
 | `drishti.identity.min-password-length` | integer | `10` |  | server | the shortest password accepted | restart |  | admin |
 | `drishti.identity.max-failed-attempts` | integer | `5` |  | server | failed sign-ins before an account locks | restart |  | admin |
@@ -3847,7 +3845,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|---|
 | `drishti.governance.enabled` | boolean | `true` | `DRISHTI_SUTRA_REVIEW` | server | With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live. | restart |  | admin |
 | `drishti.governance.four-eyes` | boolean | `true` | `DRISHTI_SUTRA_FOUR_EYES` | server | nobody approves their own proposal (when security is on) | restart |  | admin |
-| `drishti.governance.dir` | string | `<data>/governance` | `DRISHTI_GOVERNANCE_DIR` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place | restart |  | admin |
+| `drishti.governance.dir` | string | `<data>/governance` | `DRISHTI_GOVERNANCE_DIR` | server | where proposals are kept with store: file; with content (the default) they are in the content store | restart |  | admin |
 
 #### `drishti.engine`
 
@@ -3914,7 +3912,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.builder.fraction-names` | list | `[utilisation, utilization, usage, used, ratio, share, coverage, fill, pct, pe...` |  | server | words in a 0..1 number's name that make it a gauge (of 1) | restart |  | admin |
 | `drishti.builder.code-names` | list | `[year, version, seq, sequence, no, num, number, code, zip, postcode]` |  | server | words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount) | restart |  | admin |
 | `drishti.builder.designs.store` | string | `content` |  | server | content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/DATA\_ARCHITECTURE.md), or, one node only: file (dir below) or jpa (the identity database) | restart |  | admin |
-| `drishti.builder.designs.dir` | string | `<data>/designs` |  | server | the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-&lt;time&gt; | restart |  | admin |
+| `drishti.builder.designs.dir` | string | `<data>/designs` |  | server | the file store's folder (store: file) | restart |  | admin |
 | `drishti.builder.designs.max-per-user` | integer | `50` |  | server | named designs one user keeps (scratch ones: max-scratch) | restart |  | admin |
 | `drishti.builder.designs.max-samples` | integer | `50` |  | server | samples in one design | restart |  | admin |
 | `drishti.builder.designs.max-mb` | integer | `25` |  | server | megabytes of samples, Sutra, notes and tests in one design | restart |  | expert |
@@ -4337,25 +4335,13 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.engines.sensitivities.enabled` | boolean | `true` | `DRISHTI_SENSITIVITIES_ENABLED` | server (each node its own) | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) | live |  | admin |
 | `drishti.engines.sensitivities.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
 
-#### `drishti.sensitivities`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.sensitivities.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  | admin |
-| `drishti.sensitivities.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  | admin |
-| `drishti.sensitivities.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
-
-#### `drishti.engines.frtb-sa`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.engines.frtb-sa.enabled` | boolean | `true` | `DRISHTI_FRTB_ENABLED` | server (each node its own) | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) | live |  | admin |
-| `drishti.engines.frtb-sa.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
-
 #### `drishti.frtb`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
+| `drishti.frtb.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  | admin |
+| `drishti.frtb.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  | admin |
+| `drishti.frtb.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
 | `drishti.frtb.parameters-dir` | string | `<module:banking>/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
@@ -4363,6 +4349,13 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.frtb.max-factors` | integer | `2000` |  | server (each node its own) | the most factors one playground grid and workbook holds | restart |  | admin |
 | `drishti.frtb.recipes-dir` | string | `<data>/frtb/recipes` |  | server (each node its own) | saved playground recipes (PLAY FRTB RUN &lt;id&gt;) | restart |  | admin |
 | `drishti.frtb.playground-template` | string | `""` |  | server (each node its own) | a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/ | restart |  | admin |
+
+#### `drishti.engines.frtb-sa`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.engines.frtb-sa.enabled` | boolean | `true` | `DRISHTI_FRTB_ENABLED` | server (each node its own) | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) | live |  | admin |
+| `drishti.engines.frtb-sa.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
 
 #### `drishti.engines.simm`
 
@@ -6472,7 +6465,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | server | turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs) |
 | `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI\_GUIDE.md) |
 | `DRISHTI_ASYNC_TIMEOUT` | `spring.mvc.async.request-timeout` | `30m` | server | how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete |
-| `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `<data>/identity/audit.jsonl` | server | the pre-1.10 audit file, imported into the database once |
+| `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `<data>/identity/audit.jsonl` | server | the file audit log's file |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | console | off for local development |
 | `DRISHTI_BACKEND_DISCOVER` | `backend.discover` | `true` | console | pull the cluster's member list from the server in use, and keep it (&lt;console data dir&gt;/net/servers.json) |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | console | where the server is (one server; backend.urls for several) |
@@ -6577,7 +6570,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
 | `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `<module:banking>/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
-| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
+| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | server | where proposals are kept with store: file; with content (the default) they are in the content store |
 | `DRISHTI_HAMMER_TOKEN` | the Explain hammer's bearer token | `(none)` | tools | The token tools/drillkit/explain\_hammer.py sends to a server with sign-in on (else its --token) |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
 | `DRISHTI_HOME` | the install folder (drishti.home) | `the folder holding tools/drishti.py` | tools | THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in &lt;home&gt;/lib): --home, else DRISHTI\_HOME, else drishti.home of --settings, else the tools' own folder; a value that is not the folder the tools come from is refused (tools/javacmd.py find\_home) |
@@ -6747,7 +6740,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `<data>/uninstalled` | server | an uninstall MOVES the artifact here; nothing is deleted |
 | `DRISHTI_UNINSTALLED_KEEP` | `drishti.admin.uninstalled-keep` | `30d` | server | archives older than this are removed, once a day; 0 keeps them for ever |
 | `DRISHTI_USER` | `ui.user` | `ash` | console | acting user until sign-in lands |
-| `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `<data>/identity/users.json` | server | The files of releases before 1.10, imported once into an empty database and renamed \*.imported. |
+| `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `<data>/identity/users.json` | server | The files of the file user store and the file audit log (FileUserStore, FileAuditLog); the server keeps users in the identity database and the audit trail in the content store. |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | us-equities benchmark | `SPY` | packs | The index an equity's beta is measured against |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | us-equities-prices enabled | `false` | packs | The us-equities pack's live prices (internal use only) |
 | `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` (engine) | `0.99` | engine | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) |

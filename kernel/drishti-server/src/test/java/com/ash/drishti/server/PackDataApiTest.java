@@ -34,13 +34,15 @@ import org.springframework.test.web.servlet.MockMvc;
  * test's own folder: a JSON-lines upload is written under its business date, and a bad date, a kind the pack does not load, an unknown pack
  * and a file with no ids are answered with a client error (a file's bad rows are counted, never a 500).
  */
-@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-data/packs", "drishti.packs.installed-dir=${drishti.test.dir}/pack-data/installed",
-        "drishti.packs.settings-dir=${drishti.test.dir}/pack-data/settings", "drishti.sources.connectors-dir=${drishti.test.dir}/pack-data/connectors",
-        "drishti.packs.overlay=${drishti.test.dir}/pack-data/added.yaml", "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-data/history.jsonl",
-        "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=datapack",
-        "drishti.sources.connectors.data-store.plugin=file", "drishti.sources.connectors.data-store.settings.root=${drishti.test.dir}/pack-data/files"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/pack-data-api", "drishti.packs.dir=${drishti.test.dir}/pack-data/packs", "drishti.packs.installed-dir=${drishti.test.dir}/pack-data/installed",
+        "drishti.packs.settings-dir=${drishti.test.dir}/pack-data/settings", "drishti.packs.overlay=${drishti.test.dir}/pack-data/added.yaml", "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-data/history.jsonl",
+        "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=datapack"})
 @AutoConfigureMockMvc
 class PackDataApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("pack-data-api");
+    }
 
     static final Path ROOT;
 

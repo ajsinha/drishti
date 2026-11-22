@@ -282,7 +282,7 @@ def read_table(path: pathlib.Path, table: str | None = None) -> dict[str, list[P
     for f in files:
         low = f.name.lower()
         if filedate.is_tar(f.name):
-            import archives
+            from drishti_lake import archives
             plan = archives.plan(f, layout="feed")
             for t, members in plan.datasets.items():
                 if table is None or t == table.lower():

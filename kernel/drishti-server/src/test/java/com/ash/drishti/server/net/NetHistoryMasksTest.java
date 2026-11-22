@@ -39,8 +39,12 @@ import org.junit.jupiter.api.Test;
 class NetHistoryMasksTest {
 
     static NetNodes cluster;
-    static final String LAKE = "--drishti.sources.connectors.finance-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake";
-    static final String DOMAIN = "--drishti.sources.connectors.finance-lake.settings.domain=desk";
+    /** The finance lake's override of a node holding the test lake (its desk domain), and of a node holding none. */
+    static void lake(NetNodes cluster, String node, Object root) {
+        cluster.connector(node, "finance-lake", "settings:", "  root: \"" + root + "\"", "  domain: desk");
+    }
+
+    static final String TEST_LAKE = "../../plugins/drishti-plugin-delta/src/test/resources/lake";
     static final String MASK = "--drishti.security.redact=mtm";
     static final ObjectMapper JSON = new ObjectMapper();
 
@@ -54,10 +58,12 @@ class NetHistoryMasksTest {
         NetNodes.folder(root.resolve("c/net"), p[2], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
         String off = "--drishti.sources.plugins.demo.enabled=false";
-        String none = "--drishti.sources.connectors.finance-lake.settings.root=" + empty;
-        cluster.start("a", p[0], NetForwardTest.secure(LAKE, DOMAIN, off, MASK));
-        cluster.start("b", p[1], NetForwardTest.secure(none, DOMAIN, off, MASK));
-        cluster.start("c", p[2], NetForwardTest.secure(none, DOMAIN, off, MASK));
+        lake(cluster, "a", TEST_LAKE);
+        lake(cluster, "b", empty);
+        lake(cluster, "c", empty);
+        cluster.start("a", p[0], NetForwardTest.secure(off, MASK));
+        cluster.start("b", p[1], NetForwardTest.secure(off, MASK));
+        cluster.start("c", p[2], NetForwardTest.secure(off, MASK));
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b", "c").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table().nodes().size() == 3)))
                 .as("every node has every digest").isTrue();
     }

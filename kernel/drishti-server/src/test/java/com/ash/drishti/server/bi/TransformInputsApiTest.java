@@ -53,19 +53,19 @@ import org.springframework.test.web.servlet.ResultActions;
  * reader's rows (a role that may not read the kind gets none of it), filtered and cut; a bad input is refused with its path; a Python dataset whose input is a kind is checked
  * and, on the server's compute pool python where it may run, run as the reader; its lineage reaches the kind and the connector.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/transform-inputs-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/tin-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/tin-api-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/tin-api-folder", "drishti.tables.root=${drishti.test.dir}/tin-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/tin-api-store/${random.uuid}",
-        "drishti.sources.connectors-dir=${drishti.test.dir}/tin-api-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.tin-lake.plugin=file", "drishti.sources.connectors.tin-lake.kinds[0]=trade",
-        "drishti.sources.connectors.tin-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.tin-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate"})
+        "drishti.sources.plugins.file.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransformInputsApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("transform-inputs-api");
+    }
 
     static final String DAY = "2026-10-08";
     static Path root;
@@ -88,7 +88,7 @@ class TransformInputsApiTest {
         Path f = root.resolve("lake").resolve(DAY).resolve("trade.jsonl");
         Files.createDirectories(f.getParent());
         Files.write(f, lines, StandardCharsets.UTF_8);
-        r.add("drishti.sources.connectors.tin-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.tin-lake.root", () -> root.resolve("lake").toString());
     }
 
     static {

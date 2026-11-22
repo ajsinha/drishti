@@ -55,23 +55,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * VaR engine's own answer, the export recalculated by headless LibreOffice against it to the cent, the ids, the limits and the refusals,
  * the estimate and the empty template.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit", "drishti.sources.connectors.risk-lake.kinds[3]=scenario-pv",
-        "drishti.sources.connectors.risk-lake.kinds[4]=fx-scenario",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TRADE_STATUS,"
-                + "MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
-        "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.vectors=SCENARIO_PV",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-playground-api", "drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK",
         "drishti.var.hierarchies.MGMT.level-names=desk", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -89,6 +74,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @Import(PinnedBusinessDate.class)
 class VarPlaygroundApiTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("var-playground-api");
+    }
+
     static final LocalDate DAY = VarLakeFixture.DAY;
     static final int N = 509;
     static Path lake;
@@ -97,7 +86,7 @@ class VarPlaygroundApiTest {
     static void lake(DynamicPropertyRegistry r) throws Exception {
         lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-playground-lake-"+ System.nanoTime())).toAbsolutePath();
         write(lake);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
     }
 

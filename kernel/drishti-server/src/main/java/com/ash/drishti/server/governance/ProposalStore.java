@@ -45,7 +45,6 @@ import java.util.stream.Stream;
  * <p>With a content store ({@code drishti.governance.store=content}, the default; DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9) the proposals are
  * {@code governance/proposals/P-NNNNNN.json} there instead, numbered from the cluster-wide sequence {@code governance/counters/proposals},
  * read from the store every time, and a decision is a compare-and-set: two approvers on two nodes cannot both decide one proposal.
- * The folder's proposals are imported once (marker {@code system/imports/governance-files.json}) and the files are left in place.
  */
 public final class ProposalStore {
 
@@ -64,13 +63,12 @@ public final class ProposalStore {
         this(dir, null);
     }
 
-    /** Proposals in {@code content} (every node of a cluster), after importing {@code dir} once; {@code content} null keeps them in {@code dir}. */
+    /** Proposals in {@code content} (every node of a cluster); {@code content} null keeps them in {@code dir}. */
     public ProposalStore(Path dir, com.ash.drishti.identity.content.ContentStore content) {
         this.content = content;
         this.docs = content == null ? null : new com.ash.drishti.identity.content.ContentDocs(content);
         this.dir = dir.toAbsolutePath().normalize();
         if (content != null) {
-            importFolder();
             return;
         }
         try {
@@ -89,30 +87,6 @@ public final class ProposalStore {
 
     public Proposal create(String name, int version, String text, String baseText, String note, String author) {
         return create(name, version, text, baseText, note, author, null);
-    }
-
-    private void importFolder() {
-        String marker = "system/imports/governance-files.json";
-        if (content.get(marker).isPresent()) {
-            return;
-        }
-        int n = 0;
-        long max = 0;
-        if (Files.isDirectory(dir)) {
-            try (Stream<Path> files = Files.list(dir)) {
-                for (Path f : files.filter(x -> x.getFileName().toString().matches("P-\\d+\\.json")).sorted().toList()) {
-                    Proposal p = json.readValue(f.toFile(), Proposal.class);
-                    max = Math.max(max, Long.parseLong(p.id().substring(2)));
-                    if (docs.create(PROPOSALS + p.id() + ".json", p)) {
-                        n++;
-                    }
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException("cannot read Sutra proposals in " + dir, e);
-            }
-        }
-        com.ash.drishti.identity.content.ContentDocs.raise(content, COUNTER, max);
-        docs.create(marker, Map.of("imported", n, "at", System.currentTimeMillis()));
     }
 
     public Proposal create(String name, int version, String text, String baseText, String note, String author,

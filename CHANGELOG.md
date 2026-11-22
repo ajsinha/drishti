@@ -8341,7 +8341,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   refused by name. `engine: library` is today's Apache Iceberg Java code, kept for tables in Azure, Google Cloud Storage or HDFS;
   **`native` is the default** (every Iceberg test passes on it), and left to the default a root it cannot reach is read by the
   library; `engine: library` (or `DRISHTI_ICEBERG_ENGINE=library`) brings back the old behaviour, `auto` keeps the library on Linux. On 10,000 trades a day the native engine started the connector in 0.6 s (library 1.8 s) and read a trade
-  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](plugins/drishti-plugin-iceberg/README.md#engines-and-caches)).
+  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](plugins/drishti-plugin-iceberg/README.md#the-reader-and-caches)).
   `tools/windows/load-iceberg.ps1` loads Iceberg tables on Windows, `tools/windows/start-server.ps1 -Iceberg` serves them;
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
@@ -9789,7 +9789,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     pack opts in its netting set's member trades, its book P&L and its trade searches.
   - `drishti.pivot.*` settings (`enabled`/`DRISHTI_PIVOT_ENABLED`, `max-records`, `max-row-keys`, `max-column-keys`,
     `document-scan`, `drill-page`, `budget`); the access log records the new reads.
-- **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop),
+- **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](plugins/drishti-plugin-delta/README.md#the-reader-drishti-lake),
   [WINDOWS.md](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),
   S3 through the AWS SDK v2, Parquet through parquet-java over its own input files (row groups pruned by statistics

@@ -91,10 +91,12 @@ class RunClusterTest {
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
         Path identity = root.resolve("identity");
+        for (String n : List.of("a", "b")) {
+            cluster.off(n, "finance-lake");
+            cluster.connector(n, "run-lake", "plugin: file", "kinds:", "  - trade", "settings:", "  root: \"" + root.resolve("lake") + "\"", "  id-field: TRADE_ID",
+                    "  rescan-seconds: \"3600\"");
+        }
         List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false",
-                "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.run-lake.plugin=file",
-                "--drishti.sources.connectors.run-lake.kinds[0]=trade", "--drishti.sources.connectors.run-lake.settings.root=" + root.resolve("lake"),
-                "--drishti.sources.connectors.run-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.run-lake.settings.rescan-seconds=3600",
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.bi.runs.file=" + root.resolve("runs.yaml"),
                 // one identity database for both: the run rows are shared, so a node that dies has its runs adopted (13.3)
                 "--drishti.identity.database-url=jdbc:sqlite:" + identity.resolve("identity.db"),

@@ -45,18 +45,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * for D not loaded — showing D-1" (never the deleted figures), the default date moves back to the newest remaining one, nothing is captured;
  * the date loaded again (and its ready signal) brings it back.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk", "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-deleted-date", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
         "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -69,6 +59,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class VarDeletedDateTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("var-deleted-date");
+    }
+
     static final LocalDate D1 = VarLakeFixture.DAY;
     static final LocalDate D2 = D1.plusDays(1);
     static Path lake;
@@ -78,7 +72,7 @@ class VarDeletedDateTest {
         lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-deleted-lake-" + System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, D1, 1.0, false, false);
         VarLakeFixture.write(lake, D2, 2.0, false, false);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
     }
 

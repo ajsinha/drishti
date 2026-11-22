@@ -40,10 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * 30): the answer has exactly the fixture's shape, every day is masked for a role without raw, rights are checked, and each error has its
  * code.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
-        "drishti.sources.connectors.finance-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake",
-        "drishti.sources.connectors.finance-lake.settings.domain=desk",
-        "drishti.sources.connectors.finance-lake.settings.mode.counterparty=effective",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/business-date", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=nettingSet",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
@@ -51,6 +48,10 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.other.kinds[0]=counterparty", "drishti.security.roles.other.raw=true"})
 @AutoConfigureMockMvc
 class HistoryApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("business-date");
+    }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

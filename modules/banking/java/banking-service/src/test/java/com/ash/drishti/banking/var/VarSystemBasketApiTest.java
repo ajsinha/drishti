@@ -54,21 +54,8 @@ import org.springframework.test.web.servlet.ResultActions;
  * unknown id: DRS-5221), served as the {@code system-basket} kind for its page; opened as a copy in the sheet; and never mixing one person's
  * baskets with another's.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.connectors.var-system-baskets.plugin=var-system-baskets",
-        "drishti.sources.connectors.var-system-baskets.kinds[0]=system-basket",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-system-basket-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.sources.routes.system-basket=var-system-baskets",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
@@ -90,6 +77,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class VarSystemBasketApiTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("var-system-basket-api");
+    }
+
     static Path lake;
     static final String API = "/api/v1/risk/var/system-baskets";
 
@@ -98,7 +89,7 @@ class VarSystemBasketApiTest {
         lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-sb-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         Path store = Files.createDirectories(lake.resolve("store"));      // a basket store of its own: the system scope starts empty
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
         r.add("drishti.store.root", store::toString);
     }

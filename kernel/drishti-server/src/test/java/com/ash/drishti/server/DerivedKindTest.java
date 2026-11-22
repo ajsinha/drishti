@@ -27,10 +27,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** A derived kind declared in a pack (finance: book-pnl from trade) is served like any other kind. */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
-        "drishti.sources.connectors.finance-lake.enabled=false"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-format-equality", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance"})
 @AutoConfigureMockMvc
 class DerivedKindTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("exposure-format-equality");
+    }
 
     @Autowired MockMvc mvc;
 

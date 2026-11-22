@@ -20,7 +20,7 @@ drishti:
     sensitivities:
       enabled: ${DRISHTI_SENSITIVITIES_ENABLED:true}   # run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
-  sensitivities:                     # read by FRTB-SA and SIMM; the old names drishti.frtb.sensitivity-kind, factor-kind and cache-minutes still work
+  frtb:                              # the settings of the position sensitivities, bound as drishti.frtb.* (FrtbProperties); FRTB-SA and SIMM read them
     sensitivity-kind: position-sensitivity   # the position sensitivities (SENS)
     factor-kind: risk-factor         # the factor dictionary (RFAC)
     cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read

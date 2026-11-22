@@ -114,9 +114,11 @@ class NetStack:
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="false",
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="finance",
                    DRISHTI_PACKS_EXTRA_DIRS=str(ROOT / "examples" / "packs"), DRISHTI_NET_DIR=str(work / "net"))
+        (work / "connectors").mkdir(parents=True, exist_ok=True)
+        (work / "connectors" / "finance-lake.yaml").write_text("enabled: false\n", encoding="utf-8")      # the template's switch, as a connector file
         args = [self.heap, "-jar", jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
                 f"--drishti.sources.plugins.file.settings.root={work / 'feeds'}", "--drishti.sources.plugins.file.settings.id-field=TRADE_ID",
-                f"--drishti.sources.connectors-dir={work / 'connectors'}", "--drishti.sources.connectors.finance-lake.enabled=false"]
+                f"--drishti.sources.connectors-dir={work / 'connectors'}"]
         if name != "b":
             args.append("--drishti.sources.plugins.demo.enabled=false")       # the demo's trades (and their ticks) are on b only
         cmd = java_cmd(java, args, tmp=work / "jtmp", cwd=work, env=env)                     # its native libraries unpack in its own folder, not /tmp

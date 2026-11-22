@@ -33,6 +33,7 @@ import threading
 import time
 from pathlib import Path
 
+import browser_engine
 from wb_live import BROWSER_WAIT_MS, should_reload
 
 SETTLED_JS = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_settled.js"
@@ -89,7 +90,7 @@ class Browsers:
             # of every page through Python); the tests' own servers are addressed as 127.0.0.1 and localhost
             from render_harness import SITE_PORT
             rules = f"MAP render.test 127.0.0.1:{SITE_PORT}, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost"
-            self.browser = await self.pw.chromium.launch(args=[f"--host-resolver-rules={rules}"])
+            self.browser = await self.pw.chromium.launch(args=browser_engine.launch_args(rules))   # chromium unless DRISHTI_BROWSER says another
             self.gate = asyncio.Semaphore(PAGES_AT_ONCE)
         self.run(go())
         return self

@@ -2715,17 +2715,6 @@ version and every save is a compare-and-set against it, so two nodes saving the 
 `409 DRS-5057` (changed elsewhere: reload and try again). The older `file` (`data/designs`) and `jpa` stores can still be named,
 for one node only.
 
-**One-time import at start.** With `store: content`, the server imports what the old stores hold:
-
-- **files** (`drishti.builder.designs.dir`, `data/designs`): each Design and its samples are put with *must be absent*, so an
-  item already in the store is never overwritten and a rerun is harmless. When every Design is in, the folder is renamed
-  `designs-imported-<yyyyMMdd-HHmmss>` (visible, kept, safe to delete later). A failure leaves the folder in place for the next
-  start.
-- **the identity database** (`drishti_design`, `drishti_design_sample`, used by `store: jpa`): the same, once; a marker item
-  `system/imports/designs-jpa.json` records it, so a Design deleted later does not come back. The rows are left in place.
-
-Each import logs how many Designs it brought in, skipped (already there) and failed.
-
 ### 6. Several servers
 
 Every node of a cluster must use the **same** store configuration. A filesystem store on a cluster needs a **shared mount**
@@ -2846,18 +2835,12 @@ run's document: `renew` writes only while the row still names this node, `adopt`
 lapsed, so exactly one node wins (ARCHITECTURE.md §28 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
 A due schedule is taken by one node (`claim`: a compare-and-set on its `nextAt`), so a schedule fires once in a cluster.
 
-**One-time import at start.** With `content`, the server imports, once, the identity database's `drishti_bi_*` rows (marker
-`system/imports/bi-jpa.json`) and the `drishti_bi_run`, `drishti_bi_run_share`, `drishti_bi_run_schedule` rows with the results and snapshots
-under `store.dir` (`<data>/bi-runs`; marker `system/imports/bi-runs.json`). Every document is created with "must be absent" (a rerun is
-harmless; a person's marks already in the store win); the marker keeps an item or run deleted later from coming back. The rows and the files
-are left in place.
-
 **One node back on the old stores.** `drishti.bi.store: jpa` and `drishti.bi.runs.store: local` put one node back on its identity database
 and `store.dir`; it then sees only its own BI content and runs (forwarding by node id still reaches the others' runs).
 
 **Tests.** `ContentBiStoreTest` (drishti-identity): two nodes on one filesystem root (a workspace and an item made on A are read, edited and
 published on B; marks, views and settings; delete), two saves of one item give one conflict, concurrent revisions never share a number, and
-the import (once; a deleted item stays deleted; nothing counted twice; the rows kept). `ContentRunsTest` (drishti-server): a run submitted on
+marks, views and settings on two nodes. `ContentRunsTest` (drishti-server): a run submitted on
 A has its status and result read on B (never across signatures); a dead node's run adopted by exactly one of two nodes through the lease and
 finished; renew only by the holder and a loser's late save dropped; a share made on A seen on B; a schedule claimed once; the import of rows
 and the result folder. `RunClusterTest` runs its two servers on one content store root.
@@ -2865,9 +2848,8 @@ and the result folder. `RunClusterTest` runs its two servers on one content stor
 ### 10. Collaboration, notes and the admin data
 
 Each moved store keeps its interface, so the services above it (rights, limits, retention, holds, seals) are unchanged; a switch per
-type names the old store for one node only. At start each runs a **one-time import** of the old rows and files: every item keeps its
-id, number and hashes, an item already in the store is skipped, a marker `system/imports/<what>.json` records the import (so
-something deleted later does not come back), and the old tables and files are left in place.
+type names the old store for one node only. Nothing is imported at start: the content store starts empty, and an old table or folder is
+not read by a node that uses `content`.
 
 #### 10.1 Several documents, one change: `TxContentStore`
 
@@ -2928,14 +2910,13 @@ The revision chains keep their hashes, so `GET /admin/collab/verify` verifies th
 **Audit is append-only**, so no two nodes write one document: each node appends to its own per-day segments (a new segment past
 512 KB), one JSON line per event, each chained by hash to that node's previous line; `audit-heads/<node>.json` holds the node's count
 and newest hash, so removed newest lines show. A read merges every node's segments newest first; the compliance verifier walks each
-node's chain. The node is `drishti.net.node-id` (else host and port). The table's rows are imported once (marker
-`system/imports/audit-jpa.json`, written first so only one node copies).
+node's chain. The node is `drishti.net.node-id` (else host and port).
 
 #### 10.5 Governance proposals (`drishti.governance.store`: `content`, default; `file` for one node)
 
-`governance/proposals/P-NNNNNN.json`, numbered from `governance/counters/proposals` (raised past the imported numbers), read from the
+`governance/proposals/P-NNNNNN.json`, numbered from `governance/counters/proposals` read from the
 store every time. A decision is a compare-and-set: two approvers on two nodes cannot both decide one proposal (the second gets
-`PROPOSAL_CONFLICT`). The folder `<data>/governance` is imported once (`system/imports/governance-files.json`).
+`PROPOSAL_CONFLICT`).
 
 #### 10.6 Load history (`drishti.loads.store`: `content`, default; `file` for one node)
 
@@ -2988,7 +2969,7 @@ over only when its version moved. One walk of the store per interval, however ma
 **Connectors** are not in this overlay: the file in `config/connectors` is the only truth, and an Admin save writes it (with the history and the audit entry). A node's files are its own; each node's digest carries its connector files' hashes and Admin → Health warns when a connector on two nodes differs.
 
 **Data loads overrides** (`drishti.loads.config-store`: `content`, default; `file`): `loads/config/<pack>.yaml`, read on every use,
-saved by compare-and-set; the folder `<data>/loads/config` imported once (`system/imports/loads-config.json`) and kept.
+saved by compare-and-set.
 
 **`config/bi`**: nothing is written there by the UI (BI content is in the store, section 9), so there is nothing to share.
 
@@ -3038,7 +3019,7 @@ There is no second store to back up, secure, size or switch.
 |---|---|
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
-| BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
+| BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are read only by a node on `jpa` ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
 | Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([README.md](../guides/bi/README.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
 | Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([ADMIN_GUIDE.md (Functions)](../guides/ADMIN_GUIDE.md#206-where-it-is-kept)). New tables only: the schema version does not move | |
@@ -3352,7 +3333,7 @@ forms are permanent.
 | Append | `TableTarget.appended`; `DeltaTarget` (`withTransactionId(drishti-batch:<batch>:<date>, 1)`); `IcebergTarget` (`drishti.batch` in the snapshot summary) | the batch is per date, so a crash after some dates' commits retries only the rest. The batch rule exists once, in the Java loader: the Python writer refuses an append into a lake-file append table |
 | Memory stores | `MemoryLakeSettings.withLakeStores` | the engine file keeps the switch, the replenish jobs and the compaction policy (the engine's work); the lake file keeps the description |
 | Packs | every shipped pack's `lake:` block; its Delta templates `lake: demo` + `lake-tables`; `tools/packlake.py` (`lake_form` for the generators, `view` for the tools that read a template's layout); `PackEntry` | one transformation each way, so the generators and every reader of a template agree |
-| Shipped copy | `lake/lake-io/src/main/resources/drishti/lakes/demo.yaml`, checked equal by `settings_catalogue.py` | a server in another working folder (a container, a stack node) knows the demo lake |
+| Shipped copy | `lake/drishti-lake-host/src/main/resources/drishti/lakes/demo.yaml`, checked equal by `settings_catalogue.py` | a server in another working folder (a container, a stack node) knows the demo lake |
 | References | nested `${A:${B:x}/delta}`, resolved with the server's settings (`Lakes.useProperties`, installed by `PackEnvironmentPostProcessor`), else a dotted name as a system property or its environment form | the demo root follows the data folder and a `--setting` or test property |
 | Official results | `config/lakes/banking/var-official.yaml`, `ccr-official.yaml`; `OfficialReaders` only switches the plugin | the readers follow the publisher without a second description of its store |
 | Inbox loader | `Lakes.environment()`: the settings the lake files name, as the server resolves them, handed to the child process | nothing resolved twice |
@@ -3684,7 +3665,7 @@ statistics say the same for a reader without the manifest.
     "first": {"LEGAL_ENTITY": "LE-LDN", "DESK": "DESK-COMM", "id": "P-1000017"}, "last": {"LEGAL_ENTITY": "LE-LDN", "DESK": "DESK-COMM", "id": "P-1799862"}}]}}}
 ```
 
-An Iceberg table sorted by more than the id gets the property `drishti.layout.sort-by`; `lake maintain`'s relayout (which re-sorts days
+An Iceberg table sorted by more than the id gets the table property `layout.sort-by`; `lake maintain`'s relayout (which re-sorts days
 by id) leaves such a table in its order (`IcebergMaintenance.shardSorted`). A Delta table's compaction merges only small files (under
 `target-file-mb`); a pack layout that names `sort-by` for the kind should name the same columns.
 

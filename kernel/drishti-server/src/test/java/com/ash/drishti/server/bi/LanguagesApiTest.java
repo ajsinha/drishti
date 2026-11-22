@@ -52,19 +52,19 @@ import org.springframework.test.web.servlet.ResultActions;
  * and for an item's YAML; Drishti SQL over the same model. A small lake read through a real file connector; readers rita (every desk, raw), hana (a
  * desk-head: DESK-A only) and ann (no raw: {@code mtm} masked).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/languages-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lang-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/lang-api-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/lang-api-folder", "drishti.tables.root=${drishti.test.dir}/lang-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/lang-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/lang-api-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.lang-lake.plugin=file", "drishti.sources.connectors.lang-lake.kinds[0]=trade",
-        "drishti.sources.connectors.lang-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.lang-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate"})
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class LanguagesApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("languages-api");
+    }
 
     static final String DAY = "2026-10-08";
     static Path root;
@@ -87,7 +87,7 @@ class LanguagesApiTest {
         Path f = root.resolve("lake").resolve(DAY).resolve("trade.jsonl");
         Files.createDirectories(f.getParent());
         Files.write(f, lines, StandardCharsets.UTF_8);
-        r.add("drishti.sources.connectors.lang-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.lang-lake.root", () -> root.resolve("lake").toString());
     }
 
     static {
