@@ -27,7 +27,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * The connector files of config/connectors.examples/postgres turn each banking data domain's store into a JDBC table connector. With no database at
+ * The connector files of config/connectors.examples/postgres turn each banking data domain's store (of the enabled packs) into a JDBC table connector. With no database at
  * the configured URL the connectors still start (they reconnect once it is up), report themselves down, and the
  * server runs.
  */
@@ -44,7 +44,7 @@ class StoreProfilesTest {
 
     @Test
     void eachDomainStoreBecomesATableConnector() {
-        for (String store : new String[] {"reference-store", "market-store", "trading-store", "risk-store", "credit-store", "collateral-store"}) {
+        for (String store : new String[] {"reference-store", "market-store", "risk-store", "credit-store", "collateral-store"}) {
             assertThat(registry.failures()).doesNotContainKey(store);
             assertThat(registry.plugin(store)).as(store).isPresent();
             // table kinds are listed in the background once the database answers; reads meanwhile fail and health says so
