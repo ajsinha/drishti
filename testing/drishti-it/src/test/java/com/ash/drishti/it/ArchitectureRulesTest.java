@@ -178,7 +178,7 @@ class ArchitectureRulesTest {
     private static final java.util.Set<String> LAKE_PUBLIC = java.util.Set.of("com.ash.lake", "com.ash.lake.config", "com.ash.lake.contract",
             "com.ash.lake.inbox", "com.ash.lake.load", "com.ash.lake.memory", "com.ash.lake.memory.store", "com.ash.lake.read", "com.ash.lake.spi");
 
-    /** Lake follow-up list (G4 gate F6): com.ash.lake.common.RowFeed, delta.write.LakeWriter/LakeManifest, iceberg.table.IcebergAppender, io.*. */
+    /** Lake follow-up list (G4 gate F6): com.ash.lake.common.RowFeed, delta.write.LakeWriter/LakeManifest/LakeCli, iceberg.table.IcebergAppender, io.*, common.LakeException/LakeError. */
     private static final java.util.Set<String> LAKE_FOLLOW_UP = java.util.Set.of(
             "com.ash.drishti.benchmarks.HistoryBench", "com.ash.drishti.lakehost.LakeReads", "com.ash.drishti.lakehost.DrishtiLake",
             "com.ash.drishti.testkit.LoaderRows", "com.ash.drishti.testkit.s3.MinioServer", "com.ash.drishti.testkit.s3.ConditionalWrites",
@@ -187,7 +187,8 @@ class ArchitectureRulesTest {
             "com.ash.drishti.plugin.redis.RedisLoader", "com.ash.drishti.plugin.cassandra.CassandraLoader", "com.ash.drishti.plugin.duckdb.DuckDbLoader",
             "com.ash.drishti.plugin.aerospike.AerospikeLoader",
             "com.ash.drishti.banking.official.DeltaSink", "com.ash.drishti.banking.official.IcebergSink", "com.ash.drishti.banking.official.OfficialSink",
-            "com.ash.drishti.banking.official.LakeAppends", "com.ash.drishti.banking.var.VarPvStream");
+            "com.ash.drishti.banking.official.LakeAppends", "com.ash.drishti.banking.var.VarPvStream",
+            "com.ash.drishti.server.DrishtiApplication", "com.ash.drishti.server.api.ApiExceptionHandler");
 
     /**
      * Drishti imports only Drishti Lake's public packages (the surface of its java/api-surface.txt: com.ash.lake, config, contract, inbox, load,

@@ -20,7 +20,6 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
