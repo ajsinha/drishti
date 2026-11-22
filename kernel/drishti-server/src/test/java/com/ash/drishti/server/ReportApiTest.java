@@ -41,13 +41,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Scheduled reports: saved, checked, run by hand and by the scheduler, delivered to a folder and to a webhook. */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-format-equality", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/finance-lake-off", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=finance", "drishti.reports.tick=500ms"})
 @AutoConfigureMockMvc
 class ReportApiTest {
 
     static {
-        com.ash.drishti.server.ConnectorFixtures.copy("exposure-format-equality");
+        com.ash.drishti.server.ConnectorFixtures.copy("finance-lake-off");
     }
 
     static HttpServer hook;

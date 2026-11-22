@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * the margin both ways, the steps, the versions, the playground with a comparison in words, the workbook and the empty template, a recipe
  * saved and replayed to the cent, and the refusals.
  */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-format-equality", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/finance-lake-off", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.frtb.parameters-dir=../../../../modules/banking/packs/market-risk/capital",
@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class SimmApiTest {
 
     static {
-        com.ash.drishti.server.ConnectorFixtures.copy("exposure-format-equality");
+        com.ash.drishti.server.ConnectorFixtures.copy("finance-lake-off");
     }
 
     @Autowired MockMvc mvc;
