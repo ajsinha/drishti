@@ -46,8 +46,8 @@ fields:
 - name: SCORE_ID
   type: id
   presence: required
-  description: The protein, position, amino acid and assay, joined by colons.
-  example: HLXK7:117:P:activity
+  description: The protein, position, amino acid and assay, joined by colons (the assay in capitals).
+  example: HLXK7:117:P:ACTIVITY
 - name: PROTEIN
   type: id
   presence: required

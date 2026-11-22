@@ -128,7 +128,7 @@ public final class IcebergMirror {
             Files.writeString(config, "source:\n  files: '" + feed + "/*.jsonl'\n  format: loader-rows\n"
                     + (promote.isEmpty() ? "" : "  promote: [" + String.join(", ", promote) + "]\n")
                     + (vectors.isEmpty() ? "" : "  vectors: [" + String.join(", ", vectors) + "]\n")
-                    + "target:\n  format: iceberg\n  lake: '" + root + "'\n  domain: risk\n  kind: " + kind + "\n  mode: replace-date\n");
+                    + "target:\n  format: iceberg\n  path: '" + root.resolve("risk").resolve(kind) + "'\n  domain: risk\n  kind: " + kind + "\n  mode: replace-date\n");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
                     new java.io.PrintStream(out, true, java.nio.charset.StandardCharsets.UTF_8));

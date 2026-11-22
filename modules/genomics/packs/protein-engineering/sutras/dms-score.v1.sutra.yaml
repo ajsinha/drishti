@@ -26,8 +26,8 @@ doc:
   emits: []
   expects: []
   examples:
-  - /v/dms-score/HLXK7:177:A:activity
-  - DMS HLXK7:177:A:activity
+  - /v/dms-score/HLXK7:1:A:ACTIVITY
+  - DMS HLXK7:1:A:ACTIVITY
   since: 2.9.11
 match:
   kind: dms-score

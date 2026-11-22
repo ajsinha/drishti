@@ -250,7 +250,7 @@ KINDS: list[Kind] = [
          "One measurement of the scan: what changing one position of a protein to one amino acid did to one assay. Every position, every one "
          "of the 20 amino acids, two assays: 47,840 experiments.",
          "One row per position, amino acid and assay, keyed by SCORE_ID.",
-         [F("SCORE_ID", "id", "The protein, position, amino acid and assay, joined by colons.", "HLXK7:117:P:activity"),
+         [F("SCORE_ID", "id", "The protein, position, amino acid and assay, joined by colons (the assay in capitals).", "HLXK7:117:P:ACTIVITY"),
           F("PROTEIN", "id", "The protein; opens PROT.", "HLXK7", link="protein"),
           F("POS", "integer", "The position changed.", 117),
           F("AA_REF", "text", "The amino acid the protein has there (one letter).", "L"),

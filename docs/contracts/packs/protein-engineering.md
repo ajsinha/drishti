@@ -196,7 +196,7 @@ One measurement of the scan: what changing one position of a protein to one amin
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SCORE_ID` | id | required |  | The protein, position, amino acid and assay, joined by colons. | `HLXK7:117:P:activity` |  |
+| `SCORE_ID` | id | required |  | The protein, position, amino acid and assay, joined by colons (the assay in capitals). | `HLXK7:117:P:ACTIVITY` |  |
 | `PROTEIN` | id | required |  | The protein; opens PROT. | `HLXK7` | `protein` |
 | `POS` | integer | required |  | The position changed. | `117` |  |
 | `AA_REF` | text | required |  | The amino acid the protein has there (one letter). | `L` |  |

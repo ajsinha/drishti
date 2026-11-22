@@ -753,7 +753,7 @@ def build(seed: int = SEED) -> tuple:
         for assay, scan in (("activity", p.activity), ("stability", p.stability)):
             for i in range(p.L):
                 for a, aa in enumerate(AA20):
-                    sid = f"{sym}:{i + 1}:{aa}:{assay}"
+                    sid = f"{sym}:{i + 1}:{aa}:{assay.upper()}"
                     dms_docs[sid] = doc("dms-score", SCORE_ID=sid, PROTEIN=sym, POS=i + 1, AA_REF=p.sequence[i], AA=aa,
                                         MUTATION=f"{p.sequence[i]}{i + 1}{aa}", ASSAY=assay, SCORE=scan[i][a],
                                         SE=round(0.04 + 0.2 * sr.random(), 3), REPLICATES=3)
