@@ -247,7 +247,7 @@ class SutraCliTest {
         Files.createDirectories(root.resolve("empty"));
         Path out = tmp.resolve("each-out");
         Run r = run("design", "--each", root.toString(), "--out", out.toString());
-        assertThat(r.code()).isZero();
+        assertThat(r.code()).as(r.err()).isZero();
         assertThat(Files.readString(out.resolve("fx-a.sutra.yaml"))).contains("kind: fx-a");
         assertThat(Files.readString(out.resolve("fx-b.sutra.yaml"))).contains("kind: swap");
         assertThat(Files.exists(out.resolve("empty.sutra.yaml"))).isFalse();
