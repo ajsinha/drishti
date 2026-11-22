@@ -127,14 +127,14 @@ public class StudioController {
         entitlements.requireOpen(principal, kind);
         String n = name.isBlank() ? kind + "-custom" : name;
         return "# Started from what inference makes of " + kind + " " + id + ". Edit freely.\n"
-                + writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1);
+                + writer.write(pipeline.inferred(EntityRef.of(kind, id), asOf), n, 1, com.ash.drishti.rachana.DrishtiRachana.level());
     }
 
     @PostMapping(path = "/studio/inferred", produces = "text/yaml")
     public String inferredFromSample(@RequestBody InferRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         String n = req.name() == null || req.name().isBlank() ? req.kind() + "-custom" : req.name();
         return "# Started from what inference makes of a pasted " + req.kind() + " document. Edit freely.\n"
-                + writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1);
+                + writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1, com.ash.drishti.rachana.DrishtiRachana.level());
     }
 
     @GetMapping("/studio/settings")

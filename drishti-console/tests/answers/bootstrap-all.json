@@ -6,7 +6,7 @@
       "pack" : "counterparty-risk"
     },
     "ASSOC" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -81,7 +81,7 @@
       "pack" : "compute-demo"
     },
     "CNV" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -96,7 +96,7 @@
       "pack" : "counterparty-risk"
     },
     "CONTACT" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -151,7 +151,7 @@
       "pack" : "counterparty-risk"
     },
     "DESIGN" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -166,12 +166,12 @@
       "pack" : "market-data"
     },
     "DMS" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
     "DMUT" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -181,7 +181,7 @@
       "pack" : "market-risk"
     },
     "DROUND" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -301,7 +301,7 @@
       "pack" : "gdelt-events"
     },
     "GENOMICS" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -476,7 +476,7 @@
       "pack" : "world-economy"
     },
     "PATHWAY" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -521,12 +521,12 @@
       "pack" : "official-news"
     },
     "PROT" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
     "PROTENG" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -576,7 +576,7 @@
       "pack" : "market-data"
     },
     "RESIDUE" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "protein-engineering"
     },
@@ -601,7 +601,7 @@
       "pack" : "market-risk"
     },
     "SGENE" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -626,7 +626,7 @@
       "pack" : "market-risk"
     },
     "SSAMPLE" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -651,7 +651,7 @@
       "pack" : "market-risk"
     },
     "SVARIANT" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -696,7 +696,7 @@
       "pack" : "us-equities"
     },
     "VCALL" : {
-      "loaded" : false,
+      "loaded" : true,
       "module" : "genomics",
       "pack" : "genomics-showcase"
     },
@@ -840,6 +840,7 @@
             "top" : [ "views", "markets", "companies", "bi", "admin", "help" ],
             "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ]
           },
+          "offered-by-default" : false,
           "title" : "Drishti Markets"
         },
         "research" : {
@@ -852,7 +853,7 @@
             "top" : [ "genomics", "views", "bi", "admin", "help" ],
             "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ]
           },
-          "title" : "Research"
+          "title" : "Drishti Research"
         },
         "risk" : {
           "description" : "VaR and counterparty exposure, from your own pricing data, in one place",

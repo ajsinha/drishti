@@ -932,6 +932,7 @@
             "top" : [ "views", "markets", "companies", "bi", "admin", "help" ],
             "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ]
           },
+          "offered-by-default" : false,
           "title" : "Drishti Markets"
         },
         "research" : {
@@ -944,7 +945,7 @@
             "top" : [ "genomics", "views", "bi", "admin", "help" ],
             "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ]
           },
-          "title" : "Research"
+          "title" : "Drishti Research"
         },
         "risk" : {
           "description" : "VaR and counterparty exposure, from your own pricing data, in one place",
