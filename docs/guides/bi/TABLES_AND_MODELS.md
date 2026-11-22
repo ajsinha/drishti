@@ -66,10 +66,9 @@ Every file starts with `rachana: 3`, the language version of the layer's files: 
 | Kind | Rule | Example |
 |---|---|---|
 | table | `<domain>.<name>`: lower case, letters, digits, underscores, starting with a letter; the domain is the file's folder | `trading.trade_legs` |
-| migrated BI dataset | the domain `bi`, hyphens as underscores | `trading-risk-trades` is `banking.trading_risk_trades` |
-| pack-generated dataset | the pack's name as the domain | `pack.trading.trade` is `trading.trade` |
+| pack-generated table | the pack's name as the domain | `trading.trade` |
 | model | BI's model name, kept (reports, boards and bookmarks bind it by name and major) | `trading-risk@1` |
-| a table's old name | `was: trading-risk-trades`: resolves for one release, with a warning wherever it is used | |
+| a name no longer used (a BI dataset's name such as `trading-risk-trades`, `pack.trading.trade`) | never resolved: refused, naming the current table | |
 | reference with a version | `@^1` (or `@1`): the major asked for | `trading.trade@^1` |
 
 A table's name is unique across virtual tables and stored tables: a virtual table named like a lake table or a kind is refused when it is
@@ -81,7 +80,6 @@ one source, each with its own columns, grain and filter (`trading.trade_summary`
 ```yaml
 rachana: 3
 table: banking.trading_cashflows_cashflows
-was: trading-cashflows-cashflows             # the name before, one release
 version: 1.0.0
 title: "Trade legs and cashflows: cashflows"
 from: { kind: trade }
@@ -269,7 +267,7 @@ A table over a table (`from: { table }`) has its base's columns; `0 columns` cou
 
 `tables check` checks every table (name and folder, source, grain, paths, columns, types, keys, materialisation, rules, expressions in their
 scopes), every model (aliases, tables found at the major asked, relationships, measures, hierarchies, security) and the catalogue (two
-definitions with one name, `was:` names, references between tables, `related(...)`, tables over tables that come back to themselves). It
+definitions with one name, references between tables, `related(...)`, tables over tables that come back to themselves). It
 exits 1 when it finds an error. With `--sample TABLE=FILE.jsonl` it also checks the table against sample documents: keys unique per
 business date, every path present in some row.
 
@@ -306,7 +304,7 @@ someone accepts it. `tables offer` reads a sample of the new documents and sugge
 fields one level down, `$.OWNER.NAME` as `OWNER_NAME`), each typed from its values (`integer`, `decimal`, `boolean`, `date`,
 `timestamp`, else `string`), the id field (`id` or a name ending `_ID`) as the key when it is unique in the sample, and names each list
 of objects as a grain to choose instead (`--grain '$.MOVES[*]'`: one row per element, its fields as `@` paths). `--write` accepts it: a
-new file under `config/tables/<domain>/`, refused when the name is taken (a table, a `was:` name, or `--stored`).
+new file under `config/tables/<domain>/`, refused when the name is taken (a table, or `--stored`).
 
 ```text
 $ drishti.py tables offer bank.counterparties --sample counterparties.jsonl --kind counterparty
@@ -343,7 +341,7 @@ materialize: none
 | `DRS-9607` | materialisation |
 | `DRS-9608` | a rule without a role or a condition |
 | `DRS-9609` | a table, model, column, measure or alias the catalogue does not hold |
-| `DRS-9610` | two definitions with one name, or one `was:` name twice |
+| `DRS-9610` | two definitions with one name |
 | `DRS-9611` | tables over tables in a circle |
 | `DRS-9613` | a sample check |
 | `DRS-9614` | BI's old form where the layer reads |

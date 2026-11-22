@@ -506,7 +506,7 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 2. Declare `layout.<kind>.columns` for every large kind and write the layout, or let `lake maintain` (compaction) bring other
    writers' days into it.
 3. Load with the spill directory on a disk; check Admin → Health: `UP`, no `not laid out`.
-4. Run maintenance nightly (`--keep-days`, `--relayout`, `--rewrite-manifests`, `--expire-hours`), or the platform's own.
+4. Run `lake maintain --format iceberg` nightly (retention in business days, compaction, vacuum), or the platform's own.
 5. Give the server at least 8 GB of heap per million entities a day; measure on your data (`elapsedMs`, `scanned`, `partial`).
 
 ## Troubleshooting
@@ -522,7 +522,7 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, then `--columns` |
 | single reads slow, `daysWithDeletes` > 0 | many equality deletes | `lake maintain` (compaction) |
 | single reads slow on a table another engine wrote | large row groups or unsorted days | `--relayout --force`, or the engine's sorted compaction |
-| *known at* finds nothing | the snapshots of that time were expired | keep more history (`--expire-hours`) |
+| *known at* finds nothing | the snapshots of that time were expired | keep more history (`vacuum-hours`) |
 | new data not visible | the refresh has not run yet | wait `refresh-seconds`; check the catalog's current snapshot |
 | loader: disk full in the temp folder | the external sort's run files | `--spill-dir` on a large disk |
 | `DEGRADED: cannot read trade: its metadata names files under <old folder> that are not there (…) … relocate: '<old> -> <new>'` | the table's folder was moved or copied after it was written (the metadata names every file by its full path); reads answer `502 DRS-1003` and **Test** fails with the same text | write it again where it is, or read it with `engine: native` and the `relocate` the message gives, quotes and all; one pair covers every table moved together |

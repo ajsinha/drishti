@@ -42,7 +42,7 @@ with which Drishti is stated in one place, the index repository's
 
 | Repository | What it is | Language | Build output |
 |---|---|---|---|
-| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | the shared Java utilities (settings and placeholders, TLS and the outbound proxy, single flight, the load guard, the one `.xlsx` writer) | Java 21 | jars in `~/.m2` |
+| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | the shared Java utilities (settings and placeholders, TLS and the outbound proxy, hashes and canonical JSON, CSV, single flight, the load guard, the one `.xlsx` writer) | Java 21 | jars in `~/.m2` |
 | [drishti-rachana](https://github.com/drishti-platform/drishti-rachana) | the Rachana language (Sutras, the expression language and the compiler, the live tables, the data protocol and its SDKs) | Java 21, Python, JavaScript | jars in `~/.m2` |
 | [drishti-lake](https://github.com/drishti-platform/drishti-lake) | Drishti Lake: the Delta, Iceberg and files stores, the loader, the in-memory lake, the data inbox | Java 21, Python | jars in `~/.m2` |
 | [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements, the JavaScript libraries every screen is made of | JavaScript | the release bundles (a WebJar) |

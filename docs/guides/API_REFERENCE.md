@@ -620,7 +620,7 @@ role) and either waits for approval or is appended to its record's lane and ackn
 The lane's owner then checks everything again, compares each field with what the person saw (`from`): a field that moved is
 `conflicted` with the three-way difference in `stateReason`, never written over. An applied overlay shows on every page that reads the
 record (and the page row a form edited), named in *How this view was built*; a source target's command goes out through the outbox.
-Errors: `403 DRS-9301` (off), `403 DRS-9302` (refused, in words), `409 DRS-9303` (no longer awaiting), `503 DRS-9304` (the lane is full:
+Errors: `403 DRS-9301` (off), `403 DRS-9302` (refused, in words), `409 DRS-9303` (no longer awaiting, or a change id used for another change), `503 DRS-9304` (the lane is full:
 busy, the draft is kept), `404 DRS-9305`, `503 DRS-9306` (edits paused: the edit primary is not reachable, or the cluster has no shared
 edit log). Every step is audited (`edit-submitted`, `edit-approved`, `edit-rejected`, `edit-applied`, `edit-conflicted`, `edit-refused`,
 `edit-confirmed`, `edit-refused-at-source`, `form-draft-closed`).
@@ -2524,7 +2524,7 @@ parameter file (`drishti.module.banking.simm.parameters-dir`).
 | `GET /api/v1/risk/simm/playground/recipes/{id}` | replays a recipe with its own parameter file: the answer, `recipe` and `reproduced` in words |
 
 Refusals: `400` for a bad switch value, an override naming no parameter, a multiplier below 1, or a schedule-IM CSA; `403` when SIMM is
-switched off (`drishti.simm.enabled`) or the caller sees none of the netting set's trades; `404 DRS-1002` when no connector serves
+switched off (`drishti.engines.simm.enabled`) or the caller sees none of the netting set's trades; `404 DRS-1002` when no connector serves
 `position-sensitivity` or [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)); `422 DRS-5333` when the version is not installed or its file is refused (`DRS-5331`, `DRS-5332`,
 `DRS-5334`, `DRS-5335`, `DRS-5336` count what each answer left out).
 
@@ -3256,7 +3256,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9206 | 404 | Compute not found | no such compute approval request, or no such computation waiting or running on this node (HTTP 404) |
 | DRS-9301 | 403 | Editing is off | write-back is off on this server: an administrator sets `edit.enabled: true` in `config/edit/edit.yaml` (or `DRISHTI_EDIT_ENABLED=true`) and restarts (HTTP 403) |
 | DRS-9302 | 403 | Edit refused | a change was refused; the message says why: no Sutra's form with `save:` names the field, it is masked or read-only for you, a role is missing (the edit power, the field's roles, `restate` for a past date, `override` for Apply mine anyway), a reason is required, you tried to approve your own change, or a source command is not usable (its connector's writes are off or refused at load: Admin → Edits) (HTTP 403) |
-| DRS-9303 | 409 | Edit conflict | the change is no longer awaiting approval (someone decided first), or the fields moved since you opened the record: reopen it and edit again (HTTP 409) |
+| DRS-9303 | 409 | Edit conflict | the change is no longer awaiting approval (someone decided first), or the fields moved since you opened the record: reopen it and edit again; or a change id is sent again with other content (the same id names one change: a repeat sends the same kind, record and items; audited `edit-id-reused`) (HTTP 409) |
 | DRS-9304 | 503 | Edit lane busy | The record's lane is full (`lanes.max-lane-depth`): try again in a moment; your draft is kept |
 | DRS-9305 | 404 | Change not found | no such change id (HTTP 404) |
 | DRS-9306 | 503 | Edits paused | edits are paused: the edit primary named by `edit.primary` is not reachable, or the cluster has no shared edit log (use PostgreSQL for the server's database, or name an edit primary); reading is not affected (HTTP 503) |
@@ -3420,7 +3420,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9607 | — | Materialisation | an unknown `materialize`, or a live table without keys, over a list, or over a source that does not push |
 | DRS-9608 | — | Row rule | a table's or model's rule without a role or a condition |
 | DRS-9609 | 404 | Table reference | a table, model, column, measure or alias the catalogue does not hold |
-| DRS-9610 | — | Duplicate table | two definitions with one name, or one `was:` name given by two tables |
+| DRS-9610 | — | Duplicate table | two definitions with one name |
 | DRS-9611 | — | Table cycle | tables over tables that come back to themselves |
 | DRS-9613 | — | Sample check | `tables check --sample`: keys that are not unique in the sample, a path empty in every sample row, a value not computed |
 | DRS-9614 | — | Old form | a BI dataset or model (`rachana: 2`, `dataset:`, `datasets:`) where the table layer reads: migrate it |

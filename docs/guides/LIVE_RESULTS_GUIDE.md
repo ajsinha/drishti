@@ -126,7 +126,7 @@ per field) come with the security release.
 - **One change id, end to end.** A write's `id` (the client's, 1 to 64 letters, digits, `-` or `_`) is the change's id in the write-back too: the
   approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message carry it. The same id again is answered with that change's
   answer (its state now: `held`, `queued`, `applied`, ...), never made twice, on any node and after a restart; from another person it is
-  refused (`the change id ... is another's`).
+  refused (`the change id ... is another's`). The same id with other content (another kind, record or items) is refused with `409 DRS-9303` and audited (`edit-id-reused`): a repeat sends the same change, a new change takes a new id.
 - **Audit.** Every submit, approval, refusal (`edit-refused`), send and result is audited with who, when, why and the values. The person who made
   the change is the caller of every record: the table's (`live-write-submitted`, `live-write-held`, ... with the change id and its columns) and the
   write-back's (`edit-submitted` with the same id); a write the server cannot tie to a signed-in request is refused.
@@ -241,7 +241,7 @@ One engine behind every blotter and every FORM result: Rachana's live tables, wi
    day). The answer is the table, the query, the first page and the search's summary; the next pages and the changes are the protocol's
    (`POST /tables/{t}/query`, `/changes` with the same filter). The rows, their count and their order are the search's (`FormResultsParityTest`).
    A condition outside the tree's subset (`matches`, `size`, a link) stays in the table itself (its `where:`); a condition on a field masked
-   for the person matches no row, as the search does. An id pattern (`TRD MX-2*`) is a condition on the key column.
+   for the person matches no row, as the search does. A search's table that has expired (its source left) answers `404 rdp.table.unknown` with `expired: true` and the words *run the search again*; the grid runs the search again. An id pattern (`TRD MX-2*`) is a condition on the key column.
 8. **As of a business date**: on the live business date the table follows the kind's changes; on any other day it is a static snapshot
    of that day (the lake's time travel: the bindings read the kind as of the date, the table has no stream) and says `live: false`.
 9. **Across Drishti*net**: when other members hold records of the kind for the person (the cluster routing's scatter targets), the search's

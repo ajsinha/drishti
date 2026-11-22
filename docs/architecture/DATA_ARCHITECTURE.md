@@ -1915,13 +1915,9 @@ Adding a vector column to an existing table (`Operations.addColumns`) gives the 
 records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
 
 **Orphan files.** A load that dies after writing data files but before its commit leaves files no snapshot references, and Iceberg's
-expiry only removes the files of the snapshots it expires. `OrphanFiles` (in the plugin, run by `IcebergMaintenance --remove-orphans`)
-lists every file under the table's location first, then reads the references: the current metadata file and every one its
-`metadata-log` lists, `version-hint.text`, each snapshot's manifest list, every manifest and every data and delete file they name (any
-entry status, so a file a kept snapshot may read is never taken) and the statistics files. A file not referenced and older than
-`--older-than-hours` (72 at least: longer than the longest load) is deleted; `--dry-run` lists them. Reading the references after the
-listing means a commit landing in between only adds references; the age keeps a load in flight safe. The sweep reads the table with
-lake-iceberg whichever engine wrote it, on local disk and in S3 alike (`IcebergOrphanFilesTest`).
+expiry only removes the files of the snapshots it expires. Drishti Lake's `lake maintain --format iceberg` removes them with the vacuum step: a file
+no snapshot, metadata file or statistics file names, and older than `vacuum-hours` (never under 72 hours, longer than the longest load), is deleted;
+`--dry-run` lists them. The age keeps a load in flight safe. Local disk and S3 alike.
 
 ### Connector and data-source review (standards)
 
@@ -3662,7 +3658,7 @@ statistics say the same for a reader without the manifest.
 ```
 
 An Iceberg table sorted by more than the id gets the table property `layout.sort-by`; `lake maintain`'s relayout (which re-sorts days
-by id) leaves such a table in its order (`IcebergMaintenance.shardSorted`). A Delta table's compaction merges only small files (under
+by id) leaves such a table in its order. A Delta table's compaction merges only small files (under
 `target-file-mb`); a pack layout that names `sort-by` for the kind should name the same columns.
 
 ### 10.7 Files and S3

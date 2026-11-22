@@ -279,7 +279,7 @@ own**:
   deleted with the user.
 - **Promoting a pivot** to a Sutra needs `author` (and `drishti.rachana.studio-save`), as for layouts.
 - **Reads** are in the access log: a panel's rows for its pivot as a `view`, a search pivot and its drill-downs as a `search`.
-- **For everyone:** `DRISHTI_PIVOT_ENABLED=false` (server) switches the Pivot tab off; the pivot engine itself is a compute engine
+- **For everyone:** `drishti.engines.pivot.enabled: false` (`DRISHTI_PIVOT_ENGINE_ENABLED`, server) switches the pivot engine and the Pivot tab off
   ([section 21](#21-compute-engines-on-or-off)).
 
 ### 3.8 Discussion, sharing and shared workspaces

@@ -1460,7 +1460,7 @@ Every key, check and command: [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MOD
 reverse (`ArchitectureRulesTest` holds both directions). Its packages: `def` and `yaml` (definitions read by key and written in one
 canonical form, `rachana: 3`), `lang` and `check` (Rachana's tree and checked mode with the fields a table's source paths or a model's
 `alias.COLUMN` give; `LateBound` turns `fx(...)` and `related(...)` into columns worked out before the expression runs), `catalog` (files
-under `config/tables/<domain>/` and the stored items of BI's item store, `was:` names, tables over tables, lineage; `PackTables` generates a
+under `config/tables/<domain>/` and the stored items of BI's item store, tables over tables, lineage; `PackTables` generates a
 pack's kinds and the lists it names as tables, `trading.trade` and `trading.trade_legs`), `read` (a read for one viewer on one business
 date), `answer` (`ModelAnswers`: a model query answered in memory, each table as the reader may see it, joined many-to-one from each
 measure's fact, every measure compiled by the one compiler of section 23.2), `materialize` (`LiveStore`: live by key from pushed entities;

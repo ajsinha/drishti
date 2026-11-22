@@ -62,7 +62,7 @@ version, gate and documentation:
 | [drishti-rachana](https://github.com/drishti-platform/drishti-rachana) | the Rachana language: Sutras, the expression language, the compiler, the live tables and the data protocol, with Java, JavaScript and Python SDKs |
 | [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements: the JavaScript libraries every screen is drawn with (grid and pivot, charts and maps, inputs, tree, graph, designer kit) |
 | [drishti-lake](https://github.com/drishti-platform/drishti-lake) | Drishti Lake: Delta, Iceberg and plain-file lakes as one lake; the loader (Java and Python), the inbox, upkeep, the read API, the in-memory lake |
-| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | shared Java utilities: settings, TLS and the outbound proxy, single flight, the load guard, the one `.xlsx` writer |
+| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | shared Java utilities: settings, TLS and the outbound proxy (one place every HTTP client of Drishti takes them from), hashes and canonical JSON, CSV, single flight, the load guard, the one `.xlsx` writer |
 | [drishti](https://github.com/drishti-platform/drishti) | this repository: the kernel, the console, the modules and their data |
 
 The versions that go together are stated once, in the index repository's

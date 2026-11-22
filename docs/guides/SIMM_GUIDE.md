@@ -275,7 +275,7 @@ The answer is the computed kind `simm-result` of [SIMM.md section 9.1](../contra
 `PARAMETER_SHA256`, `MISSING_TRADES`, `SWITCHES`, `OVERRIDES`, `REGULATORY` and the `PROVENANCE` (the date, the batches, the netting set,
 the CSA's terms used, the version and the file's checksum, the choices, what was left out and why).
 
-**Settings** (`drishti.simm.*` in the engine's own file `config/engines/simm.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.simm.enabled` (default true; the old name `drishti.simm.enabled` still works; off, every request answers
+**Settings** (`drishti.simm.*` in the engine's own file `config/engines/simm.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.simm.enabled` (default true; off, every request answers
 `404 DRS-1020` and SIMM disappears from the console, [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), `parameters-dir`, `default-version`, `netting-set-kind`, `csa-kind`, `add-on-kind`, `external-kind`, `stored-kind`,
 `product-classes`, `default-product-class`, `max-factors` (1,500), `recipes-dir` (under the data folder), `cache-minutes`,
 `playground-template`. The sensitivity and dictionary kinds are FRTB-SA's (`drishti.frtb.sensitivity-kind`, `factor-kind`).
@@ -308,7 +308,7 @@ case 11 together are the `EXAMPLE` scope.
 | `DRS-5324` | no FX rate for an element's (or an add-on line's) currency | the element is left out, counted |
 
 The sensitivity load's own refusals (`DRS-5321` to `DRS-5326`, [FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes))
-hold. A switched-off engine answers `403` (`drishti.simm.enabled`); a schedule-IM CSA answers `400`.
+hold. A switched-off engine answers `403` (`drishti.engines.simm.enabled`); a schedule-IM CSA answers `400`.
 
 ## 12. What is not built yet
 

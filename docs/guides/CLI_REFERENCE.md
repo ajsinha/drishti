@@ -2238,8 +2238,8 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<domain>/<table or kind>` under the root of lake file `<lake>`; `lake` is the name of a lake file |
 | `target.path` | none | the table's location instead of the four above |
 | `target.storage-options` | `source.storage-options` | the target's S3 options |
-| `target.mode` | `replace-date` | each business date of the input replaced in one commit (`overwrite-dates` is the same word) |
-| `target.properties` | none | Delta table properties for a new table (`delta.logRetentionDuration`, …) |
+| `target.mode` | `replace-date` | each business date of the input replaced in one commit (`overwrite-dates` is the same word); `overwrite-partitions` replaces only the partitions the input holds |
+| `target.properties` | none | table properties for a new table: Delta's own (`delta.logRetentionDuration`, …) and Lake's `lake.append-only` and `lake.retention-hours`, one setting for Delta and Iceberg ([Lake's STORAGE.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/STORAGE.md)) |
 | `target.iceberg` | none | Iceberg catalog settings as the connector's: `catalog: rest`, `uri`, `warehouse`, `token: ${ICEBERG_TOKEN}` (a secret only as `${VAR}`) |
 | `target.layout.sort-by` | the pack's `layout.<kind>.sort-by`, else `[LEGAL_ENTITY, DESK, id]` | the order of each date's rows (those of the fields the rows promote; `id` the row id); `[id]` is lake build's order |
 | `target.layout.file-size-mb` | `256` | Parquet files of about this size |
@@ -4028,7 +4028,7 @@ of Parquet.
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |
 | `tools/packgen/elements_range.py` | the Elements API range a module is built for (`>=<major>.<minor> <<major+1>` of the pinned Drishti Elements, the folder under `static/vendor/drishti-elements/`): the pack generators write it into a module's `elements:` |
-| `tools/duplicates.py` | the copy-paste detector (PMD CPD through `tools/cpd/pom.xml`, 100 tokens) over Java, JavaScript and Python, excluding tests, generated files, `static/vendor`, `render/1.2.0` and `web/embed`; fails if a language has more duplicated lines than `tools/cpd/baseline.txt` (the gate runs it); `--report [N]` lists the biggest groups, `--write` lowers the baseline, never raising it |
+| `tools/duplicates.py` | the copy-paste detector (PMD CPD through `tools/cpd/pom.xml`, 100 tokens) over Java, JavaScript and Python, excluding tests, generated files, `static/vendor` and `static/render`; fails if a language has more duplicated lines than `tools/cpd/baseline.txt` (the gate runs it); `--report [N]` lists the biggest groups, `--write` lowers the baseline, never raising it |
 | `tools/code_volume.py` | lines of Java main and test, console Python and console JavaScript per release tag from git; `--write` replaces the table in [BENCHMARK.md](../admin/BENCHMARK.md#22-code-volume-by-release) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/render_sheet.py` | builds the renderer's stylesheet and integrity record from the shared CSS (`--check` fails when they are stale) |

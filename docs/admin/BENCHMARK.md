@@ -184,7 +184,7 @@ runs a small version with the tool tests.
 B=/path/to/bench-scratch                      # on disk, never /tmp (tmpfs) and never the repository's data/
 python3 tools/bench/vargen.py --out $B/vargen --positions 200000 --portfolios 1500
 python3 tools/bench/var_bench.py load --data $B/vargen --lake $B/lake --engine java --out $B/results.jsonl
-DRISHTI_LAKE_HEAP=4g python3 tools/bench/var_bench.py load --data $B/vargen --lake $B/lake-py --engine drishti --out $B/results.jsonl
+DRISHTI_LAKE_HEAP=4g python3 tools/bench/var_bench.py load --data $B/vargen --lake $B/lake-py --engine deltalake --out $B/results.jsonl
 python3 tools/bench/trades.py --lake $B/lake --tmp $B/tmp --days 2 --end 2026-09-30 --min 20000 --max 20000 --counterparties 2000
 for j in 21 25; do
   python3 tools/bench/var_bench.py run --mode single  --java $j --gc g1 --heap 8g --lake $B/lake --work $B/single-$j  --run single-$j-g1  --out $B/results.jsonl
@@ -790,7 +790,7 @@ read of a real `exposure-path` table, and a cold first touch of a hot file.
 The same files: 20 gzip files a date at 200,000 positions (400,000 P&L rows for the two dates), 40 at 1,000,000 (2,000,000 rows). Java
 21. Peak resident memory of the loader's whole process tree. The Python path was not run at 1,000,000 positions.
 
-| Kind | Python path, 200,000 (`--engine drishti`) | Java loader, 200,000 (`--engine java`) | Java loader, 1,000,000 |
+| Kind | Python path, 200,000 (`--engine deltalake`) | Java loader, 200,000 (`--engine java`) | Java loader, 1,000,000 |
 |---|---|---|---|
 | `pnl-vector`, rows × 509 | **68.4 s**, peak 2.7 GB (with `DRISHTI_LAKE_HEAP=4g`) | **7.2 s**, peak 4.0 GB | **20.0 s**, peak 4.6 GB (100,000 rows a second) |
 | table size, both dates | 831 MB | 571 MB (285 MB a date) | 2,854 MB (1,427 MB a date) |

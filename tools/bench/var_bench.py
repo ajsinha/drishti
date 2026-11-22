@@ -392,7 +392,7 @@ def main(argv=None) -> int:
     lp = sub.add_parser("load")
     lp.add_argument("--data", required=True)
     lp.add_argument("--lake", required=True)
-    lp.add_argument("--engine", choices=("drishti", "java", "deltalake"), required=True)
+    lp.add_argument("--engine", choices=("java", "deltalake"), required=True)
     lp.add_argument("--kinds", default="scenario-set,var-limit,pnl-vector")
     lp.add_argument("--loader-set", action="append")
     rp = sub.add_parser("run")

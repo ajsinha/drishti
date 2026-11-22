@@ -376,7 +376,7 @@ A connector reads one lake. Edit the two connector files the packs wrote at the 
 ```yaml
 plugin: delta
 settings:
-  lake: risklake                  # was: demo
+  lake: risklake                  # the lake's name (config/lakes/)
   lake-tables: trading.trade_endur
   union: true                     # as the pack's template: read with calypso and murex as one store
   source-name: trade-endur
