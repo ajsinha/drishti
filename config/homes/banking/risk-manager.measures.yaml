@@ -23,11 +23,11 @@
 home: risk-manager
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }   # yesterday 17:00 in the site's time zone, as the plan's cut-off
 kpis:
-  - { label: Firm VaR,        engine: var,      measure: VAR,      args: { level: 0.99, horizon: 1, scope: firm },  fmt: compact, history: 30 }
-  - { label: Day P&L,         engine: var,      measure: PNL_DAY,  args: { scope: firm },                          fmt: compact, history: 30 }
+  - { label: Firm VaR,        engine: var,      measure: VAR,      args: { level: 0.99, horizon: 1, scope: firm },  fmt: compact, history: 30, open: "VAR BANK" }
+  - { label: Day P&L,         engine: var,      measure: PNL_DAY,  args: { scope: firm },                          fmt: compact, history: 30, open: "VHIST BANK" }
   - { label: Limit use,       engine: var,      measure: LIM_USE,  args: { scope: firm },                          fmt: pct0,    history: 30 }
-  - { label: Exposure (PFE),  engine: exposure, measure: PFE,      args: { scope: firm, quantile: 0.95 },          fmt: compact, history: 30 }
-  - { label: Breaches,        engine: var,      measure: BREACHES, args: { scope: firm, window: 250 },             fmt: amount0, history: 30 }
+  - { label: Exposure (PFE),  engine: exposure, measure: PFE,      args: { scope: firm, quantile: 0.95 },          fmt: compact, history: 30, open: "EXP BANK" }
+  - { label: Breaches,        engine: var,      measure: BREACHES, args: { scope: firm, window: 250 },             fmt: amount0, history: 30, open: "VHIST BANK" }
 follow:                                   # what the change detection compares, by subject kind
   - { measure: VAR,      engine: var,      subjects: desk,         min-abs: 100000, min-rel: 0.05, drivers: [new-trades, amended-trades, market-data, rolled-window] }
   - { measure: LIM_USE,  engine: var,      subjects: desk,         min-abs: 0,      min-rel: 0.05 }

@@ -39,7 +39,7 @@ panels:
     as: ind
     area: ind
     with:
-      items: "map($.ind, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION})"
+      items: "map($.ind, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION, open: @.OPEN})"
       history: { from: $.ind_hist, columns: { label: LABEL, date: DATE, value: VALUE } }
       fmt: compact
   - use: core/exceptions-list@1

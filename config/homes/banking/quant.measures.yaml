@@ -17,9 +17,9 @@
 home: quant
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }
 kpis:
-  - { label: Firm VaR, engine: var, measure: VAR, args: { level: 0.99, horizon: 1, scope: firm }, fmt: compact, history: 30 }
-  - { label: Expected shortfall, engine: var, measure: ES, args: { scope: firm }, fmt: compact, history: 30 }
-  - { label: Breaches, engine: var, measure: BREACHES, args: { scope: firm, window: 250 }, fmt: amount0, history: 30 }
+  - { label: Firm VaR, engine: var, measure: VAR, args: { level: 0.99, horizon: 1, scope: firm }, fmt: compact, history: 30, open: "VAR BANK" }
+  - { label: Expected shortfall, engine: var, measure: ES, args: { scope: firm }, fmt: compact, history: 30, open: "VAR BANK" }
+  - { label: Breaches, engine: var, measure: BREACHES, args: { scope: firm, window: 250 }, fmt: amount0, history: 30, open: "VHIST BANK" }
 follow:
   - { measure: VAR, engine: var, subjects: desk, min-abs: 100000, min-rel: 0.05, drivers: [new-trades, amended-trades, market-data, rolled-window] }
 events: [ load ]

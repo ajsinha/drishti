@@ -42,8 +42,8 @@ public record HomeDefinition(String name, String title, String description, List
         return "home-" + name;
     }
 
-    /** One KPI of the strip: answered by {@code engine} now, its history kept {@code history} days. */
-    public record Kpi(String label, String engine, String measure, Map<String, Object> args, String fmt, int history) {}
+    /** One KPI of the strip: answered by {@code engine} now, its history kept {@code history} days; {@code open} is the command a click on the figure runs. */
+    public record Kpi(String label, String engine, String measure, Map<String, Object> args, String fmt, int history, String open) {}
 
     /** One measure the change detection compares by subject. */
     public record Follow(String measure, String engine, String subjects, double minAbs, double minRel, List<String> drivers) {

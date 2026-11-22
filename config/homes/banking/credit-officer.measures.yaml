@@ -17,7 +17,7 @@
 home: credit-officer
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }
 kpis:
-  - { label: Exposure (PFE), engine: exposure, measure: PFE, args: { scope: firm, quantile: 0.95 }, fmt: compact, history: 30 }
+  - { label: Exposure (PFE), engine: exposure, measure: PFE, args: { scope: firm, quantile: 0.95 }, fmt: compact, history: 30, open: "EXP BANK" }
 follow:
   - { measure: EXPOSURE, engine: exposure, subjects: counterparty, min-abs: 500000, min-rel: 0.05, drivers: [new-trades, amended-trades, market-data] }
 events: [ new-trade, amended-trade, load ]

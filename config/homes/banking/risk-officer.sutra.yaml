@@ -47,7 +47,7 @@ panels:
     as: kpi
     area: kpis
     with:
-      items: "map($.kpis, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION})"
+      items: "map($.kpis, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION, open: @.OPEN})"
       history: { from: $.kpi_hist, columns: { label: LABEL, date: DATE, value: VALUE } }
       fmt: compact
   - use: core/exceptions-list@1

@@ -62,7 +62,7 @@ final class HomeFiles {
             Map<String, Object> k = (Map<String, Object>) o;
             kpis.add(new HomeDefinition.Kpi(req(k, "label", file), req(k, "engine", file), req(k, "measure", file),
                     k.get("args") instanceof Map<?, ?> a ? (Map<String, Object>) a : Map.of(), k.getOrDefault("fmt", "amount0").toString(),
-                    k.get("history") instanceof Number n ? n.intValue() : 0));
+                    k.get("history") instanceof Number n ? n.intValue() : 0, k.getOrDefault("open", "").toString()));
         }
         List<HomeDefinition.Follow> follow = new ArrayList<>();
         for (Object o : list(m.get("follow"))) {

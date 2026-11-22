@@ -357,7 +357,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, connector_designer_routes, calc_routes, export_routes, help_routes, home_routes,
                         designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes)
+                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes, role_home_routes)
 
     from routes import edition_routes
     from routes import data_out_routes
@@ -715,6 +715,7 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (python tools/drishti.py calc install)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
+    app.include_router(role_home_routes.router)            # the person's role Home (ROLE_HOME_SUTRAS.md)
     app.include_router(edition_routes.router)              # an edition's landings and the lens (LENSES.md › The design)
     from core import plugins as _plugins
     # the domain modules' routers (C1, DOMAIN_MODULES.md section 5): each plugins/<module>/plugin.yaml lists its own, in order; before the

@@ -121,7 +121,8 @@ public final class HomeTables {
             }
             s.kpi(c.person(), k.measure(), k.args(), c.today()).ifPresent(v -> {
                 Double w = was.get(k.label());
-                out.add(row("LABEL", k.label(), "VALUE", v, "DELTA", w == null ? null : v - w, "CAPTION", w == null ? "no earlier figure" : "since " + c.previous()));
+                out.add(row("LABEL", k.label(), "VALUE", v, "DELTA", w == null ? null : v - w, "CAPTION", w == null ? "no earlier figure" : "since " + c.previous(),
+                        "OPEN", k.open()));
             });
         }
         return out;

@@ -1,0 +1,34 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+{% extends "base.html" %}
+{% block title %}{{ home.title }} · Home{% endblock %}
+{% block content %}
+<section class="role-home" data-role-home="{{ home.home }}" data-arrange="{{ 'true' if home.arrange else 'false' }}">
+  <header class="role-home-head">
+    <h1>{{ home.title }}</h1>
+    {% if picker %}
+    <label class="role-home-pick">Home
+      <select data-role-home-pick aria-label="Choose your Home">
+        {% for h in homes %}<option value="{{ h.home }}"{% if h.home == home.home %} selected{% endif %}>{{ h.title }}</option>{% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    {% if home.arrange %}<button type="button" class="btn btn-sm" data-role-home-arrange aria-pressed="false">Arrange my Home</button>{% endif %}
+  </header>
+  {% if status.note %}<p class="role-home-note" role="status" data-role-home-note>{{ status.note }}</p>{% endif %}
+  <div data-role-home-view></div>
+  <script type="application/json" id="role-home-data">{{ {'home': home.home, 'sutra': home.sutra, 'sutraName': home.sutraName, 'arrange': home.arrange, 'tables': tables} | tojson }}</script>
+  <script src="{{ url_for('static', path='js/drishti_role-home.js') }}" defer></script>
+</section>
+{% endblock %}
