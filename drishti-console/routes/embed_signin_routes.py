@@ -46,7 +46,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from core.oidc import OidcError
-from routes import embed_routes as v1
+from routes import embed_v2_routes as v2
 
 router = APIRouter(prefix="/embed/v2/sign-in", include_in_schema=False)
 COOKIE = "drishti_embed_signin"
@@ -240,7 +240,7 @@ async def _json(request: Request) -> dict:
 
 
 async def _answer(request: Request, body: dict, status: int = 200) -> Response:
-    return await v1.cors(request, JSONResponse(body, status_code=status, headers=NO_STORE))
+    return await v2.cors(request, JSONResponse(body, status_code=status, headers=NO_STORE))
 
 
 @router.post("/refresh")

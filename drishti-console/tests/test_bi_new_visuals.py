@@ -58,7 +58,7 @@ def test_the_map_is_served_from_the_console_and_to_the_element_with_cors(backend
     r = client.get("/static/vendor/drishti-elements/3.3.1/vendor/echarts/maps/world-countries.json")
     assert r.status_code == 200 and r.json()["type"] == "FeatureCollection"
     embed = make_client(backend)
-    e = embed.get("/embed/v1/world-countries.json", headers={"Origin": HOST})
+    e = embed.get("/embed/v2/vendor/echarts/maps/world-countries.json", headers={"Origin": HOST})
     assert e.status_code == 200 and e.headers["access-control-allow-origin"] == HOST and "json" in e.headers["content-type"]
     assert e.json() == r.json()
 

@@ -34,7 +34,7 @@ from test_build_home import CATALOGUE, CONNECTORS, OBJECTS  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
 PORT = worker_port(17938)
-SERVER = {"settings": [{"key": "drishti.var.confidence", "value": "0.975", "origin": "file", "source": "application.local.yaml", "secret": False}]}
+SERVER = {"settings": [{"key": "drishti.module.banking.var.confidence", "value": "0.975", "origin": "file", "source": "application.local.yaml", "secret": False}]}
 
 
 class Stand(FakeBackend):
@@ -191,7 +191,7 @@ def test_the_configuration_editor_searches_and_proposes(page, site):
     page.locator("[data-cfe-q]").fill("confidence")
     page.locator("[data-cfe-search] button[type=submit]").click()
     page.wait_for_url("**q=confidence*")
-    row = page.locator('tr[data-key="drishti.var.confidence"]')
+    row = page.locator('tr[data-key="drishti.module.banking.var.confidence"]')
     assert "0.975" in row.inner_text()
     row.locator("[data-propose]").click()
     dlg = page.locator("[data-propose-dialog]")
@@ -207,7 +207,7 @@ def test_the_configuration_editor_searches_and_proposes(page, site):
     with page.expect_navigation():
         dlg.locator("[data-dlg-send]").click()
     item = page.locator("[data-waiting] [data-proposal]").first
-    assert "drishti.var.confidence" in item.inner_text() and "0.99" in item.inner_text()
+    assert "drishti.module.banking.var.confidence" in item.inner_text() and "0.99" in item.inner_text()
     with page.expect_navigation():
         item.locator('[data-decide="withdraw"]').click()                                 # one's own: withdraw only
     assert "Nothing is waiting" in page.locator("[data-waiting]").inner_text()

@@ -16,7 +16,7 @@
 
 The console serves its port from several worker processes (``server.workers``), and a site may run several consoles behind one load
 balancer. A live channel's stream is held by the worker that opened it, and the browser's later calls on it (``POST /api/channel/{cid}``,
-``POST /embed/v1/channel/{cid}`` and its ``/token``) reach whichever worker, on whichever host, the kernel or the load balancer hands the
+``POST /embed/v2/channel/{cid}`` and its ``/token``) reach whichever worker, on whichever host, the kernel or the load balancer hands the
 connection to. The relay passes such a call to the worker that holds the channel and answers with that worker's answer.
 
 Each worker listens on a relay port of its own, and the id of every channel (and pack job) it opens names it:

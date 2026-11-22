@@ -103,7 +103,7 @@ _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
 # Wave B (ARCHITECTURE.md §28 P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
-EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
+EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_v2_routes.py)
 
 
 PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/", "/approvals", "/review/", "/live/")
@@ -789,12 +789,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.embed = EmbedHosts(settings)
     if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
-        from routes import embed_routes, embed_signin_routes, embed_v2_routes
+        from routes import embed_signin_routes, embed_v2_routes
 
-        app.include_router(embed_routes.router)
         app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1)
-        app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.0 (beside v1)
-        from routes import embed_report_routes
-
-        app.include_router(embed_report_routes.router)
+        app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.x
     return app

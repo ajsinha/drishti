@@ -69,7 +69,7 @@ def test_every_setting_has_a_tier_from_the_one_list():
     assert all(r.tier in cat.TIERS for r in rows)
     everyday = sorted(r.key for r in rows if r.tier == "everyday")
     assert len(everyday) <= 25, everyday
-    assert "drishti.lenses" in everyday and "drishti.var.confidence" in everyday and "features.build" in everyday
+    assert "drishti.lenses" in everyday and "drishti.module.banking.var.confidence" in everyday and "features.build" in everyday
     assert not [r.key for r in rows if r.tier == "everyday" and ("branding" in r.key or "ui-kit" in r.key or r.area == "ui-kit")]
     assert {r.tier for r in rows if r.key.startswith("drishti.branding.") or r.area == "ui-kit"} == {"admin"}
 
@@ -179,7 +179,7 @@ def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path
     for f in sorted((ROOT / "config" / "engines").glob("*.yaml")):
         eid = f.stem
         assert f"drishti.engines.{eid}.enabled" in keys, eid
-    assert {"drishti.var.hot-dates", "drishti.regulatory.average-days", "drishti.ccr.exposure.alpha", "drishti.frtb.max-factors",
+    assert {"drishti.module.banking.var.hot-dates", "drishti.regulatory.average-days", "drishti.ccr.exposure.alpha", "drishti.frtb.max-factors",
             "drishti.simm.max-factors", "drishti.frtb.factor-kind", "drishti.lake.memory.job-threads"} <= keys
     assert {"drishti.var.enabled", "drishti.ccr.exposure.enabled", "drishti.frtb.enabled", "drishti.simm.enabled"} <= keys
     server = {r.key for r in cat.yaml_rows("server", [ROOT / "kernel/drishti-server/src/main/resources/application.yaml"], "server", "restart")}

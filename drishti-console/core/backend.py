@@ -361,10 +361,6 @@ class BackendClient:
     async def suggest(self, q: str, ident, limit: int | None = None) -> list:
         return await self._get("/command/suggest", ident, q=q, **({"limit": limit} if limit else {}))
 
-    async def embed_search(self, q: str, ident, limit: int | None = None) -> dict:
-        """The search of ``<drishti-search>`` (scope embed:search): masked, cut to the host application's kinds by the server."""
-        return await self._get("/embed/search", ident, q=q, **({"limit": limit} if limit else {}))
-
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 

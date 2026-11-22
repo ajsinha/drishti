@@ -94,7 +94,7 @@ def test_every_endpoint_row_of_the_api_guide_exists():
         if not m:
             continue
         path = _norm(m.group(2).split()[0].replace("[", "?"))
-        if path.startswith(("/embed/v1", "/auth/login", "/auth/sessions")) and not any(p.match(path) for p in patterns):
+        if path.startswith(("/embed/v2", "/auth/login", "/auth/sessions")) and not any(p.match(path) for p in patterns):
             continue
         if not any(p.match(path) for p in patterns):
             unknown.append(f"{m.group(1)} {m.group(2)}")

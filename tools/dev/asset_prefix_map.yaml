@@ -812,10 +812,6 @@ anchors:
   94-an-echarts-kind-chartsjs-and-the-data-table: 94-an-echarts-kind-drishti_chartsjs-and-the-data-table
   in-the-browser-channeljs: in-the-browser-drishti_channeljs
 patches:
-- file: drishti-console/routes/embed_routes.py
-  old: path = WEB / "static/js" / f"{name}.js"
-  new: path = WEB / "static/js" / f"drishti_{name}.js"
-  why: 'the Elements 1.x enhancer route: the URL keeps the public name, the file is drishti_<name>.js'
 - file: drishti-console/routes/embed_v2_routes.py
   old: STATIC / "js" / f"{name}.js"
   new: STATIC / "js" / f"drishti_{name}.js"
@@ -860,10 +856,6 @@ patches:
   old: re.findall(r"/static/js/([a-z-]+)\.js"
   new: re.findall(r"/static/js/drishti_([a-z-]+)\.js"
   why: the page's scripts by name, read with a pattern
-- file: drishti-console/routes/embed_routes.py
-  old: "async def enhancer_js(request: Request, name: str):\n    if name not in ENHANCERS:"
-  new: "async def enhancer_js(request: Request, name: str):\n    name = name.removeprefix(\"drishti_\")\n    if name not in ENHANCERS:"
-  why: the public name in the address; the drishti_ name too, which a script finding its siblings beside itself asks for
 - file: drishti-console/routes/embed_v2_routes.py
   old: "async def script(request: Request, name: str):\n    if name not in SCRIPTS:"
   new: "async def script(request: Request, name: str):\n    name = name.removeprefix(\"drishti_\")\n    if name not in SCRIPTS:"
