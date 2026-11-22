@@ -51,7 +51,7 @@ def browser(stack):
         b.close()
 
 
-VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
+VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI + ' at ' + e.sourceFile + ':' + e.lineNumber + ' ' + (e.sample || '')));"
 
 
 def sign_in(browser, user, **ctx):
