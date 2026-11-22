@@ -208,9 +208,9 @@ public class DrishtiLiveTables {
      * bounds what is kept. Rachana's {@code LiveTables.undeclare} takes the declaration out: its streams end with an expired gap and a later
      * read answers {@code 404 rdp.table.unknown} with {@code expired: true}.
      */
-    static void release(LiveTables lt, Map<String, LiveTableSpec> specs, String name) {
+    static boolean release(LiveTables lt, Map<String, LiveTableSpec> specs, String name) {
         specs.remove(name);
-        lt.undeclare(name);
+        return lt.undeclare(name);
     }
 
     /** The authoriser of one engine. */
