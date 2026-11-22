@@ -61,7 +61,7 @@ public final class DependencyGraph {
     private final Map<String, List<Dependency>> in = new LinkedHashMap<>();
 
     private DependencyGraph(Set<String> nodes, List<Dependency> edges) {
-        this.nodes = Set.copyOf(new LinkedHashSet<>(nodes));
+        this.nodes = java.util.Collections.unmodifiableSet(new LinkedHashSet<>(nodes));   // in declared order: the first cycle and the start order are stable
         this.edges = List.copyOf(edges);
         for (Dependency d : edges) {
             out.computeIfAbsent(d.from(), k -> new ArrayList<>()).add(d);
@@ -319,7 +319,7 @@ public final class DependencyGraph {
             if (dep == null) {
                 h = h.with(ComponentHealth.of(ComponentHealth.Status.DEGRADED, "needs " + d.to() + ", which does not exist here", own.checkedAt()), null);
             } else if (dep.status() != ComponentHealth.Status.UP) {
-                String why = d.to() + " is " + dep.status().name().toLowerCase(java.util.Locale.ROOT)
+                String why = d.to() + ", which is " + dep.status().name().toLowerCase(java.util.Locale.ROOT)
                         + (dep.reasons().isEmpty() ? "" : " (" + dep.reasons().get(0) + ")");
                 h = h.with(ComponentHealth.of(ComponentHealth.Status.DEGRADED, "needs " + why, own.checkedAt()), null);
             }

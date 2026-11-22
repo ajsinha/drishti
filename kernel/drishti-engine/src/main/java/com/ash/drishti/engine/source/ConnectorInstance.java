@@ -410,6 +410,23 @@ final class ConnectorInstance implements SourcePlugin {
         delegate.close();
     }
 
+    // the lifecycle (docs/architecture/LIFECYCLE.md section 4): the instance is the plugin, so it passes suspend, resume and backlog on
+
+    @Override
+    public void suspend() {
+        delegate.suspend();
+    }
+
+    @Override
+    public void resume() {
+        delegate.resume();
+    }
+
+    @Override
+    public long backlog() {
+        return delegate.backlog();
+    }
+
     // a connector writes with its plugin's write path (APPROVALS_GUIDE.md section 5.4): the instance is the plugin, so it passes it on
 
     @Override

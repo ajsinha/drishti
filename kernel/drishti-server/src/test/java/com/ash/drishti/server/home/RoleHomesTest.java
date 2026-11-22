@@ -55,14 +55,7 @@ class RoleHomesTest {
     @TempDir Path data;
 
     static Path homes() {
-        Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("config/homes"))) {
-            p = p.getParent();
-        }
-        if (p == null) {
-            throw new IllegalStateException("config/homes not found above " + Path.of("").toAbsolutePath());
-        }
-        return p.resolve("config/homes");
+        return Path.of(System.getProperty("lake.repo.root")).resolve("config/homes");   // the repository's root, absolute (TestPathsGuardTest)
     }
 
     HomeCatalogue catalogue() {

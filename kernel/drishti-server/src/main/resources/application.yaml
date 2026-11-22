@@ -384,6 +384,7 @@ drishti:
     # A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
+      - /api/v1/engines/*/output         # a hosted engine's answer as the caller (ENGINES_IN_DRISHTI.md): an ask, writes nothing
       - /api/v1/admin/settings/secret-keys   # which of the console's own setting keys are secrets (keys only, no values): reads, writes nothing
       - /api/v1/modules/needs            # which saved items need a switched-off or removed module ("needs module X"): reads, writes nothing
       - /api/v1/pivot/query              # the pivot engine (bi/PIVOT.md): a view's answer, its estimate, a node opened, two dates compared,
@@ -582,6 +583,7 @@ drishti:
           - DELETE /api/v1/admin/packs/deploy/*
           - POST /api/v1/admin/packs/*/rollback
           - POST /api/v1/admin/packs/*/data
+          - POST /api/v1/admin/*/*/lifecycle/*      # init, start, suspend, resume, shutdown of a module, pack or connector (docs/architecture/LIFECYCLE.md)
           - POST /api/v1/admin/packs/*/lifecycle/*   # init, start, suspend, resume, shutdown of a pack (docs/architecture/LIFECYCLE.md); connectors' are under connectors/**
           - PUT /api/v1/admin/connectors/*
           - DELETE /api/v1/admin/connectors/*
@@ -620,6 +622,9 @@ drishti:
         allow:
           - POST /api/v1/admin/ai/test
     token-never:                       # never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state
+      - PUT /api/v1/homes/me             # the caller's own start Home: a person's choice in the console
+      - POST /api/v1/homes/admin/snapshot   # Role Homes: take the snapshot now (an administrator in the console)
+      - POST /api/v1/homes/admin/reload     # Role Homes: read the Home files again (an administrator in the console)
       - POST /api/v1/bi/python/cell      # a Notebook cell: code a person writes, run on the compute pool from the console only
       - POST /api/v1/bi/python/steps     # a Transform's step-by-step run: an author in the console
       - POST /api/v1/tables/editor/python/run   # a Python-driven table's sample run: an author in the console

@@ -593,7 +593,12 @@ version: 1
 libraries: [core@1]
 match: { kind: trade }
 panels:
-  - { use: core/record-card@1, with: { title: "Trade" } }
+  - use: core/record-card@1
+    with:
+      record: "{name: $.trade.TRADE_ID, subtitle: $.trade.COUNTERPARTY, status: $.trade.TRADE_STATUS, NOTIONAL: $.trade.NOTIONAL, TRADE_DATE: $.trade.TRADE_DATE}"
+      facts:
+        - { label: Notional, bind: "@.NOTIONAL", fmt: money }
+        - { label: Trade date, bind: "@.TRADE_DATE", fmt: date }
 ```
 
 The long form needs no declaration: `{ use: core@1/record-card@1 }`. A library fragment is always used with its major (`DRS-2048` without

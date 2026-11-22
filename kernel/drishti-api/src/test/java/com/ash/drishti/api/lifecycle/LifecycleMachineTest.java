@@ -85,7 +85,7 @@ class LifecycleMachineTest {
         assertThat(m.state()).isEqualTo(LifecycleState.SHUTDOWN);
         assertThat(events).extracting(LifecycleEvent::auditAction)
                 .containsExactly("pack-init", "pack-start", "pack-suspend", "pack-resume", "pack-shutdown");
-        assertThat(events).extracting(LifecycleEvent::words).containsExactly("new -> initialized", "initialized -> running",
+        assertThat(events).extracting(LifecycleEvent::words).containsExactly("new -> initialised", "initialised -> running",
                 "running -> suspended", "suspended -> running", "running -> shutdown");
         assertThat(events).allMatch(e -> e.actor().equals("ops") && e.target().equals("pack/p"));
     }
