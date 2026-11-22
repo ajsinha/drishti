@@ -131,20 +131,26 @@ public final class BiMeasures {
             case Expr.Lit x when x.value() == null -> "null";
             case Expr.Lit x when x.value() instanceof Boolean b -> b ? "true" : "false";
             case Expr.Lit x when x.value() instanceof String v -> "'" + v.replace("\\", "\\\\").replace("'", "\\'") + "'";
-            case Expr.Lit x -> x.value() instanceof Double d ? Double.toString(d) : String.valueOf(x.value());
+            case Expr.Lit x when x.value() instanceof Number v -> number(com.ash.rachana.el.Values.normalise(v.doubleValue()));
+            case Expr.Lit x -> String.valueOf(x.value());
             case Expr.ListLit l -> "[" + String.join(", ", l.items().stream().map(i -> print(ds, i, fields, tables, path, inAgg)).toList()) + "]";
             case Expr.Field f -> field(ds, f, fields, tables, inAgg);
             case Expr.Not u -> "(!" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
-            case Expr.Neg u -> "(-" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
+            case Expr.Minus u -> "(-" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
             case Expr.And a -> "(" + print(ds, a.l(), fields, tables, path, inAgg) + " && " + print(ds, a.r(), fields, tables, path, inAgg) + ")";
             case Expr.Or o -> "(" + print(ds, o.l(), fields, tables, path, inAgg) + " || " + print(ds, o.r(), fields, tables, path, inAgg) + ")";
-            case Expr.Binary b -> "(" + print(ds, b.l(), fields, tables, path, inAgg) + " " + b.op() + " " + print(ds, b.r(), fields, tables, path, inAgg) + ")";
+            case Expr.Op b -> "(" + print(ds, b.l(), fields, tables, path, inAgg) + " " + b.op() + " " + print(ds, b.r(), fields, tables, path, inAgg) + ")";
             case Expr.In i -> "(" + print(ds, i.value(), fields, tables, path, inAgg) + (i.negated() ? " not in " : " in ") + print(ds, i.list(), fields, tables, path, inAgg) + ")";
             case Expr.Ternary t -> "(" + print(ds, t.cond(), fields, tables, path, inAgg) + " ? " + print(ds, t.then(), fields, tables, path, inAgg)
                     + " : " + print(ds, t.otherwise(), fields, tables, path, inAgg) + ")";
             case Expr.Call c -> call(ds, c, fields, tables, path, inAgg);
             default -> throw new NotPivot(com.ash.rachana.el.Printer.print(n) + " is not a pivot input");
         };
+    }
+
+    /** A number as the pivot formula reads it: a whole number without a point. */
+    private static String number(Number v) {
+        return v instanceof Double d ? Double.toString(d) : String.valueOf(v);
     }
 
     /** The dotted name of a chain of fields from the row ({@code trades.MTM}), or null. */
@@ -189,6 +195,11 @@ public final class BiMeasures {
             }
             return "(" + print(ds, positional.get(0), fields, tables, path, false) + " / " + print(ds, positional.get(1), fields, tables, path, false) + ")";
         }
+        if (name.equals("calc") && !inAgg && positional.size() == 1 && c.named().size() == 1 && c.named().get("where") != null
+                && positional.get(0) instanceof Expr.Call inner && AGGREGATES.containsKey(Functions.oneName(inner.name()).toLowerCase(Locale.ROOT))) {
+            // calc(sum(x), where = c): the aggregate over its group's rows where the condition holds
+            return "calc(" + call(ds, inner, fields, tables, path, false) + ", where = " + print(ds, c.named().get("where"), fields, tables, path, true) + ")";
+        }
         String agg = AGGREGATES.get(name);
         if (agg != null && !inAgg) {
             List<String> args = new ArrayList<>();
@@ -201,11 +212,8 @@ public final class BiMeasures {
                     args.add(print(ds, positional.get(i), fields, tables, path, !param));
                 }
             }
-            for (Map.Entry<String, Expr> k : c.named().entrySet()) {
-                if (!k.getKey().equals("where")) {
-                    throw new NotPivot(name + "(" + k.getKey() + "=...) reads beyond its group's rows (a filter context or a time window)");
-                }
-                args.add("where = " + print(ds, k.getValue(), fields, tables, path, true));
+            if (!c.named().isEmpty()) {
+                throw new NotPivot(name + "(" + c.named().keySet().iterator().next() + "=...) reads beyond its group's rows (a filter context or a time window)");
             }
             return agg + "(" + String.join(", ", args) + ")";
         }

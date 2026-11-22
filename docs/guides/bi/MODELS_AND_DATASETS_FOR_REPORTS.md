@@ -189,7 +189,7 @@ measures:
   Notional:   { expr: "sum(trades.NOTIONAL)", format: amount0 }
   MTM per 1m: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000" }
   Share:      { expr: "measure('MTM') / measure('Notional')" }
-  Open MTM:   { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
+  Open MTM:   { expr: "calc(sum(trades.MTM), where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
   MTM ytd:    { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)" }
   MTM rank:   { expr: "rank(sum(trades.MTM))" }
   MTM 3-day average: { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)" }
@@ -441,7 +441,7 @@ column with a cash-flow measure would repeat each cash flow once per leg, and is
 ##### Change a measure in a copy, and a definition that is wrong
 
 Shipped files are read-only: open one in **Build › Tables & models**, **Copy as a draft**, add a measure such as
-`Big trades: { expr: "sum(trade.NOTIONAL, where = trade.NOTIONAL > 100000000)" }`, save, and ask it by `trade.DESK`. Your draft is yours until
+`Big trades: { expr: "calc(sum(trade.NOTIONAL), where = trade.NOTIONAL > 100000000)" }`, save, and ask it by `trade.DESK`. Your draft is yours until
 published. A mistake is answered with its code and the names that exist:
 
 ```

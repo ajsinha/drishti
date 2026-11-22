@@ -33,7 +33,7 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}    # runs on its own (--guide
 start_servers = _var.start_servers
 shot = register("t37", OUT / "t37")
 WIDE, HIGH = 1440, 900
-SHARE = "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)"
+SHARE = "calc(sum(NOTIONAL), where=NOTIONAL > 100000000) / sum(NOTIONAL)"
 BY_PRODUCT = {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "sum(NOTIONAL)", "as": "Notional"}]}
 
 

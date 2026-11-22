@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.pivot;
 
-import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;

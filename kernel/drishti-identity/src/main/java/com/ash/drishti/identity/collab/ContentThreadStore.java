@@ -16,7 +16,6 @@
 package com.ash.drishti.identity.collab;
 
 import com.ash.drishti.identity.content.ContentDocs;
-import com.ash.drishti.identity.content.ContentStore;
 import com.ash.drishti.identity.content.TxContentStore;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**

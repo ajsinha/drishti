@@ -23,7 +23,7 @@ import java.util.Set;
 /** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict] [--docs] [--write]}. */
 record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each, boolean docs, boolean write) {
 
-    static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview", "upgrade");
+    static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview");
 
     /** @throws UsageException when the line is not understood */
     static CliArgs parse(List<String> args) {

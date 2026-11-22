@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.DatasetParser;

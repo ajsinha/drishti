@@ -36,34 +36,42 @@ from select_helpers import has_option
 
 DATASET = "wa-demo"
 REPORT = "file:report:wa-demo"
-TABLE = "file:table:bi.wa_demo_trade"             # the table the dataset wa-demo became (a rachana: 1 dataset is tables and a model)
+TABLE = "file:table:bi.wa_demo_trade"             # the table the model wa-demo reads
 TRADES = 120                                                      # two days of 60
 
-DATASET_YAML = """rachana: 1
-dataset: wa-demo
-version: 1
+TABLE_YAML = """rachana: 3
+table: bi.wa_demo_trade
+version: 1.0.0
+title: Wave A demo, trade
+sample: true
+from: { kind: trade, connector: trading-store }
+keys: [tradeId]
+columns:
+  tradeId:   { path: "$.tradeId", type: string, role: key, key: true }
+  desk:      { path: "$.desk", type: string }
+  notional:  { path: "$.notional", type: decimal }
+  mtm:       { path: "$.mtm", type: decimal }
+  tradeDate: { path: "$.tradeDate", type: date }
+materialize: on-load
+refresh: { schedule: "daily 06:00", on-load: true }
+tests:
+  - { name: The latest day holds 60 trades, agg: count, date: 2026-10-08, expect: 60 }
+  - { name: Not a hundred, agg: count, date: 2026-10-08, expect: 100, tolerance: 1% }
+"""
+
+MODEL_YAML = """rachana: 3
+model: wa-demo
+version: 1.0.0
 title: Wave A demo
 sample: true
-refresh: "daily at 06:00"
 tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    mode: cached
-    columns:
-      tradeId: { type: string, key: true }
-      desk: string
-      notional: decimal
-      mtm: decimal
-      tradeDate: date
+  trade: { table: bi.wa_demo_trade, role: fact }
 measures:
   Notional: { expr: "sum(trade.notional)", format: amount0, additive: true }      # each day holds its own trades (a flow): it adds over the dates
   MTM: { expr: "sum(trade.mtm)", format: signed0, additive: true }
   Trades: { expr: "count(trade)", additive: true }
   MTM rank: { expr: "rank(sum(trade.mtm))" }
   MTM 2-day average: { expr: "moving_avg(sum(trade.mtm), 2, trade.tradeDate)" }
-tests:
-  - { name: The latest day holds 60 trades, measure: Trades, date: 2026-10-08, expect: 60 }
-  - { name: Not a hundred, measure: Trades, date: 2026-10-08, expect: 100, tolerance: 1% }
 """
 
 REPORT_YAML = """rachana: 1
@@ -71,7 +79,7 @@ report: wa-demo
 version: 1
 title: Wave A demo
 sample: true
-dataset: wa-demo
+model: wa-demo@1
 dates: { from: 2026-10-07, to: 2026-10-08 }
 pages:
   - id: main
@@ -94,7 +102,9 @@ layouts:
 
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
-        (work / "config/bi/datasets" / f"{DATASET}.dataset.yaml").write_text(DATASET_YAML)
+        (work / "config/tables/bi").mkdir(parents=True, exist_ok=True)
+        (work / "config/tables/bi" / "wa_demo_trade.table.yaml").write_text(TABLE_YAML)
+        (work / "config/tables/bi" / f"{DATASET}.model.yaml").write_text(MODEL_YAML)
         (work / "config/bi/reports" / "wa-demo.report.yaml").write_text(REPORT_YAML)
 
 

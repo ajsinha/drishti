@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.report;
 
-import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.server.bi.Tables;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -52,7 +52,7 @@ def register(bi, srv, ctx) -> None:
                       description="Asks one model query (mq: 1) of the server, as you: the same request a report visual, an alert or Analyse makes.",
                       formatter_class=argparse.RawDescriptionHelpFormatter,
                       epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.NAME --measures MTM,Trades --sort=-MTM --limit 3\n"
-                             "  drishti.py bi mq --model trading-risk@1 --select desks.NAME --define \"Validated MTM=sum(trades.MTM, where=trades.TRADE_STATUS == 'VALIDATED')\" --measures \"Validated MTM\"")
+                             "  drishti.py bi mq --model trading-risk@1 --select desks.NAME --define \"Validated MTM=calc(sum(trades.MTM), where=trades.TRADE_STATUS == 'VALIDATED')\" --measures \"Validated MTM\"")
     q.add_argument("file", nargs="?", help="a YAML or JSON model query")
     q.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (ARCHITECTURE.md §28): the answer if done within --wait, else the run's id")
     q.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")

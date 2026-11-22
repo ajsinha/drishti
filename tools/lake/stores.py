@@ -51,7 +51,7 @@ SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
 DOMAIN = "trading"
 DELTA_DEFAULT = lakeconfig.DEMO_ROOT_REF   # the demo lake: its own folder, <data>/delta/demo (config/lakes/demo.yaml)
-ICEBERG_DEFAULT = "${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}"
+ICEBERG_DEFAULT = "${DRISHTI_ICEBERG_ROOT:${lake.data.dir:./data}/iceberg}"
 WRITTEN_BY = "# Written by tools/build_demo_lakes.py --store"
 
 
@@ -252,7 +252,7 @@ def _resolve(value: str, data: pathlib.Path, env: str) -> pathlib.Path:
         if os.environ.get(env):
             return pathlib.Path(os.environ[env]).resolve()
         value = m.group(1)
-    value = value.replace("${drishti.data.dir:./data}", str(data))
+    value = value.replace("${lake.data.dir:./data}", str(data)).replace("${drishti.data.dir:./data}", str(data))
     p = pathlib.Path(value)
     return (p if p.is_absolute() else ROOT / p).resolve()
 

@@ -235,13 +235,13 @@ record DocPath(String text, String id, List<Level> levels, List<Step> leaf, bool
             case Expr.And a -> "(" + predicate(a.l(), v, text) + " AND " + predicate(a.r(), v, text) + ")";
             case Expr.Or o -> "(" + predicate(o.l(), v, text) + " OR " + predicate(o.r(), v, text) + ")";
             case Expr.Not n -> "(NOT " + predicate(n.e(), v, text) + ")";
-            case Expr.Binary b when List.of("==", "!=", "<", "<=", ">", ">=").contains(b.op()) -> compare(b, v, text);
+            case Expr.Op b when List.of("==", "!=", "<", "<=", ">", ">=").contains(b.op()) -> compare(b, v, text);
             default -> throw PivotView.bad("'" + text + "': a filter compares the element's fields with values (@.LEG_TYPE == 'FIXED', "
                     + "@.NOTIONAL > 1000000), joined by && and ||");
         };
     }
 
-    private static String compare(Expr.Binary b, String v, String text) {
+    private static String compare(Expr.Op b, String v, String text) {
         String l = operand(b.l(), v, text);
         String r = operand(b.r(), v, text);
         boolean numeric = b.l() instanceof Expr.Lit ll && ll.value() instanceof Number || b.r() instanceof Expr.Lit rl && rl.value() instanceof Number;
@@ -260,7 +260,7 @@ record DocPath(String text, String id, List<Level> levels, List<Step> leaf, bool
     private static String operand(Expr e, String v, String text) {
         if (e instanceof Expr.Lit l) {
             Object x = l.value();
-            return x instanceof Number n ? n.toString() : x == null ? "NULL" : lit(String.valueOf(x));
+            return x instanceof java.math.BigDecimal d ? d.toPlainString() : x instanceof Number n ? n.toString() : x == null ? "NULL" : lit(String.valueOf(x));
         }
         List<String> names = new ArrayList<>();
         Expr at = e;

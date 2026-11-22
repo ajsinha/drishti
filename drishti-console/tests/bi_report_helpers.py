@@ -107,7 +107,8 @@ def click_mark(page, vis, category):
 
 
 def clean(page):
-    assert page.evaluate("window.__csp") == [], "a policy violation"
+    violations = page.evaluate("window.__csp")
+    assert violations == [], f"a policy violation: {violations}"
     assert page.errors == [], page.errors
 
 
