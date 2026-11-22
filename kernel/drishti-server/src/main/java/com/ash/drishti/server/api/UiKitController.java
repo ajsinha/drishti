@@ -71,6 +71,7 @@ public class UiKitController {
                 (com.ash.drishti.rachana.DrishtiRachana.blocks().fromKit(b) ? fragments : packFragments).add(library.describe(b, false));
             }
         }
+        List<Map<String, Object>> libraryFragments = com.ash.drishti.rachana.DrishtiLibraries.fragments(com.ash.drishti.rachana.DrishtiRachana.libraries());
         List<Map<String, Object>> assets = new ArrayList<>();
         Map<String, String> urls = new LinkedHashMap<>();
         for (UiKit.Asset a : kit.assets()) {
@@ -100,6 +101,7 @@ public class UiKitController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("fragments", fragments);
         out.put("packFragments", packFragments);
+        out.put("libraryFragments", libraryFragments);                 // Rachana libraries (core/..., finance/...): the workbench palette lists them
         out.put("assets", assets);
         out.put("brand", brand);
         out.put("streaming", false);                                   // Gen UI streaming of the kit: later (RACHANA_REFERENCE.md)

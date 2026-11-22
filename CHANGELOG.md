@@ -25,6 +25,13 @@
   tables; and who may ask. Engines have the init, start, suspend, resume and shutdown lifecycle, health and stats on a board, the
   `engineHost` health entry and the `drishti_lifecycle_*` metrics. They appear on Admin → Engines with the built-in engines.
   docs/architecture/ENGINES_IN_DRISHTI.md.
+- **Rachana libraries in Drishti.** A Sutra that declares `libraries: [core@1]` (or names a library in full, `core@1/record-card@1`) uses
+  Rachana's library fragments (`core`, `finance`, carried by the Rachana jars; more from folders or `.rlib` archives named in
+  `drishti.rachana.libraries.dirs`, absolute or anchored to `${home}`/`${config}`/`${data}`). One resolver chain: the libraries, then the UI kit
+  and the packs' fragments as before; versions pinned by Rachana's `rachana.lock` (`drishti.rachana.libraries.lock-file`, default
+  `<config>/rachana.lock`); refusals are `DRS-2110` to `DRS-2113`, in words. The workbench palette (`GET /api/v1/ui-kit`, `libraryFragments`)
+  lists them with their `doc` summaries. Needs `rachana-server` 1.0.0 (the jar that carries the libraries) in the build. RACHANA_REFERENCE.md
+  (Rachana libraries), CONFIGURATION.md (`drishti.rachana.libraries`).
 
 - **Browser tests: one server per lane.** The browser lane's workers share one Drishti server and one console per set-up
   (`tools/lane_servers.py`: the first worker starts them under a file lock, the others attach; a watchdog stops them once the lane's
