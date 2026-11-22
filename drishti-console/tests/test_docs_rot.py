@@ -415,7 +415,15 @@ def _camel(s: str) -> str:
 @functools.lru_cache(maxsize=None)
 def server_keys() -> frozenset[str]:
     rels = [p for p in tracked() if p.startswith("kernel/drishti-server/src/main/resources/application") and p.endswith(".yaml")]
-    return yaml_keys(*rels)
+    # the engines' own files (a site's config/engines/*.yaml and the ones a module ships) hold settings the server binds too, and a module's
+    # module.yaml ``settings:`` lists the keys it owns, read as drishti.module.<id>.<key>
+    rels += [p for p in tracked() if p.endswith(".yaml") and (p.startswith("config/engines/") or "/src/main/resources/engines/" in p)]
+    keys = set(yaml_keys(*rels))
+    for p in tracked():
+        if p.startswith("modules/") and p.endswith("/module.yaml"):
+            doc = yaml.safe_load(read(p)) or {}
+            keys |= {f"drishti.module.{doc.get('id', p.split('/')[1])}.{s['key']}" for s in doc.get("settings") or [] if isinstance(s, dict) and s.get("key")}
+    return frozenset(keys)
 
 
 @functools.lru_cache(maxsize=None)

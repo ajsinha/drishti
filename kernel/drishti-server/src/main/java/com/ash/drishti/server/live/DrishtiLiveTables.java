@@ -628,6 +628,12 @@ public class DrishtiLiveTables {
         columns.add(Map.of("name", keyColumn, "label", "Id"));
         fields.stream().filter(f -> !f.equals(keyColumn)).limit(12).forEach(f -> columns.add(Map.of("name", f, "label",
                 com.ash.drishti.server.api.HistoryController.label(f))));
+        List<String> narrowed = narrow == null ? List.of() : narrow.stream().map(n -> n.startsWith("$.") ? n.substring(2) : n).toList();
+        for (String f : narrowed) {                       // a narrowing field is a column (Rachana refuses a 'narrow' that names none): shown even past the first twelve
+            if (columns.stream().noneMatch(c -> c.get("name").equals(f))) {
+                columns.add(Map.of("name", f, "label", com.ash.drishti.server.api.HistoryController.label(f)));
+            }
+        }
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("rachana", 1);
         doc.put("live-table", defaultName(kind));
@@ -637,8 +643,8 @@ public class DrishtiLiveTables {
         doc.put("stream", kind);
         doc.put("key", keyColumn);
         doc.put("columns", columns);
-        if (narrow != null && !narrow.isEmpty()) {
-            doc.put("narrow", Map.of("any-of", narrow.stream().map(n -> n.startsWith("$.") ? n.substring(2) : n).toList()));
+        if (!narrowed.isEmpty()) {
+            doc.put("narrow", Map.of("any-of", narrowed));
         }
         return Optional.of(LiveTableSpec.of(doc, PROFILE_KEYS, f -> true));
     }

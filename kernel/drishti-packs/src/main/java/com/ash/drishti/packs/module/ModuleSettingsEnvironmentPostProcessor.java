@@ -98,6 +98,9 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
     static String siteSets(ConfigurableEnvironment env, String key) {
         for (PropertySource<?> ps : env.getPropertySources()) {
             String n = ps.getName();
+            if ("configurationProperties".equals(n)) {
+                continue;     // Spring's attached view over every source, the environment's variables among them (relaxed names): the real sources are visited one by one
+            }
             if (n.startsWith(SOURCE) || "systemEnvironment".equals(n) || n.startsWith("drishti-edition") || n.startsWith("drishti-packs")
                     || (n.startsWith("Config resource") && n.contains("class path resource"))
                     || (n.startsWith("Config resource") && n.replace('\\', '/').matches("(?s).*engines/[a-z0-9-]+\\.yaml\\].*"))) {

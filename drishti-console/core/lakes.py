@@ -233,7 +233,7 @@ class Lakes:
             raise LakeError(400, "the file is empty")
         u = self.uploads[uid] = Upload(uid, safe, path, owner, size)
         try:
-            fd = _tool(self.cfg.tools_dir, "filedate")
+            from drishti_lake import filedate as fd             # the business-date rule is Drishti Lake's (the wheel the pin names)
             named = fd.of(safe)
             u.date, u.today = (named.isoformat() if named else None), fd.business_today().isoformat()
         except LakeError:

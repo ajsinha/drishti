@@ -141,7 +141,7 @@ class SizingPlannerTest(unittest.TestCase):
         lines = block.split("\n")
         self.assertEqual(lines[0], "drishti:")
         self.assertEqual(sum(1 for line in lines if line == "  var:"), 1)
-        self.assertIn("    hot-dates: 10", lines)
+        self.assertIn("        hot-dates: 10", lines)                 # drishti.module.banking.var.hot-dates: the module's own settings are one tree under module.banking
         self.assertIn("      max-disk-gb: 58", lines)
         self.assertNotIn("  ccr:", lines)
         on = sp.evaluate({"ExposureOn": 1}).value("YamlBlock").split("\n")

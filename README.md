@@ -475,18 +475,18 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 397k | 2,015 |
-| Java, tests | 165k | 1,017 |
-| Python, product (console, tools, loaders, feeds) | 156k | 783 |
-| Python, tests | 114k | 683 |
-| JavaScript, product (console and its own Elements libraries) | 59k | 283 |
-| JavaScript, tests | 1.1k | 7 |
-| CSS | 14k | 103 |
-| HTML (templates and pages) | 42k | 378 |
+| Java, product | 397k | 2,016 |
+| Java, tests | 165k | 1,018 |
+| Python, product (console, tools, loaders, feeds) | 155k | 778 |
+| Python, tests | 112k | 678 |
+| JavaScript, product (console and its own Elements libraries) | 57k | 267 |
+| JavaScript, tests | 1.0k | 7 |
+| CSS | 10k | 100 |
+| HTML (templates and pages) | 42k | 377 |
 | YAML: configuration, Sutras, data contracts | 120k | 1,698 |
-| Markdown: guides, tutorials, design | 222k | 376 |
+| Markdown: guides, tutorials, design | 221k | 376 |
 
-About **668k lines of product code** and **280k lines of tests** (42% of the product code), with **222k lines of documentation**.
+About **662k lines of product code** and **278k lines of tests** (42% of the product code), with **221k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -494,7 +494,7 @@ About **668k lines of product code** and **280k lines of tests** (42% of the pro
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 12: world, markets, publicsector, research, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 670 |
+| Console routes | 646 |
 | Server REST handlers | 828 |
 | Drishti's own Elements libraries (Drishti Elements itself: vendored) | 2 libraries, 18 ES modules |
 | Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
@@ -502,7 +502,7 @@ About **668k lines of product code** and **280k lines of tests** (42% of the pro
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,552: Java 931, console 281, browser 183, tools 150, JavaScript 7 |
+| Test files | 1,548: Java 932, console 278, browser 181, tools 150, JavaScript 7 |
 | Documents under docs/ | 200 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->

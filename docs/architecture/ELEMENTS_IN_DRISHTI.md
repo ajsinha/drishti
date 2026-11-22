@@ -103,11 +103,7 @@ and `Formats.java` read the same names from the classpath and git holds no secon
 
 ## 6. The render folder and the embed
 
-`static/render/<version>/` (the public entry of the client-side renderer, its host part `m/`, its sheet and its integrity record) is
-Drishti's and is named after the pin; `tools/render_sheet.py` writes it. **The redirect policy is unchanged:** when the pin moves, a new folder is written, the
-previous folder's paths answer `308` to the current one with `Deprecation: true` for one release, then are removed; `1.2.0` stays frozen
-byte for byte (its engines are served from the vendored copy by the embed's vendor route). The element sheets of `<drishti-view>` and
-`<drishti-report>` (`tools/elements_sheet.py`) read Elements' sheets through `elements_pin.static_path`.
+`static/render/<version>/` (the public entry of the client-side renderer, its sheet and its integrity record) is Drishti's and is named after the pin; `tools/render_sheet.py` writes it. When the pin moves, a new folder is written and the previous one is removed: one renderer, one Elements version.
 
 ## 7. The gallery
 

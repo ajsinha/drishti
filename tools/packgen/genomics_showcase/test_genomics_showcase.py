@@ -126,7 +126,7 @@ def test_every_variant_of_a_protein_gene_joins_to_the_scan(world):
     for v in docs[S.GENOMICS]["study-variant"].values():
         if v["GENE"] in seq and v["CONSEQUENCE"] == "missense_variant":
             assert seq[v["GENE"]][v["PROTEIN_POS"] - 1] == v["AA_REF"], v["VARIANT_ID"]
-            assert f"{v['GENE']}:{v['PROTEIN_POS']}:{v['AA_ALT']}:activity" in scan, v["VARIANT_ID"]
+            assert f"{v['GENE']}:{v['PROTEIN_POS']}:{v['AA_ALT']}:ACTIVITY" in scan, v["VARIANT_ID"]
             joined += 1
     assert joined > 100
 
@@ -134,7 +134,7 @@ def test_every_variant_of_a_protein_gene_joins_to_the_scan(world):
 def test_the_lead_variants_hurt_in_the_scan(world):
     docs, story = world
     v = docs[S.GENOMICS]["study-variant"][story["lead_variant"]]
-    score = docs[S.PROTEIN]["dms-score"][f"{v['GENE']}:{v['PROTEIN_POS']}:{v['AA_ALT']}:activity"]["SCORE"]
+    score = docs[S.PROTEIN]["dms-score"][f"{v['GENE']}:{v['PROTEIN_POS']}:{v['AA_ALT']}:ACTIVITY"]["SCORE"]
     assert v["GENE"] == M.LEAD_GENE and score < -1.5
     assert docs[S.PROTEIN]["residue"][f"{v['GENE']}:{v['PROTEIN_POS']}"]["ACTIVE_SITE"]
 

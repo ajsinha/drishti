@@ -81,6 +81,10 @@ def test_a_bare_mnemonic_opens_a_list_and_a_known_id_its_record(live_console):
     failed, empty = [], []
     for w in sorted(words):
         status, body = get(f"{live_console.server}/api/v1/rdp/kinds/{quote(w)}")
+        if w in NO_INPUTS and not os.environ.get("DRISHTI_DEMO_LAKE") and status in (404, 503):
+            if NO_INPUTS[w] not in body:                   # no VaR inputs on this server: the table's source refuses, in words, when the table is opened
+                failed.append(f"{w}: refused, but not in the words {NO_INPUTS[w]!r}: {status} {body[:160]}")
+            continue
         if status != 200:
             failed.append(f"{w}: no table: {status} {body[:160]}")
             continue
