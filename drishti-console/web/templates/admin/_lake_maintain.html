@@ -21,7 +21,7 @@
   <h2 class="lk-h2" id="lkTables">The lakes <a class="emb-help" href="{{ BASE }}/help/lake-maintenance" aria-label="Help: lake maintenance" title="Help: lake maintenance">?</a></h2>
   <p class="text-muted-d mt-intro">Tick the tables to maintain: retention drops old business dates, compaction merges small files, a checkpoint shortens the log,
     vacuum removes files no longer used. An Iceberg table (Format: Iceberg) expires its old snapshots instead of vacuum and also removes orphan
-    files (files no snapshot uses, at least 72 hours old); the risk domains keep 7 years whatever is set. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
+    files (files no snapshot uses, older than the vacuum window, never under 72 hours); the risk domains keep 7 years whatever is set. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
     Only tables {{ PRODUCT }}'s lake build made can be maintained; a table another system publishes is its publisher's to maintain.</p>
   {% if maint %}
   <div class="mt-bar" role="toolbar" aria-label="Choose tables">

@@ -24,7 +24,7 @@ sys.path.insert(0, str(HERE))
 import stores  # noqa: E402
 import undo  # noqa: E402
 
-LINE = {"table": "risk/scenario-pv", "date": "2026-10-27", "removed": 2, "restored": 0, "replaced": False, "version": 3}
+LINE = {"table": "risk/scenario-pv", "date": "2026-10-27", "removed": 2, "restored": 0, "replaced": False, "version": 3, "format": "iceberg"}   # Lake's LakeUndo says each line's store
 
 
 def fake(calls):
@@ -38,7 +38,7 @@ def test_plan_reads_the_java_answer(tmp_path, monkeypatch):
     monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
     calls = []
     got = undo.plan(str(tmp_path), "R.1", True, runner=fake(calls))
-    assert got == [{**LINE, "format": "delta"}]
+    assert got == [LINE]
     assert calls[0][:2] == ["fake-jvm", undo.UNDO] and "--dry-run" in calls[0] and calls[0][calls[0].index("--load-id") + 1] == "R.1"
     assert undo.words(got, "R.1", True) == ["would undo risk/scenario-pv 2026-10-27: 2 rows of load R.1 removed"]
     assert undo.words([{**LINE, "replaced": True, "restored": 5}], "R.1", False)[0].endswith("5 rows of the date before it restored")
@@ -50,7 +50,7 @@ def test_log_lines_before_the_answer_are_skipped(tmp_path, monkeypatch):
     monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
     out = "08:02:01.665 [main] INFO io.delta.kernel.internal.snapshot.SnapshotManager -- Loading log segment\n" + json.dumps([LINE], indent=1)
     got = undo.plan(str(tmp_path), "R.1", True, runner=lambda cmd: types.SimpleNamespace(returncode=0, stdout=out))
-    assert got == [{**LINE, "format": "delta"}]
+    assert got == [LINE]
 
 
 def test_the_undo_is_confirmed_by_the_load_id(tmp_path, monkeypatch):

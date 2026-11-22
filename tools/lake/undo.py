@@ -17,8 +17,7 @@
 Every row a load wrote carries its ``_load_id`` (``<run>.<file>``: a ``lake build``'s or the parallel loader's summary lists them under
 ``loads``; a row's ``_load_id`` column says it too). Undoing it removes exactly those rows, one commit per table and date, in every table
 of the lake that has them (an archive's tables together). A load that replaced a date is undone by restoring the date as it was before it,
-the rows later loads appended kept. Delta tables are undone by the parallel loader's ``LakeUndo``, Iceberg tables by the Iceberg
-maintenance (``IcebergMaintenance --undo``), both in the server's exec jar.
+the rows later loads appended kept. Every store (Delta, Iceberg, files) is undone by Lake's ``LakeUndo``, in the server's exec jar.
 
 The undo first says what it would do (a dry run), then asks for the load id again to confirm; ``--yes`` skips the question (scripts), and
 without a terminal it is refused unless given.
@@ -37,7 +36,6 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 UNDO = "com.ash.lake.load.LakeUndo"
-MAINT = "com.ash.lake.iceberg.table.IcebergMaintenance"
 
 
 def plan(lake: str, load_id: str, dry_run: bool, jar=None, java=None, runner=None) -> list[dict]:
@@ -55,23 +53,8 @@ def plan(lake: str, load_id: str, dry_run: bool, jar=None, java=None, runner=Non
     start = next((i for i, x in enumerate(lines) if x.startswith("[")), None)
     text = "\n".join(lines[start:]) if start is not None else text
     if p.returncode != 0 or not text.startswith("["):
-        raise RuntimeError("lake undo (Delta): " + (text.splitlines()[-1] if text else f"exit {p.returncode}"))
-    out += [{**d, "format": "delta"} for d in json.loads(text)]
-    import maintain_iceberg
-    for uri in maintain_iceberg.tables(lake, ["*"]):
-        root, domain, table = maintain_iceberg.split_uri(uri)
-        cmd = stores.loader_command(data, jar, java, main=MAINT) + [root, "--domain", domain, "--kinds", table, "--engine", "native",
-                                                                      "--undo", load_id, "--expire-hours", "-1", "--json"]
-        if dry_run:
-            cmd.append("--dry-run")
-        p = run(cmd)
-        lines = [x for x in p.stdout.splitlines() if x.startswith("{")]
-        if not lines:
-            raise RuntimeError(f"lake undo (Iceberg {domain}/{table}): exit {p.returncode}")
-        r = json.loads(lines[-1])
-        if r.get("error"):
-            raise RuntimeError(r["error"])
-        out += [{"table": f"{domain}/{table}", **u, "format": "iceberg"} for u in r.get("undo") or []]
+        raise RuntimeError("lake undo: " + (text.splitlines()[-1] if text else f"exit {p.returncode}"))
+    out += json.loads(text)          # a line per table and date, each with its store's format (Delta, Iceberg, files)
     return out
 
 

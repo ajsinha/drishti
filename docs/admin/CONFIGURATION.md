@@ -814,7 +814,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | `lakes.maintenance_schedules` | `true` | Run the lake-maintenance schedules in this console; `false` when `lake maintain --daemon` runs them instead (run them in one place). |
 
 In `lake-maintenance.yaml`: a lake's `format` is `delta` (the default), `iceberg`, or `auto` (Iceberg tables under a local root
-found beside Delta ones); `orphan-hours` (72, the least allowed) is read for Iceberg tables only; `iceberg-settings` (a mapping) is
+found beside Delta ones); `orphan-hours` is retired and refused at start (the vacuum window, `vacuum-hours`, also removes the files no snapshot names; Lake keeps a 72-hour floor); `iceberg-settings` (a mapping) is
 passed to an Iceberg lake's maintenance as `--set key=value` (a REST catalog such as Glue: `catalog`, `uri`, `warehouse`,
 `catalog.rest.*`). [OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../guides/OPERATIONS_GUIDE.md#163-iceberg-lakes). `lake build --format delta|iceberg` (default
 `delta`) and `--iceberg-set KEY=VALUE` choose and configure the format of a build ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).

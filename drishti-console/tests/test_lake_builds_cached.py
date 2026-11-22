@@ -30,6 +30,8 @@ HERE = Path(__file__).resolve().parent
 ALLOWED = {
     "bi_report_stack.py": "make_lake: the BI sample lake of the parked BI tests and the docs' screenshots (bi_report_shots.py)",
     "bi_exposure_fixture.py": "the script make_lake runs (the BI samples' official exposure table)",
+    "test_admin_lakes.py": "Admin -> Lakes builds a lake: under the test's tmp_path only (owner 2026-11-22)",
+    "test_admin_lake_maintain.py": "maintenance compacts a copy of its own small lake: under tmp_path and the cache's own folder only",
     "test_lake_builds_cached.py": "this guard",
 }
 #: the Python writer, or a lake built, loaded or copied by a test

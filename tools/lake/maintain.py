@@ -50,7 +50,7 @@ overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.j
 
 Iceberg lakes (a lake with ``format: iceberg``, or tables with metadata/*.metadata.json under a local root; Delta is the default) are
 maintained by the same Lake upkeep with ``--format iceberg`` (tools/lake/maintain_iceberg.py: the one retention rule, compaction,
-snapshot expiry for vacuum-hours, and orphan files older than 72 hours), under the same floor, ownership rule, lock, schedules and history.
+snapshot expiry for vacuum-hours, which also removes the files no snapshot names, never under 72 hours), under the same floor, ownership rule, lock, schedules and history.
 
 Every table of every configured domain is visited; one failing table is reported and the rest go on. A line of JSON
 is printed per table and step (size and file counts before and after), for logs and monitoring."""

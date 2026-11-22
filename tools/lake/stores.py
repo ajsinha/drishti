@@ -162,7 +162,7 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 # ---- the loader --------------------------------------------------------------------------------------------------------------------------
 
 def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, *, main: str) -> list[str]:
-    """How to start one of Drishti Lake's Java mains (``main``: LakeUndo, LakeRetention, LakeRelocate, IcebergMaintenance): LAKE_CLASSPATH (development:
+    """How to start one of Drishti Lake's Java mains (``main``: LakeUndo, LakeRetention, LakeRelocate): LAKE_CLASSPATH (development:
     ``-cp CP``), else the server's exec jar (``jar``, else the newest in <home>/lib), whose
     launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):

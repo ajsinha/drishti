@@ -75,18 +75,18 @@ The platform lives in one folder, every repository a sibling of the index reposi
 `build_all.py` and `platform.yaml`, the tags that go together):
 
 ```
-~/IdeaProjects/platform/                           (Windows: C:\Users\<you>\IdeaProjects\platform\)
+~/IdeaProjects/drishti-platform/                           (Windows: C:\Users\<you>\IdeaProjects\drishti-platform\)
     drishti-platform/  drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/
 ```
 
 **A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release and unpack it into
-`~/IdeaProjects/platform/`. It holds every repository at the tags that go together, with `build_all.py`; the Lake wheel is not in it (section 2 builds it).
+`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`; the Lake wheel is not in it (section 2 builds it).
 
 **B. With git:** clone the index repository into the folder that will hold them all, and let `clone_all.py` clone the rest at the release's
 tags (it puts the repositories in the folder *above* the index repository, so the index repository goes one level down):
 
 ```bash
-mkdir -p ~/IdeaProjects/platform && cd ~/IdeaProjects/platform
+mkdir -p ~/IdeaProjects/drishti-platform && cd ~/IdeaProjects/drishti-platform
 git clone https://github.com/drishti-platform/drishti-platform.git
 cd drishti-platform
 python3 clone_all.py --release i7b         # Windows: py clone_all.py --release i7b; --parent <folder> puts them elsewhere
@@ -101,7 +101,7 @@ into the same folder: `git clone https://github.com/drishti-platform/drishti.git
 From the `drishti` folder (every command below runs from it):
 
 ```bash
-cd ~/IdeaProjects/platform/drishti
+cd ~/IdeaProjects/drishti-platform/drishti
 uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
 python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
 uv venv --python 3.13 drishti-console/.venv
@@ -126,7 +126,7 @@ The products install into `~/.m2` at the versions the root `pom.xml` pins (`dris
 `drishti.lake.version`), in this order: **tools, Rachana, Lake, then Drishti** (each builds on the one before). The index repository does the Maven part:
 
 ```bash
-cd ~/IdeaProjects/platform/drishti-platform
+cd ~/IdeaProjects/drishti-platform/drishti-platform
 python3 build_all.py --release i7b [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7b
 ```
 
@@ -139,7 +139,7 @@ installed, use `python tools/drishti.py build all` below. By hand, per repositor
 names its launchers):
 
 ```bash
-cd ~/IdeaProjects/platform/drishti-tools/java && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ~/IdeaProjects/drishti-platform/drishti-tools/java && git checkout <tag> && ./mvnw -q install -DskipTests
 cd ../../drishti-rachana/java                 && git checkout <tag> && ./mvnw -q install -DskipTests
 cd ../../drishti-lake/java                    && git checkout <tag> && ./mvnw -q install -DskipTests
 cd ../../drishti                              && python tools/drishti.py build all

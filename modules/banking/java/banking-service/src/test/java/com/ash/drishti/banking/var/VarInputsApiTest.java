@@ -129,11 +129,18 @@ class VarInputsApiTest {
         VarIntradayLake.writeVectors(lake, vectors, "overwrite-dates");
         VarIntradayLake.writePvs(lake, pvs, "overwrite-dates");
         long until = System.currentTimeMillis() + 20_000;
-        while (svc.loader().version(day).equals(before) && System.currentTimeMillis() < until) {
-            Thread.sleep(50);
+        while (!bothTablesChanged(before, svc.loader().version(day)) && System.currentTimeMillis() < until) {
+            Thread.sleep(50);                                            // the connector's refresh (1 s) has not shown both tables' new versions
         }
-        Thread.sleep(1500);                                              // the connector's refresh (1 s) has both tables' new versions
+        assertThat(bothTablesChanged(before, svc.loader().version(day))).as("the lake shows both tables' new versions of " + day).isTrue();
         svc.reload(day);
+    }
+
+    /** A date's version is the vector table's, then "|kind:" and the scenario-PV table's: true when each part is new (the PV part present). */
+    private static boolean bothTablesChanged(String before, String now) {
+        String[] b = before.split("\\|", 2);
+        String[] n = now.split("\\|", 2);
+        return !n[0].equals(b[0]) && n.length == 2 && (b.length < 2 || !n[1].equals(b[1]));
     }
 
     /** One position's record from its trades' records of the same form: the vectors (or the PVs and base PVs) summed. */
