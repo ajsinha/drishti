@@ -485,6 +485,21 @@ files to `${lake.data.dir}` (a lake-pin item, not done here).
 | Stricter checks (RCH-2048, S11 names, RCH-2008) | Nothing to fix: every pack Sutra and fragment compiles at 1.2 with no problem (`PackSutrasTest`; the server binds the same set before and after); the inline test Sutras that use UI kit fragments moved to 1.2 with them (a 1.0 Sutra on a 1.2 fragment is RCH-2008) |
 | `rank(x, 'sideways')` | The refusal case is back in `WindowFunctionsTest` |
 | Conformance inside Drishti | The runner reads its instance as level 1.0 and derives each case's level from it; Drishti's holder now runs 1.2, so `DrishtiProfileConformanceTest` hands it over at 1.0 (`language("1.0")`): every case runs at its own level on Drishti's instance |
+| The engine's measure-level functions | `EngineFunctions` gave `rank` and kin a maximum of their by-place parameters, so `rank(x, 'sideways')` was refused by arity in Drishti's words while the reference refuses it with Core's catalogue check (`el/catalogue-arguments-1-1`): they now take up to every parameter and Core's check (1.1 and later) refuses, in Core's words |
+| `rank(x, 'sideways')` in BI | Restored in `WindowFunctionsTest` and refused: BI's lowering (`NodeLowering`) read any non-boolean direction as `desc`; a direction that is not `desc = true`/`false` is now refused there |
+| Showcase of every kind | `ViewModelSchemaTest` held the showcase to the level's kinds; at 1.2 seven more (grid, tree, chart of 1.1; treemap, bullet, form, live of 1.2): a second example, `docs/guides/examples/level-1-2-panels` (Sutra, JSON, note, README row), covers them (all seven bind on the server); the "no FormPanel record" exemption is gone (R-1 closed in Rachana) |
+| Aggregate tests | `RachanaAggregatesTest`, `RachanaStatisticsTest` (the host compiler at 1.2): `range(list, field)` is `span`; sums and averages of integers are exact (`BigDecimal`), compared as numbers |
+
+### Not moved to 1.2, named
+
+- **BI, table-layer and formula expressions** (`Expressions`, `NodeLowering`, `LayerTables`, `Trees`, `LayerExpressionChecker`, `ExpressionCheck`,
+  `FormulaLowering`) are parsed by `CheckedMode.parse(text)`, which is Core's level 1.0 with Core's table, not the server's level. Parsing
+  them at 1.2 was tried: about 220 BI, table and pivot tests fail, because BI lowers Rachana's tree into its own and does not know the 1.1
+  forms (`sum(x, where = c)` is refused by 1.1's named-argument binding; `$.mtm / 1000` and `sum(r * w) / sum(w)` come out as trees the
+  lowering refuses). Moving BI's dialect to 1.2 is its own step (BI's lowering of the 1.1 trees, then its goldens); reverted here.
+- **Rachana finding (catalogue):** `cell(view, field?, member?, ...)` has no `params` in `functions.yaml`, so from 1.1 the catalogue check
+  refuses it with any argument by place ("takes at most 0 arguments by place"). No shipped Sutra uses `cell`; the engine test calls it at
+  level 1.0 until Rachana gives `cell` its parameters (or exempts a function without a params row).
 
 ### The flags (21 exact, 7 text by code point; the corpus proof's 18 and 6 plus the copies in docs and test fixtures)
 
