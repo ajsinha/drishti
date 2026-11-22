@@ -592,8 +592,6 @@ public enum ErrorCode {
     MQ_CALC_GROUP("DRS-9165", 422),
     /** Model query (wave B): a filter-context or time function that cannot be planned (via names no relationship, parent_of no hierarchy, as_of no constant date, a context deeper than three). */
     MQ_CONTEXT("DRS-9166", 422),
-    /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
-    EXPR_CONVERT("DRS-9190", 422),
     /** Drishti SQL: not a statement of the dialect (syntax, more than one statement, DDL or DML: it is read-only). */
     SQL_SYNTAX("DRS-9170", 422),
     /** Drishti SQL: a table or column the model does not have for the caller (a hidden column is not found), or of a table the statement does not read. */

@@ -1267,7 +1267,7 @@ BI, Export data and the other platform features: their switches stay in `applica
 config/engines/                 DRISHTI_ENGINES_DIR (default ./config/engines), shipped with every distribution
 ├── var.yaml                    drishti.engines.var.enabled, drishti.var.*, drishti.regulatory.*
 ├── exposure.yaml               drishti.engines.exposure.enabled, drishti.ccr.exposure.*
-├── sensitivities.yaml          drishti.engines.sensitivities.enabled, drishti.sensitivities.*
+├── sensitivities.yaml          drishti.engines.sensitivities.enabled, drishti.frtb.sensitivity-kind, factor-kind, cache-minutes
 ├── frtb-sa.yaml                drishti.engines.frtb-sa.enabled, drishti.frtb.*
 ├── simm.yaml                   drishti.engines.simm.enabled, drishti.simm.*
 ├── mr-cube.yaml                drishti.engines.mr-cube.enabled, drishti.cube.mr.*
@@ -1304,7 +1304,7 @@ WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in
       Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
 ```
 
-`drishti.sensitivities.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings. The in-memory lake is on when its
+`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` are the sensitivities engine's settings. The in-memory lake is on when its
 stores are configured in `application.local.yaml` (`drishti.lake.memory.stores`) and nothing sets its switch. To tidy up, move the engine
 keys from `application.local.yaml` to the engine's file; `drishti.py server engines show var --sources` says where each key comes from.
 

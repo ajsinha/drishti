@@ -2659,7 +2659,7 @@ document explains how it reads, its layout, scale and limits.
 | <a id="kafka--a-live-stream"></a>`kafka` | a live stream; a null value or `"doc": null` deletes | [README, Settings](../../plugins/drishti-plugin-kafka/README.md#settings) | [KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md) (security: [section 11](../../plugins/drishti-plugin-kafka/README.md#security-tls-sasl-and-confluent)) |
 | <a id="activemq-and-rabbitmq--message-queues"></a>`activemq`, `rabbitmq` | message queues; the latest document of every entity in a local RocksDB state store | [README, Settings](../../plugins/drishti-plugin-activemq/README.md#settings), [README, Settings](../../plugins/drishti-plugin-rabbitmq/README.md#settings) | [ACTIVEMQ_CONNECTOR.md](../../plugins/drishti-plugin-activemq/README.md), [RABBITMQ_CONNECTOR.md](../../plugins/drishti-plugin-rabbitmq/README.md) |
 | <a id="s3--documents-in-s3-or-an-s3-compatible-store"></a>`s3` | a JSON object per entity in S3 or an S3-compatible store | [README, Settings](../../plugins/drishti-plugin-s3/README.md#settings) | [S3_CONNECTOR.md](../../plugins/drishti-plugin-s3/README.md) |
-| <a id="iceberg--apache-iceberg"></a>`iceberg` | Iceberg tables in Drishti's layout, path-based or a REST catalog | [README, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) | [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (engines: [section 17](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches)) |
+| <a id="iceberg--apache-iceberg"></a>`iceberg` | Iceberg tables in Drishti's layout, path-based or a REST catalog | [README, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) | [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (engines: [section 17](../../plugins/drishti-plugin-iceberg/README.md#the-reader-and-caches)) |
 | <a id="iceberg-external--iceberg-tables-drishti-does-not-write"></a>`iceberg-external` | Iceberg tables other engines write, read-only | [README, Settings](../../plugins/drishti-plugin-iceberg-external/README.md#settings) | [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md) |
 | <a id="duckdb--one-embedded-duckdb-file"></a>`duckdb` | every data domain in one DuckDB file; retention is the loader's `--keep-days` | [README, Settings](../../plugins/drishti-plugin-duckdb/README.md#settings) | [DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md) |
 | <a id="mongodb"></a>`mongodb` | a document per entity per business day, a collection per domain | [README, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) | [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md) |
@@ -4336,25 +4336,13 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.engines.sensitivities.enabled` | boolean | `true` | `DRISHTI_SENSITIVITIES_ENABLED` | server (each node its own) | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) | live |  | admin |
 | `drishti.engines.sensitivities.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
 
-#### `drishti.sensitivities`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.sensitivities.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  | admin |
-| `drishti.sensitivities.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  | admin |
-| `drishti.sensitivities.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
-
-#### `drishti.engines.frtb-sa`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.engines.frtb-sa.enabled` | boolean | `true` | `DRISHTI_FRTB_ENABLED` | server (each node its own) | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) | live |  | admin |
-| `drishti.engines.frtb-sa.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
-
 #### `drishti.frtb`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
+| `drishti.frtb.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  | admin |
+| `drishti.frtb.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  | admin |
+| `drishti.frtb.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
 | `drishti.frtb.parameters-dir` | string | `<module:banking>/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
@@ -4362,6 +4350,13 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.frtb.max-factors` | integer | `2000` |  | server (each node its own) | the most factors one playground grid and workbook holds | restart |  | admin |
 | `drishti.frtb.recipes-dir` | string | `<data>/frtb/recipes` |  | server (each node its own) | saved playground recipes (PLAY FRTB RUN &lt;id&gt;) | restart |  | admin |
 | `drishti.frtb.playground-template` | string | `""` |  | server (each node its own) | a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/ | restart |  | admin |
+
+#### `drishti.engines.frtb-sa`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.engines.frtb-sa.enabled` | boolean | `true` | `DRISHTI_FRTB_ENABLED` | server (each node its own) | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) | live |  | admin |
+| `drishti.engines.frtb-sa.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
 
 #### `drishti.engines.simm`
 

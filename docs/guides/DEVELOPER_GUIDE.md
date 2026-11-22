@@ -1202,7 +1202,7 @@ Adding a function changes the grammar: record it as an amendment to
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
 `bi.expr.FunctionCatalog`, and its own guide, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions).)
 
-**1. Register it** in `compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/el/Functions.java`. `ARITY` holds `{min, max}` arguments
+**1. Register it** in Rachana's `Functions`. `ARITY` holds `{min, max}` arguments
 (the parser checks it and says `unknown function '…'; known: …` for a name not in it), and `FUNCTIONS` holds the implementation:
 
 ```java
@@ -1229,7 +1229,7 @@ Adding a function changes the grammar: record it as an amendment to
 `Values.number` turns any value (a number, numeric text, a boolean) into a `double` (`NaN` when it cannot), and `Values.normalise` makes
 whole results `Long`, so `round(7.5)` prints `8`.
 
-**2. Test it** in `compute/drishti-rachana/src/test/java/com/ash/drishti/rachana/el/ElTest.java`, with its `eval` helper over the test document
+**2. Test it** in Rachana's `ElTest`, with its `eval` helper over the test document
 (`notional` is 50,000,000; the test document is the unit tests' own, so its names need not follow a pack's):
 
 ```java

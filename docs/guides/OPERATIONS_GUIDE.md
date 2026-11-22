@@ -1520,7 +1520,7 @@ The *Install* section has three cards: **a pack** (links to Admin → Packs → 
 with a mapping at the top, the file's own key against its name, and the readers' and parsers' errors (warnings do not stop it). If a file of that
 name exists the card lists what depends on it; placing it then needs *Replace* and the name typed, and the old file is archived first. The file is
 placed atomically (a table or model in `config/tables/<domain>/`) and appears in the catalogue at once. A dataset file in BI's old form
-(`<name>.dataset.yaml`) is refused with `DRS-9196`: run `drishti.py tables migrate` and upload the tables and model it writes.
+(`<name>.dataset.yaml`) is refused with `DRS-9196`: write it as a table and a model and upload those.
 
 ![The BI file card after choosing a file: what the server found in it, and the button to place it](img/artifacts/06-bi-upload.jpg)
 
@@ -3404,7 +3404,7 @@ BI reads only tables and models of the table layer, and only Rachana. Nothing is
 |---|---|
 | A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: write it as a table or a model under `config/tables/` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)) |
 | An expression says `DRS-9100` | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): rewrite it ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
-| A dataset with `from:` or `derived:` says `DRS-9190` | write it as tables and a model of the layer |
+| A dataset with `from:` or `derived:` says `DRS-9196` | write it as tables and a model of the layer |
 | A bookmark to the dataset wizard or model designer opens Build › Tables & models | those screens are replaced: open the table or model there |
 
 ### 21.11 BI: refresh, live, visuals, Python and AI

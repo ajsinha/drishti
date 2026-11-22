@@ -1479,7 +1479,7 @@ Materialised files are a cache: rebuilt at will, never the truth, never written 
 | # | Decided |
 |---|---|
 | V1 | A central layer of its own (`drishti-tables`, definitions under `config/tables/<domain>/`), not inside BI and not in the lake file: its sources are any kind any connector serves |
-| V2 | BI's datasets are flat virtual tables and BI's models the layer's models, migrated by one tool (`drishti.py tables migrate`, dry run and report); stored items migrate at the server's first start, every version rewritten in place with the text before kept in its history |
+| V2 | BI's datasets are flat virtual tables and BI's models the layer's models, written as tables and models |
 | V3 | A flat table's columns are scalar Rachana paths or row expressions; aggregates exist only as a model's measures; a table that is not flat (SQL, Python, `keep: { latest }`) is allowed as a source, and the one way to aggregate into a table is a **summary table**, a model's answer (`from: { model, query }`) |
 | V4 | Materialisation is one mechanism: `none`, `on-load` (Parquet per business date), `{ live: { rows, age } }` (in memory by key); a model's `rollups:` keep partial states; a model's `history:` samples measures of a live table |
 | V5 | Every consumer reads the layer: BI, the pivot, Sutras, alerts and Arrow Flight; Flight's `table` form (a virtual table read as Arrow with its rules and masks, scope `data:read` or `data:read:<domain>`) and Flight SQL's `tables` and `models` catalogs are designed, as are Export data and the AI reading tables |
