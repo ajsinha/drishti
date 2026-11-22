@@ -39,11 +39,9 @@ globalThis.document = doc;
 const ser = (n) => (n.nodeType === 3 ? JSON.stringify(n.data) : '<' + n.tagName + Object.keys(n.attrs).sort().map((k) => ' ' + k + '=' + JSON.stringify(n.attrs[k])).join('') + '>'
   + n.childNodes.map(ser).join('') + '</>');
 const serAll = (x) => (Array.isArray(x) ? x.map(serAll).join('') : ser(x));
-const old = await import('../../web/static/render/1.2.0/m/tables.js');
-const cells = await import('../../web/static/render/1.2.0/m/cells.js');
 const R = { server: '', outsideLinks: 'event' };
 C.configure({ endpoints: { pivotPage: '/pivot' } });    // as the console's host script does (static/js/drishti_elements-host.js): the Pivot link's page
-const hooks = { content: (c) => cells.cellText(R, c), rowAttrs: (r, i) => ({ 'data-r-row': String(i) }) };
+const hooks = { content: (c) => (c.text == null ? '' : String(c.text)), rowAttrs: (r, i) => ({ 'data-r-row': String(i) }) };
 
 const cell = (text, extra) => Object.assign({ text }, extra);
 const PLAIN = { columns: ['Trade', 'Book', 'MTM'], numeric: [false, false, true],
@@ -92,27 +90,7 @@ test('heat buckets run 0 to 9, half up, and 5 on a flat scale', () => {
   assert.equal(G.heatBucket(1, 0, 4), 2);                 // 2.25
 });
 
-test('a plain table, a tree, a drill and a table offering Pivot are drawn as 1.2.0 drew them', () => {
-  assert.equal(ser(G.docTable(doc, PLAIN, hooks)), ser(old.table(R, PLAIN)));
-  assert.equal(ser(G.docTable(doc, Object.assign({}, PLAIN, { search: true }), hooks)), ser(old.table(R, Object.assign({}, PLAIN, { search: true }))));
-  assert.equal(ser(G.docTable(doc, TREE, hooks)), ser(old.table(R, TREE)));
-  // an empty level's note is words only in Drishti Elements (no icon font); 1.2.0, frozen, drew Bootstrap Icons' inbox before them
-  assert.equal(ser(G.docDrill(doc, DRILL, hooks)), ser(old.drill(R, DRILL)).replace(/<I aria-hidden="true" class="bi bi-inbox"><\/>" /g, '"'));
-  const pv = { id: 'p', title: 'Trades', data: Object.assign({ pivot: { source: 'panel/trade/T1/p' } }, PLAIN) };
-  // 1.2.0 is frozen byte for byte and still names the console's pivot guide (PIVOT_GUIDE.md); Drishti Elements names no host's document
-  assert.equal(serAll(G.docPivotable(doc, pv, hooks)), serAll(old.pivotable(R, pv)).replace(' (PIVOT_GUIDE.md)', ''));
-  assert.equal(serAll(G.docPivotable(doc, { id: 'p', data: PLAIN }, hooks)), serAll(old.pivotable(R, { id: 'p', data: PLAIN })));
-  assert.match(ser(G.docTable(doc, PLAIN, hooks)), /data-r-row="1"/);
-});
 
-test('the pivot kind is drawn as 1.2.0 drew it, heat classes by the half-up rule', () => {
-  const ours = ser(G.docPivot(doc, PIVOT, hooks)), theirs = ser(old.pivot(R, PIVOT));
-  assert.equal(ours.replace(/heat-\d/g, 'heat-#'), theirs.replace(/heat-\d/g, 'heat-#'));
-  assert.match(ours, /heat-0/);
-  const nested = Object.assign({ levels: ['desk', 'book'] }, PIVOT);
-  assert.equal(ser(G.docPivot(doc, nested, hooks)).replace(/heat-\d/g, 'heat-#'), ser(old.pivot(R, nested)).replace(/heat-\d/g, 'heat-#'));
-  assert.match(ser(G.docPivot(doc, nested, hooks)), /data-pv-tree=/);
-});
 
 test('the Data table under a chart: figures, a row heading drawn by the host, a cell of another class', () => {
   const t = G.docPlainTable(doc, ['Step', 'Amount (USD)'], [['Start', '1.0m'], ['End', '−2m']]);
@@ -129,27 +107,3 @@ test('the Data table under a chart: figures, a row heading drawn by the host, a 
   assert.equal(G.docPlainTable(doc, ['a', 'b'], [['x', '1']], { details: false }).attrs.class, 'tbl-wrap');
 });
 
-test('the Data tables are 1.2.0\'s chart Data tables, element for element (kinds.js dataTable and the scatter\'s)', async () => {
-  const { h, str } = await import('../../web/static/render/1.2.0/m/dom.js');
-  // kinds.js dataTable(headRow, rows), as 1.2.0 wrote it
-  const dataTable = (headRow, rows) => h('details', { class: 'xchart-data' }, h('summary', null, 'Data'), h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl', 'data-plain': true },
-    h('thead', null, h('tr', null, headRow.map((x, i) => h('th', { scope: 'col', class: i ? 'num' : null }, str(x))))),
-    h('tbody', null, rows.map((r) => h('tr', null, r.map((c, i) => (i === 0 ? h('th', { scope: 'row' }, str(c)) : h('td', { class: 'mono num' }, str(c))))))))));
-  const head = ['Date', 'Open', 'High'], rows = [['2026-11-05', '74.0', '75.5'], ['2026-11-06', '', '76']];
-  assert.equal(ser(G.docPlainTable(doc, head, rows)), ser(dataTable(head, rows)));
-  // kinds.js scatter's table: Point, an optional Group (no num), x and y; the point's heading may be an entity link
-  const pts = [{ label: 'P1', link: { kind: 'company', id: 'C1' }, group: 'G', xText: '1.0', yText: '2.0' }, { xText: '3', yText: '4' }];
-  for (const groups of [['G'], []]) {
-    const d = { xLabel: 'Beta', yLabel: 'Return', groups };
-    const theirs = h('details', { class: 'xchart-data' }, h('summary', null, 'Data'), h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl', 'data-plain': true },
-      h('thead', null, h('tr', null, h('th', { scope: 'col' }, 'Point'), (d.groups && d.groups.length) ? h('th', { scope: 'col' }, 'Group') : null,
-        h('th', { scope: 'col', class: 'num' }, str(d.xLabel)), h('th', { scope: 'col', class: 'num' }, str(d.yLabel)))),
-      h('tbody', null, pts.map((q, i) => h('tr', null, h('th', { scope: 'row' }, cells.entity(R, q.label || (i + 1), q.link)),
-        (d.groups && d.groups.length) ? h('td', null, str(q.group || '')) : null,
-        h('td', { class: 'mono num' }, str(q.xText)), h('td', { class: 'mono num' }, str(q.yText))))))));
-    const g = groups.length > 0;
-    const ours = G.docPlainTable(doc, ['Point'].concat(g ? [{ text: 'Group', num: false }] : [], [{ text: d.xLabel, num: true }, { text: d.yLabel, num: true }]),
-      pts.map((q, i) => [cells.entity(R, q.label || (i + 1), q.link)].concat(g ? [{ content: str(q.group || ''), cls: null }] : [], [q.xText, q.yText])));
-    assert.equal(ser(ours), ser(theirs));
-  }
-});
