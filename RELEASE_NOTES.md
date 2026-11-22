@@ -36,6 +36,14 @@ repository's COMPATIBILITY.md.
   copies of the Sutra compiler, the live-table engine, the renderer, the Delta and Iceberg protocol code, the aggregate kernel or the `.xlsx` writers.
 - The developer quickstart, the deployment and QA guide, and the IDE guide (now with VS Code) are rewritten for this layout.
 
+## Known limits
+
+- **BI wizard:** a model the wizard saves is not yet offered in the report designer's dataset picker right after it is saved. Reports draw as before.
+- **Workbench:** a table's `limit` is edited in a text box (it takes a number or a control reference), and a refused edit in the YAML tab does not yet show its problem line.
+- **Admin pages:** the Connectors and Bindings pages differ slightly from their approved pictures; nothing they show is wrong.
+- **Iceberg lakes:** building an Iceberg lake with the Python tools failed once on a heavily loaded machine; Delta lakes are not affected.
+- **Elements:** a row click that sets a control and remembered control values are not drawn yet in embedded screens.
+
 # Drishti 2.9.11.i7a — release notes
 
 *Released 2026-11-17.* **Modules end to end: a module is a file.** Each module ships as a verified `.dmod` package in
