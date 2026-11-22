@@ -201,7 +201,7 @@ class RealTableTest(unittest.TestCase):
                 os.environ.pop("DRISHTI_BI_STORE", None)
             dead = root / "trading" / "trade" / "data" / "dead.parquet"
             dead.write_bytes(b"left by a load that died")
-            old = time.time() - 100 * 3600
+            old = time.time() - 200 * 3600                           # older than the vacuum window (168 h) and the 72 hours a file no snapshot names must outlive
             os.utime(dead, (old, old))
             cfg = {"lakes": [{"root": str(root), "keep-business-days": 1, "vacuum-hours": 168}], "history": str(Path(tmp) / "h.jsonl")}
             dry = quiet(maintain.run_detailed, cfg, True, date(2026, 10, 16), force_drop=True)
