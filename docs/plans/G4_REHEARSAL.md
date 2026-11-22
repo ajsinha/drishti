@@ -950,7 +950,7 @@ Environment: the pinned Lake 0.9.1 wheel (sha-256 as in `lib/lake-wheel.pin`) in
 | `test_tools_guide` | the nine Lake scripts are listed in the CLI reference |
 | View sheet budget | the sheet was removed with embed v1; the test and its budget are gone |
 | Retired-name check (a server start failure) | `DRISHTI_VAR_SYSTEM_BASKETS_SEED` is a placeholder's source, yet Spring's `configurationProperties` view read it as the retired `drishti.var.system-baskets.seed` and the server refused to start; the check now looks at the real sources only (`ModuleSettingsSiteSetsTest`) |
-| Default live tables | a kind's default table carries its narrowing fields as columns (Rachana refuses a `narrow` that names none: DRS-2071) |
+| Default live tables | a kind's default table carries its narrowing fields as columns (Rachana refuses a `narrow` that names none) |
 | Business-date rule in the console | the lake upload reads `drishti_lake.filedate` (the deleted `tools/lake/filedate.py` made the date silently absent) |
 | Docs and generated files | PDFs, README code volume and the sizing planner (workbook, template, vectors) regenerated; `test_docs_rot` reads the engines' own files and the modules' `settings:` for the settings that exist; links and paths of the embed v1 removal fixed; unused pictures of the host pages deleted |
 | Stale tests | retired help addresses answer 404 (no aliases), the 1.2.0 parity cases of the Node tests went with the frozen renderer, the Data Protocol refuses a table of a kind with no inputs in words at the table, scores' ids in capitals |
