@@ -64,7 +64,7 @@ def test_transitions_are_logged_once(caplog):
 
 def test_healthz_backend_reports_the_watch(client, monkeypatch):
     w = _watch([{"version": "9.9.9"}])
-    monkeypatch.setattr(client.app.state, "backend_watch", w)
+    monkeypatch.setitem(client.app.state._state, "backend_watch", w)
     body = client.get("/healthz/backend").json()
     assert body["reachable"] is True and body["version"] == "9.9.9" and body["checkSeconds"] == 5
     assert set(body) == {"reachable", "since", "lastError", "version", "checked", "server", "checkSeconds"}

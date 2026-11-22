@@ -278,6 +278,7 @@ files:
   js/forms-home.js: js/drishti_forms-home.js
   js/frtb-sa.js: js/drishti_frtb-sa.js
   js/functions.js: js/drishti_functions.js
+  js/geomap.js: js/drishti_geomap.js
   js/help.js: js/drishti_help.js
   js/history-page.js: js/drishti_history-page.js
   js/history.js: js/drishti_history.js
