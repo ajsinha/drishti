@@ -34,6 +34,8 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]   # the repository: tools/drillkit/drill_journal.py
+
 
 def append(path: str, rec: dict) -> None:
     """One line, one write, O_APPEND: lines of concurrent writers never interleave."""
@@ -148,11 +150,11 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("prune", "snapshot", "java-watch", "java-scan", "java-done", "summary", "resumed"):
         p = sub.add_parser(name)
-        p.add_argument("--journal", default=os.environ.get("DRILL_JOURNAL", "data/drill/journal.jsonl"))
+        p.add_argument("--journal", default=os.environ.get("DRILL_JOURNAL", str(ROOT / "data" / "drill" / "journal.jsonl")))
         p.add_argument("--commit", default=os.environ.get("DRILL_COMMIT", ""))
         p.add_argument("--lane", default="")
         p.add_argument("--out", default="")
-        p.add_argument("--root", default=".")
+        p.add_argument("--root", default=str(ROOT))
         p.add_argument("--list", default="", help="java-done: a comma list of simple class names to filter")
         p.add_argument("--count", type=int, default=0)
         p.add_argument("--resumed-file", default=os.environ.get("DRILL_RESUMED", ""))
