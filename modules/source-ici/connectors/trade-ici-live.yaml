@@ -35,7 +35,7 @@ settings:
     SOURCE_SYSTEM: ICI
   map: mappings/ici-trade.yaml
 writes:
-  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.blotter.yaml): one name, each system's own connector
+  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.live.yaml): one name, each system's own connector
     kind: trade
     kafka:
       topic: ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}

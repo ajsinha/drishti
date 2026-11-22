@@ -33,7 +33,7 @@ settings:
   set:
     SOURCE_SYSTEM: CALYPSO              # the record's system: its corrections go back to this connector (section 18.6)
 writes:
-  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.blotter.yaml): one name, each system's own connector
+  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.live.yaml): one name, each system's own connector
     kind: trade
     kafka:
       topic: ${DRISHTI_CALYPSO_TOPIC:drishti.trading.calypso.trades}

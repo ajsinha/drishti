@@ -56,4 +56,12 @@ public final class KindRows {
     public static List<Object> key(String id) {
         return List.of(id);
     }
+
+    /** Two row versions compared: numbers by value, anything else as text. */
+    public static int compare(Object a, Object b) {
+        if (a instanceof Number x && b instanceof Number y) {
+            return Double.compare(x.doubleValue(), y.doubleValue());
+        }
+        return String.valueOf(a).compareTo(String.valueOf(b));
+    }
 }

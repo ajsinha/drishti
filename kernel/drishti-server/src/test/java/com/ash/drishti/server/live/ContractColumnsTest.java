@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.liveset;
+package com.ash.drishti.server.live;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 /** The columns a bare mnemonic shows from a kind's contract: a date column only when the data has one. */
 class ContractColumnsTest {
     private static java.util.List<String> columns(String yaml) throws Exception {
-        return LiveSetConfiguration.columnsOf(new ObjectMapper(new YAMLFactory()).readTree(yaml));
+        return DrishtiLiveTables.columnsOf(new ObjectMapper(new YAMLFactory()).readTree(yaml));
     }
 
     @Test

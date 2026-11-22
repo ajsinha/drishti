@@ -117,23 +117,27 @@ def _stand_in_admin(user: dict) -> bool:
 
 
 def live_page(answer: dict, live_kinds=()) -> dict:
-    """A search's answer as the server's live set gives it (LiveSetController /query): rows ``{id, version, seq, doc}`` with the values at
-    the columns' fields (``$.counterparty.name`` is ``{counterparty: {name}}``) and the title as ``_title``; the summary as ``search``."""
-    rows = []
-    for i, r in enumerate(answer.get("rows", [])):
-        doc: dict = {}
+    """A search's answer as the server opens it on a live table (FormResults, GET /api/v1/rdp/searches): ``{table, query, live, page,
+    search}``, the page in the Data Protocol's form (columns, values, total) with the values at the columns' fields
+    (``$.counterparty.name`` is ``{counterparty: {name}}``) and the key ``id``; the summary as ``search``."""
+    names: list = ["id"]
+    for path in answer.get("columns") or []:
+        top = (path[2:] if path.startswith("$.") else path).split(".")[0]
+        if top not in names:
+            names.append(top)
+    values = []
+    for r in answer.get("rows", []):
+        doc: dict = {"id": r["ref"]["id"]}
         for path, v in (r.get("values") or {}).items():
             at, parts = doc, (path[2:] if path.startswith("$.") else path).split(".")
             for part in parts[:-1]:
                 at = at.setdefault(part, {})
             at[parts[-1]] = v
-        if r.get("title"):
-            doc["_title"] = r["title"]
-        rows.append({"id": r["ref"]["id"], "version": -1, "seq": i + 1, "doc": doc})
+        values.append([doc.get(n) for n in names])
     search = {k: v for k, v in answer.items() if k != "rows"}
     live = answer.get("kind") in live_kinds
-    return {"set": {"id": "qu-stand-in", "kind": answer.get("kind")}, "live": live, "total": len(rows), "seq": len(rows), "offset": 0, "rows": rows,
-            "search": search}
+    return {"table": "q-stand-in", "query": {"sort": [{"col": "id", "dir": "asc"}], "limit": 1000}, "live": live,
+            "page": {"columns": [{"name": n} for n in names], "values": values, "total": len(values)}, "search": search}
 
 
 class FakeBackend:
@@ -146,13 +150,15 @@ class FakeBackend:
     async def _send(self, method, path, ident=None, **kw):
         """The collaboration calls (core/collab.py: the bell's unread count every page asks, the inbox, shares): an empty inbox, so a page
         under test never answers 500 to its own bell (each one logged a long traceback)."""
-        sets = self.__dict__.setdefault("live_sets", {})
-        bare, _, query = path.partition("?")
-        if method == "GET" and bare.startswith("/live/") and bare.endswith("/rows") and bare.split("/")[2] in sets:    # a set the stand-in made (live_query, live_kind)
-            from urllib.parse import parse_qs
-            page, q = sets[bare.split("/")[2]], {k: v[0] for k, v in parse_qs(query).items()}
-            off, lim = int(q.get("offset") or 0), int(q.get("limit") or 500)
-            return {**page, "rows": page["rows"][off:off + lim], "offset": off}
+        tables = self.__dict__.setdefault("live_tables", {})
+        bare = path.partition("?")[0]
+        name = bare.split("/")[3] if bare.startswith("/rdp/tables/") and len(bare.split("/")) > 3 else ""
+        if method == "POST" and bare.endswith("/query") and name in tables:    # a table the stand-in made (live_query, live_kind): a page of it
+            page, body = tables[name]["page"], kw.get("json") or {}
+            off, lim = int(body.get("offset") or 0), int(body.get("limit") or 500)
+            return {**page, "values": page["values"][off:off + lim]}
+        if method == "GET" and bare == f"/rdp/tables/{name}" and name in tables:
+            return tables[name]["schema"]
         return {"unread": 0} if path.endswith("/count") else {"items": []}
 
     async def public(self, path, raw=False, timeout=30.0):
@@ -173,23 +179,27 @@ class FakeBackend:
         from core.backend import BackendError
         raise BackendError(404, "DRS-1001", f"no engine at {path} on this stand-in server")
 
-    async def live_query(self, q, ident=None, again=True, limit=1000):
-        """The server's live set of a search (GET /api/v1/live/query), as the server makes it: the search's answer (this stand-in's own
-        ``search``) as the set's page: its rows as documents at the columns' fields, the summary as ``search``; static (no live binding)
-        unless the stand-in says ``live_kinds`` holds the kind."""
-        page = live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
-        self.__dict__.setdefault("live_sets", {})[page["set"]["id"]] = page
-        return page
+    async def live_query(self, q, ident=None):
+        """A search opened on a live table (GET /api/v1/rdp/searches), as the server makes it: the search's answer (this stand-in's own
+        ``search``) as the table's first page; static (no stream) unless the stand-in says ``live_kinds`` holds the kind."""
+        answer = live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
+        self.__dict__.setdefault("live_tables", {})[answer["table"]] = {"page": answer["page"], "schema": {"name": answer["table"], "key": ["id"]}}
+        return answer
 
     async def live_kind(self, word, ident=None, offset=0, limit=100, sort="", descending=False):
-        """A kind's own set (a bare mnemonic): the stand-in's search of the word, paged."""
-        page = live_page(await self.search(f"{word} limit 1000", ident), getattr(self, "live_kinds", ()))
-        spec = {"id": f"kind-{page['search'].get('kind')}", "kind": page["search"].get("kind"), "title": page["search"].get("mnemonic"),
-                "columns": [{"field": c.removeprefix("$."), "label": (page["search"].get("labels") or {}).get(c, c.removeprefix("$."))} for c in page["search"].get("columns", [])]}
+        """A kind's own table (a bare mnemonic): the stand-in's search of the word, paged; its schema from the search's columns."""
+        answer = live_page(await self.search(f"{word} limit 1000", ident), getattr(self, "live_kinds", ()))
+        kind = answer["search"].get("kind")
+        labels = answer["search"].get("labels") or {}
+        table = f"kind-{kind}"
+        schema = {"name": table, "title": answer["search"].get("mnemonic"), "key": ["id"], "profile": {"kind": kind},
+                  "columns": [{"name": c["name"], "type": "string", "label": labels.get("$." + c["name"], c["name"])} for c in answer["page"]["columns"]]}
+        if answer["live"]:
+            schema["live"] = {"state": "up"}
         self.__dict__.setdefault("kind_pages", []).append((word, offset, limit))
-        made = {**page, "set": spec, "rows": page["rows"][offset:offset + limit], "offset": offset, "capped": False}
-        self.__dict__.setdefault("live_sets", {})[spec["id"]] = {**page, "set": spec}
-        return made
+        self.__dict__.setdefault("live_tables", {})[table] = {"page": answer["page"], "schema": schema}
+        page = {**answer["page"], "values": answer["page"]["values"][offset:offset + limit]}
+        return {"table": table, "schema": schema, "page": page, "offset": offset}
 
     async def pivot(self, method, path, ident, body=None, raw=False, **params):
         """The pivot engine: POST /inline (the figures of rows the console holds, core/engine_figures.py) as engine_standin answers it;

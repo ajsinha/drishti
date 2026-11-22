@@ -669,7 +669,7 @@ public enum ErrorCode {
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
     /**
-     * Live result sets (docs/guides/LIVE_RESULTS_GUIDE.md): a declaration ({@code *.blotter.yaml}) was set aside at load: its shape, a format
+     * Live result sets (docs/guides/LIVE_RESULTS_GUIDE.md): a declaration ({@code *.live.yaml}) was set aside at load: its shape, a format
      * not in formats.yaml, a field not in the kind's contract, or an editable field without a write path. Admin lists why.
      */
     LIVE_SET_INVALID("DRS-9307", 422),

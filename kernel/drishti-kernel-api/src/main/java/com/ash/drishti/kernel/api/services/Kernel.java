@@ -45,7 +45,7 @@ public interface Kernel {
     /** A person's own settings ({@code /me/settings}). */
     PersonSettings settings();
 
-    /** A search as a live result set ({@code /live/query}). */
+    /** A search as a query on a live table ({@code /rdp/searches}). */
     LiveQueries live();
 
     /** The pivot engine on rows a module holds ({@code /pivot/inline}). */

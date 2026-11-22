@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.kernel.api.services;
 
-/** A search as a live result set: what {@code GET /api/v1/live/query} answers. */
+/** A search as a query on a live table: the first page of what {@code GET /api/v1/rdp/searches} answers. */
 public interface LiveQueries {
 
     /**

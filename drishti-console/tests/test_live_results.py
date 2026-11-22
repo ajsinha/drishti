@@ -69,7 +69,7 @@ def test_a_forms_result_comes_from_the_live_set_with_the_same_rows_and_columns(c
     assert "<b>2</b> of 36 trades match" in page and "<table" not in page.split('data-panel="results"')[1].split("</section>")[0]   # no table of its own: the grid draws the rows
     spec = host_spec(page)
     assert [c["field"] for c in spec["columns"]][:1] == ["__id"] and spec["kind"] == "trade" and spec["editable"] is False
-    assert 'data-live-set="qu-stand-in"' in page and 'data-live="off"' in page and "data-live-badge" not in page   # static: no live binding
+    assert 'data-live-set="q-stand-in"' in page and 'data-live="off"' in page and "data-live-badge" not in page   # static: no live binding
 
 
 def test_a_form_over_a_kind_with_a_live_binding_ticks(cl, be):
@@ -103,12 +103,28 @@ def test_a_bare_mnemonic_opens_the_kinds_own_set_a_page_at_a_time(cl, be):
 
 
 def test_values_and_cells_are_shaped_in_one_place():
-    page = {"set": {"id": "qu-1"}, "live": True, "total": 1, "seq": 9, "search": {"kind": "trade", "columns": ["$.a.b", "$.legs", "$.n"]},
-            "rows": [{"id": "T1", "doc": {"a": {"b": "x"}, "legs": [1, 2, 3], "n": -1234.5, "_title": "Swap"}}]}
-    data = live_results.as_search(page)
-    assert data["rows"] == [{"ref": {"kind": "trade", "id": "T1"}, "title": "Swap", "values": {"$.a.b": "x", "$.legs": 3, "$.n": -1234.5}}]
-    assert data["live"] == {"set": "qu-1", "live": True, "total": 1, "seq": 9}
+    answer = {"table": "q-1", "query": {"sort": [{"col": "id"}]}, "live": True, "search": {"kind": "trade", "columns": ["$.a.b", "$.legs", "$.n"]},
+              "page": {"columns": [{"name": "id"}, {"name": "a"}, {"name": "legs"}, {"name": "n"}], "values": [["T1", {"b": "x"}, [1, 2, 3], -1234.5]],
+                       "total": 1}}
+    data = live_results.as_search(answer)
+    assert data["rows"] == [{"ref": {"kind": "trade", "id": "T1"}, "title": "T1", "values": {"$.a.b": "x", "$.legs": 3, "$.n": -1234.5}}]
+    assert data["live"] == {"table": "q-1", "query": {"sort": [{"col": "id"}]}, "key": ["id"], "live": True, "total": 1}
     assert live_results.table_rows(data)[0]["cells"] == [("x", False), ("3", True), ("−1,234.5", True)]
+    spec = live_results.grid_spec(data)
+    assert spec["table"] == "q-1" and spec["query"] == {"sort": [{"col": "id"}]} and spec["key"] == ["id"]
+
+
+def test_a_tables_schema_is_the_grids_declaration_with_its_write_rules():
+    schema = {"name": "trade", "title": "Trade blotter", "key": ["TRADE_ID"], "rowVersion": "TRADE_VERSION", "profile": {"kind": "trade", "links": [{"label": "VaR", "href": "/var"}]},
+              "tray": True, "columns": [{"name": "TRADE_ID", "type": "string"}, {"name": "PRICE", "type": "number", "fmt": "price4", "label": "Price"}],
+              "view": {"sort": [{"col": "PRICE", "dir": "desc"}], "subtotals": ["PRICE"]},
+              "write": {"columns": {"PRICE": {"type": "number", "min": 0}}, "reason": "optional"}}
+    spec = live_results.table_spec("trade", schema)
+    assert [c["type"] for c in spec["columns"]] == ["id", "number"] and spec["columns"][1]["format"] == "price4"
+    assert spec["kind"] == "trade" and spec["key"] == ["TRADE_ID"] and spec["version"] == "TRADE_VERSION" and spec["tray"] is True
+    assert spec["sort"] == {"field": "PRICE", "descending": True} and spec["links"][0]["href"] == "/var"
+    assert spec["editable"] is True and spec["fields"] == [{"id": "PRICE", "bind": "PRICE", "label": "Price", "type": "number", "min": 0}]
+    assert live_results.table_spec("trade", {**schema, "write": None})["editable"] is False
 
 
 def test_a_column_that_only_repeats_the_key_is_not_drawn_twice_and_the_set_names_its_noun():

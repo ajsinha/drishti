@@ -161,41 +161,60 @@ class FormApiTest {
         return new com.fasterxml.jackson.databind.ObjectMapper().readTree(r.andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
 
-    /** A FORM's result is a live result set: the same rows, columns and order as the search it compiled to, with the search's summary. */
+    /** The rows of a Data Protocol page as maps by column name. */
+    static java.util.List<java.util.Map<String, com.fasterxml.jackson.databind.JsonNode>> rows(com.fasterxml.jackson.databind.JsonNode page) {
+        java.util.List<String> cols = new java.util.ArrayList<>();
+        page.path("columns").forEach(c -> cols.add(c.isTextual() ? c.asText() : c.path("name").asText()));
+        java.util.List<java.util.Map<String, com.fasterxml.jackson.databind.JsonNode>> out = new java.util.ArrayList<>();
+        page.path("values").forEach(v -> {
+            java.util.Map<String, com.fasterxml.jackson.databind.JsonNode> m = new java.util.LinkedHashMap<>();
+            for (int i = 0; i < cols.size(); i++) {
+                m.put(cols.get(i), v.get(i));
+            }
+            out.add(m);
+        });
+        return out;
+    }
+
+    /**
+     * A FORM's result is a query on a live table (GET /api/v1/rdp/searches): the same rows, columns and order as the search it compiled to,
+     * with the search's summary; its next pages are the Data Protocol's, and each reader reads it through their own view.
+     */
     @Test
     void aFormsResultIsALiveResultSetWithTheSearchsRowsColumnsAndOrder() throws Exception {
         String command = json(compile("searcher",
                 "{\"criteria\":[{\"path\":\"CURRENCY\",\"op\":\"in\",\"values\":[\"EUR\",\"USD\"]}],\"orderBy\":\"QUANTITY\",\"descending\":true,\"limit\":25}"))
                 .path("command").asText();
         var searched = json(mvc.perform(get("/api/v1/search").param("q", command).header("Authorization", as("searcher"))));
-        var live = json(mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("searcher"))));
+        var live = json(mvc.perform(get("/api/v1/rdp/searches").param("q", command).header("Authorization", as("searcher"))));
         org.assertj.core.api.Assertions.assertThat(live.path("search").path("columns")).isEqualTo(searched.path("columns"));
         org.assertj.core.api.Assertions.assertThat(live.path("search").path("labels")).isEqualTo(searched.path("labels"));
         org.assertj.core.api.Assertions.assertThat(live.path("search").path("matched")).isEqualTo(searched.path("matched"));
-        org.assertj.core.api.Assertions.assertThat(live.path("total").asInt()).isEqualTo(searched.path("rows").size()).isPositive();
+        var page = rows(live.path("page"));
+        org.assertj.core.api.Assertions.assertThat(page).hasSize(searched.path("rows").size()).isNotEmpty();
         java.util.List<String> want = new java.util.ArrayList<>();
         searched.path("rows").forEach(r -> want.add(r.path("ref").path("id").asText()));
-        java.util.List<String> got = new java.util.ArrayList<>();
-        live.path("rows").forEach(r -> got.add(r.path("id").asText()));
-        org.assertj.core.api.Assertions.assertThat(got).containsExactlyElementsOf(want);
-        // each row's document holds the search's values at the columns' fields
+        org.assertj.core.api.Assertions.assertThat(page.stream().map(r -> r.get("id").asText()).toList()).containsExactlyElementsOf(want);
+        // each row holds the search's values at the columns' fields
         var first = searched.path("rows").get(0).path("values");
         first.fieldNames().forEachRemaining(path -> org.assertj.core.api.Assertions
-                .assertThat(live.path("rows").get(0).path("doc").path(path.substring(2))).as(path).isEqualTo(first.path(path)));
-        String id = live.path("set").path("id").asText();
-        org.assertj.core.api.Assertions.assertThat(id).startsWith("q-");
-        org.assertj.core.api.Assertions.assertThat(live.path("set").path("editable").asBoolean()).isFalse();
-        // a page of it, sorted another way; its declaration is not listed among the blotters
-        mvc.perform(get("/api/v1/live/" + id + "/rows").param("limit", "5").param("sort", "TRADE_ID").header("Authorization", as("searcher")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.rows.length()").value(5));
-        mvc.perform(get("/api/v1/live").header("Authorization", as("searcher"))).andExpect(status().isOk())
-                .andExpect(jsonPath("$.sets[?(@.id=='" + id + "')]").isEmpty());
+                .assertThat(page.get(0).get(path.substring(2)).asDouble(0)).as(path).isEqualTo(first.path(path).asDouble(0)));
+        String table = live.path("table").asText();
+        org.assertj.core.api.Assertions.assertThat(table).startsWith("q-");
+        // the next page, sorted another way, through the Data Protocol; its schema offers no write
+        mvc.perform(post("/api/v1/rdp/tables/" + table + "/query").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"filter\":" + live.path("query").path("filter") + ",\"sort\":[{\"col\":\"id\"}],\"limit\":5}")
+                .header("Authorization", as("searcher"))).andExpect(status().isOk()).andExpect(jsonPath("$.values.length()").value(5));
+        mvc.perform(get("/api/v1/rdp/tables/" + table).header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.write").doesNotExist());
         // the trading module's trade blotter passed the checks at load (formats, the trade contract, the write path): it is listed
-        mvc.perform(get("/api/v1/live").header("Authorization", as("searcher"))).andExpect(jsonPath("$.sets[?(@.id=='trade')]").isNotEmpty());
-        // a masked person (another audience) gets their own set, and may not read the other one by its id
-        var masked = json(mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("masked"))));
-        org.assertj.core.api.Assertions.assertThat(masked.path("set").path("id").asText()).startsWith("q-").isNotEqualTo(id);
-        mvc.perform(get("/api/v1/live/" + id + "/rows").header("Authorization", as("masked"))).andExpect(status().isNotFound());
-        mvc.perform(get("/api/v1/live/query").param("q", command).header("Authorization", as("nothing"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/rdp/tables").header("Authorization", as("searcher"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.tables[?(@.name=='trade')]").isNotEmpty());
+        // a masked reader reads the same table through their own view: the masked trader never matches a condition
+        var masked = json(mvc.perform(get("/api/v1/rdp/searches").param("q", "TRD where TRADER_ID startswith 'TRDR-'").header("Authorization", as("masked"))));
+        org.assertj.core.api.Assertions.assertThat(masked.path("page").path("total").asLong()).isZero();
+        var plain = json(mvc.perform(get("/api/v1/rdp/searches").param("q", "TRD where TRADER_ID startswith 'TRDR-'").header("Authorization", as("searcher"))));
+        org.assertj.core.api.Assertions.assertThat(plain.path("page").path("total").asLong()).isPositive();
+        mvc.perform(get("/api/v1/rdp/searches").param("q", command).header("Authorization", as("nothing"))).andExpect(status().isForbidden());
     }
 }

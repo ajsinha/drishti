@@ -4049,17 +4049,18 @@ visual is added to that file by hand) and its `visuals:` entry in `console/plugi
 A page draws it with `new Chart(el, {kind: 'freight.lane-flow', ...})`; the **Elements gallery** gives it a page from its `sample()`
 while the module is on. The rules (no canvas, svg or colour of its own; tones from the theme): [section 1.8](#18-a-modules-own-visual-the-custom-visual-sdk).
 
-### 12.6a How to create a blotter (a live result set)
+### 12.6a How to create a blotter (a live table)
 
-A blotter is a declaration, not code: the kernel's live result sets engine runs it ([Live results and blotters](LIVE_RESULTS_GUIDE.md#11-make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](LIVE_RESULTS_GUIDE.md#6-the-declaration)).
+A blotter is a declaration, not code: one live table of Rachana's engine ([Live results and blotters](LIVE_RESULTS_GUIDE.md#11-make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](LIVE_RESULTS_GUIDE.md#6-the-declaration)).
 
-1. In your module, add `blotters/<id>.blotter.yaml`: the `kind`, an optional `query` (the search grammar), `key`, `version`, `columns`,
-   `links`, `retention` and, for edits, `edit:` (a Rachana form with `save:`). The trading module's
-   [`trade.blotter.yaml`](../../modules/trading/blotters/trade.blotter.yaml) is the worked example.
-2. List it in `module.yaml` (`blotters: {folder: blotters, list: [<id>]}`) and the kind in `data/needs.yaml`.
+1. In your module, add `blotters/<name>.live.yaml`: `rachana: 1`, `live-table`, the `kind`, `snapshot` and `stream` (the kind), an optional
+   `where` (Rachana-EL over the row), `key`, `version`, `columns`, `links`, `retention` and, for edits, `edit:` (a Rachana form with
+   `save:`; no key field: the table's key names the row). The trading module's [`trade.live.yaml`](../../modules/trading/blotters/trade.live.yaml)
+   is the worked example.
+2. List it in `module.yaml` (`blotters: {folder: blotters, list: [<name>]}`) and the kind in `data/needs.yaml`.
 3. The site binds the kind (`config/bindings.yaml`: `read:` the store, `live:` the messaging connector) and, for edits, gives the connector a
    `writes:` command ([APPROVALS_GUIDE.md section 10](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)).
-4. Check it: `GET /api/v1/live` lists it (an administrator also sees a declaration set aside, with why); `GET /api/v1/live/<id>/rows`
+4. Check it: `GET /api/v1/rdp/tables` lists it (a declaration set aside is listed in Admin, with why); `POST /api/v1/rdp/tables/<name>/query`
    answers its rows.
 
 ### 12.7 Putting it together: one module, end to end

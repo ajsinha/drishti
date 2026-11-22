@@ -54,6 +54,24 @@ public interface KindBindings {
         void row(String id, Object[] values);
     }
 
+    /**
+     * The kind's columnar store at a business date (time travel through the lake's {@code asOf}), when it has one. A binding that knows
+     * only the live day answers nothing for another.
+     */
+    default Optional<Store> store(String kind, com.ash.drishti.api.AsOf at) {
+        return at == null || at.isLatest() ? store(kind) : Optional.empty();
+    }
+
+    /** Every record of the kind at a business date, to the sink; false when it cannot read that day. */
+    default boolean documents(String kind, com.ash.drishti.api.AsOf at, Consumer<EntityDocument> sink) throws Exception {
+        return (at == null || at.isLatest()) && documents(kind, sink);
+    }
+
+    /** The records of these ids at a business date (absent ones left out). */
+    default Map<String, DataNode> fetch(String kind, Collection<String> ids, com.ash.drishti.api.AsOf at) throws Exception {
+        return at == null || at.isLatest() ? fetch(kind, ids) : Map.of();
+    }
+
     /** The kind's columnar store, when it has one. */
     Optional<Store> store(String kind);
 

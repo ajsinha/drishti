@@ -72,7 +72,7 @@ the libraries' modules from the same folder and loads their bundles and the map 
 ## 3. The host script
 
 `static/js/drishti_elements-host.js`, loaded by `base.html` straight after drishti-core's bundle, is the one place Drishti's routes are
-told to Elements: `configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities:
+told to Elements: `configure({ endpoints: { live: '/api/rdp', changes: '/api/changes', pivotPage: '/pivot', capabilities:
 '/api/v1/data/capabilities' } })` (the live-set client, the grid's pivot link and the data client read them; with none they say the
 feature is off), and `register` for Drishti's own libraries (section 4), so a page may load them by name with the loader.
 

@@ -58,6 +58,15 @@ def get(url: str):
         return e.code, e.read().decode("utf-8", "replace")
 
 
+def post(url: str, body: dict):
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            return r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8", "replace")
+
+
 def packs_on(server: str) -> list[dict]:
     status, body = get(server + "/api/v1/admin/packs")
     assert status == 200, body[:300]
@@ -71,29 +80,35 @@ def test_a_bare_mnemonic_opens_a_list_and_a_known_id_its_record(live_console):
     assert {"POS", "NSET", "PORT", "TRD"} <= set(words), sorted(words)
     failed, empty = [], []
     for w in sorted(words):
-        status, body = get(f"{live_console.server}/api/v1/live/kinds/{quote(w)}/rows?limit=5")
+        status, body = get(f"{live_console.server}/api/v1/rdp/kinds/{quote(w)}")
+        if status != 200:
+            failed.append(f"{w}: no table: {status} {body[:160]}")
+            continue
+        table = json.loads(body)["table"]
+        schema = json.loads(get(f"{live_console.server}/api/v1/rdp/tables/{quote(table)}")[1])
+        status, body = post(f"{live_console.server}/api/v1/rdp/tables/{quote(table)}/query", {"limit": 5})
         if w in NARROWED:                                  # never a scan: refused in words that name a field to give
-            if status != 400 or NARROWED[w] not in body:
+            if status != 422 or NARROWED[w] not in body:
                 failed.append(f"{w}: listed whole, not refused naming {NARROWED[w]}: {status} {body[:160]}")
             continue
-        if w in NO_INPUTS and not os.environ.get("DRISHTI_DEMO_LAKE") and status == 404 and "DRS-1001" in body and NO_INPUTS[w] in body:
-            continue                                       # no VaR inputs on this server: refused, saying why
-        if status != 200 or "DRS-" in body[:200]:
+        if w in NO_INPUTS and not os.environ.get("DRISHTI_DEMO_LAKE") and status in (404, 503):
+            continue                                       # no VaR inputs on this server: its source refuses, so the table cannot be read
+        if status != 200:
             failed.append(f"{w}: {status} {body[:160]}")
             continue
         page = json.loads(body)
-        spec = page.get("set") or {}
-        if page.get("total", 0) == 0 and spec.get("kind") not in MAY_BE_EMPTY:
-            empty.append(f"{w} ({spec.get('kind')})")
+        kind = (schema.get("profile") or {}).get("kind")
+        if page.get("total", 0) == 0 and kind not in MAY_BE_EMPTY:
+            empty.append(f"{w} ({kind})")
             continue
-        rows = page.get("rows") or []
-        if rows and isinstance(rows[0], dict):
-            key = spec.get("key") or "id"
-            rid = rows[0].get(key) or rows[0].get("id")
-            if rid:
-                st, rec = get(f"{live_console.server}/api/v1/live/{spec['id']}/rows/{quote(str(rid), safe='')}")
-                if st != 200:
-                    failed.append(f"{w}: the record {rid} did not open: {st} {rec[:160]}")
+        cols = [c["name"] if isinstance(c, dict) else c for c in page.get("columns") or []]
+        key = (schema.get("key") or ["id"])[0]
+        if page.get("values") and key in cols:
+            rid = page["values"][0][cols.index(key)]
+            st, rec = post(f"{live_console.server}/api/v1/rdp/tables/{quote(table)}/query",
+                           {"filter": {"op": "==", "args": [{"col": key}, {"lit": rid}]}})
+            if st != 200 or not json.loads(rec).get("values"):
+                failed.append(f"{w}: the record {rid} did not open: {st} {rec[:160]}")
     assert not failed, "\n".join(failed)
     if os.environ.get("DRISHTI_DEMO_LAKE"):                # no lake built: every mnemonic still opened; with one, each kind with data shows it
         assert not empty, "mnemonics whose demo data is empty: " + ", ".join(empty)

@@ -43,10 +43,14 @@
 - **Every pack Sutra is drawn by the client renderer in the parity suite.** Its server turns every shipped pack on (the off-by-default ones too, with
   their blocks), a Sutra the preview refuses fails with the server's words, and the painter's pages and closed rows are opened before the read:
   241 Sutras, none skipped. A link to a target the server found missing is a link again in an embed, as on the console's pages.
-- **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
-  snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
-  rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default
-  (`drishti.live-sets.engine: rachana` turns it on); the kernel's live result sets still serve the console.
+- **One engine of live tables: Rachana's.** Blotters, FORM results, the search page and bare mnemonics are Rachana's live tables through
+  Drishti's adapter, on the Data Protocol at `/api/v1/rdp`; the kernel's own live result sets (`server/liveset`, `/api/v1/live/*`) and the
+  switch between the two are deleted. A search is compiled once (`SearchFilter`: the search grammar to a filter tree through Rachana's
+  `FilterTree`, an order and a limit) and read as a query on a table of the kind (`GET /api/v1/rdp/searches`), with the search's rows, count
+  and order; a condition outside the tree's subset stays in the table's `where:`. A past business date is a static snapshot of that day
+  (the lake's time travel); a kind other Drishti*net members hold is a table spanning them (each member's share and changes, merged by key
+  and version, `GET /api/v1/net/changes/{kind}`). The trade blotter is `trade.live.yaml`; the console's grids read and write through
+  `/api/rdp` and follow `live:<table>` on the one live channel.
 
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are

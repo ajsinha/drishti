@@ -50,9 +50,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * {@code GET /tables/{name}/rows} and {@code POST /tables/{name}/query} (a page; a FORM's search is a query with a filter on its kind's
  * table), {@code POST /tables/{name}/write} (an edit, checked by the guard and handed to the write-back as the person),
  * {@code GET|POST /changes} (the minimal SSE stream; a windowed one starts with {@code subd}) and {@code POST /changes/{sub}/window}
- * (only the stream's own caller). A bare mnemonic's table ({@code kind-<kind>}) is declared from its contract on first use.
+ * (only the stream's own caller). A bare mnemonic's table ({@code kind-<kind>}) is declared from its contract on first use; a search
+ * ({@code GET /searches?q=}: a FORM's result, the search page's) is opened as a query on a table ({@link FormResults}).
  */
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "drishti.live-sets.engine", havingValue = "rachana")
 @RestController
 @RequestMapping(LiveTablesController.BASE)
 public class LiveTablesController {
@@ -67,19 +67,45 @@ public class LiveTablesController {
 
     private record Open(Subscription sub, String user) {}
 
-    public LiveTablesController(LiveTables tables, ObjectMapper json) {
+    private final FormResults forms;
+
+    private final com.ash.drishti.engine.command.Mnemonics mnemonics;
+    private final com.ash.drishti.engine.source.SourceRouter router;
+
+    public LiveTablesController(LiveTables tables, FormResults forms, com.ash.drishti.engine.command.Mnemonics mnemonics,
+            com.ash.drishti.engine.source.SourceRouter router, ObjectMapper json) {
+        this.router = router;
         this.tables = tables;
+        this.forms = forms;
+        this.mnemonics = mnemonics;
         this.host = new ProtocolHost(BASE, tables);
         this.json = json;
     }
 
     /** The table of a kind (its own declaration of that name, else the kind's default one), declared on first use: {@code {table}}. */
     @GetMapping("/kinds/{kind}")
-    public Map<String, Object> kindTable(@PathVariable String kind, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+    public Map<String, Object> kindTable(@PathVariable("kind") String word, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        // a mnemonic (POS) or a kind (position)
+        String kind = mnemonics.of(word.toUpperCase(java.util.Locale.ROOT)).map(m -> m.kind()).orElse(word);
         String name = tables.has(kind) ? kind : DrishtiLiveTables.defaultTable(tables, kind).orElseThrow(() -> ProtocolError.of("rdp.table.unknown", 404,
                 kind + " has no columns to list", "table", kind));
         tables.schemaDoc(name, principal);                    // a reader who may not read it is refused here
         return Map.of("table", name);
+    }
+
+    /** A refusal of the protocol answered as the protocol says: its status and {@code {error: {code, message, ...}}}. */
+    @org.springframework.web.bind.annotation.ExceptionHandler(ProtocolError.class)
+    public ResponseEntity<Object> refused(ProtocolError e) {
+        return ResponseEntity.status(e.status()).contentType(MediaType.APPLICATION_JSON).body(e.body());
+    }
+
+    /**
+     * A search as a query on a table (a FORM's result, the search page's), on the person's business date:
+     * {@code {table, query, live, page, search}} ({@link FormResults#answer}). The page's next ones and the changes are the protocol's.
+     */
+    @GetMapping("/searches")
+    public ResponseEntity<Object> search(@RequestParam String q, com.ash.drishti.api.AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return ResponseEntity.ok(forms.answer(q, asOf, principal));
     }
 
     /** The changes of a table: the minimal SSE form (PROTOCOL 8.2, 16). */
@@ -168,6 +194,24 @@ public class LiveTablesController {
         Object parsed = body == null ? null : json.convertValue(body, Object.class);
         String path = rel;
         ProtocolHost.Answer a = DrishtiChangeSink.as(principal, () -> host.handle(principal, request.getMethod(), path, params, parsed));
+        if (a.status() == 200 && "GET".equals(request.getMethod()) && path.matches("/tables/[^/]+") && a.body() instanceof Map<?, ?> m) {
+            // a table's schema carries Drishti's profile (its kind and links) and whether it has a tray: the grid's record panel reads them
+            com.ash.rachana.table.LiveTableSpec spec = DrishtiLiveTables.spec(tables, path.substring("/tables/".length()));
+            if (spec != null) {
+                Map<String, Object> doc = new LinkedHashMap<>();
+                m.forEach((k, v) -> doc.put(String.valueOf(k), v));
+                doc.put("profile", spec.profile());
+                doc.put("tray", spec.tray() && spec.edit() != null);
+                java.util.Set<String> off = router.excluded(DrishtiAuthoriser.kind(spec));
+                if (!off.isEmpty()) {                         // the trading systems switched off that feed the kind: the page says so
+                    doc.put("excludes", new java.util.TreeSet<>(off));
+                }
+                if (!doc.containsKey("write")) {
+                    doc.put("readOnly", DrishtiLiveTables.readOnly(tables, spec.name(), principal));
+                }
+                return ResponseEntity.ok(doc);
+            }
+        }
         return ResponseEntity.status(a.status()).body(a.body());
     }
 

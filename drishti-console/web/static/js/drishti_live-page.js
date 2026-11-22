@@ -13,8 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The page of one live result set (/live/<id>): hands the declaration, the /api/live calls and the console's one live channel (the
-   subscription live:<id>) to drishti-grid's live mode (LiveSetGrid). Nothing else is drawn here. */
+/* The page of one live table (/live/<name>): hands the declaration, the Data Protocol calls (/api/rdp) and the console's one live channel
+   (the subscription live:<name>) to drishti-grid's live mode (LiveSetGrid). Nothing else is drawn here. */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
