@@ -38,7 +38,7 @@ SHEET_FILE, MANIFEST_FILE = "drishti-view.css", "drishti-view.manifest.json"
 REPORT_FILE, REPORT_MANIFEST = "drishti-report.css", "drishti-report.manifest.json"
 # <drishti-report> adopts the view sheet (tokens, theme, buttons, inputs) and then this one: the BI sheets, rewritten the same way, with the glyphs the report code names
 REPORT_SHEETS = ("css/drishti_bi.css", "css/drishti_bi-report.css", "css/drishti_bi-board.css")
-REPORT_ICON_SOURCES = ("static/js/drishti_bi-visuals.js", "static/js/drishti_bi-visuals-format.js", "static/js/drishti_bi-grids.js", "static/js/drishti_bi-matrix.js", "static/js/drishti_bi-multiples.js", "static/js/drishti_bi-frame.js", "static/js/drishti_bi-live.js", "static/js/drishti_bi-phone.js", "static/js/drishti_bi-lib.js",
+REPORT_ICON_SOURCES = ("static/js/drishti_bi-visuals.js", "static/js/drishti_bi-visuals-format.js", "static/js/drishti_bi-grids.js", "static/js/drishti_bi-matrix.js", "static/js/drishti_bi-frame.js", "static/js/drishti_bi-live.js", "static/js/drishti_bi-phone.js", "static/js/drishti_bi-lib.js",
                        "embed/report.js", "embed/report-page.js")
 # glyphs the code builds from parts (a class such as "bi bi-" + (x ? a : b)) or hands to a helper by name
 REPORT_NAMED_ICONS = ("table", "x-circle", "play-fill", "pause-fill", "caret-down-fill", "caret-up-fill", "dash-square", "plus-square", "arrow-left", "cursor", "funnel", "sliders",

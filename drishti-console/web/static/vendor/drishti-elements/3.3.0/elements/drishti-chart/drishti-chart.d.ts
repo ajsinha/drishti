@@ -70,6 +70,21 @@ export interface PanelChartsOptions {
   attr?: string;
   relayout?: boolean;
 }
+/** The host's adapter: how the report's page reads, formats and colours what a chart draws. */
+export interface ReportEnv {
+  t: Record<string, string>;
+  palette: string[];
+  fmt: ((a0: any, a1: string, a2: boolean) => string);
+  compact: ((a0: number) => string);
+  numFmt: ((a0: string) => string);
+  styler?: ((a0: Record<string, any>) => ({ point: ((a0: string, a1: any, a2: any[]) => (string | null)) } | null));
+  label?: ((a0: string) => string);
+  selected?: { visual: string; values: any[] };
+  interactive?: boolean;
+  update?: boolean;
+  rolling?: Record<string, Record<string, any>>;
+  rollingKey?: string;
+}
 export interface ScaleOptions {
   type?: ('sequential' | 'diverging');
   domain: number[];

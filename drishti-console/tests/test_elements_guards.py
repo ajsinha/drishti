@@ -70,16 +70,13 @@ ALLOWED = {
     "static/js/drishti_bi-layer-ops.js": {"numbers": BI},
     "static/js/drishti_bi-lib.js": {"numbers": BI},
     "static/js/drishti_bi-notebook-profile.js": {"numbers": BI},
-    "static/js/drishti_bi-python.js": {"echarts": BI},
     "static/js/drishti_bi-runs-admin.js": {"numbers": BI},
     "static/js/drishti_bi-runs.js": {"numbers": BI},
     "static/js/drishti_bi-transform.js": {"numbers": BI},
-    "static/js/drishti_bi-visuals.js": {"echarts": BI},
-    "static/js/drishti_geomap.js": {"echarts": BI},
+    "static/js/drishti_geomap.js": {"echarts": BI},                          # left for the Sutra panels' maps and the frozen embeds (render 1.2.0, embed v1); BI's maps draw with drishti-chart's geo part
     "plugins/banking/static/js/drishti_mr-lens.js": {"numbers": BI},
     "static/js/drishti_pivot-engine.js": {"numbers": BI},
     "static/js/drishti_pivot-functions.js": {"numbers": BI},
-    "static/js/drishti_table-chart.js": {"echarts": BI},
     # VaR, exposure and the risk screens (wip/e-migrate-var)
     "plugins/banking/static/js/drishti_exposure-explorer.js": {"numbers": VAR},
     "plugins/banking/static/js/drishti_frtb-sa.js": {"numbers": VAR},

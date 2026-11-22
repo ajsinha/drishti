@@ -337,7 +337,7 @@ source: |
 ```
 
 `table` is a DataFrame of the rows the visual hands over (the columns of its `columns` well; the row `id` is dropped). The function returns
-**data, never markup**: an ECharts option drawn by the console's own charts (any `formatter`, `valueFormatter`, `extraCssText` and
+**data, never markup**: an ECharts option drawn by drishti-chart (Drishti Elements' report part; any `formatter`, `valueFormatter`, `extraCssText` and
 `appendToBody` key is removed: those are the places an option can carry HTML), an SVG (refused if it holds `<script`, `javascript:`,
 `<foreignObject`, `<iframe`, `<image`, `xlink:href` or an `on...` handler; shown as an image, which never runs script) or PNG bytes.
 Colours you leave out (text, axes, grid lines) take the page's theme, so a chart reads in the dark and the light theme alike.
@@ -485,7 +485,7 @@ with its rows inline, and the page draws it as it is: every kind drishti-chart h
 heatmap, pie, donut, waterfall, treemap, sankey, gauge, candlestick, map, layers), its annotations and conditional marks, nothing to
 translate and nothing refused. The answer is `{"kind": "drishti-chart", "spec": {...}}`; a spec without `kind` is a `TypeError`, and
 `data.source` (an address to load) is refused in the sandbox (`DRS-9073`): put the rows in `data.rows`. The spec's language is in
-[ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md) (drishti-chart).
+[ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md) (drishti-chart).
 
 ```python
 def render(table, params):

@@ -14,20 +14,21 @@
 
 
 """Delta Lake maintenance, so a lake does not grow without bound. A Delta table is kept by Drishti Lake's ``lake maintain`` (LakeMaintain: retention,
-compaction, checkpoint and vacuum, one set of options for every store, started through the loader's class path); delta-rs here only reads a table's
-shape for the report and rewrites a pack's sorted layout (relayout), which Lake does not do for Delta. Drishti's server only reads the lake; this job
-does what readers cannot, on a schedule, for local lakes and lakes in object storage (S3 and S3-compatible):
+relayout, compaction, checkpoint and vacuum, one set of options for every store, started through the loader's class path, through Delta Kernel;
+no delta-rs). Drishti's server only reads the lake; this job does what readers cannot, on a schedule, for local lakes and lakes in object storage
+(S3 and S3-compatible):
 
-    retention   keep the newest keep-business-days business dates on or before today in schedule.zone (or --as-of), delete the older
-                ones, never counting from a date after today; a run that would delete more than
-                max-drop-share (0.5) of a table's rows deletes nothing and reports the table failed, unless --force-drop
-    compact     merge the small files each day's writes leave into files of target-file-mb; a table whose pack declares
-                a layout is instead rewritten, sorted, for the dates that drifted from it (relayout), and keeps
-                statistics only on id, the date and its promoted columns
+    retention   delete business dates older than the history window (keep-business-days), counted back from today in schedule.zone
+                (or --as-of) in business days (Monday to Friday): today and that many business days before it are kept, never counted
+                from the newest date in the table; a run that would delete more than max-drop-share (0.5) of a table's rows deletes
+                nothing and reports the table failed, unless --force-drop
+    compact     merge the small files each day's writes leave into files of target-file-mb; a table whose pack declares a layout keeps
+                it: the dates that drifted from it (an append whose ids overlap the date's files) are rewritten sorted by id first
+                (lake maintain --relayout), each file its own id range
     checkpoint  write a Delta checkpoint, so readers replay a short log
     vacuum      remove files no longer referenced, older than vacuum-hours (time travel reaches back that far)
 
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once
+    uv run --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once
     ... --daemon            run the file's schedules (lakes[].schedules: cron text or after-build); with none, every day at
                             schedule.at in schedule.zone (a container or service); a time missed while down runs once at start
     ... --dry-run           report what would happen (files and MB before -> after, dates retention drops, files vacuum removes)
@@ -42,10 +43,10 @@ does what readers cannot, on a schedule, for local lakes and lakes in object sto
 tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock exclusively (builds hold it shared), so it never
 overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.jsonl).
 
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading \\
+    uv run --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading \\
         [--kind trade] [--dates 2026-09-28,2026-09-30 | --dates 2026-09-01..2026-09-30] [--force] [--dry-run]
-                            rewrite tables into the layout their pack declares (tools/samplegen/layout.py), one business
-                            date at a time; a date already in the layout is left as it is, so running it again is harmless
+                            lay the tables their pack lays out (tools/samplegen/layout.py) out again by id (lake maintain --relayout):
+                            a date already in the layout is left as it is (unless --force), so running it again is harmless
 
 Iceberg lakes (a lake with ``format: iceberg``, or tables with metadata/*.metadata.json under a local root; Delta is the default) are
 maintained by Drishti's Iceberg maintenance instead (tools/lake/maintain_iceberg.py: retention, relayout, snapshot expiry for vacuum-hours,
@@ -67,8 +68,7 @@ from zoneinfo import ZoneInfo
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from samplegen.layout import Layout, column_name, keep_stats_small, layouts_by_table, promote, write_partition  # noqa: E402
-from samplegen.layout import stats_columns as stats_columns_of  # noqa: E402
+from samplegen.layout import Layout, layouts_by_table  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import maintain_iceberg  # noqa: E402
@@ -107,32 +107,13 @@ def tables(root: str, domains: list[str], options: dict) -> list[str]:
     return [str(t) for d in picked for t in sorted(d.iterdir()) if (t / "_delta_log").is_dir()]
 
 
-def add_actions(dt) -> list[dict]:
-    """The table's live files, as dicts (deltalake 1.x returns an Arrow C-stream table; pyarrow reads it)."""
-    import pyarrow as pa
-    return pa.table(dt.get_add_actions(flatten=True)).to_pylist()
-
-
-def stats(dt) -> dict:
-    return stats_of(add_actions(dt))
-
-
-def stats_of(actions: list[dict]) -> dict:
-    """Files and MB, the business dates, and the latest date with its rows (for the data-load signal)."""
-    dates = sorted({str(a.get("partition.business_date")) for a in actions if a.get("partition.business_date") is not None})
-    latest = dates[-1] if dates else None
-    rows = [a.get("num_records") for a in actions if latest and str(a.get("partition.business_date")) == latest]
-    return {"files": len(actions), "mb": round(sum(a["size_bytes"] for a in actions) / 1_048_576, 2), "dates": len(dates),
-            "latestDate": latest, "latestRows": sum(r for r in rows if r is not None) if rows else None}
-
-
 LAKE_MAINTAIN = "com.ash.lake.load.LakeMaintain"
 
 
 def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, floor_days: int, compact: bool,
-                 data: Path | None = None, jar: str | None = None, java: str | None = None) -> list[str]:
-    """Drishti Lake's ``lake maintain`` for one Delta table (``<root>/<domain>/<table>``): retention (business dates, then rows), compaction,
-    checkpoint and vacuum, by Lake's options and in Lake's order. ``compact`` is False for a laid-out table (relayout rewrote it sorted)."""
+                 data: Path | None = None, jar: str | None = None, java: str | None = None, relayout: bool = False, file_rows: int | None = None) -> list[str]:
+    """Drishti Lake's ``lake maintain`` for one Delta table (``<root>/<domain>/<table>``): retention (business dates, then rows), relayout
+    (a laid-out table), compaction, checkpoint and vacuum, by Lake's options and in Lake's order."""
     import stores
     root, name = uri.rsplit("/", 2)[0], "/".join(uri.rstrip("/").split("/")[-2:])
     cmd = stores.loader_command(data or Path(root) / "_drishti-lake", jar, java, main=LAKE_MAINTAIN) + [
@@ -142,6 +123,8 @@ def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: b
     for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
         if (conf.get("row-retention") or {}).get(key):
             cmd += [f"--{key}", str(conf["row-retention"][key])]
+    if relayout:
+        cmd += ["--relayout"] + (["--file-rows", str(int(file_rows))] if file_rows else [])
     if compact:
         cmd += ["--compact", "--target-file-mb", str(int(conf.get("target-file-mb", 128)))]
     if conf.get("checkpoint"):
@@ -159,24 +142,16 @@ def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: b
 
 def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False, floor_days: int = 0,
              runner=None, data: Path | None = None) -> dict:
-    """One Delta table maintained (or a dry run): Drishti Lake's ``lake maintain`` does the retention, compaction, checkpoint and vacuum (one
-    set of options for every store); the one thing it does not do is the pack's sorted layout, so a laid-out table's drifted dates are
-    rewritten first (:func:`relayout`) and Lake then compacts nothing. The result in lake maintain's form (before, after or estimate, retention,
-    row-retention, compact, checkpoint, vacuum). ``runner(cmd)`` gives the JSON line (tests). Raises RuntimeError on failure."""
+    """One Delta table maintained (or a dry run) by Drishti Lake's ``lake maintain`` (one set of options for every store): retention, a
+    laid-out table's relayout (the dates that drifted from its id order rewritten sorted), compaction, checkpoint and vacuum. The result
+    in lake maintain's form (before, after or estimate: files, mb, dates, latestDate, latestRows; retention, row-retention, compact,
+    checkpoint, vacuum). ``runner(cmd)`` gives the JSON line (tests). Raises RuntimeError on failure."""
     import maintain_iceberg
     opts = conf.get("storage-options") or {}
-    before = stats_of(add_actions(_table(uri, opts)))
-    done: dict = {"table": uri, "before": before}
-    lay = layout_of(uri)
     compact = bool(conf.get("compact"))
-    if compact and lay is not None:
-        # a laid-out table is compacted by rewriting only the dates that drifted from its layout (small intraday appends, overlapping id
-        # ranges), sorted again: a plain compaction would merge files out of id order
-        done["stats-columns-set"] = False if dry_run else keep_stats_small(uri, lay, opts)
-        r = relayout(uri, lay, dry_run=dry_run)
-        done["compact"] = {"relaid-dates": r["rewritten"], "files": r["files"], "rows": r["rows"]}
-        compact = False
-    cmd = lake_command(uri, conf, today, dry_run, force_drop, floor_days, compact, data)
+    lay = layout_of(uri) if compact else None
+    cmd = lake_command(uri, conf, today, dry_run, force_drop, floor_days, compact, data, relayout=lay is not None,
+                       file_rows=lay.file_rows if lay is not None else None)
     old = {k: os.environ.get(k) for k in opts}
     os.environ.update({k: str(v) for k, v in opts.items()})     # an S3 lake: Lake's runtime reads the AWS_* names
     try:
@@ -186,53 +161,36 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
             os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
     if r.get("error"):
         raise RuntimeError(r["error"])
+    done: dict = {"table": uri, "before": r.get("before") or {}}
     keep = r.get("keepDays") or {}
     if keep:
-        cutoff = keep.get("from")
-        done["retention"] = {"cutoff": cutoff, "dates": keep.get("dates") or [], "num_deleted_rows": keep.get("rows", 0)}
+        done["retention"] = {"cutoff": keep.get("from"), "dates": keep.get("dates") or [], "num_deleted_rows": keep.get("rows", 0)}
         if dry_run:
             done["retention"]["would_remove_files"] = len(keep.get("dates") or [])
     if "rowRetention" in r:
         days = r["rowRetention"] or []
         done["row-retention"] = {"dropped": sum(int(d.get("dropped", 0)) for d in days), "dates": days, "dry_run": dry_run}
-    if "compact" in r and "compact" not in done:
-        done["compact"] = {"dates": (r["compact"] or {}).get("dates", [])}
+    if "relayout" in r or "compact" in r:
+        done["compact"] = {"dates": (r.get("compact") or {}).get("dates", [])}
+        if "relayout" in r:
+            done["compact"]["relaid-dates"] = (r.get("relayout") or {}).get("dates", [])
     if "checkpoint" in r:
         done["checkpoint"] = (r["checkpoint"] or {}).get("version")
     if "vacuum" in r:
         v = r["vacuum"] or {}
         done["vacuum"] = {"files": v.get("files", 0), "dry_run": dry_run, "hours": v.get("hours"), "first": (v.get("first") or [])[:5],
                           "mb": round((v.get("bytes") or 0) / 1_048_576, 2)}
-    actions = add_actions(_table(uri, opts))
-    if dry_run:
-        gone = set((done.get("retention") or {}).get("dates") or [])
-        done["estimate"] = _estimate([a for a in actions if str(a.get("partition.business_date")) not in gone], conf, compact or "relaid-dates" in done.get("compact", {}))
+    if dry_run:      # what the table will hold: the dates retention leaves, one file a date when the run compacts (an estimate)
+        est = dict(r.get("after") or {})
+        est["dates"] = max(0, int(est.get("dates") or 0) - len(keep.get("dates") or []))
+        if isinstance(est.get("rows"), int) and est["rows"] >= 0:
+            est["rows"] = max(0, est["rows"] - int(keep.get("rows") or 0))
+        if compact:
+            est["files"] = est["dates"]
+        done["estimate"] = {**est, "estimate": True}
     else:
-        done["after"] = stats_of(actions)
+        done["after"] = r.get("after") or {}
     return done
-
-
-def _estimate(actions: list[dict], conf: dict, compacted: bool) -> dict:
-    """What a dry run says the table will hold: the dates retention leaves, each one's small files merged into files of target-file-mb when
-    the run compacts. An estimate: compression changes the sizes a little."""
-    out = stats_of(actions)
-    if compacted:
-        target = int(conf.get("target-file-mb", 128)) * 1_048_576
-        groups: dict[tuple, list[dict]] = {}
-        for a in actions:
-            groups.setdefault(tuple(sorted((k, str(v)) for k, v in a.items() if k.startswith("partition."))), []).append(a)
-        files = 0
-        for g in groups.values():
-            small = [a for a in g if a["size_bytes"] < target]
-            files += (len(g) - len(small)) + (max(1, -(-sum(a["size_bytes"] for a in small) // target)) if small else 0)
-        out["files"] = files
-    return {**out, "estimate": True}
-
-
-def _table(uri: str, opts: dict):
-    """The table opened for reading its shape (delta-rs, read only: the maintenance itself is Drishti Lake's)."""
-    from deltalake import DeltaTable
-    return DeltaTable(uri, storage_options=opts or None)
 
 
 def layout_of(uri: str) -> Layout | None:
@@ -449,90 +407,14 @@ def history_entry(report: dict, dry_run: bool, by: str, schedule: str | None = N
             "outcome": outcome(report), "note": note, "tables": [{k: v for k, v in t.items() if k in keep} for t in report["tables"]]}
 
 
-def in_layout(actions: list[dict], lay: Layout, columns: set[str]) -> bool:
-    """Whether a business date's files already follow the layout: every promoted column present with statistics, no
-    file over file-rows and, sorted by id, contiguous disjoint id ranges with only the last file short."""
-    if not actions or any(column_name(p) not in columns for p in lay.columns):
-        return False
-    partitioned = {k.removeprefix("partition.") for a in actions for k in a if k.startswith("partition.")}   # no statistics: one value a folder
-    if any(a.get(f"null_count.{column_name(p)}") is None for a in actions for p in lay.columns if column_name(p) not in partitioned):
-        return False
-    if any(a["num_records"] > lay.file_rows for a in actions):
-        return False
-    if lay.sort_by != "id":
-        return True
-    # a table partitioned past the date (a trade table by PRODUCT_TYPE) is checked in each of its partitions: the layout's
-    # files of file-rows are cut across them, so there the files are in id order but need not be full
-    groups: dict[tuple, list[dict]] = {}
-    for a in actions:
-        groups.setdefault(tuple(sorted((k, str(v)) for k, v in a.items() if k.startswith("partition.") and k != "partition.business_date")), []).append(a)
-    full = len(groups) == 1 and not next(iter(groups))
-    for group in groups.values():
-        files = sorted(group, key=lambda a: str(a.get("min.id")))
-        if not all(a.get("min.id") is not None and a.get("max.id") is not None for a in files):
-            return False
-        if not all(files[k]["max.id"] < files[k + 1]["min.id"] and (not full or files[k]["num_records"] == lay.file_rows) for k in range(len(files) - 1)):
-            return False
-    return True
-
-
-def wanted_dates(spec: str | None) -> tuple[str, str] | set[str] | None:
-    if not spec:
-        return None
-    if ".." in spec:
-        lo, hi = spec.split("..", 1)
-        return lo.strip(), hi.strip()
-    return {d.strip() for d in spec.split(",") if d.strip()}
-
-
-def relayout(uri: str, lay: Layout, dates: str | None = None, force: bool = False, dry_run: bool = False) -> dict:
-    """Rewrites a table into `lay` one business date at a time: the date's documents are read from a pinned
-    version, promoted, sorted and written back, file by file (the first write replaces the date, the rest append),
-    so memory holds one file's rows. Dates already in the layout are skipped unless `force`."""
-    import pyarrow as pa
-    import pyarrow.compute as pc
-    from deltalake import DeltaTable
-
-    dt = DeltaTable(uri)
-    version = dt.version()
-    columns = {f.name for f in pa.schema(dt.schema())}
-    by_date: dict[str, list[dict]] = {}
-    for a in add_actions(dt):
-        by_date.setdefault(str(a.get("partition.business_date")), []).append(a)
-    want = wanted_dates(dates)
-    done: dict = {"table": uri, "version": version, "rewritten": [], "skipped": [], "files": 0, "rows": 0}
-    for iso in sorted(by_date):
-        if isinstance(want, set) and iso not in want or isinstance(want, tuple) and not want[0] <= iso <= want[1]:
-            continue
-        if not force and in_layout(by_date[iso], lay, columns):
-            done["skipped"].append(iso)
-            continue
-        done["rewritten"].append(iso)
-        if dry_run:
-            continue
-        day = date.fromisoformat(iso)
-        import deltaread                                # every reader feature honoured (DATA_LAKE_GUIDE.md section 14)
-        snapshot = deltaread.read(uri, version=version, date=iso, columns=["id", "doc"])
-        ids = sorted(set(snapshot.column("id").to_pylist()))
-        step = lay.file_rows if lay.sort_by == "id" else max(1, len(ids))
-        for k in range(0, max(1, len(ids)), step):
-            part = ids[k:k + step]
-            where = (pc.field("id") >= part[0]) & (pc.field("id") <= part[-1]) if part and lay.sort_by == "id" else None
-            t = snapshot if where is None else snapshot.filter(where)
-            rows = [(i, d, promote(json.loads(d), lay)) for i, d in zip(t.column("id").to_pylist(), t.column("doc").to_pylist())]
-            done["files"] += write_partition(uri, day, rows, lay, "overwrite-partition" if k == 0 else "append", promoted=True)
-            done["rows"] += len(rows)
-    return done
-
-
 def relayout_main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="maintain.py relayout", description="rewrite tables into their pack's layout")
+    ap = argparse.ArgumentParser(prog="maintain.py relayout", description="lay tables out again by their pack's layout (lake maintain --relayout)")
     ap.add_argument("--root", default=(__import__("os").environ.get("DRISHTI_DATA_DIR") or str(__import__("pathlib").Path(__file__).resolve().parents[2] / "data")) + "/delta")
     ap.add_argument("--domain", required=True)
     ap.add_argument("--kind", default=None, help="one kind (default: every kind with a layout in the domain)")
     ap.add_argument("--dates", default=None, help="only these business dates: 2026-09-28,2026-09-30 or 2026-09-01..2026-09-30")
     ap.add_argument("--packs", default=None, help="the packs folder whose pack.yaml files declare the layouts (default: this repository's)")
-    ap.add_argument("--force", action="store_true", help="rewrite dates already in the layout too")
+    ap.add_argument("--force", action="store_true", help="rewrite dates already in the layout too (another codec, smaller row groups)")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
     tables = layouts_by_table(a.domain, Path(a.packs)) if a.packs else layouts_by_table(a.domain)
@@ -541,13 +423,19 @@ def relayout_main(argv: list[str]) -> int:
         if not tables:
             log(event="failed", domain=a.domain, kind=a.kind, error="no layout declared for this kind")
             return 1
+    import maintain_iceberg
     failures = 0
     for table, (_kind, lay) in sorted(tables.items()):
         uri = str(Path(a.root) / a.domain / table)
         if not (Path(uri) / "_delta_log").is_dir() and "://" not in uri:
             continue                                          # a table the lake does not have (yet)
         try:
-            log(event="relayout", dry_run=a.dry_run, **relayout(uri, lay, a.dates, a.force, a.dry_run))
+            import stores
+            cmd = stores.loader_command(Path(a.root) / "_drishti-lake", None, None, main=LAKE_MAINTAIN) + [
+                "--lake", a.root, "--format", "delta", "--table", f"{a.domain}/{table}", "--relayout", "--file-rows", str(lay.file_rows), "--json"] + (["--dates", a.dates] if a.dates else []) \
+                + (["--force"] if a.force else []) + (["--dry-run"] if a.dry_run else [])
+            r = json.loads(maintain_iceberg.json_line(cmd, "lake maintain"))
+            log(event="relayout", dry_run=a.dry_run, table=uri, rewritten=(r.get("relayout") or {}).get("dates", []))
         except Exception as e:  # noqa: BLE001 - one table must not stop the others
             failures += 1
             log(event="failed", table=uri, error=f"{type(e).__name__}: {e}")

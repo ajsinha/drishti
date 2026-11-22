@@ -436,6 +436,38 @@ blotter page, the trading landing) paint through the same LiveSetGrid over a Dat
 | LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
 | LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
 
+### Pass 3 live tables, the fixes (2026-11-21, on `g4/live-fixes` from `wip/g4-rehearsal-rx` `14c20e677`)
+
+The owner's rulings on LS1 to LS7 and LV4 (no feature loss; audit correctness):
+
+| # | Ruling | Done |
+|---|---|---|
+| LV4, LS5 | the caller must reach the change sink and the audit record | the mount marks the person for the write it serves and `DrishtiChangeSink` refuses a change whose maker is not that person (never submitted as anyone else); `live-write-*` audit records carry the caller, the change id and its columns (subject `<table>:<change id>`), the write-back's `edit-submitted` the same id. The tray's release/reject stay Drishti's approvals page (no feature the old engine had) |
+| LS7 | Rachana's change id end to end; a repeated id gets the same answer (PROTOCOL 16) | `EditService` keeps a client's id (`[A-Za-z0-9_-]{1,64}`, Postgres `VARCHAR(64)`); `EditService.known(id)` reads the edit log or the approval queue; the sink's `madeBy`/`prior` answer a repeat from it (any node, after a restart); a repeat through the write-back API answers the change's state (`edit-repeated` audited), another person's is refused |
+| LS3 | a failing source's 503 carries the source's words, made safe | `ReadFailures` (one line, 300 characters, file paths cut to the name, URL credentials and `password=`/`token:` values as `***`), kept per kind by `KindSnapshot` for two minutes and cleared by a good read; the mount adds them to every `503 rdp.unavailable` (`message` and `source`) |
+| LS1 | FORM results keep their title column | a FORM's table has `_title` after the id, filled from the sources' listing (the search's titles) on a whole read and by Drishti*net members; the console's Title column shows when it says more than the id |
+| LS4 | a bare mnemonic's page carries the as-of notices | `GET /rdp/kinds/{word}` answers `{table, asOfNotices}`; the console's kind page shows them as a search's |
+| LS2 | N new instead of jumping: intentional | said in LIVE_RESULTS_GUIDE.md section 7 |
+| LS6 | unchanged (a declaration outlives an evicted source; read again on next use) | — |
+
+Delta upkeep: `tools/lake/maintain.py` no longer imports delta-rs; relayout, compaction, retention, checkpoint, vacuum and the report's
+shape are Drishti Lake's `lake maintain` (Drishti Lake `78a8422`, to be tagged v0.9.1). Two things the delta-rs relayout did are not carried: promoting a pack's
+columns into a table written without them (every table Lake builds has them) and the `delta.dataSkippingStatsColumns` property (Lake writes
+statistics for the id, the date, the load id and the promoted columns only). The retention rule is Drishti's again on Delta (today and
+`keep-business-days` business days before it); Iceberg keeps its own (the newest N dates), as before the move.
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11, with the repeat through a second engine, another's id refused, an unmarked write refused, the audit), `LiveTablesFixesTest` (5), `LiveIsolationTest`, `LiveBlotterBrokerAbsentTest`, `ContractColumnsTest` | pass |
+| `FormApiTest` (9, the Title column and `/kinds` notices), `FormResultsParityTest` (3, titles equal the search's), `KafkaTradeEditTest` (four eyes; the id kept; a repeat after the approval answers without a second write; another trader's repeat 403), `LiveTableValidationTest`, `StructuredSearchTest` | pass |
+| Console `test_live_results`, `test_live_routes`, `test_every_mnemonic_opens_live` | pass (`test_form_routes`: 3 fail before and after the change, the pack index of the test environment) |
+| Blotter browser tests `test_live_grid_browser` | Chromium 15/15, WebKit 15/15 |
+
+**Not done in this lane (lane closed by the owner):** the Python maintenance tests (`tools/lake/test_maintain.py`, `test_maintain_admin.py`,
+rewritten for Lake's rules and relayout) were not run: they need `LAKE_CLASSPATH` on a Lake build holding `--relayout` (78a8422) or the
+re-pin of `drishti.lake.version` to v0.9.1; the four VaR/ES goldens and `ArchitectureRulesTest` were not run on this branch (no engine,
+VaR or test-data file changed); the console's `test_form_routes` three failures (present before the change) are not investigated.
+
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
 G4 item 10 (I7B_DUPLICATES U1, B6; DD-7: Jinja stays). Branch `g4/renderer` from `wip/g4-rehearsal-rx` `fd1b4a847`. Drishti Elements
@@ -599,3 +631,55 @@ flagged Sutra that binds gives a ViewModel identical to the 1.0 one (below), and
 | Every Sutra bound on its sample by a real server (`/api/v1/studio/preview`, every pack on): the base build at level 1.0 against this branch at 1.2 | **303 bound, 301 byte-identical**, 2 differ only in an async compute panel's request id and timestamp (`path-book`, `correlation-matrix`: the run's own request id and time). The 203 that do not bind fail identically before and after (test fixtures that need their own old blocks, architecture illustrations, kinds with no sample). Every flagged Sutra that binds is among the identical |
 | drishti-rachana | 71 of 72: `SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem` fails on the base too with Rachana `develop` (100,000 nested parentheses no longer overflow, so the test's "unforeseen failure" does not happen): a test premise for its owner, not a level effect |
 | Console and tools Python | designer, ship, schema kit, governance, Studio, pack deploy, packdiff, GLEIF, US equities, pack layout and guides: pass. Failing on the base as well: `test_studio_folded::test_the_studio_help_guide_moved_to_the_designer_guide` (Help's old addresses removed by the shims pass) and the genomics showcase `--check` (`help.yaml` `category`) |
+## Pass 3: BI charts (2026-11-21), on `g4/bi-charts` from `wip/g4-rehearsal-rx` (`d06a8d6e2`)
+
+Duplicate audit row U9 (DD-8, cut DC3). Jinja stays (DD-7). The pivot engine stays on the server; only the drawing moved.
+
+**Entry check.** What BI draws, and with what, before the switch:
+
+| Where | Kinds and options | Drawn by (before) | Covered by drishti-chart? |
+|---|---|---|---|
+| Report visuals (viewer, designer canvas, theme designer, boards, the embedded `<drishti-report>`) | bar, column, line, area, combo (second axis), small multiples (`split`), pie, donut, waterfall, treemap, heatmap, scatter, bubble, gauge, funnel, histogram (server bins), box plot (server figures), map (countries, drill to first-level regions, latitude/longitude points), live-chart (rolling window), KPI sparkline; format: stacked, percent, labels, label density and position, pie label style, legend none/right/top, smooth, colour, series colours, value axis (min, max, log, gridlines, show), category axis (rotate, show), axis titles, conditional rules as point colours, gauge min/max, live window, multiples (columns, max, shared axis), map level/drill, number format; interaction: selection fade, cross-highlight overlay, click and keyboard marks, tooltip pages on hover, range brush, live redraw in place | Drishti's `drishti_bi-visuals.js`, `-visuals-format.js`, `-multiples.js`, `-elements.js` (brush) calling `echarts.init`; maps over `drishti_geomap.js` | the spec kinds cover most kinds but not the report vocabulary (wells, server-binned answers, highlight overlay, mark semantics): **added** to drishti-chart as its `report` part |
+| Python visual and notebook cells | an ECharts option from the item (sanitised, themed), a measure's rows as bars; drishti-chart spec and Vega-Lite already drishti-chart's | `drishti_bi-python.js` (`echarts.init`) | added (`pythonOption`, `measureBarsOption`, `drawOption`) |
+| Chart any table (BI table and matrix, Sutra tables, history) | line, bar, area, pie/donut, scatter, combo; stacks, 100%, labels, Top N with Others, dashes and decals past the palette, SVG renderer, PNG and SVG export, keyboard tip | `drishti_table-chart.js` (`echarts.init`) + the engine's `option()` | added (`tableChartOption`, `OptionChart`) |
+| Pivot chart, calendar, sunburst/icicle, decomposition | | already drishti-chart / drishti-tree | yes |
+| Exports (PDF, PNG, Excel, CSV) | | server side | n/a |
+
+Nothing was left uncovered, so the lane went on.
+
+**The switch.** Elements develop `cd527cf` (on the v3.3.0 tag): drishti-chart's new part `drishti_chart-report.js` (sources
+`drishti_chart-report.js`, `drishti_chart-report-kinds.js`, 830 lines; part budget 70,000 bytes, 65,890 built): `reportOption`/`drawReport`/
+`mountReport` (the options moved series for series, the keyboard's marks, hover, click, live redraw in place, the range brush), `reportMap`
+over the geo part's helper, `sparkline`, `pythonOption`, `measureBarsOption`, `drawOption`, `tableChartOption`, `OptionChart`; Node tests
+(`report.test.mjs`, 12; the Elements suite 411 Node tests and 75 static checks green). Vendored into the pin folder `3.2.0` (VENDOR.md names
+both commits; re-pinning to 3.3.x is its own step). Drishti: `drishti_bi-visuals.js` keeps the cards and the report's adapter (`V.env`: formats,
+conditional colours, class names), `drishti_bi-multiples.js` deleted, the chart parts of `-visuals-format.js` and the brush of `-elements.js`
+deleted, `drishti_bi-python.js` and `drishti_table-chart.js` draw through the part, the table chart engine keeps the numbers and words
+(`valueText`, `summary`). BI pages load the geo and report parts instead of `drishti_geomap.js`; the embedded report loads them by name
+(`/embed/v1/js/elements-chart-geo.js`, `elements-chart-report.js`); embed v2 serves a library's parts. The guard `test_elements_guards.py`
+lost the `echarts` exceptions of `drishti_bi-visuals.js`, `drishti_bi-python.js` and `drishti_table-chart.js`; `drishti_geomap.js` keeps
+its one for the Sutra panels' maps and the frozen embeds (render 1.2.0, embed v1: U3, U4). Strict CSP unchanged (no inline style or script
+added; colours through the CSS object model). **Drishti lines: +110, −997** (without the vendored tree); Elements +830 source lines.
+
+**Before/after screenshots** (`~/.cache/drishti-lanes/g4-bi/shots/{before,before2,after}`: 31 visuals of three reports, the pages and the
+Chart any table dialog, Chromium, Playwright 1.64.1). Two base runs differ from each other by up to 11% on the first report (a chart's
+height settles 6 to 8 px differently from run to run): the comparison is against the base run in the same state. Every chart is
+pixel-identical except the footer line (milliseconds, "from the cache", "Listening"/"Asked once") and the live chart's clock labels,
+**except the maps**:
+
+| Visual | Difference | Reason |
+|---|---|---|
+| Map by country (world) | Equal Earth projection instead of plate carrée; land a little lighter; the choropleth ramp from the surface to the link tone | drishti-chart's map helper (the view painter's maps use the same) replaces `drishti_geomap.js` for BI |
+| Map of points | the same projection and land; bubbles 4 + 30√ instead of 7 + 22√ of the share (the helper's sizing), still in the palette's first colour; countries silent, no small-country dots | the helper projects the points onto its own shapes (raw longitude/latitude over projected shapes would misplace them) |
+
+**Tests.** Console static checks 326 passed; the BI, table chart, maps, embed report, board designer, render library, vendored, licences
+and asset unit tests 149 passed (the one failure, `/help/table-chart` 404, fails on the base too). BI browser suites (14 files, pinned
+Playwright 1.64.1): 63 passed, 6 skipped (parked to i6), **32 failed, the same 32 on the base** (a separate base worktree, same jar and
+packages): the shims pass removed `config/bi/datasets|models` (the new-visuals suite's fixtures), the strict-policy check sees an inline
+`script-src-attr` on the base too, the Python and notebook suites' compute set-up, the phone and tablet layout checks. Their first failing
+line is the same before and after but for two tests that got further after (the highlight test, base timed out first; the desk-pack viewer,
+base failed in set-up): both then stop on the same pre-existing policy violation. BI API tests (`BiApiTest`, `BiReportApiTest`, `FieldParamsApiTest`, `PythonBiApiTest`), `PivotFormulaParityTest` and the VaR/ES goldens: no Java changed in this lane; **not run** (the machine's load stayed above 16 at the end and the owner asked to wrap up), so the goldens are untouched by construction, not re-proven here. Static checks on the merge with `wip/g4-rehearsal-rx`: 322 passed, 4 failed in files this lane does not touch (`test_browser_rules` fixed pause, `KERNEL_AND_MODULES.md` PDF, the settings catalogue twice: from the merged branch). **Not compared** in screenshots: the report designer canvas, the theme designer, the notebook's Python cell and the embedded `<drishti-report>` (they draw through the same calls as the viewer).
+
+**Open.** The BI browser suites need their fixtures moved to tables and models after the shims pass (`test_bi_new_visuals_browser`,
+`test_bi_wave_a_browser`) and the pre-existing `script-src-attr` violation found; Elements re-pin to 3.3.x; `drishti_geomap.js` goes with
+U3/U4 once the Sutra panels' maps use the geo part.

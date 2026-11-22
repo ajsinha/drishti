@@ -77,12 +77,13 @@ export const chartLibs = (server) => memo('charts:' + server, async () => {
   for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }
 });
 
-/** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
-export const REPORT_LIBS = ['elements-core', 'elements-grid', 'elements-inputs', 'geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
+/** What <drishti-report> draws with: ECharts, Drishti Elements (drishti-chart's geo and report parts draw the charts), then the console's report code (window.drishtiBi), in order. */
+export const REPORT_LIBS = ['elements-core', 'elements-grid', 'elements-inputs', 'elements-chart-geo', 'elements-chart-report'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'frame', 'live'].map((n) => 'bi-' + n));
 export const reportLibs = (server) => memo('rlibs:' + server, async () => {
   await inputsSheet(server);
   await script(server + API + '/echarts.js');
   quietDispose();
+  (window.drishtiBi = window.drishtiBi || {}).mapsBase = server + API + '/';      // the map shapes are served beside the scripts (world-countries.json, regions/)
   for (const n of REPORT_LIBS) { await script(server + API + '/js/' + n + '.js'); }
 });
 

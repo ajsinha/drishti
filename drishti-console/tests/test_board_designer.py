@@ -68,7 +68,7 @@ def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     studio = (STATIC / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")     # BI Studio is the kit's DesignerShell: Explorer, open items, dock
     for part in ("new K.DesignerShell(", "docs: true", "collapsible: true", "{ id: 'problems', label: 'Problems' }", "{ id: 'query', label: 'Query' }", "shell.setObjects(", "shell.setDocs("):
         assert part in studio, part
-    for script in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-multiples.js", "drishti_bi-visuals-format.js"):
+    for script in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-visuals-format.js"):
         assert "/static/js/" + script in page.text, script
     v2 = (STATIC / "js" / "drishti_bi-design-v2.js").read_text(encoding="utf-8")
     for hook in ("data-tile-report", "data-tile-visual", "'data-tile-' + name + '-op'", "data-page-layout", "data-page-tooltip", "data-interaction", "data-report-theme", "data-board-rotate"):
@@ -76,7 +76,7 @@ def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
 
 
 def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
-    for name in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-multiples.js", "drishti_bi-visuals-format.js", "drishti_bi-tooltips.js",
+    for name in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-visuals-format.js", "drishti_bi-tooltips.js",
                  "drishti_bi-report-board.js", "drishti_bi-theme-designer.js"):
         text = (STATIC / "js" / name).read_text(encoding="utf-8")
         assert "http://" not in text and "https://" not in text and "innerHTML" not in text and "insertAdjacentHTML" not in text and "eval(" not in text, name

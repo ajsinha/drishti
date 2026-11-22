@@ -24,8 +24,8 @@ is [QUICKSTART_DEVELOPERS.pdf](QUICKSTART_DEVELOPERS.pdf).
 
 ## Contents
 
-1. [Clone and set up the machine](#1-clone-and-set-up-the-machine)
-2. [Build the server](#2-build-the-server)
+1. [Get the code and set up the machine](#1-get-the-code-and-set-up-the-machine)
+2. [Build](#2-build)
 3. [Run the server and the console on the demo lake](#3-run-the-server-and-the-console-on-the-demo-lake)
 4. [The repository map](#4-the-repository-map)
 5. [The fast checks](#5-the-fast-checks)
@@ -33,10 +33,29 @@ is [QUICKSTART_DEVELOPERS.pdf](QUICKSTART_DEVELOPERS.pdf).
 7. [Your first change, end to end](#7-your-first-change-end-to-end)
 8. [Where to go next](#8-where-to-go-next)
 
-## 1. Clone and set up the machine
+## 1. Get the code and set up the machine
 
-You need a JDK 21 (production runs 21; 25 is also tested), Python 3.13 for the console and the tools, git, and Node 20 or newer for the
-Elements unit tests. Maven is not needed: the repository carries its own (`./mvnw`, `mvnw.cmd`). The one statement of the versions is
+Drishti is one of five repositories of the **Drishti platform** (github.com/drishti-platform). The four products Drishti is built on are
+their own repositories with their own versions and gates; Drishti uses them as jars and as JavaScript bundles. Which version of each goes
+with which Drishti is stated in one place, the index repository's
+[COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md); this page never repeats a version.
+
+| Repository | What it is | Language | Build output |
+|---|---|---|---|
+| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | the shared Java utilities (settings and placeholders, TLS and the outbound proxy, single flight, the load guard, the one `.xlsx` writer) | Java 21 | jars in `~/.m2` |
+| [drishti-rachana](https://github.com/drishti-platform/drishti-rachana) | the Rachana language (Sutras, the expression language and the compiler, the live tables, the data protocol and its SDKs) | Java 21, Python, JavaScript | jars in `~/.m2` |
+| [drishti-lake](https://github.com/drishti-platform/drishti-lake) | Drishti Lake: the Delta, Iceberg and files stores, the loader, the in-memory lake, the data inbox | Java 21, Python | jars in `~/.m2` |
+| [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements, the JavaScript libraries every screen is made of | JavaScript | the release bundles (a WebJar) |
+| [drishti](https://github.com/drishti-platform/drishti) | the server, the console, the modules and the demo data | Java 21, Python | `lib/` and `modules/` |
+
+`drishti-stack` (the three-node local cluster) is a sixth, optional repository for operators. The index repository,
+[drishti-platform/drishti-platform](https://github.com/drishti-platform/drishti-platform), holds `clone_all.py`, `build_all.py`,
+`make_bundle.py` and COMPATIBILITY.md.
+
+### 1.1 The machine
+
+You need a JDK 21 (production runs 21), Python 3.13 for the console and the tools, git, and Node 20 or newer for the Elements unit
+tests. Maven is not needed: every repository carries its own (`./mvnw`, `mvnw.cmd`). The one statement of the versions is
 [OPERATIONS_GUIDE.md › Prerequisites](guides/OPERATIONS_GUIDE.md#21-prerequisites).
 
 | | Linux (Ubuntu, Debian) | macOS | Windows (PowerShell) |
@@ -47,9 +66,39 @@ Elements unit tests. Maven is not needed: the repository carries its own (`./mvn
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
 
+Only Java and Python are needed: no `.exe` is added on Windows, and every operator command is `tools/drishti.py`. Behind a company
+network that re-signs HTTPS, Maven needs Java to trust the Windows store ([IDE_GUIDE.md › PKIX](guides/IDE_GUIDE.md#14-maven-behind-a-company-network-pkix-path-building-failed)).
+
+### 1.2 The code: a bundle, or `clone_all.py`
+
+The platform lives in one folder, every repository a sibling:
+
+```
+~/IdeaProjects/drishti-platform/                   (Windows: C:\Users\<you>\IdeaProjects\drishti-platform\)
+    drishti/  drishti-rachana/  drishti-elements/  drishti-lake/  drishti-tools/  drishti-stack/
+```
+
+**A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release, unpack it into
+`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`.
+
+**B. With git:** clone the index repository and let it clone the rest at the same tags:
+
 ```bash
-git clone https://github.com/ajsinha/drishti.git
-cd drishti                                   # every command on this page runs from here
+mkdir -p ~/IdeaProjects && cd ~/IdeaProjects
+git clone https://github.com/drishti-platform/drishti-platform.git
+cd drishti-platform
+python3 clone_all.py                       # Windows: py clone_all.py
+```
+
+`make_bundle.py` (the same index repository) makes the ZIP of A from the clones. To work on a branch rather than the tags, clone the repository
+you change by hand into the same folder: `git clone https://github.com/drishti-platform/drishti.git`.
+
+### 1.3 The console's environment
+
+From the `drishti` folder (every command below runs from it):
+
+```bash
+cd ~/IdeaProjects/drishti-platform/drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt
 drishti-console/.venv/bin/python -m playwright install chromium        # the browser tests' Chromium, once
@@ -57,22 +106,48 @@ drishti-console/.venv/bin/python tools/drishti.py doctor
 ```
 
 On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
-`drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`).
+`drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`); Playwright's browsers go into the
+user's profile, no administrator rights needed.
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
 **Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
-`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md).
+`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md) (IntelliJ and PyCharm), [VSCODE_GUIDE.md](guides/VSCODE_GUIDE.md) (VS Code).
 
-## 2. Build the server
+## 2. Build
+
+The products install into `~/.m2` **from their release tags only**, in this order: **tools, Rachana, Lake, then Drishti**
+(each builds on the one before). The index repository does all of it:
+
+```bash
+cd ~/IdeaProjects/drishti-platform
+python3 build_all.py                       # Windows: py build_all.py
+```
+
+`build_all.py` checks out the tag of each product, installs its jars into `~/.m2` (skipping what is already there), builds the Elements
+bundles and then builds Drishti. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
+names its launchers):
+
+```bash
+cd ~/IdeaProjects/drishti-platform/drishti-tools/java && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti-rachana/java                      && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti-lake/java                         && git checkout <tag> && ./mvnw -q install -DskipTests
+cd ../../drishti                                   && python tools/drishti.py build all
+```
+
+`<tag>` is the tag in COMPATIBILITY.md for your Drishti; a branch is never installed into `~/.m2` (a snapshot there hides a mismatch). Windows:
+`mvnw.cmd`. The Elements bundles are built in `drishti-elements` (`python tools/elements/cli.py dist`, or its `Elements: build all`
+launcher) and read by Drishti from the release tree its pin names.
+
+**Drishti itself:**
 
 ```bash
 python tools/drishti.py build all        # Windows: py tools\drishti.py build all
 ls lib/*-exec.jar modules/*.dmod
 ```
 
-**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs one `mvnw clean package` for the server and the modules, and the Maven build itself installs the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the same command with no Python: `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, or IntelliJ's **Drishti build all**) (the jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network). The first build downloads
-its libraries (several minutes); later ones take about a minute. `-pl :drishti-app,:drishti-modules -am` builds the jar that runs (the kernel and the plugins) and the module packages, and only what they need; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
+**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs one `mvnw clean package` for the server and the modules, and the Maven build itself installs the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the same command with no Python: `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, or IntelliJ's **Drishti build all**). The jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network. The first build downloads
+its libraries (several minutes); later ones take about a minute. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands).
 
 ## 3. Run the server and the console on the demo lake
@@ -137,7 +212,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | Where | What |
 |---|---|
 | `drishti-api`, `drishti-common` | the source SPI (Spring-free) and the shared types, errors and file-date rules |
-| `drishti-engine`, `drishti-rachana`, `drishti-inference` | the view pipeline, the Rachana grammar (Sutras, the expression language), layout inference, links |
+| `drishti-engine`, `drishti-rachana`, `drishti-inference` | the view pipeline, Drishti's side of Rachana (its binder and hooks; the language, the compiler and the live tables are the Rachana product's jars), layout inference, links |
 | `drishti-registry` | modules, lenses, functions and their switches: what is on at this site |
 | `drishti-banking`, `drishti-compute-banking` | the banking module: VaR and ES, exposure, FRTB-SA, SIMM, sensitivities, the MR cube; its compute kernels |
 | `lake-io`, `lake-delta`, `lake-iceberg`, `lake-load` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
@@ -145,12 +220,13 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
 | `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
-| `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)) |
+| `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
 | `modules/<module>/packs/<pack>/` (banking's in `modules/banking/packs/`), `config/packs/core/` | the packs (content, not code): the modules' and the kernel's `core` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)); a source module's connector templates in `modules/source-<system>/connectors/` |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | a README only: every command is `tools/drishti.py` (a node's drain: `drishti.py node drain`, [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
-| `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |
+| `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill) |
+| `run-configs/`, `drishti.code-workspace` | the IntelliJ and PyCharm launchers and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [VSCODE_GUIDE.md](guides/VSCODE_GUIDE.md)) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 
@@ -165,6 +241,7 @@ Run these before every commit; each takes seconds to a few minutes. The whole te
 | The Elements unit tests | `node --test drishti-console/tests/elements/` (or `pytest drishti-console/tests/test_elements_node.py`) | the libraries in Node, no browser |
 | One browser file | `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
 | One Java module | `./mvnw -q verify -pl :drishti-registry -am` | that module's tests and the rules it must keep |
+| Several targeted tests together | `./mvnw -q verify -pl :drishti-registry,:drishti-engine -am -Dtest='A*Test,B*Test' -Dsurefire.failIfNoSpecifiedTests=false` | build once, name every test you need in one Maven run, never one Maven run per test |
 | What your branch touched | `tools/drill.sh --affected` (`--base REF`, default `origin/develop`; `--dry-run` lists the selection) | only the Maven modules and test files the diff can reach; shared infrastructure selects more; never a release proof |
 | The gate | `tools/drill.sh --gate` | everything the release drill checks first (headers, generated files, docs, static tests, the rule tests and one build); a few minutes, on any branch, no push |
 
@@ -200,7 +277,7 @@ a test, a guide and a screenshot together.
 1. **Branch** from `develop`: `git switch -c my-first-change origin/develop`.
 2. **Find the one home.** Search before writing: `git grep -n "the thing you change"` across `drishti-console/`, `config/` and `docs/`.
    A screen is made of Elements: change the library (`drishti-console/web/static/elements/<library>/`) or the page's template, never a
-   one-off widget ([ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
+   one-off widget ([ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
    A Java change follows the recipes of [DEVELOPER_GUIDE.md › Recipes](guides/DEVELOPER_GUIDE.md#5-recipes) (a REST endpoint, a
    configuration property, a console page, a source plugin).
 3. **Write the test first** beside its neighbours: a `drishti-console/tests/test_<area>.py` for the console (a `*_browser.py` when it needs
@@ -227,7 +304,7 @@ your change in the running console.
 | understand how a request travels through the code | [DEVELOPER_GUIDE.md › How a request travels](guides/DEVELOPER_GUIDE.md#4-how-a-request-travels-through-the-code) |
 | add a pack, a kind, a Sutra or a screen | [BUILD_GUIDE.md](guides/BUILD_GUIDE.md) and [tutorial 19](tutorials/19-build-a-pack-and-a-screen.md) |
 | add or change a connector | [DEVELOPER_GUIDE.md › Connectors](guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) |
-| use or extend the Elements libraries | [ELEMENTS_API.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/API.md) |
+| use or extend the Elements libraries | [ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md) |
 | every command of `drishti.py` | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | every setting | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | install, deploy and verify a release on Windows, Linux or macOS | [DEPLOYMENT_AND_QA_GUIDE.md](DEPLOYMENT_AND_QA_GUIDE.md) |

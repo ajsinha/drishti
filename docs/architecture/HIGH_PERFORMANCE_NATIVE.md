@@ -549,20 +549,18 @@ well they plug into those two formats.
 | **chDB** | ClickHouse as an embedded library | very large, wide aggregations; ClickHouse's SQL dialect | Python in-process (first-class); Java through a community binding (to verify) or a sidecar | strong on huge scans; overlaps DuckDB in Drishti's sizes | M | medium–high (large library, few embedding users from Java) | Apache-2.0 | Linux, macOS; Windows: to verify | Parquet, Arrow output | not proposed unless a workload outgrows DuckDB |
 | **Arrow Flight / Flight SQL** | gRPC protocol for Arrow record batches | moving large answers between the Java server and the Python console or a sidecar | Java (`flight-core`) and Python (`pyarrow.flight`) | removes JSON encoding for large tables: Arrow batches are sent as they are; the console's large exports and the compute packs' inputs | M | medium (gRPC and Netty add jars; one more port to secure) | Apache-2.0 | all (pure Java plus `pyarrow`) | Arrow by definition | time and bytes of a 1M-row answer from server to console, JSON against Flight |
 | **Arrow Acero** | Arrow C++'s streaming execution engine | Python tools that already hold `pyarrow` tables | Python (`pyarrow.acero`) | small filters and joins without a second engine | S | low | Apache-2.0 | as `pyarrow` (already used) | Arrow | tool run times |
-| **delta-rs** (`deltalake`) and **PyIceberg / iceberg-rust** | Rust (and Python) readers and writers of Delta and Iceberg | the Python loader path and lake tools (`tools/lake/`) | Python, in-process | `deltalake` is **already** a dependency of the tools; the gap to the Java loader is the single-threaded staging before it (section 7.3) | S–M | low | Apache-2.0 | Python wheels with native code (already used) | Delta, Iceberg, Parquet, Arrow | BENCHMARK 7.1 |
+| **PyIceberg / iceberg-rust** | Rust (and Python) readers and writers of Iceberg | not used: Delta and Iceberg are read and written by Drishti Lake (Java; the Python tools call its wheel) | Python, in-process | none | n/a | n/a | Apache-2.0 | n/a | Iceberg, Parquet, Arrow | not proposed |
 | **Lance** | Rust columnar format for random access and vectors | the VaR hot file's role (random access to rows) and AI embeddings | Python first-class; Java binding exists (maturity to verify) | fast random row reads; the hot file already gives that for VaR | M | medium | Apache-2.0 | Linux, macOS; Windows to verify | its own format, Arrow in memory | not proposed for VaR; a candidate for AI embeddings only |
 
 ### 7.3 The Python loader path and Polars
 
-The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstream.py`) before a writer (Drishti's Java writer or
-`deltalake`) commits the table; that staging is one Python thread, hence the 9 times gap. Two routes close it:
-
-1. **Where a JVM exists** (the server's machine, the drill, AWS loaders): make `--engine java` (the parallel loader,
-   [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
-2. **Where no JVM exists** (an analyst's Python environment): a Polars staging path. `pl.scan_ndjson` reads JSON Lines on every core into
-   Arrow, the reject rules of `stage.py` become Polars expressions, and `deltalake.write_deltalake` commits the Arrow table. The rules must
-   give exactly the same rows and rejects as `stage.py` (a parity test over the test data). Expected: within about 2 times of the Java
-   loader on the same machine.
+Data loading is Drishti Lake's one loader (Java and Python), with its guards (future days, zone, maximum drop share, force drop); the
+Python tools call the Lake wheel and stage each JSON line in Python (`tools/lake/stage.py`, `jsonstream.py`) before it commits the table.
+Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default for large inputs
+([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load); `--java-above-mb`). Where no JVM exists, a Polars
+staging path (`pl.scan_ndjson` into Arrow, the reject rules of `stage.py` as Polars expressions, the Arrow table handed to the Lake
+writer) must give exactly the same rows and rejects as `stage.py` (a parity test over the test data). The loader itself is documented
+by [Drishti Lake](https://github.com/drishti-platform/drishti-lake).
 
 ### 7.4 Recommendation
 
@@ -572,7 +570,7 @@ The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstr
 | Storage format | **Parquet in Delta or Iceberg** (unchanged) | every engine reads it |
 | VaR and exposure | **the Java engines, unchanged in role** (with the Java 25 and BLAS work above) | they hold bit-level guarantees, sharding and the hot-file design no general engine has |
 | Ad-hoc analytics and BI in the server | **DuckDB**, kept as the one embedded engine, with Arrow export and direct Delta and Iceberg scans | already in place, MIT, ships inside its jar on every platform (Windows included), mature, fastest to gain; DataFusion's Java binding is not mature enough, Velox has no embedding story, chDB overlaps it |
-| Python tools, loaders and compute packs | **Polars** (with `deltalake` and `pyarrow`, already present) | first-class in Python, multi-threaded, Arrow-native, MIT |
+| Python tools, loaders and compute packs | **Polars** (with `pyarrow` and the Drishti Lake wheel, already present) | first-class in Python, multi-threaded, Arrow-native, MIT |
 | Isolation for anything new and native | **a sidecar over Arrow Flight** | a crash or a leak costs the sidecar, not the server |
 
 DataFusion stays a watched alternative: if its Java binding matures, or a need for custom Arrow-native operators appears, it is evaluated
