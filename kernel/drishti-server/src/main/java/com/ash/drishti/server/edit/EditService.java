@@ -151,6 +151,7 @@ public final class EditService {
             if (was.isPresent()) {                                     // a repeat of a change id: its answer again, only to its maker
                 Map<String, Object> a = new LinkedHashMap<>(was.get());
                 String by = String.valueOf(a.remove("by"));
+                a.remove("digest");
                 if (!by.equals(p.user())) {
                     throw refused(p, Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity"))),
                             "the change id '" + given + "' is another's");
@@ -226,6 +227,9 @@ public final class EditService {
         origin.put("panel", first.panel());
         origin.put("mode", "edit");
         origin.put("via", text(body, "via") == null ? "api" : text(body, "via"));
+        if (text(body, "digest") != null) {
+            origin.put("digest", text(body, "digest"));            // the Data Protocol's digest of the change (kept for ChangeSink.priorDigest)
+        }
         return build(p, body, first, kind, entity, list, origin);
     }
 
@@ -617,6 +621,9 @@ public final class EditService {
         Change c = row.map(EditLog.Row::change).orElseGet(() -> req.get().change());
         Map<String, Object> out = answer(c, row.map(EditLog.Row::state).orElseGet(() -> req.get().state()));
         out.put("by", c.by());
+        if (c.origin("digest") != null) {
+            out.put("digest", c.origin("digest"));
+        }
         if (row.isPresent()) {
             out.put("lane", row.get().lane());
             out.put("seq", row.get().seq());
