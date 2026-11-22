@@ -42,7 +42,7 @@ table { border-collapse: collapse; }
 @media (max-width: 639.98px) { .lay { grid-template-columns: minmax(0, 1fr); } }
 """
 HTML = """<!DOCTYPE html><html lang="en" data-theme="terminal"><head><meta charset="utf-8"><title>resize</title>
-<link rel="stylesheet" href="/static/vendor/drishti-elements/3.3.0/css/drishti_tokens.css"><link rel="stylesheet" href="/static/vendor/drishti-elements/3.3.0/css/drishti_resize.css">
+<link rel="stylesheet" href="/static/vendor/drishti-elements/3.3.1/css/drishti_tokens.css"><link rel="stylesheet" href="/static/vendor/drishti-elements/3.3.1/css/drishti_resize.css">
 <link rel="stylesheet" href="/rz.css"></head><body>
 <div class="lay" id="lay" data-resize-mode="historical">
   <aside id="side"><div data-resize="panel" data-resize-key="t.side" data-resize-var="--side" data-resize-min="150" data-resize-max="500"
@@ -58,7 +58,7 @@ HTML = """<!DOCTYPE html><html lang="en" data-theme="terminal"><head><meta chars
     <div id="later"></div>
   </main>
 </div>
-<script src="/static/vendor/drishti-elements/3.3.0/elements/drishti-core/drishti_core.js"></script></body></html>"""
+<script src="/static/vendor/drishti-elements/3.3.1/elements/drishti-core/drishti_core.js"></script></body></html>"""
 HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'"}
 
 

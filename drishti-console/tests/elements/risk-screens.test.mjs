@@ -20,7 +20,7 @@
    screens are tested in their browser files. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as C from '../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-chart/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-chart/src/drishti_index.js';
 import '../../web/static/elements/drishti-risk/src/drishti_index.js';
 
 const th = C.chartTheme({ theme: 'terminal' });

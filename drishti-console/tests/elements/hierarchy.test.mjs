@@ -20,7 +20,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import * as T from '../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-tree/src/drishti_index.js';
+import * as T from '../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-tree/src/drishti_index.js';
 import * as R from '../../web/static/elements/drishti-risk/src/drishti_index.js';
 
 const MEASURES = [{ field: 'n', label: 'Count' }, { field: 'v', label: 'Risk', additive: false, childSum: true }, { field: 'u', label: 'Use', additive: false, bar: { max: 1, status: 'us', tones: { within: 'good', near: 'warn', breach: 'bad' } } }];
@@ -221,7 +221,7 @@ test('the outline: a filter keeps the matches and the nodes above them; Enter op
 });
 
 test('one outline: drishti-designer\'s Outline is drishti-tree\'s TreeOutline; nested nodes read as rows with their own fields', async () => {
-  const K = await import('../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-designer/src/drishti_index.js');
+  const K = await import('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-designer/src/drishti_index.js');
   assert.equal(K.Outline, T.TreeOutline);
   assert.equal(K.moveNode, T.moveNode);
   const src = T.nodesSource([{ id: 's', label: 'Section', fixed: true, cls: 'ol-sec', attrs: { 'data-ol-sec': 'a' }, children: [{ id: 'p', label: 'Trades', detail: 'A table' }] }]);
@@ -238,9 +238,9 @@ test('the lists the gallery reads, and the bundle registers the same API', () =>
   assert.ok(Object.isFrozen(T.TREE_EVENTS) && T.TREE_EVENTS.includes('proposal') && T.TREE_EVENTS.includes('selectionChanged'));
   const require = createRequire(import.meta.url);
   globalThis.Drishti = undefined;
-  require('../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-core/drishti_core.js');
-  require('../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-grid/drishti_grid.js');
-  const B = require('../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-tree/drishti_tree.js');
+  require('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-core/drishti_core.js');
+  require('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-grid/drishti_grid.js');
+  const B = require('../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-tree/drishti_tree.js');
   assert.deepEqual(Object.keys(B).filter((k) => k !== 'library' && k !== 'version').sort(), Object.keys(T).sort());
 });
 

@@ -22,7 +22,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as C from '../../web/static/vendor/drishti-elements/3.3.0/elements/drishti-chart/src/drishti_index.js';
+import * as C from '../../web/static/vendor/drishti-elements/3.3.1/elements/drishti-chart/src/drishti_index.js';
 
 const require = createRequire(import.meta.url);
 const LIB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'modules', 'genomics', 'elements', 'drishti-genomics');

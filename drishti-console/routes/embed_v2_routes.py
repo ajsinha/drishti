@@ -58,7 +58,7 @@ ELEMENTS = {"2.2.0": "1.2.0", "2.4.0": rd.VERSION, rd.VERSION: rd.VERSION}   # t
 # the painter (drishti-views) and what it draws with
 LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|graph|tree|inputs|events|views)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+(?:-[a-z]+)?\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
-SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
+SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls",
            "table-chart", "table-chart-engine", "table-chart-sources"}
 VENDOR = re.compile(r"(echarts/echarts\.min\.js|echarts-gl/echarts-gl\.min\.js|echarts/maps/(world-countries|world-points)\.json|echarts/maps/regions/[A-Z]{3}\.json"
                     r"|bootstrap-icons/fonts/bootstrap-icons\.woff2)")

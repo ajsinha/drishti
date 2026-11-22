@@ -17,7 +17,7 @@
    950: whole thousands, two decimals from a million up, the plain minus; drishti-core's rounding, half up as the server's FormatSpec),
    the same with a sign, whole units with grouping and a share with one decimal (as the screens printed them before Elements, so no
    figure on a screen changed when it moved). */
-import { formatter } from '../../../vendor/drishti-elements/3.3.0/elements/drishti-core/src/drishti_index.js';
+import { formatter } from '../../../vendor/drishti-elements/3.3.1/elements/drishti-core/src/drishti_index.js';
 
 const compact = formatter('compact', { decimals: (a, u) => (u === 'k' || !u ? 0 : 2), minus: '-' });
 
