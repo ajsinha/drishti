@@ -1,0 +1,41 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Role Home B Risk manager</title>
+<style>
+:root{--bg:#0b0f14;--pn:#111820;--ln:#223040;--tx:#cfd8e3;--mu:#7c8b9c;--am:#ffb000;--gr:#2ecc71;--rd:#ff5555;--bl:#4aa3ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.35 ui-monospace,Menlo,Consolas,monospace}
+.top{display:flex;gap:10px;align-items:center;padding:6px 10px;background:#000;border-bottom:1px solid var(--ln)}
+.brand{color:var(--am);font-weight:700}.cmd{flex:1;background:#050709;border:1px solid var(--ln);color:var(--am);padding:4px 8px}
+.role{color:var(--bl)}.mut{color:var(--mu)}.up{color:var(--gr)}.dn{color:var(--rd)}.am{color:var(--am)}
+.wrap{padding:10px;display:grid;gap:8px}.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.k{background:var(--pn);border:1px solid var(--ln);padding:6px 8px}.k b{display:block;font-size:18px}
+.g2{grid-template-columns:2fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.p{background:var(--pn);border:1px solid var(--ln);min-width:0}.p h3{margin:0;padding:4px 8px;font-size:11px;color:var(--am);border-bottom:1px solid var(--ln);display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:.05em}
+.p .b{padding:6px 8px}table{width:100%;border-collapse:collapse}td,th{padding:2px 6px;text-align:right;border-bottom:1px solid #18222d}th{color:var(--mu);font-weight:400}td:first-child,th:first-child{text-align:left}
+.chip{display:inline-block;border:1px solid var(--ln);padding:1px 6px;margin:1px;color:var(--bl)}.bar{height:6px;background:#1b2733}.bar i{display:block;height:6px;background:var(--gr)}
+.sp{display:inline-block;width:70px;height:12px;vertical-align:middle}.note{padding:6px 10px;color:var(--mu);border-top:1px solid var(--ln);font-size:11px}
+.ev{padding:4px 0;border-bottom:1px solid #18222d}.tag{padding:0 5px;margin-right:6px;color:#000;background:var(--am)}.tag.r{background:var(--rd)}.tag.g{background:var(--gr)}
+.grip{cursor:move;color:var(--mu)}@media(max-width:800px){.kpis,.g2,.g3{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<!-- Mock-up for the product owner (2026-11-22). Static; synthetic data only. Built later from Elements components only. -->
+<div class="top"><span class="brand">DRISHTI</span><input class="cmd" value="BRIEF <GO>" aria-label="mnemonic"><span class="mut">&lt;GO&gt;</span><span class="role">Risk manager Home</span><span class="mut">DEMO-NODE-1 · 09:41</span></div>
+<div class="wrap">
+<div class="wrap g2" style="padding:0"><div class="p"><h3><span>Exceptions first</span><span class="mut">3 need you</span></h3><div class="b"><div class="ev"><span class="tag r">!</span>DESK-C VaR at 99% of limit <span class="chip">open</span></div><div class="ev"><span class="tag r">!</span>DESK-F feed late since 07:10 <span class="chip">open</span></div><div class="ev"><span class="tag r">!</span>CPTY-014 exposure above 90% of credit limit <span class="chip">open</span></div></div></div><div class="p"><h3><span>Since yesterday 17:00</span><span class="mut">4 changes</span></h3><div class="b"><div class="ev"><span class="tag r">EXC</span>DESK-C VaR +16% on D-1; driver: rates risk factor RF-USD-10Y</div><div class="ev"><span class="tag ">UPD</span>DESK-A stressed VaR window rolled; +0.4M</div><div class="ev"><span class="tag g">OK</span>Limit LIM-0007 back under amber</div><div class="ev"><span class="tag ">UPD</span>New position sensitivities loaded for DESK-B (4,120 rows)</div></div></div></div>
+<div class="wrap g2" style="padding:0"><div class="p"><h3><span>Where you stand</span><span class="mut">yesterday vs today</span></h3><div class="b"><table><tr><th>Desk</th><th>VaR</th><th>Limit</th><th>Use</th><th>Δ 1d</th></tr><tr><td>DESK-A</td><td>4.82M</td><td>6.0M</td><td>80%</td><td>+0.21M</td></tr><tr><td>DESK-B</td><td>3.10M</td><td>5.0M</td><td>62%</td><td>-0.05M</td></tr><tr><td>DESK-C</td><td>6.44M</td><td>6.5M</td><td>99%</td><td>+0.90M</td></tr><tr><td>DESK-D</td><td>2.02M</td><td>4.0M</td><td>51%</td><td>+0.02M</td></tr></table></div></div><div class="p"><h3><span>Today's calendar</span><span class="mut"></span></h3><div class="b"><div class="ev">10:00 limit review</div><div class="ev">14:30 model refresh</div><div class="ev">16:00 cut-off</div></div></div></div></div>
+<div class="note">Direction B · briefing: a short narrative of change, exceptions on top, numbers underneath. The mnemonic bar stays.</div>
+</body></html>

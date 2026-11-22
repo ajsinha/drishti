@@ -1,0 +1,41 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Role Home C Trader</title>
+<style>
+:root{--bg:#0b0f14;--pn:#111820;--ln:#223040;--tx:#cfd8e3;--mu:#7c8b9c;--am:#ffb000;--gr:#2ecc71;--rd:#ff5555;--bl:#4aa3ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.35 ui-monospace,Menlo,Consolas,monospace}
+.top{display:flex;gap:10px;align-items:center;padding:6px 10px;background:#000;border-bottom:1px solid var(--ln)}
+.brand{color:var(--am);font-weight:700}.cmd{flex:1;background:#050709;border:1px solid var(--ln);color:var(--am);padding:4px 8px}
+.role{color:var(--bl)}.mut{color:var(--mu)}.up{color:var(--gr)}.dn{color:var(--rd)}.am{color:var(--am)}
+.wrap{padding:10px;display:grid;gap:8px}.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.k{background:var(--pn);border:1px solid var(--ln);padding:6px 8px}.k b{display:block;font-size:18px}
+.g2{grid-template-columns:2fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.p{background:var(--pn);border:1px solid var(--ln);min-width:0}.p h3{margin:0;padding:4px 8px;font-size:11px;color:var(--am);border-bottom:1px solid var(--ln);display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:.05em}
+.p .b{padding:6px 8px}table{width:100%;border-collapse:collapse}td,th{padding:2px 6px;text-align:right;border-bottom:1px solid #18222d}th{color:var(--mu);font-weight:400}td:first-child,th:first-child{text-align:left}
+.chip{display:inline-block;border:1px solid var(--ln);padding:1px 6px;margin:1px;color:var(--bl)}.bar{height:6px;background:#1b2733}.bar i{display:block;height:6px;background:var(--gr)}
+.sp{display:inline-block;width:70px;height:12px;vertical-align:middle}.note{padding:6px 10px;color:var(--mu);border-top:1px solid var(--ln);font-size:11px}
+.ev{padding:4px 0;border-bottom:1px solid #18222d}.tag{padding:0 5px;margin-right:6px;color:#000;background:var(--am)}.tag.r{background:var(--rd)}.tag.g{background:var(--gr)}
+.grip{cursor:move;color:var(--mu)}@media(max-width:800px){.kpis,.g2,.g3{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<!-- Mock-up for the product owner (2026-11-22). Static; synthetic data only. Built later from Elements components only. -->
+<div class="top"><span class="brand">DRISHTI</span><input class="cmd" value="POS BOOK-12 <GO>" aria-label="mnemonic"><span class="mut">&lt;GO&gt;</span><span class="role">Trader Home</span><span class="mut">DEMO-NODE-1 · 09:41</span></div>
+<div class="wrap"><div class="mut">Layout: 3 columns · <span class="chip">+ add panel</span><span class="chip">reset to role default</span><span class="chip">save as my Home</span></div>
+<div class="wrap g3" style="padding:0"><div class="p"><h3><span><span class="grip">⠿ </span>PNL BOOK-12</span><span class="mut">pinned</span></h3><div class="b"><b style="font-size:16px">+412K</b> <svg class="sp" viewBox="0 0 70 12"><polyline fill="none" stroke="#2ecc71" stroke-width="1.5" points="0,10 10,8 20,9 30,5 40,6 50,3 60,4 70,1"/></svg></div></div><div class="p"><h3><span><span class="grip">⠿ </span>Table</span><span class="mut">pinned</span></h3><div class="b"><table><tr><th>Position</th><th>Qty</th><th>Mark</th><th>Day P&L</th><th>Delta</th></tr><tr><td>SWAP-TRD-0031</td><td>50M</td><td>101.20</td><td>+88K</td><td>0.40M</td></tr><tr><td>OPT-TRD-0107</td><td>-200</td><td>3.45</td><td>-21K</td><td>-0.12M</td></tr><tr><td>FUT-TRD-0212</td><td>120</td><td>78.10</td><td>+140K</td><td>0.90M</td></tr><tr><td>SWAP-TRD-0044</td><td>25M</td><td>99.85</td><td>+205K</td><td>0.31M</td></tr></table></div></div><div class="p"><h3><span><span class="grip">⠿ </span>Exceptions</span><span class="mut">pinned</span></h3><div class="b"><div class="ev">Delta at 70% of limit and rising</div><div class="ev">3 stale marks</div><div class="ev">TRD-0044 maturity in 2 days</div></div></div></div>
+<div class="wrap g3" style="padding:0"><div class="p"><h3><span><span class="grip">⠿ </span>POS CL-BRENT</span><span class="mut">pinned</span></h3><div class="b"><b style="font-size:16px">-120 lots</b> <svg class="sp" viewBox="0 0 70 12"><polyline fill="none" stroke="#2ecc71" stroke-width="1.5" points="0,10 10,8 20,9 30,5 40,6 50,3 60,4 70,1"/></svg></div></div><div class="p"><h3><span><span class="grip">⠿ </span>Changes</span><span class="mut">pinned</span></h3><div class="b"><div class="ev">BOOK-12 P&L +412K; 60% from SWAP-TRD-0044</div><div class="ev">Overnight curve USD-SOFR +3bp</div><div class="ev">3 marks older than 15 min (FUT-TRD-0212 and 2 more)</div></div></div><div class="p"><h3><span><span class="grip">⠿ </span>Empty slot</span><span class="mut"></span></h3><div class="b"><div class="mut" style="padding:18px;text-align:center">drop a panel here or type a mnemonic</div></div></div></div></div>
+<div class="note">Direction C · workspace: the role supplies a default arrangement; the user drags, resizes and pins; the layout is saved per person.</div>
+</body></html>
