@@ -575,6 +575,8 @@ public class DesignController {
                 out.set("preview", mapper.valueToTree(preview(d.id, sample, who)));
             } catch (DrishtiException | IOException e) {
                 out.put("previewError", e.getMessage());
+            } catch (com.ash.rachana.SutraException e) {     // refused while it was read (level 1.2 reads more at parse): located, as the others
+                out.put("previewError", e.getMessage() == null ? "the Sutra could not be read" : e.getMessage().replace("RCH-", "DRS-"));
             }
         }
         return out;
