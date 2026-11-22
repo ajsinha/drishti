@@ -142,8 +142,8 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         o = {x.get("name"): x.get("value") or "" for x in c.findall("option")}
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
-            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name
-            assert "$PROJECT_DIR$/data" not in text, f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console/"
+            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name           # the one project: the repository root
+            assert "$PROJECT_DIR$/.." not in text, f"{f.name}: $PROJECT_DIR$ is the repository root"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -265,8 +265,8 @@ def test_g8_the_docs_name_launchers_that_exist_and_no_retired_script():
     import yaml
     doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
     names = {r["name"] for ide in ("intellij", "pycharm") for r in doc[ide]}
-    pat = __import__("re").compile(r"\*\*((?:Drishti (?:server|console|doctor)(?: \([^)*]*\))?|Drishti build [a-z ]+|Build demo lakes|Load (?:a|ENDUR) file into the lake))\*\*")
-    retired = ("start.sh", "stop-cluster.sh", "start-cluster.sh", "drishti-stack/")
+    pat = __import__("re").compile(r"\*\*(Drishti: (?:build|test|run|check)[^*]*)\*\*")
+    retired = ("start.sh", "stop-cluster.sh", "start-cluster.sh", "drishti-stack/start", "drishti-stack/stop")   # the retired scripts (the drishti-stack repository itself is the platform checkout the docs list)
     for f in sorted((ROOT / "docs").rglob("*.md")) + [ROOT / "README.md", ROOT / "bin" / "README.md", ROOT / "lib" / "README.md", ROOT / "deploy" / "stack" / "README.md"]:
         if "plans" in f.parts or not f.is_file():
             continue

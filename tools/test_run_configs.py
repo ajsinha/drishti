@@ -145,7 +145,7 @@ class RunConfigs(unittest.TestCase):
                 self.assertEqual(conf.get("type"), "MavenRunConfiguration", f.name)
                 continue
             checked += 1
-        self.assertEqual(checked, len(CONFIGS) - 2)
+        self.assertEqual(checked, len(CONFIGS) - 3)               # all but the three Maven builds (build all, test, build modules)
 
 
 if __name__ == "__main__":
