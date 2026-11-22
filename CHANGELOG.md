@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+- **One lifecycle for modules, packs and connectors** (docs/architecture/LIFECYCLE.md): init, start, suspend, resume, shutdown, with `health()` and `stats()` on each, one dependency graph built from existing declarations (`extends:`, `connectors:`/`routes:`, `uses.engines`, a module's packs), Admin → Packs and Admin → Connectors Suspend/Resume, `/api/v1/admin/{modules,packs,connectors}/{name}/{lifecycle,health,stats}`, `/api/v1/admin/lifecycle[/graph]`, the `lifecycle` health entry, `drishti_lifecycle_*` metrics, `409 DRS-1036` and `503 DRS-1037`; Kafka resumes from its kept offsets.
+
 - **Removed: the embed scopes `embed:report` and `embed:search`**, `GET /api/v1/embed/search`, `drishti.embed.search.*` and `drishti.embed.limits.searches-per-user-per-minute`: embed v1 was deleted and nothing calls them; the scope list is `embed:view` and `embed:about`.
 
 - **`lake build` and `lake demo` default to the Java loader.** `--engine auto` tries the parallel Java loader first (when its exec jar is found), then Drishti's Java writer, then deltalake; `lake build` no longer needs `--engine java`. `--java-above-mb` is removed (it has no meaning now). When the jar is missing the message names the jar looked for and the engine it fell back to.

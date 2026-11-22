@@ -1256,6 +1256,11 @@ A module is a file and a restart: the commands are file operations that need no 
 | `drishti.py bindings list | set | migrate | check` | section 5 |
 | `drishti.py dist build | check <file>` | section 6 |
 
+### 7.1a The runtime lifecycle
+
+Modules, packs and connectors share one lifecycle (init, start, suspend, resume, shutdown), with health, stats and one dependency graph:
+[LIFECYCLE.md](LIFECYCLE.md).
+
 ### 7.2 Admin → Modules
 
 The screen shows what this server booted: each module with its version, origin (first-party, third-party, development), whether it is
