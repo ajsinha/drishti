@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **i7b documents.** The developer quickstart, the deployment and QA guide (with the QA figures VaR 167,372,692 and ES 210,131,972 for the bank on
+  2026-11-06), the IDE guide (the whole platform in one IDE) and a new VS Code guide are written for the five-repository platform; the root README names
+  the platform; the guides' repository links point at github.com/drishti-platform; loading, upkeep, archives and protocol compliance in the data
+  lake guide and the operations guide point to Drishti Lake's guides instead of repeating them; lake roots are written under `${lake.data.dir}`.
+
 - **BI charts draw with drishti-chart.** Every chart of a report (bar, column, line, area, combo, small multiples, pie, donut, waterfall, treemap,
   heatmap, scatter, bubble, gauge, funnel, histogram, box plot, the map, the rolling line and a KPI's sparkline), the Python visual's chart and
   Chart any table's chart are drawn by Drishti Elements' drishti-chart (its new report part, `drishti_chart-report.js`); the console's own chart
