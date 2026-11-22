@@ -63,20 +63,25 @@ public final class ManifestLoad {
             List<String> promoted = new ArrayList<>();
             m.path("promoted").forEach(c -> promoted.add(c.asText()));
             List<String> vectors = new ArrayList<>();
+            boolean[] float32 = new boolean[1];
             m.path("columns").forEach(c -> {
-                if ("vector".equals(c.path("type").asText())) {
+                if (c.path("type").asText().startsWith("vector")) {
                     vectors.add(c.path("name").asText());
+                    float32[0] |= "vector32".equals(c.path("type").asText());
                 }
             });
+            promoted.removeAll(vectors);
+            promoted.remove("_load_id");                                  // the loader writes the load's own id                                  // a vector is not a promoted column to the loader
             String mode = switch (m.path("mode").asText("append")) {
                 case "overwrite-dates", "overwrite-partitions" -> "replace-date";
                 case "append" -> "append";
                 default -> m.path("mode").asText();
             };
-            Map<LocalDate, List<LakeRowsLoad.Row>> byDate = new TreeMap<>();
+            Map<LocalDate, List<List<LakeRowsLoad.Row>>> byDate = new TreeMap<>();      // a date's parts, each a file of its own
             for (JsonNode p : m.path("parts")) {
                 LocalDate d = LocalDate.parse(p.path("values").path("business_date").asText());
-                List<LakeRowsLoad.Row> rows = byDate.computeIfAbsent(d, x -> new ArrayList<>());
+                List<LakeRowsLoad.Row> rows = new ArrayList<>();
+                byDate.computeIfAbsent(d, x -> new ArrayList<>()).add(rows);
                 for (String line : Files.readAllLines(Path.of(p.path("file").asText()))) {
                     if (line.isBlank()) {
                         continue;
@@ -85,14 +90,28 @@ public final class ManifestLoad {
                     JsonNode doc = n.isArray() ? n.get(1) : n.path("doc");
                     @SuppressWarnings("unchecked")
                     Map<String, Object> cols = JSON.convertValue(n.isArray() ? n.get(2) : n.path("columns"), LinkedHashMap.class);
+                    if (cols != null) {
+                        cols.remove("_load_id");
+                    }
                     rows.add(new LakeRowsLoad.Row(n.isArray() ? n.get(0).asText() : n.path("id").asText(),
-                            doc.isTextual() ? doc.asText() : doc.toString(), cols));
+                            doc.isTextual() ? doc.asText() : doc.toString(), cols == null ? new LinkedHashMap<>() : cols));
                 }
             }
             Map<String, String> properties = new LinkedHashMap<>();
             m.path("properties").fields().forEachRemaining(e -> properties.put(e.getKey(), e.getValue().asText()));
-            for (Map.Entry<LocalDate, List<LakeRowsLoad.Row>> e : byDate.entrySet()) {
-                LakeRowsLoad.load("delta", t.toString(), domain, kind, e.getKey(), mode, e.getValue(), promoted, vectors, properties, Map.of());
+            Map<String, Object> layout = new LinkedHashMap<>();
+            if (float32[0]) {
+                layout.put("vector-type", "float32");
+            }
+            if (m.has("rowGroupMb")) {
+                layout.put("row-group-mb", m.path("rowGroupMb").asDouble());
+            }
+            for (Map.Entry<LocalDate, List<List<LakeRowsLoad.Row>>> e : byDate.entrySet()) {
+                String partMode = mode;
+                for (List<LakeRowsLoad.Row> part : e.getValue()) {
+                    LakeRowsLoad.load("delta", t.toString(), domain, kind, e.getKey(), partMode, part, promoted, vectors, properties, Map.of(), layout);
+                    partMode = "append";                                          // the date's next parts are added to what the first wrote
+                }
             }
         } catch (IOException e) {
             throw new IllegalStateException(manifest + ": " + e.getMessage(), e);

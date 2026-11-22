@@ -70,7 +70,7 @@ class SourceShapeParityTest {
         }
         Path cfg = tmp.resolve("load-" + store + "-" + table + ".yaml");
         Files.writeString(cfg, "source:\n  files: '" + drop + "/*.jsonl'\n  id: " + id + "\n  promote: [" + id + "]\n"
-                + "target:\n  format: " + store + "\n  lake: '" + lake + "'\n  domain: trading\n  kind: trade\n  table: " + table + "\n");
+                + "target:\n  format: " + store + "\n  path: '" + lake + "/trading/" + table + "'\n  domain: trading\n  kind: trade\n  table: " + table + "\n");
         ByteArrayOutputStream said = new ByteArrayOutputStream();
         int code = LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8));
         assertThat(code).as(said.toString(StandardCharsets.UTF_8)).isZero();

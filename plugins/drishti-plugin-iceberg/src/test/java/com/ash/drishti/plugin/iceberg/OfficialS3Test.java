@@ -138,7 +138,7 @@ class OfficialS3Test {
         assertThat(d2).as("the second writer committed the next version").isEqualTo(d1 + 1);
         long i1 = iceberg("s3://lake/iceberg-results", 1);
         long i2 = iceberg("s3://lake/iceberg-results", 2);
-        assertThat(i2).isGreaterThan(i1);
+        assertThat(i2).as("a new snapshot").isNotEqualTo(i1);
         Map<String, Object> fromDelta = read(new DeltaSourcePlugin(), "s3://lake/delta-results");
         Map<String, Object> fromIceberg = read(new IcebergSourcePlugin(), "s3://lake/iceberg-results");
         assertThat(fromDelta).hasSize(4).containsKeys("MGMT~BANK@2026-09-30#v1", "LL~LL-A@2026-09-30#v2");

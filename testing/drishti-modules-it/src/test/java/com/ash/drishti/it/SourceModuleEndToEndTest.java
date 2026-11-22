@@ -102,7 +102,7 @@ class SourceModuleEndToEndTest {
         Path lake = tmp.resolve("lake");
         Path cfg = tmp.resolve("load.yaml");
         Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack + "'\n  connector: "
-                + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n");
+                + connector + "\ntarget:\n  format: delta\n  path: '" + lake + "/trading/trade_swapone'\n  domain: trading\n  kind: trade\n");
         // the loader's resolution: this site's modules folder (drishti.modules.home), every module on (KERNEL_AND_MODULES.md section 18)
         com.ash.drishti.api.resolution.ConfigResolution.install(com.ash.drishti.api.resolution.ConfigResolution.offline(
                 k -> booted.containsKey(k) ? booted.get(k) : k.equals("drishti.packs.site-dir")

@@ -57,7 +57,7 @@ class LakeAppendsTest {
         long first = append(List.of(row("PV-T1", "T1", List.of(1.5, -2.25))));
         assertThat(LakeAppends.iceberg(lake, OfficialSink.FOLDER, "pnl-vector")).isTrue();
         long second = append(List.of(row("PV-T1-HS-20-B-I1", "T1", List.of(3.0, -4.5)), row("PV-N1-HS-20-B-I1", "N1", List.of(0.0, 1.0))));
-        assertThat(second).isGreaterThan(first);
+        assertThat(second).as("a new snapshot").isNotEqualTo(first);
         Map<String, Map<String, Object>> rows = OfficialTables.read("iceberg", lake.toString(), "pnl-vector", Map.of());
         assertThat(rows).containsOnlyKeys("PV-T1", "PV-T1-HS-20-B-I1", "PV-N1-HS-20-B-I1");
         assertThat(rows.get("PV-T1-HS-20-B-I1")).containsEntry("TRADE_ID", "T1");

@@ -80,7 +80,7 @@ class DeltaParallelVectorsTest {
         String m = "{\"table\":\"" + table + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"
                 + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"TT_BOOK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"vector\"}],"
-                + "\"promoted\":[\"DESK\",\"TT_BOOK\",\"PNL\"],\"mode\":\"overwrite-dates\",\"batchRows\":50,\"statsColumns\":[\"id\",\"business_date\"],"
+                + "\"promoted\":[\"DESK\",\"TT_BOOK\",\"PNL\"],\"mode\":\"overwrite-dates\",\"batchRows\":50,\"rowGroupMb\":0.5,\"statsColumns\":[\"id\",\"business_date\"],"
                 + "\"parts\":[" + String.join(",", parts) + "]}";
         Path mf = tmp.resolve("manifest.json");
         Files.writeString(mf, m);

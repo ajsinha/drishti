@@ -38,6 +38,11 @@ import java.util.Map;
 public final class LakeRowsLoad {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final java.util.Set<String> SECRETS = java.util.Set.of("access-key", "secret-key", "session-token", "s3.access-key", "s3.secret-key",
+            "s3.session-token");
+    private static final Map<String, String> KEY_PROPERTIES = Map.of("s3.access-key", "aws.accessKeyId", "s3.secret-key", "aws.secretAccessKey",
+            "s3.session-token", "aws.sessionToken");
+    private static final Object KEYS = new Object();
 
     private LakeRowsLoad() {
     }
@@ -59,6 +64,12 @@ public final class LakeRowsLoad {
      */
     public static long load(String format, String table, String domain, String kind, LocalDate date, String mode, List<Row> rows, List<String> promote,
             List<String> vectors, Map<String, String> properties, Map<String, String> storage) throws IOException {
+        return load(format, table, domain, kind, date, mode, rows, promote, vectors, properties, storage, Map.of());
+    }
+
+    /** As {@link #load(String, String, String, String, LocalDate, String, List, List, List, Map, Map)} with the loader's {@code target.layout} settings (a row group size, say). */
+    public static long load(String format, String table, String domain, String kind, LocalDate date, String mode, List<Row> rows, List<String> promote,
+            List<String> vectors, Map<String, String> properties, Map<String, String> storage, Map<String, Object> layout) throws IOException {
         Path dir = TempFiles.createDir("lake-rows-");
         try {
             StringBuilder lines = new StringBuilder();
@@ -82,15 +93,45 @@ public final class LakeRowsLoad {
             if (!properties.isEmpty()) {
                 target.set("properties", JSON.valueToTree(properties));
             }
-            if (!storage.isEmpty()) {
-                target.set("storage-options", JSON.valueToTree(storage));
+            if (!layout.isEmpty()) {
+                target.set("layout", JSON.valueToTree(layout));
+            }
+            Map<String, String> options = new java.util.LinkedHashMap<>();
+            storage.forEach((k, v) -> {
+                if (!SECRETS.contains(k)) {
+                    options.put(k, v);                             // the loader's file never holds a key
+                }
+            });
+            if (!options.isEmpty()) {
+                target.set("storage-options", JSON.valueToTree(options));
             }
             cfg.putObject("report").put("summary", summary.toString()).put("run-log", false);
             Path config = dir.resolve("load.yaml");
             Files.writeString(config, cfg.toString(), StandardCharsets.UTF_8);
             ByteArrayOutputStream said = new ByteArrayOutputStream();
-            int code = com.ash.lake.load.LakeLoad.run(DrishtiLake.runtime(), new String[] {"--config", config.toString(), "-q"},
-                    new PrintStream(said, true, StandardCharsets.UTF_8));
+            int code;
+            synchronized (KEYS) {                                  // a key a caller gives reaches the loader by the AWS default chain (system properties) for this load
+                Map<String, String> was = new java.util.HashMap<>();
+                for (Map.Entry<String, String> e : KEY_PROPERTIES.entrySet()) {
+                    String v = storage.get(e.getKey());
+                    if (v != null && !v.isBlank()) {
+                        was.put(e.getValue(), System.getProperty(e.getValue()));
+                        System.setProperty(e.getValue(), v);
+                    }
+                }
+                try {
+                    code = com.ash.lake.load.LakeLoad.run(DrishtiLake.runtime(), new String[] {"--config", config.toString(), "--no-lock", "-q"},
+                            new PrintStream(said, true, StandardCharsets.UTF_8));      // no lake lock: writers at once commit optimistically, as every append does
+                } finally {
+                    was.forEach((k, v) -> {
+                        if (v == null) {
+                            System.clearProperty(k);
+                        } else {
+                            System.setProperty(k, v);
+                        }
+                    });
+                }
+            }
             if (code != 0) {
                 throw new IOException("loading " + rows.size() + " row(s) of " + kind + " " + date + " into " + table + " failed (" + code + "): "
                         + said.toString(StandardCharsets.UTF_8).strip());

@@ -106,7 +106,7 @@ final class ExposurePublisher {
         return sink == null ? "delta" : sink.format();
     }
 
-    /** "Delta version 4" or "Iceberg sequence number 4". */
+    /** "Delta version 4" or "Iceberg snapshot 4". */
     String describe(long version) {
         return sink.describe(version);
     }

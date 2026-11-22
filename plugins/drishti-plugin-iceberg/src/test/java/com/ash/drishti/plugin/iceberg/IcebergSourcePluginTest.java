@@ -77,7 +77,7 @@ class IcebergSourcePluginTest extends DatedSourceContract {
             String promote = String.join(", ", promotedByKind.getOrDefault(k.getKey(), Map.of()).keySet());
             Path config = in.resolveSibling(in.getFileName() + ".yaml");
             Files.writeString(config, "source:\n  files: '" + in + "/*.jsonl'\n  format: loader-rows\n" + (promote.isEmpty() ? "" : "  promote: [" + promote + "]\n")
-                    + "target:\n  format: iceberg\n  lake: '" + root + "'\n  domain: " + domain + "\n  kind: " + k.getKey() + "\n  mode: replace-date\n");
+                    + "target:\n  format: iceberg\n  path: '" + root + "/" + domain + "/" + k.getKey() + "'\n  domain: " + domain + "\n  kind: " + k.getKey() + "\n  mode: replace-date\n");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
                     new java.io.PrintStream(out, true, java.nio.charset.StandardCharsets.UTF_8));

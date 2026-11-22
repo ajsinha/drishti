@@ -49,14 +49,14 @@ public interface OfficialSink {
         return root() + "/" + FOLDER + "/" + table;
     }
 
-    /** How the version an append returned is said: "Delta version 4", "Iceberg sequence number 4". */
+    /** How the version an append returned is said: "Delta version 4", "Iceberg snapshot 4". */
     default String describe(long version) {
-        return ("iceberg".equals(format()) ? "Iceberg sequence number " : "Delta version ") + version;
+        return ("iceberg".equals(format()) ? "Iceberg snapshot " : "Delta version ") + version;
     }
 
     /**
      * Appends one date's rows to the table in one commit, creating the table on the first write; returns the version written (Delta's
-     * table version, Iceberg's sequence number: both grow with every commit).
+     * table version, Iceberg's snapshot id: the commit's number).
      *
      * @param columns the published columns and their types ({@code string}, {@code long}, {@code double}), in order
      * @param rows the rows, each a map of {@code columns}

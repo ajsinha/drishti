@@ -164,7 +164,8 @@ class DeltaUnreadableTest {
         p.reindex();
         assertThat(p.search("trade", "", 100)).as("the ids listed before stay listed").hasSize(40);
         assertThat(p.listingProblem("trade")).hasValueSatisfying(why -> assertThat(why).contains("2026-09-30").contains("it lists those of"));
-        assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-001"))).as("a failure, not 'not held'").isNotInstanceOf(UnreadableData.class);
+        assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-001"))).as("a failure, not 'not held': Drishti Lake says LK-1006 and the words reach the caller")
+                .isInstanceOf(UnreadableData.class).hasMessageContaining("trade 2026-09-30 cannot be read");
         assertThat(p.health()).startsWith("DEGRADED: cannot read trade 2026-09-30: ");
         Files.write(broken, good);                                                  // repaired
         p.purgeCaches();

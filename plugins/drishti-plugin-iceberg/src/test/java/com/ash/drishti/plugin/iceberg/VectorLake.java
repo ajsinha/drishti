@@ -143,7 +143,7 @@ final class VectorLake {
         }
         Path config = tmp.resolve("load-" + System.nanoTime() + ".yaml");
         Files.writeString(config, "source:\n  files: '" + in + "/*'\n  format: loader-rows\n  promote: [DESK, TT_BOOK, QUANTITY]\n"
-                + "  vectors: [PNL]\ntarget:\n  format: iceberg\n  lake: '" + root + "'\n  domain: risk\n  kind: " + KIND + "\n  mode: replace-date\n");
+                + "  vectors: [PNL]\ntarget:\n  format: iceberg\n  path: '" + root + "/risk/" + KIND + "'\n  domain: risk\n  kind: " + KIND + "\n  mode: replace-date\n");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
                 new PrintStream(out, true, StandardCharsets.UTF_8));

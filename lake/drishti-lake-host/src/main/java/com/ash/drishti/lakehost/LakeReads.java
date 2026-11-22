@@ -73,6 +73,14 @@ public final class LakeReads {
         return new IllegalStateException(e);
     }
 
+    /**
+     * A read that Drishti Lake failed: {@code LK-1006} (data that cannot be read) as an {@link UnreadableData} in Lake's own words (they already name the table and
+     * what to do; no folder, no stack trace for an expected condition), any other failure as it is.
+     */
+    public static RuntimeException unreadable(LakeException e) {
+        return e.error() == LakeError.UNREADABLE ? new UnreadableData(e.getMessage().replaceFirst("^LK-\\d+ ", ""), e) : e;
+    }
+
     /** A connector's listings: the kinds whose ids its last reindex could not rebuild, and what it lists meanwhile. */
     public static final class Listings {
         private record Listing(String reason, Instant at, Instant keptFrom) {}
