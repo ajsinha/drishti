@@ -73,8 +73,8 @@ public final class ManifestLoad {
             promoted.removeAll(vectors);
             promoted.remove("_load_id");                                  // the loader writes the load's own id                                  // a vector is not a promoted column to the loader
             String mode = switch (m.path("mode").asText("append")) {
-                case "overwrite-dates", "overwrite-partitions" -> "replace-date";
-                case "append" -> "append";
+                case "overwrite-dates" -> "replace-date";
+                case "overwrite-partitions", "append" -> m.path("mode").asText();             // the loader's own modes: passed through
                 default -> m.path("mode").asText();
             };
             Map<LocalDate, List<List<LakeRowsLoad.Row>>> byDate = new TreeMap<>();      // a date's parts, each a file of its own
@@ -110,7 +110,9 @@ public final class ManifestLoad {
                 String partMode = mode;
                 for (List<LakeRowsLoad.Row> part : e.getValue()) {
                     LakeRowsLoad.load("delta", t.toString(), domain, kind, e.getKey(), partMode, part, promoted, vectors, properties, Map.of(), layout);
-                    partMode = "append";                                          // the date's next parts are added to what the first wrote
+                    if (!"overwrite-partitions".equals(mode)) {
+                        partMode = "append";                                      // the date's next parts are added to what the first wrote
+                    }                                                             // (overwrite-partitions: each part replaces its own partition)
                 }
             }
         } catch (IOException e) {

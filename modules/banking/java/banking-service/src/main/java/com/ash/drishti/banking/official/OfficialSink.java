@@ -49,14 +49,22 @@ public interface OfficialSink {
         return root() + "/" + FOLDER + "/" + table;
     }
 
-    /** How the version an append returned is said: "Delta version 4", "Iceberg snapshot 4". */
+    /**
+     * The table properties every official table is created with, one map for both formats (Drishti Lake maps each to the format's own
+     * property): append only, and the retention in hours (time travel reaches back that far).
+     */
+    static Map<String, String> properties(int retentionDays) {
+        return Map.of("lake.append-only", "true", "lake.retention-hours", String.valueOf(retentionDays * 24L));
+    }
+
+    /** How the version an append returned is said: "Delta version 4", "Iceberg version 4" (the loader's version: one meaning in both formats). */
     default String describe(long version) {
-        return ("iceberg".equals(format()) ? "Iceberg snapshot " : "Delta version ") + version;
+        return ("iceberg".equals(format()) ? "Iceberg version " : "Delta version ") + version;
     }
 
     /**
      * Appends one date's rows to the table in one commit, creating the table on the first write; returns the version written (Delta's
-     * table version, Iceberg's snapshot id: the commit's number).
+     * table version, Iceberg's sequence number: the commit's number).
      *
      * @param columns the published columns and their types ({@code string}, {@code long}, {@code double}), in order
      * @param rows the rows, each a map of {@code columns}

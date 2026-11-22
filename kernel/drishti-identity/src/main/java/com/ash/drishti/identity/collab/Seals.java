@@ -18,10 +18,7 @@ package com.ash.drishti.identity.collab;
 import com.ash.tools.codec.Hashes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.HexFormat;
 
 /**
  * Hashes and the decorators that keep seals current: a thread store that seals every {@code append} (the thread's revision count and

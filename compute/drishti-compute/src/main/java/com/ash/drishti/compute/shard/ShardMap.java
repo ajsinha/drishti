@@ -16,12 +16,9 @@
 package com.ash.drishti.compute.shard;
 
 import com.ash.tools.codec.Hashes;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

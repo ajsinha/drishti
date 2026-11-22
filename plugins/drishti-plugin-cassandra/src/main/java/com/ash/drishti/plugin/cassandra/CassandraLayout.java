@@ -17,7 +17,6 @@ package com.ash.drishti.plugin.cassandra;
 
 import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HexFormat;

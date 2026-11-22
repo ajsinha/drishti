@@ -24,7 +24,6 @@ import com.ash.drishti.packs.module.ModuleSettingsSchema;
 import com.ash.drishti.server.security.Entitlements;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;

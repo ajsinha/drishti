@@ -16,8 +16,6 @@
 package com.ash.drishti.compute.shard;
 
 import com.ash.tools.codec.Hashes;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
