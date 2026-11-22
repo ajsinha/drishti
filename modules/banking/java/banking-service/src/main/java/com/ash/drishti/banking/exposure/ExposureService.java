@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
@@ -164,9 +165,9 @@ final class ExposureService implements AutoCloseable {
     /** Which dates stay open: least recently used out first (VAR_GUIDE.md section 26.8, as VaR's). */
     private final com.ash.drishti.server.caches.OpenDates openDates = new com.ash.drishti.server.caches.OpenDates();
     private final com.ash.drishti.server.caches.PinKeeper pins;
-    private volatile com.ash.drishti.common.BusinessCalendar calendar = com.ash.drishti.common.BusinessCalendar.of("USNY");
+    private volatile com.ash.rachana.el.BusinessCalendar calendar = com.ash.rachana.el.BusinessCalendar.of("USNY");
 
-    void calendar(com.ash.drishti.common.BusinessCalendar c) {
+    void calendar(com.ash.rachana.el.BusinessCalendar c) {
         if (c != null) {
             this.calendar = c;
         }
@@ -530,11 +531,7 @@ final class ExposureService implements AutoCloseable {
      */
     static String pathsKey(LocalDate date, String version, List<String> sorted) {
         java.security.MessageDigest md;
-        try {
-            md = java.security.MessageDigest.getInstance("SHA-256");
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        md = Hashes.digest("SHA-256");
         for (String id : sorted) {
             md.update(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             md.update((byte) 0);                                         // no id holds NUL: "A","BC" never digests as "AB","C"

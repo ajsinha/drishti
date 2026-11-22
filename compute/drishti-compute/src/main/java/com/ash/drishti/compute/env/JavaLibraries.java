@@ -96,7 +96,7 @@ public final class JavaLibraries {
         String rel = lib.group().replace('.', '/') + "/" + lib.artifact() + "/" + lib.version() + "/" + lib.fileName();
         if (repo.startsWith("http://") || repo.startsWith("https://")) {
             try {
-                HttpClient c = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).followRedirects(HttpClient.Redirect.NORMAL).build();
+                HttpClient c = com.ash.drishti.api.DrishtiTools.httpBuilder().connectTimeout(Duration.ofSeconds(20)).followRedirects(HttpClient.Redirect.NORMAL).build();
                 HttpResponse<byte[]> r = c.send(HttpRequest.newBuilder(URI.create(repo.replaceAll("/+$", "") + "/" + rel)).timeout(Duration.ofMinutes(5)).build(),
                         HttpResponse.BodyHandlers.ofByteArray());
                 if (r.statusCode() != 200) {

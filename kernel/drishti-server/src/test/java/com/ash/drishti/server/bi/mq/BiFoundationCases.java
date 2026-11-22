@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.lake.tck.TestRoots;
 import com.ash.drishti.server.bi.Tables;
 import com.ash.drishti.api.error.DrishtiException;
@@ -544,11 +545,7 @@ public final class BiFoundationCases {
     }
 
     static String sha(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text);
     }
 
     // ---- fixtures ---------------------------------------------------------------------------------------------------------------------

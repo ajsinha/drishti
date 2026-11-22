@@ -58,8 +58,8 @@ public final class AnthropicProvider extends BaseProvider {
             throw new LlmException(LlmException.Kind.CONFIG, "base-url is not a valid URL");
         }
         this.proxy = ProxySettings.resolve(c.settings(), uri.toString());          // proxy.* or the site default; https is tunnelled with CONNECT
-        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
-                .version(HttpClient.Version.HTTP_1_1));
+        HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
+                .version(HttpClient.Version.HTTP_1_1);
         TlsMaterial tls = DrishtiTools.tlsMaterial(c.settings(), uri.toString(), "base-url");
         this.client = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }

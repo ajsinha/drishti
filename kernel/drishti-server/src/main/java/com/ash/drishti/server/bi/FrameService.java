@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -127,10 +128,6 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
     }
 
     private static String hash(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(String.valueOf(text).getBytes(StandardCharsets.UTF_8))).substring(0, 12);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(String.valueOf(text)).substring(0, 12);
     }
 }

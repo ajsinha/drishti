@@ -232,7 +232,7 @@ public final class NotifyChannels {
     private static HttpClient build(URI uri, Map<String, String> http, Duration timeout) {
         try {
             ProxySettings proxy = ProxySettings.resolve(http, uri.toString());
-            HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout).followRedirects(HttpClient.Redirect.NEVER).version(HttpClient.Version.HTTP_1_1));
+            HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(timeout).followRedirects(HttpClient.Redirect.NEVER).version(HttpClient.Version.HTTP_1_1);
             TlsMaterial tls = DrishtiTools.tlsMaterial(http, uri.toString(), "the URL");
             return (tls == null ? b : TlsHttp.apply(b, tls)).build();
         } catch (RuntimeException e) {

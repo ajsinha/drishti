@@ -20,7 +20,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Values;
@@ -43,11 +43,11 @@ public final class FieldValueReader {
     private static final Duration WAIT = Duration.ofSeconds(30);
 
     private final SourceRouter router;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Formats formats;
     private final Entitlements entitlements;
 
-    public FieldValueReader(SourceRouter router, ElCompiler el, Formats formats, Entitlements entitlements) {
+    public FieldValueReader(SourceRouter router, LiveCompiler el, Formats formats, Entitlements entitlements) {
         this.router = router;
         this.el = el;
         this.formats = formats;

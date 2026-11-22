@@ -16,7 +16,6 @@
 package com.ash.drishti.rachana;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Values;
 import com.ash.rachana.format.Formats;
@@ -32,16 +31,16 @@ import java.util.Optional;
 public final class SutraMatcher {
 
     private final SutraRegistry registry;
-    private final ElCompiler compiler;
+    private final LiveCompiler compiler;
     private final Formats formats;
     private final UnderConstruction underConstruction;
 
-    public SutraMatcher(SutraRegistry registry, ElCompiler compiler, Formats formats) {
+    public SutraMatcher(SutraRegistry registry, LiveCompiler compiler, Formats formats) {
         this(registry, compiler, formats, UnderConstruction.none());
     }
 
     /** A matcher whose Sutras show the registry's items as it says ({@link UnderConstruction}: hidden, or "Under construction"). */
-    public SutraMatcher(SutraRegistry registry, ElCompiler compiler, Formats formats, UnderConstruction underConstruction) {
+    public SutraMatcher(SutraRegistry registry, LiveCompiler compiler, Formats formats, UnderConstruction underConstruction) {
         this.registry = registry;
         this.compiler = compiler;
         this.formats = formats;

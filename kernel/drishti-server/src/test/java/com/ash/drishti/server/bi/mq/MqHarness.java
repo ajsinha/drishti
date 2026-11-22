@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.server.bi.Tables;
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.ash.drishti.server.bi.engine.Layers;

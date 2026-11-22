@@ -804,3 +804,89 @@ computed from a double keeps its point (`125.0`, was `125`), and a division of e
 conditional, the same tree as `c ? a : b`), no longer refused; `ShippedInRachanaTest` holds that the printed text reads back as itself
 (1.2's printer writes `where=`, `and` and `a if c else b`). `LanguageLevelGuardTest` no longer exists (deleted with the level setting in
 `g4/finish`). Not run here: the console's Python suites (their conftest refuses the stale `.dmod` packages of the worktree).
+
+### Pass 3 triage: after the merge with level 1.2, the live fixes and the lake-doc work (`36e82521a`), one full `clean verify`
+
+5,275 tests. The level-1.2 lane's three items: `SutraRegistryTest` and `PathologicalExpressionsTest$LiftedLimits` now expect Rachana's
+documented behaviour (its stack guard, `internal.Deep`, parses, checks and binds again on a 512 MB stack when the host thread's runs out, so
+with the limits lifted a 100,000- or 200,000-deep file is valid and loads, and a 200,000-term chain evaluates; past even that stack the
+binder's refusal is the panel's `RCH-2102`, never a 500): not a Rachana defect. `SutraCliTest` `design --each` failed in-process only:
+the `sutra` command's own context reconfigured the process-wide `DrishtiRachana` settings with its scratch folder's pack formats files,
+deleted when it ended, so the test JVM's server then read formats from a deleted folder (through the jar the command is a JVM of its own);
+`CliLauncher` now puts the settings back (`DrishtiRachana.keep()`). `ViewModelSchemaTest` and `DrishtiProfileConformanceTest` pass at
+level 1.2. `PackagedVarGoldenTest` needs the venv's `drishti_lake` from Lake `main` (the merged tools call `archives.plan(layout=...)`).
+
+Failures left (11):
+
+| Test | Class |
+|---|---|
+| `VarShardClusterTest.anOwnerDown...`, `BankingPacksTest`, `ConsoleAnswersRecordTest`, `DomainPacksTest`, `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly` | fail on `main` too |
+| `AbandonedReadsTest` | timing under load; passes alone |
+| `TypedCallParityTest` (2: the REST `live` search answers 404 where the typed call answers rows) | G4, from the merged live-table work (not in the pre-merge run); open for the live lane |
+| `LiveVisualsTest` (fixture `bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | G4 (shims part 2 fixtures); open |
+| `IcebergMovedConnectorFileTest` (a moved Iceberg table's health words) | G4 (Lake's read-problem words); open |
+
+## Gate 4 fixes: F9 (T3–T11), on `g4/tools-adopt` from `wip/g4-rehearsal-rx` (2026-11-21)
+
+Owner decision on Fable's F9: Drishti keeps no copy of anything Drishti Tools provides. Tools 1.1.0 (the `v1.1.0` tag) is the pin (`drishti.tools.version`);
+the build is offline against a scratch repository with that tag installed. The Python xlsx writers (`drishti-console/core/export.py`, `tools/sizing_planner.py`)
+stay by the owner's word; `ToolsAdoptionGuardTest.noJavaCodeRunsAPythonWorkbookWriter` holds that no Java main source names or runs them (only two messages in
+`CapacityWorkbook` and `CapacityPlanner` name the generator), and the server writes every workbook with `tools-xlsx`.
+
+| Row | Result |
+|---|---|
+| T3 hashes | Done. Every `MessageDigest.getInstance` in 75 files (main and test) is `Hashes` (`sha256Hex`, `of`, `digest` for streams and `SHA-1` where a stored identity needs it); the `NoSuchAlgorithmException` catches that could no longer happen are gone; `MessageDigest.isEqual` (constant-time compare) stays. Rule: `ArchitectureRulesTest.noMessageDigestOutsideTools`, text guard `ToolsAdoptionGuardTest.noDigestIsMadeByHand` (tests too). Same bytes: the stored identities and the four VaR/ES goldens are unchanged. |
+| T4 canonical JSON | Done in `RunSources.canonical`, `QuestionNormaliser` (`canonical`, `text`), `MqParser` (`hash`, `json`) and `reactive/Results.hash`: Jackson turns the value into plain data first, then `CanonicalJson` writes it (same text as `ORDER_MAP_ENTRIES_BY_KEYS` for plain data). Not changed: `net/Digest.hash` writes a record, whose property order is the declaration order, not sorted: a different job, and a node's gossiped hash must not change between builds. |
+| T5 CSV | Done. `plugin/file/CsvReader` became `CsvRows` (the typing of a cell into a `DataNode` only; records are read by `tools-csv`, which also reads a quoted line break); `Feeds.csv` reads through `tools-csv`; `dist/CsvWriter` became `ExportCsv` (lays an `ExportDoc` out as records; BOM, formula guard and quoting are `tools-csv`); the four hand-written quoting helpers (`PivotExport.q`, `VarCaptures.cell`, `SqlController.cell`, `SearchController.cell`) call `CsvWriter.quote`. A newline inside a field of the VaR capture export is now quoted (it was not). |
+| T6 temp files | Done. `TempFiles` (266 lines) is the server's policy on `tools-files` `TempFolder` (the base from `drishti.tmp-dir`, the JVM-flag warning, `java.io.tmpdir`, the health report); the folder, marker, clean-up hook, usage count, stale listing and `deleteTree` are the tools'. The disabled `removeStale` and the legacy-marker are gone. `JvmTempDir` stays: it reads the JVM's own temp folder and sweeps unpacked native libraries, which no tools module does (see the tools gaps). |
+| T7 `RowFeed` | Already done by the Lake step (Drishti's copy was replaced by the product's); now held: `ArchitectureRulesTest.commonDoesNotDependOnTheLake` and the no-copy rule. One unrelated nested interface of the same name in `DuckDbExecutor` is `StagedRows`. |
+| T8 calendar | Done. `common/BusinessCalendar` and `rachana/HostCalendars` are deleted; Rachana Core's `BusinessCalendar` is a `Calendars.Calendar`, so the adapter had no job. `BusinessCalendarTest` (holidays of the five centres, joint calendars, observed days) now runs on Rachana's class. The two sources were equal rule for rule (a diff of the two files). |
+| T9 HTTP clients | Done. `DrishtiTools.httpBuilder` is the one place an `HttpClient` starts, with the proxy (`ProxySettings`) and the TLS material (`TlsHttp`) applied. The seven that bypassed it (`JavaLibraries`, `BridgeClient`, `PackRegistryClient`, `ReportService`, `OidcConfiguration`, the feed connector's default client, `MinioServer`) use it, as do the eleven that applied both by hand (notify, the four AI clients, the five connectors) and the peer client (no proxy, the node's mutual TLS). Rule: `ArchitectureRulesTest.httpClientsStartInDrishtiTools`; text guard on main sources. Test: `OutboundClientsHonourSettingsTest` (a call through the fake proxy, the TLS context on the client, the bridge and registry clients' proxy selector); the per-connector `*ProxyTest`, `*TlsTest`, `AiProxyTest`, `ProviderTlsTest` pass. A client built for a target not known at construction (registry, reports, OIDC, bridge, libraries) resolves the proxy for an `https://` target. |
+| T10 guards | Done where Drishti duplicated the kit: `LicenseHeaderTest` uses the kit's `HeaderAndLineCap.withoutHeader`, `SourceFileSizeTest` its `overCap` and holds `tools/code_cap.py` equal to the kit's cap. Not adopted: `kernel-api ApiSurfaceTest` (it checks a hand-named value-class list and its own baseline format; the kit's `ApiSurface` writes another format, so adopting it is a baseline rewrite for a later release). |
+| T11 zips | Not done as written: `tools-codec` has no `Zips.write` (see the tools gaps). The four archives written with the JDK stay (`Dmod`, `PackFragment`, `ModulePublicController`, `ExportService`), named in `ArchitectureRulesTest.zipWritingOnlyWhereItIsToday`: the list only shrinks, and a fifth writer fails the build. |
+
+### Tools gaps (for a tools 1.2.0)
+
+- `tools-codec` has no `Zips` (a deterministic and a plain zip writer from entries); T11 waits on it.
+- `tools-net` has no client factory (`HttpClients.builder(proxy, tls)`): `DrishtiTools.httpBuilder` is Drishti's three lines; the guard keeps it the only place.
+- `tools-files` has no JVM-temp-folder helper (the `-Djava.io.tmpdir` check and the native-copy sweep of `JvmTempDir`).
+- `tools-guards` kit: the header mark is fixed to the owner's name and its window is 20 lines; a configurable mark would let the branding rule use it.
+
+### Proof
+
+Merged with `wip/g4-rehearsal-rx` (Rachana 1.0.0, Lake 0.9.0, Tools 1.1.0 tags), offline; every run through the two-slot machine lock.
+
+- **Compile all** (main and test, every module, `install -DskipTests`): green.
+- **Guards**: `ArchitectureRulesTest` (42 with the five new rules), `ToolsAdoptionGuardTest` (4), `LicenseHeaderTest`, `SourceFileSizeTest` (2): green.
+- **Tests of every touched class**: `TempFilesTest`, `JvmTempDirTest`, `BusinessCalendarTest`, `ExportWritersTest`, `RunExportTest`, `PivotExportTest`, `QuestionNormaliserTest`, `RunSourcesReportTest`, `MqParserTest`, `MqEngineTest`, `ModelViewHashTest`, `PackRegistryClientTest`, `RegistryApiTest`, `ConnectorProxyTest`, `IdTokenVerifierTest`, `NotifyChannelsTest`, the feed, news, REST and Yahoo connector tests (source, proxy and TLS), `AiProxyTest`, `ProviderTlsTest`, `ComputeWritesApiTest`, `EnvironmentTest`, `ShardMap*`, `ModulePackTest`, `OutboundClientsHonourSettingsTest` (new); plus the whole of drishti-api, -common, -kernel-api, -identity, -module-runtime, -net and -flight: green.
+- **The four VaR/ES goldens**: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` (2 cases, from the Python of the lake wheel): green, the figures unchanged.
+- **The 60-workbook comparison**: not re-run. This branch changes no workbook writer (`ExportWorkbook`, `PlaygroundWorkbook`, `CapacityWorkbook`, `PivotExport`'s sheet code, `tools-xlsx` calls are untouched; the only edits near them are a hash key and a CSV quote helper), and the export tests that read workbooks pass; the capture needs two full builds of two trees and was left to the drill.
+
+## Gate 4 fixes: F1, F3, F5 (2026-11-21, `g4/gate4-server` from `wip/g4-rehearsal-rx` `208b491f1`)
+
+The findings of `I7B_GATE_4_REVIEW.md` (part 1), fixed at their cause.
+
+| Finding | Fix | Proof |
+|---|---|---|
+| **F1** (blocker) a compiler taken at start: a module started later not seen, a stopped one still callable | One holder, `LiveCompiler` (drishti-rachana): `get()` is always `DrishtiRachana.current()`'s compiler, as `Formats.live` is for formats. It is the Spring bean (no `ElCompiler` bean any more) and every reader takes it: `StructuredSearch`, `BadgeRenderer`, `ViewPipeline`, `ExplainService`, `ImpactService`, `HistoryService`, `RecordReads`, `HistoryController`, `FieldValueReader`, `DesignAboutService`, `SutraRegistry`, `SutraMatcher`, `AboutCatalog`/`AboutParser`/`DesignAbout`, `LayoutMerger`; `RowPredicate` and `DocPath` compile through it (no Core-only compiler). What is built on a compiler (the binder, controls, maps, the screen's wiring; the Sutra checks) is held through `LiveCompiler.follow`, dropped by `DrishtiRachana` at every change of instance, so no older instance (and no stopped module's class loader) stays reachable. A Sutra that calls a stopped module's function is refused in words: "the function 'f' is off: its module 'm' is not running on this server" | `ModuleHostServerTest` evaluates through the server's bean again, and `aModuleStoppedOrStartedAfterStartIsSeenByTheServersScreensAtOnce`: a Sutra calling `greeter_greet` previews through `/api/v1/studio/preview`; the module unloaded hot (leak check clean); the same preview is refused with the module-off words; the module started again after start-up previews again |
+| **F3** an evicted search's table read as a kind `q-<hash>`; declarations never released | `LiveSources` tells a listener of every source that leaves the cap; the live tables release it (its declaration leaves the authoriser and the write-back, its open table is closed with its rows, members' reads and stream). The resolver never reads a `q-` name without a source as a kind: `404 rdp.table.unknown` "the search's table q-… has expired: run the search again" (`expired: true`), also through the controller's words for every route | `FormApiTest.aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt` |
+| **F5** a repeated change id answered from the first change without comparing | `EditService.submit`: a repeat must send the first change's kind, record and items (path, from, to; a number equal whatever its written form); otherwise `409 DRS-9303` "the change id … was used for another change", audited `edit-id-reused` | `KafkaTradeEditTest`: the same id and content through `/api/v1/changes` answers `applied`; another value or another field is 409, audited twice by name, nothing made or written |
+
+Left for Rachana (not edited here): `LiveTables` has no `undeclare`, so an evicted search's small declaration stays in Rachana's map
+(nothing open behind it) until Rachana adds one; and Rachana's `WriteGuard` answers a repeated id written through the Data Protocol
+from `ChangeSink.prior(id)`, which is not given the change's content, so F5's comparison covers the write-back API only until the SPI
+passes the change (`prior(change)`).
+
+Also on this branch: `TypedCallParityTest` (2 failing, REST live search 404): its REST side asked `/api/v1/live/query`, left with the
+liveset engine; the typed call and its REST side now read `GET /api/v1/rdp/searches` one way (`KernelLiveQueries.page`). The F1 test found
+two more: a document's field reached a module's function as Rachana's node, not its value (`RachanaFunctions` passes plain values), and
+two servers in one JVM provided a module's function twice once the compiler followed the instance (module functions are now kept by
+module and names, the latest registration in use). Proved: `ModuleHostServerTest`, `FormApiTest`, `LiveIsolationTest`,
+`KafkaTradeEditTest`, `TypedCallParityTest` (both classes), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`,
+`PackagedVarGoldenTest`, `SutraRegistryTest`, on the merge with `wip/g4-rehearsal-rx` `951cd5b69`, whose `DrishtiRachana.keep()` named the
+removed `level` field (it did not compile; it keeps options and kinds now and drops what followed the compiler). Not this branch's: the
+merged `docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict markers from `g4/level-12`.
+
+F4 (a FORM table spanning Drishti\*net members read as its first opener): not done here, parked to the combined i8 by name. Option A
+needs a node identity on the on-behalf-of token carrying the audience's rights, the member trusting it, and a per-read audit call to each
+member for every reader of the shared table, proved on a cluster test: more than the two hours it was given.

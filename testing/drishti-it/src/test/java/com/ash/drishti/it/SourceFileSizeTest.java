@@ -48,25 +48,20 @@ class SourceFileSizeTest {
     }
 
     @Test
+    void theCapIsTheKitsCap() {
+        assertThat(MAX_LINES).as("tools/code_cap.py and Drishti Tools' guard kit hold one cap").isEqualTo(com.ash.tools.guards.kit.GuardFiles.MAX_LINES);
+    }
+
+    @Test
     void sourceFilesStayUnderTheLimit() throws IOException {
-        List<String> over = new ArrayList<>();
         Path root = RepositoryFiles.root();
+        List<Path> files = new ArrayList<>();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java", ".py", ".yaml", ".yml", ".xml"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if (rel.startsWith("drishti-console/web/")) {
-                continue;
-            }
-            if (rel.startsWith("data/testdata/")) {             // the committed test data: generated data and its manifest, not source
-                continue;
-            }
-            long lines;
-            try (var s = Files.lines(p)) {
-                lines = s.count();
-            }
-            if (lines > MAX_LINES) {
-                over.add(rel + " (" + lines + ")");
+            if (!rel.startsWith("drishti-console/web/") && !rel.startsWith("data/testdata/")) {   // the console's guards count the UX files; the committed test data is not source
+                files.add(p);
             }
         }
-        assertThat(over).isEmpty();
+        assertThat(com.ash.tools.guards.kit.HeaderAndLineCap.overCap(root, files)).isEmpty();
     }
 }

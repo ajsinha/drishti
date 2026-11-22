@@ -28,6 +28,7 @@
   <name>drishti-api</name>
   <description>Plugin SPI and data model (no Spring)</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <!-- G4: DataNode implements Rachana's Node (SPLIT_PLAN 8.5) -->
     <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>

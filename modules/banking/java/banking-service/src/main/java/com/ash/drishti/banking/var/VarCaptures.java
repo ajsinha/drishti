@@ -353,6 +353,6 @@ final class VarCaptures {
 
     private static String cell(Object o) {
         String s = String.valueOf(o);
-        return s.contains(",") || s.contains("\"") ? "\"" + s.replace("\"", "\"\"") + "\"" : s;
+        return com.ash.tools.csv.CsvWriter.quote(s, ',');
     }
 }

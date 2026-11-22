@@ -135,7 +135,7 @@ class HistoryServiceTest {
         SourceRouter router = new SourceRouter(new SourceRegistry(List.of(lake), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
-                Formats.defaults(), com.ash.drishti.rachana.DrishtiRachana.compiler(), k -> specs.getOrDefault(k, HistorySpec.defaults(k)), k -> k.equals("trade") ? "TRD" : null);
+                Formats.defaults(), com.ash.drishti.rachana.LiveCompiler.current(), k -> specs.getOrDefault(k, HistorySpec.defaults(k)), k -> k.equals("trade") ? "TRD" : null);
     }
 
     private static final UnaryOperator<DataNode> MASK_TRADER = d -> {
@@ -354,7 +354,7 @@ class HistoryServiceTest {
 
     @Test
     void windows() {
-        var cal = com.ash.drishti.common.BusinessCalendar.of("USNY");
+        var cal = com.ash.rachana.el.BusinessCalendar.of("USNY");
         LocalDate earliest = LocalDate.of(2021, 1, 4);
         HistoryWindow ytd = HistoryWindow.resolve(null, "ytd", null, null, 30, TODAY, TODAY, earliest, 366, cal);
         assertThat(ytd.from()).isEqualTo(LocalDate.of(2026, 1, 1));

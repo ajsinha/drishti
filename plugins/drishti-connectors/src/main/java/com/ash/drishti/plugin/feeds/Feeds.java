@@ -145,26 +145,10 @@ final class Feeds {
 
     static List<List<String>> csv(String body) {
         List<List<String>> out = new ArrayList<>();
-        for (String line : body.split("\\r?\\n")) {
-            if (line.isBlank()) {
-                continue;
+        for (List<String> cells : com.ash.tools.csv.CsvReader.parse(body)) {
+            if (cells.size() != 1 || !cells.get(0).isBlank()) {
+                out.add(cells);
             }
-            List<String> cells = new ArrayList<>();
-            StringBuilder cur = new StringBuilder();
-            boolean quoted = false;
-            for (int i = 0; i < line.length(); i++) {
-                char c = line.charAt(i);
-                if (c == '"') {
-                    quoted = !quoted;
-                } else if (c == ',' && !quoted) {
-                    cells.add(cur.toString());
-                    cur.setLength(0);
-                } else {
-                    cur.append(c);
-                }
-            }
-            cells.add(cur.toString());
-            out.add(cells);
         }
         return out;
     }

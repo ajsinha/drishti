@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.runs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;

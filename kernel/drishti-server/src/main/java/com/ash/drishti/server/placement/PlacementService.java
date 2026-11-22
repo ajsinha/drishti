@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.placement;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -319,11 +320,7 @@ public final class PlacementService {
         nodes.get().stream().sorted(java.util.Comparator.comparing(NodeView::id))
                 .forEach(n -> s.append('|').append(n.id()).append(n.tags().stream().sorted().toList()));
         modules().forEach(m -> s.append('|').append(m.module()).append('@').append(m.version()));
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.toString().getBytes(StandardCharsets.UTF_8))).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s.toString()).substring(0, 16);
     }
 
     /**

@@ -39,7 +39,7 @@ class InferenceEngineTest {
     static final ElCompiler EL = com.ash.drishti.rachana.DrishtiRachana.compiler();
     static final Formats F = Formats.load(null, java.util.List.of("../../examples/packs/finance/config/formats.yaml"));
     static final InferenceEngine ENGINE = new InferenceEngine(Semantics.load(null, java.util.List.of("../../examples/packs/finance/config/semantics.yaml")), Rules.builtIn());
-    static final LayoutMerger MERGER = new LayoutMerger(ENGINE, EL, F);
+    static final LayoutMerger MERGER = new LayoutMerger(ENGINE, com.ash.drishti.rachana.LiveCompiler.current(), F);
     static final JsonCodec JSON = new JsonCodec();
 
     static DataNode fixture(String kind, String id) throws Exception {
@@ -126,8 +126,8 @@ class InferenceEngineTest {
 
     @Test
     void sutraWinsAndInferenceFillsItsGaps() throws Exception {
-        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL)) {
-            SutraMatcher matcher = new SutraMatcher(reg, EL, F);
+        try (SutraRegistry reg = new SutraRegistry(new RachanaProperties(List.of("../../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.current())) {
+            SutraMatcher matcher = new SutraMatcher(reg, com.ash.drishti.rachana.LiveCompiler.current(), F);
             DataNode fut = fixture("trade", "CFT-77120");
             EffectiveLayout e = MERGER.merge(matcher.match("trade", fut), fut, "trade");
             assertThat(e.label()).isEqualTo("Sutra listed-future v1 + inference");

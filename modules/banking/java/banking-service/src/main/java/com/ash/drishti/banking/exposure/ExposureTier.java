@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureHotFile;
 import java.io.IOException;
@@ -23,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -250,11 +250,7 @@ final class ExposureTier implements AutoCloseable {
     static String digest(LocalDate date, Map<String, String> versions, String runId, String collateral, String im) {
         String key = "format=" + ExposureHotFile.VERSION + "|date=" + date + "|run=" + runId + "|collateral=" + collateral + "|im=" + im + "|"
                 + new java.util.TreeMap<>(versions);
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(key);
     }
 
     Path folder(LocalDate date) {

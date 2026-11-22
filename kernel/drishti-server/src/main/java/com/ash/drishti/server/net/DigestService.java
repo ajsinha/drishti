@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRegistry;
@@ -455,13 +456,13 @@ public final class DigestService implements AutoCloseable {
         return packHashes.computeIfAbsent(key, k -> {
             packHashes.keySet().removeIf(x -> x.startsWith(p.name() + "@") && !x.equals(k));
             try (Stream<Path> files = Files.walk(p.dir())) {
-                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                MessageDigest md = Hashes.digest("SHA-256");
                 for (Path f : files.filter(Files::isRegularFile).sorted().toList()) {
                     md.update(p.dir().relativize(f).toString().replace('\\', '/').getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     md.update(Files.readAllBytes(f));
                 }
                 return HexFormat.of().formatHex(md.digest(), 0, 8);
-            } catch (IOException | java.security.NoSuchAlgorithmException | RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 return "";
             }
         });

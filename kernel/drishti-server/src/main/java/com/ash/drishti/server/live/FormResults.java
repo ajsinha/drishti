@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.live;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -31,8 +32,6 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.rachana.live.LiveTables;
 import com.ash.rachana.table.LiveTableSpec;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -100,6 +99,11 @@ public class FormResults {
      * @param filter the compiled search
      */
     public record Opened(String table, Map<String, Object> query, boolean live, SearchFilter filter) {}
+
+    /** Whether a table name is a search's whose source expired ({@link LiveSources#expired}). */
+    public boolean expired(String table) {
+        return sources.expired(table);
+    }
 
     /** Opens a search for a person on a business date: the kind's access and edition checked, the table declared on first use. */
     public Opened open(String command, AsOf asOf, Principal p) {
@@ -268,11 +272,7 @@ public class FormResults {
     static String name(SearchFilter f, AsOf at, String condition, String audience) {
         String basis = f.kind() + "\u001f" + String.join(",", f.columns()) + "\u001f" + (at.isLatest() ? "live" : at.businessDate() + "@" + at.knownAt())
                 + "\u001f" + (condition == null ? "" : condition) + "\u001f" + audience;
-        try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(basis.getBytes(StandardCharsets.UTF_8));
-            return "q-" + HexFormat.of().formatHex(h, 0, 12);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, basis);
+        return LiveSources.SEARCH + HexFormat.of().formatHex(h, 0, 12);
     }
 }

@@ -207,7 +207,7 @@ public final class FileSourcePlugin implements SourcePlugin {
         if (p.toString().endsWith(".csv")) {
             csv(p);
             try (BufferedReader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
-                return CsvReader.read(r);
+                return CsvRows.read(r);
             }
         }
         try (InputStream in = Files.newInputStream(p)) {

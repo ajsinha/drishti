@@ -159,13 +159,11 @@ public final class PeerHttp implements GossipTransport {
 
     private static HttpClient build(String baseUrl, Map<String, String> tls, HttpClient.Version v, Duration connect,
             java.util.concurrent.Executor executor) {
-        HttpClient.Builder b = HttpClient.newBuilder().connectTimeout(connect).followRedirects(HttpClient.Redirect.NEVER).version(v);
+        var material = com.ash.drishti.api.DrishtiTools.tlsMaterial(tls, baseUrl, "the peer's url");
+        // the cluster's own peers: no proxy (the site proxy is for outbound calls), the node's mutual TLS
+        HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(null, material).connectTimeout(connect).followRedirects(HttpClient.Redirect.NEVER).version(v);
         if (executor != null) {
             b.executor(executor);
-        }
-        var material = com.ash.drishti.api.DrishtiTools.tlsMaterial(tls, baseUrl, "the peer's url");
-        if (material != null) {
-            com.ash.tools.net.TlsHttp.apply(b, material);
         }
         return b.build();
     }

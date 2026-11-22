@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.graph.ReferenceCatalog;
@@ -101,7 +102,7 @@ public final class DatasetService {
         return queries.layers().aligned(ds, d);
     }
 
-    public com.ash.drishti.common.BusinessCalendar calendar() {
+    public com.ash.rachana.el.BusinessCalendar calendar() {
         return sources.calendar();
     }
 
@@ -598,11 +599,7 @@ public final class DatasetService {
     // ---- resolving ---------------------------------------------------------------------------------------------------
 
     private static String hash(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8))).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text).substring(0, 16);
     }
 
     private DatasetParser.Result parse(String id, String body) {

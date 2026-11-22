@@ -22,7 +22,7 @@ import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.ReferenceCatalog;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Values;
 import com.ash.rachana.format.Formats;
@@ -98,11 +98,11 @@ public final class ImpactService implements com.ash.drishti.common.LiveSettings 
     private final Mnemonics mnemonics;
     private final ReferenceCatalog catalog;
     private volatile GraphProperties.Impact config;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Formats formats;
     private final ExecutorService executor;
 
-    public ImpactService(SourceRouter router, Mnemonics mnemonics, ReferenceCatalog catalog, GraphProperties graph, ElCompiler el,
+    public ImpactService(SourceRouter router, Mnemonics mnemonics, ReferenceCatalog catalog, GraphProperties graph, LiveCompiler el,
             Formats formats, ExecutorService executor) {
         this.router = router;
         this.mnemonics = mnemonics;

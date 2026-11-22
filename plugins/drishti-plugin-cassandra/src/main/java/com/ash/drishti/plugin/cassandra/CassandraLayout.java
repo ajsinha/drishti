@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HexFormat;
@@ -162,11 +162,7 @@ public final class CassandraLayout {
     }
 
     private static String sha1(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(text.getBytes(StandardCharsets.UTF_8)));
     }
 
     /** A quoted identifier. */

@@ -26,7 +26,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Expr;
@@ -98,11 +98,11 @@ public final class StructuredSearch {
 
     private final SourceRouter router;
     private final Mnemonics mnemonics;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Formats formats;
     private final SearchProperties props;
 
-    public StructuredSearch(SourceRouter router, Mnemonics mnemonics, ElCompiler el, Formats formats, SearchProperties props) {
+    public StructuredSearch(SourceRouter router, Mnemonics mnemonics, LiveCompiler el, Formats formats, SearchProperties props) {
         this.router = router;
         this.mnemonics = mnemonics;
         this.el = el;

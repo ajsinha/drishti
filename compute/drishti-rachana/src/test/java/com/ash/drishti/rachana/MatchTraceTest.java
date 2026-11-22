@@ -48,7 +48,7 @@ class MatchTraceTest {
         Files.writeString(dir.resolve("hi.sutra.yaml"), sutra("hi", "{ kind: thing, where: \"$.scope == 'desk'\", priority: 20 }", null));
         Files.writeString(dir.resolve("mid.sutra.yaml"), sutra("mid", "{ kind: thing, where: \"$.secret == 'x'\", priority: 10 }", "Middle layout"));
         Files.writeString(dir.resolve("lo.sutra.yaml"), sutra("lo", "{ kind: thing, priority: 1 }", null));
-        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, null, null, null, null, null, null, null, null), EL);
+        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, null, null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.current());
     }
 
     private static DataNode doc(String json) {
@@ -58,7 +58,7 @@ class MatchTraceTest {
     @Test
     void listsEveryCandidateInPriorityOrderWithItsVerdict() throws Exception {
         try (SutraRegistry r = registry()) {
-            MatchTrace t = new SutraMatcher(r, EL, F).explain("thing", doc("{\"scope\":\"book\",\"secret\":\"x\"}"));
+            MatchTrace t = new SutraMatcher(r, com.ash.drishti.rachana.LiveCompiler.current(), F).explain("thing", doc("{\"scope\":\"book\",\"secret\":\"x\"}"));
             assertThat(t.candidates()).extracting(c -> c.sutra().name()).containsExactly("hi", "mid", "lo");
             assertThat(t.candidates()).extracting(MatchTrace.Candidate::result).containsExactly(Result.FALSE, Result.TRUE, Result.TRUE);
             assertThat(t.candidates().get(0).where()).isEqualTo("$.scope == 'desk'");
@@ -70,7 +70,7 @@ class MatchTraceTest {
     @Test
     void chosenIsWhatMatchReturnsAndNothingMatchingMeansNone() throws Exception {
         try (SutraRegistry r = registry()) {
-            SutraMatcher m = new SutraMatcher(r, EL, F);
+            SutraMatcher m = new SutraMatcher(r, com.ash.drishti.rachana.LiveCompiler.current(), F);
             for (String json : List.of("{\"scope\":\"desk\"}", "{\"secret\":\"x\"}", "{}")) {
                 assertThat(m.explain("thing", doc(json)).chosen()).isEqualTo(m.match("thing", doc(json)));
             }
@@ -84,7 +84,7 @@ class MatchTraceTest {
         try (SutraRegistry r = registry()) {
             DataNode stored = doc("{\"scope\":\"book\",\"secret\":\"x\"}");
             DataNode seen = doc("{\"scope\":\"book\",\"secret\":\"" + DataNode.MASK + "\"}");
-            MatchTrace t = new SutraMatcher(r, EL, F).explain("thing", stored, seen);
+            MatchTrace t = new SutraMatcher(r, com.ash.drishti.rachana.LiveCompiler.current(), F).explain("thing", stored, seen);
             assertThat(t.candidates()).extracting(MatchTrace.Candidate::result).containsExactly(Result.FALSE, Result.MASKED, Result.TRUE);
             assertThat(t.chosen()).get().extracting(s -> s.name()).isEqualTo("mid");   // the view's real choice, made on the stored document
         }
@@ -93,9 +93,9 @@ class MatchTraceTest {
     @Test
     void matchIsUnchangedOverEveryShippedFinanceFixture() throws Exception {
         Path fixtures = ReferenceSutrasTest.FIXTURES;
-        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of("../../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of("../../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.current());
                 Stream<Path> files = Files.list(fixtures)) {
-            SutraMatcher m = new SutraMatcher(r, EL, F);
+            SutraMatcher m = new SutraMatcher(r, com.ash.drishti.rachana.LiveCompiler.current(), F);
             int n = 0;
             for (String kind : com.ash.drishti.common.PackSamples.kinds(fixtures)) {          // samples/<kind>.jsonl, one document a line
                 for (Map.Entry<String, String> e : com.ash.drishti.common.PackSamples.documents(fixtures, kind, java.util.Set.of(), 0).entrySet()) {

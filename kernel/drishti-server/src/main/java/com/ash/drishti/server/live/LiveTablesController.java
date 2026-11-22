@@ -111,10 +111,15 @@ public class LiveTablesController {
 
     /**
      * A {@code 503 rdp.unavailable} with the source's words added (the engine says only that the read failed): {@code message} ends with
-     * what the source said and {@code source} holds it, made safe; any other answer as it is.
+     * what the source said and {@code source} holds it, made safe; a {@code 404} of a search's table that expired, in its own words
+     * ({@link LiveSources#expiredError}); any other answer as it is.
      */
     @SuppressWarnings("unchecked")
     Object explained(int status, Object body) {
+        if (status == 404 && body instanceof Map<?, ?> b404 && b404.get("error") instanceof Map<?, ?> e404 && "rdp.table.unknown".equals(e404.get("code"))
+                && e404.get("table") instanceof String t404 && forms.expired(t404)) {
+            return LiveSources.expiredError(t404).body();       // a search's table that expired says so: the grid runs the search again
+        }
         if (status != 503 || failures == null || !(body instanceof Map<?, ?> b) || !(b.get("error") instanceof Map<?, ?> err)
                 || !"rdp.unavailable".equals(err.get("code")) || !(err.get("table") instanceof String table)) {
             return body;

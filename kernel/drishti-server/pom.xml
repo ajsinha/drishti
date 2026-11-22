@@ -28,6 +28,8 @@
   <name>drishti-server</name>
   <description>The Drishti Spring Boot application</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-csv</artifactId></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-xlsx</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-module-runtime</artifactId></dependency>

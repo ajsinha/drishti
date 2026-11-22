@@ -76,7 +76,7 @@ final class ModuleBridge {
         port(com.ash.drishti.api.SourcePlugin.class, Contributions.Surface.KIND_PROVIDER,
                 (m, p) -> required(sources, "the source registry").attachExtension(p, settings.apply(m, p)));
         this.sources = sources;
-        port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> RachanaFunctions.register(f));
+        port(FunctionProvider.class, Contributions.Surface.FUNCTION, (m, f) -> RachanaFunctions.register(m, f));
         port(ComputeEngine.class, Contributions.Surface.SPI, (m, e) -> required(engines, "the engine registry").attach(e, listed(m, e.id())));
         port(com.ash.drishti.server.caches.CacheGroup.class, Contributions.Surface.SPI, (m, g) -> join(budget.get(), g));
         // the kernel's own extension points a first-party module reaches through its allowance: collected live (Extensions) by the kernel

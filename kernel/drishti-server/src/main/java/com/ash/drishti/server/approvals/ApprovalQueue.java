@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.approvals;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.kernel.api.approvals.ApprovalSource;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
@@ -28,7 +29,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -320,12 +320,8 @@ public final class ApprovalQueue {
 
     /** The store key of an item's questions: a digest, so any id is a safe key. */
     static String key(String kind, String id) {
-        try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest((kind + "\u0000" + id).getBytes(StandardCharsets.UTF_8));
-            return kind + "-" + HexFormat.of().formatHex(h, 0, 16);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, (kind + "\u0000" + id));
+        return kind + "-" + HexFormat.of().formatHex(h, 0, 16);
     }
 
     private static String clip(String s) {

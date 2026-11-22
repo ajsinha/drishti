@@ -39,7 +39,7 @@ class SutraRegistryTest {
     }
 
     private SutraRegistry registry(boolean hot) {
-        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null, null, null), new com.ash.rachana.el.ElCompiler());
+        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()));
     }
 
     @Test
@@ -90,7 +90,7 @@ class SutraRegistryTest {
         Files.writeString(dir.resolve("plain.yaml"), "rachana: 1.2\nsutra: plain\nversion: 1\nmatch: { kind: trade }\n");
         Files.writeString(dir.resolve("good.v1.sutra.yaml"), "rachana: 1.2\nsutra: good\nversion: 1\nmatch: { kind: trade }\n");
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null),
-                new com.ash.rachana.el.ElCompiler())) {
+                com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
             assertThat(r.all()).extracting(x -> x.name()).containsExactly("good");
             assertThat(r.problems().get(dir.resolve("old.v1.sutra.md").toString())).singleElement()
                     .satisfies(p -> assertThat(p.message()).contains("tools/rachana/md_to_yaml.py"));
@@ -139,24 +139,23 @@ class SutraRegistryTest {
         }
     }
 
-    /** The per-file guard: even a failure the checks do not foresee (an overflow, with the limits lifted) is one file's problem. */
+    /**
+     * With the limits lifted, a 100,000-deep expression is a valid one: Rachana's stack guard ({@code com.ash.rachana.internal.Deep}) parses
+     * it again on a thread with a deep stack instead of overflowing, so the file loads beside the others, at start and through the watcher.
+     */
     @Test
-    void anyFailureLoadingOneFileIsThatFilesProblem() throws Exception {
+    void aDeepFileLoadsWhenTheLimitsAreLifted() throws Exception {
         Files.writeString(dir.resolve("qa-deep.v1.sutra.yaml"), deep("qa-deep", 100_000));
         Files.writeString(dir.resolve("good.v1.sutra.yaml"), sutra("good", 1, "trade"));
         var unbounded = new com.ash.rachana.el.ElCompiler(100,
                 new com.ash.rachana.el.ElLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
-                null, null, null, null), unbounded)) {
-            assertThat(r.all()).extracting(Sutra::name).containsExactly("good");
-            assertThat(r.problems().get(dir.resolve("qa-deep.v1.sutra.yaml").toString())).singleElement()
-                    .satisfies(p -> assertThat(p.code()).isEqualTo("DRS-2032"));
+                null, null, null, null), com.ash.drishti.rachana.LiveCompiler.of(unbounded))) {
+            assertThat(r.all()).extracting(Sutra::name).containsExactlyInAnyOrder("good", "qa-deep");
+            assertThat(r.problems()).isEmpty();
             Files.writeString(dir.resolve("deeper.v1.sutra.yaml"), deep("qa-deeper", 100_000));   // the watcher meets one too
-            await(() -> r.problems().size() == 2);
-            Files.writeString(dir.resolve("probe.v1.sutra.yaml"), sutra("qa-probe", 1, "trade"));
-            await(() -> r.latest("qa-probe").isPresent());
-            assertThat(r.problems()).hasSize(2);
-            assertThat(r.latest("qa-probe")).isPresent();
+            await(() -> r.latest("qa-deeper").isPresent());
+            assertThat(r.problems()).isEmpty();
             assertThat(r.hotReload()).isIn("WATCHING", "POLLING");   // POLLING where the inotify watch limit is reached
         }
     }
@@ -165,7 +164,7 @@ class SutraRegistryTest {
     @Test
     void pollingPicksUpANewSutraWithoutFileEvents() throws Exception {
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
-                null, null, null, null, "poll", Duration.ofMillis(100)), new com.ash.rachana.el.ElCompiler())) {
+                null, null, null, null, "poll", Duration.ofMillis(100)), com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
             assertThat(r.hotReload()).isEqualTo("POLLING");
             Files.writeString(dir.resolve("polled.v1.sutra.yaml"), sutra("qa-polled", 1, "trade"));
             await(() -> r.latest("qa-polled").isPresent());

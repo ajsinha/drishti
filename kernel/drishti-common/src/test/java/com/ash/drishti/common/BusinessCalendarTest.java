@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.common;
 
+import com.ash.rachana.el.BusinessCalendar;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -34,8 +35,7 @@ class BusinessCalendarTest {
     }
 
     @Test
-    void jointCalendarsAndEaster() {
-        assertThat(BusinessCalendar.easter(2026)).isEqualTo(LocalDate.of(2026, 4, 5));
+    void jointCalendars() {
         BusinessCalendar ldnNy = BusinessCalendar.of("GBLO+USNY");
         assertThat(ldnNy.isBusinessDay(LocalDate.of(2026, 4, 3))).isFalse();                            // Good Friday (London)
         assertThat(ldnNy.isBusinessDay(LocalDate.of(2026, 11, 26))).isFalse();                          // Thanksgiving (New York)

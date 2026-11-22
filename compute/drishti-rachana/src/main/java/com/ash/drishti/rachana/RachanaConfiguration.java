@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.rachana;
 
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,15 +26,19 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({RachanaProperties.class, com.ash.drishti.rachana.about.AboutProperties.class})
 public class RachanaConfiguration {
 
+    /**
+     * The one compiler holder every reader takes: always the current instance's compiler, so a module started later is callable at once
+     * and a module stopped is gone at once ({@link LiveCompiler}).
+     */
     @Bean
-    public ElCompiler elCompiler(RachanaProperties props) {
+    public LiveCompiler elCompiler(RachanaProperties props) {
         DrishtiRachana.configure(DrishtiRachana.optionsOf(props), null);       // the drishti profile's instance, from the settings (8.3b)
-        return DrishtiRachana.compiler();
+        return LiveCompiler.current();
     }
 
     /** The packs' about text (About this page, layer 1). */
     @Bean
-    public com.ash.drishti.rachana.about.AboutCatalog aboutCatalog(com.ash.drishti.rachana.about.AboutProperties props, ElCompiler elCompiler) {
+    public com.ash.drishti.rachana.about.AboutCatalog aboutCatalog(com.ash.drishti.rachana.about.AboutProperties props, LiveCompiler elCompiler) {
         return new com.ash.drishti.rachana.about.AboutCatalog(props, elCompiler);
     }
 
@@ -57,7 +60,7 @@ public class RachanaConfiguration {
      * enabled, so any screen may use them.
      */
     @Bean(destroyMethod = "close")
-    public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler,
+    public SutraRegistry sutraRegistry(RachanaProperties props, LiveCompiler elCompiler,
             @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:${drishti.config.dir}/ui-kit}") String uiKitDir,
             @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:${drishti.config.dir}/packs}") String packsDir) {
         java.nio.file.Path kit = UiKitDir.resolve(uiKitDir, packsDir);         // else beside the packs folder (another working folder)
@@ -90,7 +93,7 @@ public class RachanaConfiguration {
     }
 
     @Bean
-    public SutraMatcher sutraMatcher(SutraRegistry registry, ElCompiler elCompiler, Formats formats, UnderConstruction underConstruction) {
+    public SutraMatcher sutraMatcher(SutraRegistry registry, LiveCompiler elCompiler, Formats formats, UnderConstruction underConstruction) {
         return new SutraMatcher(registry, elCompiler, formats, underConstruction);
     }
 }

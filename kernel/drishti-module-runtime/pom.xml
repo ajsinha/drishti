@@ -26,6 +26,7 @@
   <name>drishti-module-runtime</name>
   <description>The module runtime (docs/architecture/KERNEL_AND_MODULES.md sections 3, 4, 9.8, 10.4 and 12): the .dmod reader and its hash list, the manifest, verification V1-V8, the conformance checks C1-C14, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check. One implementation, used by the kernel and later by the console host.</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-kernel-api</artifactId></dependency>
     <!-- the boot fills drishti-api's plain value of its result (api.resolution.ModuleHomes) for the readers below this module -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>

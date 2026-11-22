@@ -21,7 +21,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.lake.delta.write.LakeManifest;
 import com.ash.lake.delta.write.LakeWriter;
@@ -169,7 +169,7 @@ public final class HistoryBench {
                     Clock.fixed(END.atTime(20, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
             HistoryProperties hp = new HistoryProperties(null, null, null, null, null, null, null, null, cacheMb);
             service = new HistoryService(router, dates, hp, new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID", "TRADE_STATUS"))),
-                    Formats.defaults(), new ElCompiler(), HistorySpec::defaults, k -> "TRD");
+                    Formats.defaults(), com.ash.drishti.rachana.LiveCompiler.of(new ElCompiler()), HistorySpec::defaults, k -> "TRD");
         }
 
         long read(String id) {

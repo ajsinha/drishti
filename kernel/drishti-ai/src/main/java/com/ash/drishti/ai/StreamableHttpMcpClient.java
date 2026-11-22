@@ -64,8 +64,8 @@ public final class StreamableHttpMcpClient implements McpClient {
             throw new LlmException(LlmException.Kind.CONFIG, "url is not a valid URL");
         }
         this.proxy = ProxySettings.resolve(cfg.settings(), cfg.url());             // proxy.* or the site default; https is tunnelled with CONNECT
-        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(cfg.timeout()).version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NEVER));
+        HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(cfg.timeout()).version(HttpClient.Version.HTTP_1_1)
+                .followRedirects(HttpClient.Redirect.NEVER);
         TlsMaterial tls = DrishtiTools.tlsMaterial(cfg.settings(), cfg.url(), "url");
         this.http = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
