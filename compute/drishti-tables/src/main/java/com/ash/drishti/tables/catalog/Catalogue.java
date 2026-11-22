@@ -218,16 +218,21 @@ public final class Catalogue {
     }
 
     /**
-     * The current name of {@code name} when it is an old way of writing one: a BI dataset's name ({@code trading-risk-trades} for
-     * {@code banking.trading_risk_trades}, {@code pack.trading.trade} for {@code trading.trade}), which is not a table's name; else null. Never resolved:
+     * The current name of {@code name} when it is an old way of writing one: a BI dataset's name ({@code trading-risk-trades} for the one table
+     * whose local name is {@code trading_risk_trades}, {@code pack.trading.trade} for {@code trading.trade}), which is not a table's name; else null. Never resolved:
      * a reference to it is refused, naming the current table.
      */
     public String retiredTo(String name) {
         if (name == null || tables.containsKey(name) || name.contains(".") && !name.startsWith("pack.")) {
             return null;
         }
-        String now = TableName.ofDataset(name);
-        return !now.equals(name) && tables.containsKey(now) ? now : null;
+        if (name.startsWith("pack.")) {
+            String now = TableName.ofDataset(name);
+            return tables.containsKey(now) ? now : null;
+        }
+        String local = TableName.ofDataset(name).substring(TableName.BI_DOMAIN.length() + 1);       // the dataset's name as a table's local name
+        List<String> found = tables.keySet().stream().filter(k -> k.substring(k.indexOf('.') + 1).equals(local)).toList();
+        return found.size() == 1 ? found.get(0) : null;
     }
 
     /** The words that end a refusal of {@code name}: empty, or "('old' is retired: use 'new')". */
