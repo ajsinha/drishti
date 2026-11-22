@@ -890,3 +890,11 @@ merged `docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict 
 F4 (a FORM table spanning Drishti\*net members read as its first opener): not done here, parked to the combined i8 by name. Option A
 needs a node identity on the on-behalf-of token carrying the audience's rights, the member trusting it, and a per-read audit call to each
 member for every reader of the shared table, proved on a cluster test: more than the two hours it was given.
+
+### Gate 4 fixes, open after the Lake 0.9.1 pin (b26cc2e)
+
+| Item | State |
+|---|---|
+| `IcebergMovedConnectorFileTest` | loader config follows 0.9.1 (`target.path`, not `target.lake`); the test holds the state, the tables and DRS-1003, not Lake's sentence. **Still fails:** 0.9.1 no longer classifies a moved Iceberg table (Health says `File does not exist: ...avro`, no relocate hint) and the read failure logs a stack trace (`SourceFailure`): Lake follow-up |
+| `tools/lake/test_maintain.py::test_relayout_sorts_into_the_layouts_files_and_is_idempotent` | fails: `lake maintain --relayout` answers "another writer committed while relayout read the date; run it again" on a delta-rs fixture table: Lake follow-up (or the fixture) |
+| `test_maintain` row counts, `test_maintain_admin` file counts | updated to 0.9.1 compaction (24 rows readers see; two files a date) |
