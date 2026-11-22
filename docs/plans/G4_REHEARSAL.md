@@ -451,7 +451,7 @@ The owner's rulings on LS1 to LS7 and LV4 (no feature loss; audit correctness):
 | LS6 | unchanged (a declaration outlives an evicted source; read again on next use) | — |
 
 Delta upkeep: `tools/lake/maintain.py` no longer imports delta-rs; relayout, compaction, retention, checkpoint, vacuum and the report's
-shape are Drishti Lake's `lake maintain` (main `<lake commit>`). Two things the delta-rs relayout did are not carried: promoting a pack's
+shape are Drishti Lake's `lake maintain` (Drishti Lake `78a8422`, to be tagged v0.9.1). Two things the delta-rs relayout did are not carried: promoting a pack's
 columns into a table written without them (every table Lake builds has them) and the `delta.dataSkippingStatsColumns` property (Lake writes
 statistics for the id, the date, the load id and the promoted columns only). The retention rule is Drishti's again on Delta (today and
 `keep-business-days` business days before it); Iceberg keeps its own (the newest N dates), as before the move.
@@ -461,6 +461,12 @@ statistics for the id, the date, the load id and the promoted columns only). The
 | `LiveTablesAdapterTest` (11, with the repeat through a second engine, another's id refused, an unmarked write refused, the audit), `LiveTablesFixesTest` (5), `LiveIsolationTest`, `LiveBlotterBrokerAbsentTest`, `ContractColumnsTest` | pass |
 | `FormApiTest` (9, the Title column and `/kinds` notices), `FormResultsParityTest` (3, titles equal the search's), `KafkaTradeEditTest` (four eyes; the id kept; a repeat after the approval answers without a second write; another trader's repeat 403), `LiveTableValidationTest`, `StructuredSearchTest` | pass |
 | Console `test_live_results`, `test_live_routes`, `test_every_mnemonic_opens_live` | pass (`test_form_routes`: 3 fail before and after the change, the pack index of the test environment) |
+| Blotter browser tests `test_live_grid_browser` | Chromium 15/15, WebKit 15/15 |
+
+**Not done in this lane (lane closed by the owner):** the Python maintenance tests (`tools/lake/test_maintain.py`, `test_maintain_admin.py`,
+rewritten for Lake's rules and relayout) were not run: they need `LAKE_CLASSPATH` on a Lake build holding `--relayout` (78a8422) or the
+re-pin of `drishti.lake.version` to v0.9.1; the four VaR/ES goldens and `ArchitectureRulesTest` were not run on this branch (no engine,
+VaR or test-data file changed); the console's `test_form_routes` three failures (present before the change) are not investigated.
 
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
