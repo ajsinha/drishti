@@ -169,7 +169,7 @@ public final class HistoryBench {
                     Clock.fixed(END.atTime(20, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
             HistoryProperties hp = new HistoryProperties(null, null, null, null, null, null, null, null, cacheMb);
             service = new HistoryService(router, dates, hp, new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID", "TRADE_STATUS"))),
-                    Formats.defaults(), new ElCompiler(), HistorySpec::defaults, k -> "TRD");
+                    Formats.defaults(), com.ash.drishti.rachana.LiveCompiler.of(new ElCompiler()), HistorySpec::defaults, k -> "TRD");
         }
 
         long read(String id) {

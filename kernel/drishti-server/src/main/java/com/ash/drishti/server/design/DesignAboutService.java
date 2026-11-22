@@ -23,6 +23,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.explain.AboutPreview;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.identity.design.DesignService;
 import com.ash.drishti.identity.design.StoredDesign;
@@ -34,7 +35,6 @@ import com.ash.drishti.rachana.about.DesignAbout;
 import com.ash.drishti.rachana.about.GlossaryEntry;
 import com.ash.drishti.rachana.about.GlossaryResolver;
 import com.ash.drishti.rachana.about.HelpLint;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.Panel;
 import com.ash.rachana.model.Sutra;
 import com.ash.drishti.server.security.Entitlements;
@@ -67,11 +67,11 @@ public class DesignAboutService {
     private final Entitlements entitlements;
     private final JsonCodec codec;
     private final AboutCatalog catalog;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final AboutPreview preview;
 
     public DesignAboutService(DesignService designs, SutraRegistry sutras, ViewPipeline pipeline, Entitlements entitlements, JsonCodec codec,
-            AboutCatalog catalog, ElCompiler el, AboutPreview preview) {
+            AboutCatalog catalog, LiveCompiler el, AboutPreview preview) {
         this.designs = designs;
         this.sutras = sutras;
         this.pipeline = pipeline;

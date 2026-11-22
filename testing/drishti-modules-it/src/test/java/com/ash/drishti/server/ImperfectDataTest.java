@@ -61,7 +61,7 @@ class ImperfectDataTest {
         try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
-                        null, null, null, null, null, null, null, null), com.ash.drishti.rachana.DrishtiRachana.compiler())) {
+                        null, null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.current())) {
                     out.addAll(r.all());
                 }
             }

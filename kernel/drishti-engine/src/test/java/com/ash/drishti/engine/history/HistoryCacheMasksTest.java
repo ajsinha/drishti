@@ -93,7 +93,7 @@ class HistoryCacheMasksTest {
         router.fallback(peers);
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
-                Formats.defaults(), com.ash.drishti.rachana.DrishtiRachana.compiler(), HistorySpec::defaults, k -> "TRD");
+                Formats.defaults(), com.ash.drishti.rachana.LiveCompiler.current(), HistorySpec::defaults, k -> "TRD");
     }
 
     private static HistoryService.Query days(String id, int n) {

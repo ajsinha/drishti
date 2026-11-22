@@ -23,9 +23,9 @@ final class RachanaFunctions {
     private RachanaFunctions() {
     }
 
-    /** Adds the module's functions to Rachana while it is loaded; the returned action takes them out. */
-    static Runnable register(FunctionProvider module) {
-        return com.ash.drishti.rachana.DrishtiRachana.addFunctions(new com.ash.rachana.el.FunctionProvider() {
+    /** Adds the module's functions to Rachana while it is loaded; the returned action takes them out (the module named as off). */
+    static Runnable register(String moduleId, FunctionProvider module) {
+        return com.ash.drishti.rachana.DrishtiRachana.addFunctions(moduleId, new com.ash.rachana.el.FunctionProvider() {
             @Override
             public String source() {
                 return module.source();

@@ -95,6 +95,9 @@ public class DrishtiLiveTables {
         LiveTables lt = new LiveTables(new LiveTables.Resolver() {
             @Override
             public SnapshotSource snapshot(String name) {
+                if (sources.expired(name)) {
+                    throw LiveSources.expiredError(name);              // a search's table whose source left: never read as a kind of its name
+                }
                 // a table declared in code (a FORM's result) reads its kind as its source says: the day, whole or by columns, the members
                 return sources.get(name).<SnapshotSource>map(x -> new KindSnapshot(x.kind(), bindings, List.of(com.ash.drishti.engine.search.SearchFilter.KEY),
                         x.at(), x.whole(), x.peers(), null, true)).orElseGet(() -> new KindSnapshot(name, bindings, keyOf(specs, name)));
@@ -102,6 +105,9 @@ public class DrishtiLiveTables {
 
             @Override
             public LiveStream stream(String name) {
+                if (sources.expired(name)) {
+                    throw LiveSources.expiredError(name);
+                }
                 return sources.get(name).<LiveStream>map(x -> new KindStream(x.kind(), bindings, List.of(com.ash.drishti.engine.search.SearchFilter.KEY),
                         x.peerStream())).orElseGet(() -> new KindStream(name, bindings, keyOf(specs, name)));
             }
@@ -148,6 +154,7 @@ public class DrishtiLiveTables {
         });
         DEFAULTS.put(lt, defaults);
         SPECS.put(lt, specs);
+        sources.onEvict(name -> release(lt, specs, name));
         return lt;
     }
 
@@ -193,6 +200,19 @@ public class DrishtiLiveTables {
             specs.put(spec.name(), spec);
         }
         lt.declare(spec);
+    }
+
+    /**
+     * A search's table whose source left {@link LiveSources} (the cap): its declaration leaves the authoriser and the write-back, and its open
+     * table is closed (with its rows, its members' reads and its stream), so a later read answers "expired, run the search again" and the cap
+     * bounds what is kept. Rachana's engine has no way to take a declaration out ({@code LiveTables.undeclare}): its entry stays there, a
+     * small spec with nothing open behind it, until Rachana has one.
+     */
+    static void release(LiveTables lt, Map<String, LiveTableSpec> specs, String name) {
+        LiveTableSpec spec = specs.remove(name);
+        if (spec != null) {
+            lt.declare(spec);                                          // declaring again closes the open table of that name
+        }
     }
 
     /** The authoriser of one engine. */

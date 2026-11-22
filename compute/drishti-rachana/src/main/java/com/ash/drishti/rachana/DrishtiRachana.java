@@ -45,6 +45,11 @@ public final class DrishtiRachana {
     private static volatile Supplier<? extends Collection<String>> kinds = List::of;
     private static volatile Rachana current;
     private static final List<com.ash.rachana.format.Formats> SERVED = new ArrayList<>();
+    /** What {@link LiveCompiler#follow} built, dropped at every change of instance (held weakly: a closed context's go with it). */
+    private static final java.util.Set<LiveCompiler.Follower<?>> FOLLOWERS = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+    /** The functions of a module that was stopped, by name: the module's id (a Sutra calling one is told the module is off). */
+    private static final Map<String, String> OFF = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.regex.Pattern UNKNOWN = java.util.regex.Pattern.compile("unknown function '([^']+)'(; known: [^\\n]*)?");
 
     private DrishtiRachana() {
     }
@@ -73,7 +78,10 @@ public final class DrishtiRachana {
         return current().parser();
     }
 
-    /** The compiler of the instance now (engine and module functions included). */
+    /**
+     * The compiler of the instance now (engine and module functions included). A reader that keeps a compiler takes {@link LiveCompiler}
+     * instead, never this one's result.
+     */
     public static ElCompiler compiler() {
         return current().compiler();
     }
@@ -120,7 +128,7 @@ public final class DrishtiRachana {
             if (servedKinds != null) {
                 kinds = servedKinds;
             }
-            current = null;
+            changed();
         }
     }
 
@@ -144,34 +152,54 @@ public final class DrishtiRachana {
     public static void level(String l) {
         synchronized (LOCK) {
             level = l == null || l.isBlank() ? LEVEL : l.strip();
-            current = null;
+            changed();
         }
     }
 
-    /** A started module's functions join Core's table; the returned action takes them out (a stop). */
-    public static Runnable addFunctions(FunctionProvider provider) {
+    /**
+     * A started module's functions join Core's table; the returned action takes them out (a stop), and a Sutra that still calls one is told
+     * the module is off ({@link #drs(com.ash.rachana.SutraProblem)}).
+     */
+    public static Runnable addFunctions(String module, FunctionProvider provider) {
         Object key = new Object();
+        List<String> names = provider.functions().stream().map(FunctionProvider.Provided::name).toList();
         synchronized (LOCK) {
             MODULES.put(key, provider);
-            current = null;
+            names.forEach(OFF::remove);
+            changed();
         }
         return () -> {
             synchronized (LOCK) {
                 MODULES.remove(key);
-                current = null;
+                names.forEach(n -> OFF.put(n, module));
+                changed();
             }
         };
+    }
+
+    /** Registers what {@link LiveCompiler#follow} built, to be dropped at the next change of instance. */
+    static void follow(LiveCompiler.Follower<?> f) {
+        synchronized (LOCK) {
+            FOLLOWERS.add(f);
+        }
+    }
+
+    /** The instance changes (under the lock): the next reader builds the new one; nothing built on the older one is kept. */
+    private static void changed() {
+        current = null;
+        FOLLOWERS.forEach(LiveCompiler.Follower::forget);
     }
 
     /** Forgets everything (a test starting clean): no module functions, default settings, an empty block library. */
     public static void reset() {
         synchronized (LOCK) {
             MODULES.clear();
+            OFF.clear();
             SERVED.clear();
             options = RachanaOptions.DEFAULTS;
             kinds = List::of;
             level = LEVEL;
-            current = null;
+            changed();
         }
     }
 
@@ -180,10 +208,33 @@ public final class DrishtiRachana {
         return code != null && code.startsWith("RCH-") ? "DRS-" + code.substring(4) : code;
     }
 
-    /** A problem with its code mapped by {@link #drs(String)}. */
+    /**
+     * A problem with its code mapped by {@link #drs(String)}, and a call of a stopped module's function said as that: the module is off here
+     * ({@link #offWords(String)}).
+     */
     public static com.ash.rachana.SutraProblem drs(com.ash.rachana.SutraProblem p) {
-        return p == null || p.code() == null || !p.code().startsWith("RCH-") ? p
-                : new com.ash.rachana.SutraProblem(drs(p.code()), p.severity(), p.message(), p.location(), p.path(), p.range());
+        if (p == null) {
+            return null;
+        }
+        String words = offWords(p.message());
+        return (p.code() == null || !p.code().startsWith("RCH-")) && words.equals(p.message()) ? p
+                : new com.ash.rachana.SutraProblem(drs(p.code()), p.severity(), words, p.location(), p.path(), p.range());
+    }
+
+    /** A refusal's words with "unknown function 'f'" of a stopped module's function said as "the module is off". */
+    public static String offWords(String message) {
+        if (message == null || OFF.isEmpty()) {
+            return message;
+        }
+        java.util.regex.Matcher m = UNKNOWN.matcher(message);
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            String module = OFF.get(m.group(1));
+            m.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(module == null ? m.group()
+                    : "the function '" + m.group(1) + "' is off: its module '" + module + "' is not running on this server"));
+        }
+        m.appendTail(out);
+        return out.toString();
     }
 
     /** The problems with their codes mapped. */

@@ -77,7 +77,7 @@ class AboutCatalogTest {
     private AboutCatalog catalog(Path base, Path child) {
         return new AboutCatalog(new AboutProperties(List.of(
                 pack("child", child, List.of("child-thing"), List.of("child", "base")),
-                pack("base", base, List.of("thing"), List.of("base"))), null, null), com.ash.drishti.rachana.DrishtiRachana.compiler());
+                pack("base", base, List.of("thing"), List.of("base"))), null, null), com.ash.drishti.rachana.LiveCompiler.current());
     }
 
     private static EvalContext ctx(Map<String, Object> doc) {

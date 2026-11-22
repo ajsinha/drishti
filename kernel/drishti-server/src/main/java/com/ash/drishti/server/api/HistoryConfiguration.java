@@ -21,7 +21,7 @@ import com.ash.drishti.engine.history.HistoryService;
 import com.ash.drishti.engine.search.SearchProperties;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.format.Formats;
 import com.ash.drishti.server.design.HistoryDefinitions;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +33,7 @@ public class HistoryConfiguration {
 
     @Bean
     public HistoryService historyService(SourceRouter router, BusinessDates dates, HistoryProperties props, SearchProperties search, Formats formats,
-            ElCompiler el, HistoryDefinitions definitions, Mnemonics mnemonics) {
+            LiveCompiler el, HistoryDefinitions definitions, Mnemonics mnemonics) {
         return new HistoryService(router, dates, props, search, formats, el, definitions::of, kind -> {
             String code = mnemonics.codeFor(kind);
             return code == null || code.isBlank() ? null : code;

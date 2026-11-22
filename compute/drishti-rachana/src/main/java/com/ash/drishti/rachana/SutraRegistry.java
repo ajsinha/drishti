@@ -22,7 +22,6 @@ import com.ash.rachana.SutraProblem;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.SharedWatchService;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.SourceLocation;
 import com.ash.rachana.model.Sutra;
 import com.ash.rachana.parse.SutraParser;
@@ -68,7 +67,8 @@ public final class SutraRegistry implements AutoCloseable {
 
     private final SutraParser parser = com.ash.drishti.rachana.DrishtiRachana.parser();
     private volatile RachanaProperties props;
-    private final SutraExpressions expressions;
+    /** The expressions' checks on the instance now (a module's functions known while it runs). */
+    private final java.util.function.Supplier<SutraExpressions> expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
     /** Serialises reloads and saves (never taken by readers). A ReentrantLock: both do file I/O, which would pin under synchronized. */
     private final java.util.concurrent.locks.ReentrantLock writeLock = new java.util.concurrent.locks.ReentrantLock();
@@ -81,9 +81,9 @@ public final class SutraRegistry implements AutoCloseable {
     /** {@code OFF}, {@code WATCHING}, or {@code STOPPED: <reason>} once the watcher has ended unexpectedly. */
     private volatile String hotReload = "OFF";
 
-    public SutraRegistry(RachanaProperties props, ElCompiler compiler) {
+    public SutraRegistry(RachanaProperties props, LiveCompiler compiler) {
         this.props = props;
-        this.expressions = new SutraExpressions(compiler);
+        this.expressions = compiler.follow(SutraExpressions::new);
         reload();
         if (props.hotReload()) {
             startWatching();
@@ -144,7 +144,7 @@ public final class SutraRegistry implements AutoCloseable {
 
     private Sutra save0(String yaml) throws IOException {
         Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
-        List<SutraProblem> problems = expressions.check(s);
+        List<SutraProblem> problems = expressions.get().check(s);
         if (!problems.isEmpty()) {
             throw new SutraException(DrishtiRachana.drs(problems));
         }
@@ -174,7 +174,7 @@ public final class SutraRegistry implements AutoCloseable {
     /** Parses and checks {@code yaml} without saving it, for Studio previews. */
     public Sutra check(String yaml) {
         Sutra s = parser.parse(yaml, SutraParser.STUDIO, "studio");
-        List<SutraProblem> problems = expressions.check(s);
+        List<SutraProblem> problems = expressions.get().check(s);
         if (!problems.isEmpty()) {
             throw new SutraException(DrishtiRachana.drs(problems));
         }
@@ -285,7 +285,7 @@ public final class SutraRegistry implements AutoCloseable {
                     LOG.warn("sutra {}: {}", f, older);              // a user's Sutra of an older level: read at its level, the upgrade offered
                 }
                 s = parser.parse(text, f.getFileName().toString(), domain);
-                List<SutraProblem> exprProblems = expressions.check(s);
+                List<SutraProblem> exprProblems = expressions.get().check(s);
                 if (!exprProblems.isEmpty()) {
                     throw new SutraException(DrishtiRachana.drs(exprProblems));
                 }

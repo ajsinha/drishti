@@ -229,4 +229,34 @@ class FormApiTest {
         org.assertj.core.api.Assertions.assertThat(plain.path("page").path("total").asLong()).isPositive();
         mvc.perform(get("/api/v1/rdp/searches").param("q", command).header("Authorization", as("nothing"))).andExpect(status().isForbidden());
     }
+
+    /**
+     * Gate 4 F3: a search's table whose source left the cap is never read as a kind called {@code q-<hash>}: its declaration is released, its
+     * open table closed, and a read answers 404 "expired: run the search again"; running the search again opens it again.
+     */
+    @Test
+    void aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt(
+            @Autowired com.ash.drishti.server.live.LiveSources sources) throws Exception {
+        String q = "TRD where CURRENCY == 'EUR'";
+        var live = json(mvc.perform(get("/api/v1/rdp/searches").param("q", q).header("Authorization", as("searcher"))));
+        String table = live.path("table").asText();
+        String query = "{\"filter\":" + live.path("query").path("filter") + ",\"sort\":[{\"col\":\"id\"}],\"limit\":5}";
+        mvc.perform(post("/api/v1/rdp/tables/" + table + "/query").contentType(MediaType.APPLICATION_JSON).content(query)
+                .header("Authorization", as("searcher"))).andExpect(status().isOk());
+        for (int i = 0; i < com.ash.drishti.server.live.LiveSources.MAX; i++) {       // other searches push it out
+            sources.put("q-other-" + i, new com.ash.drishti.server.live.LiveSources.Source("trade", null, false, null, null));
+        }
+        org.assertj.core.api.Assertions.assertThat(sources.get(table)).isEmpty();
+        mvc.perform(post("/api/v1/rdp/tables/" + table + "/query").contentType(MediaType.APPLICATION_JSON).content(query)
+                        .header("Authorization", as("searcher"))).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("rdp.table.unknown"))
+                .andExpect(jsonPath("$.error.message").value(containsString("has expired: run the search again")))
+                .andExpect(jsonPath("$.error.expired").value(true));
+        mvc.perform(get("/api/v1/rdp/tables/" + table).header("Authorization", as("searcher"))).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.message").value(containsString("has expired")));
+        var again = json(mvc.perform(get("/api/v1/rdp/searches").param("q", q).header("Authorization", as("searcher"))));
+        org.assertj.core.api.Assertions.assertThat(again.path("table").asText()).isEqualTo(table);
+        mvc.perform(post("/api/v1/rdp/tables/" + table + "/query").contentType(MediaType.APPLICATION_JSON).content(query)
+                .header("Authorization", as("searcher"))).andExpect(status().isOk()).andExpect(jsonPath("$.values.length()").value(5));
+    }
 }

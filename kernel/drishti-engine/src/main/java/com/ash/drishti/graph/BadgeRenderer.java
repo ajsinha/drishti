@@ -16,7 +16,7 @@
 package com.ash.drishti.graph;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Values;
@@ -27,10 +27,10 @@ import java.util.Map;
 public final class BadgeRenderer implements com.ash.drishti.common.LiveSettings {
 
     private volatile Map<String, String> badges;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Formats formats;
 
-    public BadgeRenderer(GraphProperties props, ElCompiler el, Formats formats) {
+    public BadgeRenderer(GraphProperties props, LiveCompiler el, Formats formats) {
         this.badges = props.badges();
         this.el = el;
         this.formats = formats;

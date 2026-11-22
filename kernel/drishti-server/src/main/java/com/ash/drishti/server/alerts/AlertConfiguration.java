@@ -22,7 +22,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.collab.CollabProperties;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.format.Formats;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.DatasetService;
@@ -57,7 +57,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class AlertConfiguration {
 
     @Bean
-    public FieldValueReader fieldValueReader(SourceRouter router, ElCompiler el, Formats formats, Entitlements entitlements) {
+    public FieldValueReader fieldValueReader(SourceRouter router, LiveCompiler el, Formats formats, Entitlements entitlements) {
         return new FieldValueReader(router, el, formats, entitlements);
     }
 

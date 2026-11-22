@@ -121,7 +121,7 @@ class SearchFailuresTest {
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofMillis(500), null, null);
         var router = new SourceRouter(new SourceRegistry(List.of(plugins), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
         var mnemonics = new Mnemonics(new CommandsProperties(Map.of("TRD", new CommandsProperties.Mnemonic("trade", "Trade")), null, null, null));
-        return new StructuredSearch(router, mnemonics, com.ash.drishti.rachana.DrishtiRachana.compiler(), Formats.defaults(), new SearchProperties(1000, Duration.ofMillis(400)));
+        return new StructuredSearch(router, mnemonics, com.ash.drishti.rachana.LiveCompiler.current(), Formats.defaults(), new SearchProperties(1000, Duration.ofMillis(400)));
     }
 
     private static StructuredSearch.Result run(StructuredSearch s, String q) {

@@ -101,6 +101,11 @@ public class FormResults {
      */
     public record Opened(String table, Map<String, Object> query, boolean live, SearchFilter filter) {}
 
+    /** Whether a table name is a search's whose source expired ({@link LiveSources#expired}). */
+    public boolean expired(String table) {
+        return sources.expired(table);
+    }
+
     /** Opens a search for a person on a business date: the kind's access and edition checked, the table declared on first use. */
     public Opened open(String command, AsOf asOf, Principal p) {
         if (command == null || command.isBlank()) {
@@ -270,7 +275,7 @@ public class FormResults {
                 + "\u001f" + (condition == null ? "" : condition) + "\u001f" + audience;
         try {
             byte[] h = MessageDigest.getInstance("SHA-256").digest(basis.getBytes(StandardCharsets.UTF_8));
-            return "q-" + HexFormat.of().formatHex(h, 0, 12);
+            return LiveSources.SEARCH + HexFormat.of().formatHex(h, 0, 12);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

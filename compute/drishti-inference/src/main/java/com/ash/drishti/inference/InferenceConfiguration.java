@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.inference;
 
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.format.Formats;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +32,7 @@ public class InferenceConfiguration {
     }
 
     @Bean
-    public LayoutMerger layoutMerger(InferenceEngine engine, ElCompiler elCompiler, Formats formats) {
+    public LayoutMerger layoutMerger(InferenceEngine engine, LiveCompiler elCompiler, Formats formats) {
         return new LayoutMerger(engine, elCompiler, formats);
     }
 }

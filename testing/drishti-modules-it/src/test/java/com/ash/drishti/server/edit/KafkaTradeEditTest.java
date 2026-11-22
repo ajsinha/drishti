@@ -98,6 +98,7 @@ class KafkaTradeEditTest {
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     @Autowired ConnectorWrites writes;
+    @Autowired com.ash.drishti.identity.AuditLog audit;
     private final ObjectMapper json = new ObjectMapper();
 
     private String as(String user, String role) {
@@ -195,6 +196,23 @@ class KafkaTradeEditTest {
         assertThat(call("POST", "/api/v1/rdp/tables/trade/write", as("tom", "trader"), again, 403).toString()).contains("another's");
         assertThat(call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes")).hasSize(1);
         assertThat(topic()).as("a repeat writes nothing").hasSize(2);
+        // Gate 4 F5: through the write-back API, a repeat with the same content gets the change's answer; the same id with another
+        // content (another value, another field) is refused 409 and audited, and nothing is made or written
+        Map<String, Object> same = new java.util.LinkedHashMap<>(Map.of("id", "01JKAFKAEDIT0000000000001", "kind", "trade", "entity", "EN-1",
+                "basedOn", 1, "sutra", "live:trade", "panel", "edit", "reason", "booked to the wrong book",
+                "items", List.of(Map.of("field", "PORTFOLIO", "from", "BOOK-A", "to", "BOOK-B"))));
+        JsonNode answered = call("POST", "/api/v1/changes", tia, same, 202).path("changes").get(0);
+        assertThat(answered.path("id").asText()).isEqualTo("01JKAFKAEDIT0000000000001");
+        assertThat(answered.path("state").asText()).isEqualTo("applied");
+        Map<String, Object> other = new java.util.LinkedHashMap<>(same);
+        other.put("items", List.of(Map.of("field", "PORTFOLIO", "from", "BOOK-A", "to", "BOOK-C")));
+        assertThat(call("POST", "/api/v1/changes", tia, other, 409).toString()).contains("was used for another change");
+        other.put("items", List.of(Map.of("field", "PRICE", "from", 10.5, "to", 12)));
+        assertThat(call("POST", "/api/v1/changes", tia, other, 409).toString()).contains("was used for another change");
+        assertThat(audit.recent(200, "trade:EN-1")).filteredOn(e -> "edit-id-reused".equals(e.action())).hasSize(2)
+                .allSatisfy(e -> assertThat(e.actor()).isEqualTo("tia"));
+        assertThat(call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes")).hasSize(1);
+        assertThat(topic()).as("a reused id writes nothing").hasSize(2);
 
         // made on version 1 after version 2 was written: refused, naming who made version 2
         until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);

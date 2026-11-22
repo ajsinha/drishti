@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana.about;
 
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.SutraProblem;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.SourceLocation;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -58,7 +58,7 @@ public final class AboutCatalog implements AboutSource, com.ash.drishti.common.L
     /** The generic words every domain shares ({@value #CORE_RESOURCE}); the lowest priority of all vocabularies. */
     private final Map<String, GlossaryEntry> core;
 
-    public AboutCatalog(AboutProperties props, ElCompiler el) {
+    public AboutCatalog(AboutProperties props, LiveCompiler el) {
         this.props = props;
         this.parser = new AboutParser(el, props.maxText());
         this.core = loadCore();

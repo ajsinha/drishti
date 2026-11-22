@@ -17,7 +17,7 @@ package com.ash.drishti.engine.source;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.ScanRequest;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Expr;
 import com.ash.rachana.el.Values;
@@ -46,7 +46,8 @@ public final class RowPredicate {
     /** Every row. */
     public static final RowPredicate ALL = new RowPredicate("", "", null, Set.of(), List.of(), Map.of());
 
-    private static final ElCompiler EL = new ElCompiler(2_000);
+    /** The server's one compiler holder: the instance now (Core's functions, the engine's and a running module's), as every reader. */
+    private static final LiveCompiler EL = LiveCompiler.current();
 
     private final String text;
     private final String el;

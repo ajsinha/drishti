@@ -16,7 +16,7 @@
 package com.ash.drishti.server.pivot;
 
 import com.ash.drishti.kernel.api.pivot.PivotView;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.Expr;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +29,7 @@ import java.util.Locale;
 
 /**
  * A pivot field of an entity document as a Rachana path (ARCHITECTURE.md section 26.4): parsed by Rachana's own parser
- * ({@link ElCompiler}), never a second dialect, and compiled to DuckDB's JSON functions over the document. The grain comes from the path:
+ * ({@link LiveCompiler}), never a second dialect, and compiled to DuckDB's JSON functions over the document. The grain comes from the path:
  * each {@code [*]} steps into a list ({@code $.LEGS[*].NOTIONAL} is a leg field, {@code $.LEGS[*].CASH_FLOWS[*].AMOUNT} a cash-flow one),
  * a filter before it keeps some elements ({@code $.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL}: the fixed legs'), a filter before an index
  * picks one ({@code $.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME}), and {@code size(...)} counts a list. Anything with no SQL form is
@@ -50,7 +50,8 @@ record DocPath(String text, String id, List<Level> levels, List<Step> leaf, bool
     /** One step inside a level: a field, an index, or a filter followed by an index (the first matching element). */
     record Step(String field, Integer index, Expr filter) {}
 
-    private static final ElCompiler EL = new ElCompiler(2_000);
+    /** The server's one compiler holder: the instance now (Core's functions, the engine's and a running module's), as every reader. */
+    private static final LiveCompiler EL = LiveCompiler.current();
 
     /** The grain the path's lists make: {@code ""} for the entity, {@code LEGS}, {@code LEGS.CASH_FLOWS}. */
     String grain() {

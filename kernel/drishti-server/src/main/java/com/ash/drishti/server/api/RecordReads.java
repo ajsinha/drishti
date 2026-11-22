@@ -23,6 +23,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.history.HistoryService;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.view.ViewModel;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.api.HistoryController.Point;
@@ -46,11 +47,11 @@ public class RecordReads {
     private final SourceRouter router;
     private final BusinessDates dates;
     private final Entitlements entitlements;
-    private final com.ash.rachana.el.ElCompiler el;
+    private final LiveCompiler el;
     private final com.ash.rachana.format.Formats formats;
     private final HistoryService history;
 
-    public RecordReads(SourceRouter router, BusinessDates dates, Entitlements entitlements, com.ash.rachana.el.ElCompiler el,
+    public RecordReads(SourceRouter router, BusinessDates dates, Entitlements entitlements, LiveCompiler el,
             com.ash.rachana.format.Formats formats, HistoryService history) {
         this.router = router;
         this.dates = dates;

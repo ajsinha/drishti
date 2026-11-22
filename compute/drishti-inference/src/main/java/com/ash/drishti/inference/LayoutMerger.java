@@ -16,7 +16,7 @@
 package com.ash.drishti.inference;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.format.Formats;
 import com.ash.rachana.model.Column;
@@ -38,10 +38,10 @@ import java.util.Optional;
 public final class LayoutMerger {
 
     private final InferenceEngine engine;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Formats formats;
 
-    public LayoutMerger(InferenceEngine engine, ElCompiler el, Formats formats) {
+    public LayoutMerger(InferenceEngine engine, LiveCompiler el, Formats formats) {
         this.engine = engine;
         this.el = el;
         this.formats = formats;

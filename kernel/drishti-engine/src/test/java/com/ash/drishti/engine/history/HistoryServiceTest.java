@@ -135,7 +135,7 @@ class HistoryServiceTest {
         SourceRouter router = new SourceRouter(new SourceRegistry(List.of(lake), props, new JsonCodec()), props, Executors.newVirtualThreadPerTaskExecutor());
         BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null, null), CLOCK);
         return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
-                Formats.defaults(), com.ash.drishti.rachana.DrishtiRachana.compiler(), k -> specs.getOrDefault(k, HistorySpec.defaults(k)), k -> k.equals("trade") ? "TRD" : null);
+                Formats.defaults(), com.ash.drishti.rachana.LiveCompiler.current(), k -> specs.getOrDefault(k, HistorySpec.defaults(k)), k -> k.equals("trade") ? "TRD" : null);
     }
 
     private static final UnaryOperator<DataNode> MASK_TRADER = d -> {
