@@ -277,7 +277,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
   lists everything people build, what it uses and what uses it.
 - **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
-  graph, the designer kit) are [Drishti Elements](https://github.com/ajsinha/drishti-elements), a separate project by the same owner
+  graph, the designer kit) are [Drishti Elements](https://github.com/drishti-platform/drishti-elements), a separate project by the same owner
   with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
   at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.3.1/`, see
   [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).

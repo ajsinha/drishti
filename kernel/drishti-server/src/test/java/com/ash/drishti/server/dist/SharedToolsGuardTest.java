@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * One way per job, held by a test (the shared utilities are Drishti Tools, {@code github.com/ajsinha/drishti-tools}): no main source of
+ * One way per job, held by a test (the shared utilities are Drishti Tools, {@code github.com/drishti-platform/drishti-tools}): no main source of
  * this repository writes an Excel workbook's parts by itself, and none carries a copy of what the tools hold (TLS and the proxy, the
  * settings file and the placeholders, single-flight, the load guard, the path rule).
  */

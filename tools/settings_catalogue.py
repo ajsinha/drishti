@@ -53,7 +53,7 @@ import settings_sources as S  # noqa: E402
 DOC = ROOT / "docs" / "admin" / "CONFIGURATION.md"
 SCHEMAS = ROOT / "tools" / "settings_schemas.yaml"
 CATALOGUE = ROOT / "kernel/drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
-# the shared tls.* and proxy.* settings are declared in Drishti Tools (github.com/ajsinha/drishti-tools): a checkout of it, named by
+# the shared tls.* and proxy.* settings are declared in Drishti Tools (github.com/drishti-platform/drishti-tools): a checkout of it, named by
 # DRISHTI_TOOLS_HOME, else the folder next to this repository
 TOOLS = Path(os.environ.get("DRISHTI_TOOLS_HOME") or ROOT.parent / "drishti-tools")
 TLS = TOOLS / "java" / "tools-net" / "src" / "main" / "java" / "com" / "ash" / "tools" / "net" / "TlsSettings.java"
@@ -201,7 +201,7 @@ def _tools_source(path: Path) -> Path:
     """A source file of Drishti Tools: the checkout is named by DRISHTI_TOOLS_HOME (default: the folder next to this repository)."""
     if not path.is_file():
         raise SystemExit(f"{path} is not there: the shared tls.* and proxy.* settings are declared in Drishti Tools "
-                         "(github.com/ajsinha/drishti-tools); check it out next to this repository or set DRISHTI_TOOLS_HOME")
+                         "(github.com/drishti-platform/drishti-tools); check it out next to this repository or set DRISHTI_TOOLS_HOME")
     return path
 
 
