@@ -739,3 +739,14 @@ pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenThe
 | `LiveVisualsTest` (`bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | pass | G4 (shims part 2's fixtures) | **open** |
 | `IcebergMovedConnectorFileTest` (health text: `cannot read sa-ccr log: File does not exist` instead of the moved-lake words) | pass | G4 (Lake's read problems word a moved Iceberg table differently) | **open** (Lake's reason words for a moved table) |
 | `BankingPacksTest` (183 vs 186), `ConsoleAnswersRecordTest` (recorded answers older than the code), `DomainPacksTest` (no source holds `dms-score/...`), `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly`, `VarShardClusterTest.anOwnerDown...` | **fail on `main` too** | pre-existing | not changed |
+
+## Pass 4: finish (2026-11-21, on `g4/finish`)
+
+Products installed from their tags into a scratch Maven repository in the order tools 1.1.0, Rachana, Lake 0.9.0; Drishti pins Tools 1.1.0, Lake 0.9.0 (+ bom), Rachana 1.0.0 (the `develop` build, installed into the scratch repository only), Elements 3.3.1 (the test-fixes lane's vendoring, one Elements version).
+
+| Item | State | What was done |
+|---|---|---|
+| Re-pin | closed | the four poms' pins; lake files read `${lake.data.dir}` (the server writes it with `drishti.data.dir`, `tools/javacmd.py` passes it, the official lake files name `lake.var.official.*` and `lake.ccr.official.*`: Lake 0.9.0 refuses a host's name); `config/engines/*.yaml` lake sections likewise |
+| Level retirement (Rachana 1.0.0) | closed | one level, 1.2; `rachana upgrade` removed from 1.0.0 (it lives in 0.12.0); `LanguageLevels`, the designer's `/upgrade`, `drishti.py sutra upgrade` and `drishti.rachana.language-level` removed in Drishti; the corpus re-recorded at 1.2 (481 Sutras, no problem) |
+| Last shims | partly | `tools/test_tablescli` migrate tests removed. NOT done: the `PackStateStore` and `LoadStore` imports, the data-source override migration, `FileUserStore`/`FileAuditLog` and their settings, the WebKit test setup, the phone-width scroll, the launcher move per LAUNCHER_STANDARD (the generator `tools/launch/launchers.py`, its tests and IDE_GUIDE need one lane of their own) |
+| Proof | see the report of the lane | VaR goldens (`VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `PackagedVarGoldenTest` with the Lake tag's Python on `LAKE_PYTHON`), `HierarchyEquivalenceTest`, `ArchitectureRulesTest`, Drishti profile conformance, `PackSutrasTest` (parity), `ReferenceSutrasTest`, `ViewPipelineTest`: green in one run; tools/lake `test_javaload`, `test_build`, `test_demo`: 60 pass |
