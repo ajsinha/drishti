@@ -324,6 +324,21 @@ final class TableCatalog {
         return Optional.of(new ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /**
+     * The columns of the rows a connector's {@code where} may accept: its comparisons of a promoted text column with text values go into the
+     * query's {@code WHERE} (not cached: a smaller read); the whole day from its cache when none can.
+     */
+    Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate asked, List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        Set<String> have = columnar(kind);
+        Map<String, Set<String>> text = com.ash.drishti.api.TextEqualities.of(where,
+                p -> have.contains(p) && !Boolean.TRUE.equals(present.get(PostgresLayout.column(p))) ? PostgresLayout.column(p) : null);
+        Optional<LocalDate> day = text.isEmpty() || !have.containsAll(paths) ? Optional.empty() : snapshotDate(kind, asked);
+        if (day.isEmpty()) {
+            return columns(kind, paths, asked);
+        }
+        return Optional.ofNullable(readDay(kind, day.get(), List.copyOf(paths), text));   // no row the where accepts: none, not "not held"
+    }
+
     /** Entities of the kind whose promoted text columns hold {@code target} on the day; empty when the kind has none. */
     Optional<Set<String>> referrers(String kind, String target, LocalDate asked) {
         Set<String> cols = columnar(kind);
@@ -367,11 +382,15 @@ final class TableCatalog {
      * when the loader's dates table says the day was loaded again during the read, it is read again.
      */
     private ColumnSet readDay(String kind, LocalDate day, List<String> paths) {
+        return readDay(kind, day, paths, Map.of());
+    }
+
+    private ColumnSet readDay(String kind, LocalDate day, List<String> paths, Map<String, Set<String>> where) {
         dayReads.acquire();
         try {
             for (int attempt = 1; ; attempt++) {
                 Instant before = keepsDates ? db.with(c -> table.dayLoadedAt(c, kind, day)) : null;
-                ColumnSet read = readRanges(kind, day, paths);
+                ColumnSet read = readRanges(kind, day, paths, where);
                 Instant after = keepsDates ? db.with(c -> table.dayLoadedAt(c, kind, day)) : null;
                 if (Objects.equals(before, after)) {
                     return read;
@@ -388,7 +407,7 @@ final class TableCatalog {
         }
     }
 
-    private ColumnSet readRanges(String kind, LocalDate day, List<String> paths) throws Exception {
+    private ColumnSet readRanges(String kind, LocalDate day, List<String> paths, Map<String, Set<String>> where) throws Exception {
         List<String> numberPaths = paths.stream().filter(p -> Boolean.TRUE.equals(present.get(PostgresLayout.column(p)))).toList();
         List<String> textPaths = paths.stream().filter(p -> !numberPaths.contains(p)).toList();
         List<String> columns = new ArrayList<>();
@@ -403,7 +422,7 @@ final class TableCatalog {
                 parts.add(pool.submit(() -> db.with(c -> {
                     Chunk ch = new Chunk(numberPaths.size(), textPaths.size());
                     Map<String, String> shared = new HashMap<>();
-                    table.columns(c, kind, day, from, to, columns, rs -> add(ch, rs, numberPaths.size(), textPaths.size(), shared));
+                    table.columns(c, kind, day, from, to, columns, where, rs -> add(ch, rs, numberPaths.size(), textPaths.size(), shared));
                     return ch;
                 })));
             }

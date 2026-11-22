@@ -1454,7 +1454,7 @@ settings:
 
 | Key | Meaning |
 |---|---|
-| `where` | A row predicate on the **stored** row: `=`, `<>`, `<`, `<=`, `>`, `>=`, `in ('A', 'B')`, `is null`, `is not null`, `and`, `or`, `not`, parentheses; text is quoted. The comparisons of a field with constants at the top level are pushed down to the store (partition and file pruning where possible); the whole predicate is tested on every row read. |
+| `where` | A row predicate on the **stored** row: `=`, `<>`, `<`, `<=`, `>`, `>=`, `in ('A', 'B')`, `is null`, `is not null`, `and`, `or`, `not`, parentheses; text is quoted. The top-level comparisons of a promoted field with text (`=`, `in`) are pushed down to the store: a Delta or Iceberg connector does not open the date's files whose partition value or column statistics show none of the values and leaves out the other rows of the files it reads; a database (PostgreSQL, DuckDB) gets them in its query's `WHERE`. Other comparisons are not pushed down. The whole predicate is still tested on every row read, so the answer is the same. Health shows the files read and left out (`wherePushdown`). |
 | `set` | Constants for the canonical row where it lacks the field (`SOURCE_SYSTEM` for a system's own table). |
 | `map` | A map file, relative to the connector's module folder, else the connectors' folder (`config/connectors/`). |
 

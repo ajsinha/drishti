@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * A shaped connector's columnar read (the grid's pages, BI): the canonical columns asked for are read by their stored names, with the
- * columns its {@code where} tests; the rows it leaves out (and the rows of a system switched off) are dropped; the columns are renamed to
+ * columns its {@code where} tests, the where's comparisons handed to the store (which may leave out rows at the source); the rows it leaves out (and the rows of a system switched off) are dropped; the columns are renamed to
  * their canonical names and the constants of {@code set} filled in where a row lacks them.
  */
 final class ShapedColumns {
@@ -65,7 +65,7 @@ final class ShapedColumns {
                 return Optional.empty();                      // a where on a field not kept as a column: the documents answer
             }
         }
-        Optional<ColumnSet> read = delegate.columns(kind, new ArrayList<>(ask), asOf);
+        Optional<ColumnSet> read = delegate.columns(kind, new ArrayList<>(ask), asOf, shape.where().pushdown());   // the store may leave out rows the where drops
         if (read.isEmpty()) {
             return read;
         }

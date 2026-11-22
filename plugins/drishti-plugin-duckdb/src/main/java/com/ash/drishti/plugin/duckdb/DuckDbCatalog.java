@@ -309,6 +309,21 @@ final class DuckDbCatalog {
         return Optional.of(new ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /**
+     * The columns of the rows a connector's {@code where} may accept: its comparisons of a promoted text column with text values go into the
+     * query's {@code WHERE} (not cached: a smaller read); the whole day from its cache when none can.
+     */
+    Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate asked, List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        Set<String> have = columnar(kind);
+        Map<String, Set<String>> text = com.ash.drishti.api.TextEqualities.of(where,
+                p -> have.contains(p) && !Boolean.TRUE.equals(present.get(DuckDbLayout.column(p))) ? DuckDbLayout.quoted(p) : null);
+        Optional<LocalDate> day = text.isEmpty() || !have.containsAll(paths) ? Optional.empty() : snapshotDate(kind, asked);
+        if (day.isEmpty()) {
+            return columns(kind, paths, asked);
+        }
+        return Optional.ofNullable(readDay(kind, day.get(), List.copyOf(paths), text));   // no row the where accepts: none, not "not held"
+    }
+
     /** Entities of the kind whose promoted text columns hold {@code target} on the day; empty when the kind has none. */
     Optional<Set<String>> referrers(String kind, String target, LocalDate asked) {
         Set<String> cols = columnar(kind);
@@ -393,12 +408,27 @@ final class DuckDbCatalog {
      * spread the work of turning rows into Java values), at most two days at a time.
      */
     private ColumnSet readDay(String kind, LocalDate day, List<String> paths) {
+        return readDay(kind, day, paths, Map.of());
+    }
+
+    /** As above, only the rows whose quoted text column holds one of its values ({@code "COL" IN (?, ?)}: a connector's where at the source). */
+    private ColumnSet readDay(String kind, LocalDate day, List<String> paths, Map<String, Set<String>> where) {
         List<String> numberPaths = paths.stream().filter(p -> Boolean.TRUE.equals(present.get(DuckDbLayout.column(p)))).toList();
         List<String> textPaths = paths.stream().filter(p -> !numberPaths.contains(p)).toList();
         StringBuilder select = new StringBuilder("SELECT id");
         numberPaths.forEach(p -> select.append(", ").append(DuckDbLayout.quoted(p)));
         textPaths.forEach(p -> select.append(", ").append(DuckDbLayout.quoted(p)));
         select.append(" FROM ").append(table).append(" WHERE kind = ? AND business_date = CAST(? AS DATE)");
+        List<String> bound = new ArrayList<>();
+        where.forEach((col, values) -> {
+            if (values.isEmpty()) {
+                select.append(" AND FALSE");                         // comparisons that no value meets
+                return;
+            }
+            List<String> sorted = values.stream().sorted().toList();
+            select.append(" AND ").append(col).append(" IN (").append(String.join(", ", java.util.Collections.nCopies(sorted.size(), "?"))).append(')');
+            bound.addAll(sorted);
+        });
         dayReads.acquire();
         try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
             List<String> cuts = file.with(c -> boundaries(c, kind, day, scanThreads));
@@ -414,6 +444,9 @@ final class DuckDbCatalog {
                         int i = 1;
                         ps.setString(i++, kind);
                         ps.setString(i++, day.toString());
+                        for (String v : bound) {                  // the where's values come right after the day in the query
+                            ps.setString(i++, v);
+                        }
                         if (from != null) {
                             ps.setString(i++, from);
                         }

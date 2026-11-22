@@ -298,6 +298,13 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                 : queryMode != null ? queryMode.columns(kind, paths, asOf.businessDate()) : Optional.empty();
     }
 
+    /** The table mode's columns with a connector's where in the query's {@code WHERE} (its text comparisons); query mode reads the whole day. */
+    @Override
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, com.ash.drishti.api.AsOf asOf,
+            java.util.List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        return catalog != null ? catalog.columns(kind, paths, asOf.businessDate(), where) : columns(kind, paths, asOf);
+    }
+
     @Override
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
         return com.ash.drishti.api.ColumnScans.over(this, request);

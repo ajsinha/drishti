@@ -263,7 +263,7 @@ final class ConnectorInstance implements SourcePlugin {
         if (switchedOff()) {
             return true;
         }
-        return delegate.documents(kind, asOf, d -> {
+        return delegate.documents(kind, asOf, shape.where().pushdown(), d -> {      // the where reaches the store; every row is still tested
             EntityDocument s = shaped(d);
             if (s != null) {
                 sink.accept(s);

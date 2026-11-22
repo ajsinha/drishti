@@ -772,6 +772,48 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return true;
     }
 
+    /** A connector's {@code where} pushed down (docs/guides/DATA_LAKE_GUIDE.md, "Several source systems"): what it read and left out. */
+    private final com.ash.drishti.lakehost.WherePushdown pushdown = new com.ash.drishti.lakehost.WherePushdown();
+
+    /** The pushed-down reads' counts since start: {@code filesRead}, {@code filesSkipped}, {@code rowsReturned}. */
+    public Map<String, Long> pushdownStats() {
+        return pushdown.stats();
+    }
+
+    /**
+     * The day's documents of the files that may hold the rows {@code where} accepts, as the Delta connector; the whole day when nothing can be
+     * left out. The connector tests every document it is given.
+     */
+    @Override
+    public boolean documents(String kind, AsOf asOf, List<com.ash.drishti.api.ScanRequest.Filter> where, java.util.function.Consumer<EntityDocument> sink) {
+        if (where == null || where.isEmpty() || !tables.containsKey(kind) || effective(kind)) {
+            return documents(kind, asOf, sink);
+        }
+        Optional<TableSnapshot> l = layout(kind, asOf.knownAt());
+        List<DayFiles> days = l.isEmpty() ? List.of() : candidates(kind, l.get(), asOf.businessDate());
+        com.ash.drishti.lakehost.WherePushdown.Plan plan = days.isEmpty() ? null
+                : com.ash.drishti.lakehost.WherePushdown.plan(l.get(), days.get(0), where, promotedColumns(kind, l.get()));
+        if (plan == null) {
+            return documents(kind, asOf, sink);
+        }
+        DayFiles d = days.get(0);
+        long generation = l.get().sequence();
+        LocalDate date = LocalDate.MIN.equals(d.date()) ? null : d.date();
+        try {
+            boolean read = pushdown.documents(l.get(), plan, "doc" /* the layout's document column */, (id, json) -> {
+                try {
+                    sink.accept(new EntityDocument(EntityRef.of(kind, id), context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))),
+                            new Provenance(sourceName, generation, Instant.now(), false, date)));
+                } catch (IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+            });
+            return read || documents(kind, asOf, sink);
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, d.date().toString(), e);
+        }
+    }
+
     @Override
     public Set<String> vectorColumns(String kind) {
         List<String> v = vectorCols.get(kind);
@@ -1089,6 +1131,40 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return Optional.of(new ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /** The columns of the rows {@code where} may accept, as the Delta connector; the whole day from its cache when nothing can be left out. */
+    @Override
+    public Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf, List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        if (where == null || where.isEmpty() || effective(kind)) {
+            return columns(kind, paths, asOf);
+        }
+        Optional<TableSnapshot> l = layout(kind, asOf.knownAt());
+        if (l.isEmpty()) {
+            return columns(kind, paths, asOf);
+        }
+        Map<String, String> cols = promotedColumns(kind, l.get());
+        List<DayFiles> days = cols.keySet().containsAll(paths) ? candidates(kind, l.get(), asOf.businessDate()) : List.of();
+        com.ash.drishti.lakehost.WherePushdown.Plan plan = days.isEmpty() ? null
+                : com.ash.drishti.lakehost.WherePushdown.plan(l.get(), days.get(0), where, cols);
+        if (plan == null) {
+            return columns(kind, paths, asOf);
+        }
+        Map<String, ColumnType> types = l.get().columns().types();
+        Map<String, String> asks = new LinkedHashMap<>();
+        Set<String> numbers = new HashSet<>();
+        for (String p : paths) {
+            asks.put(p, cols.get(p));
+            if (numeric(types.get(cols.get(p))) && !com.ash.drishti.api.IdText.isIdField(p)) {
+                numbers.add(p);                                // as the whole day's read asks it
+            }
+        }
+        try {
+            ColumnSet some = pushdown.columns(l.get(), plan, asks, numbers);
+            return some == null ? columns(kind, paths, asOf) : Optional.of(some);
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, days.get(0).date().toString(), e);
+        }
+    }
+
     @Override
     public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
         return dated.enabled() ? java.util.Optional.of(dated) : java.util.Optional.empty();
@@ -1108,6 +1184,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize(),
                 "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size()));
         m.putAll(disk.stats());
+        m.put("wherePushdown", pushdown.stats());
         if (dated.enabled()) {
             m.putAll(dated.health());
         }

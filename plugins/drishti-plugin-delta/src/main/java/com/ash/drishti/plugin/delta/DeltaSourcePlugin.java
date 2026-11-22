@@ -832,6 +832,60 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return true;
     }
 
+    /** A connector's {@code where} pushed down (docs/guides/DATA_LAKE_GUIDE.md, "Several source systems"): what it read and left out. */
+    private final com.ash.drishti.lakehost.WherePushdown pushdown = new com.ash.drishti.lakehost.WherePushdown();
+
+    /** The pushed-down reads' counts since start: {@code filesRead}, {@code filesSkipped}, {@code rowsReturned}. */
+    public Map<String, Long> pushdownStats() {
+        return pushdown.stats();
+    }
+
+    /**
+     * The date's documents of the files that may hold the rows {@code where} accepts (partition values, file statistics), the other rows of
+     * those files left out by Lake's row test; the whole date (as {@link #documents(String, AsOf, java.util.function.Consumer)}) when
+     * nothing can be left out. The connector tests every document it is given.
+     */
+    @Override
+    public boolean documents(String kind, AsOf asOf, List<com.ash.drishti.api.ScanRequest.Filter> where,
+            java.util.function.Consumer<EntityDocument> sink) {
+        if (where == null || where.isEmpty() || !tables.containsKey(kind) || "effective".equals(modes.get(kind))) {
+            return documents(kind, asOf, sink);
+        }
+        Optional<TableSnapshot> l = readableLayout(kind, asOf.knownAt());
+        List<LocalDate> dates = l.isEmpty() ? List.of() : candidates(kind, l.get(), asOf.businessDate());
+        com.ash.drishti.lakehost.WherePushdown.Plan plan = dates.isEmpty() ? null
+                : com.ash.drishti.lakehost.WherePushdown.plan(l.get(), l.get().day(dates.get(0)).orElse(null), where, promotedColumns(kind, l.get()));
+        if (plan == null) {
+            return documents(kind, asOf, sink);
+        }
+        LocalDate d = dates.get(0);
+        long version = l.get().version();
+        RuntimeException[] callers = {null};
+        try {
+            boolean read = pushdown.documents(l.get(), plan, context.setting("doc-column", "doc"), (id, json) -> {
+                DataNode doc;
+                try {
+                    doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+                } catch (IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+                try {
+                    sink.accept(new EntityDocument(EntityRef.of(kind, id), doc,
+                            new Provenance(sourceName, version, Instant.now(), false, d == LocalDate.MIN ? null : d)));
+                } catch (RuntimeException e) {
+                    callers[0] = e;
+                    throw e;
+                }
+            });
+            return read || documents(kind, asOf, sink);
+        } catch (IOException | RuntimeException e) {
+            if (callers[0] != null) {
+                throw callers[0];
+            }
+            throw LakeReads.failure(kind, d.toString(), e);
+        }
+    }
+
     /** {@code 90s}, {@code 30m}, {@code 12h}, {@code 7d}, or an ISO-8601 duration ({@code PT12H}). */
     static java.time.Duration duration(String text) {
         String t = text.trim().toLowerCase(java.util.Locale.ROOT);
@@ -1349,6 +1403,44 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /**
+     * The columns of the rows {@code where} may accept: the date's files that cannot hold one are not read, nor are the other rows of the
+     * files read (Lake's read API: {@link com.ash.drishti.lakehost.WherePushdown}); the whole date from its cache when nothing can be left out.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf,
+            List<com.ash.drishti.api.ScanRequest.Filter> where) {
+        if (where == null || where.isEmpty()) {
+            return columns(kind, paths, asOf);
+        }
+        Optional<TableSnapshot> l = readableLayout(kind, asOf.knownAt());
+        if (l.isEmpty() || l.get().deletes()) {
+            return columns(kind, paths, asOf);
+        }
+        Map<String, String> cols = promotedColumns(kind, l.get());
+        List<LocalDate> dates = cols.keySet().containsAll(paths) ? candidates(kind, l.get(), asOf.businessDate()) : List.of();
+        com.ash.drishti.lakehost.WherePushdown.Plan plan = dates.isEmpty() ? null
+                : com.ash.drishti.lakehost.WherePushdown.plan(l.get(), l.get().day(dates.get(0)).orElse(null), where, cols);
+        if (plan == null) {
+            return columns(kind, paths, asOf);
+        }
+        Map<String, ColumnType> types = l.get().columns().types();
+        Map<String, String> asks = new LinkedHashMap<>();
+        Set<String> numeric = new java.util.HashSet<>();
+        for (String p : paths) {
+            asks.put(p, cols.get(p));
+            if (types.get(cols.get(p)) == ColumnType.DOUBLE && !com.ash.drishti.api.IdText.isIdField(p)) {
+                numeric.add(p);                                // as the whole date's read asks it
+            }
+        }
+        try {
+            com.ash.drishti.api.ColumnSet some = pushdown.columns(l.get(), plan, asks, numeric);
+            return some == null ? columns(kind, paths, asOf) : Optional.of(some);
+        } catch (IOException | RuntimeException e) {
+            throw LakeReads.failure(kind, dates.get(0).toString(), e);
+        }
+    }
+
     /** Opens the RocksDB document cache; null when it opened, else why it did not (it is a cache: reads go on without it). */
     private String openDiskDocs(SourceContext ctx) {
         java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
@@ -1391,6 +1483,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("engine", lake.health(Instant.now()).engine(), "partitions", own(parts), "tables",
                 latest.synchronous().estimatedSize(), "timeTravel", travelled.synchronous().estimatedSize(), "idMaps",
                 own(idMaps), "columnSets", own(columnSets), "documents", docs.asMap().keySet().stream().filter(k -> k.startsWith(owner + "\u001f")).count()));
+        m.put("wherePushdown", pushdown.stats());
         if (dated.enabled()) {
             m.putAll(dated.health());
         }

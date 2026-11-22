@@ -38,8 +38,9 @@ import java.util.Set;
  * person's attribute (a list for {@code in}, its one value otherwise; an attribute the person lacks matches nothing). Text is quoted.
  *
  * <p>The top-level conjuncts that compare a field with a constant ({@code =}, {@code <>}, {@code <}, {@code <=}, {@code >}, {@code >=},
- * {@code in}) are also given as {@link ScanRequest.Filter}s, so a lake read prunes partitions and files by them; the whole predicate is still
- * tested on every row the store returns. Immutable and thread-safe.
+ * {@code in}) are also given as {@link ScanRequest.Filter}s, handed to the store with every bulk read of a shaped connector (the ones with text,
+ * {@code =} and {@code in}, prune a lake's partitions and files and go into a database's {@code WHERE}: {@code TextEqualities}); the whole
+ * predicate is still tested on every row the store returns. Immutable and thread-safe.
  */
 public final class RowPredicate {
 
