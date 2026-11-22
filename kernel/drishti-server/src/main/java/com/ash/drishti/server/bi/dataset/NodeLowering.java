@@ -55,7 +55,7 @@ public final class NodeLowering {
     public static Node lower(String text) {
         CheckedMode.Parsed p;
         try {
-            p = CheckedMode.parse(text);
+            p = CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL);
         } catch (ElException e) {
             int at = Math.max(0, e.position());
             throw new ExpressionException(CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));

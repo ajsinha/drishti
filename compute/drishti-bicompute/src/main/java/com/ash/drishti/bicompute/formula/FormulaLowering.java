@@ -103,7 +103,7 @@ public final class FormulaLowering {
         }
         CheckedMode.Parsed p;
         try {
-            p = CheckedMode.parse(text);
+            p = CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL);
         } catch (ElException e) {
             throw new FormulaException(e.getMessage(), Math.max(0, e.position()));
         }
