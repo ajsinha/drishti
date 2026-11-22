@@ -80,6 +80,12 @@ public class ApiExceptionHandler {
         if (e instanceof DrishtiException x) {
             return drishti(x);
         }
+        if (e instanceof com.ash.lake.common.LakeException x && drishti(x) != null) {
+            return lake(x);
+        }
+        if (e instanceof com.ash.rachana.RachanaException x && drishti(x) != null) {
+            return rachana(x);
+        }
         if (e instanceof java.time.format.DateTimeParseException x) {
             return badValue(x);
         }
@@ -205,6 +211,63 @@ public class ApiExceptionHandler {
             p.setProperty("traceback", f.traceback());          // only for a run an author asked for (PythonRuns)
         }
         return p;
+    }
+
+    /**
+     * Drishti Lake's refusals ({@code LK-}, thrown by the lake's inbox, loader and memory guard the server hosts) as Drishti's codes with
+     * the lake's words: a bad request {@code DRS-5001}, a file not there {@code DRS-1001}, too large {@code DRS-5005}, a refused
+     * {@code .ready} {@code DRS-5008}, memory-only data {@code 403 DRS-5219}. {@code LK-1006} (unreadable data) is not mapped here.
+     */
+    @ExceptionHandler(com.ash.lake.common.LakeException.class)
+    ProblemDetail lake(com.ash.lake.common.LakeException e) {
+        DrishtiException d = drishti(e);
+        if (d == null) {
+            throw e;
+        }
+        return drishti(d);
+    }
+
+    /** A lake refusal as Drishti's own exception (its words without the lake's code), null for one Drishti does not map. */
+    static DrishtiException drishti(com.ash.lake.common.LakeException e) {
+        ErrorCode code = switch (e.error()) {
+            case BAD_REQUEST -> ErrorCode.BAD_REQUEST;
+            case NOT_FOUND -> ErrorCode.ENTITY_NOT_FOUND;
+            case TOO_LARGE -> ErrorCode.PAYLOAD_TOO_LARGE;
+            case READY_REFUSED -> ErrorCode.READY_PUSH_REFUSED;
+            case MEMORY_ONLY -> ErrorCode.MEMORY_ONLY;
+            default -> null;
+        };
+        if (code == null) {
+            return null;
+        }
+        String m = e.getMessage();
+        String prefix = e.error().code() + " ";
+        return new DrishtiException(code, m.startsWith(prefix) ? m.substring(prefix.length()) : m, e);
+    }
+
+    /**
+     * Rachana's refusals ({@code RCH-}, thrown while a screen answers: a panel or row a click names that is not there) as Drishti's code
+     * of the same number ({@code DrishtiRachana.drs}, the edge's one mapping) with its status and Rachana's words; a code Drishti does
+     * not have is not mapped here.
+     */
+    @ExceptionHandler(com.ash.rachana.RachanaException.class)
+    ProblemDetail rachana(com.ash.rachana.RachanaException e) {
+        DrishtiException d = drishti(e);
+        if (d == null) {
+            throw e;
+        }
+        return drishti(d);
+    }
+
+    /** A Rachana refusal as Drishti's own exception, null for a code Drishti does not have. */
+    static DrishtiException drishti(com.ash.rachana.RachanaException e) {
+        String drs = com.ash.drishti.rachana.DrishtiRachana.drs(e.code().code());
+        for (ErrorCode c : ErrorCode.values()) {
+            if (c.code().equals(drs)) {
+                return new DrishtiException(c, e.words(), e);
+            }
+        }
+        return null;
     }
 
     /** A required query parameter that is missing: {@code 400 DRS-5001} naming it (SEC-10), not the 401 of a missing principal. */

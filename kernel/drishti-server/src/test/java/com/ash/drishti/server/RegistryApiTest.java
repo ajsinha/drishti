@@ -37,13 +37,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Admin → Packs → Registry: a signed pack is listed, installed and queued to load; an unsigned one is refused. */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-format-equality", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/finance-lake-off", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=finance"})
 @AutoConfigureMockMvc
 class RegistryApiTest {
 
     static {
-        com.ash.drishti.server.ConnectorFixtures.copy("exposure-format-equality");
+        com.ash.drishti.server.ConnectorFixtures.copy("finance-lake-off");
     }
 
     static Path root;

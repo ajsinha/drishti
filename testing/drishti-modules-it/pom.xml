@@ -99,7 +99,7 @@
             <drishti.bi.governance.imports-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/bi-imports</drishti.bi.governance.imports-dir>
           <!-- G14: the server jar of this reactor and the packages it is started on -->
             <!-- the helpers of drishti-server's test jar find their resources (sutra-next-data, bi/samples) under the module root: drishti-server's -->
-            <drishti.module.root>${project.basedir}/../../kernel/drishti-server</drishti.module.root>
+            <lake.module.root>${project.basedir}/../../kernel/drishti-server</lake.module.root>
             <drishti.g14.dir>${project.build.directory}/g14</drishti.g14.dir>
             <drishti.module.jars>${project.basedir}/../../packaging/dist/target/module-jars</drishti.module.jars>
             <drishti.exec.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</drishti.exec.jar>

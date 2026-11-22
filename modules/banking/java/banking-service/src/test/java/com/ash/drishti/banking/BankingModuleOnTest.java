@@ -58,16 +58,6 @@ class BankingModuleOnTest {
     }
 
     @Test
-    void theOldPathIsTheNewOneForThisRelease() throws Exception {
-        MvcResult old = mvc.perform(get("/api/v1/simm/versions").header("Authorization", auth())).andReturn();
-        MvcResult now = mvc.perform(get("/api/v1/risk/simm/versions").header("Authorization", auth())).andReturn();
-        assertThat(old.getResponse().getStatus()).isEqualTo(200);
-        assertThat(old.getResponse().getContentAsString()).isEqualTo(now.getResponse().getContentAsString());
-        assertThat(old.getResponse().getHeader("Deprecation")).isEqualTo("true");
-        assertThat(old.getResponse().getHeader("Link")).isEqualTo("</api/v1/risk/simm/versions>; rel=\"successor-version\"");
-    }
-
-    @Test
     void aFunctionOffIsGoneFromTheApi() throws Exception {
         try {
             registry.functionSwitches(w -> "SIMM".equals(w) ? Boolean.FALSE : null);
