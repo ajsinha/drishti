@@ -18,7 +18,7 @@ package com.ash.drishti.plugin.iceberg;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.lake.delta.write.LakeCli;
+import com.ash.drishti.testkit.ManifestLoad;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -183,7 +183,7 @@ final class VectorLake {
             Path mf = Files.createTempFile(tmp, "manifest", ".json");
             Files.writeString(mf, m.toString());
             ByteArrayOutputStream err = new ByteArrayOutputStream();
-            int code = LakeCli.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
+            int code = ManifestLoad.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
                     new PrintStream(err, true, StandardCharsets.UTF_8));
             assertThat(code).as(err.toString(StandardCharsets.UTF_8)).isZero();
         }

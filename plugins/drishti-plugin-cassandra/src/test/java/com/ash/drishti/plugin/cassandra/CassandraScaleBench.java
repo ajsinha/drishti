@@ -17,7 +17,7 @@ package com.ash.drishti.plugin.cassandra;
 
 import com.ash.drishti.api.DrishtiTools;
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;

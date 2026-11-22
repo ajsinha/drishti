@@ -17,7 +17,7 @@ package com.ash.drishti.lakehost;
 
 import com.ash.lake.LakeOptions;
 import com.ash.lake.LakeRuntime;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import com.ash.lake.memory.store.MemoryStorageProvider;
 import java.io.IOException;
 import java.io.Reader;

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin → Data loads → Lakes: upload (streamed to the temp folder), scan with suggestions, targets, a build through the CLI's
-engine (tools/lake/build.py, engine auto: the parallel Java loader of the exec jar, else Drishti's writer, else deltalake) on a small synthetic file, then the connector bound and the load announced as the admin.
+engine (tools/lake/build.py, engine auto: the parallel Java loader of the exec jar, else deltalake) on a small synthetic file, then the connector bound and the load announced as the admin.
 
     uv run --with deltalake --with pyarrow -r drishti-console/requirements.txt python -m pytest drishti-console/tests/test_admin_lakes.py -q
 """
@@ -31,7 +31,7 @@ from core.lakes import Lakes, LakeSettings, connector_text
 
 REPO = Path(__file__).resolve().parents[2]
 #: the writers lake build may choose (engine auto: java where the exec jar is, else drishti, else deltalake)
-ENGINES = ("java", "drishti", "deltalake")
+ENGINES = ("java", "deltalake")
 needs_deltalake = pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="the build test needs deltalake and pyarrow")
 OCTET = {"Content-Type": "application/octet-stream"}
 

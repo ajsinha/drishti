@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.lake.delta.write.LakeCli;
+import com.ash.drishti.testkit.ManifestLoad;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -123,7 +123,7 @@ final class ExposureHierarchyFixture {
         Path mf = work.resolve("exposure-path-letters.manifest.json");
         Files.writeString(mf, JSON.writeValueAsString(m));
         ByteArrayOutputStream err = new ByteArrayOutputStream();
-        int code = LakeCli.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
+        int code = ManifestLoad.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),
                 new PrintStream(err, true, StandardCharsets.UTF_8));
         if (code != 0) {
             throw new IllegalStateException("exposure-path: " + err.toString(StandardCharsets.UTF_8));

@@ -17,7 +17,7 @@ package com.ash.drishti.banking.official;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.lake.iceberg.table.IcebergAppender;
+import com.ash.drishti.lakehost.LakeRowsLoad;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -38,24 +38,25 @@ class LakeAppendsTest {
     @TempDir
     Path lake;
 
-    private static IcebergAppender.Row row(String id, String trade, List<Double> pnl) {
+    private static LakeRowsLoad.Row row(String id, String trade, List<Double> pnl) {
         Map<String, Object> cols = new LinkedHashMap<>();
         cols.put("TRADE_ID", trade);
         cols.put("QUANTITY", 150.0);
         cols.put("PNL", pnl);
-        return new IcebergAppender.Row(id, "{\"TRADE_ID\":\"" + trade + "\",\"BUSINESS_DATE\":\"" + DAY + "\",\"PNL\":{\"$vector\":\"PNL\"}}", cols);
+        return new LakeRowsLoad.Row(id, "{\"TRADE_ID\":\"" + trade + "\",\"BUSINESS_DATE\":\"" + DAY + "\",\"PNL\":{\"$vector\":\"PNL\"}}", cols);
+    }
+
+    private long append(List<LakeRowsLoad.Row> rows) throws Exception {
+        return LakeRowsLoad.load("iceberg", lake.resolve(OfficialSink.FOLDER).resolve("pnl-vector").toString(), OfficialSink.FOLDER, "pnl-vector", DAY, "append", rows,
+                List.of("TRADE_ID", "QUANTITY"), List.of("PNL"), Map.of(), Map.of());
     }
 
     @Test
     void windowsAreAppendedToAnIcebergTableAsCommitsNothingReplaced() throws Exception {
         assertThat(LakeAppends.iceberg(lake, OfficialSink.FOLDER, "pnl-vector")).isFalse();
-        Map<String, String> types = new LinkedHashMap<>();
-        types.put("TRADE_ID", "string");
-        types.put("QUANTITY", "double");
-        long first = LakeAppends.appendIceberg(lake, OfficialSink.FOLDER, "pnl-vector", DAY, List.of(row("PV-T1", "T1", List.of(1.5, -2.25))), types, "PNL");
+        long first = append(List.of(row("PV-T1", "T1", List.of(1.5, -2.25))));
         assertThat(LakeAppends.iceberg(lake, OfficialSink.FOLDER, "pnl-vector")).isTrue();
-        long second = LakeAppends.appendIceberg(lake, OfficialSink.FOLDER, "pnl-vector", DAY,
-                List.of(row("PV-T1-HS-20-B-I1", "T1", List.of(3.0, -4.5)), row("PV-N1-HS-20-B-I1", "N1", List.of(0.0, 1.0))), types, "PNL");
+        long second = append(List.of(row("PV-T1-HS-20-B-I1", "T1", List.of(3.0, -4.5)), row("PV-N1-HS-20-B-I1", "N1", List.of(0.0, 1.0))));
         assertThat(second).isGreaterThan(first);
         Map<String, Map<String, Object>> rows = OfficialTables.read("iceberg", lake.toString(), "pnl-vector", Map.of());
         assertThat(rows).containsOnlyKeys("PV-T1", "PV-T1-HS-20-B-I1", "PV-N1-HS-20-B-I1");

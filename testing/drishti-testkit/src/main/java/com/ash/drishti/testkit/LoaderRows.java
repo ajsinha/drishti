@@ -16,7 +16,7 @@
 package com.ash.drishti.testkit;
 
 import com.ash.drishti.lakehost.DrishtiLake;
-import com.ash.lake.common.RowFeed;
+import com.ash.lake.load.RowFeed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;

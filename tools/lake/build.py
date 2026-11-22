@@ -40,10 +40,10 @@ default. An Iceberg lake may be in object storage (--lake s3://bucket/prefix, or
 local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/iceberg/load-day.sh keeps its own).
 
 Engines (--engine): auto (default) uses the parallel loader in the server's exec jar when one is found (--jar, else
-<home>/lib), else Drishti's own Java writer, else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
+<home>/lib), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
 lake loader in the same jar (tools/lake/javaload.py; Delta or Iceberg, every stage multi-threaded, memory bounded, input from a folder or
 s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings), the default: auto tries it first (JSON Lines inputs, mode
-overwrite-dates or append), then Drishti's Java writer, then deltalake, and names the jar it looked for when it falls back.
+overwrite-dates or append), then deltalake, and names the jar it looked for when it falls back.
 
 For schedulers: exit 0 ok, 2 written with rejects (or the data-load signal failed), 1 failure (nothing was committed for the
 table that failed), 3 another run holds the table's lock (or lake maintain the lake's). Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
@@ -700,8 +700,6 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
             import icebergwrite
             res = icebergwrite.write(remote_root or lake, p["domain"], table.rstrip("/").rsplit("/", 1)[-1], by_day, names, staging, a.jar, a.java,
                                      progress=tick, settings=getattr(a, "iceberg_set", None), types=promoted)
-        elif engine == "drishti":
-            res = writers.write_drishti(t, by_day, staging, a.jar, a.java, progress=tick)
         else:
             res = writers.write_deltalake(t, by_day, progress=tick)
         timings["writeSeconds"] = round(time.monotonic() - t1, 3)
@@ -963,8 +961,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE",
                    help="--format iceberg: a setting for the Iceberg loader (s3.region=eu-west-2, catalog=rest, uri=..., warehouse=..., "
                         "catalog.rest.signing-name=glue); repeatable")
-    g.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="auto",
-                   help="auto (default): the parallel Java loader when the server jar has it, else Drishti's Java writer, else deltalake; java: the parallel "
+    g.add_argument("--engine", choices=("auto", "deltalake", "java"), default="auto",
+                   help="auto (default): the parallel Java loader when the server jar has it, else deltalake; java: the parallel "
                         "lake loader required (Delta or Iceberg, multi-threaded, memory bounded)")
     g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "

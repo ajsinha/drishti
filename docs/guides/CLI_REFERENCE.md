@@ -305,7 +305,7 @@ Run the program from the repository root, or from anywhere with its path, with t
 PyYAML, deltalake and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that
 does not write a Delta lake; `drishti.py` in the output is the same program. The shell tools under `tools/` are bash; the Python commands (`tools/drishti.py`, `tools/rolling.py`, `tools/pvgen/*.py`) run on every system.
 
-The Java commands (`sutra`, `pack check`, `tables` and Drishti's own lake writer) run from the server's exec jar, found as `--jar`,
+The Java commands (`sutra`, `pack check`, `tables` and Drishti Lake's loader) run from the server's exec jar, found as `--jar`,
 then the newest `lib/drishti-server-*-exec.jar` of the install (`<home>/lib`; make it with `python tools/drishti.py build jar`).
 
 **Environment variables** the program reads:
@@ -1863,15 +1863,14 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
 
 ### 7.6 The lake writers: `--engine`
 
-`lake build` and `lake demo` take `--engine` with the choices `auto` (the default: the parallel Java loader first), `drishti`, `deltalake` and `java` (the loader required: it fails when the jar is missing); the first line of the
+`lake build` and `lake demo` take `--engine` with the choices `auto` (the default: the parallel Java loader first), `deltalake` and `java` (the loader required: it fails when the jar is missing); the first line of the
 output says which ran and why.
 
 | Value | What writes the table |
 |---|---|
 | `java` | the parallel lake loader, Drishti Lake's Java loader started from the server's exec jar: every stage multi-threaded, memory bounded, one commit per business date, Delta or Iceberg, from a folder or `s3://` (section 7.13) |
-| `drishti` | Drishti's Java writer in the exec jar (needs the jar) |
 | `deltalake` | the Python path (Drishti Lake's `drishti_lake` and the `deltalake` package), for a machine without the jar |
-| `auto` (default) | the parallel Java loader when the exec jar (or `LAKE_CLASSPATH`) carries it, else `drishti`, else `deltalake`, in both `lake build` and `lake demo`. `lake build` goes straight to the Python-side engines for an input that is not JSON Lines or a `--mode` other than `overwrite-dates` or `append`. When the jar is missing the first line names the jar looked for (for example `<home>/lib/drishti-server-*-exec.jar (no jar matches)`) and the engine it fell back to |
+| `auto` (default) | the parallel Java loader when the exec jar (or `LAKE_CLASSPATH`) carries it, else `deltalake`, in both `lake build` and `lake demo`. `lake build` goes straight to the Python-side engines for an input that is not JSON Lines or a `--mode` other than `overwrite-dates` or `append`. When the jar is missing the first line names the jar looked for (for example `<home>/lib/drishti-server-*-exec.jar (no jar matches)`) and the engine it fell back to |
 
 All of them write the same table and obey the same rules and guards (the business date of a file, replace and append, the future-date, zone and drop
 guards, one archive rule): they are written once, in Lake's [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md) and [PYTHON.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/PYTHON.md). The Delta protocol itself
@@ -1939,7 +1938,7 @@ removed by the next run, which holds the lock. With `--lake NAME` (a lake of `co
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-<version>-exec.jar",
+ "engineWhy": "the Python deltalake package",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},

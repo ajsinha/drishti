@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server;
 
-import com.ash.lake.iceberg.table.IcebergAppender;
+import com.ash.drishti.lakehost.LakeRowsLoad;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -73,7 +73,7 @@ public final class IcebergMirror {
         }
         if ("append".equals(mode)) {
             for (Map.Entry<String, List<String>> e : byDay.entrySet()) {
-                List<IcebergAppender.Row> rows = new ArrayList<>();
+                List<LakeRowsLoad.Row> rows = new ArrayList<>();
                 Map<String, Boolean> promoted = new LinkedHashMap<>();
                 Set<String> vectors = new LinkedHashSet<>();
                 for (String line : e.getValue()) {
@@ -89,10 +89,10 @@ public final class IcebergMirror {
                             promoted.putIfAbsent(c, false);
                         }
                     });
-                    rows.add(new IcebergAppender.Row(a.get(0).asText(), a.get(1).asText(), cols));
+                    rows.add(new LakeRowsLoad.Row(a.get(0).asText(), a.get(1).asText(), cols));
                 }
                 vectors.forEach(promoted::remove);
-                IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), Map.of("root", root.toString()), "risk", kind, LocalDate.parse(e.getKey()), rows, promoted, vectors, Map.of());
+                LakeRowsLoad.load("iceberg", root.resolve("risk").resolve(kind).toString(), "risk", kind, LocalDate.parse(e.getKey()), "append", rows, List.copyOf(promoted.keySet()), List.copyOf(vectors), Map.of(), Map.of());
             }
             return;
         }

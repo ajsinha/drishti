@@ -15,20 +15,14 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.lake.iceberg.table.IcebergAppender;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Appends to a table of the risk lake in the lake's own format (2.9.5): the intraday PV stream's windows (VAR_GUIDE.md section 8.4)
  * go to Delta (the default) or, when the lake's table is an Iceberg table ({@code <lake>/<domain>/<kind>/metadata}, no
- * {@code _delta_log}), as an Iceberg append, so an Iceberg risk lake takes intraday micro-batches as a Delta one does. Stateless.
+ * {@code _delta_log}), as an Iceberg append (the lake's loader, {@code LakeRowsLoad}), so an Iceberg risk lake takes intraday micro-batches as a Delta
+ * one does. Stateless.
  */
 public final class LakeAppends {
 
@@ -39,20 +33,5 @@ public final class LakeAppends {
     public static boolean iceberg(Path lake, String domain, String kind) {
         Path t = lake.resolve(domain).resolve(kind);
         return Files.isDirectory(t.resolve("metadata")) && !Files.isDirectory(t.resolve("_delta_log"));
-    }
-
-    /**
-     * Appends one date's rows to the Iceberg table {@code <lake>/<domain>/<kind>} in one commit (nothing replaced: a window beside the
-     * morning's run).
-     *
-     * @param rows id, the document's JSON text and its promoted columns (a vector as a list of numbers)
-     * @param types each promoted column's type ({@code double} or {@code string})
-     */
-    public static long appendIceberg(Path lake, String domain, String kind, LocalDate day, List<IcebergAppender.Row> rows, Map<String, String> types,
-            String vector) throws IOException {
-        Map<String, Boolean> promoted = new LinkedHashMap<>();
-        types.forEach((c, t) -> promoted.put(c, "double".equals(t)));
-        return IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), Map.of("root", lake.toString()), domain, kind, day, rows, promoted,
-                vector == null ? Set.of() : Set.of(vector), Map.of());
     }
 }

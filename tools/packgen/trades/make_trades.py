@@ -148,7 +148,7 @@ def main(argv=None) -> int:
     p.add_argument("--systems", default="ENDUR,CALYPSO,MUREX", help="which systems (default all three)")
     p.add_argument("--out", default=str(ROOT / "data" / "build" / "trades"), help="where the JSON Lines files go (default data/build/trades)")
     p.add_argument("--lake", help="also build the Delta tables under this lake root (the demo lake's root, data/delta/demo)")
-    p.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer (default auto)")
+    p.add_argument("--engine", default="auto", choices=("auto", "deltalake"), help="the lake writer (default auto)")
     a = p.parse_args(argv)
     systems = [s.strip().upper() for s in a.systems.split(",") if s.strip()]
     if any(s not in S.SYSTEMS for s in systems):

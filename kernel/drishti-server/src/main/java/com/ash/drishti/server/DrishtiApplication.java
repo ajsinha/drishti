@@ -72,9 +72,9 @@ public class DrishtiApplication {
         if (!fromFile.isEmpty()) {
             System.setProperty(com.ash.drishti.packs.LaunchRoots.FROM_FILE, String.join(",", fromFile));
         }
-        // a command (module, resolve, lake write, sutra) answers on stdout, which its caller reads: the settings echo goes to stderr there
+        // a command (module, resolve, sutra) answers on stdout, which its caller reads: the settings echo goes to stderr there
         boolean cli = com.ash.drishti.server.cli.CliLauncher.isCli(args) || com.ash.drishti.server.cli.ModuleCli.isCli(args)
-                || com.ash.drishti.server.cli.ResolveCli.isCli(args) || com.ash.lake.delta.write.LakeCli.isCli(args);
+                || com.ash.drishti.server.cli.ResolveCli.isCli(args);
         java.io.PrintStream echo = cli ? System.err : System.out;
         for (String f : com.ash.tools.settings.SettingsFile.filesRead()) {   // each file by its path; a secret's value never shown
             StringBuilder b = new StringBuilder("settings file ").append(f).append(':');
@@ -98,9 +98,6 @@ public class DrishtiApplication {
                     .run(java.util.List.of(args).subList(1, args.length)));
         }
         startTempFolder(args);
-        if (com.ash.lake.delta.write.LakeCli.isCli(args)) {         // `lake write --manifest M` (tools/lake/build.py): no Spring, no web server
-            System.exit(com.ash.lake.delta.write.LakeCli.run(args, System.out, System.err));
-        }
         Restarter.enable();
         while (true) {
             org.springframework.context.ConfigurableApplicationContext ctx;

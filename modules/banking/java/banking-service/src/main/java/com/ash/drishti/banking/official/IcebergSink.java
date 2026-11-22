@@ -15,21 +15,19 @@
  */
 package com.ash.drishti.banking.official;
 
-import com.ash.lake.iceberg.table.IcebergAppender;
+import com.ash.drishti.lakehost.LakeRowsLoad;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
  * The official results as Iceberg tables (by configuration; Delta is the default): {@code <root>/risk-results/<table>} written by
- * drishti-iceberg (no Hadoop; a local folder or {@code s3://}, a commit being an exclusive create of the next metadata file), in the
+ * Drishti Lake's loader (no Hadoop; a local folder or {@code s3://}, a commit being an exclusive create of the next metadata file), in the
  * connector's layout (rows {@code id, doc, business_date} and the published columns beside them, an identity partition on
  * {@code business_date}). Append-only by convention: this sink only ever appends (no overwrite operation is offered), a restated date
  * adds rows with the next {@code RESULT_VERSION}. Table properties: snapshots kept {@code retention} days
@@ -74,18 +72,16 @@ final class IcebergSink implements OfficialSink {
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
         sameFormat(table);
-        Map<String, Boolean> promoted = new LinkedHashMap<>();
-        columns.forEach((c, t) -> promoted.put(c, "double".equals(t) || "long".equals(t)));
-        List<IcebergAppender.Row> out = new ArrayList<>();
+        List<LakeRowsLoad.Row> out = new ArrayList<>();
         for (Map<String, Object> r : rows) {
             Map<String, Object> cols = new LinkedHashMap<>();
             columns.keySet().forEach(c -> cols.put(c, r.get(c)));
             Map<String, Object> doc = new LinkedHashMap<>(cols);
             doc.put("BUSINESS_DATE", date.toString());
-            out.add(new IcebergAppender.Row(id.apply(r), JSON.writeValueAsString(doc), cols));
+            out.add(new LakeRowsLoad.Row(id.apply(r), JSON.writeValueAsString(doc), cols));
         }
-        Map<String, String> s = new HashMap<>(settings);
-        s.put("root", OfficialSink.local(root) ? OfficialSink.folder(root).toString() : root);
-        return IcebergAppender.append(com.ash.drishti.lakehost.DrishtiLake.runtime(), s, FOLDER, table, date, out, promoted, Set.of(), properties());
+        String where = where(table);
+        String path = OfficialSink.local(where) ? OfficialSink.folder(where).toString() : where;
+        return LakeRowsLoad.load("iceberg", path, FOLDER, table, date, "append", out, List.copyOf(columns.keySet()), List.of(), properties(), settings);
     }
 }
