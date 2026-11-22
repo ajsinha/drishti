@@ -205,14 +205,12 @@ public class DrishtiLiveTables {
     /**
      * A search's table whose source left {@link LiveSources} (the cap): its declaration leaves the authoriser and the write-back, and its open
      * table is closed (with its rows, its members' reads and its stream), so a later read answers "expired, run the search again" and the cap
-     * bounds what is kept. Rachana's engine has no way to take a declaration out ({@code LiveTables.undeclare}): its entry stays there, a
-     * small spec with nothing open behind it, until Rachana has one.
+     * bounds what is kept. Rachana's {@code LiveTables.undeclare} takes the declaration out: its streams end with an expired gap and a later
+     * read answers {@code 404 rdp.table.unknown} with {@code expired: true}.
      */
-    static void release(LiveTables lt, Map<String, LiveTableSpec> specs, String name) {
-        LiveTableSpec spec = specs.remove(name);
-        if (spec != null) {
-            lt.declare(spec);                                          // declaring again closes the open table of that name
-        }
+    static boolean release(LiveTables lt, Map<String, LiveTableSpec> specs, String name) {
+        specs.remove(name);
+        return lt.undeclare(name);
     }
 
     /** The authoriser of one engine. */

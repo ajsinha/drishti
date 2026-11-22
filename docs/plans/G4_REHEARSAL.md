@@ -872,20 +872,7 @@ The findings of `I7B_GATE_4_REVIEW.md` (part 1), fixed at their cause.
 | **F3** an evicted search's table read as a kind `q-<hash>`; declarations never released | `LiveSources` tells a listener of every source that leaves the cap; the live tables release it (its declaration leaves the authoriser and the write-back, its open table is closed with its rows, members' reads and stream). The resolver never reads a `q-` name without a source as a kind: `404 rdp.table.unknown` "the search's table q-… has expired: run the search again" (`expired: true`), also through the controller's words for every route | `FormApiTest.aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt` |
 | **F5** a repeated change id answered from the first change without comparing | `EditService.submit`: a repeat must send the first change's kind, record and items (path, from, to; a number equal whatever its written form); otherwise `409 DRS-9303` "the change id … was used for another change", audited `edit-id-reused` | `KafkaTradeEditTest`: the same id and content through `/api/v1/changes` answers `applied`; another value or another field is 409, audited twice by name, nothing made or written |
 
-Left for Rachana (not edited here): `LiveTables` has no `undeclare`, so an evicted search's small declaration stays in Rachana's map
-(nothing open behind it) until Rachana adds one; and Rachana's `WriteGuard` answers a repeated id written through the Data Protocol
-from `ChangeSink.prior(id)`, which is not given the change's content, so F5's comparison covers the write-back API only until the SPI
-passes the change (`prior(change)`).
-
-Also on this branch: `TypedCallParityTest` (2 failing, REST live search 404): its REST side asked `/api/v1/live/query`, left with the
-liveset engine; the typed call and its REST side now read `GET /api/v1/rdp/searches` one way (`KernelLiveQueries.page`). The F1 test found
-two more: a document's field reached a module's function as Rachana's node, not its value (`RachanaFunctions` passes plain values), and
-two servers in one JVM provided a module's function twice once the compiler followed the instance (module functions are now kept by
-module and names, the latest registration in use). Proved: `ModuleHostServerTest`, `FormApiTest`, `LiveIsolationTest`,
-`KafkaTradeEditTest`, `TypedCallParityTest` (both classes), `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`,
-`PackagedVarGoldenTest`, `SutraRegistryTest`, on the merge with `wip/g4-rehearsal-rx` `951cd5b69`, whose `DrishtiRachana.keep()` named the
-removed `level` field (it did not compile; it keeps options and kinds now and drops what followed the compiler). Not this branch's: the
-merged `docs/guides/CLI_REFERENCE.md` and `RACHANA_REFERENCE.md` carry conflict markers from `g4/level-12`.
+Rachana 1.0.0 (`develop` `66b3c9c7`) has since added both: `LiveTables.undeclare` and `ChangeSink.priorDigest` (see "Rachana SPI adoption" below).
 
 F4 (a FORM table spanning Drishti\*net members read as its first opener): not done here, parked to the combined i8 by name. Option A
 needs a node identity on the on-behalf-of token carrying the audience's rights, the member trusting it, and a per-read audit call to each
@@ -911,3 +898,11 @@ member for every reader of the shared table, proved on a cluster test: more than
 | Finish lane's open items | launcher standard (one `run-configs/`, `Drishti: <verb> <what>`, `drishti.code-workspace`, `Drishti: test`, `tools/launchers/check_launchers.py`, generator, tests, IDE_GUIDE and every guide naming a launcher); `LiveVisualsTest` (a report names `model:<name>@1`); docs tests: Rachana Core's codes and the live tables' route constant are known to the error-code and endpoint checks, the retired `sutra upgrade` section and dead anchors removed, `/net/changes/{kind}` documented; genomics generator writes Help category `data`; `settled` waits out a second navigation (WebKit) |
 | Proof (one `heavy.sh` slot each) | `BiApiTest`, `BiReportApiTest`, `FieldParamsApiTest`, `PythonBiApiTest`, `PivotFormulaParityTest`, `LiveVisualsTest`, `BoardParserTest`, `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest`: **all green**. BI browser suites (11 files, Chromium): 89 of 90 (the one, a foot-text regex, fixed). Smoke: Chromium 128 passed, WebKit `test_page_widths_browser` 115 passed. `test_render_parity_browser`: 5 consecutive green runs |
 | Not done (named) | Python tools with the Lake 0.9.0 wheel on `LAKE_PYTHON`: 48 `plan() got an unexpected keyword argument 'layout'` and `tools/lake/test_maintain*` wait for the Lake 0.9.1 pin; `test_sdk_builds_genomics` needs Rachana 1.0.0 in a Maven repository (`DRISHTI_LOCAL_MAVEN_REPO`); console tests that read Rachana sources that moved (`PanelKind.java`: `test_panel_kinds`, `test_examples`); `test_no_relative_paths` and `test_python_main_paths_guard` (`${lake.data.dir:./data}` in the lake files: the finish lane's design); `test_tools_guide` (Lake scripts not in the guides); `test_element_sheet` (the view sheet is 37.7 KB gzip against 36 KB, the same bytes as before the re-pin) |
+
+### Gate 4 fixes: Rachana SPI adoption (F3 and F5 on the Data Protocol, `g4/rachana-spi`, Rachana `develop` `66b3c9c7`)
+
+| Item | What was done |
+|---|---|
+| `LiveTables.undeclare` (F3) | `DrishtiLiveTables.release` (the cap's listener) calls `undeclare(name)`: Rachana drops the spec, tray and open table, open streams end with an expired gap, and a read answers its `404 rdp.table.unknown` `expired: true`; Drishti's "expired: run the search again" words stay (its resolver answers first). The workaround that declared a spec again to close the table is gone. Proved in `FormApiTest.aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt` (Rachana's `specs()` no longer holds the table) |
+| `ChangeSink.priorDigest` (F5) | the sink sends `Change.digest()` with the change; `EditService` keeps it in the change's `origin` (durable with the edit log and approval queue) and `known(id)` answers it; `DrishtiChangeSink.priorDigest(id)` reads it. A reused id with other content written through the Data Protocol is `409 rdp.write.conflict` (`reused: true`) audited `write-reused` for the caller, as the write-back API's `409 DRS-9303`; the same content answers as before. The digest never leaves `known` into an answer |
+| Proof | `KafkaTradeEditTest` (reused id and other content through `/api/v1/rdp/tables/trade/write`: 409 plus audit naming the caller; same content: same answer), `FormApiTest`, `LiveIsolationTest`, `TypedCallParityTest`, the four VaR/ES goldens |

@@ -213,6 +213,18 @@ class KafkaTradeEditTest {
                 .allSatisfy(e -> assertThat(e.actor()).isEqualTo("tia"));
         assertThat(call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes")).hasSize(1);
         assertThat(topic()).as("a reused id writes nothing").hasSize(2);
+        // the same on the Data Protocol's write path (Rachana's ChangeSink.priorDigest): the same content answers as before; other
+        // content under the same id is 409 rdp.write.conflict (reused), audited naming the caller, and never reaches the write-back
+        JsonNode again2 = call("POST", "/api/v1/rdp/tables/trade/write", tia, again, 200);
+        assertThat(again2.path("change").asText()).isEqualTo("01JKAFKAEDIT0000000000001");
+        Map<String, Object> reused = new java.util.LinkedHashMap<>(again);
+        reused.put("set", Map.of("PORTFOLIO", "BOOK-C"));
+        String refusedReuse = call("POST", "/api/v1/rdp/tables/trade/write", tia, reused, 409).toString();
+        assertThat(refusedReuse).contains("rdp.write.conflict").contains("\"reused\":true");
+        assertThat(audit.recent(500, null)).filteredOn(e -> String.valueOf(e.action()).contains("write-reused"))
+                .hasSize(1).allSatisfy(e -> assertThat(e.actor()).isEqualTo("tia"));
+        assertThat(call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes")).hasSize(1);
+        assertThat(topic()).as("a reused id through the Data Protocol writes nothing").hasSize(2);
 
         // made on version 1 after version 2 was written: refused, naming who made version 2
         until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);

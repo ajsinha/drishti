@@ -77,6 +77,12 @@ public final class DrishtiChangeSink implements ChangeSink {
         return known.apply(changeId).map(m -> m.get("by") == null ? null : String.valueOf(m.get("by"))).orElse(null);
     }
 
+    /** The digest of the change first taken under the id, as the write-back kept it with the change (so a reused id is refused on this path too). */
+    @Override
+    public String priorDigest(String changeId) {
+        return known.apply(changeId).map(m -> m.get("digest") == null ? null : String.valueOf(m.get("digest"))).orElse(null);
+    }
+
     @Override
     public Outcome prior(String changeId) {
         return known.apply(changeId).map(DrishtiChangeSink::outcome).orElse(null);
@@ -131,6 +137,7 @@ public final class DrishtiChangeSink implements ChangeSink {
         body.put("panel", PANEL);
         body.put("via", "blotter");
         body.put("id", c.id());
+        body.put("digest", c.digest());
         if (c.reason() != null) {
             body.put("reason", c.reason());
         }
