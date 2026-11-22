@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A page of a live set, field for field what {@code GET /api/v1/live/query} answers.
+ * The first page of a search read as a query on a live table ({@code GET /api/v1/rdp/searches}).
  *
- * @param set         the set as described to the person (id, kind, columns...)
- * @param live        whether the set streams changes (the live date and a kind with a live binding)
- * @param total       rows in the set
- * @param seq         the set's sequence number at this page
+ * @param set         {@code id} and {@code table} (the table's name) and the query ({@code table}, {@code query}: filter, sort, limit) the next pages and changes are read with
+ * @param live        whether the table follows the kind's changes (the live business date)
+ * @param total       rows matching
+ * @param seq         0 (the table's position is in the Data Protocol's {@code version})
  * @param offset      the first row's position
- * @param rows        the rows, masked for the person
+ * @param rows        the rows, {@code {id, doc}} (the row by column name), masked for the person
  * @param search      what the search said (columns, labels, matched, scanned, partial, failed, noData, pivot)
  * @param asOfNotices the sources that carried an earlier date forward, on a past date
  */

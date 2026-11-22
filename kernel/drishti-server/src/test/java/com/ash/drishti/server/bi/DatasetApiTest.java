@@ -55,21 +55,19 @@ import org.springframework.test.web.servlet.ResultActions;
  *
  * <p>Roles: bi-risk (raw), desk-head (raw, rows of their desks), analyst (no raw), author (bi-author), plain (no BI power).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/dataset-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-dataset-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-dataset-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.tables.root=${drishti.test.dir}/bi-dataset-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-dataset-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.test-lake.plugin=file", "drishti.sources.connectors.test-lake.kinds[0]=trade",
-        "drishti.sources.connectors.test-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.test-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,counterparty.id,tradeDate",
-        "drishti.sources.connectors.test-ref.plugin=file", "drishti.sources.connectors.test-ref.kinds[0]=book",
-        "drishti.sources.connectors.test-ref.settings.rescan-seconds=3600", "drishti.sources.connectors.test-ref.settings.layout.book.columns=name,desk"})
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DatasetApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("dataset-api");
+    }
 
     /** The trades of lake-test a table of the layer (its model is lake-test). */
     static final String DS = "file:table:bi.lake_test_trades";
@@ -103,8 +101,8 @@ class DatasetApiTest {
         Files.createDirectories(root.resolve("ref"));
         Files.write(root.resolve("ref").resolve("book.jsonl"), List.of("{\"id\":\"BOOK-1\",\"bookId\":\"BOOK-1\",\"name\":\"Rates one\",\"desk\":\"DESK-A\"}",
                 "{\"id\":\"BOOK-2\",\"bookId\":\"BOOK-2\",\"name\":\"FX one\",\"desk\":\"DESK-B\"}", "{\"id\":\"BOOK-3\",\"bookId\":\"BOOK-3\",\"name\":\"Credit one\",\"desk\":\"DESK-C\"}"));
-        r.add("drishti.sources.connectors.test-lake.settings.root", () -> root.resolve("lake").toString());
-        r.add("drishti.sources.connectors.test-ref.settings.root", () -> root.resolve("ref").toString());
+        r.add("test-connectors.test-lake.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.test-ref.root", () -> root.resolve("ref").toString());
     }
 
     static {

@@ -489,7 +489,7 @@ side still lacks. 2.9.5 closes it, so every capability the Delta side has is bui
 | | Hierarchies defined by columns (configurable drill-down) | a VaR hierarchy is configured as an ordered list of columns that every input row carries (scenario-PV, P&L-vector or trade record in the lake), e.g. `LEGAL_ENTITY > DESK > TT_BOOK`, `LIMIT_LETTER > DESK`, `REGION > PRODUCT_TYPE`: the nodes are derived from the data, so any column present on every row can be a level and the drill-down path is configuration; limits attach to node paths from a limits table; a hierarchy whose level column is on each row also handles a limit letter holding part of a book (membership per row, not per book). Validated at load: a configured column missing from a source's rows is refused with a DRS code naming the source and column (product owner, 2026-10-27) |
 
 Deferred (decided later): converting tables between Delta and Iceberg; S3 Tables if the REST route does not work.
-Docs: ICEBERG_CONNECTOR, DRISHTI_ICEBERG, VAR_GUIDE (section 29.3), EXPOSURE_GUIDE, LAKE_MAINTENANCE, AWS_DEPLOYMENT, the Windows QA guide
+Docs: ICEBERG_CONNECTOR, the Iceberg design, VAR_GUIDE (section 29.3), EXPOSURE_GUIDE, LAKE_MAINTENANCE, AWS_DEPLOYMENT, the Windows QA guide
 where it changes, and both AWS decks (`Drishti-AWS-Iceberg.pptx` labels move from proposed to built).
 
 ## 2.9.6 (released 2026-10-29)

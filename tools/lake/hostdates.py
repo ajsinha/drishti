@@ -43,7 +43,7 @@ def local_day(stamp: str | float | None = None) -> date:
 def of_input(f, today: date | None = None) -> date | None:
     """The date of one input of ``jsonstream.input_files``: a tar member's folder date, a zip member's archive's name's, else the
     path's name's."""
-    import archives
+    from drishti_lake import archives
     if isinstance(f, archives.Member):
         if getattr(f, "date", None) is not None:
             return f.date

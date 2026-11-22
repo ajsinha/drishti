@@ -13,11 +13,13 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""Delta Lake maintenance, so a lake does not grow without bound. Drishti's server only reads the lake; this job
+"""Delta Lake maintenance, so a lake does not grow without bound. A Delta table is kept by Drishti Lake's ``lake maintain`` (LakeMaintain: retention,
+compaction, checkpoint and vacuum, one set of options for every store, started through the loader's class path); delta-rs here only reads a table's
+shape for the report and rewrites a pack's sorted layout (relayout), which Lake does not do for Delta. Drishti's server only reads the lake; this job
 does what readers cannot, on a schedule, for local lakes and lakes in object storage (S3 and S3-compatible):
 
-    retention   delete business dates older than the history window (keep-business-days), counted back from today in
-                schedule.zone (or --as-of), never from the newest date in the table; a run that would delete more than
+    retention   keep the newest keep-business-days business dates on or before today in schedule.zone (or --as-of), delete the older
+                ones, never counting from a date after today; a run that would delete more than
                 max-drop-share (0.5) of a table's rows deletes nothing and reports the table failed, unless --force-drop
     compact     merge the small files each day's writes leave into files of target-file-mb; a table whose pack declares
                 a layout is instead rewritten, sorted, for the dates that drifted from it (relayout), and keeps
@@ -55,6 +57,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import date, datetime, timedelta
@@ -80,16 +83,6 @@ DEFAULTS = {"domains": ["*"], "keep-business-days": None, "max-drop-share": 0.5,
 
 def log(**event) -> None:
     print(json.dumps({"at": datetime.now().astimezone().isoformat(timespec="seconds"), **event}, default=str), flush=True)
-
-
-def business_cutoff(today: date, days: int) -> date:
-    """The date `days` business days (Monday to Friday) before `today`."""
-    d, n = today, 0
-    while n < days:
-        d -= timedelta(days=1)
-        if d.weekday() < 5:
-            n += 1
-    return d
 
 
 def tables(root: str, domains: list[str], options: dict) -> list[str]:
@@ -133,97 +126,113 @@ def stats_of(actions: list[dict]) -> dict:
             "latestDate": latest, "latestRows": sum(r for r in rows if r is not None) if rows else None}
 
 
-def estimate(actions: list[dict], conf: dict, cutoff: date | None, lay: Layout | None) -> dict:
-    """What a run would leave, for a dry run: the dates retention drops are gone and each remaining date's small files are merged into
-    files of target-file-mb (a laid-out table: files of the layout's rows). An estimate: compression changes the sizes a little."""
-    keep = [a for a in actions if cutoff is None or str(a.get("partition.business_date", "9999")) >= cutoff.isoformat()]
-    if not conf.get("compact"):
-        return {**stats_of(keep), "estimate": True}
-    target = int(conf.get("target-file-mb", 128)) * 1_048_576
-    groups: dict[tuple, list[dict]] = {}
-    for a in keep:
-        groups.setdefault(tuple(sorted((k, str(v)) for k, v in a.items() if k.startswith("partition."))), []).append(a)
-    files = 0
-    for g in groups.values():
-        if lay is not None and all(a.get("num_records") is not None for a in g):
-            files += max(1, -(-sum(a["num_records"] for a in g) // max(1, lay.file_rows)))
-        else:
-            small = [a for a in g if a["size_bytes"] < target]
-            files += (len(g) - len(small)) + (max(1, -(-sum(a["size_bytes"] for a in small) // target)) if small else 0)
-    out = stats_of(keep)
-    out.update(files=files, estimate=True)
-    return out
+LAKE_MAINTAIN = "com.ash.lake.load.LakeMaintain"
 
 
-def retention_share(actions: list[dict], cutoff: date) -> tuple[int, int, str]:
-    """What deleting the dates before `cutoff` would take: (rows before it, rows in all, "rows"), or files when the
-    log does not count the rows."""
-    old = [a for a in actions if str(a.get("partition.business_date", "9999")) < cutoff.isoformat()]
-    if all(a.get("num_records") is not None for a in actions):
-        return sum(a["num_records"] for a in old), sum(a["num_records"] for a in actions), "rows"
-    return len(old), len(actions), "files"
-
-
-def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False) -> dict:
-    from deltalake import DeltaTable
-
-    opts = conf.get("storage-options") or {}
-    dt = DeltaTable(uri, storage_options=opts or None)
-    actions = add_actions(dt)
-    before = stats_of(actions)
-    done: dict = {"table": uri, "before": before}
-    keep = conf.get("keep-business-days")
-    cutoff = business_cutoff(today, int(keep)) if keep else None
-    lay = layout_of(uri)
-    if cutoff:
-        dropping, total, unit = retention_share(actions, cutoff)
-        share = float(conf.get("max-drop-share", 0.5))
-        if total and dropping > share * total and not force_drop:
-            raise RuntimeError(f"retention would delete {dropping:,} of {total:,} {unit} (more than max-drop-share {share}), the business dates "
-                               f"before {cutoff}, counted back from {today}; nothing was deleted: check the dates, or run with --force-drop")
-        old = [a for a in actions if str(a.get("partition.business_date", "9999")) < cutoff.isoformat()]
-        dropped = sorted({str(a.get("partition.business_date")) for a in old})
-        if dry_run:
-            done["retention"] = {"cutoff": cutoff, "would_remove_files": len(old), "dates": dropped}
-        else:
-            # the dates are removed by Drishti Lake's retention tool (LakeRetention --dates: one remove commit), the one way a date leaves a lake
-            import delete
-            gone = delete.plan(uri.rsplit("/", 2)[0], "delta", table_name(uri), ",".join(dropped), False) if dropped else {}
-            done["retention"] = {"cutoff": cutoff, "dates": dropped, "num_deleted_rows": gone.get("dropped", 0)}
-            if dropped:
-                dt = DeltaTable(uri, storage_options=opts or None)
-                actions = add_actions(dt)
-    rows_rr = maintain_rows.clean(conf)
-    if rows_rr:      # rows past their age, by the shared rule (the files compacted and vacuumed below are the ones left)
-        done["row-retention"] = maintain_rows.apply(uri.rsplit("/", 2)[0], "delta", table_name(uri), rows_rr, dry_run)
-        if not dry_run and done["row-retention"]["dropped"]:
-            dt = DeltaTable(uri, storage_options=opts or None)
-            actions = add_actions(dt)
+def lake_command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, floor_days: int, compact: bool,
+                 data: Path | None = None, jar: str | None = None, java: str | None = None) -> list[str]:
+    """Drishti Lake's ``lake maintain`` for one Delta table (``<root>/<domain>/<table>``): retention (business dates, then rows), compaction,
+    checkpoint and vacuum, by Lake's options and in Lake's order. ``compact`` is False for a laid-out table (relayout rewrote it sorted)."""
+    import stores
+    root, name = uri.rsplit("/", 2)[0], "/".join(uri.rstrip("/").split("/")[-2:])
+    cmd = stores.loader_command(data or Path(root) / "_drishti-lake", jar, java, main=LAKE_MAINTAIN) + [
+        "--lake", root, "--format", "delta", "--table", name, "--as-of", today.isoformat(), "--json"]
+    if conf.get("keep-business-days"):
+        cmd += ["--keep-days", str(int(conf["keep-business-days"])), "--max-drop-share", str(conf.get("max-drop-share", 0.5))]
+    for key in ("ttl", "on", "max-rows"):     # row retention (maintain_rows.py): the same rule as the memory lake's
+        if (conf.get("row-retention") or {}).get(key):
+            cmd += [f"--{key}", str(conf["row-retention"][key])]
+    if compact:
+        cmd += ["--compact", "--target-file-mb", str(int(conf.get("target-file-mb", 128)))]
+    if conf.get("checkpoint"):
+        cmd += ["--checkpoint"]
+    if conf.get("vacuum-hours") is not None:
+        cmd += ["--vacuum-hours", str(int(conf["vacuum-hours"]))]
+    if floor_days:
+        cmd += ["--floor-days", str(floor_days)]
+    if force_drop:
+        cmd += ["--force-drop"]
     if dry_run:
-        done["estimate"] = estimate(actions, conf, cutoff, lay)
-    if conf.get("compact") and lay is not None:
-        # a laid-out table is compacted by rewriting only the dates that drifted from its layout (small intraday
-        # appends, overlapping id ranges), sorted again: a plain compaction would merge files out of id order
+        cmd += ["--dry-run"]
+    return cmd
+
+
+def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool = False, floor_days: int = 0,
+             runner=None, data: Path | None = None) -> dict:
+    """One Delta table maintained (or a dry run): Drishti Lake's ``lake maintain`` does the retention, compaction, checkpoint and vacuum (one
+    set of options for every store); the one thing it does not do is the pack's sorted layout, so a laid-out table's drifted dates are
+    rewritten first (:func:`relayout`) and Lake then compacts nothing. The result in lake maintain's form (before, after or estimate, retention,
+    row-retention, compact, checkpoint, vacuum). ``runner(cmd)`` gives the JSON line (tests). Raises RuntimeError on failure."""
+    import maintain_iceberg
+    opts = conf.get("storage-options") or {}
+    before = stats_of(add_actions(_table(uri, opts)))
+    done: dict = {"table": uri, "before": before}
+    lay = layout_of(uri)
+    compact = bool(conf.get("compact"))
+    if compact and lay is not None:
+        # a laid-out table is compacted by rewriting only the dates that drifted from its layout (small intraday appends, overlapping id
+        # ranges), sorted again: a plain compaction would merge files out of id order
         done["stats-columns-set"] = False if dry_run else keep_stats_small(uri, lay, opts)
         r = relayout(uri, lay, dry_run=dry_run)
         done["compact"] = {"relaid-dates": r["rewritten"], "files": r["files"], "rows": r["rows"]}
-        dt = DeltaTable(uri, storage_options=opts or None)
-    elif conf.get("compact") and not dry_run:
-        r = dt.optimize.compact(target_size=int(conf.get("target-file-mb", 128)) * 1_048_576)
-        done["compact"] = {k: r.get(k) for k in ("numFilesAdded", "numFilesRemoved")}
-    if conf.get("checkpoint") and not dry_run:
-        dt.create_checkpoint()
-        dt.cleanup_metadata()
-        done["checkpoint"] = dt.version()
-    hours = conf.get("vacuum-hours")
-    if hours is not None:
-        removed = dt.vacuum(retention_hours=int(hours), dry_run=dry_run, enforce_retention_duration=False)
-        done["vacuum"] = {"files": len(removed), "dry_run": dry_run, "hours": int(hours), "first": sorted(removed)[:5]}
-        if dry_run and "://" not in uri:
-            paths = [Path(f.removeprefix("file://")) if Path(f.removeprefix("file://")).is_absolute() else Path(uri) / f for f in removed]
-            done["vacuum"]["mb"] = round(sum(p.stat().st_size for p in paths if p.is_file()) / 1_048_576, 2)
-    done["after"] = stats(DeltaTable(uri, storage_options=opts or None))
+        compact = False
+    cmd = lake_command(uri, conf, today, dry_run, force_drop, floor_days, compact, data)
+    old = {k: os.environ.get(k) for k in opts}
+    os.environ.update({k: str(v) for k, v in opts.items()})     # an S3 lake: Lake's runtime reads the AWS_* names
+    try:
+        r = json.loads(runner(cmd) if runner is not None else maintain_iceberg.json_line(cmd, "lake maintain"))
+    finally:
+        for k, v in old.items():
+            os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    if r.get("error"):
+        raise RuntimeError(r["error"])
+    keep = r.get("keepDays") or {}
+    if keep:
+        cutoff = keep.get("from")
+        done["retention"] = {"cutoff": cutoff, "dates": keep.get("dates") or [], "num_deleted_rows": keep.get("rows", 0)}
+        if dry_run:
+            done["retention"]["would_remove_files"] = len(keep.get("dates") or [])
+    if "rowRetention" in r:
+        days = r["rowRetention"] or []
+        done["row-retention"] = {"dropped": sum(int(d.get("dropped", 0)) for d in days), "dates": days, "dry_run": dry_run}
+    if "compact" in r and "compact" not in done:
+        done["compact"] = {"dates": (r["compact"] or {}).get("dates", [])}
+    if "checkpoint" in r:
+        done["checkpoint"] = (r["checkpoint"] or {}).get("version")
+    if "vacuum" in r:
+        v = r["vacuum"] or {}
+        done["vacuum"] = {"files": v.get("files", 0), "dry_run": dry_run, "hours": v.get("hours"), "first": (v.get("first") or [])[:5],
+                          "mb": round((v.get("bytes") or 0) / 1_048_576, 2)}
+    actions = add_actions(_table(uri, opts))
+    if dry_run:
+        gone = set((done.get("retention") or {}).get("dates") or [])
+        done["estimate"] = _estimate([a for a in actions if str(a.get("partition.business_date")) not in gone], conf, compact or "relaid-dates" in done.get("compact", {}))
+    else:
+        done["after"] = stats_of(actions)
     return done
+
+
+def _estimate(actions: list[dict], conf: dict, compacted: bool) -> dict:
+    """What a dry run says the table will hold: the dates retention leaves, each one's small files merged into files of target-file-mb when
+    the run compacts. An estimate: compression changes the sizes a little."""
+    out = stats_of(actions)
+    if compacted:
+        target = int(conf.get("target-file-mb", 128)) * 1_048_576
+        groups: dict[tuple, list[dict]] = {}
+        for a in actions:
+            groups.setdefault(tuple(sorted((k, str(v)) for k, v in a.items() if k.startswith("partition."))), []).append(a)
+        files = 0
+        for g in groups.values():
+            small = [a for a in g if a["size_bytes"] < target]
+            files += (len(g) - len(small)) + (max(1, -(-sum(a["size_bytes"] for a in small) // target)) if small else 0)
+        out["files"] = files
+    return {**out, "estimate": True}
+
+
+def _table(uri: str, opts: dict):
+    """The table opened for reading its shape (delta-rs, read only: the maintenance itself is Drishti Lake's)."""
+    from deltalake import DeltaTable
+    return DeltaTable(uri, storage_options=opts or None)
 
 
 def layout_of(uri: str) -> Layout | None:
@@ -368,7 +377,7 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
         if iceberg:
             res.update(maintain_iceberg.maintain(uri, conf, day, dry_run, force_drop, maintconfig.floor_days(name, lake.get("retain-years"))))
         else:
-            res.update(maintain(uri, conf, day, dry_run, force_drop))
+            res.update(maintain(uri, conf, day, dry_run, force_drop, maintconfig.floor_days(name, lake.get("retain-years"))))
         if not quiet:
             log(event="maintained", dry_run=dry_run, **{k: v for k, v in res.items() if k not in ("root", "name", "owner")})
     except Exception as e:  # noqa: BLE001 - one table must not stop the others

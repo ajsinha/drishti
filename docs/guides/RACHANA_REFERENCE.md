@@ -3884,11 +3884,11 @@ Sutra YAML ──parse──▶ Panel(kind, options) ──compile EL──▶ b
 
 | Step | Where | What it does for a kind |
 |---|---|---|
-| Parse | `compute/drishti-rachana/.../model/PanelKind.java`, `PanelOptions.java` | the kind word (`DRS-2021`), required options (`DRS-2022`), accepted options (`DRS-2023`), restricted values (`DRS-2029`) |
-| Compile | `compute/drishti-rachana/.../SutraExpressions.java` | which options are expressions, compiled when the Sutra loads (`DRS-2101`) |
-| Schema | `compute/drishti-rachana/.../RachanaSchema.java` | the JSON Schema served at `GET /api/v1/rachana/schema`: completion, the YAML editor and the workbench inspector all read it |
-| Bind | `kernel/drishti-engine/.../bind/Binder.java`, `ChartBinder.java` | evaluates the options against the document into a `PanelData` record; masks and `source` are handled around it |
-| View model | `kernel/drishti-engine/.../view/PanelData.java`, `Emptiness.java` | the record, and when it counts as empty |
+| Parse | Rachana's `PanelKind`, `PanelOptions.java` | the kind word (`DRS-2021`), required options (`DRS-2022`), accepted options (`DRS-2023`), restricted values (`DRS-2029`) |
+| Compile | Rachana's `SutraExpressions` | which options are expressions, compiled when the Sutra loads (`DRS-2101`) |
+| Schema | Rachana's `RachanaSchema` | the JSON Schema served at `GET /api/v1/rachana/schema`: completion, the YAML editor and the workbench inspector all read it |
+| Bind | Rachana's `Binder`, `ChartBinder.java` | evaluates the options against the document into a `PanelData` record; masks and `source` are handled around it |
+| View model | Rachana's `PanelData`, `Emptiness.java` | the record, and when it counts as empty |
 | Draw | `drishti-console/web/templates/_macros/panels.html`, `static/css/drishti_terminal.css`, `static/js/drishti_charts.js` | first paint from the macro; ECharts kinds then enhanced by `drishti_charts.js` |
 | Live | `drishti-console/routes/api_routes.py` (`_view_event`) | a changed panel is re-rendered by the same macro |
 | Export | `drishti-console/core/export.py` | the CSV of the panel |
@@ -3945,21 +3945,21 @@ means nothing fails and a human has to look, which is why those steps say what t
 
 | # | File | Change | Why | Catches it if missed |
 |---|---|---|---|---|
-| 1 | `compute/drishti-rachana/.../model/PanelKind.java` | add the enum constant with required and optional options | the word exists; the parser's `DRS-2021/2022/2023` come from it | compiler (exhaustive `switch` in `Binder`), `StudioTest` kind count |
-| 2 | `compute/drishti-rachana/.../model/PanelOptions.java` | only for an option with a fixed set or a shape rule | `DRS-2029` instead of a silent mistake | your own parser test (`MetricPanelTest.theGrammarAcceptsTheOptionsAndRejectsTheRest`) |
-| 3 | `compute/drishti-rachana/.../SutraExpressions.java` | the options that hold expressions, in `EL_OPTIONS` | compiled and checked at load (`DRS-2101`); the workbench offers autocomplete in exactly these | `MetricPanelTest` (`DRS-2101` on a broken `value`) |
-| 4 | `compute/drishti-rachana/.../RachanaSchema.java` | a `kindOption` branch for every option that is not plain text; `SCHEMA_CHOICES` for fixed sets | the inspector's editors and descriptions come from here | `test_workbench_options_browser.py` (labelled editor); **no guard** for a missing description: look at the inspector |
-| 5 | `kernel/drishti-engine/.../view/PanelData.java` | a record, when [3.1](#31-reuse-a-paneldata-record-or-add-a-new-one) says so | the view model | compiler |
-| 6 | `kernel/drishti-engine/.../view/Emptiness.java` | a `case` for the record | when the panel says *No data available*; the `SampleChecker` and auto-design pruning read it | compiler (sealed `switch`); `MetricPanelTest.aMissingFigureIsAnEmptyPanelNotAnError` |
-| 7 | `kernel/drishti-engine/.../bind/Binder.java` (or `ChartBinder.java`) | a `case` in the `switch` in `bind`, and the method | the data | compiler; `MetricPanelTest` |
+| 1 | Rachana's `PanelKind` | add the enum constant with required and optional options | the word exists; the parser's `DRS-2021/2022/2023` come from it | compiler (exhaustive `switch` in `Binder`), `StudioTest` kind count |
+| 2 | Rachana's `PanelOptions` | only for an option with a fixed set or a shape rule | `DRS-2029` instead of a silent mistake | your own parser test (`MetricPanelTest.theGrammarAcceptsTheOptionsAndRejectsTheRest`) |
+| 3 | Rachana's `SutraExpressions` | the options that hold expressions, in `EL_OPTIONS` | compiled and checked at load (`DRS-2101`); the workbench offers autocomplete in exactly these | `MetricPanelTest` (`DRS-2101` on a broken `value`) |
+| 4 | Rachana's `RachanaSchema` | a `kindOption` branch for every option that is not plain text; `SCHEMA_CHOICES` for fixed sets | the inspector's editors and descriptions come from here | `test_workbench_options_browser.py` (labelled editor); **no guard** for a missing description: look at the inspector |
+| 5 | Rachana's `PanelData` | a record, when [3.1](#31-reuse-a-paneldata-record-or-add-a-new-one) says so | the view model | compiler |
+| 6 | Rachana's `Emptiness` | a `case` for the record | when the panel says *No data available*; the `SampleChecker` and auto-design pruning read it | compiler (sealed `switch`); `MetricPanelTest.aMissingFigureIsAnEmptyPanelNotAnError` |
+| 7 | Rachana's `Binder` (or `ChartBinder.java`) | a `case` in the `switch` in `bind`, and the method | the data | compiler; `MetricPanelTest` |
 | 8 | `drishti-console/web/templates/_macros/panels.html` | a branch in `panel(p)`, with an accessible name and `data-path` | first paint, and every live patch | `test_metric.py` (yours); `test_terminal.py::test_every_panel_kind_renders_imperfect_data_without_failing` after step 17 |
 | 9 | `drishti-console/web/static/css/drishti_terminal.css` | the styles, theme variables only, a phone rule | no inline styles (CSP) | `test_metric.py` stylesheet test (yours); `test_contrast.py` |
 | 10 | `drishti-console/web/static/js/drishti_charts.js` | ECharts kinds only: a builder in `BUILD` | the drawing | a browser test of yours |
 | 11 | `drishti-console/core/export.py` | `EXPORTABLE` and a `panel_rows` branch | the CSV | `test_metric.py` CSV test (yours) |
 | 12 | `drishti-console/web/templates/_macros/panels.html` | the kind in the tuple that shows the download link | the ↓ in the heading | `test_metric.py` (`data-export-panel`) |
-| 13 | `compute/drishti-rachana/.../design/ops/Bind.java` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
-| 14 | `kernel/drishti-engine/.../design/PanelChooser.java` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
-| 15 | `kernel/drishti-engine/.../design/AutoDesigner.java` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
+| 13 | Rachana's `Bind` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
+| 14 | Rachana's `PanelChooser` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
+| 15 | Rachana's `AutoDesigner` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
 | 16 | `drishti-console/web/static/js/build/drishti_palette.js`, `drishti_actions.js` | a `KINDS` row; seeding in `drishti_actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (22 kinds), `test_workbench_metric_browser.py` (yours) |
 | 17 | `drishti-console/tests/test_terminal.py` | the kind in `KINDS` | the macro against broken data | itself |
 | 18 | `docs/guides/examples/` | the kind in the showcase **and** an example of its own; the examples README | the examples are the source of the docs and the tests | `test_examples.py`, `ExamplePreviewTest`, `test_build_designs.py` |
@@ -3975,7 +3975,7 @@ Then run the whole set: [15.4](#154-how-to-run-them). The sections that follow t
 
 ##### 5.1 `PanelKind`: the word and its options
 
-`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java`:
+Rachana's `PanelKind`:
 
 ```java
     /**
@@ -4018,7 +4018,7 @@ Add a rule only for a mistake people will make; every rule is a message to write
 
 ##### 5.3 `SutraExpressions`: which options are expressions
 
-`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/SutraExpressions.java` holds `EL_OPTIONS`, the map from kind to
+Rachana's `SutraExpressions` holds `EL_OPTIONS`, the map from kind to
 the options that are Rachana-EL expressions:
 
 ```java
@@ -4038,7 +4038,7 @@ its option **names** appear on their own. But each option's **type, choices and 
 the inspector would then show.
 
 `fmt` and `tone` are special-cased by name; expression options are typed by `SutraExpressions`. Everything else needs a
-branch in `compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/RachanaSchema.java`:
+branch in Rachana's `RachanaSchema`:
 
 ```java
         if (k == PanelKind.METRIC && (o.equals("deltaFmt") || o.equals("deltaTone"))) {
@@ -4070,7 +4070,7 @@ curl -s localhost:18480/api/v1/rachana/schema | python3 -c 'import json,sys; pri
 
 ##### 6.1 The record
 
-`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java`:
+Rachana's `PanelData`:
 
 ```java
     /**
@@ -4092,7 +4092,7 @@ members.
 
 ##### 6.2 Emptiness
 
-`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java`:
+Rachana's `Emptiness`:
 
 ```java
             case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));
@@ -4109,7 +4109,7 @@ cases: what happens when *some* parts are present?
 
 #### 7. The binder
 
-`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java` binds one panel at a time. Add a `case` to the
+Rachana's `Binder` binds one panel at a time. Add a `case` to the
 `switch` (the compiler insists):
 
 ```java
@@ -4416,7 +4416,7 @@ catalogue's heading must be exactly `### metric`.
 
 ##### 12.4 Dropping a field: `Bind.BINDABLE`
 
-`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java` lists the options that hold a *path or
+Rachana's `Bind` lists the options that hold a *path or
 field of the data* (as opposed to formats, labels and switches). Dropping a field from the Data pane onto a panel fills
 one of them, and `roles(kind)` (what the drop menu offers) is derived from this set and the kind's options:
 
@@ -4431,7 +4431,7 @@ fails if you forget**: the symptom is a field dropped on the tile offering no `d
 
 ##### 12.5 Suggestions: `PanelChooser`
 
-`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/design/PanelChooser.java` answers "which panels suit this field,
+Rachana's `PanelChooser` answers "which panels suit this field,
 best first" for the field-drop menu (`S` on a field) and for the runner-up *alternatives* shown next to an auto-designed
 panel. For a lone measure it now offers `metric` (and `gauge` when the field is a fraction or has a limit):
 
@@ -4465,7 +4465,7 @@ behind the workbench's **Tests** tab: both read `Emptiness`, which is why step 6
 
 ##### 12.7 `SampleChecker` and the Tests tab
 
-`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/design/SampleChecker.java` renders a Sutra against each sample and
+Rachana's `SampleChecker` renders a Sutra against each sample and
 reports, per panel and sample, `ok`, `empty`, `error` or `noAccess`. It needs **nothing** from a new kind except that
 `Emptiness.of` is right for the record and that binding does not throw on ordinary missing data. A kind whose emptiness
 is wrong makes every design that uses it look broken, or healthy while blank.
@@ -9029,10 +9029,10 @@ M 2–3 days, L 4–5 days.
 
 | Step | Scope | Files touched | Tests | Accepted when | Size |
 |---|---|---|---|---|---|
-| **1. Explain endpoint, layers 3+4** (done) | `MatchTrace` from `SutraMatcher.explain`; `EmptinessReason`; `ExplainService` (data, layout, next.keys, next.panelKinds), cache; `ExplainController` `GET /views/{k}/{id}/explain`; codes 4006 | `compute/drishti-rachana/.../SutraMatcher.java`, new `MatchTrace.java`; `kernel/drishti-engine/.../explain/*` (new); `kernel/drishti-server/.../api/ExplainController.java` (new); `ErrorCode.java`; `application.yaml` (`drishti.explain`) | `MatchTraceTest`, `ExplainControllerTest`, `ExplainMaskTest` (masked list, no-access) | `curl .../views/var/VAR-COMM/explain` shows source, freshness, Sutra var v1, candidates, masked and no-access lists; view JSON byte-identical to before | M |
-| **2. Drawer with layers 3+4+5** (done, console) | console route, partial, `drishti_about.js`, `drishti_about.css`, `?` and view `F1`, phone sheet; Sutra `description` kept in `Sutra`/`Panel` and shown in layer 1 | `routes/terminal_routes.py`, `core/backend.py`, `templates/terminal/{view,_about}.html`, `_macros/about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css`, `static/js/drishti_app.js` (F1 yield); `compute/drishti-rachana/.../model/{Sutra,Panel}.java`, `SutraBuilder.java` | `test_about.py`, `test_fkeys.py`, `test_contrast.py`, `about_browser.py`; `SutraBuilderTest` for description | `?` on any QUICKSTART view opens a drawer with three layers and the Sutra description; keyboard only; phone width | M |
+| **1. Explain endpoint, layers 3+4** (done) | `MatchTrace` from `SutraMatcher.explain`; `EmptinessReason`; `ExplainService` (data, layout, next.keys, next.panelKinds), cache; `ExplainController` `GET /views/{k}/{id}/explain`; codes 4006 | Rachana's `SutraMatcher`, new `MatchTrace.java`; `kernel/drishti-engine/.../explain/*` (new); `kernel/drishti-server/.../api/ExplainController.java` (new); `ErrorCode.java`; `application.yaml` (`drishti.explain`) | `MatchTraceTest`, `ExplainControllerTest`, `ExplainMaskTest` (masked list, no-access) | `curl .../views/var/VAR-COMM/explain` shows source, freshness, Sutra var v1, candidates, masked and no-access lists; view JSON byte-identical to before | M |
+| **2. Drawer with layers 3+4+5** (done, console) | console route, partial, `drishti_about.js`, `drishti_about.css`, `?` and view `F1`, phone sheet; Sutra `description` kept in `Sutra`/`Panel` and shown in layer 1 | `routes/terminal_routes.py`, `core/backend.py`, `templates/terminal/{view,_about}.html`, `_macros/about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css`, `static/js/drishti_app.js` (F1 yield); Rachana's `Sutra` and Rachana's `Panel`, `SutraBuilder.java` | `test_about.py`, `test_fkeys.py`, `test_contrast.py`, `about_browser.py`; `SutraBuilderTest` for description | `?` on any QUICKSTART view opens a drawer with three layers and the Sutra description; keyboard only; phone width | M |
 | **3. Pack about files and layer 1** (done) | `AboutParser`, `AboutCatalog`, templates; `PackLoader` property; codes 2040–2044; load problems listed | `compute/drishti-rachana/.../about/*` (new); `kernel/drishti-packs/.../PackLoader.java`; `ExplainService` (about block) | `AboutParserTest`, `AboutCatalogTest` (inheritance), `ExplainMaskTest` (templates) | market-risk `var` and genomics `variant` show parameterised text; a masked field in a template reads `•••` | M |
-| **4. Glossary, layer 2, panel and field help** (done) | `GlossaryResolver`, vocabulary file, derived formulas; panel popover, field hints | `ExplainService`; `compute/drishti-rachana/.../about/GlossaryResolver.java`, `resources/about/vocabulary.yaml`; `DerivedKind.java` (accessor); `drishti_about.js`, `drishti_about.css`, `_macros/about.html` | `GlossaryResolverTest`, derived-formula test; console popover/hint tests | hovering *ES 97.5%* shows its meaning; a derived [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)) field shows "sum of mtm" | M |
+| **4. Glossary, layer 2, panel and field help** (done) | `GlossaryResolver`, vocabulary file, derived formulas; panel popover, field hints | `ExplainService`; Rachana's `GlossaryResolver`, `resources/about/vocabulary.yaml`; `DerivedKind.java` (accessor); `drishti_about.js`, `drishti_about.css`, `_macros/about.html` | `GlossaryResolverTest`, derived-formula test; console popover/hint tests | hovering *ES 97.5%* shows its meaning; a derived [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)) field shows "sum of mtm" | M |
 | **5. Content for the QUICKSTART packs + i18n overlay** (done) | about files via generators; `locale` resolution and `about.<lang>.yaml` overlay | `tools/packgen/*/` (about sources, `packbuild.py`), `config/packs/*/config/about.yaml` (generated), `AboutCatalog` (overlay) | `AboutPacksTest` (all load, all render, guide anchors), overlay test | every QUICKSTART kind has `about`; coverage recorded per pack | L |
 | **6. Lint, coverage, pack tests** | `DRS-2045`–`2047`; `sutra lint` warnings, `--strict`; `expect.yaml help:`; ratchet files | `kernel/drishti-server/.../cli/{SutraCli,ExpectFile,CliReports}.java`; `config/packs/*/tests/*/expect.yaml`; `config/packs/*/tests/help-coverage.txt` | `SutraCliTest` extended | `sutra test modules/banking/packs/market-risk` prints coverage and fails under the floor | S |
 | **7. Workbench About tab** (done) | design/studio explain endpoints, about preview endpoint, Design `about` part and fragment export, About tab, Problems coverage | `DesignController.java`, `StudioController.java`, `PackFragment.java`, design store model; `routes/build_routes.py`; `templates/build/design.html`; `static/js/build/drishti_about.js`, `drishti_problems.js` | `DesignControllerTest`, `PackFragmentTest`, `wb_live.py` case | edit about text → the card updates on idle; export contains `config/about.yaml` | M |

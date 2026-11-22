@@ -31,12 +31,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Admin &rarr; Connectors &rarr; Index: status, reload, audit, and who may. */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
-        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.sources.connectors.finance-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake",
-        "drishti.sources.connectors.finance-lake.settings.domain=desk", "drishti.sources.connectors.finance-lake.settings.index.days=5"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/index-reload-admin", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance"})
 @AutoConfigureMockMvc
 class IndexReloadAdminTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("index-reload-admin");
+    }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

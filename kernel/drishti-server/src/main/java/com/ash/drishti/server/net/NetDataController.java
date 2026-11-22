@@ -117,6 +117,53 @@ public class NetDataController {
         return emitter;
     }
 
+    /**
+     * Every change of a kind held here, for a live table on a peer that spans the members ({@code GET /api/v1/net/changes/{kind}}): server-sent
+     * events, one {@code doc} event per change of this node's own records ({@code {id, provenance, data, deleted}}, masked for the
+     * on-behalf-of user as here), until the peer closes it; a comment every heartbeat keeps it open.
+     */
+    @GetMapping(path = "/changes/{kind}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter changes(@PathVariable String kind, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims) {
+        Principal user = forUser(p, claims);
+        entitlements.requireOpen(user, kind);
+        var emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(0L);
+        java.util.concurrent.LinkedBlockingDeque<EntityDocument> box = new java.util.concurrent.LinkedBlockingDeque<>(4_096);
+        com.ash.drishti.api.Subscription sub = router.subscribeKind(kind, d -> {
+            if (!box.offerLast(d)) {
+                box.pollFirst();                           // a slow peer loses the oldest changes, never this node's memory
+                box.offerLast(d);
+            }
+        });
+        Runnable close = sub::close;
+        emitter.onCompletion(close);
+        emitter.onError(e -> close.run());
+        executor.execute(() -> {
+            try {
+                emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().comment("open"));
+                while (!Thread.currentThread().isInterrupted()) {
+                    EntityDocument d = box.pollFirst(10, java.util.concurrent.TimeUnit.SECONDS);
+                    if (d == null) {
+                        emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().comment("hb"));
+                        continue;
+                    }
+                    String doc = json(user, d);
+                    emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("doc")
+                            .data("{\"id\":" + json.writeValueAsString(d.ref().id()) + "," + doc.substring(1), MediaType.APPLICATION_JSON));
+                }
+            } catch (Exception e) {
+                try {
+                    emitter.completeWithError(e);
+                } catch (IllegalStateException done) {
+                    // the request is already complete
+                }
+            } finally {
+                close.run();
+            }
+        });
+        return emitter;
+    }
+
     /** One document as a peer receives it, masked for {@code user} as this node masks. */
     private String json(Principal user, EntityDocument d) throws java.io.IOException {
         Map<String, Object> prov = new LinkedHashMap<>();

@@ -102,7 +102,7 @@ def endur_files(folder: Path, system: str = "endur") -> tuple[list[tuple[str, Pa
     file's date is its name's (none: the business today); a tar's are its folders (its newest given). A file the rules refuse, or of
     another table, is a problem (with the name to give it): the run stops before anything is written. ``.ready`` files are skipped
     (lake build reads the one beside its file)."""
-    import archives
+    from drishti_lake import archives
     table = f"trade_{system}"
     out, problems = [], []
     for p in sorted(folder.iterdir()):
@@ -230,7 +230,7 @@ def server_said(out: str) -> str:
 def first_trade(path: Path) -> str | None:
     """The first TRADE_ID in one of your files (its first megabyte; an archive's first member), for the closing lines' example command."""
     try:
-        import archives
+        from drishti_lake import archives
         if archives.is_archive(path.name):
             plan = archives.plan(path, layout="feed" if filedate.is_tar(path.name) else "rows")
             with archives.Archive(plan) as a, a.open(plan.members()[-1]) as f:

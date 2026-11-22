@@ -124,47 +124,4 @@ class ContentDesignStoreTest {
         b.delete("ann", d.id);
         assertThatThrownBy(() -> a.get("ann", d.id)).hasMessageContaining("DRS-5006");
     }
-
-    @Test
-    void theOldFolderIsImportedOnceAndKept() throws Exception {
-        Path old = dir.resolve("designs");
-        FileDesignStore legacy = new FileDesignStore(old);
-        StoredDesign d = DesignStoreChecks.design("ann", "a1b2c3d4e5f6", "Old one");
-        d.samples.add(new StoredDesign.SampleInfo("t1.json", StoredDesign.DOCUMENT, null, null, 14));
-        legacy.save(d);
-        legacy.putSample("ann", d.id, "t1.json", "{\"tradeId\":\"T1\"}");
-        legacy.save(DesignStoreChecks.design("bob", "ffffffffffff", "Bob's"));
-
-        ContentDesignStore to = node();
-        DesignImport.Result r = DesignImport.fromFiles(old, to);
-        assertThat(r).isEqualTo(new DesignImport.Result(2, 0, 0));
-        assertThat(to.get("ann", d.id).orElseThrow().name).isEqualTo("Old one");
-        assertThat(to.sample("ann", d.id, "t1.json")).contains("{\"tradeId\":\"T1\"}");
-        assertThat(Files.exists(old)).isFalse();
-        try (Stream<Path> s = Files.list(dir)) {
-            assertThat(s.map(p -> p.getFileName().toString())).anyMatch(n -> n.startsWith("designs-imported-"));
-        }
-        assertThat(DesignImport.fromFiles(old, to)).isEqualTo(new DesignImport.Result(0, 0, 0));      // a second start: nothing to do
-
-        // the same Design brought back in an old folder is never overwritten: skipped
-        StoredDesign edited = to.get("ann", d.id).orElseThrow();
-        edited.notes = "edited after the import";
-        to.save(edited);
-        new FileDesignStore(old).save(d);
-        assertThat(DesignImport.fromFiles(old, to)).isEqualTo(new DesignImport.Result(0, 1, 0));
-        assertThat(to.get("ann", d.id).orElseThrow().notes).isEqualTo("edited after the import");
-    }
-
-    @Test
-    void theDatabaseIsImportedOnceThenMarked() {
-        FileDesignStore rows = new FileDesignStore(dir.resolve("as-if-jpa"));
-        rows.save(DesignStoreChecks.design("ann", "a1b2c3d4e5f6", "From the database"));
-        ContentDesignStore to = node();
-        assertThat(DesignImport.fromDatabase(rows, to)).isEqualTo(new DesignImport.Result(1, 0, 0));
-        assertThat(to.content().get(DesignImport.JPA_MARKER)).isPresent();
-        to.delete("ann", "a1b2c3d4e5f6");
-        assertThat(DesignImport.fromDatabase(rows, to)).isEqualTo(new DesignImport.Result(0, 0, 0));   // a deleted Design does not come back
-        assertThat(to.get("ann", "a1b2c3d4e5f6")).isEmpty();
-        assertThat(rows.get("ann", "a1b2c3d4e5f6")).isPresent();                                       // the rows are left in place
-    }
 }

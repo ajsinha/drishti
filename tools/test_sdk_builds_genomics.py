@@ -18,6 +18,7 @@ tests run, ``module pack`` makes the .dmod and the fourteen conformance checks p
 one at a time, tools lane. Needs the server jar in lib/ (the verifier), a JDK and a Maven that can run offline."""
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -52,6 +53,13 @@ def _version() -> str:
     return (ROOT / ".mvn" / "maven.config").read_text(encoding="utf-8").split("-Drevision=")[1].split()[0]
 
 
+def _repository_tail() -> Path:
+    """The read-only repository the build falls back to: the one the environment's MAVEN_ARGS names (``-Dmaven.repo.local.tail=``: where
+    the product's pinned Drishti Lake and Drishti Tools boms are installed on a build machine), else ~/.m2."""
+    m = re.search(r"-Dmaven\.repo\.local\.tail=(\S+)", os.environ.get("MAVEN_ARGS", ""))
+    return Path(m.group(1)) if m else Path.home() / ".m2" / "repository"
+
+
 def _no_build_output(src: str, names: list[str]) -> set[str]:
     return {n for n in names if n in ("target", "dist", "build")}
 
@@ -74,7 +82,7 @@ def test_a_module_builds_from_the_sdk_folder_alone(tmp_path, way):
     shutil.copytree(GENOMICS, work / "modules" / "genomics", ignore=_no_build_output)
     project = work / "modules" / "genomics" / "java" / "genomics"
     version = (ROOT / ".mvn" / "maven.config").read_text(encoding="utf-8").split("-Drevision=")[1].split()[0]
-    local, tail = tmp_path / "m2", Path.home() / ".m2" / "repository"          # nothing of the kernel reaches ~/.m2: reads fall back to it
+    local, tail = tmp_path / "m2", _repository_tail()          # nothing of the kernel reaches the tail: reads fall back to it
     cmd = [*envsetup.maven_command(ROOT), "-B", f"-Dmaven.repo.local={local}", f"-Dmaven.repo.local.tail={tail}",
            f"-Ddrishti.home={ROOT}", f"-Ddrishti.sdk.repo={sdk / 'repo'}", f"-Ddrishti.python={sys.executable}", "verify"]
     if way == "parent-folder":        # the sample's own pom: the parent by relativePath into the SDK folder, the version the one ${revision}

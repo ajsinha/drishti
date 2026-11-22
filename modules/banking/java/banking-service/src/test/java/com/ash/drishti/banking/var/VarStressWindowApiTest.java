@@ -52,18 +52,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * the proposal freezes the analysis, its proposer may not decide it, another person approves it and the tool names the approval beside
  * the current window; a role that does not see every node is refused; an unknown node and a short window are refused in words.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.kinds[3]=pnl-history",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-history.columns=HIERARCHY,NODE_ID,LEVEL,CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-history.vectors=PNL",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-stress-window-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
         "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -81,6 +71,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class VarStressWindowApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("var-stress-window-api");
+    }
 
     static final LocalDate DAY = VarLakeFixture.DAY;
     static final int DAYS = 300;
@@ -141,7 +135,7 @@ class VarStressWindowApiTest {
                 Map.of("SCENARIO_SET_ID", "HS-STRESS-T", "SET_TYPE", "STRESS", "SYNTHETIC", true, "BUSINESS_DATE", DAY.toString(),
                         "SCENARIO_DATES", days(LocalDate.of(2008, 9, 1), 30), "WINDOW_START", "2008-09-01", "SCENARIO_COUNT", 30));
         VarLakeFixture.table(lake, work, "scenario-set", "SCENARIO_SET_ID", sets, List.of(), null);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
         r.add("drishti.var.tier.dir", () -> lake.resolve("hot").toString());
         r.add("drishti.data.dir", () -> lake.resolve("data").toString());

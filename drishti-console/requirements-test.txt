@@ -6,6 +6,7 @@ httpx>=0.27
 pyyaml>=6.0
 markdown>=3.6
 pytest>=8.0
+jsonschema>=4.21      # the data contracts' schema checks (tools/contracts.py and its tests; also a dependency of the drishti-lake wheel)
 # Test-only: the drishti.quant tests (tests/test_quant.py) check Calc's analytics against textbook values in plain
 # CPython. Not needed to run the console (Calc's Python runs in the browser), so not in requirements.txt.
 -r requirements.txt

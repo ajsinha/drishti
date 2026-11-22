@@ -25,25 +25,47 @@ import java.util.List;
  */
 public final class KindStream implements LiveStream {
 
+    /** The other Drishti*net members' changes of the kind (as one audience sees them there); closing the handle stops them. */
+    @FunctionalInterface
+    public interface Peers {
+        AutoCloseable subscribe(java.util.function.Consumer<com.ash.drishti.api.EntityDocument> listener);
+    }
+
     private final String kind;
     private final KindBindings bindings;
     private final List<String> key;
+    private final Peers peers;
 
     public KindStream(String kind, KindBindings bindings, List<String> key) {
+        this(kind, bindings, key, null);
+    }
+
+    /** With the other members' changes merged in (null: this node's only). */
+    public KindStream(String kind, KindBindings bindings, List<String> key, Peers peers) {
         this.kind = kind;
         this.bindings = bindings;
         this.key = List.copyOf(key);
+        this.peers = peers;
     }
 
     @Override
     public AutoCloseable subscribe(Listener l) {
-        AutoCloseable h = bindings.subscribe(kind, d -> {
+        java.util.function.Consumer<com.ash.drishti.api.EntityDocument> each = d -> {
             if (d.deleted()) {
                 l.delete(KindRows.key(d.ref().id()), null);
             } else {
                 l.upsert(KindRows.row(d, key), null);
             }
-        });
+        };
+        AutoCloseable mine = bindings.subscribe(kind, each);
+        AutoCloseable theirs = peers == null ? null : peers.subscribe(each);
+        AutoCloseable h = theirs == null ? mine : () -> {
+            try {
+                theirs.close();
+            } finally {
+                mine.close();
+            }
+        };
         List<String> paused = bindings.paused(kind);
         if (!paused.isEmpty()) {
             l.state(false, String.join("; ", paused));

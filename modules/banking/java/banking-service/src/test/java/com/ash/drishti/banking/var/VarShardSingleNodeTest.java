@@ -43,9 +43,7 @@ import org.springframework.context.annotation.Import;
  * tests run with sharding off.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors-dir=target/var-shard-single/connectors",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors-dir=target/var-shard-single/connectors",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
         "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -83,6 +81,8 @@ class VarShardSingleNodeTest {
             VarPvFixture.write(LAKE, DAY);
             Path conn = Files.createDirectories(BASE.resolve("connectors"));
             Files.writeString(conn.resolve("risk-lake.yaml"), VarShardClusterTest.riskLake("delta", LAKE, BASE));
+            Files.writeString(conn.resolve("finance-lake.yaml"), "enabled: false\n");
+            Files.writeString(conn.resolve("var-positions.yaml"), "plugin: var-positions\nkinds:\n  - position\n");
         } catch (Exception e) {
             throw new IllegalStateException("the lake cannot be written: " + e, e);
         }

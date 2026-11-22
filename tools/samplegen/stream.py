@@ -23,7 +23,7 @@ trades per second get a new PRICE (a trade carries no MTM: that is the market-ri
 `--seconds 0` runs until interrupted.
 
 Every message carries a numeric TRADE_VERSION and UPDATED_BY (the demo trade blotter's version and who made it, modules/trading
-blotters/trade.blotter.yaml): a tick is a new version by STREAM, so the blotter merges by version and refuses an edit made on an older one,
+blotters/trade.live.yaml): a tick is a new version by STREAM, so the blotter merges by version and refuses an edit made on an older one,
 naming who moved it. The samples' own version (text, "1") is read as a number; a trade without one starts at 1.
 """
 from __future__ import annotations

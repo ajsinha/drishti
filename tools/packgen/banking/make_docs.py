@@ -173,7 +173,7 @@ def overview(name: str, docs: dict) -> str:
                   "(`docs/guides/EXPOSURE_GUIDE.md`) walks through it on the test data; the data contract is its Part II.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
-                  "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "
+                  "on with its environment variable (or `enabled: true` in the connector's file). "
                   "Feed data has its own identifiers, so it never collides with the bank's own, and it keeps its history, so a picked "
                   "date shows that day's value.", ""]
         lines += table(["Connector", "Switch", "Kind", "What"], [[f"`{f}-feed`", f"`{sw}=true`", ", ".join(f"`{k}`" for k in ks), what]

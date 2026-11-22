@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param store {@code content} (default: the content store, {@code config/store/store.yaml}, reached by every node of a cluster), or, for one
  *     node only, {@code file} ({@code dir}, files readable by the server only) or {@code jpa} (the identity database)
- * @param dir the file store's directory; with {@code content}, what it holds is imported once at start
+ * @param dir the file store's directory ({@code store: file})
  * @param maxPerUser most Designs one user keeps
  * @param maxSamples most samples in one Design
  * @param maxMb most megabytes of sample documents in one Design

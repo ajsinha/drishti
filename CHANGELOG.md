@@ -49,10 +49,14 @@
 - **Every pack Sutra is drawn by the client renderer in the parity suite.** Its server turns every shipped pack on (the off-by-default ones too, with
   their blocks), a Sutra the preview refuses fails with the server's words, and the painter's pages and closed rows are opened before the read:
   241 Sutras, none skipped. A link to a target the server found missing is a link again in an embed, as on the console's pages.
-- **Live tables (Rachana) behind a switch, for the switch-over.** An adapter in the kernel lets Rachana's live tables serve Drishti's kinds:
-  snapshots through the bindings (paged from a lake's columns), the `live:` binding as the stream, the entitlements as the authoriser (row
-  rules, masks, edit rights) and the write-back as the change sink; mounted on the Data Protocol at `/api/v1/rdp`. Off by default
-  (`drishti.live-sets.engine: rachana` turns it on); the kernel's live result sets still serve the console.
+- **One engine of live tables: Rachana's.** Blotters, FORM results, the search page and bare mnemonics are Rachana's live tables through
+  Drishti's adapter, on the Data Protocol at `/api/v1/rdp`; the kernel's own live result sets (`server/liveset`, `/api/v1/live/*`) and the
+  switch between the two are deleted. A search is compiled once (`SearchFilter`: the search grammar to a filter tree through Rachana's
+  `FilterTree`, an order and a limit) and read as a query on a table of the kind (`GET /api/v1/rdp/searches`), with the search's rows, count
+  and order; a condition outside the tree's subset stays in the table's `where:`. A past business date is a static snapshot of that day
+  (the lake's time travel); a kind other Drishti*net members hold is a table spanning them (each member's share and changes, merged by key
+  and version, `GET /api/v1/net/changes/{kind}`). The trade blotter is `trade.live.yaml`; the console's grids read and write through
+  `/api/rdp` and follow `live:<table>` on the one live channel.
 
 - **Drishti Tools: the shared utilities are one library, and the four Excel writers are one.** TLS and the outbound proxy, the settings file
   and the placeholder resolver, the path rule, single-flight, the load guard and the test fixtures (`FakeProxy`, `TlsFixture`, the test PKI) are
@@ -8343,7 +8347,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   refused by name. `engine: library` is today's Apache Iceberg Java code, kept for tables in Azure, Google Cloud Storage or HDFS;
   **`native` is the default** (every Iceberg test passes on it), and left to the default a root it cannot reach is read by the
   library; `engine: library` (or `DRISHTI_ICEBERG_ENGINE=library`) brings back the old behaviour, `auto` keeps the library on Linux. On 10,000 trades a day the native engine started the connector in 0.6 s (library 1.8 s) and read a trade
-  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](plugins/drishti-plugin-iceberg/README.md#engines-and-caches)).
+  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](plugins/drishti-plugin-iceberg/README.md#the-reader-and-caches)).
   `tools/windows/load-iceberg.ps1` loads Iceberg tables on Windows, `tools/windows/start-server.ps1 -Iceberg` serves them;
   GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
   back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
@@ -9791,7 +9795,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     pack opts in its netting set's member trades, its book P&L and its trade searches.
   - `drishti.pivot.*` settings (`enabled`/`DRISHTI_PIVOT_ENABLED`, `max-records`, `max-row-keys`, `max-column-keys`,
     `document-scan`, `drill-page`, `budget`); the access log records the new reads.
-- **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop),
+- **Delta Lake without Hadoop; Drishti on Windows** ([DELTA_CONNECTOR.md › Engines](plugins/drishti-plugin-delta/README.md#the-reader-drishti-lake),
   [WINDOWS.md](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)). A new module, `drishti-deltalake`, is a Delta Kernel engine (`NativeEngine`)
   that never touches Hadoop's file systems: local lakes through `java.nio` (drive letters, backslashes and UNC shares),
   S3 through the AWS SDK v2, Parquet through parquet-java over its own input files (row groups pruned by statistics

@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live result sets' console side (docs/guides/Drishti Elements' docs/DESIGN.md, the grid's live mode; docs/guides/LIVE_RESULTS_GUIDE.md): one page for any
-declaration (``/live/<id>``: a blotter), and ``/api/live/...`` passing the server's ``/api/v1/live/...`` on as the signed-in person: the
-declarations, a page of rows, one record whole, a stream's window and a blotter's edit. The stream itself is the console's live channel
-(``live:<id>``, core/channel.py), so a browser holds one connection however many sets are open. The rules (rights, masks, versions, four
-eyes) are the server's; nothing here decides them."""
+"""The live tables' console side (docs/guides/LIVE_RESULTS_GUIDE.md; Drishti Elements' grid, live mode): one page for any table
+(``/live/<name>``: a blotter), and ``/api/rdp/...`` passing the server's Data Protocol (``/api/v1/rdp/...``) on as the signed-in person:
+the tables, a table's schema (masks, ``write`` for a reader who may edit), a page (``query``), a write, a stream's window. The changes
+stream through the console's live channel (``live:<table>``, core/channel.py), so a browser holds one connection however many tables are
+open. The rules (rights, masks, versions, four eyes) are the server's; nothing here decides them."""
 from __future__ import annotations
 
 import re
@@ -25,101 +25,111 @@ from urllib.parse import quote, urlencode
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core import live_results
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
-NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-STREAM = re.compile(r"^[A-Za-z0-9-]{8,64}$")
-ROW_QUERY = ("offset", "limit", "sort", "descending", "filter", "query")
+
+NAME = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,127}$")
+SUB = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 LIMIT = 256 * 1024
-LIVE_MODULE = "trading"                 # the module whose blotters the live sets are (modules/trading/blotters)
+LIVE_MODULE = "trading"                 # the module whose blotters are the shipped live tables (modules/trading/blotters)
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502,
+    return JSONResponse({"error": {"code": e.code, "message": e.detail}}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502,
                         headers={"Cache-Control": "no-store"})
 
 
 def _bad(detail: str, status: int = 400) -> JSONResponse:
-    return JSONResponse({"code": "DRS-5001", "detail": detail}, status_code=status, headers={"Cache-Control": "no-store"})
+    return JSONResponse({"error": {"code": "rdp.query.invalid", "message": detail}}, status_code=status, headers={"Cache-Control": "no-store"})
 
 
 async def _call(request: Request, method: str, path: str, body=None):
     kw = {"json": body} if body is not None else {}
     try:
-        got = await request.app.state.backend._send(method, path, ident(request), **kw)
+        got = await request.app.state.backend._send(method, "/rdp" + path, ident(request), **kw)
     except BackendError as e:
         return _problem(e)
     return JSONResponse(got if got is not None else {}, headers={"Cache-Control": "no-store"})
+
+
+async def _body(request: Request):
+    try:
+        return await json_body(request, limit=LIMIT), None
+    except BodyError as e:
+        return None, _bad(e.detail, e.status)
 
 
 def _missing(request: Request):
     return render(request, "module_unavailable.html", route={"status": 404}, path=request.url.path, me=ident(request), status_code=404)
 
 
-@router.get("/live/{live_id}")
-async def page(request: Request, live_id: str):
-    """The page of one declaration: its grid (the live mode of drishti-grid), its record panel, its tray. 404 when the person may not open it."""
-    if not NAME.match(live_id):
+@router.get("/live/{name}")
+async def page(request: Request, name: str):
+    """The page of one live table: its grid (the live mode of drishti-grid), its record panel, its tray. 404 when the person may not read it."""
+    if not NAME.match(name):
         return _missing(request)
     try:
-        listed = await request.app.state.backend._send("GET", "/live", ident(request))
-    except BackendError:
-        listed = {"sets": []}
-    spec = next((s for s in (listed or {}).get("sets") or [] if s.get("id") == live_id), None)
-    if spec is None:
+        schema = await request.app.state.backend._send("GET", f"/rdp/tables/{quote(name, safe='')}", ident(request))
+    except BackendError as e:
+        if e.status != 404:
+            return _missing(request)
         from core import modules
-        if not modules.module_on(LIVE_MODULE):          # the module that declares the sets is not part of this distribution: say so, plainly
+        if not modules.module_on(LIVE_MODULE):          # the module that declares the tables is not part of this distribution: say so, plainly
             return render(request, "module_unavailable.html", route={"status": 200, "state": "absent", "module": LIVE_MODULE, "title": "Trading",
-                                                                   "what": f"The live set '{live_id}'"}, path=request.url.path, me=ident(request))
+                                                                   "what": f"The live table '{name}'"}, path=request.url.path, me=ident(request))
         return _missing(request)
-    return render(request, "live/live.html", live_id=live_id, spec=spec, screen="live")
+    return render(request, "live/live.html", live_id=name, spec=live_results.table_spec(name, schema or {}), screen="live")
 
 
-@router.get("/api/live")
-async def sets(request: Request):
-    """The declarations the person may open (``sets``), each with ``editable`` and ``readOnly`` (why not) as the server says for them."""
-    return await _call(request, "GET", "/live")
+@router.get("/api/rdp/tables")
+async def tables(request: Request):
+    """The tables the person may read."""
+    return await _call(request, "GET", "/tables")
 
 
-@router.get("/api/live/{live_id}/rows")
-async def rows(request: Request, live_id: str):
-    if not NAME.match(live_id):
-        return _bad("a live set's id is lower case, digits and dashes")
-    q = {k: v for k, v in request.query_params.items() if k in ROW_QUERY and v != ""}
-    return await _call(request, "GET", f"/live/{live_id}/rows" + (("?" + urlencode(q)) if q else ""))
+@router.get("/api/rdp/tables/{name}")
+async def schema(request: Request, name: str):
+    """A table's schema for the person: masked columns, ``write`` when they may edit, ``live`` (up or paused), its profile."""
+    if not NAME.match(name):
+        return _bad("a table's name is lower case, digits, dots and dashes")
+    return await _call(request, "GET", f"/tables/{quote(name, safe='')}")
 
 
-@router.get("/api/live/{live_id}/rows/{entity:path}")
-async def row(request: Request, live_id: str, entity: str):
-    """One record whole as the person may see it, its version and sequence (the panel's Raw JSON)."""
-    if not NAME.match(live_id):
-        return _bad("a live set's id is lower case, digits and dashes")
-    q = {k: v for k, v in request.query_params.items() if k == "query" and v}
-    return await _call(request, "GET", f"/live/{live_id}/rows/{quote(entity, safe='')}" + (("?" + urlencode(q)) if q else ""))
+@router.post("/api/rdp/tables/{name}/query")
+async def query(request: Request, name: str):
+    """A page: ``{filter?, sort?, limit?, offset?, columns?}`` (PROTOCOL 6)."""
+    if not NAME.match(name):
+        return _bad("a table's name is lower case, digits, dots and dashes")
+    body, bad = await _body(request)
+    return bad or await _call(request, "POST", f"/tables/{quote(name, safe='')}/query", body or {})
 
 
-@router.post("/api/live/{live_id}/stream/{stream}/window")
-async def window(request: Request, live_id: str, stream: str):
-    """The page a stream shows (``{ids: [...]}``, or ``{all: true}``): what the server sends changes of."""
-    if not NAME.match(live_id) or not STREAM.match(stream):
-        return _bad("a live set's id and a stream's id are plain names")
-    try:
-        body = await json_body(request, limit=LIMIT)
-    except BodyError as e:
-        return _bad(e.detail, e.status)
-    return await _call(request, "POST", f"/live/{live_id}/stream/{stream}/window", body)
+@router.post("/api/rdp/tables/{name}/write")
+async def write(request: Request, name: str):
+    """A change ``{id, op, key, basedOn, set, from?, reason?}``: 409 when the row moved since it was read, 403 when read-only, held for four eyes."""
+    if not NAME.match(name):
+        return _bad("a table's name is lower case, digits, dots and dashes")
+    body, bad = await _body(request)
+    return bad or await _call(request, "POST", f"/tables/{quote(name, safe='')}/write", body or {})
 
 
-@router.post("/api/live/{live_id}/edit")
-async def edit(request: Request, live_id: str):
-    """A blotter's edit ``{entity, items: [{field, from, to}], basedOn, reason}``; 409 when the record moved since it was seen, 403 when read-only."""
-    if not NAME.match(live_id):
-        return _bad("a live set's id is lower case, digits and dashes")
-    try:
-        body = await json_body(request, limit=LIMIT)
-    except BodyError as e:
-        return _bad(e.detail, e.status)
-    return await _call(request, "POST", f"/live/{live_id}/edit", body)
+@router.post("/api/rdp/changes/{sub}/window")
+async def window(request: Request, sub: str):
+    """The rows a windowed stream sends changes of: ``{keys, top?}``; only the stream's own reader may move it."""
+    if not SUB.match(sub):
+        return _bad("a stream's id is a plain name")
+    body, bad = await _body(request)
+    return bad or await _call(request, "POST", f"/changes/{sub}/window", body or {})
+
+
+@router.get("/api/rdp/searches")
+async def searches(request: Request):
+    """A search opened as a query on a table (a FORM's result): ``{table, query, live, page, search}``."""
+    q = request.query_params.get("q", "")
+    if not q.strip():
+        return _bad("a search names what it reads: q=TRD where ...")
+    return await _call(request, "GET", "/searches?" + urlencode({"q": q}))

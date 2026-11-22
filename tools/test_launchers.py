@@ -31,6 +31,7 @@ pytestmark = pytest.mark.static
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tools" / "launch")]
 import javacmd  # noqa: E402
+import resolved  # noqa: E402
 import launchcli  # noqa: E402
 import launchers  # noqa: E402
 import procs  # noqa: E402
@@ -242,7 +243,7 @@ def test_g4_every_setting_a_launcher_profile_or_cluster_file_names_is_documented
 def test_g5_every_pack_named_is_a_pack_and_no_tool_or_launcher_holds_a_pack_list():
     """D1: the default packs follow the modules; a profile or the cluster file names extra packs by id, each a pack.yaml on disk; no
     launcher and no tool writes a pack list of its own."""
-    known = {p.parent.name for p in [*ROOT.glob("modules/*/packs/*/pack.yaml"), *ROOT.glob("config/packs/core/*/pack.yaml")]}
+    known = set(resolved.pack_dirs())
     named = []
     for f in sorted((ROOT / "config" / "profiles").glob("*.ini")):
         named += [p.strip() for p in (settingsfile.read(f).get("drishti.packs.enabled") or "").split(",") if p.strip() and p.strip() != "default"]

@@ -18,31 +18,56 @@ package com.ash.drishti.server.kernelapi;
 import com.ash.drishti.kernel.api.services.LivePage;
 import com.ash.drishti.kernel.api.services.LiveQueries;
 import com.ash.drishti.kernel.api.services.Person;
-import com.ash.drishti.server.liveset.LivePages;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ash.drishti.server.live.FormResults;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 /**
- * {@link LiveQueries} in process: the body of {@code GET /api/v1/live/query}, the search read afresh ({@code again=true}) as the landings
- * ask, its first page.
+ * {@link LiveQueries} in process: the body of {@code GET /api/v1/rdp/searches} (a search as a query on a live table, {@link FormResults}),
+ * its first page as rows {@code {id, doc}} (the row by column name).
  */
 @Component
 public class KernelLiveQueries implements LiveQueries {
 
-    private final LivePages pages;
+    private final FormResults forms;
     private final KernelDoors doors;
-    private final ObjectMapper json;
 
-    public KernelLiveQueries(LivePages pages, KernelDoors doors, ObjectMapper json) {
-        this.pages = pages;
+    public KernelLiveQueries(FormResults forms, KernelDoors doors) {
+        this.forms = forms;
         this.doors = doors;
-        this.json = json;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public LivePage query(Person person, String query, int limit) {
         RequestPerson p = RequestPerson.of(person);
-        return json.convertValue(doors.call(p, "GET", "/api/v1/live/query",
-                () -> pages.query(query, 0, limit, null, false, null, true, p.asOf(), p.principal())), LivePage.class);
+        Map<String, Object> a = doors.call(p, "GET", "/api/v1/rdp/searches", () -> forms.answer(query, p.asOf(), p.principal()));
+        Map<String, Object> page = (Map<String, Object>) a.get("page");
+        List<String> columns = ((List<Object>) page.getOrDefault("columns", List.of())).stream()
+                .map(c -> c instanceof Map<?, ?> m ? String.valueOf(m.get("name")) : String.valueOf(c)).toList();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Object v : (List<Object>) page.getOrDefault("values", List.of())) {
+            if (rows.size() >= Math.max(0, limit)) {
+                break;
+            }
+            List<Object> vals = (List<Object>) v;
+            Map<String, Object> doc = new LinkedHashMap<>();
+            for (int i = 0; i < columns.size() && i < vals.size(); i++) {
+                doc.put(columns.get(i), vals.get(i));
+            }
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("id", doc.get(com.ash.drishti.engine.search.SearchFilter.KEY));
+            r.put("doc", doc);
+            rows.add(r);
+        }
+        long total = page.get("total") instanceof Number n ? n.longValue() : rows.size();
+        Map<String, Object> set = new LinkedHashMap<>();
+        set.put("id", a.get("table"));
+        set.put("table", a.get("table"));
+        set.put("query", a.get("query"));
+        return new LivePage(set, Boolean.TRUE.equals(a.get("live")), (int) total, 0L, 0, rows, (Map<String, Object>) a.get("search"), List.of());
     }
 }

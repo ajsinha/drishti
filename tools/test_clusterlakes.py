@@ -118,4 +118,8 @@ def test_start_node_hands_the_off_list_to_the_server(tmp_path):
         stack = clusterctl.load_stack()
         assert clusterctl.start_node(stack, stack["nodes"][0], tmp_path / "server.jar")
     args = run.call_args[0][2]
-    assert "--server-arg=--drishti.sources.connectors.trade-murex.enabled=false" in args and "--server-arg=--x=y" in args
+    assert "--server-arg=--x=y" in args and not any("sources.connectors." in a for a in args), "no connector is set by a property"
+    off = tmp_path / "data" / "stack" / "nodes" / "n" / "connectors" / "trade-murex.yaml"
+    assert off.read_text(encoding="utf-8").endswith("enabled: false\n"), "the off: list is a connector file in the node's own folder"
+    clusterlakes.write_off_files(off.parent, [])
+    assert not off.exists(), "a connector no longer listed is on again"

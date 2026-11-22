@@ -37,10 +37,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * link budget a linked entity's label waits for. With the link budget at zero every read held to it times out; the panel still draws
  * its source (before, it drew its empty text, as if the source held nothing: the funds pack's "Held by funds" tab under load).
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/panel-source-budget", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=news-and-markets", "drishti.graph.link-budget=0ms"})
 @AutoConfigureMockMvc
 class PanelSourceBudgetTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("panel-source-budget");
+    }
 
     @Autowired MockMvc mvc;
     private final ObjectMapper json = new ObjectMapper();

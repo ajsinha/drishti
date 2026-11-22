@@ -298,10 +298,8 @@ A board is designed in the report designer:
 | *Warning: < 0* | `alert: { warn: { op: lt, value: 0 } }` |
 | *Kiosk: 20* | `board: { rotate: 20s }` |
 
-A board file in the older form (`config/bi/boards/*.board.yaml`, with `tiles:`) is read as a report until converted:
-`drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` (`--keep-old` keeps the old file); stored
-boards are converted when the server starts (`drishti.bi.migrate.on-start`), keeping their ids. `POST /api/v1/bi/boards/convert` shows what a
-file becomes. Settings: the console's `bi.board.rotate_seconds`, `bi.live.min_interval_ms` and `bi.live.stale_seconds`; the server's
+A board file in the older form (`config/bi/boards/*.board.yaml`, with `tiles:`) is read as a report: `POST /api/v1/bi/boards/convert` shows what a
+file becomes; save the result as `config/bi/reports/<name>.report.yaml`. Settings: the console's `bi.board.rotate_seconds`, `bi.live.min_interval_ms` and `bi.live.stale_seconds`; the server's
 `drishti.bi.live.*` and `drishti.alerts.*`. Endpoints: `GET /api/v1/bi/boards/{id}`, `GET /api/v1/bi/boards/reports` (the reports a tile can
 name) ([API_REFERENCE.md](../API_REFERENCE.md)).
 
@@ -891,8 +889,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
   tags: sample, trading, counterparty-risk, live, streaming, tutorial   views: 0   audience: {'roles': [], 'users': [], 'packs': []}
 ```
 
-(`--body` prints its YAML: [config/bi/reports/banking/desk-wall.report.yaml](../../../config/bi/reports/banking/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](#26-designing-a-board)).
+(`--body` prints its YAML: [config/bi/reports/banking/desk-wall.report.yaml](../../../config/bi/reports/banking/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report; `POST /api/v1/bi/boards/convert` shows the report it becomes, to save as `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](#26-designing-a-board)).
 
 ### Step 49 · Kiosk mode
 

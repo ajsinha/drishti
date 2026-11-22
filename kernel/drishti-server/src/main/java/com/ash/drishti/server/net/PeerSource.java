@@ -197,21 +197,37 @@ public final class PeerSource implements SourcePlugin {
         if (c == null || c.principal() == null) {
             return com.ash.drishti.api.Subscription.NONE;
         }
+        String path = "/api/v1/net/subscribe/" + URLEncoder.encode(ref.kind(), StandardCharsets.UTF_8) + "/~?id=" + URLEncoder.encode(ref.id(), StandardCharsets.UTF_8);
+        return relay(path, ref.kind(), ref.id(), c.principal(), c.requestId(), body -> document(ref, body), listener);
+    }
+
+    /**
+     * Every change of a kind this peer holds ({@code GET /api/v1/net/changes/{kind}}, its own records only, masked there for {@code p}): a
+     * live table that spans the members follows each member so (docs/guides/LIVE_RESULTS_GUIDE.md, Drishti*net). Reopened as
+     * {@link #subscribe} is.
+     */
+    public com.ash.drishti.api.Subscription subscribeKind(String kind, Principal p, java.util.function.Consumer<EntityDocument> listener) {
+        String path = "/api/v1/net/changes/" + URLEncoder.encode(kind, StandardCharsets.UTF_8);
+        return relay(path, kind, "*", p, "live-" + kind, body -> document(EntityRef.of(kind, body.path("id").asText()), body), listener);
+    }
+
+    private com.ash.drishti.api.Subscription relay(String path, String kind, String what, Principal p, String requestId,
+            java.util.function.Function<JsonNode, EntityDocument> doc, java.util.function.Consumer<EntityDocument> listener) {
         java.util.concurrent.atomic.AtomicBoolean open = new java.util.concurrent.atomic.AtomicBoolean(true);
         java.util.concurrent.atomic.AtomicReference<InputStream> body = new java.util.concurrent.atomic.AtomicReference<>();
-        String path = "/api/v1/net/subscribe/" + URLEncoder.encode(ref.kind(), StandardCharsets.UTF_8) + "/~?id=" + URLEncoder.encode(ref.id(), StandardCharsets.UTF_8);
+        EntityRef ref = EntityRef.of(kind, what);
         Thread relay = Thread.ofVirtual().name("drishti-net-relay-" + nodeId).start(() -> {
             while (open.get()) {
                 long t0 = System.nanoTime();
                 try {
-                    var answer = net.http().open(url.get(), "GET", path, forCaller(c.principal(), c.requestId()), null, Duration.ofSeconds(30));
+                    var answer = net.http().open(url.get(), "GET", path, forCaller(p, requestId), null, Duration.ofSeconds(30));
                     if (answer.statusCode() != 200) {
                         answer.body().close();
                         log.record(nodeId, ref.kind(), "stream", ForwardLog.outcome(answer.statusCode()), ms(t0), ref.id());
                     } else {
                         log.record(nodeId, ref.kind(), "stream", "ok", ms(t0), ref.id());
                         body.set(answer.body());
-                        read(answer.body(), ref, listener, open);
+                        read(answer.body(), doc, listener, open);
                     }
                 } catch (IOException e) {
                     if (open.get()) {
@@ -244,7 +260,8 @@ public final class PeerSource implements SourcePlugin {
     private static final java.util.regex.Pattern DOC_EVENT = java.util.regex.Pattern.compile("^event:\\s*doc\\s*$");
 
     /** Reads {@code event: doc} events (one JSON document each) until the stream ends or is closed. */
-    private void read(InputStream in, EntityRef ref, java.util.function.Consumer<EntityDocument> listener, java.util.concurrent.atomic.AtomicBoolean open)
+    private void read(InputStream in, java.util.function.Function<JsonNode, EntityDocument> doc, java.util.function.Consumer<EntityDocument> listener,
+            java.util.concurrent.atomic.AtomicBoolean open)
             throws IOException {
         try (var lines = new java.io.BufferedReader(new java.io.InputStreamReader(in, StandardCharsets.UTF_8))) {
             String event = null;
@@ -257,7 +274,7 @@ public final class PeerSource implements SourcePlugin {
                     data.append(line.substring(5).trim());
                 } else if (line.isEmpty()) {
                     if ("doc".equals(event) && data.length() > 0) {
-                        listener.accept(document(ref, net.http().json().readTree(data.toString())));
+                        listener.accept(doc.apply(net.http().json().readTree(data.toString())));
                     }
                     event = null;
                     data.setLength(0);

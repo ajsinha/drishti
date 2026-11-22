@@ -45,7 +45,8 @@ from dataclasses import dataclass
 from typing import Iterator
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import archives  # noqa: E402
+import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
+from drishti_lake import archives  # noqa: E402
 
 SUFFIXES = (".json", ".jsonl", ".ndjson", ".gz", ".zip", ".tgz", ".tar")
 CHUNK = 1 << 20                     # characters read at a time
@@ -155,7 +156,7 @@ class Reader:
     def _open(self):
         if self.member:                                          # an archive's member: the archive rule's reader, held to its caps
             plan = archives.Plan(self.member.archive, {self.member.dataset: [self.member]}, False, size=self.path.stat().st_size,
-                                 kind=archives._kind(self.member.archive))
+                                 kind=archives.kind_of(self.member.archive))
             arch = archives.Archive(plan).__enter__()
             self._counted = _Counted(_Closing(arch.open(self.member), arch))
             return io.TextIOWrapper(io.BufferedReader(self._counted, 1 << 16), encoding="utf-8-sig", errors="strict", newline="")

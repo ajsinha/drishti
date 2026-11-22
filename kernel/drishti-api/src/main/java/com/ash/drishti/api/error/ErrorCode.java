@@ -592,8 +592,6 @@ public enum ErrorCode {
     MQ_CALC_GROUP("DRS-9165", 422),
     /** Model query (wave B): a filter-context or time function that cannot be planned (via names no relationship, parent_of no hierarchy, as_of no constant date, a context deeper than three). */
     MQ_CONTEXT("DRS-9166", 422),
-    /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
-    EXPR_CONVERT("DRS-9190", 422),
     /** Drishti SQL: not a statement of the dialect (syntax, more than one statement, DDL or DML: it is read-only). */
     SQL_SYNTAX("DRS-9170", 422),
     /** Drishti SQL: a table or column the model does not have for the caller (a hidden column is not found), or of a table the statement does not read. */
@@ -669,7 +667,7 @@ public enum ErrorCode {
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
     /**
-     * Live result sets (docs/guides/LIVE_RESULTS_GUIDE.md): a declaration ({@code *.blotter.yaml}) was set aside at load: its shape, a format
+     * Live result sets (docs/guides/LIVE_RESULTS_GUIDE.md): a declaration ({@code *.live.yaml}) was set aside at load: its shape, a format
      * not in formats.yaml, a field not in the kind's contract, or an editable field without a write path. Admin lists why.
      */
     LIVE_SET_INVALID("DRS-9307", 422),

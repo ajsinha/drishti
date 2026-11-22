@@ -169,11 +169,14 @@ class KafkaTradeEditTest {
         }
         assertThat(topic()).hasSize(1);
 
-        JsonNode sent = call("POST", "/api/v1/live/trade/edit", tia, Map.of("entity", "EN-1", "basedOn", 1, "reason", "booked to the wrong book",
-                "items", List.of(Map.of("field", "PORTFOLIO", "from", "BOOK-A", "to", "BOOK-B"))), 200).path("changes").get(0);
-        String id = sent.path("id").asText();
-        assertThat(sent.path("state").asText()).as("four eyes: the site's policy for a source amendment").isEqualTo("awaiting");
-        assertThat(sent.path("connector").asText("")).isIn("trade-endur-live", "");
+        // the blotter's edit is a Data Protocol write on the trade table, handed to the write-back as the person with its change id
+        JsonNode sent = call("POST", "/api/v1/rdp/tables/trade/write", tia, Map.of("id", "01JKAFKAEDIT0000000000001", "op", "update",
+                "key", List.of("EN-1"), "basedOn", 1, "reason", "booked to the wrong book", "set", Map.of("PORTFOLIO", "BOOK-B"),
+                "from", Map.of("PORTFOLIO", "BOOK-A")), 200);
+        assertThat(sent.path("state").asText()).as("four eyes: the site's policy for a source amendment").isEqualTo("held");
+        JsonNode mine = call("GET", "/api/v1/changes?mine=true&kind=trade&entity=EN-1", tia, null, 200).path("changes").get(0);
+        String id = mine.path("id").asText();
+        assertThat(mine.path("state").asText()).isEqualTo("awaiting");
         assertThat(topic()).as("nothing is written before the approval").hasSize(1);
         assertThat(call("POST", "/api/v1/approvals/change/" + id + "/approve", tia, Map.of(), 403).path("code").asText()).isNotBlank();
         call("POST", "/api/v1/approvals/change/" + id + "/approve", kim, Map.of("comment", "checked"), 200);
@@ -186,17 +189,17 @@ class KafkaTradeEditTest {
         until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
         String refused = "";
         while (System.nanoTime() < until) {
-            var r = mvc.perform(post("/api/v1/live/trade/edit").header("Authorization", tia)   // a trader (the checker holds no edit power)
+            var r = mvc.perform(post("/api/v1/rdp/tables/trade/write").header("Authorization", tia)   // a trader (the checker holds no edit power)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(json.writeValueAsString(Map.of("entity", "EN-1", "basedOn", 1, "reason", "late",
-                            "items", List.of(Map.of("field", "PRICE", "from", 10.5, "to", 11)))))).andReturn().getResponse();
+                    .content(json.writeValueAsString(Map.of("id", "01JKAFKAEDIT0000000000002", "op", "update", "key", List.of("EN-1"), "basedOn", 1,
+                            "reason", "late", "set", Map.of("PRICE", 11), "from", Map.of("PRICE", 10.5))))).andReturn().getResponse();
             if (r.getStatus() == 409) {
                 refused = r.getContentAsString(StandardCharsets.UTF_8);
                 break;
             }
             Thread.sleep(250);
         }
-        assertThat(refused).contains("version 2").contains("changed by " + after.get(1).get("UPDATED_BY")).contains("you edited version 1");
+        assertThat(refused).contains("rdp.write.conflict").contains(String.valueOf(after.get(1).get("UPDATED_BY")));
         assertThat(topic()).as("a refused correction writes nothing").hasSize(2);
     }
 }

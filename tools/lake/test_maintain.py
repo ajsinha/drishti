@@ -72,13 +72,11 @@ class MaintainTest(unittest.TestCase):
             import pyarrow as pa
             rows = pa.table(dt.to_pyarrow_table()).to_pylist()
             dates = sorted({r["business_date"] for r in rows})
-            cutoff = maintain.business_cutoff(date(2026, 9, 30), 10)
-            self.assertTrue(all(d >= cutoff for d in dates))                                          # old dates deleted
-            self.assertEqual(len(dates), 11)                                                          # the cutoff day and after
-            self.assertEqual(len(rows), 11 * 15)                                                      # every kept row intact
-            self.assertEqual(len(maintain.add_actions(dt)), 11)                   # one file per day
+            self.assertEqual(dates, business_days(date(2026, 9, 30), 10))                             # the newest ten business dates (Lake's rule)
+            self.assertEqual(len(rows), 10 * 15)                                                      # every kept row intact
+            self.assertEqual(len(maintain.add_actions(dt)), 10)                   # one file per day
             parquet_on_disk = list(Path(uri).rglob("*.parquet"))
-            self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 11)  # vacuumed
+            self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 10)  # vacuumed
             self.assertTrue(any(Path(uri, "_delta_log").glob("*.checkpoint.parquet")))
 
     def test_the_lake_files_settings_are_read_in_this_modules_keys(self):
@@ -108,7 +106,7 @@ class MaintainTest(unittest.TestCase):
             self.assertIn("keep-business-days", report["tables"][0]["lake-file"])
             import pyarrow as pa
             dates = sorted({r["business_date"] for r in pa.table(DeltaTable(uri).to_pyarrow_table()).to_pylist()})
-            self.assertEqual(len(dates), 11)                                                          # the lake file's retention
+            self.assertEqual(len(dates), 10)                                                          # the lake file's retention
 
     def test_retention_that_would_delete_most_of_a_table_needs_force_drop(self):
         from deltalake import DeltaTable
@@ -118,7 +116,7 @@ class MaintainTest(unittest.TestCase):
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 1)      # 19 of 30 days: refused
             self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 90)                       # nothing deleted
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30), force_drop=True), 0)
-            self.assertEqual(len({a["partition.business_date"] for a in maintain.add_actions(DeltaTable(uri))}), 11)
+            self.assertEqual(len({a["partition.business_date"] for a in maintain.add_actions(DeltaTable(uri))}), 10)
 
     def test_retention_counts_back_from_today_never_from_a_future_date_in_the_table(self):
         import pyarrow as pa
@@ -130,7 +128,7 @@ class MaintainTest(unittest.TestCase):
             config = {"lakes": [{"root": tmp, "keep-business-days": 25, "compact": False, "checkpoint": False, "vacuum-hours": None}]}
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 0)
             dates = {str(a["partition.business_date"]) for a in maintain.add_actions(DeltaTable(uri))}
-            self.assertEqual(len(dates), 27)                     # 25 business days back from today, the cutoff day, and the typo
+            self.assertEqual(len(dates), 26)                     # the newest 25 business dates up to today, and the typo
             self.assertIn("2099-03-01", dates)
 
     def test_a_failing_table_does_not_stop_the_others(self):
@@ -258,7 +256,6 @@ class MaintainTest(unittest.TestCase):
         ny = ZoneInfo("America/New_York")
         self.assertEqual(maintain.next_run(datetime(2026, 9, 30, 1, 0, tzinfo=ny), "02:30"), datetime(2026, 9, 30, 2, 30, tzinfo=ny))
         self.assertEqual(maintain.next_run(datetime(2026, 9, 30, 3, 0, tzinfo=ny), "02:30"), datetime(2026, 10, 1, 2, 30, tzinfo=ny))
-        self.assertEqual(maintain.business_cutoff(date(2026, 10, 5), 1), date(2026, 10, 2))            # Monday back to Friday
 
 
 if __name__ == "__main__":

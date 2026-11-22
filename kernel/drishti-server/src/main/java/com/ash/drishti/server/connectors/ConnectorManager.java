@@ -50,10 +50,8 @@ import org.springframework.core.env.PropertySource;
  * the files change. This class is the single place that reads, checks, writes and applies them; the REST controller, the
  * file watcher and the pack views all go through it.
  *
- * <p>A connector's definition comes from, highest first: the server's own configuration ({@code
- * drishti.sources.connectors} in application.yaml, deprecated), its file, and the template of a pack that names it. A
- * file replaces the pack's template for the same name altogether (the settings are not merged); the server writes a file
- * from the template at first start, so the file normally exists and is the one place to edit.
+ * <p>A connector's definition comes from its file and the template of a pack or module that names it (the file's keys
+ * are merged over the template, ConnectorLayers); no property defines a connector.
  *
  * <p>Concurrency: files are scanned one pass at a time; each connector is reconfigured under its own lock in the
  * {@link SourceRegistry}, so a slow restart of one never holds up another, and reads that are in flight finish on the old
@@ -83,7 +81,6 @@ public final class ConnectorManager {
     /** What is wrong with a file now; the connector keeps running its last good configuration. */
     private final Map<String, String> fileProblems = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Instant> updated = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Set<String> applicationDefined;
     /** Connectors whose file was there at start (so the start-up properties still hold them) and has since been removed: they are gone, not "defined in application.yaml". */
     private final Set<String> goneFiles = java.util.concurrent.ConcurrentHashMap.newKeySet();
     /** Connectors held off because their {@code requires:} is not approved (bi/README.md section 6), with the reason in words. */
@@ -121,7 +118,7 @@ public final class ConnectorManager {
         this.probe = probe;
         this.probeDates = probeDates;
         this.probeTimeoutMs = probeTimeoutSeconds * 1000L;
-        this.applicationDefined = applicationDefined(env);
+        refuseProperties(env);
         this.bootstrapMessages = indexed(env, "drishti.sources.connectors-bootstrap");
         this.suppressed = Set.copyOf(indexed(env, "drishti.sources.connectors-suppressed"));
         // what the environment post-processor loaded at start is "seen": only later changes are acted on
@@ -147,7 +144,6 @@ public final class ConnectorManager {
         });
         files.misnamed().forEach(f -> LOG.warn("{} in {} is not a connector file (names are lower case letters, digits and hyphens, ending .yaml); it is ignored", f, files.dir()));
         bootstrapMessages.forEach(m -> LOG.info("connectors: {}", m));
-        warnDeprecated();
     }
 
     private Instant modifiedOf(String name) {
@@ -183,10 +179,13 @@ public final class ConnectorManager {
         return bootstrapMessages;
     }
 
-    // -- the server's own configuration (deprecated) ---------------------------------------------------------------
+    // -- the one way: connector files -------------------------------------------------------------------------------
 
-    /** Connector names defined in a property source of the site (application.yaml, a profile, the environment), not in a pack or a file. */
-    private static Set<String> applicationDefined(ConfigurableEnvironment env) {
+    /**
+     * A connector is defined by its file (and the template of a pack or module), never by a property: a {@code drishti.sources.connectors.<name>.*}
+     * property or environment variable, set anywhere but by this server's own loading of the files, refuses the start and says which file to write.
+     */
+    private void refuseProperties(ConfigurableEnvironment env) {
         Set<String> out = new TreeSet<>();
         String prefix = "drishti.sources.connectors.";
         for (PropertySource<?> ps : env.getPropertySources()) {
@@ -204,28 +203,17 @@ public final class ConnectorManager {
                 } else if (k.startsWith("drishti-sources-connectors-") && !k.startsWith("drishti-sources-connectors-dir")
                         && !k.startsWith("drishti-sources-connectors-watch") && !k.startsWith("drishti-sources-connectors-poll")
                         && !k.startsWith("drishti-sources-connectors-drain") && !k.startsWith("drishti-sources-connectors-generate")
-                        && !k.startsWith("drishti-sources-connectors-bootstrap") && !k.startsWith("drishti-sources-connectors-migrated")) {
+                        && !k.startsWith("drishti-sources-connectors-bootstrap") && !k.startsWith("drishti-sources-connectors-migrated")
+                        && !k.startsWith("drishti-sources-connectors-suppressed")) {
                     out.add("(environment variable " + key + ")");
                 }
             }
         }
-        return out;
-    }
-
-    private void warnDeprecated() {
-        for (String n : applicationDefined) {
-            if (n.startsWith("(")) {
-                LOG.warn("deprecated: {} sets a connector from the environment; move it to a connector file in {} (settings: ...)", n.substring(1, n.length() - 1), files.dir());
-            } else {
-                LOG.warn("deprecated: connector '{}' is defined in the server's own configuration (drishti.sources.connectors.{}); move it to {} "
-                        + "and remove it from application.yaml. Until then it overrides that file setting by setting.", n, n, files.file(ConnectorFiles.validName(n) ? n : "name"));
-            }
+        if (!out.isEmpty()) {
+            throw new IllegalStateException("a connector is a file, not a property: " + out + " are set as drishti.sources.connectors.<name>.* properties or "
+                    + "environment variables, which the server no longer reads. Write each one as " + files.dir() + "/<name>.yaml "
+                    + "(docs/guides/DATA_GUIDE.md, 'Connector files'); to switch one off, 'enabled: false' in its file");
         }
-    }
-
-    /** Names defined in the server's own configuration (deprecated). */
-    public Set<String> applicationDefined() {
-        return applicationDefined;
     }
 
     // -- watching --------------------------------------------------------------------------------------------------
@@ -427,9 +415,7 @@ public final class ConnectorManager {
     }
 
     private void fileGone(String name) {
-        if (!applicationDefined.contains(name)) {
-            goneFiles.add(name);
-        }
+        goneFiles.add(name);
         Optional<Map<String, Object>> template = template(name).map(Template::definition);
         if (template.isPresent()) {
             LOG.info("connector file {}.yaml was removed; the pack's template applies", name);
@@ -537,7 +523,7 @@ public final class ConnectorManager {
 
     // -- reading ---------------------------------------------------------------------------------------------------
 
-    /** Every connector name the server knows: files, pack templates, the server's own configuration, and what runs. */
+    /** Every connector name the server knows: files, pack templates, and what runs. */
     public Set<String> names() {
         Set<String> out = new TreeSet<>(files.names());
         out.addAll(fileProblems.keySet());
@@ -546,11 +532,10 @@ public final class ConnectorManager {
         for (Pack p : packs.packs()) {
             out.addAll(p.connectorTemplates().keySet());
         }
-        applicationDefined.stream().filter(n -> !n.startsWith("(")).forEach(out::add);
         return out;
     }
 
-    /** True when something defines this connector (a file, a template, the server's configuration). */
+    /** True when something defines this connector (a file, a template). */
     public boolean defined(String name) {
         return files.exists(name) || fileProblems.containsKey(name) || (props.connectors().containsKey(name) && !goneFiles.contains(name))
                 || registry.connectorStatuses().containsKey(name) || template(name).isPresent();
@@ -782,13 +767,6 @@ public final class ConnectorManager {
         if (status != null && status.problem() != null && !"RUNNING".equals(status.state()) && !"DISABLED".equals(status.state())
                 && !com.ash.drishti.engine.source.OfflineMode.STATE.equals(status.state())) {
             out.add(status.state().equals("IDLE") ? "not configured: " + status.problem() : status.problem());
-        }
-        if (applicationDefined.contains(name)) {
-            if (files.exists(name) || fileProblems.containsKey(name)) {
-                out.add("also defined in the server's own configuration (deprecated); its values override this file after a restart");
-            } else {
-                out.add("defined in application.yaml (deprecated); save it to create " + name + ".yaml");
-            }
         }
         return out;
     }
@@ -1306,7 +1284,7 @@ public final class ConnectorManager {
         }
     }
 
-    /** Text of a connector that has no file yet: its pack template, or what runs from the server's own configuration. */
+    /** Text of a connector that has no file yet: its pack template, or what runs. */
     private String baseText(String name) {
         Optional<Template> t = template(name);
         if (t.isPresent()) {
@@ -1316,7 +1294,7 @@ public final class ConnectorManager {
         if (cs == null) {
             throw new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "no connector named '" + name + "'");
         }
-        return files.render("# Created from a definition in the server's own configuration.", cs.plugin(), cs.enabled(), cs.kinds(), "", cs.settings());
+        return files.render("# Created from the running definition.", cs.plugin(), cs.enabled(), cs.kinds(), "", cs.settings());
     }
 
     static String withEnabled(String text, boolean enabled) {
@@ -1677,7 +1655,6 @@ public final class ConnectorManager {
         m.put("problems", new LinkedHashMap<>(new java.util.TreeMap<>(fileProblems)));
         m.put("watch", watchState());
         m.put("directory", files.dir().toString());
-        m.put("deprecated", new ArrayList<>(applicationDefined));
         return m;
     }
 

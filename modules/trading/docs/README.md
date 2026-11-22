@@ -10,7 +10,7 @@ kinds: [trade]
 ---
 # Trading
 
-The live trade blotter: a declaration (`blotters/trade.blotter.yaml`) the kernel's live result sets engine runs. The trades from the
+The live trade blotter: a live table (`blotters/trade.live.yaml`) of Rachana's engine, served at `/api/v1/rdp/tables/trade`. The trades from the
 durable store, ticking from the `trade` kind's `live:` binding, editable where the site's configuration and the person's rights allow it,
 each change written back through the binding's write path (a version per trade, the outbox, four eyes where the site asks, audit).
 

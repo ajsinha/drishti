@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live result sets' console side (routes/live_routes.py, core/channel.py): /live/<id> is a page for any declaration the person may open
-and a 404 for one they may not; /api/live passes the server's answers on as the person (rows, one record whole, a stream's window, an edit)
-with the server's own refusals (403 read-only, 409 moved) and never a path outside the live set; a browser's live:<id> subscription is the
+"""The live tables' console side (routes/live_routes.py, core/channel.py): /live/<name> is a page for any table the person may read
+and a 404 for one they may not; /api/rdp passes the server's Data Protocol on as the person (the schema, a page, a write, a stream's window)
+with the server's own refusals (403 read-only, 409 moved) and never a path outside the protocol; a browser's live:<table> subscription is the
 server's stream of that set; the hub passes the stream's rows and resync events; the trading module's menu opens the blotter; the Pivot takes
 the layout a live grid hands over."""
 import asyncio
@@ -26,88 +26,110 @@ from core.backend import BackendError
 from core.channel import ChannelSession
 
 CONSOLE = Path(__file__).resolve().parent.parent
-SPEC = {"id": "trade", "title": "Trade blotter", "kind": "trade", "columns": [{"field": "TRADE_ID", "label": "Trade", "type": "id"}], "groupBy": [],
-        "subtotals": [], "links": [], "editable": False, "readOnly": "your role holds no edit power", "tray": True}
+SCHEMA = {"name": "trade", "title": "Trade blotter", "key": ["TRADE_ID"], "columns": [{"name": "TRADE_ID", "type": "string", "label": "Trade"}],
+          "profile": {"kind": "trade"}, "tray": True}
 
 
 def serve(backend, monkeypatch, calls):
     async def send(method, path, ident=None, **kw):
         calls.append((method, path, kw.get("json")))
-        if path == "/live":
-            return {"sets": [SPEC]}
-        if path.endswith("/edit"):
-            raise BackendError(409, "DRS-9301", "trade T-1 is at version 3, changed by R.DIAZ")
+        if path == "/rdp/tables/trade" and method == "GET":
+            return SCHEMA
+        if path.startswith("/rdp/tables/") and method == "GET":
+            raise BackendError(404, "rdp.table.unknown", f"no table '{path.split('/')[-1]}'")
+        if path.endswith("/write"):
+            raise BackendError(409, "rdp.write.conflict", "trade T-1 is at version 3, changed by R.DIAZ")
         return {"ok": True, "path": path}
     monkeypatch.setattr(backend, "_send", send, raising=False)
 
 
-def test_the_page_opens_for_a_declaration_the_person_may_open_and_not_found_for_another(client, backend, monkeypatch):
+def test_the_page_opens_for_a_table_the_person_may_read_and_not_found_for_another(client, backend, monkeypatch):
     calls = []
     serve(backend, monkeypatch, calls)
     page = client.get("/live/trade")
     assert page.status_code == 200 and 'data-live-page' in page.text and 'data-id="trade"' in page.text and "Trade blotter" in page.text
-    assert "drishti_live-page.js" in page.text and json.loads(__import__("html").unescape(page.text.split('data-spec="')[1].split('"')[0]))["id"] == "trade"
-    assert client.get("/live/other").status_code == 404
-    assert client.get("/live/Not_An_Id").status_code == 404
+    spec = json.loads(__import__("html").unescape(page.text.split('data-spec="')[1].split('"')[0]))
+    assert "drishti_live-page.js" in page.text and spec["id"] == "trade" and spec["key"] == ["TRADE_ID"] and spec["tray"] is True
+    assert spec["editable"] is False and spec["readOnly"]                                                  # no write in the schema: read only
+    assert client.get("/live/Not_An_Id!").status_code == 404
 
 
 def test_the_api_passes_each_call_on_and_the_servers_refusals_with_it(client, backend, monkeypatch):
     calls = []
     serve(backend, monkeypatch, calls)
-    assert client.get("/api/live").json() == {"sets": [SPEC]}
-    r = client.get("/api/live/trade/rows", params={"limit": 50, "sort": "TRADE_ID", "descending": "true", "evil": "x"})
-    assert r.json()["path"] == "/live/trade/rows?limit=50&sort=TRADE_ID&descending=true"                 # only the known parameters
-    assert client.get("/api/live/trade/rows/T%2F1").json()["path"] == "/live/trade/rows/T%2F1"          # one record whole, its key encoded
-    w = client.post("/api/live/trade/stream/stream-0001-abcdef/window", json={"ids": ["T-1"]})
-    assert w.status_code == 200 and calls[-1] == ("POST", "/live/trade/stream/stream-0001-abcdef/window", {"ids": ["T-1"]})
-    e = client.post("/api/live/trade/edit", json={"entity": "T-1", "items": [], "basedOn": 2})
-    assert e.status_code == 409 and e.json() == {"code": "DRS-9301", "detail": "trade T-1 is at version 3, changed by R.DIAZ"}
-    assert client.post("/api/live/trade/edit", content="not json", headers={"content-type": "text/plain"}).status_code == 415
-    assert client.post("/api/live/..%2Fadmin/edit", json={}).status_code in (400, 404)                   # never a path outside the live set
-    assert client.post("/api/live/trade/stream/x/window", json={"all": True}).status_code == 400          # a stream's id is a plain name of 8 or more
+    assert client.get("/api/rdp/tables/trade").json() == SCHEMA
+    r = client.post("/api/rdp/tables/trade/query", json={"limit": 50, "sort": [{"col": "TRADE_ID", "dir": "desc"}]})
+    assert r.json()["path"] == "/rdp/tables/trade/query" and calls[-1][2] == {"limit": 50, "sort": [{"col": "TRADE_ID", "dir": "desc"}]}
+    w = client.post("/api/rdp/changes/stream-0001-abcdef/window", json={"keys": [["T-1"]]})
+    assert w.status_code == 200 and calls[-1] == ("POST", "/rdp/changes/stream-0001-abcdef/window", {"keys": [["T-1"]]})
+    e = client.post("/api/rdp/tables/trade/write", json={"id": "01J", "op": "update", "key": ["T-1"], "basedOn": 2, "set": {"PRICE": 1}})
+    assert e.status_code == 409 and e.json() == {"error": {"code": "rdp.write.conflict", "message": "trade T-1 is at version 3, changed by R.DIAZ"}}
+    assert client.post("/api/rdp/tables/trade/write", content="not json", headers={"content-type": "text/plain"}).status_code == 415
+    assert client.post("/api/rdp/tables/..%2Fadmin/write", json={}).status_code in (400, 404)               # never a path outside the protocol
+    assert client.post("/api/rdp/changes/x/window", json={}).status_code == 400                            # a stream's id is a plain name of 8 or more
+    assert client.get("/api/rdp/searches", params={"q": "TRD where CURRENCY = 'EUR'"}).json()["path"].startswith("/rdp/searches?q=TRD")
 
 
 class Pumped:
-    """The server's stream of one set: hello, then one rows event; the path it was opened on is kept."""
+    """The server's stream of one table (the minimal SSE form): one msg (a patch), then a gap; the path and body it was opened with are kept."""
 
     def __init__(self):
         self.paths = []
 
+    def _frames(self):
+        yield "msg", json.dumps({"t": "msg", "table": "trade", "epoch": "e1", "seq": 3, "data": {"update": [{"TRADE_ID": "T-1", "PRICE": 2}]}})
+        yield "gap", json.dumps({"t": "gap", "recoverable": False})
+
     async def sse(self, path, me, opened=None):
         self.paths.append(path)
-        yield "hello", json.dumps({"stream": "stream-0001-abcdef", "total": 1, "live": True})
-        yield "rows", json.dumps({"type": "rows", "upserts": [{"id": "T-1", "version": 2, "seq": 3, "doc": {"TRADE_ID": "T-1"}}], "removes": [], "total": 1, "seq": 3})
-        yield "resync", json.dumps({"type": "resync", "total": 1, "seq": 4})
+        for f in self._frames():
+            yield f
+        await asyncio.sleep(30)
+
+    async def sse_post(self, path, me, body, opened=None):
+        self.paths.append((path, body))
+        for f in self._frames():
+            yield f
         await asyncio.sleep(30)
 
 
-def test_a_live_subscription_is_the_servers_stream_of_that_set():
+def chunks_of(subs, n):
     backend = Pumped()
     session = ChannelSession(backend, SimpleNamespace(user="ann"), lambda event, data: data, limit=4)
 
     async def run():
         out = []
-        agen = session.events(["live:trade"], lambda: asyncio.sleep(0, result=False))
+        agen = session.events(subs, lambda: asyncio.sleep(0, result=False))
         try:
             async for chunk in agen:
                 out.append(chunk)
-                if len(out) >= 4:
+                if len(out) >= n:
                     break
         finally:
             await agen.aclose()
         return out
-
-    chunks = asyncio.run(run())
-    assert backend.paths == ["/live/trade/stream"]
-    events = [c.split("\n")[0] for c in chunks[1:]]
-    assert events == ["event: hello", "event: rows", "event: resync"]
-    assert json.loads(chunks[2].split("\n")[1][6:])["ch"] == "live:trade"
+    return backend, asyncio.run(run())
 
 
-def test_the_hub_passes_the_streams_rows_and_resync_events():
+def test_a_live_subscription_is_the_servers_stream_of_that_table():
+    backend, chunks = chunks_of(["live:trade"], 3)
+    assert backend.paths == ["/rdp/changes?table=trade"]
+    assert [c.split("\n")[0] for c in chunks[1:]] == ["event: msg", "event: gap"]
+    assert json.loads(chunks[1].split("\n")[1][6:])["ch"] == "live:trade"
+
+
+def test_a_forms_subscription_follows_its_filter():
+    import base64
+    tree = {"op": "==", "args": [{"col": "CURRENCY"}, {"lit": "EUR"}]}
+    sub = "live:q-1~" + base64.urlsafe_b64encode(json.dumps(tree).encode()).decode().rstrip("=")
+    backend, _ = chunks_of([sub], 2)
+    assert backend.paths == [("/rdp/changes", {"table": "q-1", "filter": tree})]
+
+
+def test_the_hub_passes_the_tables_msg_and_gap_events():
     hub = (CONSOLE / "web" / "static" / "js" / "drishti_live-hub.js").read_text(encoding="utf-8")
     types = hub.split("var TYPES = [")[1].split("]")[0]
-    assert "'rows'" in types and "'resync'" in types and "'hello'" in types
+    assert "'msg'" in types and "'gap'" in types
 
 
 def test_the_trading_modules_menu_opens_the_blotter():

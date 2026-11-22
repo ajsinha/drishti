@@ -69,7 +69,6 @@ public class ConnectorController {
         out.put("watch", connectors.watchState());
         out.put("misnamed", connectors.misnamed());
         out.put("fileProblems", connectors.fileProblems());
-        out.put("deprecated", connectors.applicationDefined());
         out.put("knownKinds", connectors.knownKinds());
         return out;
     }

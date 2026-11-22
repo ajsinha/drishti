@@ -40,13 +40,17 @@ import org.springframework.test.context.DynamicPropertySource;
  * the four derived trade pages, built from {@code trading/payments-metrics@1}, {@code trading/trade-table@1} (its columns a
  * parameter) and the kit's data-provenance, draw what their inline layouts drew on a synthetic page each.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/trading-sutra-next-equivalence", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.packs.enabled=trading", "drishti.sources.connectors.trade-pages.enabled=false", "drishti.security.redact=NOTIONAL,COUNTERPARTY,TRADE_DATE",
+        "drishti.packs.enabled=trading", "drishti.security.redact=NOTIONAL,COUNTERPARTY,TRADE_DATE",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
 class TradingSutraNextEquivalenceTest extends PackSutraNextEquivalence {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("trading-sutra-next-equivalence");
+    }
 
     private static final Pattern MATCH = Pattern.compile("\\$\\.SOURCE_SYSTEM == '([A-Z]+)' && \\$\\.PRODUCT_TYPE == '([^']+)'");
 
