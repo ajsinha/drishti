@@ -117,7 +117,9 @@ class DrishtiProfileConformanceTest {
         // Drishti's: its holder's instance (the real drishti profile) over DataNodes
         DrishtiRachana.reset();
         DrishtiRachana.configure(RachanaOptions.DEFAULTS.withFormats(null, List.of(formats)), null);
-        Cases.rachana = DrishtiRachana.current();
+        // the runner reads its instance as level 1.0 and makes each later level a case names from it ({@code since}); Drishti's holder
+        // runs 1.2, so it is handed over at 1.0 and every case runs at its own level on Drishti's instance, as on the reference
+        Cases.rachana = DrishtiRachana.current().language(com.ash.rachana.profile.Grammar.LEVEL_1_0);
         Cases.formats = Cases.rachana.formats();
         Cases.EL = Cases.rachana.compiler();
         clearLevels();
