@@ -63,15 +63,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * and PNG as three different people (row rules, masks), the slicer state of the screen applied; a subscription run by hand sends each recipient their
  * own render by SMTP (GreenMail), as an inline body and as a PDF attachment, and the refusals carry their DRS codes.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/dist-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/dist-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/dist-api-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.tables.root=${drishti.test.dir}/dist-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/dist-api-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.dist-lake.plugin=file", "drishti.sources.connectors.dist-lake.kinds[0]=trade",
-        "drishti.sources.connectors.dist-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.dist-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate",
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false",
         "drishti.collab.console-url=https://drishti.test", "drishti.collab.email.from=drishti@localhost", "spring.mail.host=127.0.0.1",
         "spring.mail.properties.mail.smtp.connectiontimeout=2000", "spring.mail.properties.mail.smtp.timeout=2000",
         "drishti.distribution.subscriptions.tick=1h", "drishti.distribution.export.max-rows=1000"})
@@ -79,6 +75,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DistApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("dist-api");
+    }
 
     static final String REPORT = "file:report:dist-report";
     static final int PORT = freePort();
@@ -116,7 +116,7 @@ class DistApiTest {
         root = com.ash.drishti.server.TestRun.temp("drishti-dist-lake");
         day("2026-10-07");
         day("2026-10-08");
-        r.add("drishti.sources.connectors.dist-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.dist-lake.root", () -> root.resolve("lake").toString());
         r.add("spring.mail.port", () -> PORT);
     }
 

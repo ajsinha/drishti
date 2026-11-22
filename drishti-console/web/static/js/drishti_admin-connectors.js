@@ -372,7 +372,7 @@
       var d = { isNew: false, hasFile: !!c.text, name: name, plugin: c.plugin, enabled: c.enabled, kinds: c.kinds || [], description: c.description || '', settings: c.settings || {}, etag: c.etag, template: c.template, text: c.text, proxy: c.proxy };
       var note = c.origin === 'file' ? 'Defined by ' + (c.file || name + '.yaml') + '.' + (c.template ? ' Pack ' + c.template + ' suggests a default; Reset in the list puts it back.' : '')
         : c.origin === 'pack' ? 'Defined by pack ' + c.template + ' and not yet a file: saving writes ' + name + '.yaml.'
-        : 'Defined in the server\'s own configuration (deprecated): saving writes ' + name + '.yaml. Credentials show as *** and must be re-entered as ${ENV_VAR} references.';
+        : 'Not a file yet: saving writes ' + name + '.yaml. Credentials show as *** and must be re-entered as ${ENV_VAR} references.';
       var go2 = c.text ? call('POST', '/' + q(name) + '/parse', { text: c.text }) : Promise.resolve(null);
       return go2.then(function (p) {
         if (p && p.ok && p.body.plugin) {

@@ -136,7 +136,7 @@
     {% if c.text %}<p class="text-muted-d">Read only here; <b>Edit</b> opens the editor.</p>
     <pre class="det-pre mono" tabindex="0" aria-label="The connector file {{ c.name }}.yaml" data-file-text>{{ c.text }}</pre>
     {% else %}<p class="text-muted-d">{% if c.origin == 'pack' %}Defined by pack <span class="mono">{{ c.template }}</span> and not yet a file; saving in the editor writes <span class="mono">{{ c.name }}.yaml</span>.
-      {% else %}Defined in the server's own configuration (deprecated); saving in the editor writes <span class="mono">{{ c.name }}.yaml</span>.{% endif %}</p>{% endif %}
+      {% else %}Not a file yet; saving in the editor writes <span class="mono">{{ c.name }}.yaml</span>.{% endif %}</p>{% endif %}
   </section>
 
   <section aria-labelledby="cdHistory" class="det-sec">

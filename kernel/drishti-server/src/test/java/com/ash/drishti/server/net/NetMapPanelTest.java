@@ -57,9 +57,10 @@ class NetMapPanelTest {
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
         String off = "--drishti.sources.plugins.demo.enabled=false";
-        cluster.start("a", p[0], NetForwardTest.secure(NetHistoryMasksTest.LAKE, NetHistoryMasksTest.DOMAIN, off, NetHistoryMasksTest.MASK));
-        cluster.start("b", p[1], NetForwardTest.secure("--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.finance-lake.settings.root=" + empty,
-                off, NetHistoryMasksTest.MASK));
+        NetHistoryMasksTest.lake(cluster, "a", NetHistoryMasksTest.TEST_LAKE);
+        cluster.connector("b", "finance-lake", "enabled: false", "settings:", "  root: \"" + empty + "\"");
+        cluster.start("a", p[0], NetForwardTest.secure(off, NetHistoryMasksTest.MASK));
+        cluster.start("b", p[1], NetForwardTest.secure(off, NetHistoryMasksTest.MASK));
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table().nodes().size() == 2)))
                 .as("both nodes have both digests").isTrue();
     }

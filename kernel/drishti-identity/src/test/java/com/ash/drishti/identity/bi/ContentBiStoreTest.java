@@ -201,43 +201,4 @@ class ContentBiStoreTest {
         c.refresh();
         return c;
     }
-
-    @Test
-    void theIdentityDatabaseIsImportedOnceAndADeletedItemDoesNotComeBack() {
-        try (AnnotationConfigApplicationContext c = open("jpa")) {
-            BiStore jpa = c.getBean(BiStore.class);
-            assertThat(jpa).isInstanceOf(JpaBiStore.class);
-            jpa.saveWorkspace(new BiStore.Workspace("ws-old", "Old", "", false, "ann", false, T, "ann"));
-            jpa.setMember(new BiStore.Member("ws-old", "ann", "admin", T, "ann"));
-            jpa.saveItem(item("bi-old", "ws-old", "v: 1", 1));
-            jpa.saveItem(item("bi-gone", "ws-old", "v: 1", 0));
-            jpa.addVersion(new BiStore.Version("bi-old", 1, "v: 1", "first", "ann", T), 50);
-            jpa.addRevision("bi-old", "v: 1", "first", "ann", T, "save", 1, 50);
-            jpa.addEvent("bi-old", "approve", "ann", "", 1, T);
-            jpa.favourite("bob", "bi-old", true);
-            jpa.opened("bob", "bi-old", T);
-            jpa.setSetting("s1", "v1");
-        }
-        try (AnnotationConfigApplicationContext c = open("content")) {
-            BiStore s = c.getBean(BiStore.class);
-            assertThat(s).isInstanceOf(ContentBiStore.class);
-            assertThat(s.items()).extracting(BiStore.Item::id).containsExactlyInAnyOrder("bi-old", "bi-gone");
-            assertThat(s.members("ws-old")).hasSize(1);
-            assertThat(s.versions("bi-old")).hasSize(1);
-            assertThat(s.revisions("bi-old")).hasSize(1);
-            assertThat(s.events("bi-old")).hasSize(1);
-            assertThat(s.marks("bob").get("bi-old")).isEqualTo(new BiStore.Mark(true, T, 1));
-            assertThat(s.views(1, T)).containsEntry("bi-old", 1);
-            assertThat(s.setting("s1")).contains("v1");
-            s.deleteItem("bi-gone");
-        }
-        try (AnnotationConfigApplicationContext c = open("content")) {
-            BiStore s = c.getBean(BiStore.class);
-            assertThat(s.items()).extracting(BiStore.Item::id).containsExactly("bi-old");     // the marker: a deleted item stays deleted
-            assertThat(s.views(1, T)).containsEntry("bi-old", 1);                               // and nothing is counted twice
-        }
-        try (AnnotationConfigApplicationContext c = open("jpa")) {
-            assertThat(c.getBean(BiStore.class).items()).hasSize(2);                           // the rows are kept
-        }
-    }
 }

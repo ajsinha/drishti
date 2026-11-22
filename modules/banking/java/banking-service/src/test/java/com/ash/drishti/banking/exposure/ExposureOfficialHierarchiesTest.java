@@ -42,18 +42,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * its trades (the same as the scope {@code LL:<letter>}, as {@code WHERE:} on the letter, and LL-B's desk node as the desk B is alone on);
  * the root is the bank (LL is the only hierarchy configured here, so its nodes are the only ones).
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.ccr-lake.plugin=delta",
-        "drishti.sources.connectors.ccr-lake.kinds[0]=simulation-run", "drishti.sources.connectors.ccr-lake.kinds[1]=exposure-path",
-        "drishti.sources.connectors.ccr-lake.kinds[2]=netting-set", "drishti.sources.connectors.ccr-lake.kinds[3]=csa",
-        "drishti.sources.connectors.ccr-lake.kinds[4]=collateral-balance", "drishti.sources.connectors.ccr-lake.kinds[5]=counterparty",
-        "drishti.sources.connectors.ccr-lake.kinds[6]=counterparty-group",
-        "drishti.sources.connectors.ccr-lake.settings.domain=risk",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.columns=TRADE_ID,NETTING_SET,COUNTERPARTY,LEGAL_ENTITY,DESK,TT_BOOK,"
-                + "LIMIT_LETTER,ASSET_CLASS,PRODUCT,SOURCE_SYSTEM,MATURITY_DATE,NOTIONAL,GRID_INDEX,GRID_DATE,RUN_ID,BATCH_ID,STATUS",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.vectors=MTM",
-        "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-official-hierarchies", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
         "drishti.sources.routes.netting-set=ccr-lake", "drishti.sources.routes.csa=ccr-lake", "drishti.sources.routes.collateral-balance=ccr-lake",
         "drishti.sources.routes.counterparty=ccr-lake", "drishti.sources.routes.counterparty-group=ccr-lake",
         "drishti.var.hierarchies.LL.title=Limit letters", "drishti.var.hierarchies.LL.levels=LIMIT_LETTER > DESK",
@@ -66,13 +56,17 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class ExposureOfficialHierarchiesTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("exposure-official-hierarchies");
+    }
+
     static Path lake;
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
         lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "exposure-hier-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureHierarchyFixture.write(lake);
-        r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
+        r.add("test-connectors.ccr-lake.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);
     }
 

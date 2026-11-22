@@ -65,11 +65,10 @@ class NetHistoryFreshTest {
         NetNodes.folder(root.resolve("a/net"), p[0], List.of("region:emea"), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        String domain = "--drishti.sources.connectors.finance-lake.settings.domain=desk";
-        cluster.start("a", p[0], NetForwardTest.secure("--drishti.sources.connectors.finance-lake.settings.root=" + lake, domain,
-                "--drishti.sources.plugins.demo.enabled=false"));
-        cluster.start("b", p[1], NetForwardTest.secure("--drishti.sources.connectors.finance-lake.settings.root=" + empty, domain,
-                "--drishti.sources.plugins.demo.enabled=false"));
+        NetHistoryMasksTest.lake(cluster, "a", lake);
+        NetHistoryMasksTest.lake(cluster, "b", empty);
+        cluster.start("a", p[0], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false"));
+        cluster.start("b", p[1], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false"));
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table().nodes().size() == 2)))
                 .as("every node has every digest").isTrue();
     }

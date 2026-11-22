@@ -64,20 +64,20 @@ import org.springframework.test.web.servlet.ResultActions;
  * checker passes it, a question runs on the engine as the reader (two readers, two answers; a masked field stays masked), and a number's lineage and breakdown
  * come from the engine. Security on, a small generated lake.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/bi-ai", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-ai-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-ai-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/bi-ai-folder", "drishti.tables.root=${drishti.test.dir}/bi-ai-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-ai-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-ai-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.ai-lake.plugin=file", "drishti.sources.connectors.ai-lake.kinds[0]=trade",
-        "drishti.sources.connectors.ai-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.ai-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate",
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false",
         "drishti.ai.enabled=true", "drishti.ai.dir=${drishti.test.dir}/bi-ai/ai", "drishti.ai.default-model=mock/m", "drishti.ai.watch=off",
         "drishti.ai.policy.features.[bi-draft].roles[0]=report-author"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BiAiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("bi-ai");
+    }
 
     static final String REPORT = "file:report:lake-report";
     static final JsonNode DATES = new ObjectMapper().createObjectNode().set("dates", new ObjectMapper().createObjectNode().put("from", "2026-10-08").put("to", "2026-10-08"));
@@ -108,7 +108,7 @@ class BiAiTest {
     static void lake(DynamicPropertyRegistry r) throws Exception {
         root = com.ash.drishti.server.TestRun.temp("drishti-bi-ai-lake");
         day("2026-10-08");
-        r.add("drishti.sources.connectors.ai-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.ai-lake.root", () -> root.resolve("lake").toString());
     }
 
     static {

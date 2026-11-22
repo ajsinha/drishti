@@ -78,10 +78,14 @@ class NetLiveBiTest {
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false",
-                "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.rep-lake.plugin=file",
-                "--drishti.sources.connectors.rep-lake.kinds[0]=trade", "--drishti.sources.connectors.rep-lake.settings.root=" + root.resolve("lake"),
-                "--drishti.sources.connectors.rep-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.rep-lake.settings.rescan-seconds=3600");
+        List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false");
+        for (String n : List.of("a", "b")) {
+            cluster.off(n, "finance-lake");
+        }
+        for (String n : List.of("a", "b")) {                          // B has the connector too, switched off: it serves none
+            cluster.connector(n, "rep-lake", "plugin: file", "enabled: " + n.equals("a"), "kinds:", "  - trade", "settings:", "  root: \"" + root.resolve("lake") + "\"",
+                    "  id-field: TRADE_ID", "  rescan-seconds: \"3600\"");
+        }
         // A's trades for a viewer are the ticking samples (bound to the demo explicitly: beside the lake connector nothing else would serve
         // them); the BI dataset reads the lake connector by name
         Path aBindings = root.resolve("a/bindings.yaml");
@@ -91,8 +95,7 @@ class NetLiveBiTest {
         a.addAll(List.of("--drishti.sources.plugins.demo.settings.ticking=true", "--drishti.bi.query.store-dir=" + root.resolve("a/bi-store"),
                 "--drishti.bindings.file=" + aBindings));
         List<String> b = new ArrayList<>(common);
-        b.addAll(List.of("--drishti.sources.plugins.demo.enabled=false", "--drishti.sources.connectors.rep-lake.enabled=false",
-                "--drishti.bi.query.store-dir=" + root.resolve("b/bi-store")));
+        b.addAll(List.of("--drishti.sources.plugins.demo.enabled=false", "--drishti.bi.query.store-dir=" + root.resolve("b/bi-store")));
         cluster.start("a", p[0], a.toArray(String[]::new));
         cluster.start("b", p[1], b.toArray(String[]::new));
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table().nodes().size() == 2)))

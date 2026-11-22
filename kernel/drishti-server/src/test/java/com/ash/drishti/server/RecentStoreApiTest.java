@@ -38,16 +38,15 @@ import org.springframework.test.web.servlet.MockMvc;
  * refused by stores without time travel (DATA-15), and an id with a {@code /} opens with the id in the query (DATA-21).
  */
 // its own connector folder (read before the test environment is final): files other test contexts generate into the shared one, such as trading-store from the trading pack, would merge their settings into these connectors
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
-        "drishti.sources.connectors-dir=${drishti.test.dir}/recent-store-connectors", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.sources.plugins.file.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.recent-files.plugin=file", "drishti.sources.connectors.recent-files.kinds[0]=trade",
-        "drishti.sources.connectors.recent-files.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.trading-store.plugin=file", "drishti.sources.connectors.trading-store.kinds[0]=trade",
-        "drishti.sources.connectors.trading-store.settings.rescan-seconds=3600",
-        "drishti.sources.routes.trade=recent-files"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/recent-store-api", "drishti.rachana.hot-reload=false",
+        "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
+        "drishti.sources.plugins.file.enabled=false", "drishti.sources.routes.trade=recent-files"})
 @AutoConfigureMockMvc
 class RecentStoreApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("recent-store-api");
+    }
 
     private static final String KNOWN = "2020-01-01T00:00:00Z";
 
@@ -69,8 +68,8 @@ class RecentStoreApiTest {
         write(root.resolve("recent/2026-09-29/trade.jsonl"), trade("MX-30000001", 11), trade("MX-30000002", 12), trade("sl/ash-6", 13));
         write(root.resolve("lake/2026-09-29/trade.jsonl"), trade("MX-30000001", 21), trade("MX-30000002", 22), trade("MX-30000006", 26));
         write(root.resolve("lake/2026-09-01/trade.jsonl"), trade("MX-30000006", 6));
-        r.add("drishti.sources.connectors.recent-files.settings.root", () -> root.resolve("recent").toString());
-        r.add("drishti.sources.connectors.trading-store.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.recent-files.root", () -> root.resolve("recent").toString());
+        r.add("test-connectors.trading-store.root", () -> root.resolve("lake").toString());
     }
 
     /** DATA-12: the entity the recent store dropped is not brought back from the lake; the view and search agree. */

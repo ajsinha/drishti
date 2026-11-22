@@ -99,7 +99,7 @@ that reads it; the node must be stopped. Otherwise the node holds no trade of th
 
 A node with `lake:` **switches off every connector whose tables its lake does not hold**: of the connectors it may run (the modules'
 templates, its packs' connectors and its own connector files) each that reads the demo lake or an official results lake (a lake rooted at
-`${DRISHTI_DELTA_ROOT}`) with none of its tables in the synthetic lake, with the node's `off:` list. Those kinds are served by the nodes
+`${DRISHTI_DELTA_ROOT}`) with none of its tables in the synthetic lake, with the node's `off:` list (each becomes an `enabled: false` override file in the node's own connectors folder; a `home: repo` node takes no `off:`: put `enabled: false` in `config/connectors/` instead). Those kinds are served by the nodes
 that hold them ([CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md), "Is the pack here but not the data?"), never reported DOWN, and a
 new module's connector needs no new line here. `start cluster` names them.
 
@@ -146,7 +146,7 @@ Add one entry under `nodes:` in `stack.yaml`, for example:
     heap: 1536m
     lake: shared            # a lake of stack.yaml's lakes (built when missing), or a new one you add there
     packs: trading
-    off: [trade-murex]      # connectors this node switches off besides those whose tables its lake does not hold
+    off: [trade-murex]      # connectors this node switches off (a file with enabled: false in its connectors folder) besides those whose tables its lake does not hold
     args: [--drishti.security.registered-users-only=false]
 ```
 

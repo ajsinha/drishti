@@ -66,27 +66,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * result equal, to the cent, to the same final data
  * loaded as one run.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.kinds[3]=scenario-pv", "drishti.sources.connectors.risk-lake.kinds[4]=fx-scenario",
-        "drishti.sources.connectors.risk-lake.kinds[5]=fx-spot",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TRADE_STATUS,"
-                + "MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
-        "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.vectors=SCENARIO_PV",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.connectors.pv-test.plugin=var-pv-stream", "drishti.sources.connectors.pv-test.kinds[0]=pv-update",
-        "drishti.sources.connectors.pv-test.settings.topic=pv-updates", "drishti.sources.connectors.pv-test.settings.poll-ms=50",
-        "drishti.var.intraday.kafka.window=10m", "drishti.var.intraday.kafka.max-trades=3",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-pv-stream", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.var.intraday.kafka.window=10m", "drishti.var.intraday.kafka.max-trades=3",
         "drishti.var.inputs.SYS-B.form=pv", "drishti.var.inputs.SYS-B.grain=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
@@ -106,6 +87,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class VarPvStreamTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("var-pv-stream");
+    }
 
     /** The date the topic updates (the newest with trades). */
     static final LocalDate DAY = VarLakeFixture.DAY;
@@ -148,11 +133,11 @@ class VarPvStreamTest {
         p.put("key.serializer", StringSerializer.class.getName());
         p.put("value.serializer", StringSerializer.class.getName());
         producer = new KafkaProducer<>(p);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
         r.add("drishti.var.tier.dir", () -> lake.resolve("hot").toString());
-        r.add("drishti.sources.connectors.pv-test.settings.bootstrap-servers", broker::getBrokersAsString);
-        r.add("drishti.sources.connectors.pv-test.settings.lake", lake::toString);
+        r.add("test-connectors.pv-test.bootstrap-servers", broker::getBrokersAsString);
+        r.add("test-connectors.pv-test.lake", lake::toString);
     }
 
     @AfterAll

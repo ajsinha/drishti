@@ -87,14 +87,10 @@ abstract class PackSutraNextEquivalence {
     static Path lakeNamed(DynamicPropertyRegistry r, String pack, String c, String... kinds) throws Exception {
         Path day = TestRun.root().resolve(Path.of(c));
         Files.createDirectories(day);
-        r.add("drishti.sources.connectors." + c + ".plugin", () -> "file");
-        r.add("drishti.sources.connectors." + c + ".settings.root", day::toString);
-        r.add("drishti.sources.connectors." + c + ".settings.rescan-seconds", () -> "3600");
-        for (int i = 0; i < kinds.length; i++) {
-            String kind = kinds[i];
+        r.add("test-connectors." + c + ".root", day::toString);        // the connector is a file of the test's connectors folder (testing/connectors/<test>/<c>.yaml)
+        for (String kind : kinds) {
             Files.copy(Path.of(TestRoots.module(), "src", "test", "resources", "sutra-next-data",  pack, kind + ".jsonl"), day.resolve(kind + ".jsonl"),
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            r.add("drishti.sources.connectors." + c + ".kinds[" + i + "]", () -> kind);
             r.add("drishti.sources.routes." + kind, () -> c);
         }
         return day;

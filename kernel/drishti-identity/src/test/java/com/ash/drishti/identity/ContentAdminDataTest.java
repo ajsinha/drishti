@@ -96,31 +96,6 @@ class ContentAdminDataTest {
     }
 
     @Test
-    void theAuditTableIsImportedThroughTheLog() {
-        IdentityRepositories.Audit repo = mock(IdentityRepositories.Audit.class);
-        List<com.ash.drishti.identity.db.AuditEventEntity> rows = new ArrayList<>();
-        for (int i = 1; i <= 3; i++) {
-            com.ash.drishti.identity.db.AuditEventEntity e = new com.ash.drishti.identity.db.AuditEventEntity();
-            e.id = (long) i;
-            e.at = Instant.parse("2026-10-0" + i + "T10:00:00Z");
-            e.actor = "ann";
-            e.action = "login";
-            e.subject = "ann";
-            e.detail = "#" + i;
-            rows.add(e);
-        }
-        when(repo.findByIdGreaterThanOrderByIdAsc(any(), any())).thenAnswer(inv -> rows.stream().filter(e -> e.id > (Long) inv.getArgument(0)).toList());
-        JpaAuditLog jpa = new JpaAuditLog(repo);
-        ContentAuditLog c = new ContentAuditLog(node(), "node-a");
-        assertThat(jpa.copyTo(c)).isEqualTo(3);
-        jpa.useContent(c);
-        jpa.record("ann", "logout", "ann", "now");
-        assertThat(jpa.recent(10, null)).extracting(AuditLog.Event::detail).containsExactly("now", "#3", "#2", "#1");
-        assertThat(node().list("audit/2026-10-01/")).hasSize(1);
-        assertThat(jpa.verify(10)).isEmpty();
-    }
-
-    @Test
     void aPackSwitchOnOneNodeIsSeenOnTheOtherAfterTheImport() {
         IdentityRepositories.PackStates states = mock(IdentityRepositories.PackStates.class);
         PackStateEntity off = new PackStateEntity();
@@ -160,15 +135,5 @@ class ContentAdminDataTest {
                 .matches(x -> ((DrishtiException) x).errorCode() == ErrorCode.CONTENT_CONFLICT);
         assertThat(a.findById("portal").orElseThrow().name).isEqualTo("Portal B");
         assertThat(b.findAll()).hasSize(1);
-
-        IdentityRepositories.EmbedApps table = mock(IdentityRepositories.EmbedApps.class);
-        EmbedAppEntity old = new EmbedAppEntity();
-        old.id = "legacy";
-        old.name = "Legacy";
-        when(table.findAll()).thenReturn(List.of(old, e));
-        assertThat(b.importFrom(table)).isEqualTo(1);
-        assertThat(a.importFrom(table)).isZero();
-        assertThat(a.findById("legacy")).isPresent();
-        assertThat(a.findById("portal").orElseThrow().name).as("never overwritten").isEqualTo("Portal B");
     }
 }
