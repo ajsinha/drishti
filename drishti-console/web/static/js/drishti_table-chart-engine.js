@@ -18,9 +18,8 @@
    table's columns (date, number, text; masked; identifiers), picks the smart defaults, normalises a settings document,
    maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values; the server's engine aggregates), turns its cube into drawn
    series (date buckets, Top N with Others, split cap, sort, percent, gaps), refuses what cannot be drawn honestly (a pie
-   with negative values, 100% of percentages), and builds the ECharts option from the theme tokens it is given (never a
-   literal colour). Also the text summary (caption, aria-label) and the export grid. Masks hold: a masked column is never
-   chartable, and the masked cells of a partly masked column are left out of every aggregate and counted.
+   with negative values, 100% of percentages). The option is drishti-chart's (tableChartOption, every colour a theme token).
+   Also the text summary (caption, aria-label) and the export grid. Masks hold: a masked column is never chartable, and the masked cells of a partly masked column are left out of every aggregate and counted.
    Loaded in the page after drishti_pivot-engine.js (window.Drishti.tableChartEngine) and under node for tests (module.exports). */
 (function (root) {
   'use strict';
@@ -483,79 +482,8 @@
     return series(c, settings, cols, null, opts);
   }
 
-  // ---- the ECharts option -------------------------------------------------------------------------------------------
-  function palette(t) { return t.palette && t.palette.length ? t.palette.slice() : [t.link, t.accent, t.ok, t.neg, t.warn, t.bad, t.muted, t.ink].filter(Boolean); }
-  function fmtValue(v, f) { return PE().format(v, f === 'int' ? 'int' : f === 'pct' ? 'pct' : 'compact'); }
-  /**
-   * The ECharts option of a drawn model, every colour taken from the theme tokens {@code t} (drishti_charts.js tokens(), or
-   * {palette: [...], faint, border, muted, ink, surface, neg}). No literal colour, no animation; colour is never the only
-   * difference past the palette's length (dashes on lines, decals on bars).
-   */
-  function option(model, settings, t) {
-    var pal = palette(t), many = model.series.length > pal.length, stacked = settings.bars === 'stacked' || (settings.type === 'area' && !!settings.split);
-    var colorOf = function (d, i) { return d.others ? t.faint : pal[i % pal.length]; };
-    var dashOf = function (i) { return i < pal.length ? 'solid' : ['dashed', 'dotted'][Math.floor(i / pal.length - 1) % 2]; };
-    var ax = { axisLine: { lineStyle: { color: t.border } }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 },
-      splitLine: { lineStyle: { color: t.border, opacity: 0.5 } }, nameTextStyle: { color: t.muted, fontSize: 10 } };
-    var tip = { backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } };
-    var base = { animation: false, aria: { enabled: true, label: { description: summary(model, settings) } }, tooltip: Object.assign({ trigger: model.axis === 'value' ? 'item' : 'axis' }, tip),
-      legend: { show: model.series.length > 1, type: 'scroll', top: 0, textStyle: { color: t.muted, fontSize: 11 }, pageTextStyle: { color: t.muted } } };
-    if (many) { base.aria.decal = { show: true }; }
-    if (settings.type === 'pie') {
-      var d0 = model.series[0] || { data: [] };
-      base.tooltip = Object.assign({ trigger: 'item' }, tip);
-      base.legend.show = true;
-      base.series = [{ type: 'pie', name: d0.label, radius: settings.donut ? ['45%', '70%'] : '70%', avoidLabelOverlap: true,
-        label: { show: settings.labels || model.x.length <= 8, color: t.ink }, labelLine: { lineStyle: { color: t.border } },
-        itemStyle: { borderColor: t.surface, borderWidth: 1 },
-        data: model.x.map(function (k, j) { return { name: k, value: d0.data[j], itemStyle: { color: model.others[j] ? t.faint : pal[j % pal.length] } }; }) }];
-      return base;
-    }
-    var right = model.series.some(function (d) { return d.axis === 'right'; });
-    var yname = function (side) { return model.series.filter(function (d) { return d.axis === side; }).map(function (d) { return d.label; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', '); };
-    var fmtOf = function (side) { var d = model.series.filter(function (x) { return x.axis === side; })[0]; return d ? d.fmt : null; };
-    var valueAxis = function (side) {
-      var f = fmtOf(side);
-      return Object.assign({ type: 'value', name: yname(side), position: side, scale: settings.type === 'scatter' }, ax,
-        { axisLabel: Object.assign({}, ax.axisLabel, { formatter: function (v) { return fmtValue(v, f); } }) }, side === 'right' ? { splitLine: { show: false } } : {},
-        settings.percent ? { max: 1 } : {});
-    };
-    var xAxis = model.axis === 'time' ? Object.assign({ type: 'time', name: model.xLabel }, ax)
-      : model.axis === 'value' ? Object.assign({ type: 'value', name: model.xLabel, scale: true }, ax)
-        : Object.assign({ type: 'category', name: model.xLabel, data: model.x }, ax, { axisLabel: Object.assign({}, ax.axisLabel, { hideOverlap: true }) });
-    var yAxis = right ? [valueAxis('left'), valueAxis('right')] : [valueAxis('left')];
-    if (model.horizontal) { base.xAxis = yAxis[0]; base.yAxis = Object.assign(xAxis, { inverse: true }); } else {
-      base.xAxis = Object.assign(xAxis, { nameLocation: 'middle', nameGap: 28 });          // the X's name under its labels, clear of a right axis
-      base.yAxis = yAxis;
-    }
-    base.grid = { left: model.horizontal ? 140 : 56, right: right ? 56 : 20, top: model.series.length > 1 ? 40 : 28, bottom: model.horizontal ? 40 : 48, containLabel: true };
-    var signTone = model.series.length === 1 && model.series[0].type === 'bar' && model.series[0].data.some(function (v) { return num(v) && v < 0; });
-    base.series = model.series.map(function (d, i) {
-      var color = colorOf(d, i), type = d.type === 'area' ? 'line' : d.type;
-      var data = model.axis === 'time' ? d.data.map(function (v, j) { return [model.x[j], v]; }) : model.axis === 'value' ? d.data : d.data.slice();
-      if (signTone && !model.horizontal) { data = data.map(function (v, j) { return num(v) && v < 0 ? { value: model.axis === 'time' ? [model.x[j], v] : v, itemStyle: { color: t.neg } } : v; }); }
-      var o = { type: type, name: d.name, data: data, yAxisIndex: model.horizontal ? undefined : (d.axis === 'right' && right ? 1 : 0), itemStyle: { color: color },
-        label: { show: !!settings.labels, color: t.ink, fontSize: 10, formatter: function (p) { var v = Array.isArray(p.value) ? p.value[1] : p.value; return fmtValue(v, d.fmt); } } };
-      if (model.horizontal) { delete o.yAxisIndex; }
-      if (type === 'line') {
-        o.lineStyle = { color: color, type: dashOf(i), width: 2 };
-        o.smooth = false; o.step = false; o.connectNulls = settings.x.gaps !== 'break';
-        o.showSymbol = d.data.filter(num).length <= 1 || d.data.length <= 60; o.symbolSize = d.data.filter(num).length <= 1 ? 8 : 4;
-      }
-      if (d.type === 'area') { o.areaStyle = { color: color, opacity: 0.25 }; if (stacked) { o.stack = 'area-' + d.axis; } }
-      if (type === 'bar' && settings.bars === 'stacked') { o.stack = 'bar-' + d.axis; }
-      if (type === 'scatter') {
-        o.symbolSize = d.sized ? sizer(d.data) : 6;
-        o.tooltip = { formatter: function (p) { return d.name + ': ' + fmtValue(p.value[0], null) + ', ' + fmtValue(p.value[1], d.fmt); } };
-      }
-      return o;
-    });
-    return base;
-  }
-  function sizer(data) {
-    var zs = data.map(function (p) { return p[2]; }).filter(num), lo = Math.min.apply(null, zs.concat([0])), hi = Math.max.apply(null, zs.concat([1]));
-    return function (p) { return num(p[2]) && hi > lo ? 4 + 20 * (p[2] - lo) / (hi - lo) : 6; };
-  }
+  /** A value's words in a chart (an axis tick, a label, the summary): the pivot engine's int, pct or compact format. */
+  function valueText(v, f) { return PE().format(v, f === 'int' ? 'int' : f === 'pct' ? 'pct' : 'compact'); }
 
   // ---- words, export ------------------------------------------------------------------------------------------------
   var TYPE_WORD = { line: 'Line', bar: 'Bar', area: 'Area', pie: 'Pie', scatter: 'Scatter', combo: 'Combo' };
@@ -590,9 +518,9 @@
         d.data.forEach(function (v, j) { if (num(v)) { if (hi === null || v > d.data[hi]) { hi = j; } if (lo === null || v < d.data[lo]) { lo = j; } } });
         if (model.time && n > 1) { parts.push('from ' + model.x[0] + ' to ' + model.x[n - 1]); }
         if (hi !== null && n > 1) {
-          parts.push('highest ' + model.x[hi] + ' ' + fmtValue(d.data[hi], d.fmt));
-          parts.push('lowest ' + model.x[lo] + ' ' + fmtValue(d.data[lo], d.fmt));
-        } else if (hi !== null) { parts.push(model.x[hi] + ' ' + fmtValue(d.data[hi], d.fmt)); }
+          parts.push('highest ' + model.x[hi] + ' ' + valueText(d.data[hi], d.fmt));
+          parts.push('lowest ' + model.x[lo] + ' ' + valueText(d.data[lo], d.fmt));
+        } else if (hi !== null) { parts.push(model.x[hi] + ' ' + valueText(d.data[hi], d.fmt)); }
         var tr = model.time ? trend(d.data) : null;
         if (tr) { parts.push('trend ' + tr); }
       }
@@ -616,7 +544,7 @@
     toNumber: toNumber, isDate: isDate, dayOf: dayOf, bucketOf: bucketOf, autoBucket: autoBucket, businessDays: businessDays,
     classify: classify, chartable: chartable, types: types, normalise: normalise, defaults: defaults,
     prepare: prepare, toArrangement: toArrangement, plan: plan, finish: finish, series: series, points: points, build: build, fromCube: fromCube,
-    option: option, palette: palette, summary: summary, trend: trend, exportGrid: exportGrid };
+    valueText: valueText, summary: summary, trend: trend, exportGrid: exportGrid };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else {
     (root.drishtiModules = root.drishtiModules || {}).tableChartEngine = api;
     (root.Drishti = root.Drishti || {}).tableChartEngine = api;

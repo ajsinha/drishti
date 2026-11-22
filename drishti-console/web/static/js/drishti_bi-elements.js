@@ -16,7 +16,7 @@
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Report visuals that are Drishti Elements (the sunburst and icicle of drishti-tree, the calendar of drishti-chart, the decomposition tree of
    drishti-tree): this file only hands a visual's answer to its element and turns the element's events into the report's selection. It draws
-   nothing itself. Linked brushing: what a drag on a line, area, histogram or scatter selects. */
+   nothing itself. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -101,27 +101,5 @@
       load: (r) => B.api('POST', '/pivot/decompose', Object.assign({ source: f.source, measure: f.measure, options: f.options || {} }, r)),
     });
     return { dispose() { d.dispose(); }, resize() { d.resize(); } };
-  };
-
-  /** What a drag selects on a chart that can be brushed: the selection, or null when the chart cannot. (from, to) are the axis values at the band's ends. */
-  V.brushOf = function (spec, option, marks) {
-    const xa = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis;
-    if (!xa || ['line', 'area', 'histogram', 'scatter', 'bubble'].indexOf(spec.type) < 0) { return null; }
-    if (spec.type === 'histogram') {
-      const field = (spec.wells.axis || [])[0];
-      return !field || xa.type !== 'value' ? null : (a, b) => ({ field, values: [a, b], range: true, label: B.compact(a) + ' to ' + B.compact(b) });
-    }
-    if (spec.type === 'scatter' || spec.type === 'bubble') {
-      const data = (option.series[0] && option.series[0].data) || [];
-      return !marks.field ? null : (a, b) => {
-        const vs = [];
-        data.forEach((d, i) => { const x = Array.isArray(d) ? d[0] : (d.value || [])[0]; if (typeof x === 'number' && x >= a && x <= b && marks.items[i]) { vs.push(marks.items[i].value); } });
-        return vs.length ? { field: marks.field, values: vs, label: vs.length + ' points' } : null;
-      };
-    }
-    return !marks.field ? null : (a, b) => {
-      const lo = Math.max(0, Math.ceil(a)), hi = Math.min(marks.items.length - 1, Math.floor(b));
-      return lo > hi ? null : { field: marks.field, values: [marks.items[lo].value, marks.items[hi].value], range: true, label: marks.items[lo].label + ' to ' + marks.items[hi].label };
-    };
   };
 }());

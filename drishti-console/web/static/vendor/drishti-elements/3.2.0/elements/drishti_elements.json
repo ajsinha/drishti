@@ -105,6 +105,10 @@
         "geo": {
           "file": "drishti_chart-geohelper.js",
           "entry": "src/drishti_geohelper.js"
+        },
+        "report": {
+          "file": "drishti_chart-report.js",
+          "entry": "src/drishti_chart-report.js"
         }
       }
     },

@@ -15,7 +15,7 @@
 """Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): drishti_table-chart-engine.js under Node, as
 with the pivot engine's answer stood in (the server's engine aggregates: PivotApiTest, RowsProviderTest). Classify, defaults, normalise,
 the mapping onto the pivot engine, the figures per X, Top N
-and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the ECharts option (two axes,
+and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the option drishti-chart draws from its model (two axes,
 stacking, 100%, combo, and no literal colour)."""
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 
 ENGINE = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_table-chart-engine.js"
+REPORT_PART = Path(__file__).resolve().parent.parent / "web" / "static" / "vendor" / "drishti-elements" / "3.2.0" / "elements" / "drishti-chart" / "src" / "drishti_chart-report.js"
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run the chart engine")
 
 HARNESS = """
@@ -81,8 +82,12 @@ function engineCube(records, arr, kept) {
   arr.columns.forEach((f) => { if (more[f]) { again.columnOthers = more[f]; } });
   return again;
 }
-const out = (function (E, input) { %s })(E, input);
-process.stdout.write(JSON.stringify(out === undefined ? null : out));
+// the option is drishti-chart's (its report part, vendored): E.option stands for what the dialog draws
+import(require('url').pathToFileURL(process.argv[3]).href).then((R) => {
+  E.option = (m, s, t) => R.tableChartOption(m, s, t, { fmt: E.valueText, description: E.summary(m, s) });
+  const out = (function (E, input) { %s })(E, input);
+  process.stdout.write(JSON.stringify(out === undefined ? null : out));
+});
 """
 
 TOKENS = {"link": "#1f77b4", "accent": "#ff7f0e", "ok": "#2ca02c", "neg": "#d62728", "warn": "#9467bd", "bad": "#8c564b",
@@ -90,7 +95,7 @@ TOKENS = {"link": "#1f77b4", "accent": "#ff7f0e", "ok": "#2ca02c", "neg": "#d627
 
 
 def js(body: str, data=None):
-    run = subprocess.run(["node", "-e", HARNESS % body, str(ENGINE), json.dumps(data)], capture_output=True, text=True, timeout=60)
+    run = subprocess.run(["node", "-e", HARNESS % body, str(ENGINE), json.dumps(data), str(REPORT_PART)], capture_output=True, text=True, timeout=60)
     assert run.returncode == 0, run.stderr
     return json.loads(run.stdout)
 

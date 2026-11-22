@@ -20,13 +20,16 @@
    date bucket), up to six series (column, aggregation, axis, type in a combo), split, sort, Top N with Others, labels, stacking.
    Every change redraws at once. Actions: View as table, PNG, SVG, CSV, Excel, JSONL (one row a line), Defaults; Chart all N where the source can.
    The rows come from a source adapter (drishti_table-chart-sources.js); the numbers from the engine (drishti_table-chart-engine.js over
-   drishti_pivot-engine.js); the colours from the theme tokens (drishti_charts.js), redrawn on a theme change. Masked columns are offered greyed
+   drishti_pivot-engine.js); the drawing from drishti-chart (its report part: tableChartOption, OptionChart); the colours from the theme tokens (drishti_charts.js), redrawn on a theme change. Masked columns are offered greyed
    and never charted. Keys: Esc closes (focus back on the opener), 1-6 the type, T table, A chart all, E export, ? help; on the
    chart ← → points, ↑ ↓ series, Home/End. Settings are kept per table for the tab's life (saving them is a later step). */
 (function () {
   'use strict';
   function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   function E() { return window.Drishti.tableChartEngine; }
+  function R() { return window.Drishti.elements && window.Drishti.elements.chart_report; }   // drishti-chart's report part draws the chart
+  /** The option of a drawn model: drishti-chart's tableChartOption, with the engine's words for a value and the chart's summary. */
+  function optionOf(m, s, t) { return R().tableChartOption(m, s, t, { fmt: E().valueText, description: E().summary(m, s) }); }
   function PE() { return window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine; }
   var MEMO = {};                                      // identity -> the settings a reader chose, for the tab's life
   var TYPES = [['line', 'Line', 'graph-up'], ['bar', 'Bar', 'bar-chart'], ['area', 'Area', 'graph-up-arrow'], ['pie', 'Pie', 'pie-chart'],
@@ -135,7 +138,7 @@
     this.status.textContent = 'Reading ' + (this.src.shown != null ? group(this.src.shown) + ' ' : '') + 'rows…';
     this.closeBtn.focus();
     this.onTheme = function () { self.draw(); };
-    this.onResize = function () { if (self.chart && !self.chart.isDisposed()) { self.chart.resize(); } };
+    this.onResize = function () { if (self.chart) { self.chart.resize(); } };
     document.addEventListener('drishti:theme', this.onTheme);
     window.addEventListener('resize', this.onResize);
     return Promise.resolve().then(function () { return self.src.rows(); }).then(function (data) {
@@ -165,7 +168,7 @@
     this.closed = true;
     document.removeEventListener('drishti:theme', this.onTheme);
     window.removeEventListener('resize', this.onResize);
-    if (this.chart && !this.chart.isDisposed()) { this.chart.dispose(); }
+    if (this.chart) { this.chart.dispose(); }
     if (this.dlg.open && this.dlg.close) { this.dlg.close(); }
     this.dlg.remove();
     document.body.classList.remove('tc-open');
@@ -427,16 +430,16 @@
     this.msg.hidden = true;
     this.chartEl.hidden = this.view === 'table';
     if (this.view === 'table') { this.drawTable(m); return; }
-    if (!window.echarts) { this.message('The charting library did not load.', true); return; }
+    if (!R()) { this.message('The charting library did not load.', true); return; }
     var t = tokens(this.opts.root);
-    var option = E().option(m, s, t);
-    if (!this.chart || this.chart.isDisposed()) { this.chart = window.echarts.init(this.chartEl, null, { renderer: 'svg' }); }
-    this.chart.setOption(option, true);
+    var option = optionOf(m, s, t);
+    if (!this.chart || this.chart.disposed) { this.chart = new (R().OptionChart)(this.chartEl, { renderer: 'svg' }); }
+    this.chart.draw(option);
     this.chart.resize();
     this.option = option;
     this.point = -1;
   };
-  Dialog.prototype.disposeChart = function () { if (this.chart && !this.chart.isDisposed()) { this.chart.dispose(); } this.chart = null; };
+  Dialog.prototype.disposeChart = function () { if (this.chart) { this.chart.dispose(); } this.chart = null; };
   Dialog.prototype.statusLine = function (m) {
     var src = this.src, bits = [];
     if (this.scope === 'all' && this.allData) {
@@ -533,7 +536,7 @@
       var others = m.series.filter(function (d, i) { return i !== self.si; }).map(function (d) { return d.name + ' ' + fmt(d.data[j], d); });
       text = m.x[j] + ': ' + [at].concat(others).filter(Boolean).join(', ') + ' (' + (j + 1) + ' of ' + n + ')';
     }
-    try { this.chart.dispatchAction({ type: 'showTip', seriesIndex: this.settings.type === 'pie' ? 0 : this.si, dataIndex: j }); } catch (err) { /* a tooltip is a nicety */ }
+    try { this.chart.tip(this.settings.type === 'pie' ? 0 : this.si, j); } catch (err) { /* a tooltip is a nicety */ }
     this.say(text);
   };
   Dialog.prototype.key = function (e) {
@@ -556,25 +559,17 @@
   // ---- export --------------------------------------------------------------------------------------------------------------------
   Dialog.prototype.name = function (ext) { return fileName(this.src.title) + '-chart-' + today() + '.' + ext; };
   Dialog.prototype.png = function () {
-    if (!this.option || !window.echarts) { return; }
+    if (!this.option || !R()) { return; }
     var t = tokens(this.opts.root), w = Math.max(640, this.chartEl.clientWidth || 960), h = Math.max(400, this.chartEl.clientHeight || 540);
-    var box = el('div', { cls: 'tc-offscreen' });
-    document.body.appendChild(box);
-    var c = window.echarts.init(box, null, { renderer: 'canvas', width: w, height: h });
-    c.setOption(E().option(this.last, this.settings, t), true);
-    var url = c.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: t.surface });
-    c.dispose(); box.remove();
+    var url = R().OptionChart.png(document, optionOf(this.last, this.settings, t), { cls: 'tc-offscreen', width: w, height: h, background: t.surface });
     var bin = atob(url.split(',')[1]), bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
     download(new Blob([bytes], { type: 'image/png' }), this.name('png'));
     this.say('Downloaded ' + this.name('png'));
   };
   Dialog.prototype.svg = function () {
-    if (!this.chart || this.chart.isDisposed()) { return; }
-    var t = tokens(this.opts.root), text;
-    this.chart.setOption({ backgroundColor: t.surface });
-    text = this.chart.renderToSVGString ? this.chart.renderToSVGString() : decodeURIComponent(this.chart.getDataURL({ type: 'svg' }).split(',')[1]);
-    this.chart.setOption({ backgroundColor: 'transparent' });
+    if (!this.chart || this.chart.disposed) { return; }
+    var t = tokens(this.opts.root), text = this.chart.svg(t.surface);
     download(new Blob([text], { type: 'image/svg+xml' }), this.name('svg'));
     this.say('Downloaded ' + this.name('svg'));
   };

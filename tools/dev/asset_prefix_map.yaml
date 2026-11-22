@@ -194,7 +194,6 @@ files:
   js/bi-live.js: js/drishti_bi-live.js
   js/bi-matrix.js: js/drishti_bi-matrix.js
   js/bi-models.js: js/drishti_bi-models.js
-  js/bi-multiples.js: js/drishti_bi-multiples.js
   js/bi-phone.js: js/drishti_bi-phone.js
   js/bi-python.js: js/drishti_bi-python.js
   js/bi-query-panel.js: js/drishti_bi-query-panel.js
