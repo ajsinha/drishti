@@ -119,9 +119,10 @@ class StudioTest {
         String body = mvc.perform(get("/api/v1/rachana/schema")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         var schema = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
         org.assertj.core.api.Assertions.assertThat(schema.path("required").toString()).contains("rachana", "sutra", "version", "match");
-        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/const").asInt()).isEqualTo(1);
+        // the level a Sutra is written for, at most this server's (1.2): 1 (that is 1.0), 1.1, 1.2, as a number or a text
+        org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/anyOf/1/enum").toString()).isEqualTo("[\"1.0\",\"1.1\",\"1.2\"]");
         org.assertj.core.api.Assertions.assertThat(schema.at("/properties/match/properties/kind/enum").toString()).contains("trade");
-        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(22);
+        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(com.ash.rachana.model.PanelKind.values().length);
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/column/properties/fmt/enum").toString()).contains("signed0", "date");
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/colors/enum").toString()).isEqualTo("[\"gain-loss\",\"theme\"]");
         org.assertj.core.api.Assertions.assertThat(schema.path("x-rachana-functions").has("link")).isTrue();

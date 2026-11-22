@@ -46,7 +46,7 @@ public final class LayerExpressionChecker implements ExpressionChecker {
             case RULE, MODEL_RULE -> com.ash.rachana.el.check.Scope.RULE;
             case AGGREGATE -> com.ash.rachana.el.check.Scope.AGGREGATE;
         };
-        Checker.Checked c = CheckedMode.check(text, rachana, model ? modelFields(env) : tableFields(env));
+        Checker.Checked c = com.ash.drishti.rachana.DrishtiRachana.checkExpression(text, rachana, model ? modelFields(env) : tableFields(env));
         List<Problem> out = new ArrayList<>();
         for (com.ash.rachana.el.check.Problem p : c.problems()) {
             String words = p.message() + (p.fix() == null ? "" : " (" + p.fix() + ")");

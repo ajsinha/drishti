@@ -135,6 +135,20 @@ public final class DrishtiRachana {
                 .withFormats(props.formatsFile(), props.packFormatsFiles());
     }
 
+    /**
+     * An expression of a table, model, measure or formula read by Rachana's checked mode at the server's language level (the one place a
+     * non-Sutra expression is parsed: BI, the table layer, the pivot's formulas).
+     */
+    public static com.ash.rachana.el.CheckedMode.Parsed parseExpression(String text) {
+        return com.ash.rachana.el.CheckedMode.parse(text, level);
+    }
+
+    /** As {@link #parseExpression} and checked in a scope over known fields, at the server's language level. */
+    public static com.ash.rachana.el.check.Checker.Checked checkExpression(String text, com.ash.rachana.el.check.Scope scope,
+            com.ash.rachana.el.check.Fields fields) {
+        return com.ash.rachana.el.CheckedMode.check(text, scope, fields, level);
+    }
+
     /** The server's language level now ({@code drishti.rachana.language-level}, default {@link #LEVEL}). */
     public static String level() {
         return level;

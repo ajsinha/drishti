@@ -103,7 +103,7 @@ public final class FormulaLowering {
         }
         CheckedMode.Parsed p;
         try {
-            p = CheckedMode.parse(text);
+            p = com.ash.drishti.rachana.DrishtiRachana.parseExpression(text);
         } catch (ElException e) {
             throw new FormulaException(e.getMessage(), Math.max(0, e.position()));
         }
