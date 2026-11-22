@@ -577,7 +577,7 @@ public class RunsController {
         String title = RunService.title(r);
         com.ash.drishti.server.dist.ExportDoc doc = x.ofAnswer(title, "Run " + r.id() + (r.asOf() == null ? "" : " · as of " + r.asOf()), answer);
         byte[] bytes = switch (format) {
-            case "csv" -> com.ash.drishti.server.dist.CsvWriter.write(doc);
+            case "csv" -> com.ash.drishti.server.dist.ExportCsv.write(doc);
             case "jsonl" -> com.ash.drishti.server.dist.JsonlWriter.write(doc);                // one row a line, the CSV's column names
             default -> com.ash.drishti.server.dist.ExportWorkbook.write(doc);
         };

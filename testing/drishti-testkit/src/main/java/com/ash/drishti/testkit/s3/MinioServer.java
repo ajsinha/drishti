@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.testkit.s3;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.lake.tck.s3.S3Endpoint;
 
 import java.io.IOException;
@@ -74,7 +75,7 @@ public final class MinioServer implements AutoCloseable {
         Process p = pb.start();
         MinioServer m = new MinioServer(p.pid(), port);
         Runtime.getRuntime().addShutdownHook(new Thread(m::close));
-        HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+        HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder(null, null).connectTimeout(Duration.ofSeconds(2)).build();
         long until = System.currentTimeMillis() + 30_000;
         while (System.currentTimeMillis() < until && p.isAlive()) {
             try {
@@ -105,7 +106,7 @@ public final class MinioServer implements AutoCloseable {
         if (Files.isExecutable(cached)) {
             return cached;
         }
-        HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(10)).build();
+        HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(10)).build();
         String expected = System.getenv("DRISHTI_MINIO_SHA256");
         try {
             if (expected == null || expected.isBlank()) {
@@ -118,7 +119,7 @@ public final class MinioServer implements AutoCloseable {
             Path part = cached.resolveSibling(cached.getFileName() + ".part");
             HttpResponse<InputStream> got = http.send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofInputStream());
             skipUnless(got.statusCode() == 200, "the MinIO binary is not served at " + url + " (HTTP " + got.statusCode() + ")");
-            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            MessageDigest sha = Hashes.digest("SHA-256");
             try (InputStream in = got.body(); var out = Files.newOutputStream(part)) {
                 byte[] buf = new byte[1 << 16];
                 for (int n; (n = in.read(buf)) > 0; ) {

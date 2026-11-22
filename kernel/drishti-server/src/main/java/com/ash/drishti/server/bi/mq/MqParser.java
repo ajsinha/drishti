@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.tools.codec.CanonicalJson;
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -463,9 +465,8 @@ public final class MqParser {
     /** A short fingerprint of the canonical form (the same query in any key order has the same hash). */
     public static String hash(ModelQuery q) {
         try {
-            byte[] text = JSON.writeValueAsBytes(canonical(q));
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text)).substring(0, 16);
-        } catch (JsonProcessingException | java.security.NoSuchAlgorithmException e) {
+            return Hashes.sha256Hex(CanonicalJson.bytes(JSON.convertValue(canonical(q), Object.class))).substring(0, 16);
+        } catch (IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -473,8 +474,8 @@ public final class MqParser {
     /** The canonical form as JSON text. */
     public static String json(ModelQuery q) {
         try {
-            return new String(JSON.writeValueAsBytes(canonical(q)), StandardCharsets.UTF_8);
-        } catch (JsonProcessingException e) {
+            return CanonicalJson.write(JSON.convertValue(canonical(q), Object.class));
+        } catch (IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }

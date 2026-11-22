@@ -257,4 +257,56 @@ class ArchitectureRulesTest {
                     com.tngtech.archunit.base.DescribedPredicate.describe("is Files.createTempFile, Files.createTempDirectory or File.createTempFile",
                             (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> (t.getOwner().isEquivalentTo(java.nio.file.Files.class)
                                     || t.getOwner().isEquivalentTo(java.io.File.class)) && t.getName().startsWith("createTemp"))));
+
+    // ------------------------------------------------------------------------------------------------ Drishti Tools: one copy of each shared job
+
+    /** Hashes are Drishti Tools' {@code Hashes} ({@code MessageDigest.isEqual}, the constant-time compare, is not a digest and stays allowed). */
+    @ArchTest
+    static final ArchRule noMessageDigestOutsideTools = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is MessageDigest.getInstance",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) ->
+                                    t.getOwner().isEquivalentTo(java.security.MessageDigest.class) && t.getName().equals("getInstance"))))
+            .because("a digest is tools-codec's Hashes (docs/plans/G4_REHEARSAL.md, Gate 4 fixes: F9)");
+
+    /** Every HTTP client starts in {@code DrishtiTools.httpBuilder}: the site proxy and the TLS settings are applied in that one place. */
+    @ArchTest
+    static final ArchRule httpClientsStartInDrishtiTools = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.api.DrishtiTools")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is HttpClient.newBuilder or HttpClient.newHttpClient",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) ->
+                                    t.getOwner().isEquivalentTo(java.net.http.HttpClient.class)
+                                            && (t.getName().equals("newBuilder") || t.getName().equals("newHttpClient")))))
+            .because("a client built elsewhere ignores the site's proxy and TLS settings");
+
+    /** The shared jobs have one class each, in Drishti Tools: Drishti keeps no class of these names. */
+    @ArchTest
+    static final ArchRule noCopyOfAToolsClass = noClasses()
+            .that().haveSimpleName("Hashes").or().haveSimpleName("CanonicalJson").or().haveSimpleName("CsvReader").or().haveSimpleName("CsvWriter")
+            .or().haveSimpleName("TempFolder").or().haveSimpleName("BusinessCalendar").or().haveSimpleName("HostCalendars").or().haveSimpleName("RowFeed")
+            .or().haveSimpleName("TlsHttp").or().haveSimpleName("TlsContexts").or().haveSimpleName("XlsxWriter")
+            .should().resideInAPackage("com.ash.drishti..")
+            .allowEmptyShould(true)
+            .because("tools-codec, tools-csv, tools-files, tools-net and tools-xlsx, Rachana Core's BusinessCalendar and Lake's RowFeed are the one copy");
+
+    /** The drishti-common layer reads no lake (the row feed is Drishti Lake's, used by the loaders). */
+    @ArchTest
+    static final ArchRule commonDoesNotDependOnTheLake = noClasses()
+            .that().resideInAPackage("com.ash.drishti.common..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.lake..");
+
+    /** Zip writing: the archives that are written by the JDK's ZipOutputStream today; the list only shrinks (a new archive uses a tools writer). */
+    @ArchTest
+    static final ArchRule zipWritingOnlyWhereItIsToday = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.module.runtime.Dmod")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.design.PackFragment")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.modules.ModulePublicController")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.collab.compliance.ExportService")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.collab.compliance.ExportService$Sink")
+            .should().callConstructor(java.util.zip.ZipOutputStream.class, java.io.OutputStream.class)
+            .orShould().callConstructor(java.util.zip.ZipOutputStream.class, java.io.OutputStream.class, java.nio.charset.Charset.class);
 }

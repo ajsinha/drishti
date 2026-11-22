@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.banking.compute.var.CurrencyBook;
@@ -189,10 +190,6 @@ class VarGoldenMatrixTest {
     }
 
     private static String sha(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text);
     }
 }

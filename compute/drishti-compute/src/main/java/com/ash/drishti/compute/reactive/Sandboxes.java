@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.reactive;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -24,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
@@ -220,11 +220,7 @@ public final class Sandboxes {
     }
 
     static String ownerFolder(String owner) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(owner.getBytes(StandardCharsets.UTF_8))).substring(0, 24);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(owner).substring(0, 24);
     }
 
     private void save(Sandbox s) {

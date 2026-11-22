@@ -179,10 +179,10 @@ public final class VarService implements AutoCloseable {
     /** The pinned dates (VAR_GUIDE.md section 26.8). */
     private final com.ash.drishti.server.caches.PinKeeper pins;
     /** The business-date calendars the pinned dates are found in ({@code drishti.business-date.calendar}). */
-    private volatile com.ash.drishti.common.BusinessCalendar calendar = com.ash.drishti.common.BusinessCalendar.of("USNY");
+    private volatile com.ash.rachana.el.BusinessCalendar calendar = com.ash.rachana.el.BusinessCalendar.of("USNY");
 
     /** Sets the business-date calendars (the server's {@code drishti.business-date.calendar}). */
-    void calendar(com.ash.drishti.common.BusinessCalendar c) {
+    void calendar(com.ash.rachana.el.BusinessCalendar c) {
         if (c != null) {
             this.calendar = c;
         }

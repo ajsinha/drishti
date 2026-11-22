@@ -32,6 +32,7 @@
     <drishti.test.forks>1</drishti.test.forks>
   </properties>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>

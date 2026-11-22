@@ -29,6 +29,9 @@
   <description>Error codes, JSON, fingerprints, config; the disk-backed, size-bounded, self-clearing cache (RocksDB) for live data; the
     latest-state store and live fan-out shared by the message-queue connectors (ActiveMQ, RabbitMQ)</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-files</artifactId></dependency>
+    <dependency><groupId>com.ash.rachana</groupId><artifactId>rachana-core</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- SettingsFile (-Ddrishti.settings.file): the server reads the optional settings file through this (Drishti Tools) -->
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-settings</artifactId></dependency>

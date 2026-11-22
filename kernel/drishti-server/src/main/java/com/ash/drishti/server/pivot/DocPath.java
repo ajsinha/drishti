@@ -15,13 +15,13 @@
  */
 package com.ash.drishti.server.pivot;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.kernel.api.pivot.PivotView;
 import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.ElException;
 import com.ash.rachana.el.Expr;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -191,12 +191,8 @@ record DocPath(String text, String id, List<Level> levels, List<Step> leaf, bool
                 return dotted;
             }
         }
-        try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(text.strip().getBytes(StandardCharsets.UTF_8));
-            return "path_" + HexFormat.of().formatHex(h).substring(0, 10);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, text.strip());
+        return "path_" + HexFormat.of().formatHex(h).substring(0, 10);
     }
 
     private static boolean plainStep(Step s) {

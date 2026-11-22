@@ -95,7 +95,7 @@ public final class RestSourcePlugin implements SourcePlugin {
             }
         });
         this.proxy = ProxySettings.resolve(ctx.settings(), baseUrl);          // proxy.* / the site default; https targets are tunnelled with CONNECT
-        HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout));
+        HttpClient.Builder hb = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(timeout);
         this.tls = DrishtiTools.tlsMaterial(ctx.settings(), baseUrl, "base-url");      // fails the start, naming the setting and the file
         this.http = (tls == null ? hb : TlsHttp.apply(hb, tls)).build();
     }

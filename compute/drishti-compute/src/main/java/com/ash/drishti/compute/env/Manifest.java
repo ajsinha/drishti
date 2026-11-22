@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.env;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -24,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -115,14 +115,10 @@ public final class Manifest {
     }
 
     private static String hash(Path p) throws IOException {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            try (InputStream in = new DigestInputStream(Files.newInputStream(p), md)) {
-                in.transferTo(java.io.OutputStream.nullOutputStream());
-            }
-            return HexFormat.of().formatHex(md.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+        MessageDigest md = Hashes.digest("SHA-256");
+        try (InputStream in = new DigestInputStream(Files.newInputStream(p), md)) {
+            in.transferTo(java.io.OutputStream.nullOutputStream());
         }
+        return HexFormat.of().formatHex(md.digest());
     }
 }

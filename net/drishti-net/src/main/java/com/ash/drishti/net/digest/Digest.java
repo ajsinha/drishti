@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net.digest;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -203,7 +204,7 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
         try {
             Digest stable = new Digest(nodeId, url, version, protocol, packs, kinds, Load.NONE, calendar, tags, redact, access, reports, 0, services, modules,
                     modulesFingerprint);
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(CANON.writeValueAsString(stable).getBytes(StandardCharsets.UTF_8));
+            byte[] h = Hashes.of(Hashes.SHA_256, CANON.writeValueAsString(stable));
             return HexFormat.of().formatHex(h, 0, 8);
         } catch (Exception e) {
             throw new IllegalStateException(e);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.embed;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -157,11 +158,7 @@ public final class EmbedKeys {
     }
 
     private static byte[] sha256(byte[] b) {
-        try {
-            return MessageDigest.getInstance("SHA-256").digest(b);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.digest("SHA-256").digest(b);
     }
 
     private static String hex(byte[] b) {

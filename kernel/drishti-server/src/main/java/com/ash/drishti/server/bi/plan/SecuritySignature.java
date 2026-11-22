@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.plan;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.engine.SqlCompiler;
@@ -22,7 +23,6 @@ import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -223,10 +223,6 @@ public final class SecuritySignature {
     }
 
     public static String sha(String s) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s);
     }
 }

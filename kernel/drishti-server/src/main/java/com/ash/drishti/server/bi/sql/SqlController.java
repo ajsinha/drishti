@@ -167,6 +167,6 @@ public class SqlController {
             return "";
         }
         String s = String.valueOf(v);
-        return s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r") ? "\"" + s.replace("\"", "\"\"") + "\"" : s;
+        return com.ash.tools.csv.CsvWriter.quote(s, ',');
     }
 }

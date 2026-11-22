@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
@@ -370,7 +371,7 @@ public final class ModelCatalog {
     MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
-        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), v.flat().model().holidays() == null ? datasets.calendar() : com.ash.drishti.common.BusinessCalendar.of(v.flat().model().holidays()));   // the model's calendar when it names one (wave B)
+        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), v.flat().model().holidays() == null ? datasets.calendar() : com.ash.rachana.el.BusinessCalendar.of(v.flat().model().holidays()));   // the model's calendar when it names one (wave B)
         MqService.Runner run;
         if (v.compat()) {
             BiStore.Item item = f.item();
@@ -1324,10 +1325,6 @@ public final class ModelCatalog {
     }
 
     static String hash(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8))).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text).substring(0, 16);
     }
 }

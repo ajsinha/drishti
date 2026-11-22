@@ -15,18 +15,15 @@
  */
 package com.ash.drishti.common;
 
+import com.ash.tools.files.TempFolder;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 /**
- * The one place the server makes temporary files and folders. The server keeps a per-process folder, {@code drishti-<pid>}, under the configured temp base
+ * The one place the server makes temporary files and folders (the folder itself is Drishti Tools' {@code TempFolder}; this class adds the server's policy: the configured base, the JVM temp-folder warning and the health report). The server keeps a per-process folder, {@code drishti-<pid>}, under the configured temp base
  * ({@code drishti.tmp-dir} / {@code DRISHTI_TMP_DIR}, default {@code <data dir>/tmp/server}). {@link #start} makes it, lists (never removes) the folders of dead
  * processes, removes stale native-library copies from the base ({@link JvmTempDir}), sets the {@code java.io.tmpdir} property to the folder and removes the
  * folder on a clean shutdown.
@@ -39,23 +36,17 @@ import java.util.stream.Stream;
  */
 public final class TempFiles {
 
-    /** Names a folder as one of ours (a stale folder is removed only if it holds this marker and its process is gone). */
+    /** Names a folder as one of ours (a stale folder is listed only if it holds this marker and its process is gone). */
     static final String MARKER = "drishti-temp-folder.txt";
-    static final String LEGACY_MARKER = ".drishti-tmp";
 
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(TempFiles.class);
     private static final String PREFIX = "drishti-";
     private static final ReentrantLock LOCK = new ReentrantLock();
-    private static volatile Path root;
-    private static volatile Path base;
+    private static volatile TempFolder folder;
     private static volatile String startWarning;
 
     private TempFiles() {}
 
-    /**
-     * The configured base: the {@code drishti.tmp-dir} system property, then {@code DRISHTI_TMP_DIR}, then {@code <data dir>/tmp/server}
-     * ({@link com.ash.drishti.api.DataDir}: never the system temp folder, which may be a small in-memory file system).
-     */
     /**
      * The base when {@link #start} did not run (unit tests, a library used outside the server): the configured base when one
      * is set, else the JVM's temp folder, so nothing is made under a working directory that is not the server's.
@@ -68,6 +59,10 @@ public final class TempFiles {
         return p == null || p.isBlank() ? System.getProperty("java.io.tmpdir", "/tmp") : com.ash.drishti.api.Roots.anchored(p.strip()).toString();
     }
 
+    /**
+     * The configured base: the {@code drishti.tmp-dir} system property, then {@code DRISHTI_TMP_DIR}, then {@code <data dir>/tmp/server}
+     * ({@link com.ash.drishti.api.DataDir}: never the system temp folder, which may be a small in-memory file system).
+     */
     public static String configuredBase() {
         String p = System.getProperty("drishti.tmp-dir");
         if (p == null || p.isBlank()) {
@@ -84,8 +79,8 @@ public final class TempFiles {
     public static Path start(String baseDir) {
         LOCK.lock();
         try {
-            if (root != null) {
-                return root;
+            if (folder != null && folder.made()) {
+                return folder.root();
             }
             JvmTempDir.startup();                                    // loads it, so it records java.io.tmpdir before it is set below
             Path b = Path.of(baseDir == null || baseDir.isBlank() ? configuredBase() : baseDir).toAbsolutePath();
@@ -99,7 +94,6 @@ public final class TempFiles {
                 LOG.warn(startWarning);                               // before logging is set up: the console; the server repeats it once it is
             }
             System.setProperty("java.io.tmpdir", dir.toString());   // reaches System.getProperty readers only (see the class comment)
-            Runtime.getRuntime().addShutdownHook(new Thread(TempFiles::cleanUp, "drishti-tmp-cleanup"));
             return dir;
         } finally {
             LOCK.unlock();
@@ -113,121 +107,69 @@ public final class TempFiles {
 
     /** The process folder; made (without changing {@code java.io.tmpdir}) the first time something needs a temporary file, when {@link #start} did not run. */
     public static Path root() {
-        Path r = root;
-        if (r != null) {
-            return r;
+        TempFolder f = folder;
+        if (f != null) {
+            return f.root();
         }
         LOCK.lock();
         try {
-            if (root == null) {
+            if (folder == null) {
                 make(Path.of(libraryBase()).toAbsolutePath());
-                Runtime.getRuntime().addShutdownHook(new Thread(TempFiles::cleanUp, "drishti-tmp-cleanup"));
             }
-            return root;
+            return folder.root();
         } finally {
             LOCK.unlock();
         }
     }
 
-    private static Path make(Path b) {
-        try {
-            Files.createDirectories(b);
-            // removeStale(b); disabled 2026-10-17: removing other processes' folders at start is not safe on every machine (see removeStale)
-            Path dir = b.resolve(PREFIX + ProcessHandle.current().pid());
-            Files.createDirectories(dir);
-            Files.writeString(dir.resolve(MARKER), "pid " + ProcessHandle.current().pid() + "\n");
-            base = b;
-            root = dir;
-            return dir;
-        } catch (IOException e) {
-            throw new UncheckedIOException("cannot make the temp folder under " + b + ": " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Disabled (2026-10-17): removing other processes' folders at start is not safe on every machine (a reused process id, or a
-     * link inside a folder, can lead a delete to files that are not ours). It is no longer called; left-over folders are only
-     * listed ({@link #staleFolders()}, Admin, Health) for a person to remove by hand. Kept for a test that runs it on purpose.
-     */
-    static int removeStale(Path b) {
-        int removed = 0;
-        try (Stream<Path> s = Files.list(b)) {
-            for (Path p : s.toList()) {
-                String n = p.getFileName().toString();
-                if (!n.startsWith(PREFIX) || !n.substring(PREFIX.length()).matches("\\d{1,10}") || !(Files.isRegularFile(p.resolve(MARKER)) || Files.isRegularFile(p.resolve(LEGACY_MARKER)))) {
-                    continue;
-                }
-                long pid = Long.parseLong(n.substring(PREFIX.length()));
-                if (pid != ProcessHandle.current().pid() && ProcessHandle.of(pid).isEmpty()) {
-                    deleteTree(p);
-                    removed++;
-                }
-            }
-        } catch (IOException e) {
-            // a base that cannot be listed has nothing of ours to clean
-        }
-        return removed;
+    private static Path make(Path base) {
+        folder = TempFolder.of(base, PREFIX, MARKER);
+        return folder.root();                                        // makes it, with the clean-up on a clean stop
     }
 
     /** Removes the process folder (the shutdown hook; also callable by a test). */
     public static void cleanUp() {
-        Path r = root;
-        if (r != null) {
-            deleteTree(r);
-            root = null;
+        TempFolder f = folder;
+        if (f != null) {
+            f.cleanUp();
         }
     }
 
     /** A new empty file in {@code dir}, for a write that is then moved over its target (same folder, so the move is atomic). */
     public static Path createFile(Path dir, String prefix, String suffix) throws IOException {
-        return Files.createTempFile(dir, prefix, suffix);
+        return TempFolder.createFile(dir, prefix, suffix);
     }
 
     /** A new empty file in the process folder. */
     public static Path createFile(String prefix, String suffix) throws IOException {
-        return Files.createTempFile(root(), prefix, suffix);
+        return TempFolder.createFile(root(), prefix, suffix);
     }
 
     /** A new folder in {@code parent}. */
     public static Path createDir(Path parent, String prefix) throws IOException {
-        return Files.createTempDirectory(parent, prefix);
+        return TempFolder.createDir(parent, prefix);
     }
 
     /** A new folder in the process folder. */
     public static Path createDir(String prefix) throws IOException {
-        return Files.createTempDirectory(root(), prefix);
+        return TempFolder.createDir(root(), prefix);
     }
 
     /** A named subfolder of the process folder (made if absent), for a library's spill space. */
     public static Path subDir(String name) {
-        try {
-            return Files.createDirectories(root().resolve(name));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        root();
+        return folder.subDir(name);
     }
 
     /** What the health page shows: where the folder is and how much it holds. */
     public static Map<String, Object> info() {
-        Path r = root != null ? root : null;
-        Map<String, Object> jvm = JvmTempDir.info(Path.of(base != null ? base.toString() : configuredBase()));
-        if (r == null) {
-            return with(Map.of("base", configuredBase(), "path", "", "bytes", 0L, "files", 0L), jvm);
+        TempFolder f = folder;
+        Map<String, Object> jvm = JvmTempDir.info(Path.of(f != null ? f.base().toString() : configuredBase()));
+        if (f == null || !f.made()) {
+            return with(Map.of("base", f != null ? f.base().toString() : configuredBase(), "path", "", "bytes", 0L, "files", 0L), jvm);
         }
-        long[] size = {0, 0};
-        try (Stream<Path> s = Files.walk(r)) {
-            s.filter(Files::isRegularFile).forEach(f -> {
-                size[1]++;
-                try {
-                    size[0] += Files.size(f);
-                } catch (IOException e) {
-                    // vanished while counted
-                }
-            });
-        } catch (IOException | UncheckedIOException e) {
-            // counted as far as it could be
-        }
-        return with(Map.of("base", base.toString(), "path", r.toString(), "bytes", size[0], "files", size[1]), jvm);
+        long[] size = f.usage();
+        return with(Map.of("base", f.base().toString(), "path", f.root().toString(), "bytes", size[0], "files", size[1]), jvm);
     }
 
     private static Map<String, Object> with(Map<String, Object> a, Map<String, Object> b) {
@@ -238,29 +180,7 @@ public final class TempFiles {
 
     /** The process folders under the base that are left over from dead processes (for a test and the health page). */
     public static List<String> staleFolders() {
-        Path b = base;
-        if (b == null) {
-            return List.of();
-        }
-        try (Stream<Path> s = Files.list(b)) {
-            return s.filter(p -> p.getFileName().toString().matches(PREFIX + "\\d{1,10}") && (Files.isRegularFile(p.resolve(MARKER)) || Files.isRegularFile(p.resolve(LEGACY_MARKER)))
-                    && ProcessHandle.of(Long.parseLong(p.getFileName().toString().substring(PREFIX.length()))).isEmpty()).map(p -> p.toString()).toList();
-        } catch (IOException e) {
-            return List.of();
-        }
-    }
-
-    private static void deleteTree(Path p) {
-        try (Stream<Path> s = Files.walk(p)) {
-            s.sorted(Comparator.reverseOrder()).forEach(f -> {
-                try {
-                    Files.deleteIfExists(f);
-                } catch (IOException e) {
-                    // a file still open elsewhere: the next start removes the folder as stale
-                }
-            });
-        } catch (IOException | UncheckedIOException e) {
-            // already gone
-        }
+        TempFolder f = folder;
+        return f == null ? List.of() : f.staleFolders().stream().map(Path::toString).toList();
     }
 }

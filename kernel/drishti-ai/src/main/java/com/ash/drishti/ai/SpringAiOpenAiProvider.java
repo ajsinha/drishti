@@ -59,8 +59,8 @@ public final class SpringAiOpenAiProvider extends BaseProvider {
         super(c, Set.of(Capability.TOOL_CALLS, Capability.JSON_MODE));
         String base = c.baseUrl().isEmpty() ? "https://api.openai.com" : c.baseUrl().replaceAll("/+$", "");
         ProxySettings proxy = ProxySettings.resolve(c.settings(), base);               // proxy.* or the site default; https is tunnelled with CONNECT
-        HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NEVER));
+        HttpClient.Builder hb = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(c.timeout()).version(HttpClient.Version.HTTP_1_1)
+                .followRedirects(HttpClient.Redirect.NEVER);
         TlsMaterial tls = DrishtiTools.tlsMaterial(c.settings(), base, "base-url");
         JdkClientHttpRequestFactory rf = new JdkClientHttpRequestFactory((tls == null ? hb : TlsHttp.apply(hb, tls)).build());
         rf.setReadTimeout(c.timeout());

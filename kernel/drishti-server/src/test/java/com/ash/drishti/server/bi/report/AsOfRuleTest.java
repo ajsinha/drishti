@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.report;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicReference;

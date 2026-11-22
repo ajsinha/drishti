@@ -36,7 +36,7 @@ public final class BridgeClient {
 
     public BridgeClient(Duration timeout) {
         this.timeout = timeout;
-        this.http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).connectTimeout(timeout).build();
+        this.http = com.ash.drishti.api.DrishtiTools.httpBuilder().followRedirects(HttpClient.Redirect.NEVER).connectTimeout(timeout).build();
     }
 
     /**

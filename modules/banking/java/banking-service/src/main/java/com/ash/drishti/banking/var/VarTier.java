@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.common.TempFiles;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.banking.compute.var.VarHotFile;
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -337,11 +337,7 @@ final class VarTier implements AutoCloseable {
         }
         String key = "format=" + VarHotFile.VERSION + "|date=" + date + "|vectors=" + vectors + "|hierarchy=" + hierarchy + "|scenario-set="
                 + scenarioSet + "|rules=" + rules;
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(key);
     }
 
     Path folder(LocalDate date) {

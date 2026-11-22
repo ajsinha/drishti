@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.engine.history;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import java.time.LocalDate;

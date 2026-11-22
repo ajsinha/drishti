@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.error.DrishtiException;
@@ -496,26 +497,22 @@ public final class SimmService {
 
     /** The SHA-256 of the engine's input (every element, in order): equal digests, equal figures. */
     static String digest(SimmInput in) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            StringBuilder b = new StringBuilder(in.calculationCurrency()).append('|').append(Double.doubleToLongBits(in.thresholdFx())).append('\n');
-            for (SimmInput.Trade t : in.trades()) {
-                b.append(t.id()).append('|').append(t.productClass()).append('\n');
-            }
-            for (SimmInput.Element e : in.elements()) {
-                b.append(e.trade()).append('|').append(e.factor() == null ? "?" : e.factor().toString()).append('|').append(e.measure()).append('|')
-                        .append(Double.doubleToLongBits(e.value())).append('|').append(Double.doubleToLongBits(e.impliedVol())).append('\n');
-                if (b.length() > 1 << 16) {
-                    md.update(b.toString().getBytes(StandardCharsets.UTF_8));
-                    b.setLength(0);
-                }
-            }
-            b.append(in.addOns());
-            md.update(b.toString().getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(md.digest());
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+        MessageDigest md = Hashes.digest("SHA-256");
+        StringBuilder b = new StringBuilder(in.calculationCurrency()).append('|').append(Double.doubleToLongBits(in.thresholdFx())).append('\n');
+        for (SimmInput.Trade t : in.trades()) {
+            b.append(t.id()).append('|').append(t.productClass()).append('\n');
         }
+        for (SimmInput.Element e : in.elements()) {
+            b.append(e.trade()).append('|').append(e.factor() == null ? "?" : e.factor().toString()).append('|').append(e.measure()).append('|')
+                    .append(Double.doubleToLongBits(e.value())).append('|').append(Double.doubleToLongBits(e.impliedVol())).append('\n');
+            if (b.length() > 1 << 16) {
+                md.update(b.toString().getBytes(StandardCharsets.UTF_8));
+                b.setLength(0);
+            }
+        }
+        b.append(in.addOns());
+        md.update(b.toString().getBytes(StandardCharsets.UTF_8));
+        return HexFormat.of().formatHex(md.digest());
     }
 
     /**

@@ -28,6 +28,7 @@
   <name>drishti-net</name>
   <description>Drishti*net: many servers as one (membership by gossip over HTTP, capability digests, routing, the cluster key)</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
