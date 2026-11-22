@@ -595,8 +595,6 @@ is a dry run; every change and every place to review is printed (exit 1 when a f
 not written):
 
 ```bash
-python3 tools/drishti.py sutra upgrade config/sutras            # what would change
-python3 tools/drishti.py sutra upgrade config/sutras --write    # write it
 ```
 
 ```text
