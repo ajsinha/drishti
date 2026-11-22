@@ -19,7 +19,7 @@
 ## Unreleased
 
 - **i7b documents.** The developer quickstart, the deployment and QA guide (with the QA figures VaR 167,372,692 and ES 210,131,972 for the bank on
-  2026-11-06), the IDE guide (the whole platform in one IDE) and a new VS Code guide are written for the five-repository platform; the root README names
+  2026-11-06), the IDE guide (VS Code, and the whole platform in one IDE) are written for the five-repository platform; the root README names
   the platform; the guides' repository links point at github.com/drishti-platform; loading, upkeep, archives and protocol compliance in the data
   lake guide and the operations guide point to Drishti Lake's guides instead of repeating them; lake roots are written under `${lake.data.dir}`.
 
