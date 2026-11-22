@@ -196,7 +196,7 @@ kinds: [trade]
 settings:
   domain: trading
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
-  root: ${DRISHTI_ICEBERG_ROOT:${lake.data.dir:./data}/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
   credential: ${DRISHTI_ICEBERG_CREDENTIAL:}

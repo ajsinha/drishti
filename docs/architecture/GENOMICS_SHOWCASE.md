@@ -197,7 +197,7 @@ No real patient, organism, sequence or structure is used anywhere. Section 12 (Q
 ## 8. Drishti Elements: what exists, what is new
 
 No screen code draws anything: every card is an Elements component, and what is missing is added to a library (the standing rule,
-[ELEMENTS.md section 3.1](https://github.com/drishti-platform/drishti-elements/blob/main/docs/DESIGN.md)). Domain kinds go to the module's own library
+[ELEMENTS.md section 3.1](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)). Domain kinds go to the module's own library
 (`modules/genomics/elements/drishti-genomics/`), built from drishti-chart's primitives; anything another domain would use goes to the
 generic library.
 

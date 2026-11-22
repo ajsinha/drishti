@@ -372,7 +372,7 @@ The connector is undated. Serve the same kind from a dated connector as well and
 ```yaml
 # modules/banking/packs/counterparty-risk/pack.yaml (sketch)
 connectors:
-  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}", domain: credit } }
+  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
   limits-mq:     { plugin: activemq, kinds: [credit-limit], settings: { destinations: queue:limits,
                    kind.limits: credit-limit, id-field.limits: LIMIT_ID } }
 routes:
