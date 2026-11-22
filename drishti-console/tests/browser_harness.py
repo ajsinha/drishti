@@ -161,7 +161,15 @@ async def settled(page, quiet: int = 50, timeout: int = BROWSER_WAIT_MS, animati
     """Waits on the page's settled signal (Drishti.settled: the console loads it; Browsers puts it on every page as an init script).
     ``animations=False``: a chart counts as ready once drawn, its animation not waited for (a test that reads a chart's option and the
     page's text, never its pixels)."""
-    return await page.evaluate("(o) => window.Drishti.settled(o)", {"quiet": quiet, "timeout": timeout, "animations": animations})
+    for attempt in range(3):
+        try:
+            return await page.evaluate("(o) => window.Drishti.settled(o)", {"quiet": quiet, "timeout": timeout, "animations": animations})
+        except Exception as e:  # noqa: BLE001
+            # a page that navigates once more after its load (WebKit sets the device cookie and reloads where Chromium does not) ends the
+            # context this call ran in: wait for the new document and ask again, on the signal, not on a pause
+            if "Execution context was destroyed" not in str(e) or attempt == 2:
+                raise
+            await page.wait_for_load_state("load")
 
 
 async def open_settled(page, url: str, ready: str | None = None, phases: Phases | None = None, animations: bool = True) -> None:
