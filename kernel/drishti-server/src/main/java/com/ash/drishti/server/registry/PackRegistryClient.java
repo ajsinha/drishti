@@ -214,11 +214,7 @@ public final class PackRegistryClient {
     // -- checks ------------------------------------------------------------------------------------------------------
 
     static String sha256(byte[] data) {
-        try {
-            return Hashes.sha256Hex(data);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(data);
     }
 
     public static boolean verify(byte[] data, String signature, String publicKey) {

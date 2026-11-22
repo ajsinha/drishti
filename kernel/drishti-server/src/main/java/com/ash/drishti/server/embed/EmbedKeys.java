@@ -158,11 +158,7 @@ public final class EmbedKeys {
     }
 
     private static byte[] sha256(byte[] b) {
-        try {
-            return Hashes.digest("SHA-256").digest(b);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.digest("SHA-256").digest(b);
     }
 
     private static String hex(byte[] b) {

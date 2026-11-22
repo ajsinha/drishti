@@ -72,11 +72,7 @@ public final class PackArchive {
     }
 
     public static String sha256(byte[] data) {
-        try {
-            return Hashes.sha256Hex(data);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(data);
     }
 
     /** Unpacks {@code data} into {@code dest} (an empty folder) and finds the pack folder in it. */
