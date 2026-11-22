@@ -485,9 +485,9 @@ The data tables (`world-regions.yaml`, `formats.yaml`) are byte-identical to the
 
 | Item | Result |
 |---|---|
-| The entry | `static/render/3.2.0/drishti-render.js` keeps the API (`render`, `patch`, `subscribe`, the `Handle`, `<drishti-screen>`, `window.DrishtiRender`) and `drishti-elements.js` the embed elements 2.x (`<drishti-view>`, `<drishti-panel>`): same options, events, attributes and contract. |
+| The entry | `static/render/3.3.0/drishti-render.js` keeps the API (`render`, `patch`, `subscribe`, the `Handle`, `<drishti-screen>`, `window.DrishtiRender`) and `drishti-elements.js` the embed elements 2.x (`<drishti-view>`, `<drishti-panel>`): same options, events, attributes and contract. |
 | Every panel | drawn by `drishti-views` `paint()` (`shadow: false` inside the host's shadow root): the title line, strip, freshness line, keys, every kind; drishti-chart, drishti-graph, drishti-data, drishti-inputs and the geo part handed to it from the same module graph. |
-| Host part (Drishti's) | `render/3.2.0/m/`, 10 modules, 1,598 lines: where the ViewModel comes from (`/api/view`, embed v2, the token, the sign-in window), navigation in place with its own Back bar (links are real `/v/…` addresses; the painter's cancelable `link` event opens them), About this page, live frames handed to the painter, the stream over drishti-events. |
+| Host part (Drishti's) | `render/3.3.0/m/`, 10 modules, 1,598 lines: where the ViewModel comes from (`/api/view`, embed v2, the token, the sign-in window), navigation in place with its own Back bar (links are real `/v/…` addresses; the painter's cancelable `link` event opens them), About this page, live frames handed to the painter, the stream over drishti-events. |
 | CSP | the sheet (`drishti-render.css`, generated from Elements' tokens with every theme and the painter's sheets, 1,579 lines, was 3,292) is adopted by the shadow root; the loader's page links for those sheets are claimed without a request, so a host page with `style-src 'self'` loads no stylesheet and reports no violation. No inline styles. |
 | Explain | unchanged code: its `paintPanels` calls the same `render()`; Why it moved (drawer, its three views, the full page) is the painter's. |
 | Deleted | the `drishti-renderer` library (17 modules 2,783 lines, its bundle 1,972, harness and fixtures 134), `tools/renderer_fixtures.py`, `renderer.test.mjs`, `test_elements_renderer_browser.py`; `render/3.1.0/` (its paths answer 308 to 3.2.0 for one release). Not ported (DD-10, DD-11): GenUI stream messages, `facets`, `behaviours: 'console'` (accepted; the painter's tables), the `draw*` parts of the handle (no caller). |
@@ -740,6 +740,44 @@ pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenThe
 | `IcebergMovedConnectorFileTest` (health text: `cannot read sa-ccr log: File does not exist` instead of the moved-lake words) | pass | G4 (Lake's read problems word a moved Iceberg table differently) | **open** (Lake's reason words for a moved table) |
 | `BankingPacksTest` (183 vs 186), `ConsoleAnswersRecordTest` (recorded answers older than the code), `DomainPacksTest` (no source holds `dms-score/...`), `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly`, `VarShardClusterTest.anOwnerDown...` | **fail on `main` too** | pre-existing | not changed |
 
+## Pass 4: finish (2026-11-21, on `g4/finish`)
+
+Products installed from their tags into a scratch Maven repository in the order tools 1.1.0, Rachana, Lake 0.9.0; Drishti pins Tools 1.1.0, Lake 0.9.0 (+ bom), Rachana 1.0.0 (the `develop` build, installed into the scratch repository only; the tag follows the gate) and Elements 3.3.1 (the test-fixes lane's vendoring, one Elements version).
+
+| Item | State | What was done |
+|---|---|---|
+| Re-pin | closed | the poms' pins; lake files read `${lake.data.dir}` (the server writes it with `drishti.data.dir`, `tools/javacmd.py` passes it; the official lake files name `lake.var.official.*` and `lake.ccr.official.*` because Lake 0.9.0 refuses a host's name; `config/engines/*.yaml` lake sections likewise) |
+| Level retirement (Rachana 1.0.0) | closed | one level, 1.2; `rachana upgrade` removed from 1.0.0 (it lives in 0.12.0); in Drishti `LanguageLevels`, the designer's `/upgrade`, `drishti.py sutra upgrade` and `drishti.rachana.language-level` removed; Rachana's corpus re-recorded at 1.2 (481 Sutras, no problem); Rachana `./mvnw clean verify` green |
+| Proof (one targeted `mvnw` run) | green | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `PackagedVarGoldenTest` (Lake tag's Python on `LAKE_PYTHON`), `HierarchyEquivalenceTest`, `ArchitectureRulesTest`, Drishti profile conformance, `PackSutrasTest` (parity), `ReferenceSutrasTest`, `ViewPipelineTest`, `RachanaAggregatesTest`, `WindowFunctionsTest`, `PackLoaderTest`, `PackSettingsTest`; tools/lake `test_javaload`, `test_build`, `test_demo`: 60 pass. The printed VaR/ES figures were not compared with 167,372,692 / 210,131,972, and the demo lake's tables and row counts were not compared with the base build |
+| Not done | open | the `PackStateStore` and `LoadStore` imports, the data-source override migration, `FileUserStore`/`FileAuditLog` and their settings, the WebKit test setup, the phone-width sideways scroll, the launcher move per LAUNCHER_STANDARD (the generator `tools/launch/launchers.py`, its tests and IDE_GUIDE change together), the browser smoke on Chromium and WebKit |
+| Python failures (tools and the docs tests, 4 workers) | open | `tools/lake/test_maintain*` (the Lake 0.9.0 jar rejects `--relayout`: `lake maintain` and the maintain admin tests fail); `test_sdk_builds_genomics` (2) and the genomics generator check; `test_pvf_sets`; `test_launchers` docs check; the docs tests for error codes, api endpoints and docs rot (the references to the retired upgrade paths were fixed afterwards and not run again) |
+
+## Pass 3: BI at 1.2 (2026-11-21, on `g4/level-12`, Rachana `develop` `76bf5b23`, pin `1.0.0`)
+
+Nothing in Drishti reads Rachana at level 1.0 any more: BI's expressions, the table layer, measures, pivot formulas, the pivot's document
+filters and connector `where` predicates parse at 1.2 (`Grammar.LEVEL`) and their lowerings know the 1.2 trees.
+
+| Item | What was done |
+|---|---|
+| Lowerings | `NodeLowering`/`NodeText` (BI), `Compiler`/`SqlLowering`/`FormulaLowering` (bicompute), `Trees` (table layer), `BiMeasures`, `MeasureFacts`, `DocPath`, `RowPredicate` read `Op` and `Minus` (and walk `Power`, `Coalesce`); a number written in an expression is exact at 1.2: SQL, pivot text, document filters and lake push-down take its 1.0 value (`Values.normalise`), so SQL text and push-down are unchanged (`RowPredicate`'s push-down was silently off since the 1.2 default: back on) |
+| `agg(x, where = c)` | refused from 1.1 (SPEC 4.10 rule 3: `where` is no parameter of Core's `sum`, `avg`, `count`, ...). The 1.2 spelling is `calc(agg(x), where = c)` (Rachana's own catalogue examples). Each lowering reads a `calc` that edits nothing but the rows over one aggregate as that aggregate with its condition (the SQL emitter wrote `calc(where=)` and `sum(x, where=)` as the same `FILTER (WHERE ...)`), so the compiled tree is the 1.0 one; `NodeText` writes it back as `calc(...)`; `Incremental` builds its counts through `NodeText` |
+| Expressions rewritten | shipped models (`config/tables/banking`), test fixtures, tests, guides, mock-ups, tools' examples: every Core aggregate with `where =` (about 150 places). The formula parity corpus keeps each formula as recorded and asks the 1.2 text (`rachana:`) |
+| Upgrade paths | `sutra upgrade` and `LanguageLevels` were already gone (`g4/finish`); now the designer's `POST /designs/{id}/upgrade` console route, the Problems tab's level item, the ops' `upgrade()`, the design's `language` field and their doc mentions. A Sutra of a retired level gets Rachana's `RCH-2009` (as `DRS-2009`) naming `rachana 0.12 upgrade` (CLI, BUILD, RACHANA and API references say so) |
+| Conformance | the runner already takes Drishti's instance as it is (1.2) |
+| Pin | `drishti.rachana.version` back to `1.0.0` (the `g4/finish` merge had restored `0.11.0-SNAPSHOT`) |
+
+Results (one build, offline, `clean verify` of the changed modules and their dependants): drishti-bicompute **301/301** (with
+`PivotFormulaParityTest`: every recorded answer cell for cell, SQL and Java; `DifferentialTest`; `SutraAggregateParityTest`; Drishti's
+conformance), drishti-tables **52/52**, drishti-server BI **649, 648 pass**: `LiveVisualsTest` only (its fixture is missing on the base, as
+before), BI API tests (`BiApiTest` 19 and the rest of `server.bi`) green; table, pivot, designer and builder tests green; `VarGoldenMatrixTest`,
+`SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest` (2/2) **pass, bit-identical**.
+
+Exact decimals changed no figure. What changed in form only, in the table layer's Java rows (Rachana's own evaluation): a whole number
+computed from a double keeps its point (`125.0`, was `125`), and a division of exact numbers is a decimal (`500` as `BigDecimal`, was
+`Long`); the tests now hold the value. Tests changed with the language: `sum(PNL) if count() > 10 else 0` is Rachana 1.2 (Python's
+conditional, the same tree as `c ? a : b`), no longer refused; `ShippedInRachanaTest` holds that the printed text reads back as itself
+(1.2's printer writes `where=`, `and` and `a if c else b`). `LanguageLevelGuardTest` no longer exists (deleted with the level setting in
+`g4/finish`). Not run here: the console's Python suites (their conftest refuses the stale `.dmod` packages of the worktree).
 ## Gate 4 fixes: F1, F3, F5 (2026-11-21, `g4/gate4-server` from `wip/g4-rehearsal-rx` `208b491f1`)
 
 The findings of `I7B_GATE_4_REVIEW.md` (part 1), fixed at their cause.

@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 ENGINE = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_table-chart-engine.js"
-REPORT_PART = Path(__file__).resolve().parent.parent / "web" / "static" / "vendor" / "drishti-elements" / "3.2.0" / "elements" / "drishti-chart" / "src" / "drishti_chart-report.js"
+REPORT_PART = Path(__file__).resolve().parent.parent / "web" / "static" / "vendor" / "drishti-elements" / "3.3.1" / "elements" / "drishti-chart" / "src" / "drishti_chart-report.js"
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run the chart engine")
 
 HARNESS = """

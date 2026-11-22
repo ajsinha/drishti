@@ -104,11 +104,11 @@ public final class SqlLowering {
             case Expr.At a -> field(a);
             case Expr.Local l when l.name().startsWith("__h") -> Lowered.Shape.placeholder(Integer.parseInt(l.name().substring(3)));
             case Expr.Not n -> "(NOT " + cond(n.e()) + ")";
-            case Expr.Neg n -> "(-" + sql(n.e()) + ")";
+            case Expr.Minus n -> "(-" + sql(n.e()) + ")";
             case Expr.And a -> "(" + cond(a.l()) + " AND " + cond(a.r()) + ")";
             case Expr.Or o -> "(" + cond(o.l()) + " OR " + cond(o.r()) + ")";
             case Expr.Ternary t -> "(CASE WHEN " + cond(t.cond()) + " THEN " + sql(t.then()) + " ELSE " + sql(t.otherwise()) + " END)";
-            case Expr.Binary b -> binary(b);
+            case Expr.Op b -> binary(b);
             case Expr.In i -> in(i);
             case Expr.Call c -> call(c.name(), c.args(), c);
             case Expr.Form f -> call(f.name(), f.args(), f);
@@ -121,7 +121,9 @@ public final class SqlLowering {
         return "coalesce(" + sql(e) + ", FALSE)";
     }
 
-    static String literal(Object v) {
+    static String literal(Object written) {
+        // a number written in the expression is exact; SQL binds a whole one as BIGINT and any other as DOUBLE
+        Object v = written instanceof java.math.BigDecimal d ? com.ash.rachana.el.Values.normalise(d.doubleValue()) : written;
         if (v == null) {
             return "NULL";
         }
@@ -149,7 +151,7 @@ public final class SqlLowering {
         return columns.sql(parts);
     }
 
-    private String binary(Expr.Binary b) {
+    private String binary(Expr.Op b) {
         String l = sql(b.l());
         String r = sql(b.r());
         return switch (b.op()) {
@@ -287,8 +289,8 @@ public final class SqlLowering {
             return dflt;
         }
         Expr x = args.get(i);
-        boolean neg = x instanceof Expr.Neg;
-        Expr v = neg ? ((Expr.Neg) x).e() : x;
+        boolean neg = x instanceof Expr.Minus;
+        Expr v = neg ? ((Expr.Minus) x).e() : x;
         if (v instanceof Expr.Lit l && l.value() instanceof Number n) {
             return neg ? -n.intValue() : n.intValue();
         }

@@ -31,9 +31,7 @@ public class RachanaConfiguration {
      * and a module stopped is gone at once ({@link LiveCompiler}).
      */
     @Bean
-    public LiveCompiler elCompiler(RachanaProperties props,
-            @org.springframework.beans.factory.annotation.Value("${drishti.rachana.language-level:1.2}") String languageLevel) {
-        DrishtiRachana.level(languageLevel);
+    public LiveCompiler elCompiler(RachanaProperties props) {
         DrishtiRachana.configure(DrishtiRachana.optionsOf(props), null);       // the drishti profile's instance, from the settings (8.3b)
         return LiveCompiler.current();
     }

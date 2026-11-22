@@ -82,9 +82,9 @@ def test_the_readme_records_the_source_the_licence_and_the_sizes():
     assert "ne_10m_admin_1_states_provinces" in vendor and "Public domain" in vendor
 
 
-def test_the_shapes_are_all_local_and_the_script_loads_nothing_from_outside():
-    js = (CONSOLE / "web" / "static" / "js" / "drishti_geomap.js").read_text(encoding="utf-8")
-    assert not re.search(r"https?://", js) and "/static/vendor/echarts/maps/" in js, "drishti_geomap.js loads local files only"
+def test_the_shapes_are_all_local_and_the_map_helper_loads_nothing_from_outside():
+    js = (elements_pin.ROOT / "elements" / "drishti-chart" / "drishti_chart-geohelper.js").read_text(encoding="utf-8")
+    assert not re.search(r"https?://", js) and "vendor/echarts/maps/" in js, "the geo part loads local files only"
     assert not re.search(r"https?://", (MAPS / "world-points.json").read_text(encoding="utf-8"))
 
 
@@ -97,7 +97,8 @@ def test_the_elements_get_the_same_shapes_with_cors(backend):
     assert embed.get("/embed/v1/regions/ZZZ.json", headers={"Origin": HOST}).status_code == 404
     for bad in ("aus", "AU", "AUSS", "..%2Fregions%2FAUS", "A%2FS"):
         assert embed.get(f"/embed/v1/regions/{bad}.json", headers={"Origin": HOST}).status_code in (404, 405, 422), bad
-    assert embed.get("/embed/v1/js/geomap.js", headers={"Origin": HOST}).status_code == 200
+    assert embed.get("/embed/v1/js/elements-chart-geo.js", headers={"Origin": HOST}).status_code == 200
+    assert embed.get("/embed/v1/js/geomap.js", headers={"Origin": HOST}).status_code == 404            # the console's own map script is gone: the geo part is the one helper
 
 
 PANEL = {"id": "geography", "kind": "map", "title": "Where it is", "area": "main", "empty": False, "error": None,
@@ -172,8 +173,8 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
     for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html); BI's maps are drishti-chart's (its geo and report parts)
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert "drishti_geomap.js" not in text and text.index("drishti_chart-geohelper.js") < text.index("drishti_chart-report.js") < text.index("drishti_bi-visuals.js"), page
-    for page in ("terminal/view.html", "build/design.html", "build/shared.html"):
+    for page in ("terminal/view.html", "build/design.html", "build/shared.html"):               # the Sutra panels' maps: the same geo part, before the panel charts
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
-        assert text.index("drishti_geomap.js") < text.index("drishti_charts.js"), page
+        assert "drishti_geomap.js" not in text and text.index("drishti_chart-geohelper.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
-    assert "'geomap', 'charts'" in embed and "'elements-chart-geo', 'elements-chart-report'].concat(" in embed          # the report's libraries: drishti-core and -grid, drishti-chart's parts, then BI's
+    assert "'elements-chart-geo', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'charts'" in embed and "geomap" not in embed and "'elements-chart-geo', 'elements-chart-report'].concat(" in embed          # the report's libraries: drishti-core and -grid, drishti-chart's parts, then BI's

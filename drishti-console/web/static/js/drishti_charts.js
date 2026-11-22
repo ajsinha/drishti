@@ -81,7 +81,10 @@
         gl = gl || window.Drishti.elements.core.loadScript(options.glUrl || window.Drishti.elements.core.staticUrl('vendor/echarts-gl/echarts-gl.min.js'));
         return gl;
       },
-      geo: function () { return window.drishtiGeo ? Promise.resolve(window.drishtiGeo) : Promise.reject(new Error('drishti_geomap.js is not loaded')); },
+      geo: function () {      // drishti-chart's geo part, over the vendored shapes (an embed names where they are: drishtiBi.mapsBase)
+        var P = window.Drishti.elements.chart_geo, given = window.drishtiBi && window.drishtiBi.mapsBase;
+        return P ? Promise.resolve(P.geoHelper(given ? { base: given } : {})) : Promise.reject(new Error('the geo part of drishti-chart is not loaded'));
+      },
       graph: function () { var G = window.Drishti.elements.graph; return G ? Promise.resolve(G) : window.Drishti.elements.core.load('drishti-graph'); },   // a graph panel: drishti-graph (the page's, or loaded when a view has one)
       onLink: function (link, el) { open(el, link, options); },
       onPlaces: places

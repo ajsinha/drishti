@@ -466,6 +466,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             }
             at.put(root.name(), path);
             values.put(root.keys().get(0), path.toString());          // the canonical setting, which every reader asks first
+            if ("data".equals(root.name())) {
+                values.put("lake.data.dir", path.toString());             // Drishti Lake's name of the data folder (the lake files' ${lake.data.dir})
+            }
             if (key != null) {
                 values.put(key, path.toString());                         // and the one that named it (a former name), as the same folder
             }

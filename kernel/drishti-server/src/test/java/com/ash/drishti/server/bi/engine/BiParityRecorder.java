@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.server.bi.Tables;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.LinkedHashMap;

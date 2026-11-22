@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.iceberg;
 
 
-import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.lake.delta.write.LakeCli;

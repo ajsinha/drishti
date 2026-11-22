@@ -80,7 +80,7 @@ public sealed interface FormulaAst {
     }
 
     /**
-     * An aggregate call of a built-in ({@code sum(PNL, where=PNL > 0)}, {@code percentile(PNL, 0.99)}, {@code count()}).
+     * An aggregate call of a built-in ({@code calc(sum(PNL), where=PNL > 0)}, {@code percentile(PNL, 0.99)}, {@code count()}).
      *
      * @param name the built-in's name
      * @param args the row expressions (the inputs of the built-in)

@@ -31,12 +31,8 @@ import java.util.function.Supplier;
  */
 public final class DrishtiRachana {
 
-    /**
-     * The language level of this server: the newest (G4, after {@code rachana upgrade}); every shipped Sutra and fragment declares it
-     * (LanguageLevelGuardTest). A Sutra of an older level is read at its own level and offered the upgrade ({@link LanguageLevels}).
-     */
-    public static final String LEVEL = "1.2";
-    private static volatile String level = LEVEL;
+    /** The one language level of this server: Rachana 1.x reads one level, 1.2. */
+    public static final String LEVEL = com.ash.rachana.profile.Grammar.LEVEL;
 
     private static final Object LOCK = new Object();
     private static final BlockLibrary BLOCKS = new BlockLibrary();
@@ -143,17 +139,9 @@ public final class DrishtiRachana {
                 .withFormats(props.formatsFile(), props.packFormatsFiles());
     }
 
-    /** The server's language level now ({@code drishti.rachana.language-level}, default {@link #LEVEL}). */
+    /** The server's language level: the one level. */
     public static String level() {
-        return level;
-    }
-
-    /** The one language level of this server ({@code drishti.rachana.language-level}, default {@link #LEVEL}, the newest). */
-    public static void level(String l) {
-        synchronized (LOCK) {
-            level = l == null || l.isBlank() ? LEVEL : l.strip();
-            changed();
-        }
+        return LEVEL;
     }
 
     /**
@@ -198,7 +186,6 @@ public final class DrishtiRachana {
             SERVED.clear();
             options = RachanaOptions.DEFAULTS;
             kinds = List::of;
-            level = LEVEL;
             changed();
         }
     }
@@ -252,6 +239,6 @@ public final class DrishtiRachana {
                 .functions(providers.toArray(FunctionProvider[]::new))
                 .calendars(spec -> HostCalendars.core(BusinessCalendar.of(spec)))
                 .build();
-        return Rachana.at(level, options, Profile.core(), drishti);   // pinned in the one call (the server's setting), never a library default
+        return Rachana.with(options, Profile.core(), drishti);   // Rachana 1.x reads one language level
     }
 }

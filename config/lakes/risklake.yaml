@@ -19,6 +19,6 @@
 # with lake: risklake.
 lake: risklake
 format: delta
-root: ${drishti.data.dir:./data}/delta/risklake
+root: ${lake.data.dir:./data}/delta/risklake
 defaults: {load-mode: replace}
 tables: {}

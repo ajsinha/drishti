@@ -92,7 +92,7 @@ class TablesCliTest {
         assertThat(run("preview", "trading.legs", "--sample", "trades.jsonl", "--related", "core.books=books.jsonl", "--fx", "fx.jsonl", "--json"))
                 .isEqualTo(TablesCli.OK);
         assertThat(out()).as("EUR to USD as quoted, EUR to JPY through USD, the book's desk; GBP has no quote: no rate")
-                .contains("[ \"row-1\", null, 0, \"T1\", \"1\", 125, 18750, \"Rates\" ]").contains("[ \"row-1\", null, 1, \"T1\", \"2\", null, null, \"Rates\" ]");
+                .contains("[ \"row-1\", null, 0, \"T1\", \"1\", 125.0, 18750.0, \"Rates\" ]").contains("[ \"row-1\", null, 1, \"T1\", \"2\", null, null, \"Rates\" ]");
         assertThat(run("preview", "trading.legs", "--sample", "trades.jsonl", "--related", "core.nope=books.jsonl")).isEqualTo(TablesCli.USAGE);
     }
 

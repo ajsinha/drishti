@@ -27,7 +27,7 @@ measures:
   Notional:       { expr: sum(trade.NOTIONAL), format: amount0 }
   MTM:            { expr: sum(trade.MTM), format: signed0, description: Net mark-to-market in USD. }
   PnL 1d:         { expr: sum(trade.PNL_1D), format: signed0 }
-  Losses:         { expr: "sum(trade.MTM, where = trade.MTM < 0)", format: signed0, description: The negative marks only. }
+  Losses:         { expr: "calc(sum(trade.MTM), where = trade.MTM < 0)", format: signed0, description: The negative marks only. }
   Worst trade:    { expr: min(trade.MTM), format: signed0 }
   Best trade:     { expr: max(trade.MTM), format: signed0 }
   MTM history:    { expr: sum(history.MTM), format: signed0, description: "the sampled values of MTM added up at each sample time; chart it by history.ts" }

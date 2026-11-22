@@ -50,7 +50,7 @@ def jvm_parent() -> argparse.ArgumentParser:
     return p
 
 
-SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint modules/banking/packs/market-risk --strict\n  drishti.py sutra upgrade config/sutras --write\n  drishti.py sutra test modules/banking/packs/market-risk --junit build/market-risk.xml\n"
+SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint modules/banking/packs/market-risk --strict\n  drishti.py sutra test modules/banking/packs/market-risk --junit build/market-risk.xml\n"
                   "  drishti.py sutra shape samples/ --out build\n  drishti.py sutra design samples/ --kind ticket\n"
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 
@@ -81,10 +81,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                               ("design", "draft a Sutra from samples (--each: one per subfolder)", "samples.json, a folder, or with --each a folder of folders"),
                               ("lint", "parse and check every Sutra of a pack or file (--strict: help warnings DRS-2045..2047 fail)", "a pack folder or .sutra.yaml"),
                               ("test", "render each Sutra against its tests/ samples and check expect.yaml", "a pack folder or .sutra.yaml"),
-                              ("preview", "render samples; --out writes HTML snapshots", "a pack folder or .sutra.yaml"),
-                              ("upgrade", "rewrite Sutras and fragments of an older Rachana language level for the server's level, the same meaning "
-                                          "(Rachana's rachana upgrade with the server's functions); dry run unless --write; every place to review listed",
-                               "a folder, .sutra.yaml, .fragment.yaml or .block.yaml")):
+                              ("preview", "render samples; --out writes HTML snapshots", "a pack folder or .sutra.yaml")):
         p = add(s, name, h.cmd_sutra, f"sutra {name}: {what}", [jvm], SUTRA_EXAMPLES)
         p.set_defaults(sutra_cmd=name)
         p.add_argument("paths", nargs="*", metavar="PATH", help=paths)
@@ -94,8 +91,6 @@ def build_parser(h) -> argparse.ArgumentParser:
         p.add_argument("--samples", help="JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json")
         p.add_argument("--kind", help="design: the kind to name the Sutra for")
         p.add_argument("--each", action="store_true", help="design: one Sutra per subfolder of .json samples")
-        if name == "upgrade":
-            p.add_argument("--write", action="store_true", help="upgrade: write the files (without it, a dry run that prints each change and flag)")
         if name == "design":
             load_module("schemapack", "schemapack.py").add_schema_arguments(p)
             p.add_argument("--key", help="with --schema: the id field, FIELD or kind=FIELD,kind2=FIELD2 (default: from the schema)")

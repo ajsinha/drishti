@@ -16,7 +16,7 @@
 (docs/architecture/ARCHITECTURE.md §28 section 12.2, wave A acceptance 6): the real server and console of tests/bi_report_stack.py on ports 18912 and
 17912 with the cross-pack Delta lake (tools/packgen/banking/make_data.py --lake, a few thousand rows) and the trading-risk sample. Each recipe has
 its expression, the fields it is grouped by and its scope. A measure is asked as a model query with ``define`` (as the risk reader, who sees every row) and must
-answer rows; a row expression is checked by the server and asked inside ``distinct(...)`` (a value) or ``count(..., where=...)`` (a condition); a rule
+answer rows; a row expression is checked by the server and asked inside ``distinct(...)`` (a value) or ``calc(count(...), where=...)`` (a condition); a rule
 is checked by the server in rule scope.
 
 The parsing half needs nothing; the running half is skipped when the built server jar, uv or its offline cache (to make the lake) is missing, or a
@@ -80,7 +80,7 @@ def stack(tmp_path_factory):
 def ask(expr: str, by: list, scope: str):
     if scope == "rule":
         return rs.api("POST", "/bi/expr/validate", "rita", ["risk"], {"expr": expr, "scope": "rule", "model": MODEL + "@1", "alias": "trades"})
-    measure = expr if scope == "aggregate" else (f"count(trades, where = {expr})" if re.search(r"==|!=|<=|>=|<|>|&&|\|\||^!", expr) and " ? " not in expr
+    measure = expr if scope == "aggregate" else (f"calc(count(trades), where = {expr})" if re.search(r"==|!=|<=|>=|<|>|&&|\|\||^!", expr) and " ? " not in expr
                                                  else f"distinct({expr})")
     return rs.api("POST", "/bi/mq", "rita", ["risk"], {"mq": 1, "model": MODEL + "@1", "define": {"Recipe": measure},
                                                         "select": {"fields": by, "measures": ["Recipe"]}, "limit": 5})

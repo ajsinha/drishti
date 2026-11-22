@@ -84,7 +84,7 @@ public final class Expressions {
         }
         CheckedMode.Parsed p;
         try {
-            p = CheckedMode.parse(text);
+            p = CheckedMode.parse(text, com.ash.rachana.profile.Grammar.LEVEL);
         } catch (ElException e) {
             int at = Math.max(0, Math.min(text.length(), e.position()));
             throw new ExpressionException(NodeLowering.CODE, e.getMessage(), null, at, Math.min(text.length(), at + 1));

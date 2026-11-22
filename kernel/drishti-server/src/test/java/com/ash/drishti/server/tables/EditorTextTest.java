@@ -97,7 +97,7 @@ class EditorTextTest {
         assertThat(MeasureFacts.addsUp(m.get("Per"), m).word()).isEqualTo("ratio");
         assertThat(MeasureFacts.addsUp(m.get("Dist"), m).adds()).isFalse();
         assertThat(MeasureFacts.addsUp("sum(", m).word()).isEqualTo("unknown");
-        assertThat(MeasureFacts.explain("sum(t.MTM, where = t.DESK == 'FX')")).contains("sum").contains("t.MTM").contains("t.DESK");
+        assertThat(MeasureFacts.explain("calc(sum(t.MTM), where = t.DESK == 'FX')")).contains("sum").contains("t.MTM").contains("t.DESK");
     }
 
     @Test

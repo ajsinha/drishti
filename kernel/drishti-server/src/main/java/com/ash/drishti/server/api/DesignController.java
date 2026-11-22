@@ -455,39 +455,6 @@ public class DesignController {
     }
 
     /**
-     * Body {@code {baseRev, sample?}}: the Design's Sutra, written for an older language level, upgraded to the server's with the same
-     * meaning (Rachana's {@code rachana upgrade} over the server's functions) as one step of its log (undo takes it back). Answers as
-     * {@code /ops}, plus {@code upgrade: {from, to, changes, flags}}: each flag a place whose answer 1.2 computes differently for some
-     * data, to review. A Sutra the upgrade refuses (or a blocking flag) is {@code 400} and nothing changes.
-     */
-    @PostMapping(path = "/{id}/upgrade", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ObjectNode upgrade(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
-        JsonNode b = body(request);
-        int baseRev = baseRev(b, true, null);
-        com.ash.rachana.tools.Upgrade.Result[] up = new com.ash.rachana.tools.Upgrade.Result[1];
-        OpResult[] result = new OpResult[1];
-        StoredDesign d = designs.applyOps(who.user(), id, baseRev, yaml -> {
-            com.ash.rachana.tools.Upgrade.Result r = com.ash.drishti.rachana.LanguageLevels.upgrade("design.sutra.yaml", yaml);
-            if (!r.writable()) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the Sutra cannot be upgraded: "
-                        + (r.refused() != null ? r.refused() : "a name it uses is a word of the newer grammar; rename it first"));
-            }
-            up[0] = r;
-            ObjectNode op = mapper.createObjectNode();
-            op.putArray("ops").addObject().put("op", "text").put("yaml", r.text());
-            List<Op> ops = BuilderController.ops(op);
-            OpResult applied = applier.apply(yaml, ops);
-            result[0] = applied;
-            return new DesignService.Applied(applied.yaml(), mapper.valueToTree(Ops.toJson(applied.problems().isEmpty() ? ops : List.of())));
-        });
-        ObjectNode out = outcome(d, result[0], text(b, "sample"), who);
-        ObjectNode u = out.putObject("upgrade").put("from", up[0].from()).put("to", up[0].to());
-        u.set("changes", mapper.valueToTree(up[0].changes()));
-        u.set("flags", mapper.valueToTree(up[0].flags()));
-        return out;
-    }
-
-    /**
      * The Sutra texts the Design's log passes through, oldest first: version 0 is the text before the first step the log still
      * holds, version n the text after step n. {@code current} marks the one the Design is at (undo moves it back). Answers
      * {@code {versions: [{n, at, ops, current}]}}; the texts are read one at a time at {@code /versions/{n}}.
@@ -568,8 +535,6 @@ public class DesignController {
         out.put("rev", d.rev).put("yaml", d.sutra).put("about", d.about).put("form", d.form).put("status", d.status).put("opsAt", d.opsAt).put("opsCount", d.ops.size());
         out.set("problems", mapper.valueToTree(r == null ? List.of() : r.problems()));
         out.put("applied", r == null ? 0 : r.applied());
-        out.putObject("language").put("level", com.ash.drishti.rachana.LanguageLevels.declared(d.sutra)).put("server", com.ash.drishti.rachana.DrishtiRachana.level())
-                .put("older", com.ash.drishti.rachana.LanguageLevels.older(d.sutra));
         if (!d.samples.isEmpty() && !d.sutra.isBlank()) {
             try {
                 out.set("preview", mapper.valueToTree(preview(d.id, sample, who)));
@@ -682,9 +647,6 @@ public class DesignController {
                 o.set("baseMoved", moved);
             }
             o.put("sutra", d.sutra).put("notes", d.notes).put("about", d.about).put("form", d.form);
-            String declared = com.ash.drishti.rachana.LanguageLevels.declared(d.sutra);
-            o.putObject("language").put("level", declared).put("server", com.ash.drishti.rachana.DrishtiRachana.level())
-                    .put("older", com.ash.drishti.rachana.LanguageLevels.older(d.sutra));
             o.set("tests", mapper.valueToTree(d.tests));
             o.put("opsAt", d.opsAt);
             ArrayNode log = o.putArray("ops");                // the steps, without the Sutra texts they hold

@@ -35,44 +35,43 @@ from bi_report_helpers import card_value, clean, open_report, settled, sign_in  
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
 from select_helpers import has_option
 
-DATASET = "nv-demo-trade"          # the dataset the model nv-demo reads (2.2: a dataset and a model)
-TABLE = "file:table:bi.nv_demo_trade"   # the table it is (tables migrate)
+TABLE = "file:table:bi.nv_demo_trade"   # the table the model nv-demo reads
 MODEL = "nv-demo@1"
 REPORT = "file:report:nv-demo"
 DAYS = ("2026-10-07", "2026-10-08")
 COUNTRY = {"DESK-FX": "US", "DESK-FI": "GB", "DESK-EQD": "JP"}
 
-DATASET_YAML = """rachana: 2
-expressions: 2
-dataset: nv-demo-trade
+TABLE_YAML = """rachana: 3
+table: bi.nv_demo_trade
 version: 1.0.0
 title: "New visuals demo: trade"
 sample: true
-source: { connector: trading-store, kind: trade }
-refresh: { schedule: "daily 06:00", on-load: true }
+from: { kind: trade, connector: trading-store }
+keys: [tradeId]
 columns:
-  tradeId:     { type: string, role: key }
-  desk:        { type: string }
-  book:        { type: string }
-  productType: { type: string }
-  currency:    { type: string }
-  status:      { type: string }
-  notional:    { type: decimal }
-  mtm:         { type: decimal }
-  tradeDate:   { type: date }
-  country:     { type: string, expr: "desk == 'DESK-FX' ? 'US' : desk == 'DESK-FI' ? 'GB' : 'JP'" }
-  lat:         { type: decimal, expr: "desk == 'DESK-FX' ? 40.7 : desk == 'DESK-FI' ? 51.5 : 35.7" }
-  lon:         { type: decimal, expr: "desk == 'DESK-FX' ? -74 : desk == 'DESK-FI' ? -0.1 : 139.7" }
+  tradeId:     { path: "$.tradeId", type: string, role: key, key: true }
+  desk:        { path: "$.desk", type: string }
+  book:        { path: "$.book", type: string }
+  productType: { path: "$.productType", type: string }
+  currency:    { path: "$.currency", type: string }
+  status:      { path: "$.status", type: string }
+  notional:    { path: "$.notional", type: decimal }
+  mtm:         { path: "$.mtm", type: decimal }
+  tradeDate:   { path: "$.tradeDate", type: date }
+  country:     { expr: "$.desk == 'DESK-FX' ? 'US' : $.desk == 'DESK-FI' ? 'GB' : 'JP'", type: string }
+  lat:         { expr: "$.desk == 'DESK-FX' ? 40.7 : $.desk == 'DESK-FI' ? 51.5 : 35.7", type: decimal }
+  lon:         { expr: "$.desk == 'DESK-FX' ? -74 : $.desk == 'DESK-FI' ? -0.1 : 139.7", type: decimal }
+materialize: on-load
+refresh: { schedule: "daily 06:00", on-load: true }
 """
 
-MODEL_YAML = """rachana: 2
-expressions: 2
+MODEL_YAML = """rachana: 3
 model: nv-demo
 version: 1.0.0
 title: "New visuals demo"
 sample: true
-datasets:
-  trade: { dataset: nv-demo-trade, role: fact }
+tables:
+  trade: { table: bi.nv_demo_trade, role: fact }
 measures:
   Notional:         { expr: "sum(trade.notional)", format: amount0 }
   MTM:              { expr: "sum(trade.mtm)", format: signed0 }
@@ -118,9 +117,9 @@ class Stack(bi_report_stack.ReportStack):
         self.server_args += ["--drishti.bi.refresh.tick=2s"]               # the refresh scheduler looks every 2 s here (30 s as shipped)
 
     def prepare(self, work):
-        (work / "config/bi/datasets" / "nv-demo-trade.dataset.yaml").write_text(DATASET_YAML)
-        (work / "config/bi/models").mkdir(parents=True, exist_ok=True)
-        (work / "config/bi/models" / "nv-demo.model.yaml").write_text(MODEL_YAML)
+        (work / "config/tables/bi").mkdir(parents=True, exist_ok=True)
+        (work / "config/tables/bi" / "nv_demo_trade.table.yaml").write_text(TABLE_YAML)
+        (work / "config/tables/bi" / "nv-demo.model.yaml").write_text(MODEL_YAML)
         (work / "config/bi/reports" / "nv-demo.report.yaml").write_text(REPORT_YAML)
 
 

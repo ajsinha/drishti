@@ -266,7 +266,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; EMBED_GUIDE.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "elements-tree", "about", "about-hints", "zoom", "elements-inputs", "controls",
+ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "elements-tree", "about", "about-hints", "zoom", "elements-inputs", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-frame", "bi-live", "bi-phone", "elements-chart-geo", "elements-chart-report")
 
 

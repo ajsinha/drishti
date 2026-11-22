@@ -34,7 +34,6 @@ import java.util.Set;
  */
 public final class NodeText {
 
-    private static final Set<String> CONDITIONAL_AGGREGATES = Set.of("sum", "avg", "min", "max", "count", "distinct");
     private static final Set<String> RANKS = Set.of("rank", "dense_rank", "percent_rank");
     private static final Set<String> ORDERED = Set.of("lag", "lead", "moving_avg", "moving_sum", "moving_min", "moving_max");
     /** The compiler's names Rachana spells otherwise. */
@@ -64,13 +63,13 @@ public final class NodeText {
             case Node.UserRef u -> field(List.of("user", u.attribute()));
             case Node.MeasureRef m -> new Expr.Call("measure", null, List.of(new Expr.Lit(m.name())));
             case Node.Cond c -> new Expr.Ternary(tree(c.test()), tree(c.yes()), tree(c.no()));
-            case Node.Un u -> "!".equals(u.op()) ? new Expr.Not(tree(u.operand())) : new Expr.Neg(tree(u.operand()));
+            case Node.Un u -> "!".equals(u.op()) ? new Expr.Not(tree(u.operand())) : new Expr.Minus(tree(u.operand()));
             case Node.In i -> new Expr.In(tree(i.value()), i.items().size() == 1 && i.items().get(0) instanceof Node.UserRef ? tree(i.items().get(0))
                     : list(i.items()), i.negated());
             case Node.Bin b -> switch (b.op()) {
                 case "&&" -> new Expr.And(tree(b.left()), tree(b.right()));
                 case "||" -> new Expr.Or(tree(b.left()), tree(b.right()));
-                default -> new Expr.Binary(b.op(), tree(b.left()), tree(b.right()));
+                default -> new Expr.Op(b.op(), tree(b.left()), tree(b.right()));
             };
             case Node.Call c -> call(c);
         };
@@ -122,14 +121,12 @@ public final class NodeText {
             }
             return new Expr.Call(name, null, args, named);
         }
-        if (CONDITIONAL_AGGREGATES.contains(f) && a.size() == 2) {
-            args.add(tree(a.get(0)));
-            named.put("where", tree(a.get(1)));
-        } else if ("percentile".equals(f) && a.size() == 3) {
-            args.add(tree(a.get(0)));
-            args.add(tree(a.get(1)));
-            named.put("where", tree(a.get(2)));
-        } else if (RANKS.contains(f) && a.size() >= 2) {
+        Integer before = NodeLowering.CONDITIONAL.get(f);
+        if (before != null && a.size() == before + 1) {                       // sum(x, c): calc(sum(x), where = c)
+            Expr agg = new Expr.Call(name, null, a.subList(0, before).stream().map(NodeText::tree).toList(), Map.of());
+            return new Expr.Call("calc", null, List.of(agg), Map.of("where", tree(a.get(before))));
+        }
+        if (RANKS.contains(f) && a.size() >= 2) {
             args.add(tree(a.get(0)));
             boolean desc = !(a.get(1) instanceof Node.Str s) || !"asc".equals(s.value().toLowerCase(Locale.ROOT));
             named.put("desc", new Expr.Lit(desc));

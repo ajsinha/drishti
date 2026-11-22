@@ -269,9 +269,9 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
   lists everything people build, what it uses and what uses it.
 - **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
-  graph, the designer kit) are [Drishti Elements](https://github.com/drishti-platform/drishti-elements), a separate project by the same owner
-  with its own repository and [docs](https://drishti-platform.github.io/drishti-elements/), which Drishti uses as an external, vendored component
-  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/<version>/`, see
+  graph, the designer kit) are [Drishti Elements](https://github.com/ajsinha/drishti-elements), a separate project by the same owner
+  with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
+  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.3.1/`, see
   [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
   Drishti keeps three libraries of its own on top (insight, renderer, and the banking module's risk). Every screen and every designer is
   drawn with them, guard tests fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live,
@@ -467,18 +467,18 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 405k | 2,053 |
-| Java, tests | 168k | 1,030 |
-| Python, product (console, tools, loaders, feeds) | 156k | 784 |
+| Java, product | 397k | 2,015 |
+| Java, tests | 164k | 1,015 |
+| Python, product (console, tools, loaders, feeds) | 156k | 782 |
 | Python, tests | 114k | 681 |
-| JavaScript, product (console and its own Elements libraries) | 64k | 304 |
+| JavaScript, product (console and its own Elements libraries) | 63k | 302 |
 | JavaScript, tests | 1.1k | 7 |
 | CSS | 16k | 105 |
 | HTML (templates and pages) | 42k | 379 |
-| YAML: configuration, Sutras, data contracts | 121k | 1,594 |
-| Markdown: guides, tutorials, design | 224k | 376 |
+| YAML: configuration, Sutras, data contracts | 120k | 1,698 |
+| Markdown: guides, tutorials, design | 222k | 376 |
 
-About **683k lines of product code** and **283k lines of tests** (41% of the product code), with **224k lines of documentation**.
+About **674k lines of product code** and **279k lines of tests** (41% of the product code), with **222k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -486,16 +486,16 @@ About **683k lines of product code** and **283k lines of tests** (41% of the pro
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 12: world, markets, publicsector, research, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 670 |
-| Server REST handlers | 839 |
+| Console routes | 671 |
+| Server REST handlers | 831 |
 | Drishti's own Elements libraries (Drishti Elements itself: vendored) | 2 libraries, 18 ES modules |
 | Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
 | Sutras in the shipped packs | 265 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,564: Java 944, console 280, browser 183, tools 150, JavaScript 7 |
-| Documents under docs/ | 201 (25 guides, 11 tutorials) |
+| Test files | 1,548: Java 929, console 280, browser 183, tools 149, JavaScript 7 |
+| Documents under docs/ | 200 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 

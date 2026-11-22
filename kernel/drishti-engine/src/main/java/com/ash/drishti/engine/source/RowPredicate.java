@@ -295,7 +295,7 @@ public final class RowPredicate {
             conjuncts(and.r(), push, eq);
             return;
         }
-        if (e instanceof Expr.Binary b) {
+        if (e instanceof Expr.Op b) {
             ScanRequest.Op op = switch (b.op()) {
                 case "==" -> ScanRequest.Op.EQ;
                 case "!=" -> ScanRequest.Op.NE;
@@ -374,10 +374,10 @@ public final class RowPredicate {
     private static Object constant(Expr e) {
         if (e instanceof Expr.Lit l) {
             Object v = l.value();
-            return v instanceof DataNode n ? n.unwrap() : v;
+            return v instanceof DataNode n ? n.unwrap() : v instanceof java.math.BigDecimal d ? com.ash.rachana.el.Values.normalise(d.doubleValue()) : v;
         }
-        if (e instanceof Expr.Neg neg && neg.e() instanceof Expr.Lit l && l.value() instanceof Number num) {
-            return -num.doubleValue();
+        if (e instanceof Expr.Minus neg && neg.e() instanceof Expr.Lit l && l.value() instanceof Number num) {
+            return com.ash.rachana.el.Values.normalise(-num.doubleValue());
         }
         return NONE;
     }

@@ -685,7 +685,7 @@ error) or **holistic** (no merge: every cell gets all of its rows in one call, u
 
 | Language | Write | Runs | Kind | On as shipped |
 |---|---|---|---|---|
-| **Formula** (Rachana) | `sum(r * w) / sum(w)`, `sum(PNL, where = PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `count(where = PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
+| **Formula** (Rachana) | `sum(r * w) / sum(w)`, `calc(sum(PNL), where = PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `calc(count(), where = PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
 | **SQL macro** (DuckDB) | `CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)`; `CREATE MACRO slope(y, x) AS regr_slope(y, x)` | a macro that is a formula of the built-ins is rewritten into their states (mergeable, exact); any other runs in DuckDB per grouping set (holistic) | as found | yes |
 | **Python** | a class with `start`, `add`, `merge`, `finish`, decorated `@function(name=..., kind=Mergeable, inputs={...})` | the node's sandboxed `pivot-fn` worker pool, fed Arrow batches over a pipe (never a file) | as declared, proven by the harness | no (`functions.python.enabled`) |
 | **Java plug-in** | a class implementing `AggFunction` in a jar in `functions.java.dir` | in the server; the jar pinned by its SHA-256 when an administrator approves it | any | no (`functions.java.enabled`) |
@@ -779,7 +779,7 @@ it. Each level is computed from its own rows: an average, a ratio, a distinct co
 sum's total is the engine's too (the console adds nothing up). Measures of two facts get one statement per fact.
 
 A model's measure is a pivot function when its DEL is an expression of aggregates of one fact's rows: `sum`, `avg`, `min`, `max`, `count`,
-`distinct`, `percentile`, `ratio`, `where=` conditions, arithmetic, row functions and other measures by `measure('Name')`. Whether a
+`distinct`, `percentile`, `ratio`, conditions (`calc(sum(x), where = c)`), arithmetic, row functions and other measures by `measure('Name')`. Whether a
 measure adds up is the engine's answer (its `plainSum`), not a guess from its text. Measures that read beyond the rows of their group
 (time intelligence, running and analytic functions, filter contexts, balances, Python measures) are the model's own query's: they get no
 total, and the answer says why ("no total for YTD: ytd(...) is not an aggregate of its group's rows"). A dataset read directly from its
@@ -1071,20 +1071,20 @@ add up, and try a what-if. Each step shows the UI, the command line and the JSON
 
 ### Step 11 · A formula in a view
 
-**UI.** `PIVOT trade <GO>`, `PRODUCT_TYPE` on Rows. In Values, edit a value's text to `sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)`
+**UI.** `PIVOT trade <GO>`, `PRODUCT_TYPE` on Rows. In Values, edit a value's text to `calc(sum(NOTIONAL), where=NOTIONAL > 100000000) / sum(NOTIONAL)`
 (the share of notional in trades over 100 million). Every row and the grand total show the ratio; the grand total is the ratio over all the trades, not
 an average of the rows' ratios.
 
 **CLI.**
 
 ```
-drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)"
+drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "calc(sum(NOTIONAL), where=NOTIONAL > 100000000) / sum(NOTIONAL)"
 ```
 
 **JSON.**
 
 ```json
-{"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", "as": "Large share"}]}
+{"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "calc(sum(NOTIONAL), where=NOTIONAL > 100000000) / sum(NOTIONAL)", "as": "Large share"}]}
 ```
 
 ![The trades by product type with the large-notional share as a value](../../tutorials/img/t37/01-large-share.jpg)

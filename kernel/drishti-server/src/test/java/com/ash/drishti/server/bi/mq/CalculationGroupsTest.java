@@ -62,7 +62,7 @@ class CalculationGroupsTest {
               AvgMTM:   { expr: avg(trades.mtm) }
               Biggest:  { expr: max(trades.notional) }
               Worst:    { expr: min(trades.mtm) }
-              EurMTM:   { expr: "sum(trades.mtm, where = trades.currency == 'EUR')" }
+              EurMTM:   { expr: "calc(sum(trades.mtm), where = trades.currency == 'EUR')" }
               Names:    { expr: distinct(trades.cpty) }
               PerM:     { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
               Share:    { expr: "measure('MTM') / measure('Notional')" }

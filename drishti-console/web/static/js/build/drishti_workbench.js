@@ -27,7 +27,6 @@
   var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').getAttribute('data-text') || '', about: init.about || '', form: init.form || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
   store.state.sampleInfo = init.samples;
 store.state.baseMoved = init.baseMoved || null;
-store.state.language = init.language || null;
   var live = $('[data-live]'), status = $('[data-say]'), stale = 0;
 
   // ---- what is said ---------------------------------------------------------------------------------------------------------

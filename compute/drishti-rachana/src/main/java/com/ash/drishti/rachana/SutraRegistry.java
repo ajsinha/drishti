@@ -280,10 +280,6 @@ public final class SutraRegistry implements AutoCloseable {
             try {
                 String domain = f.getParent() == null ? "" : f.getParent().getFileName().toString();
                 String text = Files.readString(f, StandardCharsets.UTF_8);
-                String older = LanguageLevels.advice(text, f.toString());
-                if (older != null) {
-                    LOG.warn("sutra {}: {}", f, older);              // a user's Sutra of an older level: read at its level, the upgrade offered
-                }
                 s = parser.parse(text, f.getFileName().toString(), domain);
                 List<SutraProblem> exprProblems = expressions.get().check(s);
                 if (!exprProblems.isEmpty()) {
