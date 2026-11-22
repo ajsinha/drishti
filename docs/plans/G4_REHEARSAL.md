@@ -436,6 +436,32 @@ blotter page, the trading landing) paint through the same LiveSetGrid over a Dat
 | LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
 | LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
 
+### Pass 3 live tables, the fixes (2026-11-21, on `g4/live-fixes` from `wip/g4-rehearsal-rx` `14c20e677`)
+
+The owner's rulings on LS1 to LS7 and LV4 (no feature loss; audit correctness):
+
+| # | Ruling | Done |
+|---|---|---|
+| LV4, LS5 | the caller must reach the change sink and the audit record | the mount marks the person for the write it serves and `DrishtiChangeSink` refuses a change whose maker is not that person (never submitted as anyone else); `live-write-*` audit records carry the caller, the change id and its columns (subject `<table>:<change id>`), the write-back's `edit-submitted` the same id. The tray's release/reject stay Drishti's approvals page (no feature the old engine had) |
+| LS7 | Rachana's change id end to end; a repeated id gets the same answer (PROTOCOL 16) | `EditService` keeps a client's id (`[A-Za-z0-9_-]{1,64}`, Postgres `VARCHAR(64)`); `EditService.known(id)` reads the edit log or the approval queue; the sink's `madeBy`/`prior` answer a repeat from it (any node, after a restart); a repeat through the write-back API answers the change's state (`edit-repeated` audited), another person's is refused |
+| LS3 | a failing source's 503 carries the source's words, made safe | `ReadFailures` (one line, 300 characters, file paths cut to the name, URL credentials and `password=`/`token:` values as `***`), kept per kind by `KindSnapshot` for two minutes and cleared by a good read; the mount adds them to every `503 rdp.unavailable` (`message` and `source`) |
+| LS1 | FORM results keep their title column | a FORM's table has `_title` after the id, filled from the sources' listing (the search's titles) on a whole read and by Drishti*net members; the console's Title column shows when it says more than the id |
+| LS4 | a bare mnemonic's page carries the as-of notices | `GET /rdp/kinds/{word}` answers `{table, asOfNotices}`; the console's kind page shows them as a search's |
+| LS2 | N new instead of jumping: intentional | said in LIVE_RESULTS_GUIDE.md section 7 |
+| LS6 | unchanged (a declaration outlives an evicted source; read again on next use) | — |
+
+Delta upkeep: `tools/lake/maintain.py` no longer imports delta-rs; relayout, compaction, retention, checkpoint, vacuum and the report's
+shape are Drishti Lake's `lake maintain` (main `<lake commit>`). Two things the delta-rs relayout did are not carried: promoting a pack's
+columns into a table written without them (every table Lake builds has them) and the `delta.dataSkippingStatsColumns` property (Lake writes
+statistics for the id, the date, the load id and the promoted columns only). The retention rule is Drishti's again on Delta (today and
+`keep-business-days` business days before it); Iceberg keeps its own (the newest N dates), as before the move.
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11, with the repeat through a second engine, another's id refused, an unmarked write refused, the audit), `LiveTablesFixesTest` (5), `LiveIsolationTest`, `LiveBlotterBrokerAbsentTest`, `ContractColumnsTest` | pass |
+| `FormApiTest` (9, the Title column and `/kinds` notices), `FormResultsParityTest` (3, titles equal the search's), `KafkaTradeEditTest` (four eyes; the id kept; a repeat after the approval answers without a second write; another trader's repeat 403), `LiveTableValidationTest`, `StructuredSearchTest` | pass |
+| Console `test_live_results`, `test_live_routes`, `test_every_mnemonic_opens_live` | pass (`test_form_routes`: 3 fail before and after the change, the pack index of the test environment) |
+
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
 G4 item 10 (I7B_DUPLICATES U1, B6; DD-7: Jinja stays). Branch `g4/renderer` from `wip/g4-rehearsal-rx` `fd1b4a847`. Drishti Elements

@@ -2524,8 +2524,8 @@ A lake that is only ever written grows without bound. **Maintenance** does what 
 
 | Step | What it does | Setting |
 |---|---|---|
-| **Retention** | keeps the newest `keep-business-days` business dates on or before today in `schedule.zone` (or `--as-of`) and deletes the older ones (Drishti Lake's `lake maintain`, the same rule on Delta and Iceberg), never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
-| **Compaction** | merges each date's small files; a table whose pack declares a layout is rewritten in it, only for dates that drifted | `compact`, `target-file-mb` (128) |
+| **Retention** | on a Delta table deletes the business dates older than `keep-business-days` business days (Monday to Friday) before today in `schedule.zone` (or `--as-of`): today and that many business days before it are kept, counted on the calendar (Drishti Lake's `lake maintain --keep-days`); on an Iceberg table keeps the newest `keep-business-days` dates on or before today (its own maintenance); never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
+| **Compaction** | merges each date's small files (the newest copy of each id stays the one read; an append's older copies are kept apart, so an undo still finds them); a table whose pack declares a layout is first laid out again by id, only for dates that drifted (`lake maintain --relayout`, the pack's `file-rows`) | `compact`, `target-file-mb` (128) |
 | **Checkpoint** | writes a Delta checkpoint, so readers replay a short log | `checkpoint` (on) |
 | **Vacuum** | removes files no version uses, older than the window; *known at* reaches back that far, no further | `vacuum-hours` (168) |
 
@@ -2574,7 +2574,7 @@ lock: free
 
 ```bash
 drishti.py lake maintain --once --dry-run --tables trading/trade_endur --as-of 2026-10-16
-uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once --dry-run   # the tool itself, any config
+uv run --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once --dry-run   # the tool itself, any config
 ```
 
 One JSON line per table (`{"event": "maintained", "dry_run": true, "table": …, "before": {"files": 6, "mb": 0.06, …}, "retention": {"cutoff":
