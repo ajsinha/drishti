@@ -77,7 +77,7 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
     - [20. Docs to update when it is built](#20-docs-to-update-when-it-is-built)
     - [21. Where the code forced a change from the agreed design](#21-where-the-code-forced-a-change-from-the-agreed-design)
     - [22. Open questions](#22-open-questions)
-3. [lake-iceberg: Drishti's own Apache Iceberg engine](#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
+3. [lake-iceberg: Apache Iceberg on iceberg-core](#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
     - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
     - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
@@ -1853,7 +1853,7 @@ All five were decided by the product owner on 2026-10-20, before the build start
 
 ## 3. lake-iceberg: Apache Iceberg on iceberg-core, with no Hadoop
 
-Status: **built.** Modules `lake-io`, `lake-iceberg`, `plugins/drishti-plugin-iceberg`. The Iceberg protocol comes from Apache Iceberg's own
+Status: **built.** The engine is part of Drishti Lake ([github.com/drishti-platform/drishti-lake](https://github.com/drishti-platform/drishti-lake), which owns the loader, the guards, the archive rule `drishti_lake.archives`, `lake maintain` and the read API; versions in [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md)); Drishti keeps `plugins/drishti-plugin-iceberg`. The Iceberg protocol comes from Apache Iceberg's own
 `iceberg-core`; Drishti adds thin wrappers for file access and speed. There is one engine: nothing chooses between engines, and Hadoop is not on the run-time class path, so the connector, loader and maintenance run on Windows with no `winutils.exe`.
 
 | Layer | From where | What it does |
@@ -3722,7 +3722,7 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 | `ThroughputTest` | the measurements above, BYTE_STREAM_SPLIT and ZSTD on the vector column, the manifest's key order, a 24 MB budget and a `-Xmx192m` JVM giving the identical table |
 | `CodecsTest` | Python's float repr and string escapes, multi-member gzip and a corrupt CRC, globs, sort keys, the pack's layout, the configuration's checks |
 | `tools/lake/test_javaload.py` | the build's options as the loader's configuration, secrets kept out of the file, when `auto` picks the loader |
-| `tools/lake/test_delta_interop.py` | the loader's Delta tables against delta-rs both ways, with 47 partition values that need escaping, and the features each reader reads ([DATA_LAKE_GUIDE.md section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)) |
+| `tools/lake/test_delta_interop.py` | the loader's Delta tables against the other Delta readers and writers both ways, with 47 partition values that need escaping, and the features each reader reads ([DATA_LAKE_GUIDE.md section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)) |
 | `ShardSortedLayoutTest` (Iceberg plugin) | relayout leaves a sort-by table in its order |
 
 ### 10.12 Open

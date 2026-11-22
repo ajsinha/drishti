@@ -511,7 +511,7 @@ that drifted (an intraday file whose ids overlap, a file over `file-rows`, a mis
 id, the date and the promoted columns. `relayout` does the same on demand for a table written another way:
 
 ```bash
-uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta/demo --domain trading
+uv run --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta/demo --domain trading
 ```
 
 **On S3** nothing maintains a Delta table by itself: run the maintenance against the `s3://` root, or let Databricks `OPTIMIZE`. Never use
