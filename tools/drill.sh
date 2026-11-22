@@ -138,6 +138,29 @@ if [[ ! -x "$PY" ]]; then
   echo "       drishti-console/requirements.txt), or in a worktree link the main checkout's: ln -s <main>/drishti-console/.venv drishti-console/.venv" >&2
   exit 1
 fi
+# the test servers run the compute pool `python` in this interpreter: a library at another version than the lock refuses every Python run
+# (DRS-9074) and fails a dozen browser tests hours later; stop now with the remedy (requirements-test.txt installs the pins)
+pins_off=$("$PY" - config/compute/locks/python.in <<'PYEOF'
+import sys
+from importlib import metadata
+off = []
+for raw in open(sys.argv[1], encoding="utf-8"):
+    name, sep, want = raw.split("#", 1)[0].strip().partition("==")
+    if sep:
+        try:
+            have = metadata.version(name.strip())
+        except metadata.PackageNotFoundError:
+            have = "missing"
+        if have != want.strip():
+            off.append(f"{name.strip()} {have} (pinned {want.strip()})")
+print("; ".join(off))
+PYEOF
+)
+if [[ -n "$pins_off" ]]; then
+  echo "drill: the console environment differs from config/compute/locks/python.in: $pins_off" >&2
+  echo "       install the pins: drishti-console/.venv/bin/pip install -r drishti-console/requirements-test.txt" >&2
+  exit 1
+fi
 DATA="${DRISHTI_DATA_DIR:-data}"; mkdir -p "$DATA/drill"; LOGS=$(cd "$DATA/drill" && pwd -P)
 # the previous run's failure logs are kept in runs/<when>/ (the last 20 runs), so a flake's traceback is not lost to the next run
 if compgen -G "$LOGS/console-*.txt" >/dev/null || compgen -G "$LOGS/rerun-*.log" >/dev/null || compgen -G "$LOGS/*.log" >/dev/null; then
@@ -532,6 +555,10 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   local wpid=""
   python3 "$REPO/$JOURNAL_PY" java-watch --root "$copy" --lane "$name" & wpid=$!
   DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  if [[ -n "${TIMING_AFTER:-}" ]]; then   # the tests that measure time (tag timing), alone on the machine: once the lanes named have finished
+    after 14400 "${TIMING_AFTER[@]}" || true; echo "drill: $name timing tests start at $(date +%T)"
+    JAVA_HOME="$jdk" ./mvnw -q -o test-compile surefire:test@timing-budget-tests -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-} || rc=1
+  fi
   kill "$wpid" 2>/dev/null || true; wait "$wpid" 2>/dev/null || true
   python3 "$REPO/$JOURNAL_PY" java-scan --root "$copy" --lane "$name" >/dev/null || true
   local flaky
@@ -559,7 +586,14 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
 java21_verify() {
   export DOCKER_HOST=unix:///nonexistent/drill-java21 TESTCONTAINERS_RYUK_DISABLED=true
   resume_java java21
-  copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs "${JAVA_RESUME_ARGS[@]}"
+  # the timing tests (tag timing: a budget on a loaded machine measures the load) are left out of the verify and run once every other
+  # lane of this drill has finished, alone (the parent pom's timing-budget-tests; java25 leaves them out too)
+  local lane wait=()
+  for lane in browser other tools-a tools-b java25 anywhere containers; do
+    [[ -n ${RUN_LANE[$lane]:-} ]] && wait+=("$LOGS/$( [[ $lane == browser || $lane == other ]] && echo console- )$lane.secs")
+  done
+  local -a TIMING_AFTER=("${wait[@]}" /dev/null)
+  copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs -Ddrishti.timing.skip=true "${JAVA_RESUME_ARGS[@]}"
 }
 docker_test_classes() {   # every test class that uses Testcontainers, as Maven's -Dtest list
   grep -rl --include='*Test.java' -e 'org.testcontainers' "$REPO" --exclude-dir=.claude --exclude-dir=target 2>/dev/null \
@@ -626,7 +660,7 @@ java25_verify() {
   export DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true
   JAVA_LIST_LEFT=$tests; resume_java java25 "$tests"; tests=$JAVA_LIST_LEFT
   [[ -n "$tests" ]] || { echo "drill: java25: every class passed before"; return 0; }
-  copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2 -Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false
+  copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2 -Ddrishti.timing.skip=true -Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false
 }
 
 # ---- clean-up and the working tree's checks ----------------------------------------------------------------------------------

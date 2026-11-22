@@ -156,6 +156,10 @@
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
+    <!-- the tests that measure time (tag "timing") run in an execution of their own, timing-budget-tests: one JVM, alone, after the
+         module's other tests. Skipped unless the module has such tests (it sets false). The drill passes true to its Java lanes and runs
+         them once the other lanes have finished (tools/drill.sh, java_timing): on a loaded machine a budget measures the load -->
+    <drishti.timing.skip>true</drishti.timing.skip>
     <!-- extra JVM options for the test forks; surefire's argLine adds -Djava.io.tmpdir= after them -->
     <argLine></argLine>
     <!-- LLM provider layer (drishti-ai): Spring AI 1.0.x targets Spring Boot 3.4/3.5 and Java 17+ bytecode -->
@@ -300,6 +304,7 @@
         <configuration>
           <forkCount>${drishti.test.forks}</forkCount>
           <reuseForks>true</reuseForks>
+          <excludedGroups>timing</excludedGroups>
           <!-- the test JVMs' temp folder is the module's target/tmp, never the system /tmp: DuckDB (60 MB), RocksDB and CatBoost unpack
                their native code through Files.createTempFile, which reads java.io.tmpdir once, at JVM start, so only the command line moves
                it; a fork killed at a timeout leaves its copy behind, and mvn clean removes it. Surefire's own working files (tempDir)
@@ -325,6 +330,22 @@
             <lake.module.root>${project.basedir}</lake.module.root>
           </systemPropertyVariables>
         </configuration>
+        <executions>
+          <execution>
+            <id>timing-budget-tests</id>
+            <phase>test</phase>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <skip>${drishti.timing.skip}</skip>
+              <excludedGroups>none</excludedGroups>
+              <groups>timing</groups>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <!-- its own report files: the default execution's report of the same class is kept beside it -->
+              <reportNameSuffix>timing</reportNameSuffix>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

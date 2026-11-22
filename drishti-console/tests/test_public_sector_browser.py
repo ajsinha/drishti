@@ -43,6 +43,7 @@ SERVER_PORT, CONSOLE_PORT = worker_ports(os.environ.get("DRISHTI_PUBLICSECTOR_SE
 SERVER, CONSOLE = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
 FEEDS = ["world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events"]
 PACKS = "core," + ",".join(FEEDS)
+FEED_DAY = date(2026, 11, 6)   # the business day the recorded fixtures are loaded for, and the server's today
 LOADER = r"""
 import json, sys
 from datetime import date
@@ -54,7 +55,7 @@ import feedbase as FB, feedrunner as R, publicsector as PS
 fix = root / "tools/feeds/tests/fixtures/publicsector"
 sel = yaml.safe_load((fix / "selection.yaml").read_text())
 for f in feeds:
-    rc, entry = R.run_feed(FB.load_spec(f), R.RunOptions(business_date=date(2026, 11, 6), load="java", sets=sel.get(f) or {}),
+    rc, entry = R.run_feed(FB.load_spec(f), R.RunOptions(business_date=date.fromisoformat(sys.argv[3]), load="java", sets=sel.get(f) or {}),
                            opener=PS.Fixtures(fix / f), sleep=lambda s: None)
     print(f, rc, entry.get("status"), entry.get("rows"), entry.get("error") or "")
     if rc:
@@ -79,7 +80,7 @@ def stack(tmp_path_factory):
 
     def build(folder):                      # the recorded feeds loaded by the Java route, once per source hash (lake_cache)
         env = dict(os.environ, DRISHTI_DATA_DIR=str(folder / "data"), DRISHTI_FRED_API_KEY="recorded")
-        loaded = subprocess.run([sys.executable, "-c", LOADER, str(ROOT), ",".join(FEEDS)], env=env, capture_output=True, text=True, timeout=900)
+        loaded = subprocess.run([sys.executable, "-c", LOADER, str(ROOT), ",".join(FEEDS), FEED_DAY.isoformat()], env=env, capture_output=True, text=True, timeout=900)
         if loaded.returncode != 0:
             raise RuntimeError(loaded.stdout[-3000:] + loaded.stderr[-3000:])
 
@@ -87,7 +88,8 @@ def stack(tmp_path_factory):
     shutil.copytree(cached / "data", data)  # the server writes its own state in its data folder: a copy (small: the recorded fixtures)
     senv = dict(os.environ, DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                 DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), LAKE_LAKES_DIR=str(ROOT / "config" / "lakes"),
-                DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector")
+                DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector",
+                DRISHTI_BUSINESS_TODAY=FEED_DAY.isoformat())   # the recorded feeds end on their day: a later clock reads a day with no data
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"],
                                        tmp=tmp / "jvm-tmp", cwd=work, env=senv), cwd=work, env=senv, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:

@@ -322,9 +322,15 @@ def failed_ids(reports: list[Path]) -> list[str]:
 
 
 def plain_id(test_id: str) -> str:
-    """A test id without the group pytest-xdist appends under --dist loadgroup (``...::test_x[a]@test_file.py``): the id pytest takes."""
+    """A test id without the group pytest-xdist appends under --dist loadgroup (``...::test_x[a]@test_file.py``): the id pytest takes.
+    pytest 9.2 prints a parametrized test's group inside the brackets' close (``...::test_x[a]@test_file.py]``): that suffix goes too."""
     at = test_id.rfind("@")
-    return test_id[:at] if at > test_id.rfind("]") and at > test_id.rfind("::") else test_id
+    if at <= test_id.rfind("::"):
+        return test_id
+    tail = test_id[at + 1:]
+    if "]" not in tail or (tail.endswith("]") and "[" not in tail and tail.count("]") == 1 and test_id[at - 1] == "]"):
+        return test_id[:at]
+    return test_id
 
 
 def collection_errors(reports: list[Path]) -> list[str]:

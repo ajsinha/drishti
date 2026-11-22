@@ -64,12 +64,15 @@ REFUSED = re.compile(r"switched off|turned off|not enabled|is off|disabled|not a
 #: a route the console does not mount (embedding, a module) answers its own "no page" 404; one a module of the source tree owns may be absent
 NOT_MOUNTED = re.compile(r"has no page at|\"error\":\"Not Found\"")
 #: the server says what input the call lacks
+#: an answer's error code: Drishti's (DRS-1234) or the live tables protocol's (rdp.query.invalid)
+ERROR_CODE = re.compile(r"DRS-\d+|\brdp\.[a-z]+\.[a-z]+\b")
 INPUT_HINT = re.compile(r"give |name the|name a|names |needs |is required|\?ref=|scope=|is needed|must name|needs at least", re.I)
 #: where the ids of a collection are listed when the collection itself is not a list endpoint
 ALT_LISTS = {"/api/v1/bi/items": "/api/v1/bi/catalogue", "/api/v1/admin/loads": "/api/v1/admin/packs"}
 STREAM = re.compile(r"stream|/events|/channel|subscribe")
 JAVA_MAP = re.compile(r"@(?:[\w.]*\.)?(Get|Post|Put|Delete|Patch)Mapping(?:\(([^)]*)\))?")
-JAVA_BASE = re.compile(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?"([^"]*)"')
+#: a class's base path: a string, or a constant of the file (``@RequestMapping(LiveTablesController.BASE)``)
+JAVA_BASE = re.compile(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?(?:"([^"]*)"|(?:\w+\.)?([A-Z][A-Z0-9_]*)\b)')
 ENTITY_PARENTS = ("entities", "views", "view", "raw", "v", "series", "stream", "history", "impact", "explain", "export", "compare", "about", "panels")
 CONST = re.compile(r"""\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*["'](/api/[A-Za-z0-9_/{}.-]*|/[A-Z][A-Za-z0-9_/{}.-]*)["']\s*;?""")
 VARIABLE = re.compile(r"\{([^}:]*)(?::[^}]*)?\}")
@@ -91,7 +94,8 @@ def java_endpoints() -> list[dict]:
         text = path.read_text(encoding="utf-8", errors="replace")
         if not re.search(r"@(Rest)?Controller", text):
             continue
-        bases = [(m.start(), m.group(1)) for m in JAVA_BASE.finditer(text)]
+        bases = [(m.start(), java_base(text, m)) for m in JAVA_BASE.finditer(text)
+                 if re.search(r"\bclass\b", text[m.end():text.find("{", m.end())])]   # the class's, not a method's @RequestMapping
         for m in JAVA_MAP.finditer(text):
             prefix = next((b for pos, b in reversed(bases) if pos < m.start()), "")
             paths = [x for x in re.findall(r'"([^"]*)"', m.group(2) or "") if x.startswith("/")] or [""]
@@ -100,6 +104,14 @@ def java_endpoints() -> list[dict]:
                 out.append({"side": "server", "method": m.group(1).upper(), "path": prefix + p, "params": params,
                             "source": f"{path.relative_to(ROOT)}:{text.count(chr(10), 0, m.start()) + 1}"})
     return out
+
+
+def java_base(text: str, m: re.Match) -> str:
+    """A class's base path: the string, or the value of the constant it names (``static final String BASE = "/api/v1/rdp"``)."""
+    if m.group(1) is not None:
+        return m.group(1)
+    c = re.search(r"\bString\s+" + re.escape(m.group(2)) + r'\s*=\s*"([^"]*)"', text)
+    return c.group(1) if c else ""
 
 
 def java_params(sig: str) -> dict[str, bool]:
@@ -448,7 +460,7 @@ def check(t: Target, e: dict, res: Resolver) -> dict:
         if NOT_MOUNTED.search(text) and status == 404 and (e["path"].startswith(("/embed", "/m/")) or e["source"].startswith("modules/")):
             return done("not served", f"HTTP 404: the route is not mounted here (embedding or a module that is not installed)")
         unsupplied = any(k not in q for k in e["params"])
-        if status in (400, 404, 422) and (unsupplied or (re.search(r"DRS-\d+", text) and (INPUT_HINT.search(text) or q or guessed))):
+        if status in (400, 404, 422) and (unsupplied or (ERROR_CODE.search(text) and (INPUT_HINT.search(text) or q or guessed))):
             return done("needs input", f"HTTP {status}: the call needs input the sweep cannot know: {text[:130]}")
         return done("FAIL", f"HTTP {status}: {re.sub(r'<[^>]+>', ' ', text)[:170]}")
     if status != 204 and not body.strip():

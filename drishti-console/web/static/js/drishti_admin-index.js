@@ -80,21 +80,23 @@
     panel.querySelectorAll('[data-index-reload]').forEach(function (b) { b.disabled = busy; });
   }
 
+  // the table and the message from one state (a poll's or the reload's answer), so the two never disagree; true while a reload runs
+  function show(name, b) {
+    var rl = b.reload || {};
+    render(name, b);
+    if (rl.running) {
+      say(name, 'Rebuilding ' + (rl.current || '…') + ': ' + rl.done + ' of ' + rl.total + ' days done' + (rl.trigger === 'auto' ? ' (automatic)' : ''));
+    } else if (rl.finishedAt) {
+      say(name, rl.error ? 'Reload finished with errors: ' + rl.error : 'Reloaded ' + rl.done + (rl.done === 1 ? ' day' : ' days') + ' from the source (' + when(rl.finishedAt) + ').', !!rl.error);
+    }
+    return !!rl.running;
+  }
+
   function poll(name) {
     clearTimeout(timers[name]);
     fetch(drishti_url(url(name))).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); }).then(function (r) {
       if (!r.ok) { say(name, window.Drishti.drsMessage ? window.Drishti.drsMessage(r.b, 'Could not read the index') : 'Could not read the index', true); return; }
-      var rl = r.b.reload || {};
-      render(name, r.b);
-      if (rl.running) {
-        say(name, 'Rebuilding ' + (rl.current || '…') + ': ' + rl.done + ' of ' + rl.total + ' days done' + (rl.trigger === 'auto' ? ' (automatic)' : ''));
-        timers[name] = setTimeout(function () { poll(name); }, 700);
-      } else {
-        if (rl.finishedAt) {
-          say(name, rl.error ? 'Reload finished with errors: ' + rl.error : 'Reloaded ' + rl.done + (rl.done === 1 ? ' day' : ' days') + ' from the source (' + when(rl.finishedAt) + ').', !!rl.error);
-        }
-        timers[name] = setTimeout(function () { poll(name); }, 15000);
-      }
+      timers[name] = setTimeout(function () { poll(name); }, show(name, r.b) ? 700 : 15000);
     }).catch(function () { say(name, 'The console could not be reached.', true); });
   }
 
@@ -114,7 +116,7 @@
         poll(name);
         return;
       }
-      render(name, r.body);
+      show(name, r.body);
       poll(name);
     }).catch(function () { say(name, 'Reload failed: the console could not be reached.', true); });
   });

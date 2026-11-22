@@ -86,6 +86,7 @@ class AbandonedReadsTest {
     }
 
     @Test
+    @org.junit.jupiter.api.Tag("timing")   // counts the JVM's threads and times the run: alone, in its own JVM (the parent pom's timing-budget-tests)
     void readsWhoseCallerTimedOutLeaveTheQueueAndNeverRead() throws Exception {
         Slotted store = new Slotted(2, 100_000);
         SourceRouter r = router(store);
@@ -93,6 +94,7 @@ class AbandonedReadsTest {
         store.slots.acquire();
         store.slots.acquire();
         int before = Thread.activeCount();
+        java.util.Set<Thread> was = new java.util.HashSet<>(Thread.getAllStackTraces().keySet());
         long t0 = System.nanoTime();
         for (int round = 0; round < 5; round++) {                   // five passes of every trade, as signal after signal asked
             Map<EntityRef, EntityDocument> got = r.fetchAll(refs(2_000), Duration.ofMillis(150), AsOf.LATEST);
@@ -108,7 +110,10 @@ class AbandonedReadsTest {
         store.slots.release();
         store.slots.release();
         // virtual threads run on at most one carrier (platform) thread per core, so the count may grow by that and a few; a thread per read would add 10,000
-        assertThat(Thread.activeCount()).isLessThanOrEqualTo(before + 4 + Runtime.getRuntime().availableProcessors());
+        assertThat(Thread.activeCount())
+                .as(() -> "platform threads started meanwhile: " + Thread.getAllStackTraces().keySet().stream().filter(t -> !was.contains(t))
+                        .map(t -> t.getName() + " (" + (t.getThreadGroup() == null ? "ended" : t.getThreadGroup().getName()) + ")").sorted().toList())
+                .isLessThanOrEqualTo(before + 4 + Runtime.getRuntime().availableProcessors());
         assertThat(System.nanoTime() - t0).isLessThan(Duration.ofSeconds(10).toNanos());
         // with slots free again, a read goes through
         assertThat(r.fetchAll(refs(10), Duration.ofSeconds(2), AsOf.LATEST)).hasSize(10);

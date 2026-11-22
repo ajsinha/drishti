@@ -39,33 +39,9 @@
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-concurrent</artifactId></dependency>
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-time</artifactId></dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <!-- a test that measures time (tag "timing") runs alone: not in the parallel forks beside other classes, where the load of the
-               others is in its figure; the second execution runs those, one JVM, after the others -->
-          <excludedGroups>timing</excludedGroups>
-        </configuration>
-        <executions>
-          <execution>
-            <id>timing-budget-tests</id>
-            <phase>test</phase>
-            <goals><goal>test</goal></goals>
-            <configuration>
-              <excludedGroups>none</excludedGroups>
-              <groups>timing</groups>
-              <forkCount>1</forkCount>
-              <reuseForks>false</reuseForks>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
   <properties>
+    <!-- HitIndexTest's search budget: its timing execution (the parent's timing-budget-tests) runs here -->
+    <drishti.timing.skip>false</drishti.timing.skip>
     <!-- the API reference (the parent's profile api-docs): all of the plugin SPI -->
     <drishti.apidocs.skip>false</drishti.apidocs.skip>
     <drishti.apidocs.packages>com.ash.drishti.api</drishti.apidocs.packages>

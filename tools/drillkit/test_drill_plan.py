@@ -64,9 +64,11 @@ class FailedIds(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "out.txt"
             f.write_text("FAILED drishti-console/tests/test_a_browser.py::test_x[1@2]@test_a_browser.py - AssertionError\n"
-                         "ERROR drishti-console/tests/test_b_browser.py::test_y - boom\n", encoding="utf-8")
+                         "ERROR drishti-console/tests/test_b_browser.py::test_y - boom\n"
+                         "FAILED drishti-console/tests/test_c_browser.py::test_z[chromium]@test_c_browser.py]\n", encoding="utf-8")
             self.assertEqual(P.failed_ids([f]), ["drishti-console/tests/test_a_browser.py::test_x[1@2]",
-                                                 "drishti-console/tests/test_b_browser.py::test_y"])
+                                                 "drishti-console/tests/test_b_browser.py::test_y",
+                                                 "drishti-console/tests/test_c_browser.py::test_z[chromium]"])   # pytest 9.2's form
 
 
 class LaneEstimate(unittest.TestCase):

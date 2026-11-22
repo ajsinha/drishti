@@ -33,6 +33,7 @@ public sealed interface DataNode extends com.ash.rachana.api.Node permits DataNo
     /** The node's type: object, array, a scalar's type, null or missing. */
     NodeType type();
 
+    /** Rachana's node kind: the one named like this node's {@link #type()}. */
     @Override
     default com.ash.rachana.api.Node.Kind kind() {
         return com.ash.rachana.api.Node.Kind.valueOf(type().name());
@@ -54,6 +55,7 @@ public sealed interface DataNode extends com.ash.rachana.api.Node permits DataNo
         }
     };
 
+    /** The factory Rachana builds this node's derived lists and records with: Drishti's {@link #NODES}. */
     @Override
     default com.ash.rachana.api.NodeFactory nodes() {
         return NODES;
