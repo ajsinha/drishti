@@ -575,6 +575,7 @@ drishti:
           - DELETE /api/v1/admin/packs/deploy/*
           - POST /api/v1/admin/packs/*/rollback
           - POST /api/v1/admin/packs/*/data
+          - POST /api/v1/admin/packs/*/lifecycle/*   # init, start, suspend, resume, shutdown of a pack (docs/architecture/LIFECYCLE.md); connectors' are under connectors/**
           - PUT /api/v1/admin/connectors/*
           - DELETE /api/v1/admin/connectors/*
           - POST /api/v1/admin/connectors/**
@@ -669,6 +670,7 @@ drishti:
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
       - "* /api/v1/admin/modules"             # the module switch: a module switched on or off, written to config/modules/<id>.yaml, audited with a reason; never a token
+      - "* /api/v1/admin/modules/*/lifecycle/*"   # a module's init, start, suspend, resume, shutdown (docs/architecture/LIFECYCLE.md): never a token
       - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
       - "* /api/v1/admin/settings/proposals/**"
       - "* /api/v1/admin/bindings/**"             # Admin -> Data bindings: proposals decided by two administrators, reload; never a token
