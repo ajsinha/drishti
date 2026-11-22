@@ -524,3 +524,11 @@ one large one.
 | RK-18 | Accuracy gate | **Raw-bit equality to the recorder at every step; Drishti's goldens unedited; the kit is the release gate; nothing but the move in the move** |
 | RK-19 | Delivery | **One engine JAR copied into `<home>/lib/engines`, released from the tag only; no Maven dependency in Drishti** (0a). DELETED: jars in `~/.m2` pinned by one property and `risk-bom` |
 | RK-20 | Freeze | **Freeze `modules/banking/java`, `compute.vector`, `compute.linalg`, `server.playground` on Drishti from the freeze commit to D9**; owner-directed fixes in that window are made in the product and reach Drishti with the pin |
+
+## Owner decision (2026-11-22): liquidity and climate inside Drishti Risk, isolated
+
+Liquidity and climate are part of the Drishti Risk product, each isolated exactly like market risk and CCR: its own Maven modules in
+the one `drishti-risk` Maven project (`risk-liquidity` and `risk-engine-liquidity`; `risk-climate` and `risk-engine-climate`), its own
+package (`com.ash.risk.liquidity`, `com.ash.risk.climate`), its own engine JAR with its own product id (separately licensable). Each
+depends only on `risk-api` and `risk-kernel`, never on another line of business; a guard enforces it. They are built in their releases
+(liquidity i13, climate i14); the modules may be created empty earlier.
