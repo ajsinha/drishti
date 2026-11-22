@@ -186,7 +186,7 @@ class LakeTest(unittest.TestCase):
             self.assertEqual(len(DeltaTable(uri).get_add_actions(flatten=True)), 6)             # nothing changed
             real = quiet(maintain.run_detailed, cfg, False, date(2026, 10, 16))
             t = real["tables"][0]
-            self.assertEqual(t["after"]["files"], 2)
+            self.assertEqual(t["after"]["files"], 4)     # Lake 0.9.1 compaction lays out two files a date
             self.assertTrue(maintain.changed(t))
             (pack, table, body), = maintain.signal_bodies(real["tables"], "run-1")
             self.assertEqual((pack, table, body["kind"], body["businessDate"], body["rows"], body["source"]),

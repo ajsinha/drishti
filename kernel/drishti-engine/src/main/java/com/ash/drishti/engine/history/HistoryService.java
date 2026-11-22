@@ -29,7 +29,7 @@ import com.ash.drishti.engine.search.SearchProperties;
 import com.ash.drishti.engine.source.SourceHistory;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.format.Formats;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -137,7 +137,7 @@ public final class HistoryService {
     private final HistoryProperties props;
     private final SearchProperties search;
     private final Formats formats;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final Function<String, HistorySpec> specs;
     private final Function<String, String> mnemonics;
     private final HistoryCache cache = new HistoryCache();
@@ -149,7 +149,7 @@ public final class HistoryService {
      * @param specs the kind's {@code history:} entry (the defaults when its pack has none)
      * @param mnemonics the kind's mnemonic ({@code TRD}), or null
      */
-    public HistoryService(SourceRouter router, BusinessDates dates, HistoryProperties props, SearchProperties search, Formats formats, ElCompiler el,
+    public HistoryService(SourceRouter router, BusinessDates dates, HistoryProperties props, SearchProperties search, Formats formats, LiveCompiler el,
             Function<String, HistorySpec> specs, Function<String, String> mnemonics) {
         this.router = router;
         this.dates = dates;
@@ -293,7 +293,7 @@ public final class HistoryService {
         if (days.isEmpty() || (baselineFirst && days.size() == 1)) {
             nothing(ref, w, failures, q.knownAt());
         }
-        HistoryRows.Built built = new HistoryRows(used, search.columnsOf(q.kind()), formats, el, viewer::redact, viewer::masked,
+        HistoryRows.Built built = new HistoryRows(used, search.columnsOf(q.kind()), formats, el.get(), viewer::redact, viewer::masked,
                 limits.maxColumns()).build(days, baselineFirst, wanted, q.diff());
         List<HistoryAnswer.Row> rows = built.rows();
         boolean truncated = false;

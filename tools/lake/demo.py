@@ -894,7 +894,7 @@ class DemoLake:
               f"     {start}   (from {ROOT}; docs/DEPLOYMENT_AND_QA_GUIDE.md section 7)\n"
               + (f"     this lake is not the default one: start the server with --lake-root {self.lake} (drishti.py start server)\n" if env else "")
               +
-              "     or the IDE run configurations 'Drishti server (demo lakes)' and 'Drishti console'\n"
+              "     or the IDE run configurations 'Drishti: run server (demo)' and 'Drishti console'\n"
               "  2. Sign in as drishti-dev-admin / drishti-dev-admin123\n"
               "  3. Open (console port 17480 by default):\n"
               "     /v/trade/1000001             an ENDUR ComSwap (legs side by side, cash flows and resets)\n"

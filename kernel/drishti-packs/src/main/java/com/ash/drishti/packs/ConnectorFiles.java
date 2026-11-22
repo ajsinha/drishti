@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -469,12 +470,8 @@ public final class ConnectorFiles {
 
     /** The version of a text: stable for equal text, different for different text. */
     public static String etag(String text) {
-        try {
-            byte[] h = MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(h, 0, 8);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, text);
+        return HexFormat.of().formatHex(h, 0, 8);
     }
 
     /** Writes the text atomically, keeping the previous text in the history; creates the folder on first write. */

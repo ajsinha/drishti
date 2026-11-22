@@ -175,6 +175,37 @@ class ArchitectureRulesTest {
                     "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.files..", "io.delta..", "org.apache.iceberg..",
                     "org.apache.parquet..", "org.apache.hadoop..");
 
+    private static final java.util.Set<String> LAKE_PUBLIC = java.util.Set.of("com.ash.lake", "com.ash.lake.config", "com.ash.lake.contract",
+            "com.ash.lake.inbox", "com.ash.lake.load", "com.ash.lake.memory", "com.ash.lake.memory.store", "com.ash.lake.read", "com.ash.lake.spi");
+
+    /** Lake follow-up list (G4 gate F6): com.ash.lake.common.RowFeed, delta.write.LakeWriter/LakeManifest/LakeCli, iceberg.table.IcebergAppender, io.*, common.LakeException/LakeError. */
+    private static final java.util.Set<String> LAKE_FOLLOW_UP = java.util.Set.of(
+            "com.ash.drishti.benchmarks.HistoryBench", "com.ash.drishti.lakehost.LakeReads", "com.ash.drishti.lakehost.DrishtiLake",
+            "com.ash.drishti.testkit.LoaderRows", "com.ash.drishti.testkit.s3.MinioServer", "com.ash.drishti.testkit.s3.ConditionalWrites",
+            "com.ash.drishti.testroots.RecordedAnswers",
+            "com.ash.drishti.plugin.file.JsonlLoader", "com.ash.drishti.plugin.jdbc.PostgresLoader", "com.ash.drishti.plugin.mongodb.MongoLoader",
+            "com.ash.drishti.plugin.redis.RedisLoader", "com.ash.drishti.plugin.cassandra.CassandraLoader", "com.ash.drishti.plugin.duckdb.DuckDbLoader",
+            "com.ash.drishti.plugin.aerospike.AerospikeLoader",
+            "com.ash.drishti.banking.official.DeltaSink", "com.ash.drishti.banking.official.IcebergSink", "com.ash.drishti.banking.official.OfficialSink",
+            "com.ash.drishti.banking.official.LakeAppends", "com.ash.drishti.banking.var.VarPvStream",
+            "com.ash.drishti.server.DrishtiApplication", "com.ash.drishti.server.api.ApiExceptionHandler");
+
+    /**
+     * Drishti imports only Drishti Lake's public packages (the surface of its java/api-surface.txt: com.ash.lake, config, contract, inbox, load,
+     * memory, memory.store, read, spi; the test kit com.ash.lake.tck is test support). A Lake release can change anything else with no surface diff.
+     * The classes in LAKE_FOLLOW_UP still use non-public types; the list is a Lake follow-up (a host's writer behind spi.TableWriter / load, RowFeed and
+     * the page errors on the surface) and only shrinks: a new class naming a non-public Lake type fails here.
+     */
+    @ArchTest
+    static final ArchRule drishtiImportsOnlyLakesPublicPackages = noClasses()
+            .that().resideOutsideOfPackages("com.ash.lake..")
+            .and(com.tngtech.archunit.base.DescribedPredicate.describe("is not one of the Lake follow-up classes",
+                    (com.tngtech.archunit.core.domain.JavaClass c) -> !LAKE_FOLLOW_UP.contains(c.getName().replaceAll("\\$.*", ""))))
+            .should().dependOnClassesThat(com.tngtech.archunit.base.DescribedPredicate.describe("are in a non-public package of Drishti Lake",
+                    (com.tngtech.archunit.core.domain.JavaClass t) -> t.getPackageName().startsWith("com.ash.lake.")
+                            && !LAKE_PUBLIC.contains(t.getPackageName()) && !t.getPackageName().startsWith("com.ash.lake.tck")))
+            .allowEmptyShould(true);
+
     /** The one runtime of the process lives in lake-host (DrishtiLake): the engine and the packs never build or hold a lake runtime themselves. */
     @ArchTest
     static final ArchRule onlyTheLakeHostBuildsTheRuntime = noClasses()
@@ -257,4 +288,56 @@ class ArchitectureRulesTest {
                     com.tngtech.archunit.base.DescribedPredicate.describe("is Files.createTempFile, Files.createTempDirectory or File.createTempFile",
                             (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> (t.getOwner().isEquivalentTo(java.nio.file.Files.class)
                                     || t.getOwner().isEquivalentTo(java.io.File.class)) && t.getName().startsWith("createTemp"))));
+
+    // ------------------------------------------------------------------------------------------------ Drishti Tools: one copy of each shared job
+
+    /** Hashes are Drishti Tools' {@code Hashes} ({@code MessageDigest.isEqual}, the constant-time compare, is not a digest and stays allowed). */
+    @ArchTest
+    static final ArchRule noMessageDigestOutsideTools = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is MessageDigest.getInstance",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) ->
+                                    t.getOwner().isEquivalentTo(java.security.MessageDigest.class) && t.getName().equals("getInstance"))))
+            .because("a digest is tools-codec's Hashes (docs/plans/G4_REHEARSAL.md, Gate 4 fixes: F9)");
+
+    /** Every HTTP client starts in {@code DrishtiTools.httpBuilder}: the site proxy and the TLS settings are applied in that one place. */
+    @ArchTest
+    static final ArchRule httpClientsStartInDrishtiTools = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.api.DrishtiTools")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is HttpClient.newBuilder or HttpClient.newHttpClient",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) ->
+                                    t.getOwner().isEquivalentTo(java.net.http.HttpClient.class)
+                                            && (t.getName().equals("newBuilder") || t.getName().equals("newHttpClient")))))
+            .because("a client built elsewhere ignores the site's proxy and TLS settings");
+
+    /** The shared jobs have one class each, in Drishti Tools: Drishti keeps no class of these names. */
+    @ArchTest
+    static final ArchRule noCopyOfAToolsClass = noClasses()
+            .that().haveSimpleName("Hashes").or().haveSimpleName("CanonicalJson").or().haveSimpleName("CsvReader").or().haveSimpleName("CsvWriter")
+            .or().haveSimpleName("TempFolder").or().haveSimpleName("BusinessCalendar").or().haveSimpleName("HostCalendars").or().haveSimpleName("RowFeed")
+            .or().haveSimpleName("TlsHttp").or().haveSimpleName("TlsContexts").or().haveSimpleName("XlsxWriter")
+            .should().resideInAPackage("com.ash.drishti..")
+            .allowEmptyShould(true)
+            .because("tools-codec, tools-csv, tools-files, tools-net and tools-xlsx, Rachana Core's BusinessCalendar and Lake's RowFeed are the one copy");
+
+    /** The drishti-common layer reads no lake (the row feed is Drishti Lake's, used by the loaders). */
+    @ArchTest
+    static final ArchRule commonDoesNotDependOnTheLake = noClasses()
+            .that().resideInAPackage("com.ash.drishti.common..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.lake..");
+
+    /** Zip writing: the archives that are written by the JDK's ZipOutputStream today; the list only shrinks (a new archive uses a tools writer). */
+    @ArchTest
+    static final ArchRule zipWritingOnlyWhereItIsToday = noClasses()
+            .that().resideInAPackage("com.ash.drishti..")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.module.runtime.Dmod")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.design.PackFragment")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.modules.ModulePublicController")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.collab.compliance.ExportService")
+            .and().doNotHaveFullyQualifiedName("com.ash.drishti.server.collab.compliance.ExportService$Sink")
+            .should().callConstructor(java.util.zip.ZipOutputStream.class, java.io.OutputStream.class)
+            .orShould().callConstructor(java.util.zip.ZipOutputStream.class, java.io.OutputStream.class, java.nio.charset.Charset.class);
 }

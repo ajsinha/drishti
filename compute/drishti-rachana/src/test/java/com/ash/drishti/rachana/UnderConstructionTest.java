@@ -50,7 +50,7 @@ class UnderConstructionTest {
         for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
             dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());
         }
-        return new SutraRegistry(new RachanaProperties(dirs, false, null, null, null, null, null, null, null, null), com.ash.drishti.rachana.DrishtiRachana.compiler());
+        return new SutraRegistry(new RachanaProperties(dirs, false, null, null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.current());
     }
 
     private static Stream<Column> columns(List<Panel> panels) {

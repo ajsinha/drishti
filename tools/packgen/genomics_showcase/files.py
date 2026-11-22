@@ -207,7 +207,7 @@ def about(pack: str) -> str:
 def help_yaml(pack: str) -> str:
     p = PACKS[pack]
     words = ", ".join(k.word for k in S.kinds_of(pack))
-    g = {"slug": f"{pack}-pack", "category": "packs", "title": f"The {pack} pack", "kind": "guide", "icon": "diagram-2",
+    g = {"slug": f"{pack}-pack", "category": "data", "title": f"The {pack} pack", "kind": "guide", "icon": "diagram-2",
          "file": f"guides/{pack}.md",
          "summary": f"{p['description'].split('. ')[0]}. Words: {words}."}
     return HEADER + f"\n# The {pack} pack's Help entries. Written by {GENERATOR}.\n" + dump({"guides": [g]})

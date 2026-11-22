@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.banking.compute.simm;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HexFormat;
@@ -186,11 +186,9 @@ public final class SimmParams {
             if (root == null || !root.isObject()) {
                 throw new IllegalArgumentException("DRS-5333 the SIMM parameter file is empty");
             }
-            return new SimmParams(root, HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(yaml)), overrides, lenient);
+            return new SimmParams(root, Hashes.sha256Hex(yaml), overrides, lenient);
         } catch (IOException e) {
             throw new IllegalArgumentException("DRS-5333 the SIMM parameter file is not YAML: " + e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 

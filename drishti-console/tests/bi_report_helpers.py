@@ -18,7 +18,7 @@ import re
 
 from bi_report_stack import CONSOLE_URL, PASSWORD
 
-VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
+VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI + ' at ' + e.sourceFile + ':' + e.lineNumber + ' ' + (e.sample || '')));"
 
 CHART = """(vis) => {
   const el = document.querySelector('[data-visual="' + vis + '"] .bi-chart');

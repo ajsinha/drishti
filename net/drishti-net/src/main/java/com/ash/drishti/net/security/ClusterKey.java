@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net.security;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.net.member.NetClock;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -90,11 +91,7 @@ public final class ClusterKey {
 
     /** The hex SHA-256 of a body ({@code ""} for none). */
     public static String bodyHash(byte[] body) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(body == null ? new byte[0] : body));
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
-        }
+        return HexFormat.of().formatHex(Hashes.digest("SHA-256").digest(body == null ? new byte[0] : body));
     }
 
     private static String canonical(String method, String pathAndQuery, long time, String node, String bodyHash) {

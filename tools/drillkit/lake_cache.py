@@ -16,7 +16,9 @@
 
 A lake lives in ``<cache>/<hash>/<name>/``: ``delta/`` the lake, ``data/`` and ``connectors/`` what the build wrote beside it. ``<hash>`` covers the
 committed test data, its generators and the lake code (the working tree's edits included), so a change to any of them makes a new one and the old is
-pruned; nothing else invalidates it. ``<cache>`` is ``$DRISHTI_LAKE_CACHE``, else ``<repo>/data/tmp/lake-cache``. A cached lake is read-only by
+pruned. It also covers the loader that writes the lake: the pinned Lake version (``pom.xml``), the Lake wheel pin and the wheel file's digest, and the
+Lake jars the loader runs from (the CRCs of the ``lake-*`` jars inside the server's exec jar, or ``LAKE_CLASSPATH``'s files), so a Lake re-pin, or a rebuilt
+loader under the same ``-SNAPSHOT`` version, makes a new lake. Nothing else invalidates it. ``<cache>`` is ``$DRISHTI_LAKE_CACHE``, else ``<repo>/data/tmp/lake-cache``. A cached lake is read-only by
 contract: a test that writes to a lake builds its own.
 
     lake_cache.py hash
@@ -36,6 +38,7 @@ import shutil
 import subprocess
 import sys
 import time
+import zipfile
 from pathlib import Path
 from typing import Callable
 
@@ -55,11 +58,36 @@ def source_hash(root: Path = ROOT, sources: tuple[str, ...] = SOURCES) -> str:
     def git(*a: str) -> str:
         return subprocess.run(["git", *a], cwd=root, capture_output=True, text=True, check=True).stdout
     h = hashlib.sha256(git("ls-files", "-s", "--", *sources).encode())
+    h.update(loader_key(root).encode())
     for line in sorted(set(git("ls-files", "-m", "--others", "--exclude-standard", "--", *sources).splitlines())):
         p = root / line
         h.update(line.encode())
         h.update(p.read_bytes() if p.is_file() else b"deleted")
     return h.hexdigest()[:16]
+
+
+def loader_key(root: Path = ROOT) -> str:
+    """What identifies the loader that writes the lake: the pinned Lake version, the wheel pin and the pinned wheel's SHA-256 (``-`` when it is absent),
+    and the Lake jars in use (name, size and CRC of the ``lake-*`` jars inside the server's exec jar in ``<root>/lib``, else the files of ``LAKE_CLASSPATH``)."""
+    parts: list[str] = []
+    pom = root / "pom.xml"
+    m = re.search(r"<drishti\.lake\.version>([^<]+)</drishti\.lake\.version>", pom.read_text(encoding="utf-8")) if pom.is_file() else None
+    parts.append("lake.version=" + (m.group(1) if m else "-"))
+    pin = root / "lib" / "lake-wheel.pin"
+    parts.append("pin=" + (hashlib.sha256(pin.read_bytes()).hexdigest() if pin.is_file() else "-"))
+    version = re.search(r"^version=(\S+)", pin.read_text(encoding="utf-8"), re.M) if pin.is_file() else None
+    wheel = root / "lib" / "wheels" / f"drishti_lake-{version.group(1)}-py3-none-any.whl" if version else None
+    parts.append("wheel=" + (hashlib.sha256(wheel.read_bytes()).hexdigest() if wheel and wheel.is_file() else "-"))
+    for jar in sorted((root / "lib").glob("drishti-server-*-exec.jar")):
+        with zipfile.ZipFile(jar) as z:
+            parts += [f"{i.filename}:{i.file_size}:{i.CRC}" for i in z.infolist() if re.match(r"BOOT-INF/lib/(lake|drishti-lake)-.*\.jar$", i.filename)]
+    for entry in sorted(filter(None, os.environ.get("LAKE_CLASSPATH", "").split(os.pathsep))):
+        f = Path(entry)
+        files = sorted(f.rglob("*")) if f.is_dir() else [f]
+        for x in files:
+            if x.is_file():
+                parts.append(f"cp:{x}:{x.stat().st_size}:{int(x.stat().st_mtime)}")
+    return "\n".join(parts)
 
 
 def _safe(name: str) -> str:

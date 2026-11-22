@@ -18,7 +18,6 @@ package com.ash.drishti.engine;
 import com.ash.drishti.common.CommonConfiguration;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.common.ShapeFingerprinter;
-import com.ash.rachana.bind.Binder;
 import com.ash.drishti.engine.command.CommandParser;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
@@ -37,10 +36,10 @@ import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.InferenceConfiguration;
 import com.ash.drishti.inference.LayoutMerger;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.drishti.rachana.RachanaConfiguration;
 import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -150,31 +149,31 @@ public class EngineConfiguration {
     }
 
     @Bean
-    public com.ash.drishti.engine.search.StructuredSearch structuredSearch(SourceRouter router, Mnemonics mnemonics, ElCompiler el, Formats formats,
+    public com.ash.drishti.engine.search.StructuredSearch structuredSearch(SourceRouter router, Mnemonics mnemonics, LiveCompiler el, Formats formats,
             com.ash.drishti.engine.search.SearchProperties props) {
         return new com.ash.drishti.engine.search.StructuredSearch(router, mnemonics, el, formats, props);
     }
 
     @Bean
     public com.ash.drishti.engine.impact.ImpactService impactService(SourceRouter router, Mnemonics mnemonics, ReferenceCatalog catalog,
-            GraphProperties graph, ElCompiler el, Formats formats, ExecutorService drishtiVirtualExecutor) {
+            GraphProperties graph, LiveCompiler el, Formats formats, ExecutorService drishtiVirtualExecutor) {
         return new com.ash.drishti.engine.impact.ImpactService(router, mnemonics, catalog, graph, el, formats, drishtiVirtualExecutor);
     }
 
-    @Bean
-    public Binder binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics,
-            com.ash.drishti.engine.rachana.PanelSettings panels, com.ash.drishti.engine.pivot.PivotProperties pivot) {
-        return com.ash.drishti.engine.rachana.DrishtiBinder.binder(el, formats, catalog, badges, mnemonics, panels.limits(), pivot);
-    }
-
+    /**
+     * The view pipeline. Its binder is Drishti's hooks on the compiler now: built again when a module starts or stops (the compiler holder,
+     * {@link LiveCompiler}), never fixed to the functions of the moment the server started.
+     */
     @Bean
     public ViewPipeline viewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
-            ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
+            ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, BadgeRenderer badges, LiveCompiler el,
             Formats formats, Mnemonics mnemonics, ForkJoinPool drishtiBindPool, EngineProperties props,
+            com.ash.drishti.engine.rachana.PanelSettings panels, com.ash.drishti.engine.pivot.PivotProperties pivot,
             com.ash.drishti.engine.time.BusinessDates businessDates,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.kernel.api.view.ViewAugmenter> augmenters) {
-        ViewPipeline p = new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
-                drishtiBindPool, props, businessDates);
+        ViewPipeline p = new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph,
+                c -> com.ash.drishti.engine.rachana.DrishtiBinder.binder(c, formats, catalog, badges, mnemonics, panels.limits(), pivot), el,
+                formats, mnemonics, drishtiBindPool, props, businessDates);
         p.augmentersFrom(() -> augmenters.orderedStream().toList());    // the server's own; a module's through the registration bridge
         return p;
     }
@@ -182,7 +181,7 @@ public class EngineConfiguration {
     /** About this page: the explanation of a view (layers 3 and 4), derived on request. */
     @Bean
     public com.ash.drishti.engine.explain.ExplainService explainService(ViewPipeline pipeline, SutraMatcher matcher,
-            SourceRouter router, ElCompiler el, SutraRegistry registry, com.ash.drishti.rachana.about.AboutCatalog about, Formats formats,
+            SourceRouter router, LiveCompiler el, SutraRegistry registry, com.ash.drishti.rachana.about.AboutCatalog about, Formats formats,
             com.ash.drishti.engine.explain.ExplainProperties props,
             io.micrometer.core.instrument.MeterRegistry meters) {
         return new com.ash.drishti.engine.explain.ExplainService(pipeline, matcher, router, el, registry, about, formats, props, meters);

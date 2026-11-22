@@ -34,9 +34,8 @@ LIBS = "core|inputs|grid|chart|data|insight|renderer|risk|designer|graph|tree|ge
 NAMED = re.compile(r"\bdrishti-(?:%s) (\d+\.\d+\.\d+)" % LIBS)
 RENDER_PATH = re.compile(r"render/(\d+\.\d+\.\d+)/")
 PINNED_PATH = re.compile(r"vendor/drishti-elements/(\d+\.\d+\.\d+)/")
-FROZEN = {"1.2.0"}       # the renderer folder kept byte for byte for the embedders that pinned it (drishti-console/web/static/render/1.2.0)
 SCANNED = ("drishti-console/web", "drishti-console/tests", "drishti-console/core", "drishti-console/routes", "tools", "docs/guides", "docs/architecture/ELEMENTS_IN_DRISHTI.md", "modules", "pom.xml", "compute/drishti-rachana/pom.xml")
-SKIPPED = ("drishti-console/web/static/render/1.2.0", "drishti-console/tests/test_elements_version.py", "node_modules", "static/vendor/", ".venv",
+SKIPPED = ("drishti-console/tests/test_elements_version.py", "node_modules", "static/vendor/", ".venv",
            "docs/architecture/mockups")
 
 
@@ -52,9 +51,9 @@ def test_every_bundle_of_drishti_s_libraries_carries_the_pin():
         assert f"/* {name} {VERSION}:" in head, name
 
 
-def test_the_renderer_folder_is_the_version_and_only_the_frozen_one_is_beside_it():
+def test_the_renderer_folder_is_the_version_and_the_only_one():
     from core import render_dist as rd
-    assert rd.VERSION == VERSION and rd.versions() == sorted(FROZEN | {VERSION}) and set(rd.FROZEN) == FROZEN
+    assert rd.VERSION == VERSION and rd.versions() == [VERSION]
     assert (STATIC / "render" / VERSION / "drishti-render.js").is_file()
 
 
@@ -70,19 +69,12 @@ def _texts():
                     continue
 
 
-def test_the_retired_renderer_path_redirects_and_says_so():
-    from core import render_dist as rd
-    assert rd.RETIRED == ("2.0.0",) and VERSION not in rd.RETIRED and "after i6" in rd.DEPRECATION   # 3.1.0, the previous pin, is gone: no shim
-
-
 def test_nothing_names_another_elements_version():
     bad = []
     for rel, text in _texts():
         for line in text.splitlines():
-            if "after i6" in line:             # the one exception: the retired renderer path that redirects for one release (and the words that say so)
-                continue
             bad += [f"{rel}: {m.group()}" for m in NAMED.finditer(line) if m.group(1) != VERSION]
-            bad += [f"{rel}: render/{m.group(1)}/" for m in RENDER_PATH.finditer(line) if m.group(1) not in FROZEN | {VERSION}
+            bad += [f"{rel}: render/{m.group(1)}/" for m in RENDER_PATH.finditer(line) if m.group(1) != VERSION
                     and not rel.startswith("drishti-console/tests/")]
             bad += [f"{rel}: drishti-elements/{m.group(1)}/" for m in PINNED_PATH.finditer(line) if m.group(1) != VERSION]   # a path into the copy names the pin
     assert not bad, "Elements has one version (" + VERSION + "); these name another:\n" + "\n".join(bad[:30])

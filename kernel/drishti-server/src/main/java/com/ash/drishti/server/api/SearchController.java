@@ -112,7 +112,7 @@ public class SearchController {
         if (!s.isEmpty() && "=+-@".indexOf(s.charAt(0)) >= 0 && !(v instanceof Number)) {
             s = "'" + s;
         }
-        return s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r") ? '"' + s.replace("\"", "\"\"") + '"' : s;
+        return com.ash.tools.csv.CsvWriter.quote(s, ',');
     }
 
     /**

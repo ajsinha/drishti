@@ -146,10 +146,12 @@ def new_page(browser, width=1280, height=900):
 
 
 def pixel(page, selector, lon, lat):
-    """Where a longitude and latitude are on the map drawn in `selector`, in page coordinates."""
+    """Where a longitude and latitude are on the map drawn in `selector`, in page coordinates: the geo part's own projection (Equal Earth
+    for the world) puts the place on the map, the chart's geo puts the map on the page."""
     page.locator(selector).first.scroll_into_view_if_needed()
-    return page.evaluate("""([sel, lon, lat]) => { const el = document.querySelector(sel); const c = echarts.getInstanceByDom(el); const r = el.getBoundingClientRect();
-        const q = c.convertToPixel({ geoIndex: 0 }, [lon, lat]); return [r.left + q[0], r.top + q[1]]; }""", [selector, lon, lat])
+    return page.evaluate("""async ([sel, lon, lat]) => { const el = document.querySelector(sel); const c = echarts.getInstanceByDom(el); const r = el.getBoundingClientRect();
+        const E = window.Drishti.elements, G = E.chart_geo.geoHelper({ base: E.core.staticUrl('vendor/echarts/maps/') });
+        const q = c.convertToPixel({ geoIndex: 0 }, G.project(await G.world(), lon, lat)); return [r.left + q[0], r.top + q[1]]; }""", [selector, lon, lat])
 
 
 def regions(page, selector):
@@ -166,8 +168,8 @@ def test_the_jurisdiction_page_highlights_australia_and_a_click_on_new_zealand_o
     assert page.locator('.xmap-list a[href="/v/jurisdiction/JUR-NZL"]').count() == 1       # the keyboard's way to the same click
     assert page.locator(".xmap").get_attribute("aria-label").startswith("Where it is: world map, AUS highlighted")
     # a country with no entity says so on hover and does not open
-    tip = page.evaluate("""() => echarts.getInstanceByDom(document.querySelector('.xmap')).getOption().tooltip[0].formatter({ seriesType: 'map', name: 'ATA' })""")
-    assert "Antarctica" in tip and "no page for this country" in tip
+    tip = page.evaluate("""() => { const t = echarts.getInstanceByDom(document.querySelector('.xmap')).getOption().tooltip[0].formatter({ seriesType: 'map', name: 'ATA' }); return t && t.textContent !== undefined ? t.textContent : String(t); }""")   # the tooltip is a DOM node (every value escaped by construction)
+    assert "ATA" in tip and "no page for this country" in tip
     x, y = pixel(page, ".xmap", 0, -80)
     page.mouse.click(x, y)
     page.wait_for_timeout(600)
@@ -202,7 +204,7 @@ def test_the_report_map_drills_from_the_world_to_australia_and_its_regions_and_b
     assert "Australia" in page.locator(".bi-map-crumb").inner_text()
     page.wait_for_timeout(1200)
     names = [r[0] for r in regions(page, ".bi-vis-map .bi-chart")] or []
-    assert page.evaluate("echarts.getMap('drishti-region-AUS') !== undefined")          # the regions of Australia are loaded and drawn
+    assert page.evaluate("echarts.getMap('drishti-geo-AUS') !== undefined")          # the regions of Australia are loaded and drawn
     assert page.locator('[data-visual="economies"] .bi-card-value').first.inner_text().strip() == "1"               # the cross-filter: the page is Australia
     assert page.locator('.bi-vis-map [data-map-noregions="AUS"]').count() == 1, names                               # the field holds countries: said, not faked
     page.locator("[data-map-up]").click()

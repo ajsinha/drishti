@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -59,13 +60,13 @@ class RegistryApiTest {
         Signature s = Signature.getInstance("Ed25519");
         s.initSign(acme.getPrivate());
         s.update(archive);
-        String sha = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(archive));
+        String sha = Hashes.sha256Hex(archive);
         byte[] newer = PackRegistryClientTest.zip(PackRegistryClientTest.pack("widgets", "1.1.0"));
         Files.write(reg.resolve("widgets-1.1.0.zip"), newer);
         s.initSign(acme.getPrivate());
         s.update(newer);
         String newerSignature = Base64.getEncoder().encodeToString(s.sign());
-        String newerSha = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(newer));
+        String newerSha = Hashes.sha256Hex(newer);
         s.initSign(acme.getPrivate());
         s.update(archive);
         String signature = Base64.getEncoder().encodeToString(s.sign());

@@ -175,7 +175,7 @@ def test_the_console_s_own_servers_are_shown_when_it_has_several(client, backend
             return {"enabled": True, "active": "http://192.0.2.10:18784", "servers": [
                 {"url": "http://127.0.0.1:18783", "origin": "configured", "healthy": False, "latencyMs": None},
                 {"url": "http://192.0.2.10:18784", "origin": "discovered", "healthy": True, "latencyMs": 2.1}], "failovers": []}
-    monkeypatch.setattr(client.app.state, "cluster", Pool(), raising=False)
+    monkeypatch.setitem(client.app.state._state, "cluster", Pool())
     page = client.get("/admin/net").text
     for text in ("This console's servers", "Console on", "set aside", "discovered", "in use", "2.1 ms"):
         assert text in page, text

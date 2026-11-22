@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.tools.codec.Hashes;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
@@ -26,7 +27,6 @@ import com.aerospike.client.cdt.ListWriteFlags;
 import com.aerospike.client.policy.WritePolicy;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -92,12 +92,8 @@ public final class AerospikeLayout {
         if (name.length() <= 15 && !List.of(KIND, ID, DATE, DOC, DATES).contains(name)) {
             return name;
         }
-        try {
-            byte[] h = MessageDigest.getInstance("SHA-1").digest(path.getBytes(StandardCharsets.UTF_8));
-            return name.substring(0, Math.min(10, name.length())) + "_" + HexFormat.of().formatHex(h).substring(0, 4);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.digest("SHA-1").digest(path.getBytes(StandardCharsets.UTF_8));
+        return name.substring(0, Math.min(10, name.length())) + "_" + HexFormat.of().formatHex(h).substring(0, 4);
     }
 
     /**

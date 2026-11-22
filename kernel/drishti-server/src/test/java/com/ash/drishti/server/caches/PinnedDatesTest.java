@@ -18,7 +18,7 @@ package com.ash.drishti.server.caches;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.rachana.el.BusinessCalendar;
 import java.time.LocalDate;
 import java.time.MonthDay;
 import java.time.YearMonth;

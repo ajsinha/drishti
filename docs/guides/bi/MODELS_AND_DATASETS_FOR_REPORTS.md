@@ -306,7 +306,7 @@ your dates and some figures differ.
 ##### Set up
 
 The quick start of [data/testdata/README.md](../../../data/testdata/README.md) (clone, install, `lake demo`, start, open), or with the IDE's run
-configurations **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console**. From a terminal at the repository root:
+configurations **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**. From a terminal at the repository root:
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 

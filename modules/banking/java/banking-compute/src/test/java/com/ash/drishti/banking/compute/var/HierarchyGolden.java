@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.banking.compute.var;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -81,10 +81,6 @@ final class HierarchyGolden {
     }
 
     private static String sha(byte[] bytes) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(bytes);
     }
 }

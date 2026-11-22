@@ -87,7 +87,7 @@ class ExportWritersTest {
 
     @Test
     void csvKeepsFormulasAsTextAndQuotesWhatNeedsIt() {
-        String csv = new String(CsvWriter.write(doc(1)), StandardCharsets.UTF_8);
+        String csv = new String(ExportCsv.write(doc(1)), StandardCharsets.UTF_8);
         assertThat(csv).startsWith("﻿").contains("Trades: by desk / 1\r\n").contains("Desk,Notional,Rate,Date,Flag,Note\r\n")
                 .contains("'=HYPERLINK(\"\"http://evil\"\")").contains("-7").contains("a & <b>");
         assertThat(csv).contains("Total\r\nMTM\r\n-412580.5");

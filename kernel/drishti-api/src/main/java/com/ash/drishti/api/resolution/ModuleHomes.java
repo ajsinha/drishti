@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.api.resolution;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -176,11 +176,7 @@ public final class ModuleHomes {
     public String fingerprint() {
         StringBuilder b = new StringBuilder();
         homes.values().forEach(h -> b.append(h.identity()).append('\n'));
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(b.toString());
     }
 
     /**

@@ -151,12 +151,18 @@ public final class EditService {
             if (was.isPresent()) {                                     // a repeat of a change id: its answer again, only to its maker
                 Map<String, Object> a = new LinkedHashMap<>(was.get());
                 String by = String.valueOf(a.remove("by"));
+                a.remove("digest");
                 if (!by.equals(p.user())) {
                     throw refused(p, Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity"))),
                             "the change id '" + given + "' is another's");
                 }
-                audit.record(p.user(), "edit-repeated", Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity"))),
-                        given + ": answered " + a.get("state") + " again");
+                String key = Change.keyOf(String.valueOf(a.get("kind")), String.valueOf(a.get("entity")));
+                if (!sameChange(change(given).orElse(null), body)) {        // the id names one change: never answered for another
+                    audit.record(p.user(), "edit-id-reused", key, given + ": the change id was used for another change; refused");
+                    throw new DrishtiException(ErrorCode.EDIT_CONFLICT, "the change id '" + given + "' was used for another change ("
+                            + key + "): a repeat sends the same kind, record and items; a new change takes a new id");
+                }
+                audit.record(p.user(), "edit-repeated", key, given + ": answered " + a.get("state") + " again");
                 a.remove("message");
                 return List.of(a);
             }
@@ -221,6 +227,9 @@ public final class EditService {
         origin.put("panel", first.panel());
         origin.put("mode", "edit");
         origin.put("via", text(body, "via") == null ? "api" : text(body, "via"));
+        if (text(body, "digest") != null) {
+            origin.put("digest", text(body, "digest"));            // the Data Protocol's digest of the change (kept for ChangeSink.priorDigest)
+        }
         return build(p, body, first, kind, entity, list, origin);
     }
 
@@ -612,6 +621,9 @@ public final class EditService {
         Change c = row.map(EditLog.Row::change).orElseGet(() -> req.get().change());
         Map<String, Object> out = answer(c, row.map(EditLog.Row::state).orElseGet(() -> req.get().state()));
         out.put("by", c.by());
+        if (c.origin("digest") != null) {
+            out.put("digest", c.origin("digest"));
+        }
         if (row.isPresent()) {
             out.put("lane", row.get().lane());
             out.put("seq", row.get().seq());
@@ -627,6 +639,51 @@ public final class EditService {
             }
         }
         return Optional.of(out);
+    }
+
+    /** The change an id names (the edit log's, else the approval queue's). */
+    private Optional<Change> change(String id) {
+        return log.get(id).map(EditLog.Row::change).or(() -> requests.get(id).map(ChangeRequests.Request::change));
+    }
+
+    /**
+     * Whether a repeat of a change id sends the change the id was first given to: the same kind, record and items (each item's path, from
+     * and to, in order; a number equal whatever its written form).
+     */
+    static boolean sameChange(Change first, JsonNode body) {
+        if (first == null || body == null || !first.kind().equals(body.path("kind").asText(null))
+                || !first.entity().equals(body.path("entity").asText(null))) {
+            return false;
+        }
+        JsonNode items = body.path("items");
+        if (!items.isArray() || items.size() != first.items().size()) {
+            return false;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            JsonNode it = items.get(i);
+            Change.Item was = first.items().get(i);
+            String path = it.hasNonNull("path") ? it.path("path").asText() : EditPaths.ofField(it.path("field").asText(""));
+            if (!was.path().equals(path) || !sameValue(was.from(), it.get("from")) || !sameValue(was.to(), it.get("to"))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean sameValue(Object was, JsonNode sent) {
+        Object now;
+        try {
+            now = value(sent);
+        } catch (DrishtiException e) {
+            return false;
+        }
+        if (was == null || now == null) {
+            return was == null && now == null;
+        }
+        if (was instanceof Number a && now instanceof Number b) {
+            return new java.math.BigDecimal(a.toString()).compareTo(new java.math.BigDecimal(b.toString())) == 0;
+        }
+        return String.valueOf(was).equals(String.valueOf(now));
     }
 
     /** A change as this person may see it (values of fields masked for them shown masked), from the log or the approval queue. */

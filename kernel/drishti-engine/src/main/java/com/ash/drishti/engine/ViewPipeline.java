@@ -44,9 +44,9 @@ import com.ash.drishti.engine.rachana.Hosted;
 import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.inference.EffectiveLayout;
 import com.ash.drishti.inference.LayoutMerger;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.SutraRegistry;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.el.Link;
 import com.ash.rachana.el.Values;
@@ -121,17 +121,18 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     private final ShapeFingerprinter fingerprinter;
     private final ReferenceCatalog catalog;
     private final GraphProperties graph;
-    private final Binder binder;
-    private final com.ash.rachana.bind.MapSupport mapSupport;
-    private final ElCompiler el;
+    /** The compiler now ({@link LiveCompiler}): a module's functions while it runs, never after it stops. */
+    private final LiveCompiler el;
+    /** What is built on the compiler (the binder, the controls, the maps, the screen's wiring), built again when the instance changes. */
+    private final java.util.function.Supplier<Bound> bound;
+    /** The table layer's reads, set once at start and handed to every wiring built. */
+    private volatile com.ash.rachana.wire.TableRows tableRows;
     private final Formats formats;
     private final Mnemonics mnemonics;
     private final ExecutorService bindPool;
     private final Cache<LayoutKey, EffectiveLayout> layouts;
     private final Cache<GenKey, Fingerprint> fingerprints;
     private final BusinessDates dates;
-    private final ControlResolver controls;
-    private final ScreenWire wire;
     private final com.ash.drishti.engine.rachana.DrishtiTables tables;
 
     /** The zone business dates and "known at" times are read in (what the console's top bar shows times in). */
@@ -140,27 +141,35 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     }
 
     public ViewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
-            ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
+            ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph,
+            java.util.function.Function<com.ash.rachana.el.ElCompiler, Binder> binders, LiveCompiler el,
             Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props, BusinessDates dates) {
         this.router = router;
         this.dates = dates;
         this.tables = new com.ash.drishti.engine.rachana.DrishtiTables(router);
-        this.controls = new ControlResolver(el, new com.ash.drishti.engine.rachana.DrishtiDays(dates), tables, graph.linkBudget());
         this.matcher = matcher;
         this.merger = merger;
         this.fingerprinter = fingerprinter;
         this.catalog = catalog;
         this.graph = graph;
-        this.binder = binder;
-        this.mapSupport = new com.ash.rachana.bind.MapSupport(tables, el, formats, binder.limits());
         this.el = el;
         this.formats = formats;
         this.mnemonics = mnemonics;
         this.bindPool = bindPool;
         // a panel's own source is that panel's data, read as the page's record is (within the sources' fetch timeout), not a linked entity's
         // label (the link budget, 40 ms): past that budget it drew its empty text as if the source held nothing
-        this.wire = new ScreenWire(tables, binder, el, router.fetchTimeout(),
-                (e, at) -> Hosted.entity(augmented(Hosted.doc(e), Hosted.asOf(at))));
+        com.ash.drishti.engine.rachana.DrishtiDays days = new com.ash.drishti.engine.rachana.DrishtiDays(dates);
+        this.bound = el.follow(c -> {
+            Binder binder = binders.apply(c);
+            ScreenWire wire = new ScreenWire(tables, binder, c, router.fetchTimeout(),
+                    (e, at) -> Hosted.entity(augmented(Hosted.doc(e), Hosted.asOf(at))));
+            com.ash.rachana.wire.TableRows rows = tableRows;
+            if (rows != null) {
+                wire.tables(rows);
+            }
+            return new Bound(binder, new ControlResolver(c, days, tables, graph.linkBudget()),
+                    new com.ash.rachana.bind.MapSupport(tables, c, formats, binder.limits()), wire);
+        });
         this.layouts = Caffeine.newBuilder().maximumSize(props.layoutCacheSize()).recordStats().build();
         this.fingerprints = Caffeine.newBuilder().maximumSize(props.fingerprintCacheSize()).build();
         registry.onChange(changed -> layouts.invalidateAll());
@@ -168,7 +177,19 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** The table layer's reads for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13); the server sets it once at start. */
     public void tables(com.ash.rachana.wire.TableRows rows) {
-        wire.tables(rows);
+        tableRows = rows;
+        wire().tables(rows);
+    }
+
+    /** What is built on one compiler: the binder, the controls, the maps and the screen's wiring. */
+    private record Bound(Binder binder, ControlResolver controls, com.ash.rachana.bind.MapSupport maps, ScreenWire wire) {}
+
+    private Binder binder() {
+        return bound.get().binder();
+    }
+
+    private ScreenWire wire() {
+        return bound.get().wire();
     }
 
     /** A view built with an unsaved Sutra (Sutra Studio). Bypasses the layout cache. */
@@ -352,7 +373,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         EntityDocument seen = seen(doc, redact);
         EvalContext eval = EvalContext.of(seen.data(), formats);
         Map<com.ash.rachana.bind.EntityRef, com.ash.rachana.bind.Entity> linked = new LinkedHashMap<>();
-        binder.chartSource(panel, eval).ifPresent(src -> {
+        binder().chartSource(panel, eval).ifPresent(src -> {
             if (!mayOpen.test(src.kind())) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "no access to " + src.kind());
             }
@@ -361,7 +382,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         });
         BindContext ctx = new BindContext(Hosted.entity(seen), layout(layout), eval, linked, Set.of(), Set.of(), null,
                 new DrishtiBinder.Host(seen, fp, List.of()));
-        return binder.records(panel, ctx);
+        return binder().records(panel, ctx);
     }
 
     /**
@@ -371,13 +392,13 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
      */
     public ScreenWire.Result event(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values,
             Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel, String event, int row) {
-        return wire.event(screen(ref, asOf, who, values, chosen, fired), panel, event, row);
+        return wire().event(screen(ref, asOf, who, values, chosen, fired), panel, event, row);
     }
 
     /** The children of one panel of a Sutra Next screen, given the events fired (lazy: asked for when they show, RACHANA_REFERENCE.md 8). */
     public List<ScreenWire.ChildrenView> children(EntityRef ref, AsOf asOf, ViewerContext who,
             ControlValues values, Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel) {
-        return wire.children(screen(ref, asOf, who, values, chosen, fired), panel);
+        return wire().children(screen(ref, asOf, who, values, chosen, fired), panel);
     }
 
     /** {@code chosen}: a Sutra of the kind the reader asked for by name ({@code ?sutra=}), else the matched one. */
@@ -392,7 +413,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
                 k -> merger.merge(sutra, doc.data(), ref.kind()));
         EntityDocument seen = seen(doc, redact);
-        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
+        ControlResolver.Resolved resolved = bound.get().controls().resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
         java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
                 : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
         EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);
@@ -471,7 +492,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         long tLayout = System.nanoTime();
 
         EntityDocument seen = seen(doc, redact);                      // values: as the caller may see them
-        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
+        ControlResolver.Resolved resolved = bound.get().controls().resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, Hosted.asOf(asOf), mayOpen);
         java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
                 : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
         EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);   // ctl.<id>: the controls' values; today(): the date
@@ -485,7 +506,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         });
         for (Panel p : layout.sutra().panels()) {
             if (p.kind().readsData() && values.builds(p.id())) {
-                binder.chartSource(p, eval).map(Hosted::ref).ifPresent(src -> {
+                binder().chartSource(p, eval).map(Hosted::ref).ifPresent(src -> {
                     if (mayOpen.test(src.kind())) {
                         wanted.add(src);
                     } else {
@@ -510,7 +531,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         denied.forEach(r -> refused.add(Hosted.ref(r)));
         long tLinks = System.nanoTime();
 
-        Map<String, com.ash.rachana.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
+        Map<String, com.ash.rachana.bind.MapSupport.Lookup> maps = bound.get().maps().resolve(layout.sutra().panels(), values::builds,
                 Hosted.asOf(asOf.businessDate() == null ? dates.resolve(asOf) : asOf), who);   // what a map's link and shade read across a kind
         BindContext ctx = new BindContext(Hosted.entity(seen), layout(layout), eval, linked, pending, refused, maps, new DrishtiBinder.Host(seen, fp, links));
         ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.rachana.SutraWiring.nodes(layout.sutra()), ctx,
@@ -518,9 +539,9 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (RACHANA_REFERENCE.md 6 to 8)
-            if (values.builds(p.id()) && (wired ? wire.shown(screen, p) : binder.shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
-                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p)
-                        : linkedSource(p, ctx, wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx)))), bindPool));
+            if (values.builds(p.id()) && (wired ? wire().shown(screen, p) : binder().shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
+                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire().bind(screen, p)
+                        : linkedSource(p, ctx, wire().formed(screen, p, ScreenWire.refreshed(p, binder().bind(p, ctx)))), bindPool));
             }
         }
         List<PanelView> panels = futures.stream().map(CompletableFuture::join).map(DrishtiBinder::edge).toList();
@@ -533,7 +554,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             } catch (RuntimeException | StackOverflowError e) {
                 v = null;   // a field the document lacks, or of the wrong type, shows as a dash
             }
-            strip.add(binder.cell(i.label(), v, i.fmt(), i.tone(), i.emphasis(), binder.pathOf(i.bind())));
+            strip.add(binder().cell(i.label(), v, i.fmt(), i.tone(), i.emphasis(), binder().pathOf(i.bind())));
         }
         ViewModel.TitleView title = title(s, eval, ref);
         long tBind = System.nanoTime();
@@ -581,7 +602,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         }
         Optional<com.ash.rachana.bind.EntityRef> ref;
         try {
-            ref = binder.chartSource(p, ctx.eval());
+            ref = binder().chartSource(p, ctx.eval());
         } catch (RuntimeException | StackOverflowError e) {
             return v;
         }
@@ -667,7 +688,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         Cell with = null;
         if (t.with() != null) {
             Object w = soft(() -> Values.simplify(el.compile(t.with()).eval(eval)));
-            with = w == null ? null : binder.cell(null, w, null, null, false, null);
+            with = w == null ? null : binder().cell(null, w, null, null, false, null);
         }
         String pill = t.pill() == null ? null : soft(() -> el.template(t.pill()).render(eval));
         return new ViewModel.TitleView(pill, id == null || id.isBlank() ? ref.id() : id, with);
@@ -697,7 +718,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                     if (action.startsWith("link(")) {
                         Object v = Values.simplify(el.compile(action).eval(eval));
                         if (v instanceof Link l) {
-                            var lv = binder.linkView(l);
+                            var lv = binder().linkView(l);
                             if (lv != null) {
                                 keys.add(new KeyView(key, humanize(lv.kind()), "link", null, lv));
                             }

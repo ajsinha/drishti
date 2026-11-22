@@ -47,13 +47,6 @@ def test_a_version_is_one_folder_and_its_record_matches_every_file():
     assert all(v["integrity"].startswith("sha384-") for v in have["files"].values())
 
 
-def test_the_frozen_versions_are_served_unchanged():
-    """1.2.0 stays served, byte for byte, for the embedders that pinned it (the current renderer is beside it)."""
-    for v in rd.FROZEN:
-        have = json.loads((rd.ROOT / v / rd.RECORD).read_text(encoding="utf-8"))
-        assert have == rd.record(v), f"static/render/{v} is frozen: a released version never changes"
-
-
 def test_the_sheet_is_generated_and_current():
     text, facts = rd.build_sheet()
     assert (SRC / rd.SHEET).read_text(encoding="utf-8") == text, "stale: python3 tools/render_sheet.py"

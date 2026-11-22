@@ -59,6 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=core"})
 @AutoConfigureMockMvc
+@org.junit.jupiter.api.TestMethodOrder(org.junit.jupiter.api.MethodOrderer.OrderAnnotation.class)
 class ModuleHostServerTest {
 
     private static Path folder;
@@ -74,6 +75,8 @@ class ModuleHostServerTest {
     SourceRouter router;
     @Autowired
     SourceRegistry sources;
+    @Autowired
+    com.ash.drishti.rachana.LiveCompiler compiler;
 
     /** The modules folder with its packages, named before the server starts (the launch reads it from the process's settings). */
     @org.junit.jupiter.api.BeforeAll
@@ -177,13 +180,48 @@ class ModuleHostServerTest {
         assertThat(eval("greeter_greet('Ravi')")).isEqualTo("Hello, Ravi, from the greeter module");
     }
 
+    /** A loaded module's candidate (its folder and manifest), taken in a frame of its own so nothing of its loader stays on the stack. */
+    private com.ash.drishti.module.runtime.ModuleCandidate candidate(String id) {
+        return node.runtime().loaded(id).orElseThrow().candidate();
+    }
+
     private int page(String path) {
         return node.runtime().routes().lookup(path).orElseThrow().status();
     }
 
-    private static Object eval(String expression) {
-        // the instance's compiler, as the server compiles a Sutra's expressions: the engine's and the loaded modules' functions
-        return com.ash.drishti.rachana.DrishtiRachana.compiler().compile(expression).eval(EvalContext.of(DataNode.of(Map.of()), Formats.defaults()));
+    private Object eval(String expression) {
+        // the server's compiler holder (the bean every reader takes), as the server compiles a Sutra's expressions
+        return compiler.compile(expression).eval(EvalContext.of(DataNode.of(Map.of()), Formats.defaults()));
+    }
+
+    /**
+     * Gate 4 F1: a module stopped after the server is up is gone from every screen the server binds, and one started later is callable at
+     * once, through the API (Sutra Studio's preview), not a compiler of the test's own; the stopped module's class loader is unreachable.
+     * Last: it stops and starts a module the other tests use.
+     */
+    @Test
+    @org.junit.jupiter.api.Order(Integer.MAX_VALUE)
+    void aModuleStoppedOrStartedAfterStartIsSeenByTheServersScreensAtOnce() throws Exception {
+        String yaml = "rachana: 1.2\nsutra: greeted\nversion: 1\nmatch: { kind: widget }\ntitle: { pill: Widget, id: $.code }\n"
+                + "strip:\n  - { label: Greeting, bind: \"greeter_greet($.code)\" }\n";
+        String body = "{\"yaml\":" + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(yaml)
+                + ",\"kind\":\"widget\",\"id\":\"W-1\",\"document\":{\"code\":\"Ravi\"}}";
+        org.springframework.test.web.servlet.RequestBuilder preview = org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/v1/studio/preview").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body);
+        mvc.perform(preview).andExpect(status().isOk()).andExpect(jsonPath("$.strip[0].text").value("Hello, Ravi, from the greeter module"));
+
+        com.ash.drishti.module.runtime.ModuleCandidate greeter = candidate("greeter");   // its folder and manifest, no class of it
+        com.ash.drishti.module.runtime.ModuleRuntime.UnloadReport r = node.runtime().unload("greeter", true);
+        assertThat(r.failures()).isEmpty();
+        assertThat(r.leakFree()).as("nothing of the server keeps the stopped module's class loader").isTrue();
+        String refused = mvc.perform(preview).andExpect(status().isUnprocessableEntity()).andReturn().getResponse().getContentAsString();
+        assertThat(refused).contains("the function 'greeter_greet' is off: its module 'greeter' is not running on this server");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> eval("greeter_greet('Ravi')")).hasMessageContaining("greeter_greet");
+
+        node.runtime().load(greeter, List.of());                        // started again, after the server is up
+        assertThat(node.runtime().loaded("greeter")).isPresent();
+        mvc.perform(preview).andExpect(status().isOk()).andExpect(jsonPath("$.strip[0].text").value("Hello, Ravi, from the greeter module"));
+        assertThat(eval("greeter_greet('Asha')")).isEqualTo("Hello, Asha, from the greeter module");
     }
 
     // ---- the modules ------------------------------------------------------------------------------------------------------------------

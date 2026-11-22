@@ -107,7 +107,7 @@ class SearchFieldNamesTest {
         var router = new SourceRouter(new SourceRegistry(List.of(new Trades(columns)), props, new JsonCodec()), props,
                 Executors.newVirtualThreadPerTaskExecutor());
         var mnemonics = new Mnemonics(new CommandsProperties(Map.of("TRD", new CommandsProperties.Mnemonic("trade", "Trade")), null, null, null));
-        return new StructuredSearch(router, mnemonics, com.ash.drishti.rachana.DrishtiRachana.compiler(), Formats.defaults(), new SearchProperties(1000, Duration.ofSeconds(2)));
+        return new StructuredSearch(router, mnemonics, com.ash.drishti.rachana.LiveCompiler.current(), Formats.defaults(), new SearchProperties(1000, Duration.ofSeconds(2)));
     }
 
     private static StructuredSearch.Result pick(StructuredSearch s, String q) {

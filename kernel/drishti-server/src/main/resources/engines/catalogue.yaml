@@ -34,7 +34,7 @@ engines:
     file: memory-lake.yaml
     switch: drishti.engines.memory-lake.enabled
     env: DRISHTI_MEMORY_LAKE_ENABLED
-    aliases: []
+    retired: []
     shipped: false
     installed: true
     live-on: false
@@ -62,7 +62,7 @@ engines:
     file: dataload.yaml
     switch: drishti.engines.dataload.enabled
     env: DRISHTI_DATALOAD_ENABLED
-    aliases: []
+    retired: []
     shipped: false
     installed: true
     live-on: true
@@ -90,7 +90,7 @@ engines:
     file: pivot.yaml
     switch: drishti.engines.pivot.enabled
     env: DRISHTI_PIVOT_ENGINE_ENABLED
-    aliases: [drishti.pivot.enabled]
+    retired: [drishti.pivot.enabled]
     shipped: true
     installed: true
     live-on: true
@@ -118,7 +118,7 @@ engines:
     file: flight.yaml
     switch: drishti.engines.flight.enabled
     env: DRISHTI_FLIGHT_ENABLED
-    aliases: []
+    retired: []
     shipped: false
     installed: true
     live-on: false
@@ -146,7 +146,7 @@ engines:
     file: openblas.yaml
     switch: drishti.engines.openblas.enabled
     env: DRISHTI_OPENBLAS_ENABLED
-    aliases: []
+    retired: []
     shipped: false
     installed: true
     live-on: true

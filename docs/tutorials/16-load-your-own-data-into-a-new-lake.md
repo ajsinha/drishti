@@ -603,7 +603,7 @@ python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endu
 ```
 
 ```text
-engine: drishti (Drishti's Java writer in drishti-server-<version>-exec.jar)
+engine: java-loader (the parallel lake loader (the default engine))
 business date  PRODUCT_TYPE           rows
 2026-07-08     CallNot                  50
 2026-07-08     Cash                    723
@@ -613,7 +613,7 @@ business date  PRODUCT_TYPE           rows
 documents read: 4407, rows written: 4407, rejected: 0
   business date 2026-07-08 from the command line: trade_endur.2026-07-08.jsonl.gz
 summary: $SCRATCH/lake/_drishti-lake/runs/20261104T191809.840-257432.json
-2026-11-04T19:18:13-05:00 lake-build ok exit=0 run=20261104T191809.840-257432 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=4.114
+2026-11-04T19:18:13-05:00 lake-build ok exit=0 run=20261104T191809.840-257432 domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=4.114
 ```
 
 Now ask for another partition:
@@ -1344,7 +1344,7 @@ settings:
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
 These are standard Apache Iceberg v2 tables: Spark, Trino, Snowflake or pyiceberg read them as they are. To try it with pyiceberg,
-see [the data lake guide, section 15.5](../guides/DATA_LAKE_GUIDE.md#155-check-it-yourself).
+see [the data lake guide, section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
 [../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:

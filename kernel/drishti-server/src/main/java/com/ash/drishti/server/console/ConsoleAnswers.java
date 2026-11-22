@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.console;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.api.resolution.ConfigResolution;
 import com.ash.drishti.api.resolution.PackResolver;
 import com.ash.drishti.api.resolution.ResolutionSettings;
@@ -31,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -642,11 +642,7 @@ public class ConsoleAnswers {
     }
 
     static String sha(byte[] bytes) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(bytes);
     }
 
     /** Whether an {@code If-None-Match} header names this digest (quoted or not, weak or not, or {@code *}). */

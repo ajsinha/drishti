@@ -136,7 +136,7 @@ will also have a token that lets the command line talk to your server, which tut
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** In IntelliJ IDEA run **Drishti build all**, then in PyCharm run **Build demo lakes** ([IDE_GUIDE.md](../guides/IDE_GUIDE.md#13-the-maven-build-launchers)).
+**In the UI.** In IntelliJ IDEA run **Drishti: build all**, then in PyCharm run **Drishti: build demo lakes** ([IDE_GUIDE.md](../guides/IDE_GUIDE.md#13-the-maven-build-launchers)).
 
 **From the command line:**
 
@@ -202,7 +202,7 @@ You should see no red line (the exit is 0). The two `port` lines say what is on 
 
 ## Step 2 · Start the server and the console with sign-in on
 
-**In the UI.** Run **Drishti server (demo lakes)**, then **Drishti console**. The first reads the lakes with the samples off (`DRISHTI_DEMO_ENABLED=false`), with
+**In the UI.** Run **Drishti: run server (demo)**, then **Drishti: run console**. The first reads the lakes with the samples off (`DRISHTI_DEMO_ENABLED=false`), with
 security on and a development administrator; the second signs people in with the same token secret.
 
 **From the command line.** In the repository root, `tools/drishti.py` starts both with the same settings as the run configurations

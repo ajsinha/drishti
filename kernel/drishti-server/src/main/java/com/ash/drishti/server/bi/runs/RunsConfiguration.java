@@ -147,7 +147,7 @@ public class RunsConfiguration {
         com.ash.drishti.engine.time.BusinessDates d = dates.getIfAvailable();
         RunSchedules s = new RunSchedules(runs, content != null ? new ContentRunRecords.Schedules(content) : ds == null ? new RunSchedules.Memory() : new RunSchedules.Jdbc(ds),
                 r -> who == null ? Optional.empty() : sources.replay(r, who.of(r.runner())), d == null ? null : d.zone(),
-                d == null ? com.ash.drishti.common.BusinessCalendar.of("WEEKENDS") : d.calendar(), Clock.systemUTC());
+                d == null ? com.ash.rachana.el.BusinessCalendar.of("WEEKENDS") : d.calendar(), Clock.systemUTC());
         s.start(java.time.Duration.ofSeconds(30));
         return s;
     }

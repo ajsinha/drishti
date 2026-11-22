@@ -39,7 +39,7 @@ def _fresh(client, tmp_path, monkeypatch):
 
     old = client.app.state.module_parts
     parts = ModuleParts(tmp_path / "parts", old.web, 0.0)
-    monkeypatch.setattr(client.app.state, "module_parts", parts)
+    monkeypatch.setitem(client.app.state._state, "module_parts", parts)
     monkeypatch.setattr(client.app.state.editions.modules, "parts", parts)
     return parts
 

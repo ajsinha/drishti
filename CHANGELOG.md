@@ -3145,7 +3145,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   reads a column-mapped table of reader version 2 as all nulls. `lake maintain`'s relayout and the Delta-to-Iceberg copy read through
   it. Fixtures `tools/lake/testdata/delta-features` (real deletion-vector files written by Kernel, a column-mapped table, a table only a
   checkpoint describes); `test_delta_interop.py`: Python returns exactly what the Java reader returns
-  ([DATA_LAKE_GUIDE.md section 14.3](docs/guides/DATA_LAKE_GUIDE.md#143-table-features)).
+  ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 - **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
   (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
@@ -5155,7 +5155,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   (CONFIGURATION.md, the contract pages and samples, the pack guides and READMEs, the plugin READMEs, the command catalogue) is
   rewritten. Headings in the guides drop their release and wave (the old anchors still work). The release notes no longer point to this
   file, and the Help summary of the release notes says so.
-- **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
+- **The 2.9.8 screen mock-ups, ready for the build** (IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups).
   Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
   ([VAR_PLAYGROUND.md section 16](docs/guides/VAR_GUIDE.md#313-the-var-playgrounds-workbook-cell-by-cell)); backtesting, the review and
@@ -5198,7 +5198,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   drained owner hands its shards over, every answer unchanged, and is safe to stop), `tools/test_rolling.py`, `test_admin_net.py`.
 - **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK.md section 4](docs/admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
 - **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
-  ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/guides/VAR_GUIDE.md)). The
+  (IMPLEMENTATION_PLAN.md, [VAR_PLAYGROUND.md](docs/guides/VAR_GUIDE.md)). The
   release rules (one theme per release, at most two large items, Drill A for features and Drill B for hardening, docs and screenshots
   with a benchmark when performance changes, design one release ahead, scope frozen at the start, a quick pre-check before every full
   drill, no builders during a drill or benchmark, never a big documentation restructure with features, every metric with its playground,
@@ -8429,7 +8429,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   (Iceberg without Hadoop). Send and push (Outlook, Teams, SharePoint, connector dump) and integration (the PostgreSQL-wire endpoint, the
   Excel feed, embed tokens bound to envelopes, SDK events, and the feeds and embedding UI) move after the 3.0.0 release; the Sajha MCP
   connector moves to 2.8.0 with the AI work ([BI_DESIGN.md §12.2](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer),
-  [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap)).
+  IMPLEMENTATION_PLAN.md).
 - **Design: Drishti on AWS** ([AWS_DEPLOYMENT.md](docs/guides/CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)), design only, with no AWS or Docker code in the
   repository (`deploy/aws/` removed; the Dockerfiles and entry points are in the document): ECS with the server and the console as separate
   containers, every written path on EFS at the same path, lakes in S3, Drishti*net through Cloud Map.
@@ -9665,7 +9665,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **Fixed (DATA-06):** JSON-lines rows whose `doc` is a JSON object and that carry no `columns` now have their promoted fields read from the document, as rows with `doc` as a string always had; searches, pick lists and derived kinds over such files were empty.
 - **Fixed (DATA-09):** an id on several lines of a JSON-lines day is one entity, its last line (as a reload leaves it): the view, searches, columns, derived kinds and reverse lookups agree and count it once. The ids repeated are counted (`duplicateIds`) and named in Health.
 - **Fixed (DATA-10):** a read racing an atomic replace of a JSON-lines file no longer fails (502) or reads with the old file's offsets: a day's index holds the file it read open, and a read that finds the file rewritten in place builds the index again and reads again.
-- **Roadmap: server-side pricing.** A design for a QuantLib pricing service behind the Drishti server ([QUANT_SERVICE.md](docs/guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [ADR-019](docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md), proposed), now first on the roadmap in [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap).
+- **Roadmap: server-side pricing.** A design for a QuantLib pricing service behind the Drishti server ([QUANT_SERVICE.md](docs/guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [ADR-019](docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md), proposed), now first on the roadmap in IMPLEMENTATION_PLAN.md.
 - **Fixed:** the server no longer opens an unused MongoDB client to `localhost:27017` at every start (and logs connection errors when no MongoDB runs). The MongoDB driver ships for the `mongodb` plugin, which makes its own client only when configured; Spring Boot's MongoDB auto-configuration is now excluded.
 - **Fixed (DATA-04):** loaders never leave a business day empty or half loaded for readers. `PostgresLoader` COPYs into a stage nobody reads and publishes each (kind, business date) in one transaction (delete, insert, `entity_dates`); `--recreate` builds a shadow schema swapped in in one transaction; a load that fails or is killed leaves every day as it was (the next load drops its stage), two loads of one day are serialised, and the table catalogue re-reads a day's columns that were loaded again while it read them. Reloads of 10,000 trades × 3 days cost about a tenth more (1.65–1.96 s against 1.52–1.81 s). `RedisLoader` journals each id before its document, so the next load (or the failing one) deletes documents a dead load wrote that no day's columns list, and gains `--replace` (merging, still the default, is documented). `MongoLoader` hides a new day in `<domain>_loading` until its load has finished. DuckDB, Iceberg and the JSON-lines files were already atomic per day (checked).
 - **Fixed (DATA-05):** one mis-dated row can no longer wipe a store's history. Every loader (PostgreSQL, DuckDB, MongoDB, Redis, Iceberg, Aerospike, JSON-lines files) quarantines rows dated after tomorrow in the business zone (`--future-days`, `--zone`) and ends with an error naming them; retention (`--keep-months`, `--keep-days`, `--ttl-days`, `IcebergMaintenance --keep-days`, `maintain.py keep-business-days`) counts back from `--as-of` (today), never from the newest date loaded; and a run that would drop more than `--max-drop-share` (0.5) of a table drops nothing unless `--force-drop` (`maintain.py`: `max-drop-share`, `--force-drop`, `--as-of`).

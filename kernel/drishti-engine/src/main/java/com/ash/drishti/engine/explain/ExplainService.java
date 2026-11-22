@@ -24,6 +24,7 @@ import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.source.SourceHealth;
 import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.view.PanelData;
 import com.ash.rachana.view.ViewModel;
 import com.ash.rachana.view.ViewModel.Cell;
@@ -37,7 +38,6 @@ import com.ash.drishti.rachana.about.GlossaryEntry;
 import com.ash.drishti.rachana.about.GlossaryResolver;
 import com.ash.rachana.el.EvalContext;
 import com.ash.rachana.format.Formats;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.model.Panel;
 import com.ash.rachana.model.Sutra;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -77,7 +77,7 @@ public final class ExplainService {
     private final ViewPipeline pipeline;
     private final SutraMatcher matcher;
     private final SourceRouter router;
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final SutraRegistry registry;
     private final AboutCatalog about;
     private final Formats formats;
@@ -86,7 +86,7 @@ public final class ExplainService {
     private final Cache<Key, Entry> cache;
     private final Timer timer;
 
-    public ExplainService(ViewPipeline pipeline, SutraMatcher matcher, SourceRouter router, ElCompiler el, SutraRegistry registry, AboutCatalog about,
+    public ExplainService(ViewPipeline pipeline, SutraMatcher matcher, SourceRouter router, LiveCompiler el, SutraRegistry registry, AboutCatalog about,
             Formats formats, ExplainProperties props, MeterRegistry meters) {
         this.pipeline = pipeline;
         this.matcher = matcher;
@@ -243,7 +243,7 @@ public final class ExplainService {
             if (p.error() != null) {
                 errors.add(new PageContext.PanelError(p.id(), p.title(), p.error()));
             } else if (p.empty()) {
-                EmptinessReason.Reason r = EmptinessReason.of(defined.get(p.id()), built.seen().data(), el);
+                EmptinessReason.Reason r = EmptinessReason.of(defined.get(p.id()), built.seen().data(), el.get());
                 noData.add(new PageContext.NoData(p.id(), p.title(), r.why(), r.path()));
             }
         }

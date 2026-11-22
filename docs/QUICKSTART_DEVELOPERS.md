@@ -116,15 +116,15 @@ user's profile, no administrator rights needed.
 
 ## 2. Build
 
-The products install into `~/.m2` **from their release tags only**, in this order: **tools, Rachana, Lake, then Drishti**
-(each builds on the one before). The index repository does all of it:
+The products install into `~/.m2` at the versions the root `pom.xml` pins (`drishti.tools.version`, `drishti.rachana.version`,
+`drishti.lake.version`), in this order: **tools, Rachana, Lake, then Drishti** (each builds on the one before). The index repository does all of it:
 
 ```bash
 cd ~/IdeaProjects/drishti-platform
 python3 build_all.py                       # Windows: py build_all.py
 ```
 
-`build_all.py` checks out the tag of each product, installs its jars into `~/.m2` (skipping what is already there), builds the Elements
+`build_all.py` checks out the tag of each product named in COMPATIBILITY.md, installs its jars into `~/.m2` (skipping what is already there), builds the Elements
 bundles and then builds Drishti. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
 names its launchers):
 
@@ -135,9 +135,22 @@ cd ../../drishti-lake/java                         && git checkout <tag> && ./mv
 cd ../../drishti                                   && python tools/drishti.py build all
 ```
 
-`<tag>` is the tag in COMPATIBILITY.md for your Drishti; a branch is never installed into `~/.m2` (a snapshot there hides a mismatch). Windows:
+`<tag>` is the tag in COMPATIBILITY.md for your Drishti; install the version `pom.xml` pins, and check `~/.m2` holds no other build of it. Windows:
 `mvnw.cmd`. The Elements bundles are built in `drishti-elements` (`python tools/elements/cli.py dist`, or its `Elements: build all`
 launcher) and read by Drishti from the release tree its pin names.
+
+**The Lake wheel.** The console and the tools use Lake's Python path (`drishti_lake`), a pure-Python wheel. `lib/lake-wheel.pin` names the one
+wheel Drishti uses: the Lake ref (a release tag, or the release commit until it is tagged), its exact version and its SHA-256 (the build is reproducible). Build it from that tag into `lib/wheels`
+(`build_all.py` does this; by hand, `uv` is needed), then install the console's requirements:
+
+```bash
+git clone https://github.com/ajsinha/drishti-lake.git ../drishti-lake-tag && git -C ../drishti-lake-tag checkout <ref in lib/lake-wheel.pin>
+uv build --wheel ../drishti-lake-tag/python --out-dir lib/wheels
+python tools/lake/lakewheel.py             # prints the pin and whether lib/wheels holds exactly that wheel (exit 1 if not)
+```
+
+The tools take only the pinned wheel by name and checksum, never the newest file of the folder; a wheel of another version or checksum is refused
+with the reason.
 
 **Drishti itself:**
 
@@ -146,7 +159,7 @@ python tools/drishti.py build all        # Windows: py tools\drishti.py build al
 ls lib/*-exec.jar modules/*.dmod
 ```
 
-**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs one `mvnw clean package` for the server and the modules, and the Maven build itself installs the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the same command with no Python: `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, or IntelliJ's **Drishti build all**). The jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network. The first build downloads
+**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar` and one `modules/<id>-<version>.dmod` per module with `modules/first-party.yaml`: `build all` runs one `mvnw clean package` for the server and the modules, and the Maven build itself installs the exec jar into `lib/`, where every start finds it, and the packages into `modules/` (the same command with no Python: `./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am`, or IntelliJ's **Drishti: build all**). The jar holds no module; `build jar` alone builds only the jar, `build modules` only the packages; a start refuses packages older than their module folder and names the one to rebuild; `--offline` builds without the network. The first build downloads
 its libraries (several minutes); later ones take about a minute. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands).
 

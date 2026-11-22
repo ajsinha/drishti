@@ -62,7 +62,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Map<EntityRef, Feed.Series> series = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
-    private HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
+    private HttpClient http = com.ash.drishti.api.DrishtiTools.httpBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
     private com.ash.tools.net.TlsMaterial tls;
     private com.ash.tools.net.ProxySettings proxy = com.ash.tools.net.ProxySettings.none();
     private String proxyTarget;
@@ -101,7 +101,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
         // the proxy (proxy.* or the site default) applies to the built-in feeds too; https targets are tunnelled with CONNECT
         this.proxyTarget = override.startsWith("http") ? override : "https://";
         this.proxy = com.ash.tools.net.ProxySettings.resolve(ctx.settings(), proxyTarget);
-        HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL));
+        HttpClient.Builder hb = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL);
         if (override.startsWith("http") || com.ash.tools.net.TlsSettings.anyGiven(ctx.settings(), "tls.")) {
             // an https mirror on a private CA: the shared tls.* settings; the built-in feeds use the JVM's authorities
             this.tls = com.ash.drishti.api.DrishtiTools.tlsMaterial(ctx.settings(), override.isEmpty() ? "https://(the built-in feed)" : override, "url");

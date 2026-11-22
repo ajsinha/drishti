@@ -460,7 +460,7 @@ It starts each node and the console through `tools/drishti.py start` (2.0), so t
 `drishti-main` (18480) serves the demo profile's packs (the packs of every module that is on and the demo's extras), the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
 trades; `drishti-c` (18792) synthetic MUREX trades with `counterparty-risk` and `market-risk`; the console (17480) is given `drishti-main`
 alone, learns the others and fails over to them. Every node and the console start with the cluster file's profile (`profile: demo`, the
-file the IDE's **Drishti server (demo lakes)** and `start server --demo` read), then `stack.ini` (live news) and, for the members,
+file the IDE's **Drishti: run server (demo)** and `start server --demo` read), then `stack.ini` (live news) and, for the members,
 `member.ini` (no data inbox); the business day is the newest date of the demo lake.
 
 Each node's net folder is checked in (`advertise-url: http://${DRISHTI_STACK_HOST}:<port>`, `secret: ${DRISHTI_NET_SECRET}`: references,

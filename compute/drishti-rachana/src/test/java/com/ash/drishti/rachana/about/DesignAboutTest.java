@@ -49,11 +49,11 @@ class DesignAboutTest {
         Path f = dir.resolve("pack.yaml");
         Files.writeString(f, PACK);
         return new AboutCatalog(new AboutProperties(List.of(new AboutProperties.PackSource("p", "Pack", f.toString(), null, List.of("thing"), List.of("p"))), null, null),
-                com.ash.drishti.rachana.DrishtiRachana.compiler());
+                com.ash.drishti.rachana.LiveCompiler.current());
     }
 
     private static DesignAbout of(AboutCatalog c, String text) {
-        return DesignAbout.of(c, com.ash.drishti.rachana.DrishtiRachana.compiler(), 600, text, "thing");
+        return DesignAbout.of(c, com.ash.drishti.rachana.LiveCompiler.current(), 600, text, "thing");
     }
 
     @Test

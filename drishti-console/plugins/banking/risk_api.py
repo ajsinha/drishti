@@ -13,8 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The banking engines' calls on the server, as the person (docs/architecture/DOMAIN_MODULES.md section 5, C7): each over the core
-client's one generic call (``BackendClient.engine``), under the module's API, ``/api/v1/risk`` (the old prefixes are answered by the
-server for one release only). The core client names none of them."""
+client's one generic call (``BackendClient.engine``), under the module's API, ``/api/v1/risk``. The core client names none of them."""
 from __future__ import annotations
 
 from typing import Any

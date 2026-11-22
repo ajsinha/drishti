@@ -277,7 +277,6 @@ public class EngineAdminController {
         r.put("neededBy", registry.catalogue().neededBy(id));
         r.put("usedBy", registry.catalogue().usedBy(id));
         r.put("source", sw.source());
-        r.put("alias", sw.alias() == null ? "" : sw.alias());
         r.put("overridden", sw.overridden());
         r.put("file", registry.files().file(e).toString());
         r.put("fileExists", Files.isRegularFile(registry.files().file(e)));

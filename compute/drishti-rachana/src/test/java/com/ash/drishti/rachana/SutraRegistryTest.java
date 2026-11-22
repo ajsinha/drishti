@@ -39,7 +39,7 @@ class SutraRegistryTest {
     }
 
     private SutraRegistry registry(boolean hot) {
-        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null, null, null), new com.ash.rachana.el.ElCompiler());
+        return new SutraRegistry(new RachanaProperties(List.of(dir.toString()), hot, Duration.ofMillis(50), null, null, null, null, null, null, null), com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()));
     }
 
     @Test
@@ -90,7 +90,7 @@ class SutraRegistryTest {
         Files.writeString(dir.resolve("plain.yaml"), "rachana: 1.2\nsutra: plain\nversion: 1\nmatch: { kind: trade }\n");
         Files.writeString(dir.resolve("good.v1.sutra.yaml"), "rachana: 1.2\nsutra: good\nversion: 1\nmatch: { kind: trade }\n");
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null),
-                new com.ash.rachana.el.ElCompiler())) {
+                com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
             assertThat(r.all()).extracting(x -> x.name()).containsExactly("good");
             assertThat(r.problems().get(dir.resolve("old.v1.sutra.md").toString())).singleElement()
                     .satisfies(p -> assertThat(p.message()).contains("tools/rachana/md_to_yaml.py"));
@@ -150,7 +150,7 @@ class SutraRegistryTest {
         var unbounded = new com.ash.rachana.el.ElCompiler(100,
                 new com.ash.rachana.el.ElLimits(Integer.MAX_VALUE, Integer.MAX_VALUE));
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
-                null, null, null, null), unbounded)) {
+                null, null, null, null), com.ash.drishti.rachana.LiveCompiler.of(unbounded))) {
             assertThat(r.all()).extracting(Sutra::name).containsExactlyInAnyOrder("good", "qa-deep");
             assertThat(r.problems()).isEmpty();
             Files.writeString(dir.resolve("deeper.v1.sutra.yaml"), deep("qa-deeper", 100_000));   // the watcher meets one too
@@ -164,7 +164,7 @@ class SutraRegistryTest {
     @Test
     void pollingPicksUpANewSutraWithoutFileEvents() throws Exception {
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
-                null, null, null, null, "poll", Duration.ofMillis(100)), new com.ash.rachana.el.ElCompiler())) {
+                null, null, null, null, "poll", Duration.ofMillis(100)), com.ash.drishti.rachana.LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
             assertThat(r.hotReload()).isEqualTo("POLLING");
             Files.writeString(dir.resolve("polled.v1.sutra.yaml"), sutra("qa-polled", 1, "trade"));
             await(() -> r.latest("qa-polled").isPresent());

@@ -104,7 +104,7 @@ AREAS = [
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
          "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
-         "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
+         "The old switch names are listed last: a site that sets one stops the server at start, which names the new key."),
     Area("modules", "Modules: `config/modules/*.yaml`",
          "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
          "its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), "
@@ -464,11 +464,10 @@ def engine_rows() -> tuple[list[Row], list[str]]:
         rows += yaml_rows("engines", [f], "server (each node its own)", "restart", None,   # grouped by key, as the server area (stable anchors)
                           collapse=COLLAPSE["server"])
     for e in catalogue:
-        for alias in e.get("aliases") or []:
-            rows.append(Row("engines", "Old names (still accepted)", "kernel/drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",
-                            None, [], "server", _clean(f"The old name of {e['switch']} ({e['title']}): still accepted, and when set above the "
-                                                         f"shipped files it decides, with a warning at start (DRS-1024). Move it to "
-                                                         f"config/engines/{e['file']} or use Admin → Engines."), "live", "2.9.11", False))
+        for alias in e.get("retired") or []:
+            rows.append(Row("engines", "Old names (refused at start)", "kernel/drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",
+                            None, [], "server", _clean(f"The old name of {e['switch']} ({e['title']}): refused at start (the server names the new key). "
+                                                         f"The switch is in config/engines/{e['file']} or Admin → Engines."), "live", "2.9.11", False))
     return rows, problems
 
 

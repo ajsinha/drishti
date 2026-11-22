@@ -87,7 +87,7 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
         this.settings = YFinanceSettings.of(ctx.settings());
         this.cache = new BoundedCache<>(settings.cacheMax());
         this.proxy = com.ash.tools.net.ProxySettings.resolve(ctx.settings(), settings.baseUrl());   // proxy.* or the site default
-        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL));
+        HttpClient.Builder b = com.ash.drishti.api.DrishtiTools.httpBuilder(proxy).connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL);
         if (com.ash.tools.net.TlsSettings.anyGiven(ctx.settings(), "tls.")) {          // a proxy or mirror on a private CA
             var tls = com.ash.drishti.api.DrishtiTools.tlsMaterial(ctx.settings(), settings.baseUrl(), "base-url");
             if (tls != null) {

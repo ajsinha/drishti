@@ -162,7 +162,7 @@ public final class DuckDbExecutor implements AutoCloseable {
 
     /** Feeds rows to a staging table. */
     @FunctionalInterface
-    public interface RowFeed {
+    public interface StagedRows {
         /** Calls {@code sink} for every row (values in column order: String, Number or null); returns the rows fed. */
         long feed(RowSink sink) throws Exception;
     }
@@ -176,7 +176,7 @@ public final class DuckDbExecutor implements AutoCloseable {
     /**
      * A table created and filled through DuckDB's appender (no SQL per row): {@code table} replaced if it exists. Returns the rows written.
      */
-    public long stage(String table, List<Column> columns, RowFeed feed) {
+    public long stage(String table, List<Column> columns, StagedRows feed) {
         return with(c -> {
             try (Statement st = c.createStatement()) {
                 st.execute("DROP TABLE IF EXISTS " + quote(table));

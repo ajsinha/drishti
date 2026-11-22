@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.banking.compute.var.CurrencyBook;
@@ -104,6 +105,19 @@ class VarGoldenMatrixTest {
         assertThat(want.size()).as("three dates x two windows x two currencies").isEqualTo(12);
         want.fieldNames().forEachRemaining(c -> compareCase(c, want.get(c), got.get(c)));
         assertThat(got.size()).as("cases").isEqualTo(want.size());
+        headlineFigures(got);
+    }
+
+    /**
+     * The headline of the demo and of the drill's container smoke (tools/drillkit/container_smoke.json), asserted here in the normal suite: the bank's
+     * 1-day 99% VaR 167,372,692 and ES 210,131,972 (250 scenarios, USD, 2026-09-30), whole currency units, in every bank-level hierarchy.
+     */
+    static void headlineFigures(JsonNode got) {
+        for (String hierarchy : List.of("LEGAL~BANK", "LL~BANK", "MGMT~BANK")) {
+            JsonNode bank = got.get("2026-09-30/250/USD").get("nodes").get(hierarchy);
+            assertThat(Math.round(bank.get("var").asDouble())).as(hierarchy + " headline VaR").isEqualTo(167_372_692L);
+            assertThat(Math.round(bank.get("es").asDouble())).as(hierarchy + " headline ES").isEqualTo(210_131_972L);
+        }
     }
 
     private static Map<String, Object> describeCase(VarBook book, Map<String, VarDate.Portfolio> defs, ParallelSums sums, boolean usd) {
@@ -189,10 +203,6 @@ class VarGoldenMatrixTest {
     }
 
     private static String sha(String text) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text);
     }
 }

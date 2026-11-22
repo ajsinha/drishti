@@ -194,7 +194,7 @@ class ReportStack:
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"),
                    # Python (a Python item's check, its tests, Python measures) runs on the server's compute pool, in the interpreter running this test
-                   DRISHTI_COMPUTE_ENABLED="true", DRISHTI_PYTHON=sys.executable, DRISHTI_COMPUTE_FILE=str(ROOT / "config" / "compute" / "compute.yaml"))
+                   DRISHTI_COMPUTE_ENABLED="true", DRISHTI_PYTHON=os.environ.get("DRISHTI_PYTHON") or sys.executable, DRISHTI_COMPUTE_FILE=str(ROOT / "config" / "compute" / "compute.yaml"))
         if self.delta_root:
             env["DRISHTI_PACKS"] = "trading,counterparty-risk,market-risk"
             env["DRISHTI_DELTA_ROOT"] = self.delta_root

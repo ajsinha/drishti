@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.server.dist.ExportWorkbook;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
-import com.ash.drishti.server.dist.CsvWriter;
+import com.ash.drishti.server.dist.ExportCsv;
 import com.ash.drishti.server.dist.DocLayout;
 import com.ash.drishti.server.dist.ExportDoc;
 import com.ash.drishti.server.dist.PdfWriter;
@@ -179,7 +179,7 @@ final class VarReportSignoff {
         ExportDoc doc = doc(run, rec, !signed);
         return switch (format) {
             case "xlsx" -> ExportWorkbook.write(doc);
-            case "csv" -> CsvWriter.write(doc);
+            case "csv" -> ExportCsv.write(doc);
             case "pdf" -> {
                 PdfWriter.Geometry g = PdfWriter.Geometry.of(true, 1400);
                 yield PdfWriter.write(new DocLayout(g.width(), g.slice(), 500, 300, 0).build(doc), g, doc.title(), doc.subtitle(),

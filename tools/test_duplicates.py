@@ -34,7 +34,7 @@ XML = """<pmd-cpd xmlns="https://pmd-code.org/schema/cpd-report">
 
 @pytest.mark.parametrize("path", [
     "kernel/drishti-engine/src/test/java/A.java", "drishti-console/tests/x.py", "tools/test_x.py", "testing/drishti-it/src/main/java/A.java",
-    "drishti-console/web/static/vendor/x/y.js", "drishti-console/web/static/render/1.2.0/a.js", "drishti-console/web/embed/a.js",
+    "drishti-console/web/static/vendor/x/y.js", "drishti-console/web/embed/a.js",
     "a/b.min.js", "examples/connector/src/main/java/A.java", "drishti-console/web/static/elements/drishti-grid/drishti_harness.js",
 ])
 def test_excluded_paths(path: str) -> None:
@@ -43,7 +43,7 @@ def test_excluded_paths(path: str) -> None:
 
 @pytest.mark.parametrize("path", [
     "kernel/drishti-engine/src/main/java/A.java", "drishti-console/core/x.py", "tools/varcli.py", "drishti-console/web/static/js/drishti_x.js",
-    "drishti-console/web/static/elements/drishti-grid/src/a.js", "drishti-console/web/static/render/3.3.1/a.js", "drishti-console/plugins/banking/static/js/a.js",
+    "drishti-console/web/static/elements/drishti-grid/src/a.js", "drishti-console/plugins/banking/static/js/a.js",
 ])
 def test_counted_paths(path: str) -> None:
     assert d.counted(path, "// ordinary head")

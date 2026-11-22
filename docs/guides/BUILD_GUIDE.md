@@ -4945,7 +4945,7 @@ alternative to the seven, not an addition.
 The server reads `drishti.packs.enabled` from `DRISHTI_PACKS` (a comma-separated list; default the seven). Packs are looked for in `drishti.packs.dir`
 (`DRISHTI_PACKS_DIR`, default `./config/packs`), then in `drishti.packs.extra-dirs`.
 
-1. Start the server with the packs you want (or the IDE run configuration **Drishti server (built-in samples)** with a settings file of yours naming `drishti.packs.enabled` after its profile;
+1. Start the server with the packs you want (or the IDE run configuration **Drishti: run server (built-in samples)** with a settings file of yours naming `drishti.packs.enabled` after its profile;
    [OPERATIONS_GUIDE.md](IDE_GUIDE.md)):
 
    ```bash
@@ -5067,7 +5067,7 @@ Every kind of the seven packs (except live news headlines and quotes) is served 
 | `news-store` | `news/` | news-and-markets (topics, companies, and the captured market snapshot) |
 
 The committed test data (`data/testdata/`, sixty business days of every dataset, 5,000 trades per source system) becomes those tables with one command
-(or the IDE run configuration **Build demo lakes**):
+(or the IDE run configuration **Drishti: build demo lakes**):
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py lake demo
@@ -5086,7 +5086,7 @@ Connector files:
 ```
 
 (About 3.4 GB on disk.) By default the sixty days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test
-data's own dates. Start the server with the samples off so that every page reads the lakes: the run configuration **Drishti server (demo lakes)**, or
+data's own dates. Start the server with the samples off so that every page reads the lakes: the run configuration **Drishti: run server (demo)**, or
 `DRISHTI_DEMO_ENABLED=false`. Running `lake demo` again while a server runs is safe: it sends the data-load signal for every table and date it wrote, and a
 running server also sees each rebuilt Delta date by itself. The steps and timings are in [data/testdata/README.md](../../data/testdata/README.md); every
 option in [CLI_REFERENCE.md](CLI_REFERENCE.md).
@@ -5097,7 +5097,7 @@ captured through the pack's own connectors by `drishti.py testdata capture-marke
 `news-store`; every page reads the same documents as live, a quote's *As of* and the headlines' *Fetched* end in *(snapshot captured <date>)*, and the
 pages add a **Snapshot** note. The data belongs to its providers and is shown for demonstration only. world-economy is already offline: all thirteen kinds
 are real figures captured when the pack was built ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail); refresh with
-`drishti.py feed run world-economy`). **Offline mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti server (demo lakes)**) never
+`drishti.py feed run world-economy`). **Offline mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti: run server (demo)**) never
 starts the `news`, `yfinance` and public-data `feed` connectors, so nothing waits on the network
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)). Refresh the snapshot on a machine with internet:
 `drishti.py testdata capture-market` (about four minutes), then `drishti.py lake demo`, and commit `data/testdata`

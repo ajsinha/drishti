@@ -87,16 +87,11 @@ of Rachana it is written in. Values are plain YAML; strings may hold Rachana-EL 
 second dialect to learn, and any YAML tool (syntax highlighting, linters, JSON Schema completion, `yq`, code review diffs) works on a
 Sutra as it is.
 
-<<<<<<< HEAD
-**Language level.** Drishti runs Rachana's one language level, **1.2**, and every Sutra, fragment and block declares `rachana: 1.2` (`rachana: 1` is 1.2 too). At 1.2 arithmetic on exact numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double arithmetic. A Sutra or fragment that declares 1.0 or 1.1 is refused: move it first with `rachana upgrade` of Rachana 0.12.0. A Sutra uses fragments
-of its own level only (`DRS-2008` otherwise), so upgrade a Sutra and its own fragments together.
-=======
 **Language level.** Drishti runs Rachana language level **1.2**, the one level of Rachana 1.x, and every Sutra, fragment and block
-Drishti ships declares `rachana: 1.2`; tables, models, measures and pivot formulas are read at 1.2 too. At 1.2 arithmetic on exact
+Drishti ships declares `rachana: 1.2` (`rachana: 1` is 1.2 too); tables, models, measures and pivot formulas are read at 1.2 too. At 1.2 arithmetic on exact
 numbers is exact (decimals, 34 digits, half to even), so `0.1 + 0.2` is `0.3`; a value that is already a binary double keeps double
 arithmetic. A Sutra written for a retired level (`rachana: 1.0` or `1.1`) is refused (`DRS-2009`), with words that name Rachana 0.12's
 `rachana upgrade`, the tool that moves it to 1.2 with the same meaning; move a Sutra and its own fragments together.
->>>>>>> origin/g4/level-12
 
 ```yaml
 rachana: 1.2

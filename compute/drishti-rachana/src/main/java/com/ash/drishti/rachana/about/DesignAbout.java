@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.rachana.about;
 
-import com.ash.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.el.Template;
 import com.ash.rachana.SutraProblem;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public final class DesignAbout implements AboutSource {
      * @param text the Design's about.yaml (blank for none)
      * @param kind the Design's kind: the only kind its text may write about
      */
-    public static DesignAbout of(AboutSource base, ElCompiler el, int maxText, String text, String kind) {
+    public static DesignAbout of(AboutSource base, LiveCompiler el, int maxText, String text, String kind) {
         if (text == null || text.isBlank()) {
             return new DesignAbout(base, Map.of(), List.of());
         }

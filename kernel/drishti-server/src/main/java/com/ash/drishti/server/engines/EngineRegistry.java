@@ -103,7 +103,6 @@ public final class EngineRegistry implements AutoCloseable {
                     true, true, true, Map.of()));
         }
         entries.keySet().forEach(id -> inFlight.put(id, new AtomicInteger()));
-        switches.warnings().forEach(w -> LOG.warn("{}", w));
         startAll();
     }
 

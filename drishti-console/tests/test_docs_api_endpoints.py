@@ -41,11 +41,30 @@ def _endpoints() -> set[tuple[str, str]]:
         text = path.read_text(encoding="utf-8")
         if not re.search(r"@(Rest)?Controller", text):
             continue
-        base = re.search(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?"([^"]*)"', text)
-        prefix = base.group(1) if base else ""
+        base = re.search(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?(?:"([^"]*)"|(?:\w+\.)?([A-Z_]+)\s*\))', text)   # a literal, or a constant of the class (BASE)
+        if base and base.group(2):
+            const = re.search(r'String\s+' + base.group(2) + r'\s*=\s*"([^"]*)"', text)
+            prefix = const.group(1) if const else ""
+        else:
+            prefix = base.group(1) if base else ""
         for m in ANNOTATION.finditer(text):
             quoted = re.search(r'"([^"]*)"', m.group(2) or "")
             found.add((m.group(1).upper(), prefix + (quoted.group(1) if quoted else "")))
+    return found
+
+
+def _catch_all_routes() -> set[str]:
+    """Paths a controller answers with one method-level ``@RequestMapping(path = {...})`` (the live tables' route method: ``/tables/**`` is every
+    route of the Data Protocol under it, which the guide lists one row each)."""
+    found: set[str] = set()
+    for path in ROOT.glob("kernel/drishti-server/src/main/java/**/*.java"):
+        text = path.read_text(encoding="utf-8")
+        base = re.search(r'@RequestMapping\(\s*(?:\w+\.)?([A-Z_]+)\s*\)', text)
+        const = re.search(r'String\s+' + base.group(1) + r'\s*=\s*"([^"]*)"', text) if base else None
+        if not const:
+            continue
+        for m in re.finditer(r'@RequestMapping\(\s*path\s*=\s*\{([^}]*)\}', text):
+            found |= {const.group(1) + p for p in re.findall(r'"([^"]*)"', m.group(1))}
     return found
 
 
@@ -88,6 +107,7 @@ def test_every_controller_endpoint_is_in_the_api_guide():
 def test_every_endpoint_row_of_the_api_guide_exists():
     mapped = {_norm(p) for _, p in _endpoints()}
     patterns = [re.compile("^" + re.escape(p).replace(r"\{\}", "[^/]+") + "$") for p in mapped]
+    patterns += [re.compile("^" + re.escape(_norm(p).removesuffix("/**")) + "(/.*)?$") for p in _catch_all_routes() if p.endswith("/**")]
     unknown = []
     for ln in GUIDE.splitlines():
         m = re.match(r"\|\s*`(GET|POST|PUT|PATCH|DELETE)`(?:\s*[·/]\s*`?(?:GET|POST|PUT|PATCH|DELETE)`?)*\s*\|\s*`([^`]+)`", ln)

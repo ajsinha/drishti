@@ -6384,8 +6384,8 @@ line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.m
 
 ```text
 $ python tools/pvgen/intraday.py --batches 3 --trades-per-batch 10 --lake data/delta/demo --server http://<host>:<port>
-lake-build ok exit=0 ... kind=pnl-vector engine=drishti mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
-lake-build ok exit=0 ... kind=scenario-pv engine=drishti mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
+lake-build ok exit=0 ... kind=pnl-vector engine=java-loader mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
+lake-build ok exit=0 ... kind=scenario-pv engine=java-loader mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
 ...
 I-2026-09-30-001: 10 trades (7 amended, 3 new, 0 cancelled), 8 pnl-vector, 2 scenario-pv
 I-2026-09-30-002: 10 trades (6 amended, 4 new, 0 cancelled), 9 pnl-vector, 1 scenario-pv

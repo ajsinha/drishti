@@ -27,7 +27,8 @@
     const el = document.createElement(tag);
     Object.keys(attrs || {}).forEach((k) => {
       const v = attrs[k];
-      if (k === 'text') { el.textContent = v; } else if (k === 'class') { el.className = v; } else if (v === true) { el.setAttribute(k, ''); } else if (v !== false && v != null) { el.setAttribute(k, v); }
+      if (k === 'text') { el.textContent = v; } else if (/^on[a-z]+$/.test(k) && typeof v === 'function') { el.addEventListener(k.slice(2), v); }      // a handler is a listener, never an inline attribute (the strict policy refuses those)
+      else if (k === 'class') { el.className = v; } else if (v === true) { el.setAttribute(k, ''); } else if (v !== false && v != null) { el.setAttribute(k, v); }
     });
     (function add(list) {
       list.forEach((c) => {
@@ -393,40 +394,23 @@
     if (d.status && d.status !== 'published') { return d.personal ? 'draft in a private workspace: publish it first' : 'a draft: publish it first'; }
     return '';
   };
-  /** Fills the Main dataset (a <drishti-select>: the models and the packs' datasets in their groups, then the version 1 datasets) and the Also add
-      (a <drishti-multiselect>, version 1 datasets only) from GET /datasets; datasets that cannot be used are greyed with the reason. */
+  /** Fills the Main dataset (a <drishti-select>: the models and the packs' datasets in their groups); a report reads one model, so the Also add row
+      (a <drishti-multiselect>) stays hidden and empty. Resolves to the offered items. */
   B.fillDatasetPickers = function (main, also, want) {
-    const groups = B.layer && B.layer.groups ? B.layer.groups().catch(() => []) : Promise.resolve([]);       // the models and the packs' datasets, grouped (a report reads one model)
-    return Promise.all([B.api('GET', '/datasets?drafts=1'), groups]).then(([d, grouped]) => {
+    const groups = B.layer && B.layer.groups ? B.layer.groups().catch(() => []) : Promise.resolve([]);       // the models and the packs' datasets, grouped
+    return groups.then((grouped) => {
       const items = main.component.options.filter((o) => o.value === '');                     // the page's "Choose ..." first
       grouped.forEach((g) => g.items.forEach((i) => items.push({ value: i.value, label: i.label, group: g.label })));
-      const legacy = grouped.length ? 'Other datasets (version 1)' : 'Datasets';
-      // the list of datasets also holds the model layer's (rachana: 2), already offered above as dataset:<name>: only the version 1 ones are left here
-      const layered = new Set();
-      grouped.forEach((g) => g.items.forEach((i) => { if (i.kind === 'dataset') { layered.add('file:dataset:' + i.ref.slice('dataset:'.length)); layered.add('title:' + i.title); } }));
-      const v1 = (d.datasets || []).filter((x) => !layered.has(x.id) && !layered.has('title:' + x.title));
       const row = also && also.closest('label');
-      if (row) { row.hidden = !v1.length; }                                  // more datasets in one report exist only for version 1 ones (a report reads one model)
-      const same = {}, more = [];
-      v1.forEach((x) => { same[x.title] = (same[x.title] || 0) + 1; });
-      v1.forEach((x) => {
-        const why = B.datasetWhy(x), state = same[x.title] > 1 && x.status ? ', ' + x.status : '', text = x.title + (state || why ? ' (' + [why, state.slice(2)].filter(Boolean).join(', ') + ')' : '');
-        items.push({ value: x.id, label: text, disabled: !!why, group: legacy });
-        more.push({ value: x.id, label: text, disabled: !!why });
-      });
+      if (row) { row.hidden = true; }
       const o = want ? items.find((x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)) : null;
       main.component.setOptions(items, o ? o.value : undefined);
-      if (also) { also.allOptions = more; also.component.setOptions(more); }
-      if (row && grouped.length) {                                           // a model read alone: Also add steps aside, its picks dropped
-        const hide = () => { const one = /^(mq|dataset):/.test(main.value || ''); row.hidden = one || !v1.length; if (one) { also.component.setValue([]); } };
-        main.addEventListener('change', hide);
-        hide();
-      }
-      return d.datasets || [];
+      if (also) { also.allOptions = []; also.component.setOptions([]); }
+      return items.filter((x) => x.value !== '').map((x) => ({ valid: true, id: x.value, title: x.label }));
     });
   };
 
-  /** The line a new report draft starts with, for what the picker chose: a version 1 dataset (`dataset:`), a model or a pack dataset (`model:`; a report reads one model). */
+  /** The line a new report draft starts with, for what the picker chose: a model or a pack dataset (`model:`; a report reads one model). */
   B.sourceLine = function (value) {
     if (value.indexOf('mq:') === 0) { return 'model: ' + value.slice(3); }
     if (value.indexOf('dataset:') === 0) { return 'model: ' + value; }

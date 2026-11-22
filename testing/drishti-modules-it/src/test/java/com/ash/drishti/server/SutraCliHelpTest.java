@@ -25,7 +25,6 @@ import com.ash.drishti.engine.shape.ShapeService;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.about.AboutCatalog;
 import com.ash.drishti.rachana.about.AboutProperties;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.format.Formats;
 import com.ash.drishti.server.cli.HelpChecks;
 import com.ash.drishti.server.cli.SutraCli;
@@ -86,7 +85,7 @@ class SutraCliHelpTest {
     @Autowired ShapeService shapes;
     @Autowired AutoDesigner designer;
     @Autowired JsonCodec codec;
-    @Autowired ElCompiler el;
+    @Autowired com.ash.drishti.rachana.LiveCompiler el;
     @Autowired Formats formats;
     @Autowired AboutCatalog shipped;
     @TempDir Path tmp;

@@ -34,6 +34,7 @@
     <!-- build order only (G1 reads the exec jar drishti-app writes); nothing of it is on this project's class path -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-app</artifactId><version>${project.version}</version><type>pom</type><scope>test</scope>
       <exclusions><exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion></exclusions></dependency>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-guards</artifactId><type>test-jar</type><scope>test</scope></dependency>
     <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
   </dependencies>

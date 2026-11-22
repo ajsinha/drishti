@@ -13,11 +13,10 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A Sutra's test cases (2.9.4, docs/guides/DATA_GUIDE.md): `tests/<sutra>/cases.jsonl`, one case a line,
-`{"case": "<name>", "document": {...}}`, beside the folder's `expect.yaml`. `sutra test` (SutraCli) reads it; the older layout, one
-`<name>.json` per case, is still read during 2.9.4 with a deprecation warning.
+`{"case": "<name>", "document": {...}}`, beside the folder's `expect.yaml`. `sutra test` (SutraCli) reads it.
 
     text(cases)       the file's text from [(name, document)], in the order given
-    read(folder)      [(name, document)] from cases.jsonl, else from the older <name>.json files
+    read(folder)      [(name, document)] from cases.jsonl
 """
 from __future__ import annotations
 
@@ -39,14 +38,13 @@ def text(cases: list[tuple[str, object]] | dict[str, object]) -> str:
 
 
 def read(folder: Path) -> list[tuple[str, dict]]:
-    """The cases of a Sutra's folder, (name, document) in order: its cases file, else one ``.json`` file per case."""
+    """The cases of a Sutra's folder, (name, document) in order, from its cases file (none: an empty list)."""
     folder = Path(folder)
     f = folder / FILE
+    out = []
     if f.is_file():
-        out = []
         for t in f.read_text(encoding="utf-8").splitlines():
             if t.strip():
                 c = json.loads(t)
                 out.append((c["case"], c["document"]))
-        return out
-    return [(p.stem, json.loads(p.read_text(encoding="utf-8"))) for p in sorted(folder.glob("*.json"))]
+    return out

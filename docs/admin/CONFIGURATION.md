@@ -903,7 +903,7 @@ reported in the state `OFFLINE`, shown as **off (offline mode)** in Admin → Co
 the other connectors that hold them. The shipped packs keep a snapshot for exactly that: the news-and-markets pack's `news-store` serves
 `quote` and `news` from the market snapshot committed in `data/testdata/news-and-markets` (built into the lake by `drishti.py lake demo`;
 [data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)), and the market-data pack's
-`market-store` serves the kinds of its public-data feeds. The run configuration **Drishti server (demo lakes)** sets it. Read once at
+`market-store` serves the kinds of its public-data feeds. The run configuration **Drishti: run server (demo)** sets it. Read once at
 start: a connector file saved in Admin while the server runs cannot start an internet connector either; restart without it to go live.
 
 The same holds with offline mode **off** for a connector of an internet plugin whose file switches it off (its shipped state, such as
@@ -4043,7 +4043,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### Compute engines: `config/engines/*.yaml`
 
-One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
+One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). The old switch names are listed last: a site that sets one stops the server at start, which names the new key.
 
 #### `drishti.engines.var`
 
@@ -4554,15 +4554,15 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.engines.openblas.enabled` | boolean | `false` | `DRISHTI_OPENBLAS_ENABLED` | server (each node its own) | off as shipped (the Java kernels, the same figures); on: linear algebra on the bundled OpenBLAS on this node (live, no restart) for faster many-scope sums | live |  | expert |
 | `drishti.engines.openblas.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | expert |
 
-#### Old names (still accepted)
+#### Old names (refused at start)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.var.enabled` | boolean | none |  | server | The old name of drishti.engines.var.enabled (VaR): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/var.yaml or use Admin → Engines. | live | 2.9.11 | admin |
-| `drishti.ccr.exposure.enabled` | boolean | none |  | server | The old name of drishti.engines.exposure.enabled (Exposure): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/exposure.yaml or use Admin → Engines. | live | 2.9.11 | admin |
-| `drishti.frtb.enabled` | boolean | none |  | server | The old name of drishti.engines.frtb-sa.enabled (FRTB-SA): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/frtb-sa.yaml or use Admin → Engines. | live | 2.9.11 | admin |
-| `drishti.simm.enabled` | boolean | none |  | server | The old name of drishti.engines.simm.enabled (SIMM): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/simm.yaml or use Admin → Engines. | live | 2.9.11 | admin |
-| `drishti.pivot.enabled` | boolean | none |  | server | The old name of drishti.engines.pivot.enabled (Pivot): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/pivot.yaml or use Admin → Engines. | live | 2.9.11 | admin |
+| `drishti.var.enabled` | boolean | none |  | server | The old name of drishti.engines.var.enabled (VaR): refused at start (the server names the new key). The switch is in config/engines/var.yaml or Admin → Engines. | live | 2.9.11 | admin |
+| `drishti.ccr.exposure.enabled` | boolean | none |  | server | The old name of drishti.engines.exposure.enabled (Exposure): refused at start (the server names the new key). The switch is in config/engines/exposure.yaml or Admin → Engines. | live | 2.9.11 | admin |
+| `drishti.frtb.enabled` | boolean | none |  | server | The old name of drishti.engines.frtb-sa.enabled (FRTB-SA): refused at start (the server names the new key). The switch is in config/engines/frtb-sa.yaml or Admin → Engines. | live | 2.9.11 | admin |
+| `drishti.simm.enabled` | boolean | none |  | server | The old name of drishti.engines.simm.enabled (SIMM): refused at start (the server names the new key). The switch is in config/engines/simm.yaml or Admin → Engines. | live | 2.9.11 | admin |
+| `drishti.pivot.enabled` | boolean | none |  | server | The old name of drishti.engines.pivot.enabled (Pivot): refused at start (the server names the new key). The switch is in config/engines/pivot.yaml or Admin → Engines. | live | 2.9.11 | admin |
 
 ### Modules: `config/modules/*.yaml`
 
@@ -6448,8 +6448,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | server | record who looked at what (Admin -&gt; Access) |
 | `DRISHTI_ACTIVEMQ_ENABLED` | `drishti.sources.plugins.activemq.enabled` | `false` | server | run the activemq source as itself |
 | `DRISHTI_ADMISSION_ENABLED` | `drishti.admission.enabled` | `true` | server | false: nothing waits (Admin -&gt; Health still shows the readings) |
-| `DRISHTI_AEROSPIKE_HOSTS` | aerospike profile | `localhost:3000` | profile | The aerospike profile's hosts |
-| `DRISHTI_AEROSPIKE_NAMESPACE` | aerospike profile | `test` | profile | Its namespace |
+| `DRISHTI_AEROSPIKE_HOSTS` | aerospike connector file | `localhost:3000` | packs | The aerospike connector file's hosts |
+| `DRISHTI_AEROSPIKE_NAMESPACE` | aerospike connector file | `test` | packs | Its namespace |
 | `DRISHTI_AI_DEFAULT_MODEL` | `drishti.ai.default-model` | empty | server | provider/model, or a model name only one provider has; used when a call names none |
 | `DRISHTI_AI_DIR` | `drishti.ai.dir` | `<config>/ai` | server | one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names |
 | `DRISHTI_AI_ENABLED` | `drishti.ai.enabled` | `false` | server | turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable |
@@ -6523,8 +6523,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, drishti.py node | none | tools | An administrator's personal API token with the node:drain scope: drishti.py node and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
 | `DRISHTI_DRAIN_TOKEN_FILE` | drishti.py node | none | tools | A file holding the drain token (instead of DRISHTI\_DRAIN\_TOKEN) |
 | `DRISHTI_DRAIN_WAIT` | `drishti.node.drain.on-stop-wait-seconds`, drishti.node.drain.on-stop-wait-seconds, drishti.py node drain | `90` | server, server, tools | how long that drain waits for safeToStop before the stop goes on anyway |
-| `DRISHTI_DUCKDB_MEMORY` | duckdb profile | `1GB` | profile | The shared DuckDB instance's memory limit |
-| `DRISHTI_DUCKDB_PATH` | duckdb profile | `data/duckdb/drishti.duckdb` | profile | The duckdb profile's file (one file, a schema per domain) |
+| `DRISHTI_DUCKDB_MEMORY` | duckdb connector file | `1GB` | packs | The shared DuckDB instance's memory limit |
+| `DRISHTI_DUCKDB_PATH` | duckdb connector file | `data/duckdb/drishti.duckdb` | packs | The duckdb connector file's file (one file, a schema per domain) |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
 | `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `<config>/edit/edit.yaml` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
@@ -6555,7 +6555,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEED_FRED` | fred-feed enabled | `false` | packs | The FRED feed on (needs FRED\_API\_KEY) |
 | `DRISHTI_FEED_NYFED_SOFR` | nyfed-sofr-feed enabled | `false` | packs | The NY Fed SOFR public feed on |
 | `DRISHTI_FEED_US_TREASURY` | us-treasury-feed enabled | `false` | packs | The US Treasury yield curve feed on |
-| `DRISHTI_FILES_ROOT` | files profile | `<data>/files` | profile | The files profile's root (&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl) |
+| `DRISHTI_FILES_ROOT` | files connector file | `<data>/files` | packs | The files connector file's root (&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl) |
 | `DRISHTI_FISCAL_YEAR_END` | `drishti.var.fiscal-year-end` (engine), `drishti.regulatory.fiscal-year-end` (engine), `drishti.ccr.exposure.fiscal-year-end` (engine) | empty | engine | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) |
 | `DRISHTI_FLIGHT_ADVERTISE` | `drishti.engines.flight.advertise` (engine) | empty | engine | the address clients are given in GetFlightInfo; empty: the node's real address (never localhost or 0.0.0.0) |
 | `DRISHTI_FLIGHT_BIND` | `drishti.engines.flight.bind` (engine) | `0.0.0.0` | engine | the address the port opens on (0.0.0.0: every interface) |
@@ -6579,11 +6579,11 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | server | only a ${ENV} placeholder (a literal in this file is refused at start) |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | server | http://host:port; http and https targets both go through it (https via CONNECT) |
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | server | Basic proxy authentication |
-| `DRISHTI_ICEBERG_CATALOG` | iceberg profile | `hadoop` | profile | hadoop (path-based tables) or rest |
-| `DRISHTI_ICEBERG_CREDENTIAL` | iceberg profile | empty | profile | A REST catalog's credential (secret) |
-| `DRISHTI_ICEBERG_ROOT` | iceberg profile | `<data>/iceberg` | profile | The iceberg profile's root (path-based tables); also the lake tools' Iceberg root |
-| `DRISHTI_ICEBERG_URI` | iceberg profile | empty | profile | A REST catalog's URI |
-| `DRISHTI_ICEBERG_WAREHOUSE` | iceberg profile | empty | profile | A REST catalog's warehouse |
+| `DRISHTI_ICEBERG_CATALOG` | iceberg connector file | `hadoop` | packs | hadoop (path-based tables) or rest |
+| `DRISHTI_ICEBERG_CREDENTIAL` | iceberg connector file | empty | packs | A REST catalog's credential (secret) |
+| `DRISHTI_ICEBERG_ROOT` | iceberg connector file | `<data>/iceberg` | packs | The iceberg connector file's root (path-based tables); also the lake tools' Iceberg root |
+| `DRISHTI_ICEBERG_URI` | iceberg connector file | empty | packs | A REST catalog's URI |
+| `DRISHTI_ICEBERG_WAREHOUSE` | iceberg connector file | empty | packs | A REST catalog's warehouse |
 | `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | server | its password, from the environment |
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:<data>/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | server | the identity database's user (PostgreSQL) |
@@ -6626,8 +6626,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MODULES_DEV` | `drishti.modules.dev` | `false` | server | development mode: the module source folders of the modules folder (drishti.modules.home) load without a .dmod, unverified; refused in a cluster and under the prod or production profile |
 | `DRISHTI_MODULES_DIR` | `drishti.modules.dir` | `<config>/modules` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file |
 | `DRISHTI_MODULES_HOME` | the modules folder (drishti.modules.home) | `<the install folder>/modules` | tools | The server's modules folder: the .dmod files it boots at start. drishti.py module list and pack new --deploy read it; the server takes drishti.modules.home |
-| `DRISHTI_MONGODB_DATABASE` | mongodb profile | `drishti` | profile | Its database |
-| `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
+| `DRISHTI_MONGODB_DATABASE` | mongodb connector file | `drishti` | packs | Its database |
+| `DRISHTI_MONGODB_URI` | mongodb connector file | `mongodb://localhost:27017` | packs | The mongodb connector file's server |
 | `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |
 | `DRISHTI_MR_DERIVED_ENABLED` | market-risk's derived connector | `true` | packs | The market-risk pack's derived kinds on or off |
 | `DRISHTI_NATIVE_BLAS_MODE` | `drishti.native.blas.mode` | `auto` | server | auto: the bundled OpenBLAS (Linux and Windows x86-64), else the Java kernels with a warning, an alert and Health DEGRADED; java: the Java kernels, chosen (no warning) |
@@ -6659,9 +6659,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `<data>/packs/settings` | server | The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them. |
 | `DRISHTI_PACKS_WATCH` | `drishti.packs.watch` | `auto` | server | The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded, with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -&gt; Packs acts. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | server | a folder, file: or https: URL with index.json; empty: no registry |
-| `DRISHTI_PG_PASSWORD` | postgres profile | `drishti` | profile | Its password (secret) |
-| `DRISHTI_PG_URL` | postgres profile | `jdbc:postgresql://localhost:5432/drishti` | profile | The postgres profile's database (tables &lt;domain&gt;.entities) |
-| `DRISHTI_PG_USER` | postgres profile | `drishti` | profile | Its user |
+| `DRISHTI_PG_PASSWORD` | postgres connector file | `drishti` | packs | Its password (secret) |
+| `DRISHTI_PG_URL` | postgres connector file | `jdbc:postgresql://localhost:5432/drishti` | packs | The postgres connector file's database (tables &lt;domain&gt;.entities) |
+| `DRISHTI_PG_USER` | postgres connector file | `drishti` | packs | Its user |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | server | the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere |
 | `DRISHTI_PIVOT_ENGINE_ENABLED` | `drishti.engines.pivot.enabled` (engine) | `true` | engine | run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -&gt; Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works |
 | `DRISHTI_PLACEMENT_FILE` | `drishti.placement.file` | empty | server | where config/placement.yaml is; empty: placement.yaml beside the connectors' folder |
@@ -6669,9 +6669,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | server | the iss of embed tokens: this server's public URL |
 | `DRISHTI_PYTHON` | `compute.python` (compute) | empty | compute | the interpreter workers and environments use; empty: python3 (python on Windows) |
 | `DRISHTI_RABBITMQ_ENABLED` | `drishti.sources.plugins.rabbitmq.enabled` | `false` | server | run the rabbitmq source as itself |
-| `DRISHTI_REDIS_CLUSTER` | redis profile | `false` | profile | Redis Cluster rather than one server |
+| `DRISHTI_REDIS_CLUSTER` | redis connector file | `false` | packs | Redis Cluster rather than one server |
 | `DRISHTI_REDIS_PASSWORD` | the Redis loader | none | tools | The Redis loader's password (secret) |
-| `DRISHTI_REDIS_URI` | redis profile | `redis://localhost:6379` | profile | The redis profile's server |
+| `DRISHTI_REDIS_URI` | redis connector file | `redis://localhost:6379` | packs | The redis connector file's server |
 | `DRISHTI_REDIS_USER` | the Redis loader | none | tools | The Redis loader's user |
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder`, `drishti.regulatory.reports-dir` (engine) | `<data>/reports` | engine, server | where report files are written |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | server | the scheduler; run it on one server of a group (reports still run by hand) |

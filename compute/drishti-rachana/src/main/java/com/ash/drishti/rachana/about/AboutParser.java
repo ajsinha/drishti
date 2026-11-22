@@ -15,8 +15,8 @@
  */
 package com.ash.drishti.rachana.about;
 
+import com.ash.drishti.rachana.LiveCompiler;
 import com.ash.rachana.SutraProblem;
-import com.ash.rachana.el.ElCompiler;
 import com.ash.rachana.el.Template;
 import com.ash.rachana.model.SourceLocation;
 import com.ash.rachana.parse.PNode;
@@ -60,10 +60,10 @@ public final class AboutParser {
      */
     public record Parsed(Map<String, GlossaryEntry> vocabulary, Map<String, KindAbout> kinds, List<SutraProblem> problems) {}
 
-    private final ElCompiler el;
+    private final LiveCompiler el;
     private final int maxText;
 
-    public AboutParser(ElCompiler el, int maxText) {
+    public AboutParser(LiveCompiler el, int maxText) {
         this.el = el;
         this.maxText = maxText;
     }

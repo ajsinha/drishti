@@ -23,7 +23,7 @@ engines:
     file: var.yaml
     switch: drishti.engines.var.enabled
     env: DRISHTI_VAR_ENABLED
-    aliases: [drishti.var.enabled]
+    retired: [drishti.var.enabled]
     shipped: true
     installed: true
     live-on: true
@@ -52,7 +52,7 @@ engines:
     file: exposure.yaml
     switch: drishti.engines.exposure.enabled
     env: DRISHTI_EXPOSURE_ENABLED
-    aliases: [drishti.ccr.exposure.enabled]
+    retired: [drishti.ccr.exposure.enabled]
     shipped: true
     installed: true
     live-on: true
@@ -80,7 +80,7 @@ engines:
     file: sensitivities.yaml
     switch: drishti.engines.sensitivities.enabled
     env: DRISHTI_SENSITIVITIES_ENABLED
-    aliases: []
+    retired: []
     shipped: true
     installed: true
     live-on: true
@@ -109,7 +109,7 @@ engines:
     file: frtb-sa.yaml
     switch: drishti.engines.frtb-sa.enabled
     env: DRISHTI_FRTB_ENABLED
-    aliases: [drishti.frtb.enabled]
+    retired: [drishti.frtb.enabled]
     shipped: true
     installed: true
     live-on: true
@@ -138,7 +138,7 @@ engines:
     file: simm.yaml
     switch: drishti.engines.simm.enabled
     env: DRISHTI_SIMM_ENABLED
-    aliases: [drishti.simm.enabled]
+    retired: [drishti.simm.enabled]
     shipped: true
     installed: true
     live-on: true
@@ -166,7 +166,7 @@ engines:
     file: mr-cube.yaml
     switch: drishti.engines.mr-cube.enabled
     env: DRISHTI_MR_CUBE_ENABLED
-    aliases: []
+    retired: []
     shipped: true
     installed: true
     live-on: true

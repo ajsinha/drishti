@@ -38,7 +38,7 @@ import procs  # noqa: E402
 import serverstart  # noqa: E402
 import settingsfile  # noqa: E402
 
-LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml")) + sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml"))
+LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml"))
 
 
 def conf(f: Path) -> ET.Element:
@@ -80,7 +80,7 @@ def _flags_of(argfile: Path) -> list[str]:
 
 
 def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_path, monkeypatch):
-    """drishti.py start server --demo and Drishti server (demo lakes): the same JVM flags (from serverstart.jvm_flags), the same settings
+    """drishti.py start server --demo and Drishti: run server (demo): the same JVM flags (from serverstart.jvm_flags), the same settings
     files (dev.ini, then config/profiles/demo.ini), the same environment the launcher sets; nothing apart but the pid file and the log."""
     envs = tmp_path / "drishti-envs"
     envs.mkdir()
@@ -90,7 +90,7 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
                    encoding="utf-8")
     monkeypatch.delenv("DRISHTI_DATA_DIR", raising=False)
     launchers.machine(ROOT, envs, dev)
-    ide, ide_env = launchers.argv(ROOT / "run-configs" / "Drishti server (demo lakes).run.xml", ROOT, tmp_path)
+    ide, ide_env = launchers.argv(ROOT / "run-configs" / "Drishti run server (demo).run.xml", ROOT, tmp_path)
     vm = ide[1:ide.index("-jar")]
     assert vm[0] == f"@{envs.as_posix()}/jvm-demo.args"
     ide_flags = _flags_of(Path(vm[0][1:])) + vm[1:]
@@ -142,8 +142,8 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         o = {x.get("name"): x.get("value") or "" for x in c.findall("option")}
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
-            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name
-            assert "$PROJECT_DIR$/data" not in text, f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console/"
+            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name           # the one project: the repository root
+            assert "$PROJECT_DIR$/.." not in text, f"{f.name}: $PROJECT_DIR$ is the repository root"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -153,7 +153,7 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
 
 
 def test_the_argv_helper_turns_a_python_launcher_into_its_command_line(tmp_path):
-    cmd, env = launchers.argv(ROOT / "drishti-console" / "run-configs" / "Drishti console (QA, port 17580).run.xml", ROOT, tmp_path)
+    cmd, env = launchers.argv(ROOT / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
     assert cmd[1] == f"{ROOT.as_posix()}/drishti-console/run_drishti_web.py"
     assert cmd[2:] == ["--settings", f"{tmp_path.as_posix()}/drishti-envs/dev.ini", "--profile", "qa"]
     assert env["PYTHONUNBUFFERED"] == "1"
@@ -202,7 +202,7 @@ def test_g3_every_pycharm_launcher_parses_with_the_real_command_line():
     spec.loader.exec_module(cli)
     import yaml
     console_keys = yaml.safe_load((ROOT / "drishti-console" / "config" / "application.yaml").read_text(encoding="utf-8"))
-    for f in sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml")):
+    for f in sorted(p for p in (ROOT / "run-configs").glob("*.run.xml") if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
         words = shlex.split(_params(f))
         assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
         words = words[2:]
@@ -265,8 +265,8 @@ def test_g8_the_docs_name_launchers_that_exist_and_no_retired_script():
     import yaml
     doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
     names = {r["name"] for ide in ("intellij", "pycharm") for r in doc[ide]}
-    pat = __import__("re").compile(r"\*\*((?:Drishti (?:server|console|doctor)(?: \([^)*]*\))?|Drishti build [a-z ]+|Build demo lakes|Load (?:a|ENDUR) file into the lake))\*\*")
-    retired = ("start.sh", "stop-cluster.sh", "start-cluster.sh", "drishti-stack/")
+    pat = __import__("re").compile(r"\*\*(Drishti: (?:build|test|run|check)[^*]*)\*\*")
+    retired = ("start.sh", "stop-cluster.sh", "start-cluster.sh", "drishti-stack/start", "drishti-stack/stop")   # the retired scripts (the drishti-stack repository itself is the platform checkout the docs list)
     for f in sorted((ROOT / "docs").rglob("*.md")) + [ROOT / "README.md", ROOT / "bin" / "README.md", ROOT / "lib" / "README.md", ROOT / "deploy" / "stack" / "README.md"]:
         if "plans" in f.parts or not f.is_file():
             continue

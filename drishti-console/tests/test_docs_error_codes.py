@@ -26,7 +26,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CODE = re.compile(r"DRS-\d{4}")
+RACHANA_RANGES = (("DRS-2001", "DRS-2059"), ("DRS-2101", "DRS-2102"), ("DRS-5020", "DRS-5024"))   # raised by Rachana Core (an external product: its parser and its Build edit operations), tested by its own corpus
 CONSOLE_ONLY = {"DRS-5003"}  # raised by the console, not by the server (documented as such)
+
+
+def _in_rachana(code: str) -> bool:
+    return any(a <= code <= b for a, b in RACHANA_RANGES)
 
 
 def _read(rel: str) -> str:
@@ -87,10 +92,9 @@ def test_troubleshooting_links_the_one_table():
 def test_rachana_reference_lists_every_problem_code_the_parser_reports():
     documented = _first_column_codes(_section(_read("docs/guides/RACHANA_REFERENCE.md"), "## Problem codes"))
     assert _parser_codes() - documented == set(), "parser problem codes missing from RACHANA_REFERENCE"
-    grammar = sorted(c for c in _parser_codes() if c not in ("DRS-2001", "DRS-2004", "DRS-2009", "DRS-2032", "DRS-2033")
-                     and not "DRS-2040" <= c <= "DRS-2049")      # the pack about-file family has its own rows
-    assert f"`{grammar[0]}` to `{grammar[-1]}`" in _read("docs/guides/RACHANA_REFERENCE.md"), \
-        "the grammar problem-code range in RACHANA_REFERENCE is out of date"
+    assert all(_in_rachana(c) for c in _parser_codes()), "a problem code of Drishti's own Rachana host lies outside Rachana's documented range"
+    assert "`DRS-2010` to `DRS-2059`" in _read("docs/guides/RACHANA_REFERENCE.md"), \
+        "the grammar problem-code range of Rachana Core in RACHANA_REFERENCE is out of date"
 
 
 def _raised_anywhere() -> set[str]:
@@ -108,5 +112,5 @@ def test_the_tables_list_no_code_that_nothing_raises():
     """The other direction: a code in a table that no code can raise is a dead entry (DRS-3001 is documented as reserved)."""
     for rel, heading in (("docs/guides/API_REFERENCE.md", "## Error code table"), ("docs/guides/OPERATIONS_GUIDE.md", "## Error codes")):
         listed = _first_column_codes(_section(_read(rel), heading))
-        dead = listed - _raised_anywhere() - _server_codes() - {"DRS-3001"}
+        dead = listed - _raised_anywhere() - _server_codes() - {"DRS-3001"} - {c for c in listed if _in_rachana(c)}
         assert not dead, f"{rel} lists codes nothing raises: {sorted(dead)}"

@@ -33,7 +33,7 @@ def _fresh(client, tmp_path, monkeypatch, listed: dict | None):
 
     old = client.app.state.module_parts
     parts = ModuleParts(tmp_path / "parts", old.web, 0.0)
-    monkeypatch.setattr(client.app.state, "module_parts", parts)
+    monkeypatch.setitem(client.app.state._state, "module_parts", parts)   # a State is patched through its dict (monkeypatch.setattr cannot see an attribute a State serves from __getattr__)
     monkeypatch.setattr(client.app.state.editions.modules, "parts", parts)
     backend = client.app.state.backend
 

@@ -21,7 +21,7 @@
 # host: 192.168.1.20              # the address every node advertises and the console is given; empty: this machine's primary IPv4
                                    # (the default route's interface, never a docker bridge). Members never advertise 127.0.0.1.
 seed: drishti-main                 # the node every other node knows first (its peers/<seed>.yaml); it learns the rest by gossip
-profile: demo                      # config/profiles/demo.ini for every node and the console (the IDE's Drishti server (demo lakes) reads it too)
+profile: demo                      # config/profiles/demo.ini for every node and the console (the IDE's Drishti: run server (demo) reads it too)
 settings-file: stack.ini           # beside this file: the cluster's own settings, after the profile (live news, the designer)
 admin: drishti-dev-admin           # the administrator drishti.py status asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)
 

@@ -28,6 +28,7 @@
   <name>drishti-testkit</name>
   <description>Fixtures and contract tests every source plugin must pass</description>
   <dependencies>
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
     <!-- Drishti Lake's row feed (the load rules) in the process's business zone -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lake-host</artifactId></dependency>
     <!-- G4 rehearsal: the pinned Drishti Lake jars -->

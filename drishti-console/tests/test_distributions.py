@@ -26,7 +26,7 @@ from fastapi.testclient import TestClient
 import server_answers
 from conftest import CONSOLE, help_pages
 from core.app import create_app
-from core.edition import deprecated
+from core.edition import refuse_retired
 from core.auth import Identity
 from core.config import load_settings
 
@@ -147,10 +147,10 @@ def test_all_matches_today(backend, monkeypatch):
     assert "<h1>Help</h1>" in c.get("/help").text
 
 
-def test_the_old_brand_keys_are_not_read_and_health_names_them(backend, monkeypatch):
-    app = _app(backend, monkeypatch, "--distribution=risk", "--ui.product=Acme Risk")
-    assert app.state.settings.get("ui.product") == "Drishti Risk"        # the distribution file is the one home of the name
-    assert any(n.startswith("ui.product") and "no longer read" in n for n in deprecated(app.state.settings))
+def test_a_retired_brand_key_stops_the_start_and_names_the_new_one(backend, monkeypatch):
+    with pytest.raises(SystemExit) as stop:
+        _app(backend, monkeypatch, "--distribution=risk", "--ui.product=Acme Risk")
+    assert "ui.product is retired: set brand: in the distribution file" in str(stop.value)
 
 
 def test_a_console_without_its_own_distribution_follows_the_servers(backend, monkeypatch):

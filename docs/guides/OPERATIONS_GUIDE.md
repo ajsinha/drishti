@@ -206,7 +206,7 @@ today, and a past date says *No data held for <date>*.
 ### 2.5 Start the server
 
 **On the demo lakes, with sign-in**: the demo profile, `config/profiles/demo.ini`, the one file that describes the demo; the run
-configuration **Drishti server (demo lakes)** names the same file, so both start the same server:
+configuration **Drishti: run server (demo)** names the same file, so both start the same server:
 
 ```bash
 cd /home/you/drishti
@@ -249,7 +249,7 @@ connector from the modules' templates and **writes no connector file**; a site p
 ### 2.6 Start the console
 
 `python tools/drishti.py start console --demo --server http://<this machine's address>:18480` (Windows `py tools\drishti.py …`; the run configuration
-**Drishti console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
+**Drishti: run console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
 `--env-file` gives your own:
 
 ```bash
@@ -367,7 +367,7 @@ Opening the project, the run configurations, running and debugging the server: [
 
 ### 3.3 PyCharm: run and debug the console
 
-The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-open-drishti-console) and [section 6.2](IDE_GUIDE.md#36-debug-the-console-pycharm).
+The console and the tools in PyCharm: [IDE_GUIDE.md](IDE_GUIDE.md#23-pycharm-open-the-repository-root) and [section 6.2](IDE_GUIDE.md#36-debug-the-console-pycharm).
 
 ### 3.4 Running the tests from the IDEs
 
@@ -3193,7 +3193,6 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
 | `the server cannot start: … nothing names its folder`, `… is '…', a relative path`, `… holds no identity database` | a launch root not named, or named relative, or a data folder nobody named | name the roots absolutely: `tools/drishti.py start server` does, the run configurations pass `-Ddrishti.home` and the settings file; a new data folder must be named ([CONFIGURATION.md › Launch roots](../admin/CONFIGURATION.md#launch-roots)) |
-| The server's start-up stops after *connector … waits for the modules to load*, no `Started DrishtiApplication`, health never answers (a host with few cores) | older builds: the connectors started on virtual threads, which hold their carrier threads while loading classes from the server jar, and with every carrier held the start waited for ever; `jcmd <pid> Thread.print` shows virtual threads under `SourceRegistry.<init>` in `ClassLoader.loadClass` (`NestedJarFile`) or `StorageProviders$Loaded` | fixed in the product (the connectors start on platform threads); on an older build start the JVM with `-Djdk.virtualThreadScheduler.parallelism=64 -Djdk.virtualThreadScheduler.maxPoolSize=256` |
 | A run configuration fails, is missing, or tests pass in a terminal but fail in the IDE | an IDE set-up issue | [IDE_GUIDE.md › Troubleshooting](IDE_GUIDE.md#6-troubleshooting) |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |
 | `pack make` says no `drishti-server-*-exec.jar`; `lake build: ... pack.yaml: no such file` | the jar is not built; `--pack` is not the folder holding `pack.yaml` | build the jar; `--pack data/qa/packs/<name>/pack/<name>` |

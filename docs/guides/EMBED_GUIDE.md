@@ -760,7 +760,7 @@ Every failure is a `drishti:error` event and, when there is nothing to show, a b
 | `DRS-9104` | a reference without kind or id | the same |
 | `DRS-9105` | a ViewModel speaks a contract major the library does not draw | Load the renderer version this server serves |
 | `DRS-9106` | an unknown `behaviours` | Leave it out for the library's own, the default |
-| `DRS-9107` | renderer 1.2.0: `behaviours: 'console'` could not load the console's scripts | Check that the console serves its static scripts, or use `behaviours: 'library'` |
+| `DRS-9107` | `behaviours: 'console'` could not load the console's scripts | Check that the console serves its static scripts, or use `behaviours: 'library'` |
 | `DRS-9108` | an unknown `auth` | Leave it out: `token` when you give a token, else the console's session; `popup` for a page without a backend |
 | `DRS-5003` | the console could not be reached | Check the server option, the network, and that the console allows this origin (CORS) |
 | the server's own (`DRS-1001`, `DRS-5002`, ...) | the view was refused | the server's own `fix` when it gives one, else per code (`DRS-4023`: the edition or lens hides the kind), else per HTTP status: sign in or give a token (401), your role may not open this kind (403), no such entity here (404), retry (502, 504) |
@@ -923,8 +923,7 @@ anyway. Load the library by an exact version with its integrity hash (chapter 10
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.4/…` | `302` to the exact version, for a host that accepts updates | 60 s |
 | `/embed/v1/drishti-elements.js` | Elements 1.x as the console serves it now, revalidated on each load (a host that follows the console) | revalidated |
 
-Served renderer versions: **2.4.0** (the current one: the renderer, like every Elements library, carries the one Elements version) and **1.2.0** (frozen, byte for byte, for pages that pinned
-it; Elements 2.2). The data routes the library calls (the ViewModel, About, panels, a pivot's rows, the live channel, resolve, search,
+Served renderer version: the current one only (the renderer, like every Elements library, carries the one Elements version). The data routes the library calls (the ViewModel, About, panels, a pivot's rows, the live channel, resolve, search,
 reports) are listed in [API_REFERENCE.md](API_REFERENCE.md).
 
 ### 10.2 Integrity and SRI
@@ -957,7 +956,7 @@ Three contracts, all semantic versions:
 A version this console does not serve answers `410 DRS-8006`, and the answer names the one it serves: after a console upgrade, a page
 pinned to an old version tells you to move the pin.
 
-**Renderer 2.0.0 paths.** `/static/render/2.0.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` answer `308` to the current folder with a `Deprecation: true` header and a `Drishti-Deprecated` note: they are removed in the release after i6, so change the pinned version to 2.4.0 now.
+**Retired renderer paths.** `/static/render/2.0.0/…`, `/embed/v2/render/1.2.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` are gone: the embed answers `410` (`DRS-8006`) naming the version it serves; pin the one renderer.
 
 **Moving from renderer 1.2.0 to 2.4.0.** Change the version in the import (`/static/render/3.3.1/drishti-render.js`, or
 `/embed/v2/render/3.3.1/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What

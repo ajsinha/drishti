@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.frtb;
 
+import com.ash.tools.codec.Hashes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,7 +25,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -274,15 +274,13 @@ public final class FrtbParams {
                 set(root, path, o.getValue());
                 applied.put(path, o.getValue());
             }
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            MessageDigest md = Hashes.digest("SHA-256");
             md.update(sbm);
             md.update((byte) 0);
             md.update(drcRrao);
             return new FrtbParams(s, d, HexFormat.of().formatHex(md.digest()), applied);
         } catch (IOException e) {
             throw new IllegalArgumentException("the FRTB-SA parameter files are not YAML: " + e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 

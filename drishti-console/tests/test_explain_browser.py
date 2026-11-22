@@ -119,22 +119,12 @@ def test_old_against_new_on_the_demo_data(stack):
                 p = explain(stack, kind="var", measure=measure, scope=scope, part="formula")
                 assert p["formula"]["lines"] == old_question_mark(measure, pm), (scope, measure)
                 assert p["value"] == pm[{"pvar": "var", "pes": "es", "pgap": "gap"}[measure]]
-        # Why it moved: the engine's answer; against the removed endpoints when this server still has them (a parity build)
+        # Why it moved: the engine's answer; it still ends at each date's VaR
         new = explain(stack, kind="var", scope=scope, part="why")["why"]
         assert new["available"] and new["addsUp"]
-        status, old = get(stack.server + "/api/v1/risk/var/explain?" + urllib.parse.urlencode({"scope": scope}))
-        if status == 200:
-            assert without(new["answer"], "computeMs") == without(old, "computeMs"), scope
-            status, mr = get(stack.server + "/api/v1/risk/mr/explain?" + urllib.parse.urlencode({"scope": scope}))
-            if status == 200:
-                assert without(new["answer"], "computeMs") == without(mr, "computeMs", "factorOverlay"), scope
-            m_new = explain(stack, kind="var", scope=scope, part="why", view="matrix")["why"]["answer"]["matrix"]
-            status, m_old = get(stack.server + "/api/v1/risk/var/explain/matrix?" + urllib.parse.urlencode({"scope": scope}))
-            assert status == 200 and m_new == m_old, scope
-        else:                                                                  # removed: the answer still ends at each date's VaR
-            a = new["answer"]
-            _, h1 = get(str(stack) + "/api/var/scope?" + urllib.parse.urlencode({"scope": scope, "asOf": a["from"]}))
-            assert abs(a["varFrom"] - h1["var"]) < 0.5 and abs(a["varTo"] - head["var"]) < 0.5, scope
+        a = new["answer"]
+        _, h1 = get(str(stack) + "/api/var/scope?" + urllib.parse.urlencode({"scope": scope, "asOf": a["from"]}))
+        assert abs(a["varFrom"] - h1["var"]) < 0.5 and abs(a["varTo"] - head["var"]) < 0.5, scope
         wf = [p for p in new["panels"] if p["id"] == "waterfall"][0]["data"]["steps"]
         assert [s["value"] for s in wf[1:-1]] == [l["effect"] for l in new["answer"]["lines"]]
 

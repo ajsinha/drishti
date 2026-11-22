@@ -52,7 +52,7 @@ class LiveVisualsTest {
             String text = ReportParserTest.report(name);
             ReportParser.Result r = ReportParser.parse(text);
             assertThat(r.ok()).as(name + ": " + r.firstError()).isTrue();
-            String dataset = r.report().dataset();
+            String dataset = r.report().dataset().replaceFirst("^model:", "").replaceFirst("@\\d+$", "");   // a report reads a model: model:<name>@<major>
             assertThat(ReportValidator.validate(r.report(), ReportParserTest.dataset(dataset))).as(name).isEmpty();
             assertThat(ReportParser.parse(ReportYaml.write(r.report().toMap())).report().toMap()).as(name + " is written back as it was read").isEqualTo(r.report().toMap());
         }

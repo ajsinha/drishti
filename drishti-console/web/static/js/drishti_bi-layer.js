@@ -54,10 +54,9 @@
    * The things a consumer can read, grouped for a picker: Models (published first, each with its version and state so a draft and a published copy of one
    * name are told apart), Your datasets, then the packs' datasets, one group per pack (a kind with no columns is left out: there is nothing to read in it).
    * Every entry is {value, label, ref, kind}: `ref` is what a consumer binds (`name@major` for a model, `dataset:<name>` for a dataset), `value` is `mq:`+ref
-   * for a model and `dataset:`+name for a dataset (the form Analyse's extract takes). `opts.legacy` adds the version 1 datasets as a last group.
+   * for a model and `dataset:`+name for a dataset (the form Analyse's extract takes).
    */
-  B.layer.groups = function (opts) {
-    opts = opts || {};
+  B.layer.groups = function () {
     return B.layer.get('datasets').then((d) => {
       const groups = [];
       // the item's state in words: published; published with draft changes not published yet (Analyse reads the published version); a draft never published
@@ -75,10 +74,7 @@
       const byPack = {};
       (d.packs || []).filter((x) => x.columns == null || x.columns > 0).forEach((x) => { (byPack[x.pack] = byPack[x.pack] || []).push(x); });
       Object.keys(byPack).sort().forEach((pk) => groups.push({ label: 'Pack ' + pk, items: byPack[pk].map((x) => ({ value: 'dataset:' + x.name, ref: 'dataset:' + x.name, kind: 'dataset', label: x.title || x.name, title: x.title || x.name })) }));
-      return opts.legacy ? opts.legacy().then((list) => {
-        if (list && list.length) { groups.push({ label: 'Other datasets (version 1)', items: list.map((x) => ({ value: x.id, ref: x.id, kind: 'legacy', label: x.title || x.id, title: x.title || x.id })) }); }
-        return groups;
-      }, () => groups) : groups;
+      return groups;
     });
   };
   /** Fills a select with `groups` (optgroups) after a placeholder option. */

@@ -468,8 +468,8 @@ schemas:
       - { key: "console.monitors.<name>[].kind", type: string, meaning: "An entity's kind" }
       - { key: "console.monitors.<name>[].id", type: string, meaning: "Its id" }
 
-# Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
-# by: server, console, packs, profile, tools.
+# Environment variables no settings file above names: read by the packs' manifests, the example connector files, the code or the tools.
+# by: server, console, packs, tools.
 env:
   - { name: DRISHTI_KERNEL_JAR, by: tools, default: "lib/drishti-server-*-exec.jar", sets: "the server jar `module run` starts", meaning: "The server jar `drishti.py module run` starts, before the one in <home>/lib (tools/modulecli.py)" }
   - { name: DRISHTI_HOME, by: tools, default: "the folder holding tools/drishti.py", sets: "the install folder (drishti.home)", meaning: "THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in <home>/lib): --home, else DRISHTI_HOME, else drishti.home of --settings, else the tools' own folder; a value that is not the folder the tools come from is refused (tools/javacmd.py find_home)" }
@@ -514,24 +514,24 @@ env:
   - { name: DRISHTI_YFINANCE_URL, by: packs, default: "the public quote service", sets: "yfinance base URL", meaning: "Where the yfinance connector asks" }
   - { name: DRISHTI_US_EQUITIES_PRICES_ENABLED, by: packs, default: "false", sets: "us-equities-prices enabled", meaning: "The us-equities pack's live prices (internal use only)" }
   - { name: DRISHTI_US_EQUITIES_BENCHMARK, by: packs, default: "^GSPC", sets: "us-equities benchmark", meaning: "The index an equity's beta is measured against" }
-  # the server's profile files (deprecated: connector files replace them)
-  - { name: DRISHTI_PG_URL, by: profile, default: "jdbc:postgresql://localhost:5432/drishti", sets: "postgres profile", meaning: "The postgres profile's database (tables <domain>.entities)" }
-  - { name: DRISHTI_PG_USER, by: profile, default: drishti, sets: "postgres profile", meaning: "Its user" }
-  - { name: DRISHTI_PG_PASSWORD, by: profile, default: drishti, sets: "postgres profile", meaning: "Its password (secret)" }
-  - { name: DRISHTI_AEROSPIKE_HOSTS, by: profile, default: "localhost:3000", sets: "aerospike profile", meaning: "The aerospike profile's hosts" }
-  - { name: DRISHTI_AEROSPIKE_NAMESPACE, by: profile, default: test, sets: "aerospike profile", meaning: "Its namespace" }
-  - { name: DRISHTI_DUCKDB_PATH, by: profile, default: data/duckdb/drishti.duckdb, sets: "duckdb profile", meaning: "The duckdb profile's file (one file, a schema per domain)" }
-  - { name: DRISHTI_DUCKDB_MEMORY, by: profile, default: 1GB, sets: "duckdb profile", meaning: "The shared DuckDB instance's memory limit" }
-  - { name: DRISHTI_FILES_ROOT, by: profile, default: "<data>/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
-  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "<data>/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
-  - { name: DRISHTI_ICEBERG_CATALOG, by: profile, default: hadoop, sets: "iceberg profile", meaning: "hadoop (path-based tables) or rest" }
-  - { name: DRISHTI_ICEBERG_URI, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's URI" }
-  - { name: DRISHTI_ICEBERG_WAREHOUSE, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's warehouse" }
-  - { name: DRISHTI_ICEBERG_CREDENTIAL, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's credential (secret)" }
-  - { name: DRISHTI_MONGODB_URI, by: profile, default: "mongodb://localhost:27017", sets: "mongodb profile", meaning: "The mongodb profile's server" }
-  - { name: DRISHTI_MONGODB_DATABASE, by: profile, default: drishti, sets: "mongodb profile", meaning: "Its database" }
-  - { name: DRISHTI_REDIS_URI, by: profile, default: "redis://localhost:6379", sets: "redis profile", meaning: "The redis profile's server" }
-  - { name: DRISHTI_REDIS_CLUSTER, by: profile, default: "false", sets: "redis profile", meaning: "Redis Cluster rather than one server" }
+  # the example connector files (config/connectors.examples/<store>/) and the store loader read these
+  - { name: DRISHTI_PG_URL, by: packs, default: "jdbc:postgresql://localhost:5432/drishti", sets: "postgres connector file", meaning: "The postgres connector file's database (tables <domain>.entities)" }
+  - { name: DRISHTI_PG_USER, by: packs, default: drishti, sets: "postgres connector file", meaning: "Its user" }
+  - { name: DRISHTI_PG_PASSWORD, by: packs, default: drishti, sets: "postgres connector file", meaning: "Its password (secret)" }
+  - { name: DRISHTI_AEROSPIKE_HOSTS, by: packs, default: "localhost:3000", sets: "aerospike connector file", meaning: "The aerospike connector file's hosts" }
+  - { name: DRISHTI_AEROSPIKE_NAMESPACE, by: packs, default: test, sets: "aerospike connector file", meaning: "Its namespace" }
+  - { name: DRISHTI_DUCKDB_PATH, by: packs, default: data/duckdb/drishti.duckdb, sets: "duckdb connector file", meaning: "The duckdb connector file's file (one file, a schema per domain)" }
+  - { name: DRISHTI_DUCKDB_MEMORY, by: packs, default: 1GB, sets: "duckdb connector file", meaning: "The shared DuckDB instance's memory limit" }
+  - { name: DRISHTI_FILES_ROOT, by: packs, default: "<data>/files", sets: "files connector file", meaning: "The files connector file's root (<root>/<domain>/<date>/<kind>.jsonl)" }
+  - { name: DRISHTI_ICEBERG_ROOT, by: packs, default: "<data>/iceberg", sets: "iceberg connector file", meaning: "The iceberg connector file's root (path-based tables); also the lake tools' Iceberg root" }
+  - { name: DRISHTI_ICEBERG_CATALOG, by: packs, default: hadoop, sets: "iceberg connector file", meaning: "hadoop (path-based tables) or rest" }
+  - { name: DRISHTI_ICEBERG_URI, by: packs, default: "", sets: "iceberg connector file", meaning: "A REST catalog's URI" }
+  - { name: DRISHTI_ICEBERG_WAREHOUSE, by: packs, default: "", sets: "iceberg connector file", meaning: "A REST catalog's warehouse" }
+  - { name: DRISHTI_ICEBERG_CREDENTIAL, by: packs, default: "", sets: "iceberg connector file", meaning: "A REST catalog's credential (secret)" }
+  - { name: DRISHTI_MONGODB_URI, by: packs, default: "mongodb://localhost:27017", sets: "mongodb connector file", meaning: "The mongodb connector file's server" }
+  - { name: DRISHTI_MONGODB_DATABASE, by: packs, default: drishti, sets: "mongodb connector file", meaning: "Its database" }
+  - { name: DRISHTI_REDIS_URI, by: packs, default: "redis://localhost:6379", sets: "redis connector file", meaning: "The redis connector file's server" }
+  - { name: DRISHTI_REDIS_CLUSTER, by: packs, default: "false", sets: "redis connector file", meaning: "Redis Cluster rather than one server" }
   - { name: SPRING_PROFILES_ACTIVE, by: server, default: ~, sets: spring.profiles.active, meaning: "A profile of your own (application-<profile>.yaml); the stores are chosen by connector files, not by a profile" }
   # read by the code
   - { name: DRISHTI_TMP_DIR, by: "server, console, tools", default: "<data dir>/tmp", sets: "java.io.tmpdir, the console's tmp_dir", meaning: "The base of every temporary folder Drishti makes" }

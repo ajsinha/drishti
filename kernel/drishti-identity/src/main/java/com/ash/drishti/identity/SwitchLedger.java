@@ -15,12 +15,12 @@
  */
 package com.ash.drishti.identity;
 
+import com.ash.tools.codec.Hashes;
 import com.ash.drishti.identity.db.IdentityRepositories;
 import com.ash.drishti.identity.db.SwitchEntity;
 import com.ash.drishti.identity.db.SwitchLogEntity;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -332,13 +332,9 @@ public final class SwitchLedger {
         if (entries.isEmpty()) {
             return "";
         }
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            entries.stream().sorted(Comparator.comparing(Entry::key)).forEach(e -> md.update(
-                    (e.key() + "|" + e.on() + "|" + e.stamp() + "|" + e.node() + "\n").getBytes(StandardCharsets.UTF_8)));
-            return HexFormat.of().formatHex(md.digest(), 0, 8);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        MessageDigest md = Hashes.digest("SHA-256");
+        entries.stream().sorted(Comparator.comparing(Entry::key)).forEach(e -> md.update(
+                (e.key() + "|" + e.on() + "|" + e.stamp() + "|" + e.node() + "\n").getBytes(StandardCharsets.UTF_8)));
+        return HexFormat.of().formatHex(md.digest(), 0, 8);
     }
 }

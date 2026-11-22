@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab;
 
+import com.ash.tools.codec.Hashes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -386,7 +387,7 @@ abstract class ComplianceApiContract {
     }
 
     static String sha256(byte[] b) throws Exception {
-        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b));
+        return Hashes.sha256Hex(b);
     }
 
     List<JsonNode> lines(byte[] ndjson) throws Exception {

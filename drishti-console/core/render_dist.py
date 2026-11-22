@@ -36,10 +36,7 @@ from core import elements_pin as _pin
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = _pin.VERSION              # the current renderer: the pinned Drishti Elements version (core/elements_pin.py); 1.2.0 stays served, frozen, for existing embedders
-RETIRED = ("2.0.0",)              # the renderer before the one Elements version: its paths redirect to the current folder for ONE release
-DEPRECATION = "the Drishti Render {old} paths are removed in the release after i6: use {new}"
-FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
+VERSION = _pin.VERSION              # the one renderer: the pinned Drishti Elements version (core/elements_pin.py)
 FOLDER = ROOT / VERSION
 LIBRARY = FOLDER / "m"              # the host part of the current version (its modules; every panel is the painter's)
 SHEET = "drishti-render.css"

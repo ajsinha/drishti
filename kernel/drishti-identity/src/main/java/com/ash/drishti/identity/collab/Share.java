@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.identity.collab;
 
+import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -83,11 +83,7 @@ public record Share(String id, String sender, Instant createdAt, String kind, St
         if (view != null && !view.isEmpty()) {                  // only when present: a share made before view state keeps its hash
             b.append("view=").append(view).append('\u001f');
         }
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(b.toString());
     }
 
     /** {@code [[1,4],[9,12]]}. */
