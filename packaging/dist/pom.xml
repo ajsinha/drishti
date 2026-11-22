@@ -36,6 +36,7 @@
     the repository's modules/), unless -Ddrishti.install.skip=true (the properties are the parent pom's).
     Each is stamped for the kernel build of drishti.kernel.jar: the exec jar of this reactor by default, the jar in lib/ with -Pmodules-only.</description>
   <properties>
+    <drishti.root>${project.basedir}/../..</drishti.root>
     <drishti.dmods>${project.build.directory}/dmod</drishti.dmods>
     <drishti.jars>${project.build.directory}/module-jars</drishti.jars>
     <drishti.repo>${project.basedir}/../..</drishti.repo>

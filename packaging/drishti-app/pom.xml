@@ -30,6 +30,10 @@
     (.dmod) beside the jar, built by packaging/dist (docs/architecture/KERNEL_AND_MODULES.md). The jar keeps its path,
     kernel/drishti-server/target/drishti-server-VERSION-exec.jar, and at package is installed into the lib folder (drishti.home.lib, default
     the repository's lib/), unless -Ddrishti.install.skip=true (the properties are the parent pom's)</description>
+  <properties>
+    <drishti.root>${project.basedir}/../..</drishti.root>
+  </properties>
+
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId></dependency>
   </dependencies>
