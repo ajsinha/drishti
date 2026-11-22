@@ -162,6 +162,8 @@ def definitions(modules: Iterable[Path], packs: Iterable[str], own: Path | None,
         if isinstance(d, dict):
             out.update({str(k): v for k, v in (d.get("connectors") or {}).items() if isinstance(v, dict)})
     for f in sorted(own.glob("*.yaml")) if own and own.is_dir() else []:
+        if OFF_MARK in f.read_text(encoding="utf-8"):
+            continue                                       # the launcher's own switch-off file: not a definition
         d = _yaml(f)
         if isinstance(d, dict):
             out[f.stem] = d
@@ -185,6 +187,29 @@ def tables_missing(defs: dict[str, dict], lake: Path, lakes: set[str]) -> list[s
                 and not any((lake / str(s["domain"])).glob("*/_delta_log")):   # the older form of a connector file: root: and domain:
             out.append(name)
     return sorted(out)
+
+
+OFF_MARK = "# written by the cluster launcher: the connector is off on this node"
+
+
+def write_off_files(directory: Path, off: Iterable[str]) -> None:
+    """The one switch of a connector, its file's ``enabled: false`` (docs/guides/DATA_GUIDE.md, "Connector files"): one override file
+    ``<connector>.yaml`` in the node's own connectors folder for each connector the node starts switched off. A file the launcher wrote on
+    an earlier start for a connector no longer off is removed; a connector file of the site's own gets its ``enabled`` key set."""
+    off = list(dict.fromkeys(off))
+    directory.mkdir(parents=True, exist_ok=True)
+    for f in directory.glob("*.yaml"):
+        if f.stem not in off and OFF_MARK in f.read_text(encoding="utf-8"):
+            f.unlink()
+    for name in off:
+        f = directory / f"{name}.yaml"
+        text = f.read_text(encoding="utf-8") if f.exists() else ""
+        if not text or OFF_MARK in text:
+            f.write_text(OFF_MARK + "\nenabled: false\n", encoding="utf-8")
+        elif re.search(r"(?m)^enabled:", text):
+            f.write_text(re.sub(r"(?m)^enabled:.*$", "enabled: false", text), encoding="utf-8")
+        else:
+            f.write_text(text.rstrip("\n") + "\nenabled: false\n", encoding="utf-8")
 
 
 def switched_off(node: dict, lake: Path | None, own: Path | None, lakes_dir: Path, modules: Iterable[Path] | None = None) -> list[str]:

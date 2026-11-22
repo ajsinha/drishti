@@ -99,6 +99,25 @@ public final class NetNodes implements AutoCloseable {
         }
     }
 
+    /**
+     * A connector of a node as a file of its connectors folder ({@code <node>/connectors/<name>.yaml}), written before the node starts: the one way a
+     * connector is defined. {@code lines} are the YAML lines: a whole connector ({@code plugin}, {@code kinds}, {@code settings}) or the keys that
+     * change the template of its pack or module (an override).
+     */
+    public void connector(String node, String name, String... lines) {
+        try {
+            Path dir = Files.createDirectories(root.resolve(node).resolve("connectors"));
+            Files.writeString(dir.resolve(name + ".yaml"), String.join("\n", lines) + "\n");
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    /** Switches a template's connector off on a node: its override file says {@code enabled: false}. */
+    public void off(String node, String name) {
+        connector(node, name, "enabled: false");
+    }
+
     /** Starts a node on {@code port}; {@code extra} are more {@code --key=value} arguments (packs, security). */
     public Node start(String name, int port, String... extra) {
         return start(name, port, List.of(), extra);

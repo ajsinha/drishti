@@ -43,17 +43,14 @@ final class InternalImfFixture {
     private InternalImfFixture() {
     }
 
-    /** Gives the server a file connector holding the IMF samples, routed for {@link #KINDS}. */
+    /** Gives the server a file connector holding (its file: {@code testing/connectors/internal-imf-fixture}; the tests name that folder as their connectors-dir) the IMF samples, routed for {@link #KINDS}. */
     static void register(DynamicPropertyRegistry r) throws IOException {
         Path samples = Path.of(TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples");
         Path day = TestRun.root().resolve(CONNECTOR);
         Files.createDirectories(day);
         List<String> catalogue = Files.readAllLines(samples.resolve("catalog.jsonl"), StandardCharsets.UTF_8);
-        r.add("drishti.sources.connectors." + CONNECTOR + ".plugin", () -> "file");
-        r.add("drishti.sources.connectors." + CONNECTOR + ".settings.root", day::toString);
-        r.add("drishti.sources.connectors." + CONNECTOR + ".settings.rescan-seconds", () -> "3600");
-        for (int i = 0; i < KINDS.size(); i++) {
-            String kind = KINDS.get(i);
+        r.add("test-connectors." + CONNECTOR + ".root", day::toString);
+        for (String kind : KINDS) {
             List<String> ids = new ArrayList<>();
             for (String line : catalogue) {
                 if (!line.isBlank() && kind.equals(JSON.readTree(line).path("kind").asText())) {
@@ -69,8 +66,6 @@ final class InternalImfFixture {
                 out.add("{\"kind\":" + JSON.writeValueAsString(kind) + ",\"id\":" + JSON.writeValueAsString(ids.get(n)) + ",\"doc\":" + lines.get(n) + "}");
             }
             Files.write(day.resolve(kind + ".jsonl"), out, StandardCharsets.UTF_8);
-            int at = i;
-            r.add("drishti.sources.connectors." + CONNECTOR + ".kinds[" + at + "]", () -> kind);
             r.add("drishti.sources.routes." + kind, () -> CONNECTOR);
         }
     }

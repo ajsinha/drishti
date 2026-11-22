@@ -26,20 +26,19 @@ import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/** Sutra proposals in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9.5): two nodes on one root, one decision wins, the folder imported once. */
+/** Sutra proposals in the content store (DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9.5): two nodes on one root and one decision wins. */
 class ProposalStoreContentTest {
 
     @Test
     void twoNodesShareProposalsAndOnlyOneDecisionWins() throws Exception {
         Path dir = com.ash.drishti.server.TestRun.root().resolve(Path.of("content-tests", "governance-" + UUID.randomUUID()));
         Path folder = dir.resolve("governance");
-        ProposalStore old = new ProposalStore(folder);
-        Proposal before = old.create("risk", 1, "text", "", "old one", "ann");
         Path root = dir.resolve("fstore");
 
         ProposalStore a = new ProposalStore(folder, new FileContentStore(root));
         ProposalStore b = new ProposalStore(folder, new FileContentStore(root));
-        assertThat(b.find(before.id())).as("imported from the folder").isPresent();
+        Proposal before = a.create("risk", 1, "text", "", "first", "ann");
+        assertThat(b.find(before.id())).as("the other node sees it").isPresent();
         Proposal p = a.create("risk", 2, "text 2", "text", "new", "ann");
         assertThat(p.id()).isEqualTo("P-000002");
         assertThat(b.list(Proposal.PENDING, null)).extracting(Proposal::id).containsExactly(p.id(), before.id());
@@ -50,7 +49,6 @@ class ProposalStoreContentTest {
         assertThatThrownBy(() -> a.decide(p.id(), x -> { }, () -> { }, Proposal.REJECTED, "cy", "no"))
                 .isInstanceOf(DrishtiException.class).matches(e -> ((DrishtiException) e).errorCode() == ErrorCode.PROPOSAL_CONFLICT);
         assertThat(current.pending()).isTrue();
-        assertThat(Files.isRegularFile(folder.resolve(before.id() + ".json"))).as("the folder is kept").isTrue();
         assertThat(new ProposalStore(folder, new FileContentStore(root)).list(null, null)).hasSize(2);
     }
 }

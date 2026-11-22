@@ -411,34 +411,6 @@ public final class JpaBiStore implements BiStore {
         }));
     }
 
-    // -- the one-time import into the content store (BiImport) ---------------------------------------------------------
-    /** Every user's marks: user, then item, then mark. */
-    public Map<String, Map<String, Mark>> allMarks() {
-        return tx.execute(s -> {
-            Map<String, Map<String, Mark>> out = new HashMap<>();
-            marks.findAll().forEach(m -> out.computeIfAbsent(m.username, k -> new HashMap<>()).put(m.itemId, new Mark(m.favourite, m.lastOpened, m.opens)));
-            return out;
-        });
-    }
-
-    /** Every day's views: day, then item, then views. */
-    public Map<String, Map<String, Integer>> allUsage() {
-        return tx.execute(s -> {
-            Map<String, Map<String, Integer>> out = new HashMap<>();
-            usage.findAll().forEach(u -> out.computeIfAbsent(u.day, k -> new HashMap<>()).merge(u.itemId, u.views, Integer::sum));
-            return out;
-        });
-    }
-
-    /** Every setting. */
-    public Map<String, String> allSettings() {
-        return tx.execute(s -> {
-            Map<String, String> out = new HashMap<>();
-            settings.findAll().forEach(e -> out.put(e.name, e.value));
-            return out;
-        });
-    }
-
     // -- mapping ----------------------------------------------------------------------------------------------------
     private <T> T locked(java.util.function.Supplier<T> work) {
         writes.lock();

@@ -41,14 +41,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * whole columns of a business day ({@code drishti.columns()}) from a laid-out Delta table, checked and redacted as a
  * search is. The packs' snippets reach the console with {@code /packs}.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.layout-lake.plugin=delta",
-        "drishti.sources.connectors.layout-lake.kinds[0]=trade",
-        "drishti.sources.connectors.layout-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake-layout",
-        "drishti.sources.connectors.layout-lake.settings.domain=desk",
-        "drishti.sources.connectors.layout-lake.settings.layout.trade.columns=mtm,book,nettingSet,counterparty.id",
-        "drishti.sources.routes.trade=layout-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/calc-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.trade=layout-lake",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact[0]=book",
         "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.quant.calc=true",
@@ -58,6 +52,10 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class CalcApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("calc-api");
+    }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

@@ -30,11 +30,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * A book far larger than the scan limit (here 750 trades against a limit of 3, as 500,000 against 20,000): a pick
  * list still finds what it names, because the sources' indexes narrow by it before the limit applies.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
-        "drishti.sources.connectors.trade-endur.enabled=false", "drishti.sources.connectors.trade-calypso.enabled=false",
-        "drishti.sources.connectors.trade-murex.enabled=false", "drishti.search.max-scan=3"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/pick-list-scale", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
+        "drishti.search.max-scan=3"})
 @AutoConfigureMockMvc
 class PickListScaleTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("pick-list-scale");
+    }
 
     @Autowired MockMvc mvc;
 

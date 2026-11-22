@@ -46,9 +46,13 @@ import org.springframework.test.context.DynamicPropertySource;
  * binder (which country is highlighted, which countries have a page, the figures that shade the map) and what the caller's
  * masks and rights do to them. Read through the real pipeline over the world-economy pack's real documents.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/internal-imf-fixture", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=world-economy"})
 class MapPanelTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("internal-imf-fixture");
+    }
 
     /** The shade reads the economies, whose IMF samples the package does not carry: the internal fixture ({@link InternalImfFixture}). */
     @DynamicPropertySource

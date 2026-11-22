@@ -1112,7 +1112,7 @@ settings:                         # the plugin's settings; nesting is flattened 
   shared `proxy:` block ([section 10](#10-tls-and-the-outbound-proxy)).
 - Connectors are defined in files only, never in `application.yaml` or a profile ([9.11](#911-where-connectors-are-defined)).
 
-Which definition wins (environment and the deprecated `drishti.sources.connectors.*`, then the file, then the pack's template) is
+Which definition wins (the file, then the pack's or module's template) is
 [Connector layers](#connector-layers); how `routes:` and a file's `kinds:` decide which connector answers a kind is
 [9.6](#96-how-packs-and-files-fit-together).
 
@@ -1265,7 +1265,7 @@ Points to remember:
 - **Between packs**, a child pack that redefines a parent's connector template replaces it *as a whole*, and the override is
   listed in health (`overrides`); two unrelated packs that define the same connector differently stop the server at
   start, naming both. See [BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
-- **The deprecated form still works.** `drishti.sources.connectors.<name>` in `application.yaml` overrides a file setting by setting, with a warning that names the file to write.
+- **A file is the one way.** A `drishti.sources.connectors.<name>.*` property or environment variable refuses the start and names the file to write.
 
 #### Switching connectors off
 
@@ -1275,7 +1275,7 @@ Points to remember:
 | switch every pack's lake off | `DRISHTI_LAKE_ENABLED=false` |
 | switch the samples off | `DRISHTI_DEMO_ENABLED=false` |
 | switch a plugin running as itself off | `drishti.sources.plugins.<plugin>.enabled: false` (`DRISHTI_REST_ENABLED`, `DRISHTI_JDBC_ENABLED`, `DRISHTI_S3_ENABLED`, `DRISHTI_ACTIVEMQ_ENABLED`, `DRISHTI_RABBITMQ_ENABLED`) |
-| one value for one start | `java -jar … --drishti.sources.connectors.trading-stream.enabled=true` (the deprecated form; it overrides the file for that start) |
+| one value for one start | a `${VARIABLE:default}` placeholder in the file's setting (`enabled: "${DRISHTI_STREAM_TRADING:false}"`), the variable set for that start |
 
 A connector that is off is listed under its pack's `connectorsOff` in health. Note that **Admin → Packs** (switching a
 pack off for everyone) hides the pack's kinds from users; it does not stop its connectors. Use `enabled: false` for
@@ -1959,8 +1959,7 @@ Health, `POST /api/v1/admin/retry/connectors[?name=site-quotes]`, admin role, au
 `connector-recovered`). All settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings); the overview:
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself).
 
-What is **not** live: a connector defined in the server's own configuration (`application.yaml`, deprecated) and a change of
-`connectors-dir` itself; both need a restart.
+What is **not** live: a change of `connectors-dir` itself, which needs a restart.
 
 ### 9.8 Admin → Connectors
 
@@ -1977,10 +1976,8 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it as a file. A
 connector a pack's template names is only disabled or reset. See [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
-The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated
-configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it
-last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A connector defined in
-`application.yaml` is flagged with the file that would replace it; a bad file shows its problem on its row.
+The list shows each connector's **origin** (`file`, `pack` for a template with no file yet), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it
+last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A bad file shows its problem on its row.
 
 #### Connector files on a cluster
 
@@ -2074,7 +2071,7 @@ change is **audited** (setting *names*, never values) as `connector-saved`, `-de
 
 | Method and path | Does |
 |---|---|
-| `GET /` | Every connector: `origin`, `plugin`, `kinds`, `enabled`, `state`, `health`, `lastUpdate`, `updated`, `etag`, `problems`, `usedBy`; plus `directory`, `watch`, `misnamed`, `fileProblems`, `deprecated`, `knownKinds`. |
+| `GET /` | Every connector: `origin`, `plugin`, `kinds`, `enabled`, `state`, `health`, `lastUpdate`, `updated`, `etag`, `problems`, `usedBy`; plus `directory`, `watch`, `misnamed`, `fileProblems`, `knownKinds`. |
 | `GET /plugins` | The plugins and their settings: `name`, `type`, `required`, `default`, `description`, `secret`, `group`; `tls` says whether the TLS section applies. |
 | `GET /{name}` | The effective settings (credentials masked), the file `text`, `etag` (also the `ETag` header), `usedBy`, `packDefault`, `history`, `retry` (attempt, `nextRetryInSeconds`, `lastError`), and `tls`: `null` when no `tls.*` setting is given, else `enabled`, `verifyHostname`, `protocols`, `certificates` (`source`, `subject`, `notBefore`, `notAfter`, `daysLeft`, `expired`), `warnings`, or `error` when the material cannot be read. |
 | `GET /{name}/suggestion` | What a loaded pack suggests for that name, `{"pack", "text"}`, to pre-fill New connector. `404` when no pack suggests it. |
@@ -2235,7 +2232,7 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 
 ### 9.12 Health and problems
 
-- **Admin → Health** has a `connectors` block (count, failed, `badFiles` with the message, watch state, folder, deprecated names), and a
+- **Admin → Health** has a `connectors` block (count, failed, `badFiles` with the message, watch state, folder), and a
   pack row lists `connectors`, `connectorsDown` and `connectorsNotConfigured`. A bad file or a missing connector makes the overall
   status **degraded**.
 - `GET /api/v1/admin/health` → `connectors.watch` is `WATCHING`, `POLLING`, `OFF` or `STOPPED: <reason>`; `sources[]` has each

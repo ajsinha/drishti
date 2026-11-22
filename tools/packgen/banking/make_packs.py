@@ -67,8 +67,8 @@ SEMANTIC_ROLES = [
     {"role": "rate", "pattern": "rate$|spread$|coupon|yield", "fmt": "pct4", "weight": 70, "fractionOnly": True},
     {"role": "price", "pattern": "price$|strike|fixing|rate$|spread$|(^|_)px$", "fmt": "price4", "weight": 75},
 ]
-# Public data feeds: each its own connector, each off unless its switch (an environment variable, or the site
-# configuration drishti.sources.connectors.<name>.enabled) turns it on.
+# Public data feeds: each its own connector, each off unless its switch (an environment variable, or `enabled: true` in the
+# connector's file) turns it on.
 FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR from the New York Fed: FIX-SOFR-NYFED"),
          "ecb-estr": ("DRISHTI_FEED_ECB_ESTR", ["rate-fixing"], {}, "Euro short-term rate from the ECB: FIX-ESTR-ECB"),
          "ecb-fx": ("DRISHTI_FEED_ECB_FX", ["fx-spot"], {}, "ECB euro reference rates, with USD crosses: FX-EURUSD-ECB, FX-USDJPY-ECB, …"),

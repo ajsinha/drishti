@@ -115,7 +115,6 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         /** The shared overrides ({@code loads/config/<pack>.yaml} in the content store, DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 11), or null for the files. */
         private final com.ash.drishti.identity.content.ContentStore store;
         static final String PREFIX = "loads/config/";
-        static final String MARKER = "system/imports/loads-config.json";
         private static final String HEADER = "# Data loads override, written from Admin > Packs > Data loads. The pack's own files are unchanged;\n"
                 + "# delete this file (or press Reset) to use the pack's own loads: section again.\n";
 
@@ -124,40 +123,13 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         }
 
         /**
-         * With a store, an override saved through Admin is a document every node reads ({@code drishti.loads.config-store: content});
-         * the folder's files are imported once (marker {@code system/imports/loads-config.json}) and left in place.
+         * With a store, an override saved through Admin is a document every node reads ({@code drishti.loads.config-store: content}).
          */
         public Overrides(Path dir, List<String> defaultRoles, int smokeMax, com.ash.drishti.identity.content.ContentStore store) {
             this.dir = dir.toAbsolutePath().normalize();
             this.defaultRoles = defaultRoles;
             this.smokeMax = smokeMax;
             this.store = store;
-            if (store != null) {
-                importFiles();
-            }
-        }
-
-        private void importFiles() {
-            try {
-                store.put(MARKER, ("{\"at\":\"" + java.time.Instant.now() + "\"}").getBytes(java.nio.charset.StandardCharsets.UTF_8), null);
-            } catch (com.ash.drishti.api.error.DrishtiException e) {
-                return;                                                   // imported before (or by another node now)
-            }
-            Path folder = dir.resolve("config");
-            if (!Files.isDirectory(folder)) {
-                return;
-            }
-            try (var files = Files.list(folder)) {
-                for (Path f : files.filter(x -> x.getFileName().toString().endsWith(".yaml")).toList()) {
-                    String pack = f.getFileName().toString().replaceAll("\\.yaml$", "");
-                    if (NAME.matcher(pack).matches() && store.get(PREFIX + pack + ".yaml").isEmpty()) {
-                        store.put(PREFIX + pack + ".yaml", Files.readAllBytes(f), null);
-                        org.slf4j.LoggerFactory.getLogger(Overrides.class).info("data loads override {} imported into the content store ({} is kept)", pack, f);
-                    }
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException("cannot import " + folder, e);
-            }
         }
 
         private String key(String pack) {

@@ -38,14 +38,18 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * The FRTB-SA API through the server on the hand-built cases (the EXAMPLE scope, no data needed): the capital and its stack, the steps, the
  * contributions, the playground with a comparison in words, the workbook, a recipe saved and replayed to the cent, and the refusals.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false", "drishti.var.official.on-start=false", "drishti.var.official.publish=false",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-format-equality", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
+        "drishti.var.official.on-start=false", "drishti.var.official.publish=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.frtb.parameters-dir=../../../../modules/banking/packs/market-risk/capital",
         "drishti.frtb.recipes-dir=target/frtb-recipes-${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class FrtbApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("exposure-format-equality");
+    }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

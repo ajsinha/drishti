@@ -435,7 +435,13 @@ def start_node(stack: dict, node: dict, jar: Path, modules: Path | None = None) 
     off = clusterlakes.switched_off(node, lake_dir(node["lake"]) if node.get("lake") else None, own, ROOT / "config" / "lakes")
     if len(off) > len(node.get("off") or []):
         say(f"{name}: off on this node, its lake holds none of their tables: {', '.join(off[len(node.get('off') or []):])}")
-    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in off] + list(node.get("args", [])):
+    if own is None and off:
+        say(f"{name}: off: {', '.join(off)} cannot be applied: a node with home: repo reads the repository's config/connectors; put 'enabled: false' in "
+            "those connector files there (or give the node its own home) and remove off: from the node")
+        return False
+    if own is not None:
+        clusterlakes.write_off_files(own, off)                    # the one switch: 'enabled: false' in the connector's file
+    for arg in list(node.get("args", [])):
         args.append(f"--server-arg={arg}")
     return run_command("server", "start", args, env) == 0
 

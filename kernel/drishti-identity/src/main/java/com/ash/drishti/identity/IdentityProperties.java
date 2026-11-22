@@ -22,8 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * {@code drishti.identity.*}.
  *
- * @param usersFile the users file of releases before 1.10, imported into the database once (when it holds no users)
- * @param auditFile the audit file of releases before 1.10, imported with the users
+ * @param usersFile the file user store's file
+ * @param auditFile the file audit log's file
  * @param iterations PBKDF2 iterations for new hashes
  * @param minPasswordLength shortest accepted password
  * @param maxFailedAttempts failed sign-ins before a lockout

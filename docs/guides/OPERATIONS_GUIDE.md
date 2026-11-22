@@ -915,8 +915,8 @@ routes: {trade: trade-endur}        template: trade-endur, settings: {root: /srv
 
 - **Nobody but you writes a file.** The server reads the templates where they are and writes no connector file at start, reload or
   deploy: `config/connectors/` stays empty until a site needs an override. An override inherits every key of its template and changes
-  only those it names (a key set to `null` removes the inherited one). `drishti.sources.connectors.<name>.<key>` (for example
-  `--drishti.sources.connectors.trade-murex.enabled=false`) still changes one setting from the server's configuration.
+  only those it names (a key set to `null` removes the inherited one). A connector is never set by a property: `enabled: false` in
+  an override file (`config/connectors/trade-murex.yaml`) switches a template's connector off.
 - **Changing it, live.** Edit the file, use **Admin → Connectors** or the terminal; the server applies it to that connector only (reads in
   flight get `connectors-drain`, 3 s; a new file starts a connector, a deleted one stops it). Every earlier text is kept in
   `data/connectors/history/` and can be restored from the page. A variable a file refers to still needs a restart.

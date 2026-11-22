@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 class NetHistoryTest {
 
     static NetNodes cluster;
-    static final String LAKE = "--drishti.sources.connectors.finance-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake";
     static final ObjectMapper JSON = new ObjectMapper();
 
     @BeforeAll
@@ -46,9 +45,10 @@ class NetHistoryTest {
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));
         NetNodes.folder(root.resolve("c/net"), p[2], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        String domain = "--drishti.sources.connectors.finance-lake.settings.domain=desk";
-        cluster.start("a", p[0], NetForwardTest.secure(LAKE, domain, "--drishti.sources.plugins.demo.enabled=false"));
-        cluster.start("b", p[1], NetForwardTest.secure("--drishti.sources.connectors.finance-lake.settings.root=" + empty, domain,
+        NetHistoryMasksTest.lake(cluster, "a", NetHistoryMasksTest.TEST_LAKE);
+        NetHistoryMasksTest.lake(cluster, "b", empty);
+        cluster.start("a", p[0], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false"));
+        cluster.start("b", p[1], NetForwardTest.secure(
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.redact=nettingSet"));
         cluster.start("c", p[2], NetForwardTest.secure("--drishti.packs.enabled=logistics", "--drishti.sources.plugins.demo.enabled=false"));
         assertThat(NetNodes.await(15_000, () -> List.of("a", "b", "c").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table().nodes().size() == 3)))

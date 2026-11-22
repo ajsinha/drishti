@@ -28,12 +28,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** A picked business date flows from the request header through the engine to a Delta Lake connector. */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
-        "drishti.sources.connectors.finance-lake.settings.root=../../plugins/drishti-plugin-delta/src/test/resources/lake",
-        "drishti.sources.connectors.finance-lake.settings.domain=desk",
-        "drishti.sources.connectors.finance-lake.settings.mode.counterparty=effective"})
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/business-date", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance"})
 @AutoConfigureMockMvc
 class BusinessDateTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("business-date");
+    }
 
     @Autowired MockMvc mvc;
 

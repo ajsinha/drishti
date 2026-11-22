@@ -76,10 +76,10 @@ class NetRejoinMissTest {
         NetNodes.folder(root.resolve("a/net"), p[0], List.of("region:emea"), List.of(), List.of());
         NetNodes.folder(root.resolve("c/net"), p[2], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        String domain = "--drishti.sources.connectors.finance-lake.settings.domain=desk";
-        String lake = "--drishti.sources.connectors.finance-lake.settings.root=";
-        String[] argsC = NetForwardTest.secure(lake + empty, domain, "--drishti.sources.plugins.demo.enabled=false", NetPeerDownTest.NOCACHE);
-        cluster.start("a", p[0], NetForwardTest.secure(lake + lakeA, domain, "--drishti.sources.plugins.demo.enabled=false", NetPeerDownTest.NOCACHE));
+        NetHistoryMasksTest.lake(cluster, "a", lakeA);
+        NetHistoryMasksTest.lake(cluster, "c", empty);
+        String[] argsC = NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false", NetPeerDownTest.NOCACHE);
+        cluster.start("a", p[0], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false", NetPeerDownTest.NOCACHE));
         // A has no seeds and no saved members: it is a member at once, never "joining" (a node alone answers as before)
         assertThat(cluster.node("a").bean(DigestService.class).joining()).isFalse();
         assertThat(cluster.node("a").bean(NetHealth.class).summary()).containsEntry("state", "member");

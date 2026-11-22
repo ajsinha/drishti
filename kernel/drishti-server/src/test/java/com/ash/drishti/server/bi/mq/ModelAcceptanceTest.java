@@ -55,21 +55,22 @@ import org.springframework.test.web.servlet.ResultActions;
  * Also: a standing query's answer after the data changes equals the one-shot answer (section 5.8), and a dataset whose source is another model's answer
  * (section 1.2 D) is asked as the reader, with a cycle refused ({@code DRS-9109}).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/model-acceptance", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/mq-accept-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/mq-accept-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/mq-accept-folder", "drishti.tables.root=${drishti.test.dir}/mq-accept-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/mq-accept-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/mq-accept-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.acc-lake.plugin=file", "drishti.sources.connectors.acc-lake.kinds[0]=trade",
-        "drishti.sources.connectors.acc-lake.settings.rescan-seconds=3600",
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false",
         // every column the model reads, its key tradeId too, is promoted: the table is scanned as columns from this lake (a column left out made the
         // table read documents one by one, which went through every connector of the kind and read the finance pack's sample trades instead)
-        "drishti.sources.connectors.acc-lake.settings.layout.trade.columns=tradeId,desk,book,currency,notional,mtm,tradeDate"})
+        })
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ModelAcceptanceTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("model-acceptance");
+    }
 
     static final String DS = "file:dataset:acc-trades";
     /** What a visual of the converted report names: the model the converter made of the 2.1 dataset. */
@@ -101,7 +102,7 @@ class ModelAcceptanceTest {
         root = com.ash.drishti.server.TestRun.temp("drishti-mq-accept-lake");
         day("2026-10-07", 1);
         day(DAY, 1);
-        r.add("drishti.sources.connectors.acc-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.acc-lake.root", () -> root.resolve("lake").toString());
     }
 
     static {

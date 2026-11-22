@@ -20,7 +20,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{% set ORIGINS = {'shipped': 'Ships with the product', 'archive': 'Deployed from an archive', 'file': 'A file placed in the folder', 'ui': 'Saved from the console', 'template': 'Written from a pack\'s connector template', 'application': 'Defined in the server\'s own configuration (deprecated)'} %}
+{% set ORIGINS = {'shipped': 'Ships with the product', 'archive': 'Deployed from an archive', 'file': 'A file placed in the folder', 'ui': 'Saved from the console', 'template': 'Written from a pack\'s connector template'} %}
 <div class="adm" data-artifacts data-tab="{{ tab }}">
   {% with tab='artifacts' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Artifacts <a class="emb-help" href="{{ BASE }}/help/admin-artifacts" aria-label="Help: installing and uninstalling packs, connectors and BI files" title="Help: installing and uninstalling packs, connectors and BI files">?</a></h1>

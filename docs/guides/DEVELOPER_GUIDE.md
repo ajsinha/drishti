@@ -2729,8 +2729,7 @@ and the pack that reads it routes the kind: `connectors: [desk-days]` and `route
 
 A connector file has these keys: `plugin`, `enabled` (default true), `kinds` (limits what it serves: reads, subscriptions,
 reverse lookups and search for other kinds answer nothing) `description` (free text) and `settings` (nesting is flattened to dotted keys, and the plugin is handed a `Map<String,
-String>`; `source-name` defaults to the connector's name, so documents say which connector they came from). A definition under `drishti.sources.connectors.<name>` in
-`application.yaml` is deprecated but read. **The
+String>`; `source-name` defaults to the connector's name, so documents say which connector they came from). A connector is defined by its file only. **The
 settings of each shipped plugin, with defaults, are in that connector's own document** (the table in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin) lists the plugin names a connector
 can name); a plugin of yours documents its own.

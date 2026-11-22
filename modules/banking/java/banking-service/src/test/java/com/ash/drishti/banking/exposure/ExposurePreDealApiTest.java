@@ -57,19 +57,8 @@ import org.springframework.test.web.servlet.ResultMatcher;
  * a bucket), refer (a proxy, no limit, a measure not computed, no exposure); two people with different entitlements, at the same time;
  * the command's grammar; every check audited.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.ccr-lake.plugin=delta",
-        "drishti.sources.connectors.ccr-lake.kinds[0]=simulation-run", "drishti.sources.connectors.ccr-lake.kinds[1]=exposure-path",
-        "drishti.sources.connectors.ccr-lake.kinds[2]=netting-set", "drishti.sources.connectors.ccr-lake.kinds[3]=csa",
-        "drishti.sources.connectors.ccr-lake.kinds[4]=collateral-balance", "drishti.sources.connectors.ccr-lake.kinds[5]=counterparty",
-        "drishti.sources.connectors.ccr-lake.kinds[6]=counterparty-group", "drishti.sources.connectors.ccr-lake.kinds[7]=credit-limit",
-        "drishti.sources.connectors.ccr-lake.settings.domain=risk",
-        "drishti.sources.connectors.ccr-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.columns=TRADE_ID,NETTING_SET,COUNTERPARTY,LEGAL_ENTITY,DESK,TT_BOOK,"
-                + "ASSET_CLASS,PRODUCT,SOURCE_SYSTEM,MATURITY_DATE,NOTIONAL,GRID_INDEX,GRID_DATE,RUN_ID,BATCH_ID,STATUS",
-        "drishti.sources.connectors.ccr-lake.settings.layout.exposure-path.vectors=MTM",
-        "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/exposure-pre-deal-api", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
         "drishti.sources.routes.netting-set=ccr-lake", "drishti.sources.routes.csa=ccr-lake", "drishti.sources.routes.collateral-balance=ccr-lake",
         "drishti.sources.routes.counterparty=ccr-lake", "drishti.sources.routes.counterparty-group=ccr-lake",
         "drishti.sources.routes.credit-limit=ccr-lake",
@@ -84,6 +73,10 @@ import org.springframework.test.web.servlet.ResultMatcher;
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class ExposurePreDealApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("exposure-pre-deal-api");
+    }
 
     static final LocalDate DAY = ExposureLakeFixture.DAY;
     static final LocalDate BOOKED = DAY.plusDays(1);
@@ -110,7 +103,7 @@ class ExposurePreDealApiTest {
         buckets.put("1Y+", 1e12);
         ExposureLakeFixture.limit(lake, BUCKETED, 1e12, "PFE 95 peak", buckets);
         ExposureLakeFixture.limit(lake, EEPE, 1e12, "CVA capital", Map.of());
-        r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
+        r.add("test-connectors.ccr-lake.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);
     }
 
