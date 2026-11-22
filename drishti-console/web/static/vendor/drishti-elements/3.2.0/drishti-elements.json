@@ -234,8 +234,8 @@
       "integrity": "sha384-lkV9PhwSxe1ZI9NLDTd7vWFHCLQI/pp4Q2BJlHbS8dKnm+oGJ2dXKKOKf0lKFZR6"
     },
     "elements/drishti-chart/drishti_chart-report.js": {
-      "bytes": 65890,
-      "integrity": "sha384-p8TQz+tDZ/lbK/+7iWm9y8e0IFboYcoExYW0OA1teyYfPCnCCTS1FuijXWnH6Pld"
+      "bytes": 66064,
+      "integrity": "sha384-quTDRNv4fM3HYKa1BaBH7/VLO7MJR8igOiXOG/xwFXKzAL0+DrqsXn7u6j7rDgGc"
     },
     "elements/drishti-chart/drishti_chart.css": {
       "bytes": 18970,
@@ -322,8 +322,8 @@
       "integrity": "sha384-vgGRU8w2QqPd0PU2PNU8d4A3K//H02oGVbKK1bXEQuTjajiAqogEkKe0ShOvCL4y"
     },
     "elements/drishti-chart/src/drishti_chart-report.js": {
-      "bytes": 33123,
-      "integrity": "sha384-ZA6EON+6TngT2PJCPD8s4Lci7WigUGVXZlZ/t9QmW+6nASx1Afdv7pw5UhU2Xk96"
+      "bytes": 33289,
+      "integrity": "sha384-KGKMCTKyJuL3iQV1EZTBq7D8OLwtWHWF45pp81gGN3pP6jQ1+C7fSHLAaEdDKBn/"
     },
     "elements/drishti-chart/src/drishti_chart-scale.js": {
       "bytes": 3865,

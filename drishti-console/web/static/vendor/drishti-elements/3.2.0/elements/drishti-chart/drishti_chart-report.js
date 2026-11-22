@@ -708,6 +708,8 @@
       const nameOf = (r) => (di >= 0 ? String(r[di]) : r[lat] + ', ' + r[lon]);
       const g = env.geo.option({ level: 'world', geo: w, t: env.t, items: [], numText: (v) => env.compact(v),
         bubbles: pts.map((r) => ({ lon: r[lon], lat: r[lat], value: Math.abs(Number(r[o.mi]) || 0), name: nameOf(r), text: o.text(r[o.mi]) })) });
+      g.series = g.series.filter((x) => x.name !== 'places');                      // the shapes alone under the points: no country is a mark here
+      g.geo.silent = true;
       const bub = g.series.find((x) => x.name === 'bubbles');
       if (bub) { bub.itemStyle = { color: env.palette[0], opacity: 0.8 }; }
       const option = Object.assign(reportBase(spec, env, { legend: false }), g);
