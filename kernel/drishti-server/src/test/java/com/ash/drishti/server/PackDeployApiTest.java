@@ -52,18 +52,15 @@ import org.springframework.test.web.servlet.ResultActions;
  * verification (tampering, slip, signature, version, lint, dependencies, size), the preview, deploy with the previous
  * version kept, rollback, the history; and the data source layers (pack, override file, site), validation, test connection.
  */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/pack-deploy-api", "drishti.packs.dir=${drishti.test.dir}/pack-deploy/packs",
+@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-deploy/packs",
         "drishti.packs.installed-dir=${drishti.test.dir}/pack-deploy/installed", "drishti.packs.overlay=${drishti.test.dir}/pack-deploy/added.yaml",
         "drishti.packs.settings-dir=${drishti.test.dir}/pack-deploy/settings",
         "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-deploy/history.jsonl",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-deploy/connectors",
         "drishti.packs.enabled=lakepack", "drishti.packs.deploy.max-archive-mb=1"})
 @AutoConfigureMockMvc
 class PackDeployApiTest {
-
-    static {
-        com.ash.drishti.server.ConnectorFixtures.copy("pack-deploy-api");
-    }
 
     static Path root;
     static KeyPair acme;
