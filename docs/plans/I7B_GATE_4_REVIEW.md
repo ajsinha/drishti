@@ -953,3 +953,91 @@ further review from me: it is GO as it stands. Readiness today (06:48): 31 PASS,
 remove both), 2 FAIL that `prepare` step 4 cures (the venv, Playwright 1.64.x).
 
 Nothing running, nothing built; only this file was written.
+
+---
+
+# Patch gate 1.0.1 / 3.3.2 (2026-11-22 14:45)
+
+Read only: the two diffs, the code they touch, the committed schema run through `jsonschema` (a few seconds); no Maven, no Node. The lanes'
+test logs were not found on this machine (`~/.cache/drishti-lanes` holds none for these branches), so the test counts below are the lanes'
+own report, not re-read by me.
+
+## 1. Rachana 1.0.1 (`fix/1.0.1` `94775ac7` against `v1.0.0` `bfb6799b`): NOT YET, one small fix
+
+**What is right.** One commit. The only main code changed is `RachanaSchema.java` (reached only from `Rachana.schema()`); every other
+source line is the version text (`Cases`, `Facade`, `__init__`, the poms, the packages). No parser, binder, compiler or API line moved, no
+conformance case changed: no language change. The schema is now complete: `schema_cases.py` run here on the commit's tree says
+`351 Sutras checked, 0 do not validate`. The top-level keys come from `Grammar.LEVEL_KEYS`, a panel list item is "a panel with an id, or a
+use" (a `use` closed with `additionalProperties: false`), an unknown top-level key, kind, trigger, state type, pivot mode, emit trigger, a
+panel without id or kind, a data entry with two forms and an action without `do` are all refused (18 hand-made bad Sutras tried).
+The guard's exclusions are justified: of 360 candidates 6 are left out as Drishti-profile constructs (the schema is Core's) and 3 are in
+`LENIENT`, each with its reason (the compiler ignores the value). `spec_files.py` keeps the file equal to the generator.
+
+**P1. Must fix: the schema became looser than the compiler in two places 1.0.0 had right.** All 285 failing conformance cases were run
+through both schemas: 89 that 1.0.0 refused now validate. 86 of them are right to validate (1.0.0 refused them only for the missing keys;
+their problems are semantic, no schema can see them). Three are real:
+
+| Case (`conformance/1/problem/strict-sutra.yaml`) | Compiler | 1.0.0 schema | 1.0.1 schema |
+|---|---|---|---|
+| `table-rows-5` (`rows: 5`) | RCH-2029 | refused | **accepted** |
+| `table-limit-negative` (`limit: -5`; `0` too) | RCH-2029 | refused | **accepted** |
+| `table-limit-many` (`limit: many`) | RCH-2029 | refused | **accepted** |
+
+Cause, both in `RachanaSchema.panelSchema`: (a) every expression option now takes `string | number | boolean`, but
+`PanelOptions.LIST_EXPRESSIONS` (`rows`, `each`, `nodes`, `edges`, `source`, `children`) and `where` are text only in the compiler (`each: 5`
+on tabs validates too); (b) `forKind(TABLE, "limit")` lost `minimum: 1` and takes any string, while `PanelOptions.problem` takes a whole
+number of 1 or more, or text that holds `ctl.`.
+Fix (a few lines, then `spec_files.py --write`): keep `text(EL)` for `LIST_EXPRESSIONS`; the table `limit` is
+`anyOf: [{integer, minimum 1}, {string, pattern "ctl\\."}]`. That refuses all three again.
+
+**P2. Must fix with P1: the guard looks one way only.** It proves "compiles, so validates"; nothing proves "the schema still refuses".
+Add to `schema_cases.py` a short `MUST_REFUSE` list (the three cases above at least) that fails when one validates. Without it the next
+completeness fix can loosen the schema again unseen.
+
+**Notes, not blocking.** `LENIENT` "only shrinks" is a comment; nothing enforces it (a count asserted in the script would). The Java guard is
+skipped on a machine without python3, PyYAML and jsonschema (it says so): the drill machine must have them, or the guard does not run where
+it counts. Already loose in 1.0.0 and unchanged: an unknown panel option validates (`properties` without `additionalProperties`).
+
+**Verdict: NOT YET.** Tag `v1.0.1` on the child commit that holds P1 and P2, with `schema_cases.py` and `spec_files.py` green (seconds; the
+lane's verify once). If that commit touches only `RachanaSchema.java`, the regenerated `spec/1/sutra.schema.json`, `schema_cases.py` and
+the CHANGELOG, it needs no second gate from me.
+
+## 2. Elements 3.3.2 (`fix/3.3.2` `9d704c4` against `v3.3.1` `20661f0`): TAG
+
+Two commits, drishti-views only (the other bundles differ by the version line). Read: `drishti_views-controls.js` (new, 320 lines), the
+paint, element, cells and sheet diffs, the budget test.
+
+- Drawn with drishti-inputs' own components (Select, MultiSelect, Switch, ButtonGroup, DatePicker, DateRangePicker, WhatIf; search and
+  numbers are the library's field): no bespoke widget. Holders are in the first paint with a kept height, so nothing moves.
+- No inline handler or style is written (`h()` with attributes and classes; colours and spacing are tokens); the browser test runs under
+  a strict CSP and asserts no violation.
+- A pick: `takeControl` (value kept, `control-change` emitted), the change effects, then `bind` with every `ctl.<id>` the reader set and
+  `req.panels` (null for the whole view); only the reading panels are drawn again, `aria-busy` while waiting, a polite status region
+  after, focus kept. A failed bind clears `aria-busy`, says so and emits `view.bind`. Typing waits 250 ms; timers and components are
+  disposed with the view.
+- Budget 255,000 to 276,000 for 263,045: the file's own rule (size plus about 5%), with the reason written beside it.
+
+**Restoration judged: `selects` and `remember` WERE embed v1 behaviour.** The script embed v1 ran inside its shadow root
+(`drishti-console/web/static/js/drishti_controls.js`, 508 lines, last changed `7bfb675c6`) does both: `data-selects` (lines 52, 417 to 441:
+a click or Enter on a row or bar sets the control, again clears it) and `remember` (lines 316, 477 to 481: `localStorage`, with
+`options.scope` documented for the embed). Both are live in the language and the contract (`on-select`, a control's `remember`;
+`ViewModel.selects`, `ControlView.remember`), and Drishti ships `on-select` in `counterparty-risk/netting-set.v1`. The painter in 3.3.2
+reads neither. So this is an incomplete restoration.
+
+**It does not block 3.3.2.** The patch is additive (3.3.1 drew no control at all), what the drill found is cured, and both gaps degrade
+quietly and safely: a row click that used to filter does nothing, a choice is not kept between visits; no number is wrong, nothing throws.
+Neither was ever tested through the embed (`test_embed_controls_browser.py` has four tests, none of them; only the console page's
+`test_controls_browser.py` covers them). It must follow, and be written down so it is not lost:
+
+1. **3.3.3 (before the i7b release is called embed-complete, or one row in `I8_CARRY_IN.md` by the owner's word):** `selects` (row and bar
+   click and Enter set the control through `handle.change`, again clears, the selected row marked) and `remember` (through the existing
+   `options.remember {get, set}` hook, never the painter's own `localStorage`), each with a node and a browser test.
+2. With the tag: one line in the 3.3.2 CHANGELOG entry that `selects` and `remember` are not read yet. Today the entry reads as complete.
+
+**Note for the Drishti side.** Drawing is on by default: a host that draws its own controls and upgrades to 3.3.2 gets them twice unless it
+passes `controls: false` (documented in VIEWS.md). The console page still runs `drishti_controls.js`; if any page hands a ViewModel with
+controls to `paint()` and also runs that script, it needs the option.
+
+**Verdict: TAG `v3.3.2`** on `9d704c4` (or its child with the CHANGELOG line). Follow-up 3.3.3 as above.
+
+Nothing running, nothing built; only this file was written.
