@@ -2524,7 +2524,7 @@ A lake that is only ever written grows without bound. **Maintenance** does what 
 
 | Step | What it does | Setting |
 |---|---|---|
-| **Retention** | deletes business dates older than the window, counted back from today in `schedule.zone` (or `--as-of`), never from the newest date in the table; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
+| **Retention** | keeps the newest `keep-business-days` business dates on or before today in `schedule.zone` (or `--as-of`) and deletes the older ones (Drishti Lake's `lake maintain`, the same rule on Delta and Iceberg), never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
 | **Compaction** | merges each date's small files; a table whose pack declares a layout is rewritten in it, only for dates that drifted | `compact`, `target-file-mb` (128) |
 | **Checkpoint** | writes a Delta checkpoint, so readers replay a short log | `checkpoint` (on) |
 | **Vacuum** | removes files no version uses, older than the window; *known at* reaches back that far, no further | `vacuum-hours` (168) |
