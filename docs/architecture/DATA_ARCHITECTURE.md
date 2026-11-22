@@ -3698,8 +3698,8 @@ libraries inside their jars, no `.exe`).
 `drishti.py lake build --engine java` runs the whole build in the loader (`tools/lake/javaload.py`): the build's options become the
 loader's configuration (a JSON file in the run's staging folder, secrets kept out of it); `--loader-set KEY=VALUE` adds any key. The build
 holds the lock and writes the run log, the summary (the loader's keys merged in, plus `throughput` and `memory`) and the ownership record.
-The Python path is the default; `--engine auto` picks the loader only with `--java-above-mb N` (every input JSON Lines of at least N MB,
-`--mode overwrite-dates`, a jar with the loader). Java is started through `tools/javacmd.py` with `-Djava.io.tmpdir` in the staging
+The loader is the default: `--engine auto` tries it first (every input JSON Lines, `--mode overwrite-dates` or `append`, a jar with the loader),
+then Drishti's Java writer, then deltalake, and names the jar it looked for when it falls back. Java is started through `tools/javacmd.py` with `-Djava.io.tmpdir` in the staging
 folder; the heap is `DRISHTI_LAKE_LOADER_HEAP` (default `4g`). The loader reads JSON Lines only (the data standard); a JSON array stays
 the Python path's.
 
@@ -3781,7 +3781,7 @@ every request form and the clients: [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md)
 
 Every number on a market-risk or counterparty-risk page is one of three classes, and the class decides where it is made. This is the rule
 the packs follow and the mechanisms that apply it; the open steps (the engines still to build, the stored figures still to retire) are in
-[IMPLEMENTATION_PLAN.md, "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps).
+[the release notes](../../RELEASE_NOTES.md).
 
 ### 12.1 Three classes, and the rule for deciding which
 

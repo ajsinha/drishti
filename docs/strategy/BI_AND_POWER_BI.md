@@ -25,7 +25,7 @@ here. This page quotes no prices. Section 9 lists every source and what could no
 |---|---|
 | **Built** | in the product today; checked in the code or a current guide |
 | **Built, in part** | the part stated is built; the rest is not |
-| **Planned (i2, i3, i4, i5, j...)** | a release in [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md); **not in the product, and never counted as a lead** |
+| **Planned (i2, i3, i4, i5, j...)** | a release in [the release notes](../../RELEASE_NOTES.md); **not in the product, and never counted as a lead** |
 | **Not built** | not in the product and not in a planned release |
 
 The **Lead today** column looks only at what ships today. Where Drishti plans something Power BI already has, the lead stays with Power BI.
@@ -165,7 +165,7 @@ These are choices, neither better nor worse in general.
 
 ## 8. What is planned
 
-**None of this exists today, and none of it is counted above.** Release names are from [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md); the plan gives no dates for them. The design is [KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), itself marked as not built.
+**None of this exists today, and none of it is counted above.** Release names are from [the release notes](../../RELEASE_NOTES.md); the plan gives no dates for them. The design is [KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), itself marked as not built.
 
 | Release | What it brings to BI | Against Power BI |
 |---|---|---|
@@ -183,7 +183,7 @@ Parity with Power BI is a guide rather than a goal: Drishti keeps Power BI-like 
 
 ## 9. What was checked, and what could not be
 
-**Drishti.** Checked in the current guides (Reports, Pivot, Tables, Cluster, Data, Notebook, Embed, AI, Admin, Operations, Approvals, Flight), [BENCHMARK.md](../admin/BENCHMARK.md), [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md), and in code for the connector plugins, relationship cardinalities (`ModelDef`, `SqlCompiler`) and the pivot partials route (`ClusterRoute`, `PivotScaleController`).
+**Drishti.** Checked in the current guides (Reports, Pivot, Tables, Cluster, Data, Notebook, Embed, AI, Admin, Operations, Approvals, Flight), [BENCHMARK.md](../admin/BENCHMARK.md), [the release notes](../../RELEASE_NOTES.md), and in code for the connector plugins, relationship cardinalities (`ModelDef`, `SqlCompiler`) and the pivot partials route (`ClusterRoute`, `PivotScaleController`).
 
 **Power BI: read on 2026-11-09.** The articles linked in the tables above, plus [semantic model scale-out](https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-premium-scale-out), [what is Power BI Premium](https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-premium-what-is), [calculation groups](https://learn.microsoft.com/en-us/power-bi/transform-model/calculation-groups) and [Power BI Report Server licensing](https://learn.microsoft.com/en-us/power-bi/report-server/get-started).
 

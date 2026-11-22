@@ -61,25 +61,32 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     assert "partition-by" not in named["source"] and "promote" not in named["source"]   # the lake file decides
 
 
-def test_auto_picks_the_loader_only_for_large_json_lines(tmp_path, monkeypatch):
+def test_auto_picks_the_loader_by_default(tmp_path, monkeypatch):
     small = tmp_path / "small.jsonl.gz"
     with gzip.open(small, "wt", encoding="utf-8") as fh:
         fh.write('{"id": 1}\n')
     arr = tmp_path / "array.json"
     arr.write_text('[{"id": 1}]', encoding="utf-8")
     monkeypatch.setattr(javaload, "command", lambda jar, java: ("java", ["-cp", "x", javaload.LOADER_MAIN]))
-    use, why = javaload.wanted(args(java_above_mb=None), [small], None, None)
-    assert not use and "Python path is the default" in why                 # not asked: never the loader, however large
-    use, why = javaload.wanted(args(java_above_mb=1024), [small], None, None)
-    assert not use and "--java-above-mb" in why
-    use, why = javaload.wanted(args(java_above_mb=0), [small], None, None)
-    assert use
-    use, why = javaload.wanted(args(java_above_mb=0), [small, arr], None, None)
+    assert javaload.wanted(args(), [small], None, None)[0]                 # the default, however small
+    use, why = javaload.wanted(args(), [small, arr], None, None)
     assert not use and "not JSON Lines" in why
-    use, why = javaload.wanted(args(java_above_mb=0, mode="overwrite-partitions"), [small], None, None)
+    use, why = javaload.wanted(args(mode="overwrite-partitions"), [small], None, None)
     assert not use and "overwrite-partitions" in why
-    assert javaload.wanted(args(java_above_mb=0, mode="append"), [small], None, None)[0]
+    assert javaload.wanted(args(mode="append"), [small], None, None)[0]
     assert javaload.is_jsonl(small) and not javaload.is_jsonl(arr)
+
+
+def test_missing_jar_names_the_jar_and_the_fallback(tmp_path, monkeypatch):
+    small = tmp_path / "small.jsonl"
+    small.write_text('{"id": 1}\n', encoding="utf-8")
+    monkeypatch.setattr(javaload, "command", lambda jar, java: None)
+    import writers
+    monkeypatch.setattr(writers, "choose", lambda engine, jar=None, java=None: ("deltalake", "x"))
+    use, why = javaload.wanted(args(), [small], None, None)
+    assert not use and "looked for" in why and "drishti-server-" in why and "fell back to the deltalake engine" in why
+    use, why = javaload.wanted(args(), [small], str(tmp_path / "x.jar"), None)
+    assert "x.jar" in why and "no such file" in why
 
 
 def test_s3_input_needs_the_loader(tmp_path):

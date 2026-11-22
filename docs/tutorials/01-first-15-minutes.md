@@ -1278,7 +1278,7 @@ days*.
 |---|---|
 | The build says `Drishti needs Java 21 or newer` | `JAVA_HOME` is older than 21; point it at 21 or newer and run the build again |
 | `python3 -m venv` says `ensurepip is not available` | use `uv venv --python 3.13 drishti-console/.venv`, or install your system's `python3-venv` package |
-| `lake demo` says `No module named 'deltalake'` | run it with the console's Python (`drishti-console/.venv/bin/python`), which has the requirements |
+| `lake demo` says `No module named 'drishti_lake'` | run it with the console's Python (`drishti-console/.venv/bin/python`), which has the requirements |
 | The sign-in page says the password is wrong | the development password is `drishti-dev-admin123` until you change it; five wrong tries lock the account for 15 minutes |
 | Every page says `DRS-5010 missing bearer token` | the console was started without `DRISHTI_TOKEN_SECRET` (or with another value than the server's): start it as in Step 2 |
 | A view says *No data held for that date* | the demo lakes are not built, or were built for other dates: run `lake demo` again (a running server re-reads them) |

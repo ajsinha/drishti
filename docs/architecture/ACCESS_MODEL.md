@@ -122,7 +122,6 @@ What exists now, on the server and in the console (the console's part since phas
 
 The domain boundaries and the move: [DOMAIN_MODULES.md](DOMAIN_MODULES.md). The kernel, the module package, its loading and data binding, and distributions: [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md). The JavaScript libraries
 modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
-The roadmap: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## 10. Row rules
 

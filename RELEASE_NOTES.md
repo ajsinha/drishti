@@ -34,7 +34,7 @@ repository's COMPATIBILITY.md.
 
 - Rachana (one language level, `rachana: 1`), Drishti Elements, Drishti Lake and Drishti Tools are consumed from tags; Drishti no longer carries its own
   copies of the Sutra compiler, the live-table engine, the renderer, the Delta and Iceberg protocol code, the aggregate kernel or the `.xlsx` writers.
-- The developer quickstart, the deployment and QA guide, the IDE guide and the new VS Code guide are rewritten for this layout.
+- The developer quickstart, the deployment and QA guide, and the IDE guide (now with VS Code) are rewritten for this layout.
 
 # Drishti 2.9.11.i7a — release notes
 

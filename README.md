@@ -377,7 +377,7 @@ python tools/drishti.py stop all                                              # 
 
 On Windows the same commands run as `py tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
 launchers **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**
-([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [VSCODE_GUIDE.md](docs/guides/VSCODE_GUIDE.md)); they read the same profile, so the IDE and the terminal start the same server.
+([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [IDE_GUIDE.md section 10](docs/guides/IDE_GUIDE.md#10-visual-studio-code)); they read the same profile, so the IDE and the terminal start the same server.
 
 Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
@@ -398,7 +398,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
-  [IDEs](docs/guides/IDE_GUIDE.md) and [VS Code](docs/guides/VSCODE_GUIDE.md).
+  [IDEs](docs/guides/IDE_GUIDE.md) and [VS Code](docs/guides/IDE_GUIDE.md#10-visual-studio-code).
 
 ## Measured performance
 

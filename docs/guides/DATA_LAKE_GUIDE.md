@@ -972,8 +972,8 @@ and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 ### 4.0 A complete `.ready` file, every key
 
 Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
-need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
-(`ReadyNote.KEYS` in lake-load, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders, owned by Drishti Lake
+([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#the-inbox-hand-over-by-ready-files); Drishti adds `lake`; the lists are compared by a test); this example is parsed against it
 by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
@@ -2135,7 +2135,7 @@ since (or `dataload undo` removed it), the same file loads again. `drishti.datal
 
 **4. The CLI alternative, tuned** (no inbox: a terminal, cron, or a machine that is not the owner node). **Always the Java loader** (`--engine java`):
 readers, parsers and writers on every core, memory bounded and spilled to disk, **one Delta commit per business date and table** however many files
-the folder holds. The Python writer (`auto` below `--java-above-mb`) is never used for a production batch. One folder a table and date, the
+the folder holds. The Python writer (`--engine deltalake`) is never used for a production batch. One folder a table and date, the
 date given by `--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` and `fx-scenario` first (tiny), then
 the positions as **one run over the date's folder**, not a run per part:
 

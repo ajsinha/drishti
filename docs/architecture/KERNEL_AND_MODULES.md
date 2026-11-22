@@ -2371,7 +2371,7 @@ module runtime is **not** here; the full drill under 60 minutes; memory and spee
 Drishti Console on Spring Boot** (PC; **about 1.3 × g**: the skeleton, the runtime host, Elements and banking's pages about 0.4 × g, the
 migration of groups G2–G10 about 0.7 × g, console nodes and several kernels per console about 0.2 × g). P4 is in **2.9.11.j** (trust and
 security); then k (risk engines II), l (collateral), m (CVA), n (hardening); new
-domains after the line. P5 later. The rows are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+domains after the line. P5 later.
 
 #### 14.2.1 Why i2's console hosting is declarative
 

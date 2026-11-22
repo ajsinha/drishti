@@ -8,7 +8,7 @@
 
 *Revision 1.0 · 2026-11-01 · Author: Ashutosh Sinha*
 
-Status: **proposed** (design, not built). Release placement is in [IMPLEMENTATION_PLAN.md › High-performance native integration (proposed)](IMPLEMENTATION_PLAN.md#high-performance-native-integration-proposed); this document names work only by phase (P0 to P5).
+Status: **proposed** (design, not built). Release placement is in [the release notes](../../RELEASE_NOTES.md); this document names work only by phase (P0 to P5).
 
 This is the roadmap for making Drishti faster where it matters: the VaR and exposure engines, the loaders, BI and the Python
 console. It covers three levers, in the order they should be pulled:
@@ -556,8 +556,8 @@ well they plug into those two formats.
 
 Data loading is Drishti Lake's one loader (Java and Python), with its guards (future days, zone, maximum drop share, force drop); the
 Python tools call the Lake wheel and stage each JSON line in Python (`tools/lake/stage.py`, `jsonstream.py`) before it commits the table.
-Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default for large inputs
-([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load); `--java-above-mb`). Where no JVM exists, a Polars
+Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default
+([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)). Where no JVM exists, a Polars
 staging path (`pl.scan_ndjson` into Arrow, the reject rules of `stage.py` as Polars expressions, the Arrow table handed to the Lake
 writer) must give exactly the same rows and rejects as `stage.py` (a parity test over the test data). The loader itself is documented
 by [Drishti Lake](https://github.com/drishti-platform/drishti-lake).

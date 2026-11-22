@@ -24,7 +24,7 @@ instance into a focused product. How an administrator sets lenses up, switches, 
 who uses it and the questions they ask, what it answers today (linking the guide that describes it), the gaps and proposals with the data
 each needs, and its mock-ups with their build checklists; then the design of the lens mechanism itself ([section 10](#10-the-lens-mechanism-the-design)).
 Built parts are described as built; everything else is a proposal, a candidate in the
-[implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started) until its work starts.
+implementation plan until its work starts.
 
 ## Contents
 
@@ -444,7 +444,7 @@ engines, VaR limits and what-ifs with **Trading** ([section 2](#2-trading-lens))
 'does this new trade fit?'" ([`config/lenses/banking/trading.yaml`](../../config/lenses/banking/trading.yaml)). Three landings (Trader
 desk, Desk head, Explorer) on a green accent; how to set it up and run it: [ADMIN_GUIDE.md section 16.2](../guides/ADMIN_GUIDE.md#162-drishti-trading).
 The proposals below (TL1 to TL14) are candidates in the plan's
-[Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
+Lens product candidates.
 
 ### 2.1 Who uses it and their questions
 
@@ -477,14 +477,14 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | The scenario matrix (`SMAT`, "is this tail scenario new?") | **Built**, on in the lens (`SMAT BOOK BOOK-RATES-1 20`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
-| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
+| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | |
 | Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../modules/banking/packs/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | The bank's market data a trader reads (`CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`, `FXF`, `IRV`, `CPV`, `FIX`, `REPO`) | **Built**, in one Markets menu | [section 2.2.3](#223-the-lens-is-configuration) |
 | "My": user → trader or desk (lens file, console, a matching trader record, then View as); landing by trading role; never widening access (tested) | **Built**; from the directory: TL13; `lens.roles` not wired | [ADMIN_GUIDE.md, "My": who a person is, configured](../guides/ADMIN_GUIDE.md#162-drishti-trading) |
-| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps), [PNL.md](../contracts/PNL.md) |
+| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [the release notes](../../RELEASE_NOTES.md), [PNL.md](../contracts/PNL.md) |
 | Actual P&L, month-to-date and year-to-date, intraday P&L, stop-loss, sensitivity and notional limits, breach records | **Not built**: TL3, TL9, TL11, TL7, TL6 | section 2.3 |
 
 What the data does not give is left out or labelled, never invented: [ADMIN_GUIDE.md, What the data does not give](../guides/ADMIN_GUIDE.md#162-drishti-trading).
@@ -665,7 +665,7 @@ The My VaR tile shows "−0.3m since morning": the intraday VaR against the day'
 
 | Data | Grain | Needed by | Source |
 |---|---|---|---|
-| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)) |
+| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [the release notes](../../RELEASE_NOTES.md)) |
 | Trades booked on their date with `SOURCE_UPDATE_TIME`, `TRADE_ACTION`, `TRADE_STATUS` | trade | Trades today, TL1, TL4a | booking systems |
 | Actual and hypothetical P&L | desk (better book or trade) × date | TL3, TL11 | product control and finance |
 | Position sensitivities (DV01 by currency and tenor, CS01, vega, FX delta, gamma) | trade × date | TL4b, TL7 | the bank's risk engine; aggregation per RO4 |
@@ -771,7 +771,7 @@ inflation, commodities, bonds and correlations, the inputs that feed risk and va
 ([`config/lenses/banking/market.yaml`](../../config/lenses/banking/market.yaml)). Three landings (Market desk, Explorer, Quality) on a
 violet accent; set-up and running: [ADMIN_GUIDE.md section 16.3](../guides/ADMIN_GUIDE.md#163-drishti-market); every kind and field: the
 [market-data pack README](../../modules/market-data/packs/market-data/README.md). Proposals ML1 to ML11 are candidates in the plan's
-[Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
+Lens product candidates.
 
 ### 3.1 Who uses it and their questions
 
@@ -1182,7 +1182,7 @@ book: none of its packs links into the bank's own data. Three landings (World de
 [ADMIN_GUIDE.md section 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world). **Licensing first:** the IMF figures, Yahoo prices and Google News headlines
 are **internal only**, shown inside the bank; any showing outside needs a decision first
 ([WORLD_DATA_GUIDE.md section 9](../guides/WORLD_DATA_GUIDE.md#9-licences-and-internal-only-data)). Proposals WL1 to WL12 are candidates in
-the plan's [Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
+the plan's Lens product candidates.
 
 ### 4.1 Who uses it and their questions
 
@@ -1702,7 +1702,7 @@ limit breached by a crafted trade; long and short netting within a bucket; two-s
   per trade when delivered, so any scope). A sum over dates at desk grain; computed at trade grain for arbitrary scopes.
 - **Position and notional limits (RO6), proposed, S:** a position's quantity or market value, a scope's gross or net notional, from the
   derived positions ([VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered)) and `trade-valuation.NOTIONAL`,
-  whose unit must be settled first (F10, [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)).
+  whose unit must be settled first (F10, [the release notes](../../RELEASE_NOTES.md)).
 
 #### 5.3.6 RO7: the RNIV register
 
@@ -3249,7 +3249,7 @@ inputs above; retention (0.4 to 2 TB a date) and entitlements by counterparty, g
 executive, cross-risk-type view that answers *"Is the bank within its risk appetite, what changed overnight, and what do I need to act
 on or tell the board?"* It summarises and owns no engine; every figure opens the lens that computed it (MCUBE, CCUBE, Oversight,
 Market, World). Its rows are the plan's candidates CRO1 to CRO13
-([IMPLEMENTATION_PLAN, CRO lens](IMPLEMENTATION_PLAN.md#cro-lens-candidates-not-started)).
+([the release notes](../../RELEASE_NOTES.md)).
 
 The Chief Risk Officer owns the **risk appetite framework**: a board-approved list of appetite metrics (market, counterparty and
 concentration, liquidity, capital, climate), each with a board limit, a warning level and an owner. Drishti already computes the two
@@ -3297,7 +3297,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](#53-gaps-and-proposals)) | — |
 | Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
 | Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
-| LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | [IMPLEMENTATION_PLAN 21.10](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
+| LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [ADMIN_GUIDE 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world) |
 | News relevance to the book; VaR at stake of a move | **Not built** (WL9, [section 4.3](#43-gaps-and-proposals); ML1, [section 3.3](#33-gaps-and-proposals)) | — |
@@ -3749,7 +3749,7 @@ secure, affordable, and are people using it?"* Its strongest angle is a live **B
 for operators fixing things; the CIO lens is a **read-only executive summary with trends and evidence**, and every row opens the admin
 page or record behind it. It pairs with the CRO lens: the CRO's safe-to-quote panel ([8.3.3](#833-safe-to-quote)) reads this lens's
 records. Its rows are the plan's candidates CIO1 to CIO14
-([IMPLEMENTATION_PLAN, CIO lens](IMPLEMENTATION_PLAN.md#cio-lens-candidates-not-started)).
+([the release notes](../../RELEASE_NOTES.md)).
 
 Drishti already records most of the evidence a CIO and a supervisor need as a side effect of running: every load with its rows and
 rejects, expectations met or missed, a contract per kind with validation, a data version and provenance on every answer, the

@@ -112,7 +112,7 @@ user's profile, no administrator rights needed.
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
 **Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
-`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md) (IntelliJ and PyCharm), [VSCODE_GUIDE.md](guides/VSCODE_GUIDE.md) (VS Code).
+`requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md) (IntelliJ and PyCharm), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code) (VS Code).
 
 ## 2. Build
 
@@ -226,7 +226,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | a README only: every command is `tools/drishti.py` (a node's drain: `drishti.py node drain`, [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
 | `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill) |
-| `run-configs/`, `drishti.code-workspace` | the IntelliJ and PyCharm launchers and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [VSCODE_GUIDE.md](guides/VSCODE_GUIDE.md)) |
+| `run-configs/`, `drishti.code-workspace` | the IntelliJ and PyCharm launchers and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 
