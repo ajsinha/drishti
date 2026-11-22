@@ -17,7 +17,7 @@
 
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put AML / fraud / financial-crime unit engines on the
 roadmap; design first"); proposed for releases 2.9.21 and 2.9.22, placement to confirm
-([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)). It follows the engine pattern of
+([the release notes](../../RELEASE_NOTES.md)). It follows the engine pattern of
 [SENSITIVITIES_AND_FRTB_SA.md](../guides/FRTB_SA_GUIDE.md) and [IFRS9_ECL.md](IFRS9_ECL.md): method, data contracts, outputs, API and
 screens, playground, hand-built cases, parameters as configuration, decisions.
 

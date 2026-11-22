@@ -6,7 +6,7 @@
 
 # Data contracts for computed measures
 
-*Revision 1.0 · 2026-10-25 · Companion to [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+*Revision 1.0 · 2026-10-25 · Companion to [the release notes](../../RELEASE_NOTES.md)*
 
 Drishti keeps **fundamental data** as it is and **computes every risk measure when asked**, for any scope, from trade-level inputs in one
 common risk lake. Each document in this folder is the **data contract** of one measure, or of one group of related commands. It states
