@@ -79,7 +79,7 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     view = (f'<div class="view" data-view data-kind="{ref.get("kind", "")}" data-id="{ref.get("id", "")}">'
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="{_pin.static_url(s.removeprefix("static/"))}">' for s in CONSOLE_SHEETS)   # Elements' sheets from the vendored tree
-    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", _pin.URL + "/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", _pin.URL + "/elements/drishti-inputs/drishti_inputs.js", _pin.URL + "/elements/drishti-chart/drishti_chart.js",
+    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", _pin.URL + "/vendor/echarts/echarts.min.js", _pin.URL + "/elements/drishti-inputs/drishti_inputs.js", _pin.URL + "/elements/drishti-chart/drishti_chart.js", _pin.URL + "/elements/drishti-chart/drishti_chart-geohelper.js",
                                                                      "/static/js/drishti_charts.js", "/static/js/drishti_view.js",
                                                                      _pin.URL + "/elements/drishti-grid/drishti_grid.js", "/render-test/trees.js", "/render-test/chips.js"))
     # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)

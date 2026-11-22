@@ -144,7 +144,7 @@ the screen's tests and screenshots are unchanged or deliberately updated.
 4. **drishti-grid, the pivot**: the Pivot screen and the MR cube, the nested pivot panel, BI's matrix and tables, the basket's sheet, the
    playground's grid, the designer's grid.
 5. **drishti-chart**: the renderer's charts, `drishti_view.js` and `drishti_charts.js`, BI's visuals, Chart any table, history charts,
-   then the maps (`drishti_geomap.js`); Vega-Lite visuals translated to the spec and Vega deleted (O1).
+   then the maps (the geo part, `drishti_chart-geohelper.js`); Vega-Lite visuals translated to the spec and Vega deleted (O1).
 6. **drishti-inputs**: controls, forms, pickers, the code and formula editors (Build, Studio, the editors, BI).
 7. **drishti-insight**: About and Explain, search, approvals, workbook export.
 8. **The client renderer**: every panel drawn by Elements' painter (`drishti-views`) behind the same entry; the old drishti-renderer

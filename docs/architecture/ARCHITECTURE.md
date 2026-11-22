@@ -434,7 +434,7 @@ What is code and what is configuration:
 |---|---|---|
 | Server | `SutraBuilder`, `SutraMatcher`, `InferenceEngine`, `LayoutMerger`, `Binder`, `ChartBinder`, `PatchDiffer` | nothing |
 | Console | `terminal/view.html`, `_macros/view.html`, `_macros/panels.html`, `api_routes._panel_html` (live patches) | nothing |
-| Browser | `drishti_view.js`, `drishti_charts.js`, `drishti_geomap.js`, `drishti_tables.js`, `drishti_tree-rows.js`, `drishti_pivot.js`, `drishti_live.js` | nothing |
+| Browser | `drishti_view.js`, `drishti_charts.js`, `drishti_tables.js`, `drishti_tree-rows.js`, `drishti_pivot.js`, `drishti_live.js` | nothing |
 | Pack | — | YAML only: Sutras (or none), fragments, `form:`, `columns:`, `pivot:`, `semantics:`, formats |
 
 The default packs hold 219 Sutras (`config/packs/*/sutras/`) and the UI kit and packs 36 fragments; all of them are
@@ -541,7 +541,7 @@ and the export read. When a tick changes the panel, the console renders it again
 | `links` | `links` | none |
 | `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | the macro of the same name (`xchart`, `data-xchart` JSON) | `drishti_charts.js` |
 | `timeline` | `timeline` | none |
-| `map` | `geomap` | `drishti_geomap.js`, `drishti_charts.js` |
+| `map` | `geomap` | drishti-chart's geo part, `drishti_charts.js` |
 | `pivot` | `pivot`, `pivot_table` | `drishti_tree-rows.js`, `drishti_pivot-grid.js` |
 
 ### Example 2: a kind with no Sutra
